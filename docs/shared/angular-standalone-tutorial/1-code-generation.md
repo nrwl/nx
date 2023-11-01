@@ -41,7 +41,7 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
-{% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/what-is-nx-cloud" /%}
+{% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/ci-with-nx" /%}
 
 Once the command completes, the file structure should look like this:
 

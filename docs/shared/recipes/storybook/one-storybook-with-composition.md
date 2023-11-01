@@ -29,7 +29,7 @@ We are going to assume that you are at the state where you already have your `st
 It does not matter which framework you use for the host Storybook library. It can be any framework really, and it does not have to be one of the frameworks that are used in the hosted apps. The only thing that is important is for this host library to have _at least one story_. This is important, or else Storybook will not load. The one story can be a component, for example, which would work like a title for the application, or any other introduction to your Storybook you see fit.
 
 {% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
 So, let’s use React for the Storybook Composition host library:

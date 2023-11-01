@@ -8,7 +8,6 @@ export interface EsBuildExecutorOptions {
   assets: (AssetGlob | string)[];
   bundle?: boolean;
   deleteOutputPath?: boolean;
-  dependenciesFieldType?: boolean;
   esbuildOptions?: Record<string, any>;
   esbuildConfig?: string;
   external?: string[];

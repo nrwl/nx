@@ -156,6 +156,13 @@ describe('EsBuild Plugin', () => {
     // Bundle only child lib
     runCLI(`build ${parentLib} --third-party=false`);
 
+    expect(
+      readJson(`dist/libs/${parentLib}/package.json`).dependencies
+    ).toEqual({
+      // Don't care about the versions, just that they exist
+      rambda: expect.any(String),
+      lodash: expect.any(String),
+    });
     runResult = runCommand(`node dist/libs/${parentLib}/index.cjs`);
     expect(runResult).toMatch(/Hello world/);
     expect(runResult).toMatch(/Hello from child lib/);

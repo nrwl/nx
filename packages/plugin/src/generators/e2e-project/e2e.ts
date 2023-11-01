@@ -148,7 +148,6 @@ async function addJest(host: Tree, options: NormalizedSchema) {
       ...testTarget.options,
       runInBand: true,
     },
-    configurations: testTarget.configurations,
   };
 
   // remove the jest build target

@@ -222,16 +222,6 @@ We can display a special button inviting the reader to go to a VSCode marketplac
 {% install-nx-console /%}
 ```
 
-#### Nx Cloud section
-
-We can display Nx Cloud related content in the documentation with a visual cue.
-
-```markdown
-{% nx-cloud-section %}
-Your content goes here.
-{% /nx-cloud-section %}
-```
-
 #### Side by side
 
 You can show content in a grid of 2 columns, via the `side-by-side` shortcode.

@@ -84,6 +84,11 @@
       "enum": ["vite", "webpack", "none"],
       "x-prompt": "Which Cypress bundler do you want to use?",
       "default": "webpack"
+    },
+    "jsx": {
+      "description": "Whether or not this project uses JSX.",
+      "type": "boolean",
+      "default": true
     }
   },
   "required": ["project"],

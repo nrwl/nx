@@ -100,6 +100,7 @@ describe('Cypress Component Configuration', () => {
     await componentConfigurationGenerator(tree, {
       project: 'cool-lib',
       skipFormat: false,
+      jsx: true,
     });
     const projectConfig = readProjectConfiguration(tree, 'cool-lib');
     expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);

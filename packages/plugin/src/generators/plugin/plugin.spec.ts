@@ -83,13 +83,6 @@ describe('NxPlugin Plugin Generator', () => {
       outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
       options: {
         jestConfig: 'libs/my-plugin/jest.config.ts',
-        passWithNoTests: true,
-      },
-      configurations: {
-        ci: {
-          ci: true,
-          codeCoverage: true,
-        },
       },
     });
   });

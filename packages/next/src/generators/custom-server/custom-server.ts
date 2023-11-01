@@ -81,7 +81,7 @@ export async function customServerGenerator(
 
   project.targets['serve-custom-server'] = {
     executor: '@nx/js:node',
-    defaultConfiguration: 'development',
+    defaultConfiguration: 'production',
     options: {
       buildTarget: `${options.project}:build-custom-server`,
     },

@@ -50,6 +50,7 @@ export type NxReleaseConfig = DeepRequired<
 export interface CreateNxReleaseConfigError {
   code:
     | 'RELEASE_GROUP_MATCHES_NO_PROJECTS'
+    | 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE'
     | 'PROJECT_MATCHES_MULTIPLE_GROUPS'
     | 'PROJECTS_MISSING_TARGET';
   data: Record<string, string | string[]>;
@@ -194,6 +195,20 @@ export async function createNxReleaseConfig(
       }
     }
 
+    // If provided, ensure release tag pattern is valid
+    if (releaseGroup.releaseTagPattern) {
+      const error = ensureReleaseTagPatternIsValid(
+        releaseGroup.releaseTagPattern,
+        releaseGroupName
+      );
+      if (error) {
+        return {
+          error,
+          nxReleaseConfig: null,
+        };
+      }
+    }
+
     for (const project of matchingProjects) {
       if (alreadyMatchedProjects.has(project)) {
         return {
@@ -290,11 +305,40 @@ export async function handleNxReleaseConfigError(
         });
       }
       break;
+    case 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE':
+      {
+        const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+          'release',
+          'groups',
+          error.data.releaseGroupName as string,
+          'releaseTagPattern',
+        ]);
+        output.error({
+          title: `Release group "${error.data.releaseGroupName}" has an invalid releaseTagPattern. Please ensure the pattern contains exactly one instance of the "{version}" placeholder`,
+          bodyLines: [nxJsonMessage],
+        });
+      }
+      break;
     default:
       throw new Error(`Unhandled error code: ${error.code}`);
   }
 
   process.exit(1);
+}
+
+function ensureReleaseTagPatternIsValid(
+  releaseTagPattern: string,
+  releaseGroupName: string
+): null | CreateNxReleaseConfigError {
+  // ensure that any provided releaseTagPattern contains exactly one instance of {version}
+  return releaseTagPattern.split('{version}').length === 2
+    ? null
+    : {
+        code: 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE',
+        data: {
+          releaseGroupName,
+        },
+      };
 }
 
 function ensureProjectsConfigIsArray(

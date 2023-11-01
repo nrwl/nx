@@ -27,6 +27,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
+      affectedFiles: [],
     },
     {
       message: 'feat(pkg-b): and another new capability',
@@ -52,6 +53,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
+      affectedFiles: [],
     },
     {
       message: 'feat(pkg-a): new hotness',
@@ -77,6 +79,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
+      affectedFiles: [],
     },
     {
       message: 'feat(pkg-b): brand new thing',
@@ -102,6 +105,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
+      affectedFiles: [],
     },
     {
       message: 'fix(pkg-a): squashing bugs',
@@ -127,6 +131,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
+      affectedFiles: [],
     },
   ];
 

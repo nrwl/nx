@@ -79,17 +79,26 @@ export default {
 
     const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
       .namedInputs.production;
-    const testDefaults = readJson<NxJsonConfiguration>(tree, 'nx.json')
-      .targetDefaults.test;
+    const jestDefaults = readJson<NxJsonConfiguration>(tree, 'nx.json')
+      .targetDefaults['@nx/jest:jest'];
     expect(productionFileSet).toContain(
       '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
     );
     expect(productionFileSet).toContain('!{projectRoot}/tsconfig.spec.json');
     expect(productionFileSet).toContain('!{projectRoot}/jest.config.[jt]s');
     expect(productionFileSet).toContain('!{projectRoot}/src/test-setup.[jt]s');
-    expect(testDefaults).toEqual({
+    expect(jestDefaults).toEqual({
       cache: true,
       inputs: ['default', '^production', '{workspaceRoot}/jest.preset.js'],
+      options: {
+        passWithNoTests: true,
+      },
+      configurations: {
+        ci: {
+          ci: true,
+          codeCoverage: true,
+        },
+      },
     });
   });
 

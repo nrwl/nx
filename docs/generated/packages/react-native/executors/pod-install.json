@@ -25,6 +25,11 @@
         "description": "Disallow any changes to the Podfile or the Podfile.lock during installation.",
         "type": "boolean",
         "default": false
+      },
+      "useBundler": {
+        "description": "Run cocoapods within a Bundler environment, i.e. with the `bundle exec pod install` command",
+        "type": "boolean",
+        "default": false
       }
     },
     "required": ["buildFolder"],

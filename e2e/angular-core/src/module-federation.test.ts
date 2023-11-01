@@ -326,7 +326,7 @@ describe('Angular Module Federation', () => {
 
     // Federate Module
     runCLI(
-      `generate @nx/angular:federate-module ${module} --remote=${remote} --path=${lib}/src/index.ts --no-interactive`
+      `generate @nx/angular:federate-module ${lib}/src/index.ts --name=${module} --remote=${remote} --no-interactive`
     );
 
     updateFile(`${lib}/src/index.ts`, `export { isEven } from './lib/${lib}';`);
@@ -403,7 +403,7 @@ describe('Angular Module Federation', () => {
 
     // Federate Module
     runCLI(
-      `generate @nx/angular:federate-module ${module} --remote=${childRemote} --path=${lib}/src/index.ts --no-interactive`
+      `generate @nx/angular:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --no-interactive`
     );
 
     updateFile(`${lib}/src/index.ts`, `export { isEven } from './lib/${lib}';`);

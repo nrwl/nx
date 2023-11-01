@@ -203,12 +203,62 @@ export async function scheduleTarget(
   );
 }
 
+function createNodeModulesEngineHost(
+  resolvePaths: string[]
+): import('@angular-devkit/schematics/tools').NodeModulesEngineHost {
+  const NodeModulesEngineHost = require('@angular-devkit/schematics/tools')
+    .NodeModulesEngineHost as typeof import('@angular-devkit/schematics/tools').NodeModulesEngineHost;
+
+  class NxNodeModulesEngineHost extends NodeModulesEngineHost {
+    constructor() {
+      super(resolvePaths);
+    }
+
+    override _resolveCollectionPath(name: string, requester?: string): string {
+      let collectionFilePath: string;
+      const paths = requester
+        ? [dirname(requester), ...(resolvePaths || [])]
+        : resolvePaths || [];
+
+      if (name.endsWith('.json')) {
+        collectionFilePath = require.resolve(name, { paths });
+      } else {
+        const {
+          json: { generators, schematics },
+          path: packageJsonPath,
+        } = readPluginPackageJson(name, paths);
+
+        if (!schematics && !generators) {
+          throw new Error(
+            `The "${name}" package does not support Nx generators or Angular Devkit schematics.`
+          );
+        }
+
+        collectionFilePath = require.resolve(
+          join(dirname(packageJsonPath), schematics ?? generators)
+        );
+      }
+
+      return collectionFilePath;
+    }
+
+    override _transformCollectionDescription(name: string, desc: any) {
+      desc.schematics ??= desc.generators;
+
+      return super._transformCollectionDescription(name, desc);
+    }
+  }
+
+  return new NxNodeModulesEngineHost();
+}
+
 function createWorkflow(
   fsHost: virtualFs.Host<Stats>,
   root: string,
   opts: any
 ): import('@angular-devkit/schematics/tools').NodeWorkflow {
-  const NodeWorkflow = require('@angular-devkit/schematics/tools').NodeWorkflow;
+  const NodeWorkflow: typeof import('@angular-devkit/schematics/tools').NodeWorkflow =
+    require('@angular-devkit/schematics/tools').NodeWorkflow;
   const workflow = new NodeWorkflow(fsHost, {
     force: false,
     dryRun: opts.dryRun,
@@ -218,6 +268,8 @@ function createWorkflow(
       require('@angular-devkit/schematics').formats.standardFormats
     ),
     resolvePaths: [process.cwd(), root],
+    engineHostCreator: (options) =>
+      createNodeModulesEngineHost(options.resolvePaths),
   });
   workflow.registry.addPostTransform(schema.transforms.addUndefinedDefaults);
   workflow.engineHost.registerOptionsTransform(

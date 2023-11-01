@@ -28,10 +28,12 @@ export function runPodInstall(
     buildFolder?: string;
     repoUpdate?: boolean;
     deployment?: boolean;
+    useBundler?: boolean;
   } = {
     buildFolder: './build',
     repoUpdate: false,
     deployment: false,
+    useBundler: false,
   }
 ): GeneratorCallback {
   return () => {
@@ -57,10 +59,12 @@ export function podInstall(
     buildFolder?: string;
     repoUpdate?: boolean;
     deployment?: boolean;
+    useBundler?: boolean;
   } = {
     buildFolder: './build',
     repoUpdate: false,
     deployment: false,
+    useBundler: false,
   }
 ) {
   try {
@@ -70,15 +74,15 @@ export function podInstall(
         stdio: 'inherit',
       });
     }
-    execSync(
-      `pod install ${options.repoUpdate ? '--repo-update' : ''} ${
-        options.deployment ? '--deployment' : ''
-      }`,
-      {
-        cwd: iosDirectory,
-        stdio: 'inherit',
-      }
-    );
+    const podCommand = [
+      options.useBundler ? 'bundle exec pod install' : 'pod install',
+      options.repoUpdate ? '--repo-update' : '',
+      options.deployment ? '--deployment' : '',
+    ].join(' ');
+    execSync(podCommand, {
+      cwd: iosDirectory,
+      stdio: 'inherit',
+    });
   } catch (e) {
     logger.error(podInstallErrorMessage);
     throw e;

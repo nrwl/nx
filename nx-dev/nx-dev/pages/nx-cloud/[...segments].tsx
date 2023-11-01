@@ -1,7 +1,4 @@
-import {
-  getBasicNxCloudSection,
-  getDeepDiveNxCloudSection,
-} from '@nx/nx-dev/data-access-menu';
+import { getBasicNxCloudSection } from '@nx/nx-dev/data-access-menu';
 import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
 import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
 import { Menu, MenuItem } from '@nx/nx-dev/models-menu';
@@ -53,7 +50,7 @@ export default function Pages({
   } = {
     document,
     menu: {
-      sections: [getBasicNxCloudSection(menu), getDeepDiveNxCloudSection(menu)],
+      sections: [getBasicNxCloudSection(menu)],
     },
     relatedDocuments,
   };

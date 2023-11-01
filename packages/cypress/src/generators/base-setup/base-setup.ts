@@ -17,6 +17,7 @@ export interface CypressBaseSetupSchema {
    * default is `cypress`
    * */
   directory?: string;
+  jsx?: boolean;
 }
 
 export function addBaseCypressSetup(
@@ -33,6 +34,7 @@ export function addBaseCypressSetup(
 
   generateFiles(tree, join(__dirname, 'files'), projectConfig.root, {
     ...opts,
+    jsx: !!opts.jsx,
     offsetFromRoot: offsetFromRoot(projectConfig.root),
     offsetFromProjectRoot: opts.hasTsConfig ? opts.offsetFromProjectRoot : '',
     tsConfigPath: opts.hasTsConfig

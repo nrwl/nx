@@ -28,7 +28,7 @@ pub(super) async fn create_runtime(
         .map_err(anyhow::Error::from)?;
 
     filter
-        .add_globs(&additional_globs, Some(&origin.into()))
+        .add_globs(additional_globs, Some(&origin.into()))
         .map_err(anyhow::Error::from)?;
 
     let mut runtime = RuntimeConfig::default();

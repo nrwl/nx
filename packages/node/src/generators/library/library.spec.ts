@@ -40,13 +40,6 @@ describe('lib', () => {
         outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
         options: {
           jestConfig: 'my-lib/jest.config.ts',
-          passWithNoTests: true,
-        },
-        configurations: {
-          ci: {
-            ci: true,
-            codeCoverage: true,
-          },
         },
       });
       expect(

@@ -21,4 +21,5 @@ export interface ConfigurationGeneratorSchema {
    * @example: "http://localhost:4200"
    **/
   webServerAddress?: string;
+  rootProject?: boolean;
 }

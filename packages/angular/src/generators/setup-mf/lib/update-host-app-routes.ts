@@ -77,6 +77,7 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
     joinPathFragments(sourceRoot, 'app'),
     {
       appName: options.appName,
+      standalone: options.standalone,
       tmpl: '',
     }
   );

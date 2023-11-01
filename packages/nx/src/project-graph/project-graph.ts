@@ -50,7 +50,11 @@ export function readCachedProjectConfiguration(
 ): ProjectConfiguration {
   const graph = readCachedProjectGraph();
   const node = graph.nodes[projectName];
-  return node.data;
+  try {
+    return node.data;
+  } catch (e) {
+    throw new Error(`Cannot find project: '${projectName}' in your workspace.`);
+  }
 }
 
 /**

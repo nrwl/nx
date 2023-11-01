@@ -35,6 +35,8 @@ export interface CypressE2EConfigSchema {
   devServerTarget?: string;
   linter?: Linter;
   port?: number | 'cypress-auto';
+  jsx?: boolean;
+  rootProject?: boolean;
 }
 
 type NormalizedSchema = ReturnType<typeof normalizeOptions>;
@@ -55,10 +57,12 @@ export async function configurationGenerator(
   }
   await addFiles(tree, opts);
   addTarget(tree, opts);
-  addLinterToCyProject(tree, {
+
+  const linterTask = await addLinterToCyProject(tree, {
     ...opts,
     cypressDir: opts.directory,
   });
+  tasks.push(linterTask);
 
   if (!opts.skipFormat) {
     await formatFiles(tree);
@@ -88,7 +92,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
   return {
     ...options,
     bundler: options.bundler ?? 'webpack',
-    rootProject: projectConfig.root === '.',
+    rootProject: options.rootProject ?? projectConfig.root === '.',
     linter: options.linter ?? Linter.EsLint,
     devServerTarget:
       options.devServerTarget ??
@@ -115,6 +119,7 @@ async function addFiles(tree: Tree, options: NormalizedSchema) {
     ext: options.js ? 'js' : 'ts',
     offsetFromRoot: offsetFromRoot(projectConfig.root),
     offsetFromProjectRoot,
+    projectRoot: projectConfig.root,
     tsConfigPath: hasTsConfig
       ? `${offsetFromProjectRoot}/tsconfig.json`
       : getRelativePathToRootTsConfig(tree, projectConfig.root),
@@ -132,6 +137,7 @@ async function addFiles(tree: Tree, options: NormalizedSchema) {
     addBaseCypressSetup(tree, {
       project: options.project,
       directory: options.directory,
+      jsx: options.jsx,
     });
 
     const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
@@ -197,18 +203,25 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
       port: opts.port,
     };
 
-    projectConfig.targets.e2e.configurations = {
-      [parsedTarget.configuration || 'production']: {
-        devServerTarget: `${opts.devServerTarget}${
-          parsedTarget.configuration ? '' : ':production'
-        }`,
-      },
-    };
     const devServerProjectConfig = readProjectConfiguration(
       tree,
       parsedTarget.project
     );
+    // Add production e2e target if serve target is found
+    if (
+      parsedTarget.configuration !== 'production' &&
+      devServerProjectConfig.targets?.[parsedTarget.target]?.configurations?.[
+        'production'
+      ]
+    ) {
+      projectConfig.targets.e2e.configurations ??= {};
+      projectConfig.targets.e2e.configurations['production'] = {
+        devServerTarget: `${parsedTarget.project}:${parsedTarget.target}:production`,
+      };
+    }
+    // Add ci/static e2e target if serve target is found
     if (devServerProjectConfig.targets?.['serve-static']) {
+      projectConfig.targets.e2e.configurations ??= {};
       projectConfig.targets.e2e.configurations.ci = {
         devServerTarget: `${parsedTarget.project}:serve-static`,
       };

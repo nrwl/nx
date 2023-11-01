@@ -27,7 +27,8 @@ export function executeModuleFederationDevServerBuilder(
   schema: Schema,
   context: import('@angular-devkit/architect').BuilderContext
 ): ReturnType<typeof executeWebpackDevServerBuilder | any> {
-  const nxBin = require.resolve('nx');
+  // Force Node to resolve to look for the nx binary that is inside node_modules
+  const nxBin = require.resolve('nx/bin/nx');
   const { ...options } = schema;
   const projectGraph = readCachedProjectGraph();
   const { projects: workspaceProjects } =

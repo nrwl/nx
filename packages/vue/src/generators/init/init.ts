@@ -25,7 +25,6 @@ function updateDependencies(host: Tree, schema: InitSchema) {
 
   let dependencies: { [key: string]: string } = {
     vue: vueVersion,
-    'vue-tsc': vueTscVersion,
   };
 
   let devDependencies: { [key: string]: string } = {
@@ -33,6 +32,7 @@ function updateDependencies(host: Tree, schema: InitSchema) {
     '@vue/tsconfig': vueTsconfigVersion,
     '@vue/test-utils': vueTestUtilsVersion,
     '@vitejs/plugin-vue': vitePluginVueVersion,
+    'vue-tsc': vueTscVersion,
   };
 
   if (schema.routing) {

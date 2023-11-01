@@ -61,7 +61,7 @@ If you need help finding the version of `nx` you are currently using, run `nx re
 Let's generate a new application using `qwik-nx`.
 
 {% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
 ```shell
@@ -73,7 +73,7 @@ nx g qwik-nx:app todo --directory=apps/todo
 Let's generate a new library using `qwik-nx`.
 
 {% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
 ```shell

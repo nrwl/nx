@@ -12,21 +12,21 @@
   ],
   "type": "object",
   "properties": {
-    "name": {
-      "description": "The name of the module.",
+    "path": {
       "type": "string",
       "$default": {
         "$source": "argv",
         "index": 0
       },
+      "description": "The path to locate the federated module.",
+      "x-prompt": "What is the path to the module to be federated?"
+    },
+    "name": {
+      "description": "The name of the module.",
+      "type": "string",
       "x-prompt": "What name would you like to use for the module?",
       "pattern": "^[a-zA-Z][^:]*$",
       "x-priority": "important"
-    },
-    "path": {
-      "type": "string",
-      "description": "The path to locate the federated module.",
-      "x-prompt": "What is the path to the module to be federated?"
     },
     "remote": {
       "type": "string",

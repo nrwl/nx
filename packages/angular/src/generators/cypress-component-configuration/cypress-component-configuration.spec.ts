@@ -13,7 +13,7 @@ import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-
 import { generateTestApplication, generateTestLibrary } from '../utils/testing';
 import { cypressComponentConfiguration } from './cypress-component-configuration';
 
-let projectGraph: ProjectGraph;
+let projectGraph: ProjectGraph = { nodes: {}, dependencies: {} };
 jest.mock('@nx/cypress/src/utils/cypress-version');
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual<any>('@nx/devkit'),

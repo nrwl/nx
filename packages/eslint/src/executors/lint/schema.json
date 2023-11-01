@@ -137,6 +137,11 @@
       "type": "string",
       "description": "The equivalent of the `--print-config` flag on the ESLint CLI.",
       "x-completion-type": "file"
+    },
+    "errorOnUnmatchedPattern": {
+      "type": "boolean",
+      "description": "When set to false, equivalent of the `--no-error-on-unmatched-pattern` flag on the ESLint CLI.",
+      "default": true
     }
   },
   "required": ["lintFilePatterns"],

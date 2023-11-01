@@ -53,7 +53,7 @@ node-linker=hoisted
 To enable incremental builds you need to use buildable libraries.
 
 {% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
 You can generate a new buildable library with:

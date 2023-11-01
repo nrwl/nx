@@ -4,6 +4,11 @@
       "factory": "./src/generators/remove-migrations/generator",
       "schema": "./src/generators/remove-migrations/schema.json",
       "description": "remove-migrations generator"
+    },
+    "create-nodes-plugin": {
+      "factory": "./src/generators/create-nodes-plugin/generator",
+      "schema": "./src/generators/create-nodes-plugin/schema.json",
+      "description": "Workspace Generator to create a create-nodes-plugin"
     }
   }
 }

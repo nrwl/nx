@@ -12,9 +12,9 @@
     "**/*.js",
     "<%= offsetFromProjectRoot %>cypress.config.ts",
     "<%= offsetFromProjectRoot %>**/*.cy.ts",
-    "<%= offsetFromProjectRoot %>**/*.cy.tsx",
+    <% if (jsx) { %> "<%= offsetFromProjectRoot %>**/*.cy.tsx",<% } %>
     "<%= offsetFromProjectRoot %>**/*.cy.js",
-    "<%= offsetFromProjectRoot %>**/*.cy.jsx",
+    <% if (jsx) { %>"<%= offsetFromProjectRoot %>**/*.cy.jsx",<% } %>
     "<%= offsetFromProjectRoot %>**/*.d.ts"
   ]
 }

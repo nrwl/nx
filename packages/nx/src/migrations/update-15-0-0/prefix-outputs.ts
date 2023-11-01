@@ -64,12 +64,11 @@ export default async function (tree: Tree) {
       if (!target.outputs) {
         continue;
       }
-
-      target.outputs = target.outputs.map((output) => {
-        return /^{[\s\S]+}/.test(output)
-          ? output
-          : joinPathFragments('{workspaceRoot}', output);
-      });
+      try {
+        validateOutputs(target.outputs);
+      } catch (e: any) {
+        target.outputs = transformLegacyOutputs('{projectRoot}', e);
+      }
     }
 
     updateNxJson(tree, nxJson);

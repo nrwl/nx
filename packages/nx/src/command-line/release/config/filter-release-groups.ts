@@ -3,7 +3,7 @@ import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { CATCH_ALL_RELEASE_GROUP, NxReleaseConfig } from './config';
 
-type ReleaseGroupWithName = NxReleaseConfig['groups'][string] & {
+export type ReleaseGroupWithName = NxReleaseConfig['groups'][string] & {
   name: string;
 };
 

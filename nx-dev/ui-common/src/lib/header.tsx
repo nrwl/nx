@@ -52,7 +52,7 @@ export function Header(): JSX.Element {
       name: 'Nx Cloud',
       description:
         'Learn everything about remote cache and distributed tasks configuration.',
-      href: '/nx-cloud/intro/what-is-nx-cloud',
+      href: '/nx-cloud/intro/ci-with-nx',
     },
   ];
   const flyoutMobileMenu = [

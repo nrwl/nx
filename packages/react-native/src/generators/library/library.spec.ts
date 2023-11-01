@@ -296,16 +296,9 @@ describe('lib', () => {
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
       expect(projectConfiguration.targets.test).toMatchInlineSnapshot(`
         {
-          "configurations": {
-            "ci": {
-              "ci": true,
-              "codeCoverage": true,
-            },
-          },
           "executor": "@nx/jest:jest",
           "options": {
             "jestConfig": "my-lib/jest.config.ts",
-            "passWithNoTests": true,
           },
           "outputs": [
             "{workspaceRoot}/coverage/{projectRoot}",

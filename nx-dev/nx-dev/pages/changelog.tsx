@@ -267,7 +267,7 @@ export default function Changelog(props: ChangeLogProps): JSX.Element {
                         className="inline-flex h-4 w-4"
                         aria-hidden="true"
                       />{' '}
-                      v{changelog.version}
+                      v{changelog.version.split('.').slice(0, 2).join('.')}
                     </a>
                     <a aria-hidden="true" href={`#${changelog.version}`}>
                       <LinkIcon className="ml-2 mb-1 inline h-5 w-5 opacity-0 group-hover:opacity-100" />

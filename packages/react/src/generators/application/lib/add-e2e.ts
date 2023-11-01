@@ -15,31 +15,43 @@ export async function addE2e(
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
-    case 'cypress':
+    case 'cypress': {
       webStaticServeGenerator(tree, {
         buildTarget: `${options.projectName}:build`,
         targetName: 'serve-static',
       });
 
-      const { cypressProjectGenerator } = ensurePackage<
+      const { configurationGenerator } = ensurePackage<
         typeof import('@nx/cypress')
       >('@nx/cypress', nxVersion);
 
-      return await cypressProjectGenerator(tree, {
+      addProjectConfiguration(tree, options.e2eProjectName, {
+        projectType: 'application',
+        root: options.e2eProjectRoot,
+        sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+        targets: {},
+        implicitDependencies: [options.projectName],
+        tags: [],
+      });
+
+      return await configurationGenerator(tree, {
         ...options,
-        name: options.e2eProjectName,
-        directory: options.e2eProjectRoot,
+        project: options.e2eProjectName,
+        directory: 'src',
         // the name and root are already normalized, instruct the generator to use them as is
-        projectNameAndRootFormat: 'as-provided',
-        project: options.projectName,
         bundler: options.bundler === 'rspack' ? 'webpack' : options.bundler,
         skipFormat: true,
+        devServerTarget: `${options.projectName}:serve`,
+        jsx: true,
+        rootProject: options.rootProject,
       });
-    case 'playwright':
+    }
+    case 'playwright': {
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/playwright')
       >('@nx/playwright', nxVersion);
       addProjectConfiguration(tree, options.e2eProjectName, {
+        projectType: 'application',
         root: options.e2eProjectRoot,
         sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
         targets: {},
@@ -57,7 +69,9 @@ export async function addE2e(
           options.name
         }`,
         webServerAddress: 'http://localhost:4200',
+        rootProject: options.rootProject,
       });
+    }
     case 'none':
     default:
       return () => {};

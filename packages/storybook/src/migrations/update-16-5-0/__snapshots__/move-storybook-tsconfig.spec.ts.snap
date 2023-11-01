@@ -121,9 +121,6 @@ exports[`Ignore @nx/react/plugins/storybook in Storybook eslint plugin should up
     "lint": {
       "cache": true,
     },
-    "test": {
-      "cache": true,
-    },
   },
 }
 `;

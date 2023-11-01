@@ -17,6 +17,7 @@ import {
 } from '../../../utils/package-manager';
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
+import { readFileSync, writeFileSync } from 'fs';
 
 export async function askAboutNxCloud(): Promise<boolean> {
   return await enquirer
@@ -119,6 +120,17 @@ export function addDepsToPackageJson(repoRoot: string) {
   if (!json.devDependencies) json.devDependencies = {};
   json.devDependencies['nx'] = nxVersion;
   writeJsonFile(path, json);
+}
+
+export function updateGitIgnore(root: string) {
+  const ignorePath = join(root, '.gitignore');
+  try {
+    let contents = readFileSync(ignorePath, 'utf-8');
+    if (!contents.includes('.nx/cache')) {
+      contents = [contents, '', '.nx/cache'].join('\n');
+      writeFileSync(ignorePath, contents, 'utf-8');
+    }
+  } catch {}
 }
 
 export function runInstall(

@@ -46,7 +46,7 @@ export async function configurationGenerator(
       js: options.js,
       directory: options.directory,
       setParserOptionsProject: options.setParserOptionsProject,
-      rootProject: projectConfig.root === '.',
+      rootProject: options.rootProject ?? projectConfig.root === '.',
     })
   );
 

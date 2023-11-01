@@ -32,7 +32,7 @@
     "required": ["pluginName"],
     "presets": []
   },
-  "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nrwl/nx-plugin`.",
+  "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nx/plugin`.",
   "hidden": true,
   "x-use-standalone-layout": true,
   "implementation": "/packages/plugin/src/generators/preset/generator.ts",

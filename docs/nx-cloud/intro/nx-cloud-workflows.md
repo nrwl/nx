@@ -53,4 +53,4 @@ You have the choice between an on-premise setup or using the hosted version of N
 
 ## Early Access
 
-If you are interested in being one of the first organizations to experience Nx Cloud Workflows, contact [cloud-support@nrwl.io](mailto://cloud-support@nrwl.io).
+If you are interested in being one of the first organizations to experience Nx Cloud Workflows, you can [sign up for early access](https://cloud.nx.app/workflows-early-access).

@@ -2,7 +2,8 @@
  * Special thanks to changelogen for the original inspiration for many of these utilities:
  * https://github.com/unjs/changelogen
  */
-import { spawn } from 'node:child_process';
+import { interpolate } from '../../../tasks-runner/utils';
+import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {
   name: string;
@@ -28,13 +29,62 @@ export interface GitCommit extends RawGitCommit {
   references: Reference[];
   authors: GitCommitAuthor[];
   isBreaking: boolean;
+  affectedFiles: string[];
 }
 
-export async function getLastGitTag() {
-  const r = await execCommand('git', ['describe', '--tags', '--abbrev=0'])
-    .then((r) => r.split('\n').filter(Boolean))
-    .catch(() => []);
-  return r.at(-1);
+function escapeRegExp(string) {
+  return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
+// https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
+const SEMVER_REGEX =
+  /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/g;
+
+export async function getLatestGitTagForPattern(
+  releaseTagPattern: string,
+  additionalInterpolationData = {}
+): Promise<{ tag: string; extractedVersion: string } | null> {
+  try {
+    const tags = await execCommand('git', ['tag', '--sort', '-v:refname']).then(
+      (r) =>
+        r
+          .trim()
+          .split('\n')
+          .map((t) => t.trim())
+          .filter(Boolean)
+    );
+    if (!tags.length) {
+      return null;
+    }
+
+    const interpolatedTagPattern = interpolate(releaseTagPattern, {
+      version: ' ',
+      ...additionalInterpolationData,
+    });
+
+    const tagRegexp = `^${escapeRegExp(interpolatedTagPattern).replace(
+      ' ',
+      '(.+)'
+    )}`;
+    const matchingSemverTags = tags.filter(
+      (tag) =>
+        // Do the match against SEMVER_REGEX to ensure that we skip tags that aren't valid semver versions
+        !!tag.match(tagRegexp) && tag.match(tagRegexp)[1]?.match(SEMVER_REGEX)
+    );
+
+    if (!matchingSemverTags.length) {
+      return null;
+    }
+
+    const [latestMatchingTag, version] = matchingSemverTags[0].match(tagRegexp);
+
+    return {
+      tag: latestMatchingTag,
+      extractedVersion: version,
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function getGitDiff(
@@ -77,6 +127,7 @@ const ConventionalCommitRegex =
 const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
 const IssueRE = /(#\d+)/gm;
+const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
 
 export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const match = commit.message.match(ConventionalCommitRegex);
@@ -115,6 +166,19 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     });
   }
 
+  // Extract file changes from commit body
+  const affectedFiles = Array.from(
+    commit.body.matchAll(ChangedFileRegex)
+  ).reduce(
+    (
+      prev,
+      [fullLine, changeType, file1, file2]: [string, string, string, string?]
+    ) =>
+      // file2 only exists for some change types, such as renames
+      file2 ? [...prev, file1, file2] : [...prev, file1],
+    [] as string[]
+  );
+
   return {
     ...commit,
     authors,
@@ -123,36 +187,6 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     scope,
     references,
     isBreaking,
+    affectedFiles,
   };
-}
-
-async function execCommand(
-  cmd: string,
-  args: string[],
-  options?: any
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, {
-      ...options,
-      stdio: ['pipe', 'pipe', 'pipe'], // stdin, stdout, stderr
-      encoding: 'utf-8',
-    });
-
-    let stdout = '';
-    child.stdout.on('data', (chunk) => {
-      stdout += chunk;
-    });
-
-    child.on('error', (error) => {
-      reject(error);
-    });
-
-    child.on('close', (code) => {
-      if (code !== 0) {
-        reject(new Error(`Command failed with exit code ${code}`));
-      } else {
-        resolve(stdout);
-      }
-    });
-  });
 }

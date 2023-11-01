@@ -680,7 +680,9 @@ describe('Linter', () => {
       // should have plugin extends
       expect(appEslint.overrides[0].extends).toBeDefined();
       expect(appEslint.overrides[1].extends).toBeDefined();
-      expect(e2eEslint.overrides[0].extends).toBeDefined();
+      expect(
+        e2eEslint.overrides.some((override) => override.extends)
+      ).toBeTruthy();
 
       runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -691,7 +693,9 @@ describe('Linter', () => {
       // should have no plugin extends
       expect(appEslint.overrides[0].extends).toBeUndefined();
       expect(appEslint.overrides[1].extends).toBeUndefined();
-      expect(e2eEslint.overrides[0].extends).toBeUndefined();
+      expect(
+        e2eEslint.overrides.some((override) => override.extends)
+      ).toBeFalsy();
     });
 
     it('(Angular standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
@@ -708,7 +712,9 @@ describe('Linter', () => {
 
       // should have plugin extends
       expect(appEslint.overrides[1].extends).toBeDefined();
-      expect(e2eEslint.overrides[0].extends).toBeDefined();
+      expect(
+        e2eEslint.overrides.some((override) => override.extends)
+      ).toBeTruthy();
 
       runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -720,7 +726,9 @@ describe('Linter', () => {
       expect(appEslint.overrides[1].extends).toEqual([
         'plugin:@nx/angular-template',
       ]);
-      expect(e2eEslint.overrides[0].extends).toBeUndefined();
+      expect(
+        e2eEslint.overrides.some((override) => override.extends)
+      ).toBeFalsy();
     });
 
     it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', async () => {

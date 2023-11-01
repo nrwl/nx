@@ -37,9 +37,7 @@ If you're using this action in the context of a branch you may need to add `run:
 
 {% /callout %}
 
-{% nx-cloud-section %}
-
-## Distributed CI with Nx Cloud
+## Distributed Task Execution with Nx Cloud
 
 Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
 
@@ -193,5 +191,3 @@ jobs:
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
 ```
-
-{% /nx-cloud-section %}

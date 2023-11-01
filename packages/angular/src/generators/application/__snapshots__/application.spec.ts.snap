@@ -302,16 +302,9 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       },
     },
     "test": {
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true,
-        },
-      },
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "apps/my-dir/my-app/jest.config.ts",
-        "passWithNoTests": true,
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
@@ -369,6 +362,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -383,9 +377,12 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   },
   "extends": "../../../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;
@@ -542,16 +539,9 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       },
     },
     "test": {
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true,
-        },
-      },
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "apps/my-app/jest.config.ts",
-        "passWithNoTests": true,
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
@@ -609,6 +599,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -623,9 +614,12 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   },
   "extends": "../../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;
@@ -874,6 +868,7 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -888,9 +883,12 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
   },
   "extends": "../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;
@@ -993,16 +991,9 @@ exports[`app nested should create project configs 1`] = `
       },
     },
     "test": {
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true,
-        },
-      },
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "my-dir/my-app/jest.config.ts",
-        "passWithNoTests": true,
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
@@ -1151,16 +1142,9 @@ exports[`app not nested should create project configs 1`] = `
       },
     },
     "test": {
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true,
-        },
-      },
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "my-app/jest.config.ts",
-        "passWithNoTests": true,
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
@@ -1218,6 +1202,7 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -1232,9 +1217,12 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
   },
   "extends": "../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;

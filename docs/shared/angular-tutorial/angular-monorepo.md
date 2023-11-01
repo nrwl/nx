@@ -62,7 +62,7 @@ Create a new Angular monorepo with the following command:
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
-Let's name the initial application `angular-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
+Let's name the initial application `angular-store`. In this tutorial we're going to use `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
 
 ```
 └─ angular-monorepo
@@ -150,7 +150,7 @@ Each target contains a configuration object that tells Nx how to run that target
   ...
   "targets": {
     "serve": {
-      "executor": "@nx/vite:dev-server",
+      "executor": "@angular-devkit/build-angular:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "angular-store:build"
@@ -173,7 +173,7 @@ Each target contains a configuration object that tells Nx how to run that target
 
 The most critical parts are:
 
-- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the Angular app using Vite.
+- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
 Learn more about how to [run tasks with Nx](/core-features/run-tasks). We'll [revisit running tasks](#testing-and-linting-running-multiple-tasks) later in this tutorial.

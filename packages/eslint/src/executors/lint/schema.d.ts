@@ -21,6 +21,7 @@ export interface Schema extends JsonObject {
   resolvePluginsRelativeTo: string | null;
   reportUnusedDisableDirectives: Linter.StringSeverity | null;
   printConfig?: string | null;
+  errorOnUnmatchedPattern?: boolean;
 }
 
 type Formatter =

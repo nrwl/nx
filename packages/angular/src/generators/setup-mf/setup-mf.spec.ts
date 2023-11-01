@@ -503,14 +503,15 @@ describe('Init MF', () => {
     expect(tree.read('ng14/src/bootstrap.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { bootstrapApplication } from '@angular/platform-browser';
       import { appConfig } from './app/app.config';
-      import { RemoteEntryComponent } from './app/remote-entry/entry.component';
+      import { AppComponent } from './app/app.component';
       import { enableProdMode } from '@angular/core';
       import { environment } from './environments/environment';
+
       if (environment.production) {
         enableProdMode();
       }
 
-      bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
+      bootstrapApplication(AppComponent, appConfig).catch((err) =>
         console.error(err)
       );
       "

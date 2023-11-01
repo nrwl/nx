@@ -785,10 +785,23 @@ export function getPromptsForSchema(
       // Normalize x-prompt
       if (typeof v['x-prompt'] === 'string') {
         const message = v['x-prompt'];
-        v['x-prompt'] = {
-          type: v.type === 'boolean' ? 'confirm' : 'input',
-          message,
-        };
+        if (v.type === 'boolean') {
+          v['x-prompt'] = {
+            type: 'confirm',
+            message,
+          };
+        } else if (v.type === 'array' && v.items?.enum) {
+          v['x-prompt'] = {
+            type: 'multiselect',
+            items: v.items.enum,
+            message,
+          };
+        } else {
+          v['x-prompt'] = {
+            type: 'input',
+            message,
+          };
+        }
       }
 
       question.message = v['x-prompt'].message;

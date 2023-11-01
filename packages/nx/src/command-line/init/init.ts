@@ -2,7 +2,6 @@ import { execSync } from 'child_process';
 import { prompt } from 'enquirer';
 import { existsSync } from 'fs';
 import { prerelease } from 'semver';
-import * as parser from 'yargs-parser';
 import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 import { addNxToNest } from './implementation/add-nx-to-nest';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';

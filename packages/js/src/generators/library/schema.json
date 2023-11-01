@@ -48,6 +48,12 @@
       "default": false,
       "x-priority": "internal"
     },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
     "skipTsConfig": {
       "type": "boolean",
       "description": "Do not update tsconfig.json for development experience.",

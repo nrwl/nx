@@ -24,7 +24,7 @@ import { filterReleaseGroups } from './config/filter-release-groups';
 import {
   GitCommit,
   getGitDiff,
-  getLastGitTag,
+  getLatestGitTagForPattern,
   parseCommits,
 } from './utils/git';
 import {
@@ -107,7 +107,9 @@ export async function changelogHandler(args: ChangelogOptions): Promise<void> {
     releaseTagPattern: nxReleaseConfig.releaseTagPattern,
   });
 
-  const from = args.from || (await getLastGitTag());
+  const from =
+    args.from ||
+    (await getLatestGitTagForPattern(nxReleaseConfig.releaseTagPattern))?.tag;
   if (!from) {
     output.error({
       title: `Unable to determine the previous git tag, please provide an explicit git reference using --from`,

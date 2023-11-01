@@ -114,16 +114,9 @@ export default {
 
 exports[`jestProject should use jest.config.js in project config with --js flag 1`] = `
 {
-  "configurations": {
-    "ci": {
-      "ci": true,
-      "codeCoverage": true,
-    },
-  },
   "executor": "@nx/jest:jest",
   "options": {
     "jestConfig": "libs/lib1/jest.config.js",
-    "passWithNoTests": true,
   },
   "outputs": [
     "{workspaceRoot}/coverage/{projectRoot}",

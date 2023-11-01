@@ -52,11 +52,6 @@ describe('Cypress e2e configuration', () => {
       expect(readProjectConfiguration(tree, 'my-app').targets.e2e)
         .toMatchInlineSnapshot(`
         {
-          "configurations": {
-            "production": {
-              "devServerTarget": "my-app:serve:production",
-            },
-          },
           "executor": "@nx/cypress:cypress",
           "options": {
             "cypressConfig": "apps/my-app/cypress.config.ts",
@@ -85,9 +80,7 @@ describe('Cypress e2e configuration', () => {
             "**/*.js",
             "cypress.config.ts",
             "**/*.cy.ts",
-            "**/*.cy.tsx",
             "**/*.cy.js",
-            "**/*.cy.jsx",
             "**/*.d.ts",
           ],
         }
@@ -208,9 +201,7 @@ describe('Cypress e2e configuration', () => {
             "**/*.js",
             "../../cypress.config.ts",
             "../../**/*.cy.ts",
-            "../../**/*.cy.tsx",
             "../../**/*.cy.js",
-            "../../**/*.cy.jsx",
             "../../**/*.d.ts",
           ],
         }

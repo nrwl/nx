@@ -33,13 +33,13 @@ export default async function runExecutor(
 
   const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
   const projectPackageJson = readJsonFile(packageJsonPath);
-  const name = projectPackageJson.name;
+  const packageName = projectPackageJson.name;
 
   // If package and project name match, we can make log messages terser
   let packageTxt =
-    name === context.projectName
-      ? `package "${name}"`
-      : `package "${name}" from project "${context.projectName}"`;
+    packageName === context.projectName
+      ? `package "${packageName}"`
+      : `package "${packageName}" from project "${context.projectName}"`;
 
   if (projectPackageJson.private === true) {
     console.warn(
@@ -80,7 +80,7 @@ export default async function runExecutor(
     const stdoutData = JSON.parse(output.toString());
 
     // If npm workspaces are in use, the publish output will nest the data under the package name, so we normalize it first
-    const normalizedStdoutData = stdoutData[context.projectName!] ?? stdoutData;
+    const normalizedStdoutData = stdoutData[packageName] ?? stdoutData;
     logTar(normalizedStdoutData);
 
     if (options.dryRun) {

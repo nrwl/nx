@@ -130,6 +130,18 @@ async function getSettings(
     ? options.config // config is expected to be from the workspace root
     : findViteConfig(joinPathFragments(context.root, projectRoot));
 
+  if (!viteConfigPath) {
+    throw new Error(
+      stripIndents`
+      Unable to load test config from config file ${viteConfigPath}.
+      
+      Please make sure that vitest is configured correctly, 
+      or use the @nx/vite:vitest generator to configure it for you.
+      You can read more here: https://nx.dev/nx-api/vite/generators/vitest
+      `
+    );
+  }
+
   const resolvedProjectRoot = resolve(workspaceRoot, projectRoot);
   const resolvedViteConfigPath = resolve(
     workspaceRoot,

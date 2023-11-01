@@ -43,7 +43,7 @@ npx create-nx-workspace@latest
 
 {% link-card title="Single Angular App" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angular" /%}
 
-{% link-card title="Single Node App" type="tutorial" url="/getting-started/tutorials/node-server-tutorial" icon="node" /%}
+{% link-card title="Single Vue App" type="tutorial" url="/getting-started/tutorials/vue-standalone-tutorial" icon="vue" /%}
 
 <!-- {% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="reactMono" /%}
 
@@ -58,7 +58,7 @@ npx create-nx-workspace@latest
 {% cards cols="3" lgCols="8" mdCols="6" smCols="5" moreLink="/showcase/example-repos" %}
 
 {% link-card title="Express" appearance="small" url="/nx-api/express" icon="express" /%}
-{% link-card title="Vue" appearance="small" url="/showcase/example-repos/add-vue" icon="vue" /%}
+{% link-card title="Vue" appearance="small" url="/nx-api/vue" icon="vue" /%}
 {% link-card title="Next" appearance="small" url="/nx-api/next" icon="nextjs" /%}
 {% link-card title="Nuxt" appearance="small" url="/showcase/example-repos/add-nuxt" icon="nuxt" /%}
 {% link-card title="Nest" appearance="small" url="/nx-api/nest" icon="nestjs" /%}

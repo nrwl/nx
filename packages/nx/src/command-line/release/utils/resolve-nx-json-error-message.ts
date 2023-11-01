@@ -14,7 +14,10 @@ export async function resolveNxJsonConfigErrorMessage(
     joinPathFragments(workspaceRoot, 'nx.json')
   )}`;
   if (errorLines) {
-    nxJsonMessage += `, lines ${errorLines.startLine}-${errorLines.endLine}`;
+    nxJsonMessage +=
+      errorLines.startLine === errorLines.endLine
+        ? `, line ${errorLines.startLine}`
+        : `, lines ${errorLines.startLine}-${errorLines.endLine}`;
   }
   return nxJsonMessage;
 }

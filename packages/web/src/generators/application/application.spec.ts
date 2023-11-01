@@ -86,6 +86,7 @@ describe('app', () => {
         {
           "compilerOptions": {
             "allowJs": true,
+            "module": "commonjs",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
             "types": [
@@ -95,9 +96,12 @@ describe('app', () => {
           },
           "extends": "../tsconfig.base.json",
           "include": [
-            "src/**/*.ts",
-            "src/**/*.js",
+            "**/*.ts",
+            "**/*.js",
             "cypress.config.ts",
+            "**/*.cy.ts",
+            "**/*.cy.js",
+            "**/*.d.ts",
           ],
         }
       `);

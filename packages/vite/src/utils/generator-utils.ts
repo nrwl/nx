@@ -805,7 +805,7 @@ function handleViteConfigFileExists(
     cache: {
       dir: `${offsetFromRoot}node_modules/.vitest`,
     },
-    environment: 'jsdom',
+    environment: options.testEnvironment ?? 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
   };
 

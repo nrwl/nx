@@ -33,12 +33,6 @@
       "enum": ["eslint", "none"],
       "default": "eslint"
     },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
-    },
     "ciTargetName": {
       "type": "string",
       "description": "The name of the devServerTarget to use for the Cypress CI configuration. Used to control if using <storybook-project>:static-storybook:ci or <storybook-project>:storybook:ci",
@@ -49,6 +43,11 @@
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     }
   },
   "required": ["name"]

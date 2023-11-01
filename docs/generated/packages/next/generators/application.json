@@ -133,7 +133,7 @@
       }
     },
     "required": [],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create app in a directory\" %}\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=nested`. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.\n{% /callout %}\n\n```shell\nnx g app myapp --directory=apps/nested/myapp\n```\n\n{% /tab %}\n{% tab label=\"Use a custom Express server\" %}\n\n```shell\nnx g app myapp --custom-server\n```\n\n{% /tab %}\n{% tab label=\"Use plain JavaScript (not TypeScript)\" %}\n\n```shell\nnx g app myapp --js\n```\n\n{% /tab %}\n{% /tabs %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Create app in a directory\" %}\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=nested`. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.\n{% /callout %}\n\n```shell\nnx g app myapp --directory=apps/nested/myapp\n```\n\n{% /tab %}\n{% tab label=\"Use a custom Express server\" %}\n\n```shell\nnx g app myapp --custom-server\n```\n\n{% /tab %}\n{% tab label=\"Use plain JavaScript (not TypeScript)\" %}\n\n```shell\nnx g app myapp --js\n```\n\n{% /tab %}\n{% /tabs %}\n",
     "presets": []
   },
   "aliases": ["app"],

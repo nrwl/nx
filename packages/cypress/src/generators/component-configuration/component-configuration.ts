@@ -85,6 +85,7 @@ function addProjectFiles(
   addBaseCypressSetup(tree, {
     project: opts.project,
     directory: opts.directory,
+    jsx: opts.jsx,
   });
 
   generateFiles(

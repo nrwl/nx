@@ -20,7 +20,17 @@
       },
       "specifier": {
         "type": "string",
-        "description": "Exact version or semver keyword to apply to the selected release group. NOTE: This should be set on the release group level, not the project level."
+        "description": "Exact version or semver keyword to apply to the selected release group. Overrides specifierSource."
+      },
+      "releaseGroup": {
+        "type": "object",
+        "description": "The resolved release group configuration, including name, relevant to all projects in the current execution."
+      },
+      "specifierSource": {
+        "type": "string",
+        "default": "prompt",
+        "description": "Which approach to use to determine the semver specifier used to bump the version of the project.",
+        "enum": ["prompt", "conventional-commits"]
       },
       "preid": {
         "type": "string",
@@ -34,7 +44,7 @@
         "type": "string",
         "default": "disk",
         "description": "Which approach to use to determine the current version of the project.",
-        "enum": ["registry", "disk"]
+        "enum": ["registry", "disk", "git-tag"]
       },
       "currentVersionResolverMetadata": {
         "type": "object",
@@ -42,7 +52,7 @@
         "default": {}
       }
     },
-    "required": ["projects", "projectGraph", "specifier"],
+    "required": ["projects", "projectGraph", "releaseGroup"],
     "presets": []
   },
   "description": "DO NOT INVOKE DIRECTLY WITH `nx generate`. Use `nx release version` instead.",

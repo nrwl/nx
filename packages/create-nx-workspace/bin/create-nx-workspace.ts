@@ -112,10 +112,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
               Preset
             )
-              // TODO(v17): Remove this option when @nx/vue is released.
-              .filter(
-                (p) => p !== Preset.VueStandalone && p !== Preset.VueMonorepo
-              )
               .map((p) => `"${p}"`)
               .join(
                 ', '
@@ -244,7 +240,6 @@ function normalizeAndWarnOnDeprecatedPreset(
   return async (args: yargs.Arguments<Arguments>): Promise<void> => {
     if (!args.preset) return;
     if (deprecatedPresets[args.preset]) {
-      args.preset = deprecatedPresets[args.preset] as Preset;
       output.addVerticalSeparator();
       output.note({
         title: `The "${args.preset}" preset is deprecated.`,
@@ -256,6 +251,7 @@ function normalizeAndWarnOnDeprecatedPreset(
           }" preset instead.`,
         ],
       });
+      args.preset = deprecatedPresets[args.preset] as Preset;
     }
   };
 }

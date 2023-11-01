@@ -14,6 +14,7 @@ export interface LibraryGeneratorSchema {
   skipFormat?: boolean;
   tags?: string;
   skipTsConfig?: boolean;
+  skipPackageJson?: boolean;
   includeBabelRc?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: Linter;

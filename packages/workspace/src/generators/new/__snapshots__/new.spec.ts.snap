@@ -46,9 +46,6 @@ exports[`new should generate an empty nx.json 1`] = `
     "lint": {
       "cache": true,
     },
-    "test": {
-      "cache": true,
-    },
   },
 }
 `;

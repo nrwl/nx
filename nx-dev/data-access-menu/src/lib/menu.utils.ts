@@ -79,7 +79,12 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
     hideSectionHeader: true,
     itemList: items
       .filter(
-        (m) => m.id === 'intro' || m.id === 'set-up' || m.id === 'account'
+        (m) =>
+          m.id === 'intro' ||
+          m.id === 'recipes' ||
+          m.id === 'account' ||
+          m.id === 'private-cloud' ||
+          m.id === 'reference'
       )
       .map((m) => {
         return {
@@ -96,7 +101,7 @@ export function getDeepDiveNxCloudSection(items: MenuItem[]): MenuSection {
     name: 'Deep Dive',
     hideSectionHeader: false,
     itemList: items
-      .filter((m) => m.id === 'private-cloud' || m.id === 'reference')
+      .filter((m) => m.id === 'private-cloud')
       .map((m) => ({
         ...m,
         disableCollapsible: true,

@@ -12,5 +12,12 @@
   "reporters": ["detox/runners/jest/reporter"],
   "testEnvironment": "detox/runners/jest/testEnvironment",
   "verbose": true,
-  "setupFilesAfterEnv": ["<rootDir>/test-setup.ts"]
+  "setupFilesAfterEnv": ["<rootDir>/test-setup.ts"],
+      "transform": {
+    "^.+\\.(ts|js|html)$": [
+      "ts-jest",
+      { "tsconfig": "<rootDir>/tsconfig.e2e.json" }
+    ]
+  }
+  
 }

@@ -7,36 +7,60 @@ width="100%" /%}
 
 Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI working with multiple frameworks](/getting-started/why-nx#how-does-nx-work). As a result, adopting Nx as an Angular user is relatively straightforward. This guide explores some of the similarities and in particular, added benefits of using Nx over the Angular CLI for your Angular project.
 
-## Quick Overview Comparison
+## TL;DR: Why should I use Nx for my Angular project?
 
-Here's a quick side-by-side overview comparing the features between the Angular CLI and Nx.  
-_(Kudos to [Daniel Glejzner](https://twitter.com/DanielGlejzner) for helping with this)_
+Nx...
 
-| Feature/Tool                                               | Angular CLI     | Nx            |
-| ---------------------------------------------------------- | --------------- | ------------- |
-| Create Angular Apps                                        | ✅              | ✅            |
-| Generate Angular Components, Services, etc.                | ✅              | ✅            |
-| Building & Bundling                                        | ✅              | ✅            |
-| Local Development Server                                   | ✅              | ✅            |
-| Code Schematics                                            | ✅              | ✅            |
-| Automated Update with Migrations                           | ✅              | ✅ (Enhanced) |
-| Generators                                                 | ✅ (Schematics) | ✅            |
-| Executors                                                  | ✅ (Builders)   | ✅            |
-| Advanced Generators (e.g. Module Federation, Tailwind,...) | ❌              | ✅            |
-| Integrated Tooling (Jest, Cypress, Playwright etc.)        | ❌              | ✅            |
-| First-Class Monorepo Support                               | ❌              | ✅            |
-| Enforced Module Boundaries                                 | ❌              | ✅            |
-| Interactive Project Graph                                  | ❌              | ✅            |
-| Task Graph                                                 | ❌              | ✅            |
-| Running Tasks in Parallel                                  | ❌              | ✅            |
-| Building, Testing Only What is Affected                    | ❌              | ✅            |
-| Local Caching                                              | ❌              | ✅            |
-| Distributed Caching                                        | ❌              | ✅            |
-| Distributed Task Execution on CI                           | ❌              | ✅            |
-| Custom Hashers                                             | ❌              | ✅            |
-| Extensible Plugin System                                   | ❌              | ✅            |
+- helps define clear architectural guidelines and promotes best practices to organize and scale your codebase.
+- helps integrate modern tooling by actively working with devtool authors to make sure they work well with Nx and your framework of choice.
+- is adaptable: start small with a single-project setup and grow it to a monorepo when needed.
+- has an active community of contributors and plugin authors.
+- has been proven in large enterprise-level projects.
 
-## Not just for Monorepos: Project Setup & Structure
+Note, the Nx team's focus is on building the best possible developer productivity tool.
+
+### Quick Overview Comparison
+
+Here's a quick side-by-side overview comparing the features between the Angular CLI and Nx. _(Kudos to [Daniel Glejzner](https://twitter.com/DanielGlejzner) for helping with this)_
+
+| Feature/Tool                                                                                               | Angular CLI     | Nx            |
+| ---------------------------------------------------------------------------------------------------------- | --------------- | ------------- |
+| Create Angular Apps                                                                                        | ✅              | ✅            |
+| Generate Angular Components, Services, etc.                                                                | ✅              | ✅            |
+| Building & Bundling                                                                                        | ✅              | ✅            |
+| Local Development Server                                                                                   | ✅              | ✅            |
+| Code Schematics                                                                                            | ✅              | ✅            |
+| Automated Update with Migrations                                                                           | ✅              | ✅ (Enhanced) |
+| Generators                                                                                                 | ✅ (Schematics) | ✅            |
+| Executors                                                                                                  | ✅ (Builders)   | ✅            |
+| Advanced Generators (e.g. Module Federation, Tailwind,...)                                                 | ❌              | ✅            |
+| Integrated Tooling (Jest, Cypress, Playwright etc.)                                                        | ❌              | ✅            |
+| Support for [single-project Workspaces](/getting-started/tutorials/angular-standalone-tutorial)            | ✅              | ✅            |
+| First-Class [Monorepo Support](/getting-started/tutorials/angular-monorepo-tutorial)                       | ❌\*            | ✅            |
+| [Enforced Module Boundaries](/core-features/enforce-module-boundaries)                                     | ❌              | ✅            |
+| Interactive [Project Graph](/core-features/explore-graph)                                                  | ❌              | ✅            |
+| Task Graph                                                                                                 | ❌              | ✅            |
+| [Running Tasks in Parallel](/recipes/running-tasks/run-tasks-in-parallel)                                  | ❌              | ✅            |
+| Building, Testing [Only What is Affected](/core-features/run-tasks#run-tasks-on-projects-affected-by-a-pr) | ❌              | ✅            |
+| [Local Caching](/core-features/cache-task-results)                                                         | ❌\*\*          | ✅            |
+| [Distributed Caching](/core-features/remote-cache)                                                         | ❌              | ✅            |
+| [Distributed Task Execution on CI](/core-features/distribute-task-execution)                               | ❌              | ✅            |
+| Custom Hashers                                                                                             | ❌              | ✅            |
+| [Extensible Plugin System](/extending-nx/intro/getting-started)                                            | ❌              | ✅            |
+
+{% callout type="info" title="Notes" %}
+
+\* You can setup a monorepo with the Angular CLI creating buildable Angular ng-packagr projects, but the DX is not as optimized compared to what you'd get with Nx.`
+
+\*\* The Angular CLI has a [caching mechanism](https://angular.io/cli/cache) which persists the Webpack/ESBuild/"TS incremental build info" cache to disk. Nx leverages that cache as well but in addition adds a more powerful process-level caching on top that is framework agnostic.`
+
+{% /callout %}
+
+## Similarities and Differences
+
+Learn about the similarities between the Angular CLI and Nx which makes it easy to [migrate](#migrate-from-the-angular-cli) but also about how Nx goes beyond to further improve your developer productivity.
+
+### Not just for Monorepos: Project Setup & Structure
 
 Nx is not just exclusively for monorepos, but can create
 
@@ -90,7 +114,7 @@ Note that even though the configuration is split, everything works similarly. Mi
 
 More details: Nx [project configuration](/reference/project-configuration).
 
-## Executors vs. Builders, Generators vs. Schematics
+### Executors vs. Builders, Generators vs. Schematics
 
 Nx comes with slightly different terminology than the Angular CLI for some features.
 
@@ -122,7 +146,7 @@ You can also run Angular Schematics through the Nx ClI. So something like this w
 npx nx g @schematics/angular:component my-component
 ```
 
-## Running Commands
+### Running Commands
 
 Commands are run in the very same way as with the Angular CLI. You just switch `ng` with `nx`. For example:
 
@@ -132,7 +156,7 @@ npx nx serve
 
 Nx has more abilities to run commands in parallel, just for specific projects etc. Find out more [in the docs](/core-features/run-tasks).
 
-## Integrating with Modern Tools
+### Integrating with Modern Tools
 
 An Angular-based Nx Workspace already comes with a lot of batteries included:
 
@@ -143,7 +167,7 @@ An Angular-based Nx Workspace already comes with a lot of batteries included:
 
 But Nx expands beyond just that, offering automated integration with a lot of modern tools such as [Storybook](https://storybook.js.org/) or [Tailwind](https://tailwindcss.com/) just to mention a few.
 
-## 'ng update' vs. 'nx migrate'
+### 'ng update' vs. 'nx migrate'
 
 Like the Angular CLI, Nx has a command that allows you to upgrade your existing workspace tools, packages, and source code to the next version. Instead of `ng update`, you run `nx migrate`:
 
@@ -167,7 +191,7 @@ What's the difference?
 
 To reiterate: `nx migrate` runs the migrations written by the Angular team the same way `ng update` runs them. So everything should still work. You just get more control over how it works. You can learn more in our docs about [Automate Updating Dependencies](/core-features/automate-updating-dependencies).
 
-## 'ng add'
+### 'ng add'
 
 `ng add` is not natively supported by Nx. We want a consistent package install experience for developers working with Angular or non-Angular packages.
 
@@ -179,7 +203,7 @@ npm install [package] && nx g [package]:ng-add
 
 Replace `[package]` with the package name you're trying to add.
 
-## Speed
+### Speed
 
 Nx is designed to be fast. The Angular CLI leverages Webpack's caching, which Nx also does since it relies on the Angular Devkit when it comes to compiling or running apps. But Nx goes way beyond that, introducing features vital for a fast CI experience, mainly when you have a monorepo.
 
@@ -193,13 +217,13 @@ Features like
 
 And, Nx already uses fast, modern tooling like [ESBuild](/nx-api/esbuild), [Vite](/nx-api/vite), Vitest and [Rspack](/nx-api/rspack) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
 
-## Editor Integration
+### Editor Integration
 
 Nx goes beyond being just a CLI and comes with [Nx Console](/core-features/integrate-with-editors), a VSCode and WebStorm extension allowing you to run commands, generate code and visualize your workspace.
 
 ![Nx Console screenshot](/shared/images/nx-console/nx-console-screenshot.webp)
 
-## Scaling: Start Simple, Grow to a Monorepo
+### Scaling: Start Simple, Grow to a Monorepo
 
 Nx is really made to scale with you. You can
 
@@ -208,7 +232,7 @@ Nx is really made to scale with you. You can
 - you can then migrate to a monorepo when you are ready and need one ([more here](/recipes/tips-n-tricks/standalone-to-integrated))
 - or even [add Webpack Module Federation support](/recipes/angular/module-federation-with-ssr)
 
-## Visualize your Workspace
+### Visualize your Workspace
 
 As you start modularizing your Angular workspace, Nx can visualize it using the `nx graph` command or via [Nx Console](/core-features/integrate-with-editors) directly in your editor.
 
@@ -322,24 +346,28 @@ As you start modularizing your Angular workspace, Nx can visualize it using the 
 
 Learn more about the [graph features here](/core-features/explore-graph).
 
-## Extensible and Customizable: Make it fit your own needs
+### Extensible and Customizable: Make it fit your own needs
 
-Nx is [built to be extensible](/getting-started/why-nx#how-does-nx-work). Just like the [packages published by the Nx core team](/nx-api) you can create your own Nx plugins by [extending Nx](/extending-nx/intro/getting-started).
-
-This can be as simple as using [run-commands](/nx-api/nx/executors/run-commands) to integrate custom commands into the project configuration or as complex as [creating your own local executor](/extending-nx/recipes/local-executors).
-
-## Diversification
+Nx is [built to be extensible](/getting-started/why-nx#how-does-nx-work). Just like the [packages published by the Nx core team](/nx-api) you can create your own Nx plugins by [extending Nx](/extending-nx/intro/getting-started). This can be as simple as using [run-commands](/nx-api/nx/executors/run-commands) to integrate custom commands into the project configuration or as complex as [creating your own local executor](/extending-nx/recipes/local-executors).
 
 And if you ever need to expand beyond Angular or diversify your stack, you can still keep using Nx, which is [battle-tested with many different technologies](/getting-started/intro#pick-your-stack).
 
-## Being the best CLI for you!
+## Migrate from the Angular CLI?
 
-The Nx team's only mission is to build the best CLI for you. We don't build frameworks or libraries; we make tools for them!
+Migrating an Angular CLI project to Nx can be done by running
 
-## Convinced?
+```shell
+npx nx@latest init
+```
 
-If you're convinced, then here are some options for you:
+or alternatively using the `--integrated` flag if you want to create an Nx monorepo right away. Learn more about all the details on the [dedicated docs page](/recipes/angular/migration/angular).
+
+There are also guides describing how to:
+
+- [manually migrate an Angular CLI app](/recipes/angular/migration/angular-manual) and
+- how to [consolidate multiple Angular CLI projects into a single Nx monorepo](/recipes/angular/migration/angular-multiple)
+
+You can learn more about Angular & Nx by following our dedicated tutorials:
 
 - [Tutorial: Building Angular Apps with the Nx Standalone Projects Setup](/getting-started/tutorials/angular-standalone-tutorial)
 - [Tutorial: Building Angular Apps in an Nx Monorepo](/getting-started/tutorials/angular-monorepo-tutorial)
-- [Learn how to migrate from the Angular CLI to Nx](/recipes/angular/migration)

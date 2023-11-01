@@ -161,6 +161,11 @@ jobs:
           command: |
             pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
           no_output_timeout: 45m
+      - run:
+          name: Close CI group
+          command: |
+            pnpm nx-cloud stop-all-agents
+          no_output_timeout: 45m
 
 # -------------------------
 #        WORKFLOWS(JOBS)
