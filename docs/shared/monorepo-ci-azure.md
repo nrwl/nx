@@ -10,15 +10,9 @@ Nx needs additional Git history available for `affected` to function correctly. 
 
 Unlike `GitHub Actions` and `CircleCI`, you don't have the metadata to help you track the last successful run on `main`. In the example below, the base is set to `HEAD~1` (for push) or branching point (for pull requests), but a more robust solution would be to tag an SHA in the main job once it succeeds and then use this tag as a base. You can also try [using the devops CLI within the pipeline yaml](#get-the-commit-of-the-last-successful-build). See the [nx-tag-successful-ci-run](https://github.com/nrwl/nx-tag-successful-ci-run) and [nx-set-shas](https://github.com/nrwl/nx-set-shas) (version 1 implements tagging mechanism) repositories for more information.
 
-{% callout type="note" title="Tracking the origin branch" %}
-
-If you're using this action in the context of a branch you may need to add `run: "git branch --track main origin/main"` before running the `nx affected` command since `origin/main` won't exist.
-
-{% /callout %}
-
 We also have to set `NX_BRANCH` explicitly. NX_BRANCH does not impact the functionality of your runs, but does provide a human-readable label to easily identify them in the Nx Cloud app.
 
-```yaml
+```yaml {% fileName="azure-pipelines.yml" %}
 trigger:
   - main
 pr:
@@ -40,35 +34,33 @@ jobs:
     steps:
       # Set Azure Devops CLI default settings
       - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
-      displayName: 'Set default Azure DevOps organization and project'
+        displayName: 'Set default Azure DevOps organization and project'
 
       # Get last successfull commit from Azure Devops CLI
       - bash: |
-        LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
-        if [ -z "$LAST_SHA" ]
-        then
-          LAST_SHA=$DEFAULT_BASE_SHA
-        fi
-        echo "Last successful commit SHA: $LAST_SHA"
-        echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
-      displayName: 'Get last successful commit SHA'
-      env:
-        AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            LAST_SHA=$DEFAULT_BASE_SHA
+          fi
+          echo "Last successful commit SHA: $LAST_SHA"
+          echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+        displayName: 'Get last successful commit SHA'
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
+      # Required for nx affected if we're on a branch
+      - script: git branch --track main origin/main
       - script: npm ci
-
       - script: npx nx format:check --base=$(BASE_SHA)
-
-      - script: npx nx affected --base=$(BASE_SHA) -t lint --parallel=3
-      - script: npx nx affected --base=$(BASE_SHA) -t test --parallel=3 --configuration=ci
-      - script: npx nx affected --base=$(BASE_SHA) -t build --parallel=3
+      - script: npx nx affected --base=$(BASE_SHA) -t lint,test,build --parallel=3 --configuration=ci
 ```
 
 The `main` job implements the CI workflow.
 
 ## Get the Commit of the Last Successful Build
 
-The idea is to use [Azure Devops CLI](https://learn.microsoft.com/en-us/cli/azure/pipelines?view=azure-cli-latest)
+In the example above we ran a script to retrieve the commit of the last successful build. The idea is to use [Azure Devops CLI](https://learn.microsoft.com/en-us/cli/azure/pipelines?view=azure-cli-latest)
 directly in the [Pipeline Yaml](https://learn.microsoft.com/en-us/azure/devops/cli/azure-devops-cli-in-yaml?view=azure-devops)
 
 First, we configure Devops CLI
@@ -102,51 +94,6 @@ We can target a specific build, in this example we specified:
 By default the command returns an entire JSON object with all the information. But we can narrow it down to the desired result with the `--query` param that uses [JMESPath](https://jmespath.org/) format ([more details](https://learn.microsoft.com/en-us/cli/azure/query-azure-cli?tabs=concepts%2Cbash))
 
 Finally we extract the result in a common [custom variable](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/set-variables-scripts?view=azure-devops&tabs=bash) named `BASE_SHA` used later by `nx affected` commands
-
-An example with a default SHA in case no commit is found:
-
-```yaml {% fileName="azure-pipelines.yml" %}
-trigger:
-  - main
-pr:
-  - main
-
-variables:
-  CI: 'true'
-  NX_BRANCH: $(Build.SourceBranchName)
-  DEFAULT_BASE_SHA: $(git rev-parse HEAD~1)
-  HEAD_SHA: $(git rev-parse HEAD)
-
-jobs:
-  - job: main
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-      # Set Azure Devops CLI default settings
-      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
-      displayName: 'Set default Azure DevOps organization and project'
-
-      # Get last successfull commit from Azure Devops CLI
-      - bash: |
-          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
-          if [ -z "$LAST_SHA" ]
-          then
-            LAST_SHA=$DEFAULT_BASE_SHA
-          fi
-          echo "Last successful commit SHA: $LAST_SHA"
-          echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
-        displayName: 'Get last successful commit SHA'
-        env:
-          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
-
-      - script: npm ci
-
-      - script: npx nx format:check
-
-      - script: npx nx affected --base=$(BASE_SHA) -t lint --parallel=3
-      - script: npx nx affected --base=$(BASE_SHA) -t test --parallel=3 --ci --code-coverage
-      - script: npx nx affected --base=$(BASE_SHA) -t build --parallel=3
-```
 
 ## Distributed Task Execution with Nx Cloud
 
@@ -185,11 +132,11 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
+      - script: git branch --track main origin/main
       - script: npm ci
       - script: npx nx-cloud start-ci-run --stop-agents-after="build"
-
       - script: npx nx-cloud record -- npx nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint --parallel=3 & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t test --parallel=3 --configuration=ci & npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t build --parallel=3
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build --parallel=3 --configuration=ci
 ```
 
 You can also use our [ci-workflow generator](/nx-api/workspace/generators/ci-workflow) to generate the pipeline file.
