@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "moduleResolution": "node16",
     "types": ["node", "jest"]
   },
   "include": [],

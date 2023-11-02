@@ -1,6 +1,7 @@
 {
   "extends": "<%= rootTsConfigPath %>",
   "compilerOptions": {
+    "moduleResolution": "node16",
     "module": "commonjs"
   },
   "files": [],

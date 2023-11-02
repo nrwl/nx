@@ -1,4 +1,22 @@
-/**
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`update-typescript-eslint migration should update the jest.config.ts 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'eslint-rules',
+  preset: '../../jest.preset.js',
+  transform: {
+    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../../coverage/tools/eslint-rules',
+  moduleNameMapper: {},
+};
+"
+`;
+
+exports[`update-typescript-eslint migration should update the rules 1`] = `
+"/**
  * This file sets you up with structure needed for an ESLint rule.
  *
  * It leverages utilities from @typescript-eslint to allow TypeScript to
@@ -16,15 +34,15 @@
 
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-// NOTE: The rule will be available in ESLint configs as "@nx/workspace/<%= name %>"
-export const RULE_NAME = '<%= name %>';
+// NOTE: The rule will be available in ESLint configs as "@nx/workspace/lint-rule"
+export const RULE_NAME = 'lint-rule';
 
 export const rule = ESLintUtils.RuleCreator(() => __filename)({
   name: RULE_NAME,
   meta: {
     type: 'problem',
     docs: {
-      description: ``,
+      description: \`\`,
       recommended: 'recommended',
     },
     schema: [],
@@ -35,3 +53,15 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     return {};
   },
 });
+"
+`;
+
+exports[`update-typescript-eslint migration should update the tsconfig.json 1`] = `
+"{
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node16"
+  }
+}
+"
+`;
