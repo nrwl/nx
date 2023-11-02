@@ -258,7 +258,9 @@ function buildAllWorkspaceFiles(
 ): FileData[] {
   performance.mark('get-all-workspace-files:start');
   let fileData: FileData[] = Object.values(projectFileMap).flat();
-  fileData = fileData.concat(globalFiles).sort();
+  fileData = fileData
+    .concat(globalFiles)
+    .sort((a, b) => a.file.localeCompare(b.file));
   performance.mark('get-all-workspace-files:end');
   performance.measure(
     'get-all-workspace-files',
