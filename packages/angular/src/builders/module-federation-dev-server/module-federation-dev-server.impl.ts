@@ -37,6 +37,16 @@ function buildStaticRemotes(
   context: import('@angular-devkit/architect').BuilderContext,
   options: Schema
 ) {
+  const mappedLocationOfRemotes: Record<string, string> = {};
+  for (const app of remotes.staticRemotes) {
+    mappedLocationOfRemotes[app] = `http${options.ssl ? 's' : ''}://${
+      options.host
+    }:${options.staticRemotesPort}/${app}`;
+  }
+  process.env.NX_MF_DEV_SERVER_STATIC_REMOTES = JSON.stringify(
+    mappedLocationOfRemotes
+  );
+
   const staticRemoteBuildPromise = new Promise<void>((res) => {
     logger.info(
       `NX Building ${remotes.staticRemotes.length} static remotes...`
@@ -89,7 +99,6 @@ function startStaticRemotesFileServer(
   options: Schema,
   context: import('@angular-devkit/architect').BuilderContext
 ) {
-  const mappedLocationOfRemotes: Record<string, string> = {};
   let shouldMoveToCommonLocation = false;
   let commonOutputDirectory: string;
 
@@ -103,25 +112,25 @@ function startStaticRemotesFileServer(
     } else if (commonOutputDirectory !== directoryOfOutputPath) {
       shouldMoveToCommonLocation = true;
     }
-
-    mappedLocationOfRemotes[app] = `http${options.ssl ? 's' : ''}://${
-      options.host
-    }:${options.staticRemotesPort}/${app}`;
   }
-
-  process.env.NX_MF_DEV_SERVER_STATIC_REMOTES = JSON.stringify(
-    mappedLocationOfRemotes
-  );
 
   if (shouldMoveToCommonLocation) {
     commonOutputDirectory = join(workspaceRoot, 'tmp/static-remotes');
     for (const app of remotes.staticRemotes) {
       const outputPath =
         projectGraph.nodes[app].data.targets['build'].options.outputPath;
-      cpSync(outputPath, commonOutputDirectory, {
-        force: true,
-        recursive: true,
-      });
+      const outputPathParts = outputPath.split('/');
+      cpSync(
+        outputPath,
+        join(
+          commonOutputDirectory,
+          outputPathParts[outputPathParts.length - 1]
+        ),
+        {
+          force: true,
+          recursive: true,
+        }
+      );
     }
   }
 
@@ -131,11 +140,9 @@ function startStaticRemotesFileServer(
     switchMap((fileServerExecutor) =>
       fileServerExecutor.default(
         {
-          skipInitialRun: true,
           cors: true,
           watch: false,
           staticFilePath: commonOutputDirectory,
-          buildTarget: '',
           parallel: false,
           spa: false,
           withDeps: false,
@@ -331,6 +338,16 @@ export function executeModuleFederationDevServerBuilder(
     pathToManifestFile
   );
 
+  if (remotes.devRemotes.length > 0 && !schema.staticRemotesPort) {
+    options.staticRemotesPort = options.devRemotes.reduce((portToUse, r) => {
+      const remotePort =
+        projectGraph.nodes[r].data.targets['serve'].options.port;
+      if (remotePort >= portToUse) {
+        return remotePort + 1;
+      }
+    }, options.staticRemotesPort);
+  }
+
   const staticRemoteBuildPromise = buildStaticRemotes(
     remotes,
     nxBin,
@@ -340,12 +357,15 @@ export function executeModuleFederationDevServerBuilder(
 
   return from(staticRemoteBuildPromise).pipe(
     concatMap(() => {
-      const staticRemotesIter$ = startStaticRemotesFileServer(
-        remotes,
-        projectGraph,
-        options,
-        context
-      );
+      const staticRemotesIter$ =
+        remotes.staticRemotes.length > 0
+          ? startStaticRemotesFileServer(
+              remotes,
+              projectGraph,
+              options,
+              context
+            )
+          : from(Promise.resolve());
 
       const devRemotes$ = startDevRemotes(
         remotes,

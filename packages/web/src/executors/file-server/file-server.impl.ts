@@ -113,34 +113,44 @@ export default async function* fileServerExecutor(
   options: Schema,
   context: ExecutorContext
 ) {
-  let running = false;
-
-  const run = () => {
-    if (!running) {
-      running = true;
-      try {
-        const args = getBuildTargetCommand(options);
-        execFileSync(pmCmd, args, {
-          stdio: [0, 1, 2],
-        });
-      } catch {
-        throw new Error(
-          `Build target failed: ${chalk.bold(options.buildTarget)}`
-        );
-      } finally {
-        running = false;
-      }
-    }
-  };
-
-  let disposeWatch: () => void;
-  if (options.watch) {
-    const projectRoot =
-      context.projectsConfigurations.projects[context.projectName].root;
-    disposeWatch = await createFileWatcher(context.projectName, run);
+  if (!options.buildTarget && !options.staticFilePath) {
+    throw new Error("You must set either 'buildTarget' or 'staticFilePath'.");
   }
 
-  if (!options.skipInitialRun) {
+  if (options.watch && !options.buildTarget) {
+    throw new Error(
+      "Watch error: You can only specify 'watch' when 'buildTarget' is set."
+    );
+  }
+
+  let running = false;
+  let disposeWatch: () => void;
+
+  if (options.buildTarget) {
+    const run = () => {
+      if (!running) {
+        running = true;
+        try {
+          const args = getBuildTargetCommand(options);
+          execFileSync(pmCmd, args, {
+            stdio: [0, 1, 2],
+          });
+        } catch {
+          throw new Error(
+            `Build target failed: ${chalk.bold(options.buildTarget)}`
+          );
+        } finally {
+          running = false;
+        }
+      }
+    };
+
+    if (options.watch) {
+      const projectRoot =
+        context.projectsConfigurations.projects[context.projectName].root;
+      disposeWatch = await createFileWatcher(context.projectName, run);
+    }
+
     // perform initial run
     run();
   }

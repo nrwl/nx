@@ -50,7 +50,6 @@ function startStaticRemotesFileServer(
   context: ExecutorContext,
   options: ModuleFederationDevServerOptions
 ) {
-  const mappedLocationOfRemotes: Record<string, string> = {};
   let shouldMoveToCommonLocation = false;
   let commonOutputDirectory: string;
   for (const app of remotes.staticRemotes) {
@@ -63,15 +62,7 @@ function startStaticRemotesFileServer(
     } else if (commonOutputDirectory !== directoryOfOutputPath) {
       shouldMoveToCommonLocation = true;
     }
-
-    mappedLocationOfRemotes[app] = `http${options.ssl ? 's' : ''}://${
-      options.host
-    }:${options.staticRemotesPort}/${app}`;
   }
-
-  process.env.NX_MF_DEV_SERVER_STATIC_REMOTES = JSON.stringify(
-    mappedLocationOfRemotes
-  );
 
   if (shouldMoveToCommonLocation) {
     commonOutputDirectory = join(workspaceRoot, 'tmp/static-remotes');
@@ -88,11 +79,9 @@ function startStaticRemotesFileServer(
 
   const staticRemotesIter = fileServerExecutor(
     {
-      skipInitialRun: true,
       cors: true,
       watch: false,
       staticFilePath: commonOutputDirectory,
-      buildTarget: '',
       parallel: false,
       spa: false,
       withDeps: false,
@@ -156,6 +145,18 @@ async function buildStaticRemotes(
   options: ModuleFederationDevServerOptions
 ) {
   logger.info(`NX Building ${remotes.staticRemotes.length} static remotes...`);
+  const mappedLocationOfRemotes: Record<string, string> = {};
+
+  for (const app of remotes.staticRemotes) {
+    mappedLocationOfRemotes[app] = `http${options.ssl ? 's' : ''}://${
+      options.host
+    }:${options.staticRemotesPort}/${app}`;
+  }
+
+  process.env.NX_MF_DEV_SERVER_STATIC_REMOTES = JSON.stringify(
+    mappedLocationOfRemotes
+  );
+
   await new Promise<void>((res) => {
     const staticProcess = fork(
       nxBin,
@@ -198,6 +199,7 @@ export default async function* moduleFederationDevServer(
   options: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
+  const initialStaticRemotesPorts = options.staticRemotesPort;
   options.staticRemotesPort ??= options.port + 1;
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
@@ -239,20 +241,29 @@ export default async function* moduleFederationDevServer(
     }
   );
 
+  if (remotes.devRemotes.length > 0 && !initialStaticRemotesPorts) {
+    options.staticRemotesPort = options.devRemotes.reduce((portToUse, r) => {
+      const remotePort =
+        context.projectGraph.nodes[r].data.targets['serve'].options.port;
+      if (remotePort >= portToUse) {
+        return remotePort + 1;
+      }
+    }, options.staticRemotesPort);
+  }
+
   await buildStaticRemotes(remotes, nxBin, context, options);
 
   const devRemoteIters = await startDevRemotes(remotes, context);
 
-  const staticRemotesIter = startStaticRemotesFileServer(
-    remotes,
-    context,
-    options
-  );
+  const staticRemotesIter =
+    remotes.staticRemotes.length > 0
+      ? startStaticRemotesFileServer(remotes, context, options)
+      : undefined;
 
   return yield* combineAsyncIterables(
     currIter,
-    staticRemotesIter,
     ...devRemoteIters,
+    ...(staticRemotesIter ? [staticRemotesIter] : []),
     createAsyncIterable<{ success: true; baseUrl: string }>(
       async ({ next, done }) => {
         if (!options.isInitialHost) {
@@ -264,11 +275,19 @@ export default async function* moduleFederationDevServer(
           return;
         }
         try {
-          await waitForPortOpen(options.staticRemotesPort, {
-            retries: 480,
-            retryDelay: 2500,
-            host: 'localhost',
-          });
+          const portsToWaitFor = staticRemotesIter
+            ? [options.staticRemotesPort, ...remotes.remotePorts]
+            : [...remotes.remotePorts];
+          await Promise.all(
+            portsToWaitFor.map((port) =>
+              waitForPortOpen(port, {
+                retries: 480,
+                retryDelay: 2500,
+                host: 'localhost',
+              })
+            )
+          );
+
           logger.info(
             `NX All remotes started, server ready at http://localhost:${options.port}`
           );

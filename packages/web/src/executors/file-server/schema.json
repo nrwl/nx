@@ -92,14 +92,7 @@
       "type": "number",
       "description": "Set cache time (in seconds) for cache-control max-age header. To disable caching, use -1. Caching defaults to disabled.",
       "default": -1
-    },
-    "skipInitialRun": {
-      "type": "boolean",
-      "description": "Skip the initial run of the build target.",
-      "default": false,
-      "x-priority": "internal"
     }
   },
-  "additionalProperties": false,
-  "required": ["buildTarget"]
+  "additionalProperties": false
 }
