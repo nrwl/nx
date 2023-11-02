@@ -181,10 +181,10 @@ export function DocViewer({
             </div>
           </div>
         </div>
-        {experimentConfig[vm.tableOfContent[0].id] && (
-          <YouTubeEmbedExperiment id={vm.tableOfContent[0].id} />
-        )}
       </div>
+      {/* {experimentConfig[vm.tableOfContent[0].id] && (
+        <YouTubeEmbedExperiment id={vm.tableOfContent[0].id} />
+      )} */}
       <Footer />
     </>
   );
