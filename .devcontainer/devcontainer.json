@@ -3,7 +3,7 @@
 {
   "name": "NxDevContainer",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:latest",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-18",
   "features": {
     "ghcr.io/devcontainers/features/rust:1": {}
   },
