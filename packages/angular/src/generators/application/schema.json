@@ -56,7 +56,7 @@
     },
     "routing": {
       "type": "boolean",
-      "description": "Generate a routing module.",
+      "description": "Enable routing for the application.",
       "default": true,
       "x-priority": "important"
     },
