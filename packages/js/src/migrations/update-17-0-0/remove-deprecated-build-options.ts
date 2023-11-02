@@ -19,7 +19,8 @@ export default async function (tree: Tree) {
 
     for (const target of Object.values(projectConfig.targets)) {
       if (
-        target.executor.startsWith('@nx/') &&
+        target.executor?.startsWith('@nx/') &&
+        target.options &&
         ('buildableProjectDepsInPackageJsonType' in target.options ||
           'updateBuildableProjectDepsInPackageJson' in target.options)
       ) {
