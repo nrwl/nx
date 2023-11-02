@@ -102,12 +102,6 @@
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
-    },
-    "unitTestRunner": {
-      "type": "string",
-      "enum": ["vitest", "jest", "none"],
-      "description": "Test runner to use for unit tests.",
-      "x-prompt": "What unit test runner should be used?"
     }
   },
   "required": ["name"]
