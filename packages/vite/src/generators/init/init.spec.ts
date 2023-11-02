@@ -81,7 +81,7 @@ describe('@nx/vite:init', () => {
       const productionNamedInputs = readJson(tree, 'nx.json').namedInputs
         .production;
       const vitestDefaults = readJson(tree, 'nx.json').targetDefaults[
-        '@nx/vite:vitest'
+        '@nx/vite:test'
       ];
 
       expect(productionNamedInputs).toContain(
