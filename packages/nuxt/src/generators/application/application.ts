@@ -18,7 +18,6 @@ import { getRelativePathToRootTsConfig } from '@nx/js';
 import { updateGitIgnore } from '../../utils/update-gitignore';
 import { addBuildTarget, addServeTarget } from './lib/add-targets';
 import { Linter } from '@nx/eslint';
-import { addJest } from '@nx/vue';
 import { addE2e } from './lib/add-e2e';
 import { nxVersion } from '../../utils/versions';
 import { addLinting } from '../../utils/add-linting';
@@ -74,14 +73,6 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     })
   );
 
-  if (options.unitTestRunner === 'jest') {
-    tasks.push(
-      await addJest(tree, {
-        name: options.name,
-        projectRoot: options.appProjectRoot,
-      })
-    );
-  }
   if (options.unitTestRunner === 'vitest') {
     const { vitestGenerator } = ensurePackage('@nx/vite', nxVersion);
     tasks.push(
