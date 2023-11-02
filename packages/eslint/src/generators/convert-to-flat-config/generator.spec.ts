@@ -12,7 +12,6 @@ import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
 import { Linter } from '../utils/linter';
 import { eslintrcVersion } from '../../utils/versions';
-import { read } from 'fs';
 
 describe('convert-to-flat-config generator', () => {
   let tree: Tree;

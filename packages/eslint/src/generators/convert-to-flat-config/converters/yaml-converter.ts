@@ -1,14 +1,15 @@
-import { Tree, addDependenciesToPackageJson, readJson } from '@nx/devkit';
 import { join } from 'path';
+import { Tree, addDependenciesToPackageJson } from '@nx/devkit';
 import { ESLint } from 'eslint';
-import { eslintrcVersion } from '../../../utils/versions';
+import { load } from 'js-yaml';
 import { convertJsonConfigToFlatConfig } from './config-converter';
+import { eslintrcVersion } from '../../../utils/versions';
 
 /**
  * Converts an ESLint JSON config to a flat config.
  * Deletes the original file along with .eslintignore if it exists.
  */
-export function convertEslintJsonToFlatConfig(
+export function convertEslintYamlToFlatConfig(
   tree: Tree,
   root: string,
   sourceFile: string,
@@ -16,7 +17,11 @@ export function convertEslintJsonToFlatConfig(
   ignorePaths: string[]
 ) {
   // read original config
-  const config: ESLint.ConfigData = readJson(tree, `${root}/${sourceFile}`);
+  const originalContent = tree.read(`${root}/${sourceFile}`, 'utf-8');
+  const config = load(originalContent, {
+    json: true,
+    filename: sourceFile,
+  }) as ESLint.ConfigData;
 
   // convert to flat config
   const { content, addESLintRC } = convertJsonConfigToFlatConfig(

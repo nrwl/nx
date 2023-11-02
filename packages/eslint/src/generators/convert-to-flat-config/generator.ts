@@ -11,6 +11,7 @@ import {
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
 import { convertEslintJsonToFlatConfig } from './converters/json-converter';
+import { convertEslintYamlToFlatConfig } from './converters/yaml-converter';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
@@ -20,9 +21,9 @@ export async function convertToFlatConfigGenerator(
   if (!eslintFile) {
     throw new Error('Could not find root eslint file');
   }
-  if (!eslintFile.endsWith('.json')) {
+  if (eslintFile.endsWith('.js')) {
     throw new Error(
-      'Only json eslint config files are supported for conversion'
+      'Only json and yaml eslint config files are supported for conversion'
     );
   }
 
@@ -60,15 +61,15 @@ export async function convertToFlatConfigGenerator(
 export default convertToFlatConfigGenerator;
 
 function convertRootToFlatConfig(tree: Tree, eslintFile: string) {
-  if (eslintFile.endsWith('.base.json')) {
-    convertConfigToFlatConfig(
-      tree,
-      '',
-      '.eslintrc.base.json',
-      'eslint.base.config.js'
-    );
+  if (/\.base\.(js|json|yaml)$/.test(eslintFile)) {
+    convertConfigToFlatConfig(tree, '', eslintFile, 'eslint.base.config.js');
   }
-  convertConfigToFlatConfig(tree, '', '.eslintrc.json', 'eslint.config.js');
+  convertConfigToFlatConfig(
+    tree,
+    '',
+    eslintFile.replace('.base.', '.'),
+    'eslint.config.js'
+  );
 }
 
 function convertProjectToFlatConfig(
@@ -153,5 +154,12 @@ function convertConfigToFlatConfig(
   const ignorePaths = ignorePath
     ? [ignorePath, `${root}/.eslintignore`]
     : [`${root}/.eslintignore`];
-  convertEslintJsonToFlatConfig(tree, root, source, target, ignorePaths);
+  if (source.endsWith('.json')) {
+    convertEslintJsonToFlatConfig(tree, root, source, target, ignorePaths);
+    return;
+  }
+  if (source.endsWith('.yaml')) {
+    convertEslintYamlToFlatConfig(tree, root, source, target, ignorePaths);
+    return;
+  }
 }

@@ -695,12 +695,11 @@ export function stringifyNodeList(
     | ts.ExpressionStatement
     | ts.SourceFile
   >,
-  root: string,
-  fileName: string
+  root: string
 ): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const resultFile = ts.createSourceFile(
-    joinPathFragments(root, fileName),
+    joinPathFragments(root, ''),
     '',
     ts.ScriptTarget.Latest,
     true,
