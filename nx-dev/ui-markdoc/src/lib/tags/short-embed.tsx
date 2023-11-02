@@ -1,4 +1,3 @@
-// TODO@ben: refactor to use HeadlessUI tabs
 import {
   createContext,
   ReactNode,
@@ -19,16 +18,15 @@ export const shortEmbeds: Schema = {
   transform(node, config) {
     const videoData = node
       .transformChildren(config)
-      .filter((child) => {
-        console.log(child?.name);
-        return child && child.name === 'ShortVideo';
-      })
-      .map((tab) => {
-        console.log(tab);
-        return typeof tab === 'object'
-          ? { title: tab?.attributes.title, embedUrl: tab?.attributes.embedUrl }
-          : null;
-      });
+      .filter((child) => child && child.name === 'ShortVideo')
+      .map((short) =>
+        typeof short === 'object'
+          ? {
+              title: short?.attributes.title,
+              embedUrl: short?.attributes.embedUrl,
+            }
+          : null
+      );
 
     return new Tag(this.render, { videoData }, node.transformChildren(config));
   },
@@ -62,12 +60,14 @@ export function ShortEmbeds({
   const [show, setShow] = useState(true);
   const [userInteraction, setUserInteraction] = useState(false);
   const [fadingOut, setFadingOut] = useState(false);
-  console.log(videoData);
 
   useLayoutEffect(() => {
-    console.log('useLayoutEffect');
-    const wrapperWidth = document.querySelector('#wrapper')?.clientWidth;
-    const showShort = !wrapperWidth || wrapperWidth > 800;
+    const [wrapperWidth, viewHeight] = [
+      document.querySelector('#wrapper')?.clientWidth,
+      window.innerHeight,
+    ];
+    const showShort =
+      !!wrapperWidth && wrapperWidth > 800 && !!viewHeight && viewHeight > 850;
     setShow(showShort);
   }, [setShow]);
 
