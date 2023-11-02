@@ -35,6 +35,11 @@
       "description": "Change vite-tsconfig-paths plugin for first party nx-vite-tsconfig-paths plugin",
       "cli": "nx",
       "implementation": "./src/migrations/update-16-6-0-change-ts-paths-plugin/change-ts-paths-plugin"
+    },
+    "move-target-defaults": {
+      "version": "17.1.0-beta.2",
+      "description": "Move target defaults",
+      "implementation": "./src/migrations/update-17-1-0/move-target-defaults"
     }
   },
   "packageJsonUpdates": {

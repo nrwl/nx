@@ -16,7 +16,7 @@ export async function addLinting(
     linter: Linter;
     projectName: string;
     projectRoot: string;
-    unitTestRunner?: 'jest' | 'vitest' | 'none';
+    unitTestRunner?: 'vitest' | 'none';
     rootProject?: boolean;
   }
 ) {

@@ -9,5 +9,4 @@ export interface Schema {
   inSourceTests?: boolean;
   skipFormat?: boolean;
   directory?: string;
-  unitTestRunner?: 'jest' | 'vitest' | 'none';
 }

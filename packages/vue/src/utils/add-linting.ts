@@ -19,7 +19,7 @@ export async function addLinting(
     linter: Linter;
     name: string;
     projectRoot: string;
-    unitTestRunner?: 'jest' | 'vitest' | 'none';
+    unitTestRunner?: 'vitest' | 'none';
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;

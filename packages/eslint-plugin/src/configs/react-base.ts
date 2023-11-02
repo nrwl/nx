@@ -8,7 +8,7 @@
  * This configuration is intended to be combined with other configs from this
  * package.
  */
-import * as restrictedGlobals from 'confusing-browser-globals';
+import restrictedGlobals from 'confusing-browser-globals';
 
 /**
  * Rule set originally adapted from:
