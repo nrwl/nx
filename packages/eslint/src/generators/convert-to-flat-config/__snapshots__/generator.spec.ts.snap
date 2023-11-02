@@ -135,7 +135,7 @@ module.exports = [
 "
 `;
 
-exports[`convert-to-flat-config generator should add global gitignores 1`] = `
+exports[`convert-to-flat-config generator should add global eslintignores 1`] = `
 "const { FlatCompat } = require('@eslint/eslintrc');
 const nxEslintPlugin = require('@nx/eslint-plugin');
 const js = require('@eslint/js');
@@ -313,6 +313,33 @@ module.exports = [
     files: ['**/*.js', '**/*.jsx'],
     rules: {},
   })),
+];
+"
+`;
+
+exports[`convert-to-flat-config generator should handle custom eslintignores 1`] = `
+"const baseConfig = require('../../eslint.config.js');
+module.exports = [
+  ...baseConfig,
+  {
+    files: [
+      'libs/test-lib/**/*.ts',
+      'libs/test-lib/**/*.tsx',
+      'libs/test-lib/**/*.js',
+      'libs/test-lib/**/*.jsx',
+    ],
+    rules: {},
+  },
+  {
+    files: ['libs/test-lib/**/*.ts', 'libs/test-lib/**/*.tsx'],
+    rules: {},
+  },
+  {
+    files: ['libs/test-lib/**/*.js', 'libs/test-lib/**/*.jsx'],
+    rules: {},
+  },
+  { ignores: ['libs/test-lib/ignore/me'] },
+  { ignores: ['libs/test-lib/ignore/me/as/well'] },
 ];
 "
 `;

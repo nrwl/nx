@@ -26,13 +26,28 @@ export async function convertToFlatConfigGenerator(
     );
   }
 
-  // rename root eslint config to eslint.config.js
+  const eslintIgnoreFiles = new Set<string>(['.eslintignore']);
+
+  // convert root eslint config to eslint.config.js
   convertRootToFlatConfig(tree, eslintFile);
-  // rename and map files
+
+  // convert project eslint files to eslint.config.js
   const projects = getProjects(tree);
   for (const [project, projectConfig] of projects) {
-    convertProjectToFlatConfig(tree, project, projectConfig, readNxJson(tree));
+    convertProjectToFlatConfig(
+      tree,
+      project,
+      projectConfig,
+      readNxJson(tree),
+      eslintIgnoreFiles
+    );
   }
+
+  // delete all .eslintignore files
+  for (const ignoreFile of eslintIgnoreFiles) {
+    tree.delete(ignoreFile);
+  }
+
   // replace references in nx.json
   updateNxJsonConfig(tree);
   // install missing packages
@@ -60,17 +75,23 @@ function convertProjectToFlatConfig(
   tree: Tree,
   project: string,
   projectConfig: ProjectConfiguration,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  eslintIgnoreFiles: Set<string>
 ) {
   if (tree.exists(`${projectConfig.root}/.eslintrc.json`)) {
     if (projectConfig.targets) {
       const eslintTargets = Object.keys(projectConfig.targets || {}).filter(
         (t) => projectConfig.targets[t].executor === '@nx/eslint:lint'
       );
+      let ignorePath: string | undefined;
       for (const target of eslintTargets) {
         // remove any obsolete `eslintConfig` options pointing to the old config file
         if (projectConfig.targets[target].options?.eslintConfig) {
           delete projectConfig.targets[target].options.eslintConfig;
+        }
+        if (projectConfig.targets[target].options?.ignorePath) {
+          ignorePath = projectConfig.targets[target].options.ignorePath;
+          delete projectConfig.targets[target].options.ignorePath;
         }
         updateProjectConfiguration(tree, project, projectConfig);
       }
@@ -85,8 +106,13 @@ function convertProjectToFlatConfig(
           tree,
           projectConfig.root,
           '.eslintrc.json',
-          'eslint.config.js'
+          'eslint.config.js',
+          ignorePath
         );
+        eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
+        if (ignorePath) {
+          eslintIgnoreFiles.add(ignorePath);
+        }
       }
     }
   }
@@ -121,7 +147,11 @@ function convertConfigToFlatConfig(
   tree: Tree,
   root: string,
   source: string,
-  target: string
+  target: string,
+  ignorePath?: string
 ) {
-  convertEslintJsonToFlatConfig(tree, root, source, target);
+  const ignorePaths = ignorePath
+    ? [ignorePath, `${root}/.eslintignore`]
+    : [`${root}/.eslintignore`];
+  convertEslintJsonToFlatConfig(tree, root, source, target, ignorePaths);
 }
