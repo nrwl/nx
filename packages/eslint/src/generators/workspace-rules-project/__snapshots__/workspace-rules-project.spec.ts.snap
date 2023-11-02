@@ -36,7 +36,7 @@ exports[`@nx/eslint:workspace-rules-project should generate the required files 2
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "moduleResolution": "node16",
-    "module": "commonjs"
+    "module": "node16"
   },
   "files": [],
   "include": [],
@@ -70,7 +70,6 @@ exports[`@nx/eslint:workspace-rules-project should generate the required files 4
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
-    "module": "commonjs",
     "types": ["jest", "node"]
   },
   "include": ["jest.config.ts", "**/*.test.ts", "**/*.spec.ts", "**/*.d.ts"]
