@@ -36,6 +36,7 @@ describe('NextJs Component Testing', () => {
   it('should test a NextJs app using babel compiler', () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
+    //  add bable compiler to app
     addBabelSupport(`apps/${appName}`);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
@@ -47,6 +48,7 @@ describe('NextJs Component Testing', () => {
   it('should test a NextJs lib using babel compiler', async () => {
     const libName = uniq('next-lib');
     createLibWithCt(libName, false);
+    //  add bable compiler to lib
     addBabelSupport(`libs/${libName}`);
     if (runE2ETests()) {
       expect(runCLI(`component-test ${libName} --no-watch`)).toContain(
