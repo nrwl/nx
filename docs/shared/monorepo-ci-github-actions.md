@@ -26,7 +26,7 @@ jobs:
       - run: git branch --track main origin/main
 
       - run: npx nx format:check
-      - run: npx nx affected -t lint,test,buld --parallel=3
+      - run: npx nx affected -t lint,test,build --parallel=3
 ```
 
 `GitHub` can track the last successful run on the `main` branch and use this as a reference point for the `BASE`. The `Nx Set SHAs` provides a convenient implementation of this functionality which you can drop into your existing CI config.
