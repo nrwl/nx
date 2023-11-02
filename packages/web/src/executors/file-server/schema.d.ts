@@ -17,4 +17,5 @@ export interface Schema {
   gzip?: boolean;
   brotli?: boolean;
   cacheSeconds?: number;
+  skipInitialRun?: boolean;
 }

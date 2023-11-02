@@ -140,8 +140,10 @@ export default async function* fileServerExecutor(
     disposeWatch = await createFileWatcher(context.projectName, run);
   }
 
-  // perform initial run
-  run();
+  if (!options.skipInitialRun) {
+    // perform initial run
+    run();
+  }
 
   const outputPath = getBuildTargetOutputPath(options, context);
 
