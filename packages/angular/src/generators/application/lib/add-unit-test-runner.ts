@@ -1,9 +1,8 @@
 import { Tree, joinPathFragments } from '@nx/devkit';
-import type { NormalizedSchema } from './normalized-schema';
-
 import { configurationGenerator } from '@nx/jest';
-
 import { UnitTestRunner } from '../../../utils/test-runners';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import type { NormalizedSchema } from './normalized-schema';
 
 export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
   if (options.unitTestRunner === UnitTestRunner.Jest) {
@@ -20,6 +19,7 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
       'src',
       'test-setup.ts'
     );
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
     if (options.strict && host.exists(setupFile)) {
       const contents = host.read(setupFile, 'utf-8');
       host.write(
@@ -31,7 +31,17 @@ globalThis.ngJest = {
     errorOnUnknownProperties: true,
   },
 };
-${contents}`
+${contents}${
+          angularMajorVersion >= 17
+            ? `
+/**
+ * Angular uses performance.mark() which is not supported by jsdom. Stub it out
+ * to avoid errors.
+ */
+global.performance.mark = jest.fn();
+`
+            : ''
+        }`
       );
     }
   }
