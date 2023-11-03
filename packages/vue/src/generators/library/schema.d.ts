@@ -22,7 +22,7 @@ export interface Schema {
   skipTsConfig?: boolean;
   strict?: boolean;
   tags?: string;
-  unitTestRunner?: 'jest' | 'vitest' | 'none';
+  unitTestRunner?: 'vitest' | 'none';
   minimal?: boolean;
   e2eTestRunner?: 'cypress' | 'none';
 }
@@ -37,5 +37,5 @@ export interface NormalizedSchema extends Schema {
   parsedTags: string[];
   appMain?: string;
   appSourceRoot?: string;
-  unitTestRunner?: 'jest' | 'vitest' | 'none';
+  unitTestRunner?: 'vitest' | 'none';
 }

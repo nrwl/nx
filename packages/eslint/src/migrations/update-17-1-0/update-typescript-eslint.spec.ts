@@ -14,6 +14,28 @@ describe('update-typescript-eslint migration', () => {
         module: 'commonjs',
       },
     });
+    writeJson(tree, 'tools/eslint-rules/tsconfig.spec.json', {
+      extends: './tsconfig.json',
+      compilerOptions: {
+        outDir: '../../dist/out-tsc',
+        module: 'commonjs',
+        types: ['jest', 'node'],
+      },
+      include: [
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*_spec.ts',
+        '**/*_test.ts',
+        '**/*.spec.tsx',
+        '**/*.test.tsx',
+        '**/*.spec.js',
+        '**/*.test.js',
+        '**/*.spec.jsx',
+        '**/*.test.jsx',
+        '**/*.d.ts',
+        'jest.config.ts',
+      ],
+    });
 
     tree.write(
       'tools/eslint-rules/jest.config.ts',
@@ -81,6 +103,9 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 
     expect(
       tree.read('tools/eslint-rules/tsconfig.json', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read('tools/eslint-rules/tsconfig.spec.json', 'utf-8')
     ).toMatchSnapshot();
   });
 

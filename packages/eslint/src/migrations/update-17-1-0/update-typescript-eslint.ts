@@ -34,13 +34,22 @@ function updateJestConfig(tree: Tree) {
   }
 }
 
-function updateTsConfig(tree: Tree) {
+function updateTsConfigs(tree: Tree) {
   const tsConfigPath = 'tools/eslint-rules/tsconfig.json';
   if (tree.exists(tsConfigPath)) {
     updateJson(tree, tsConfigPath, (tsConfig) => {
       tsConfig.compilerOptions ??= {};
       tsConfig.compilerOptions.moduleResolution = 'node16';
+      tsConfig.compilerOptions.module = 'node16';
       return tsConfig;
+    });
+  }
+  const tsConfigSpec = 'tools/eslint-rules/tsconfig.spec.json';
+  if (tree.exists(tsConfigSpec)) {
+    updateJson(tree, tsConfigSpec, (tsConfigSpec) => {
+      delete tsConfigSpec.compilerOptions?.module;
+      delete tsConfigSpec.compilerOptions?.moduleResolution;
+      return tsConfigSpec;
     });
   }
 }
@@ -91,7 +100,7 @@ function updateRecommended(tree: Tree) {
 
 export default async function update(tree: Tree) {
   updateJestConfig(tree);
-  updateTsConfig(tree);
+  updateTsConfigs(tree);
   updateRecommended(tree);
 
   await formatFiles(tree);
