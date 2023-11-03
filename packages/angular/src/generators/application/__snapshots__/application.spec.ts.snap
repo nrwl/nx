@@ -9,10 +9,7 @@ import { appRoutes } from './app.routes';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-  ],
+  imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
   providers: [],
   bootstrap: [AppComponent],
 })
@@ -687,14 +684,11 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
 "import { ApplicationConfig } from '@angular/core';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+  providers: [provideRouter(appRoutes)],
 };
 "
 `;
@@ -889,14 +883,11 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
 
 exports[`app angular v15 support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
 "import { ApplicationConfig } from '@angular/platform-browser';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+  providers: [provideRouter(appRoutes)],
 };
 "
 `;

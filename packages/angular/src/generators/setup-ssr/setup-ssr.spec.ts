@@ -243,10 +243,7 @@ describe('setupSSR', () => {
 
       @NgModule({
         declarations: [AppComponent, NxWelcomeComponent],
-        imports: [
-          BrowserModule,
-          RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-        ],
+        imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
         providers: [provideClientHydration()],
         bootstrap: [AppComponent],
       })
@@ -270,18 +267,12 @@ describe('setupSSR', () => {
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ApplicationConfig } from '@angular/core';
-      import {
-        provideRouter,
-        withEnabledBlockingInitialNavigation,
-      } from '@angular/router';
+      import { provideRouter } from '@angular/router';
       import { appRoutes } from './app.routes';
       import { provideClientHydration } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [
-          provideClientHydration(),
-          provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
-        ],
+        providers: [provideClientHydration(), provideRouter(appRoutes)],
       };
       "
     `);
@@ -297,6 +288,61 @@ describe('setupSSR', () => {
       };
 
       export const config = mergeApplicationConfig(appConfig, serverConfig);
+      "
+    `);
+  });
+
+  it('should set "initialNavigation: enabledBlocking" in "RouterModule.forRoot" options when hydration=false', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    await generateTestApplication(tree, {
+      name: 'app1',
+      standalone: false,
+    });
+
+    await setupSsr(tree, { project: 'app1', hydration: false });
+
+    expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { BrowserModule } from '@angular/platform-browser';
+      import { RouterModule } from '@angular/router';
+      import { AppComponent } from './app.component';
+      import { appRoutes } from './app.routes';
+      import { NxWelcomeComponent } from './nx-welcome.component';
+
+      @NgModule({
+        declarations: [AppComponent, NxWelcomeComponent],
+        imports: [
+          BrowserModule,
+          RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+        ],
+        providers: [],
+        bootstrap: [AppComponent],
+      })
+      export class AppModule {}
+      "
+    `);
+  });
+
+  it('should set "withEnabledBlockingInitialNavigation()" in "provideRouter" features when hydration=false', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    await generateTestApplication(tree, { name: 'app1' });
+
+    await setupSsr(tree, { project: 'app1', hydration: false });
+
+    expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { ApplicationConfig } from '@angular/core';
+      import {
+        provideRouter,
+        withEnabledBlockingInitialNavigation,
+      } from '@angular/router';
+      import { appRoutes } from './app.routes';
+
+      export const appConfig: ApplicationConfig = {
+        providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+      };
       "
     `);
   });
@@ -370,6 +416,76 @@ describe('setupSSR', () => {
           bootstrap: [AppComponent],
         })
         export class AppModule {}
+        "
+      `);
+    });
+
+    it('should set "initialNavigation: enabledBlocking" in "RouterModule.forRoot" options', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/core': '^15.2.0' },
+      }));
+
+      await generateTestApplication(tree, {
+        name: 'app1',
+        standalone: false,
+      });
+
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
+
+      // ASSERT
+      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+
+        @NgModule({
+          declarations: [AppComponent, NxWelcomeComponent],
+          imports: [
+            BrowserModule.withServerTransition({ appId: 'serverApp' }),
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+          ],
+          providers: [],
+          bootstrap: [AppComponent],
+        })
+        export class AppModule {}
+        "
+      `);
+    });
+
+    it('should set "withEnabledBlockingInitialNavigation()" in "provideRouter" features', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/core': '^15.2.0' },
+      }));
+
+      await generateTestApplication(tree, { name: 'app1' });
+
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
+
+      // ASSERT
+      expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { ApplicationConfig } from '@angular/platform-browser';
+        import {
+          provideRouter,
+          withEnabledBlockingInitialNavigation,
+        } from '@angular/router';
+        import { appRoutes } from './app.routes';
+
+        export const appConfig: ApplicationConfig = {
+          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+        };
         "
       `);
     });
