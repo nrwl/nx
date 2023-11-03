@@ -34,8 +34,7 @@
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/vite": "file:../vite",
-    "@nx/web": "file:../web",
-    "@phenomnomnominal/tsquery": "~5.0.1"
+    "@nx/web": "file:../web"
   },
   "publishConfig": {
     "access": "public"

@@ -6051,13 +6051,13 @@
         "tags": []
       },
       {
-        "id": "workspace-layout",
-        "name": "workspace-layout",
+        "id": "as-provided-vs-derived",
+        "name": "As Provided vs. Derived",
         "description": "",
-        "file": "shared/deprecated/workspace-layout",
+        "file": "shared/deprecated/as-provided-vs-derived",
         "itemList": [],
         "isExternal": false,
-        "path": "/deprecated/workspace-layout",
+        "path": "/deprecated/as-provided-vs-derived",
         "tags": []
       },
       {
@@ -6226,14 +6226,14 @@
     "path": "/deprecated/workspace-lint",
     "tags": []
   },
-  "/deprecated/workspace-layout": {
-    "id": "workspace-layout",
-    "name": "workspace-layout",
+  "/deprecated/as-provided-vs-derived": {
+    "id": "as-provided-vs-derived",
+    "name": "As Provided vs. Derived",
     "description": "",
-    "file": "shared/deprecated/workspace-layout",
+    "file": "shared/deprecated/as-provided-vs-derived",
     "itemList": [],
     "isExternal": false,
-    "path": "/deprecated/workspace-layout",
+    "path": "/deprecated/as-provided-vs-derived",
     "tags": []
   },
   "/deprecated/workspace-generators": {

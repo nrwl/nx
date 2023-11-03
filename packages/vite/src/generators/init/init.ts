@@ -93,8 +93,9 @@ export function createVitestConfig(tree: Tree) {
   }
 
   nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults.test ??= {};
-  nxJson.targetDefaults.test.inputs ??= [
+  nxJson.targetDefaults['@nx/vite:test'] ??= {};
+  nxJson.targetDefaults['@nx/vite:test'].cache ??= true;
+  nxJson.targetDefaults['@nx/vite:test'].inputs ??= [
     'default',
     productionFileSet ? '^production' : '^default',
   ];

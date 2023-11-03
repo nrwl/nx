@@ -132,7 +132,7 @@ If you're not ready to make the change yet, you can come back to this later:
 
 Once the script has run, commit the changes. Reverting this commit will effectively undo the changes made.
 
-{% cards %}
+{% cards cols="1" mdCols="3" smCols="3" lgCols="3" %}
 
 {% card title="Nx and the Angular CLI" description="Differences between Nx and the Angular CLI" type="documentation" url="/concepts/more-concepts/nx-and-angular" /%}
 

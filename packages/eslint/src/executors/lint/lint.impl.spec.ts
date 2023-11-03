@@ -70,6 +70,7 @@ function createValidRunBuilderOptions(
     resolvePluginsRelativeTo: null,
     reportUnusedDisableDirectives: null,
     printConfig: null,
+    errorOnUnmatchedPattern: true,
     ...additionalOptions,
   };
 }
@@ -209,6 +210,34 @@ describe('Linter Builder', () => {
     await expect(result).rejects.toThrow(
       `All files matching the following patterns are ignored:\n- 'includedFile1'\n\nPlease check your '.eslintignore' file.`
     );
+    mockIsPathIgnored.mockReturnValue(Promise.resolve(false));
+  });
+
+  it('should not throw if no reports generated and errorOnUnmatchedPattern is false', async () => {
+    mockReports = [];
+    setupMocks();
+    const result = lintExecutor(
+      createValidRunBuilderOptions({
+        lintFilePatterns: ['includedFile1'],
+        errorOnUnmatchedPattern: false,
+      }),
+      mockContext
+    );
+    await expect(result).resolves.not.toThrow();
+  });
+
+  it('should not throw if pattern excluded and errorOnUnmatchedPattern is false', async () => {
+    mockReports = [];
+    setupMocks();
+    mockIsPathIgnored.mockReturnValue(Promise.resolve(true));
+    const result = lintExecutor(
+      createValidRunBuilderOptions({
+        lintFilePatterns: ['includedFile1'],
+        errorOnUnmatchedPattern: false,
+      }),
+      mockContext
+    );
+    await expect(result).resolves.not.toThrow();
     mockIsPathIgnored.mockReturnValue(Promise.resolve(false));
   });
 
