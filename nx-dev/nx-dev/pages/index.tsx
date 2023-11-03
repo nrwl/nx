@@ -10,7 +10,7 @@ import {
   Newsletter,
   NxIsFast,
   NxStatistics,
-  Testimonials,
+  Testimonials, Workflows
 } from '@nx/nx-dev/ui-home';
 import { NextSeo } from 'next-seo';
 
@@ -49,6 +49,8 @@ export default function Index(): JSX.Element {
           <LogoCloud />
           {/*NX STATISTICS*/}
           <NxStatistics />
+          {/*NX WORKFLOWS*/}
+          <Workflows />
           {/*NX IS FAST*/}
           <NxIsFast />
           {/*MIGRATE*/}

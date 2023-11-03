@@ -10,3 +10,4 @@ export * from './lib/nx-is-fast';
 export * from './lib/nx-statistics';
 export * from './lib/testimonials';
 export * from './lib/why-is-nx-fast';
+export * from './lib/workflows';
