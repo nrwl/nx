@@ -1,8 +1,10 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   getProjects,
   NxJsonConfiguration,
   ProjectConfiguration,
+  readJson,
   readNxJson,
   Tree,
   updateJson,
@@ -10,8 +12,11 @@ import {
 } from '@nx/devkit';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
+import { join } from 'path';
+import { eslintrcVersion, eslintVersion } from '../../utils/versions';
+import { ESLint } from 'eslint';
 import { convertEslintJsonToFlatConfig } from './converters/json-converter';
-import { convertEslintYamlToFlatConfig } from './converters/yaml-converter';
+import { load } from 'js-yaml';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
@@ -154,12 +159,67 @@ function convertConfigToFlatConfig(
   const ignorePaths = ignorePath
     ? [ignorePath, `${root}/.eslintignore`]
     : [`${root}/.eslintignore`];
+
   if (source.endsWith('.json')) {
-    convertEslintJsonToFlatConfig(tree, root, source, target, ignorePaths);
-    return;
+    const config: ESLint.ConfigData = readJson(tree, `${root}/${source}`);
+    return processConvertedConfig(
+      tree,
+      root,
+      source,
+      target,
+      convertEslintJsonToFlatConfig(tree, root, config, ignorePaths)
+    );
   }
   if (source.endsWith('.yaml')) {
-    convertEslintYamlToFlatConfig(tree, root, source, target, ignorePaths);
-    return;
+    const originalContent = tree.read(`${root}/${source}`, 'utf-8');
+    const config = load(originalContent, {
+      json: true,
+      filename: source,
+    }) as ESLint.ConfigData;
+    return processConvertedConfig(
+      tree,
+      root,
+      source,
+      target,
+      convertEslintJsonToFlatConfig(tree, root, config, ignorePaths)
+    );
+  }
+}
+
+function processConvertedConfig(
+  tree: Tree,
+  root: string,
+  source: string,
+  target: string,
+  {
+    content,
+    addESLintRC,
+    addESLintJS,
+  }: { content: string; addESLintRC: boolean; addESLintJS: boolean }
+) {
+  // remove original config file
+  tree.delete(join(root, source));
+
+  // save new
+  tree.write(join(root, target), content);
+
+  // add missing packages
+  if (addESLintRC) {
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@eslint/eslintrc': eslintrcVersion,
+      }
+    );
+  }
+  if (addESLintJS) {
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@eslint/js': eslintVersion,
+      }
+    );
   }
 }

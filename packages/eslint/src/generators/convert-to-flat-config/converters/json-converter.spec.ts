@@ -1,4 +1,4 @@
-import { Tree } from '@nx/devkit';
+import { Tree, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertEslintJsonToFlatConfig } from './json-converter';
 
@@ -58,15 +58,14 @@ describe('convertEslintJsonToFlatConfig', () => {
 
     tree.write('.eslintignore', 'node_modules\nsomething/else');
 
-    convertEslintJsonToFlatConfig(
+    const { content } = convertEslintJsonToFlatConfig(
       tree,
       '',
-      '.eslintrc.json',
-      'eslint.config.js',
+      readJson(tree, '.eslintrc.json'),
       ['.eslintignore']
     );
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
+    expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
@@ -118,8 +117,6 @@ describe('convertEslintJsonToFlatConfig', () => {
       ];
       "
     `);
-
-    expect(tree.exists('.eslintrc.json')).toBeFalsy();
   });
 
   it('should convert project configs', async () => {
@@ -170,15 +167,14 @@ describe('convertEslintJsonToFlatConfig', () => {
 
     tree.write('mylib/.eslintignore', 'node_modules\nsomething/else');
 
-    convertEslintJsonToFlatConfig(
+    const { content } = convertEslintJsonToFlatConfig(
       tree,
       'mylib',
-      '.eslintrc.json',
-      'eslint.config.js',
+      readJson(tree, 'mylib/.eslintrc.json'),
       ['mylib/.eslintignore']
     );
 
-    expect(tree.read('mylib/eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
+    expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
       const baseConfig = require("../../eslint.config.js");
       const globals = require("globals");
@@ -228,7 +224,5 @@ describe('convertEslintJsonToFlatConfig', () => {
       ];
       "
     `);
-
-    expect(tree.exists('mylib/.eslintrc.json')).toBeFalsy();
   });
 });
