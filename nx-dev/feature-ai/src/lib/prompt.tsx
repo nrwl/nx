@@ -121,6 +121,7 @@ export function Prompt({
           onChange={onInputChange}
           id="query-prompt"
           name="query"
+          maxLength={500}
           disabled={isGenerating}
           className="block w-full p-0 resize-none bg-transparent text-sm placeholder-slate-500 pl-2 py-[1.3rem] focus-within:outline-none focus:placeholder-slate-400 dark:focus:placeholder-slate-300 dark:text-white focus:outline-none focus:ring-0 border-none disabled:cursor-not-allowed"
           placeholder="How does caching work?"
