@@ -367,10 +367,5 @@
       "check-codeowners",
       "documentation"
     ]
-  },
-  "pnpm": {
-    "overrides": {
-      "@angular-devkit/core": "$@angular-devkit/core"
-    }
   }
 }
