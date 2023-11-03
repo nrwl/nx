@@ -235,7 +235,8 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
           pnpm nx-release --local=false $GITHUB_REF_NAME
       - name: Trigger Docs Release
-        if: ${{ !github.event.release.prerelease }}
+        # Publish docs only on a full release and when publishing the latest version
+        if: ${{ !github.event.release.prerelease && github.ref_name ==='master' }}
         run: |
           # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
           git branch -f website
