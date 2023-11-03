@@ -157,11 +157,9 @@ export function executeModuleFederationDevSSRBuilder(
     remoteProcessPromises.push(remotePromise);
   }
 
+  const { executeSSRDevServerBuilder } = require('@nguniversal/builders');
   return from(Promise.all(remoteProcessPromises)).pipe(
-    switchMap(() => from(import('@nguniversal/builders'))),
-    switchMap(({ executeSSRDevServerBuilder }) =>
-      executeSSRDevServerBuilder(options, context)
-    )
+    switchMap(() => executeSSRDevServerBuilder(options, context))
   );
 }
 
