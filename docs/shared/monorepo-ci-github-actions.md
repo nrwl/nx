@@ -1,12 +1,17 @@
 # Configuring CI Using GitHub Actions and Nx
 
-Below is an example of a GitHub setup for an Nx workspace - building and testing only what is affected. For more details on how the action is used, head over to the [official docs](https://github.com/marketplace/actions/nx-set-shas).
+There are two general approaches to setting up CI with Nx - using a single pipeline or using distributed task execution. For smaller repositories, a single pipeline is faster and cheaper, but once a full CI run starts taking 10 to 15 minutes, distributed task execution becomes the better option. Distributed task execution allows you to keep the CI pipeline fast as you scale. As the repository grows, all you need to do is add more agents.
+
+## Single Pipeline
+
+This is an example of a GitHub Actions setup that runs on a single pipeline, building and testing only what is affected.
 
 ```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI
 on:
   push:
     branches:
+      # Change this if your primary branch is not main
       - main
   pull_request:
 
@@ -17,24 +22,32 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # Cache node_modules
       - uses: actions/setup-node@v3
         with:
           node-version: 20
           cache: 'npm'
       - run: npm ci
       - uses: nrwl/nx-set-shas@v3
+      # This line is needed for nx affected to work when CI is running on a PR
       - run: git branch --track main origin/main
 
       - run: npx nx format:check
       - run: npx nx affected -t lint,test,build --parallel=3
 ```
 
-`GitHub` can track the last successful run on the `main` branch and use this as a reference point for the `BASE`. The `Nx Set SHAs` provides a convenient implementation of this functionality which you can drop into your existing CI config.
+`GitHub` can track the last successful run on the `main` branch and use this as a reference point for the `BASE`. The `nrwl/nx-set-shas` provides a convenient implementation of this functionality which you can drop into your existing CI config.
 To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation in Actions's docs](https://github.com/marketplace/actions/nx-set-shas#background).
 
-## Distributed Task Execution with Nx Cloud
+## Distributed Task Execution
 
-Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution). Use this [reusable GitHub workflow](https://github.com/nrwl/ci) to quickly set up DTE for your organization.
+To set up [Distributed Task Execution (DTE)](/core-features/distribute-task-execution), you can run this generator:
+
+```shell
+npx nx g ci-workflow --ci=github
+```
+
+Or you can copy and paste the workflow below:
 
 ```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI
@@ -53,7 +66,7 @@ jobs:
       parallel-commands: |
         npx nx-cloud record -- npx nx format:check
       parallel-commands-on-agents: |
-        npx nx affected -t lint,test,build --parallel=3
+        npx nx affected -t lint,test,build --parallel=2
 
   agents:
     name: Nx Cloud - Agents
@@ -62,13 +75,33 @@ jobs:
       number-of-agents: 3
 ```
 
-You can also use our [ci-workflow generator](/nx-api/workspace/generators/ci-workflow) to generate the workflow file.
+This configuration is using two reusable workflows from the `nrwl/ci` repository. You can check out the full [API](https://github.com/nrwl/ci) for those workflows.
 
-## Custom distributed CI with Nx Cloud
+The first workflow is for the main job:
+
+```
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.0
+```
+
+The `parallel-commands` script will be run on the main job. The `parallel-commands-on-agents` script will be distributed across the available agents.
+
+The second workflow is for the agents:
+
+```
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.0
+```
+
+The `number-of-agents` property controls how many agent jobs are created. Note that this property should be the same number for each workflow.
+
+{% callout type="warning" title="Two Types of Parallelization" %}
+The `number-of-agents` property and the `--parallel` flag both parallelize tasks, but in different ways. The way this workflow is written, there will 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
+{% /callout %}
+
+## Custom Distributed CI with Nx Cloud
 
 Our [reusable GitHub workflow](https://github.com/nrwl/ci) represents a good set of defaults that works for a large number of our users. However, reusable GitHub workflows come with their [limitations](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
 
-If the reusable workflow above doesn't satisfy your needs you should create a custom workflow. This is what the GitHub workflow above roughly encapsulates:
+If the reusable workflow above doesn't satisfy your needs you should create a custom workflow. If you were to rewrite the reusable workflow yourself, it would look something like this:
 
 ```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI
@@ -155,6 +188,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # Add more agents here as your repository expands
         agent: [1, 2, 3]
     steps:
       - name: Checkout
@@ -179,3 +213,5 @@ jobs:
         env:
           NX_AGENT_NAME: ${{ matrix.agent }}
 ```
+
+There are comments throughout the workflow to help you understand what is happening in each section.
