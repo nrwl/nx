@@ -18,6 +18,7 @@ export interface NxComponentTestingOptions {
    */
   ctTargetName?: string;
   bundler?: 'vite' | 'webpack';
+  compiler?: 'swc' | 'babel';
 }
 
 export function nxBaseCypressPreset(
