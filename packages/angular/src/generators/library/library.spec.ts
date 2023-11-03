@@ -48,6 +48,11 @@ describe('lib', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    projectGraph = {
+      dependencies: {},
+      nodes: {},
+    };
   });
 
   it('should run the library generator without erroring if the directory has a trailing slash', async () => {
