@@ -2,6 +2,7 @@ import { Tree, stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
+  fileExists,
   killPorts,
   killProcessAndPorts,
   newProject,
@@ -10,6 +11,7 @@ import {
   runCLIAsync,
   runCommandUntil,
   runE2ETests,
+  tmpProjPath,
   uniq,
   updateFile,
   updateJson,
@@ -165,9 +167,11 @@ describe('React Module Federation', () => {
         `apps/${app}/module-federation.server.config.ts`
       );
       ['build', 'server'].forEach((target) => {
-        ['development', 'production'].forEach((configuration) => {
+        ['development', 'production'].forEach(async (configuration) => {
           const cliOutput = runCLI(`run ${app}:${target}:${configuration}`);
           expect(cliOutput).toContain('Successfully ran target');
+
+          await killPorts(readPort(app));
         });
       });
     });
@@ -863,6 +867,91 @@ describe('React Module Federation', () => {
         );
 
         await killProcessAndPorts(remoteE2eResultsTsNode.pid, remotePort);
+      }
+    }, 500_000);
+  });
+
+  describe('Dynamic Module Federation', () => {
+    beforeAll(() => {
+      tree = createTreeWithEmptyWorkspace();
+      proj = newProject();
+    });
+
+    afterAll(() => cleanupProject());
+    it('should load remote dynamic module', async () => {
+      const shell = uniq('shell');
+      const remote = uniq('remote');
+
+      runCLI(
+        `generate @nx/react:host ${shell} --remotes=${remote} --dynamic=true --project-name-and-root-format=as-provided --no-interactive`
+      );
+
+      // Webpack prod config should not exists when loading dynamic modules
+      expect(
+        fileExists(`${tmpProjPath()}/${shell}/webpack.config.prod.ts`)
+      ).toBeFalsy();
+      expect(
+        fileExists(
+          `${tmpProjPath()}/${shell}/src/assets/module-federation.manifest.json`
+        )
+      ).toBeTruthy();
+
+      const manifest = readJson(
+        `${shell}/src/assets/module-federation.manifest.json`
+      );
+
+      expect(manifest[remote]).toBeDefined();
+      expect(manifest[remote]).toEqual('http://localhost:4201');
+
+      // update e2e
+      updateFile(
+        `${shell}-e2e/src/e2e/app.cy.ts`,
+        `
+        import { getGreeting } from '../support/app.po';
+
+        describe('${shell}', () => {
+          beforeEach(() => cy.visit('/'));
+
+          it('should display welcome message', () => {
+            getGreeting().contains('Welcome ${shell}');
+          });
+
+          it('should navigate to /${remote} from /', () => {
+            cy.get('a').contains('${remote[0].toUpperCase()}${remote.slice(
+          1
+        )}').click();
+            cy.url().should('include', '/${remote}');
+            getGreeting().contains('Welcome ${remote}');
+          });
+        });
+        `
+      );
+
+      // Build host and remote
+      const buildOutput = runCLI(`build ${shell}`);
+      const remoteOutput = runCLI(`build ${remote}`);
+
+      expect(buildOutput).toContain('Successfully ran target build');
+      expect(remoteOutput).toContain('Successfully ran target build');
+
+      const shellPort = readPort(shell);
+      const remotePort = readPort(remote);
+
+      if (runE2ETests()) {
+        // Serve Remote since it is dynamic and won't be started with the host
+        const remoteProcess = await runCommandUntil(
+          `serve-static ${remote} --no-watch --verbose`,
+          () => {
+            return true;
+          }
+        );
+        const hostE2eResultsSwc = await runCommandUntil(
+          `e2e ${shell}-e2e --no-watch --verbose`,
+          (output) => output.includes('All specs passed!')
+        );
+
+        await killProcessAndPorts(remoteProcess.pid, remotePort);
+        await killProcessAndPorts(hostE2eResultsSwc.pid, shellPort);
       }
     }, 500_000);
   });

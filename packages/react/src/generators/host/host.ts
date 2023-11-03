@@ -39,6 +39,7 @@ export async function hostGeneratorInternal(
   const options: NormalizedSchema = {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
     typescriptConfiguration: schema.typescriptConfiguration ?? true,
+    dynamic: schema.dynamic ?? false,
   };
 
   const initTask = await applicationGenerator(host, {
@@ -71,6 +72,8 @@ export async function hostGeneratorInternal(
         skipFormat: true,
         projectNameAndRootFormat: options.projectNameAndRootFormat,
         typescriptConfiguration: options.typescriptConfiguration,
+        dynamic: options.dynamic,
+        host: options.name,
       });
       tasks.push(remoteTask);
       remotePort++;
