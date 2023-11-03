@@ -490,6 +490,43 @@ describe('project-configuration-utils', () => {
         }
       `);
     });
+
+    it('should merge namedInputs', () => {
+      const rootMap = new RootMapBuilder()
+        .addProject({
+          root: 'libs/lib-a',
+          name: 'lib-a',
+          namedInputs: {
+            production: [
+              '{projectRoot}/**/*.ts',
+              '!{projectRoot}/**/*.spec.ts',
+            ],
+            test: ['{projectRoot}/**/*.spec.ts'],
+          },
+        })
+        .getRootMap();
+      mergeProjectConfigurationIntoRootMap(rootMap, {
+        root: 'libs/lib-a',
+        name: 'lib-a',
+        namedInputs: {
+          another: ['{projectRoot}/**/*.ts'],
+          production: ['{projectRoot}/**/*.prod.ts'],
+        },
+      });
+      expect(rootMap.get('libs/lib-a').namedInputs).toMatchInlineSnapshot(`
+        {
+          "another": [
+            "{projectRoot}/**/*.ts",
+          ],
+          "production": [
+            "{projectRoot}/**/*.prod.ts",
+          ],
+          "test": [
+            "{projectRoot}/**/*.spec.ts",
+          ],
+        }
+      `);
+    });
   });
 
   describe('readProjectsConfigurationsFromRootMap', () => {
