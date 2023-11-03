@@ -6,6 +6,9 @@ import {
   useState,
 } from 'react';
 import { Schema, Tag } from '@markdoc/markdoc';
+import { Transition } from '@headlessui/react';
+import { Button } from '@nx/nx-dev/ui-common';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
 interface VideoData {
   title: string;
@@ -55,11 +58,10 @@ export function ShortEmbeds({
 }: {
   videoData: VideoData[];
   children: ReactNode;
-}) {
+}): JSX.Element | null {
   const [currentVideo, setCurrentVideo] = useState<VideoData>(videoData[0]);
-  const [show, setShow] = useState(true);
+  const [isShowing, setIsShowing] = useState(false);
   const [userInteraction, setUserInteraction] = useState(false);
-  const [fadingOut, setFadingOut] = useState(false);
 
   useLayoutEffect(() => {
     const [wrapperWidth, viewHeight] = [
@@ -67,70 +69,85 @@ export function ShortEmbeds({
       window.innerHeight,
     ];
     const showShort =
-      !!wrapperWidth && wrapperWidth > 800 && !!viewHeight && viewHeight > 850;
-    setShow(showShort);
-  }, [setShow]);
+      !!wrapperWidth && wrapperWidth > 800 && !!viewHeight && viewHeight > 750;
 
-  if (!show) {
-    return null;
-  }
+    const t = setTimeout(() => setIsShowing(showShort), 500);
+    return () => {
+      t && clearTimeout(t);
+    };
+  }, [setIsShowing]);
+
+  if (!isShowing) return null;
 
   return (
     <ShortEmbedContext.Provider
       value={{ current: currentVideo, userInteraction }}
     >
-      <div
-        id="short-embed"
-        className={`fixed bottom-10 right-10 bg-slate-800 rounded-lg p-2 border-opacity-100 border-4 border-slate-400 drop-shadow-2xl z-50 ${
-          fadingOut ? 'fade-out' : 'fade-in'
-        }`}
-      >
-        <button
-          onClick={() => {
-            setFadingOut(true);
-            setTimeout(() => setShow(false), 500);
-          }}
-          className="fixed top-2 right-2 bg-slate-400 text-slate-900 rounded-md px-2"
+      <aside id="short-embed" className="fixed w-80 bottom-5 right-5 z-50">
+        <Transition
+          appear={true}
+          show={isShowing}
+          enter="transition-all duration-1000"
+          enterFrom="opacity-0 translate-y-full"
+          enterTo="opacity-100 translate-y-0"
+          leave="transition-all duration-1000"
+          leaveFrom="opacity-100 translate-y-0"
+          leaveTo="opacity-0 translate-y-full"
         >
-          X
-        </button>
-        <h2 className="text-center not-prose">Relevant Videos</h2>
-        <section className="grid grid-cols-1 justify-items-cente w-full">
-          {children}
-          <div>
-            <h3 className="text-center not-prose">More Videos:</h3>
-            <ul className="flex flex-row list-none justify-between">
-              {videoData
-                .filter(({ embedUrl }) => embedUrl !== currentVideo.embedUrl)
-                .map((config) => {
-                  const ytUrlPath = config.embedUrl.split('/');
-                  const ytId = ytUrlPath[ytUrlPath.length - 1];
-                  const imgUrl = `https://img.youtube.com/vi/${ytId}/0.jpg`;
-                  return (
-                    <button
-                      key={config.embedUrl}
-                      onClick={() => {
-                        setUserInteraction(true);
-                        setCurrentVideo(config);
-                      }}
-                      className="m-2 p-2 short-picker max-w-sm bg-slate-500 rounded-md"
-                    >
-                      <li className="flex flex-col place-content-center text-center">
-                        <img
-                          src={imgUrl}
-                          alt={`Another recommendation: ${config.title}`}
-                          width="200"
-                          className="not-prose w-200"
-                        />
-                        <label>{config.title}</label>
-                      </li>
-                    </button>
-                  );
-                })}
-            </ul>
+          <div className="relative mt-12 w-full h-full rounded-xl shadow-xl coding flex flex-col border border-slate-200 bg-slate-50 p-4 leading-normal text-slate-800 subpixel-antialiased dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+            <Button
+              size="small"
+              variant="secondary"
+              onClick={() => {
+                setTimeout(() => setIsShowing(false), 500);
+              }}
+              className="absolute top-2 right-2"
+              title="Close"
+            >
+              <XMarkIcon className="w-4 h-4" />
+            </Button>
+            <h3 className="text-center not-prose">Relevant Videos</h3>
+            <div className="grid grid-cols-1 gap-4 justify-items-center w-full">
+              {children}
+              <div>
+                <div className="text-base font-medium pb-1">Continue with:</div>
+                <div className="flex flex-col gap-2">
+                  {videoData
+                    .filter(
+                      ({ embedUrl }) => embedUrl !== currentVideo.embedUrl
+                    )
+                    .map((config) => {
+                      const ytUrlPath = config.embedUrl.split('/');
+                      const ytId = ytUrlPath[ytUrlPath.length - 1];
+                      const imgUrl = `https://img.youtube.com/vi/${ytId}/0.jpg`;
+                      return (
+                        <div
+                          key={ytId}
+                          onClick={() => {
+                            setUserInteraction(true);
+                            setCurrentVideo(config);
+                          }}
+                          className="hover:cursor-pointer flex text-sm h-24 rounded-lg overflow-hidden border border-slate-200 bg-white/40 shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-white dark:border-slate-800/40 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                        >
+                          <div className="w-32 shrink-0">
+                            <img
+                              className="!m-0"
+                              src={imgUrl}
+                              alt={`Another recommendation: ${config.title}`}
+                            />
+                          </div>
+                          <div className="p-2 shrink overflow-ellipsis h-full w-full grid grid-cols-1 content-center">
+                            {config.title}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </div>
           </div>
-        </section>
-      </div>
+        </Transition>
+      </aside>
     </ShortEmbedContext.Provider>
   );
 }
@@ -143,17 +160,17 @@ export function ShortVideo({ embedUrl, title }: VideoData) {
   }
 
   return (
-    <div className="not-prose overflow-y-auto bg-white dark:bg-slate-900 dark:prose-invert mt-4 max-w-3xl">
+    <div className="w-[216px] h-96 rounded-lg overflow-hidden">
       <iframe
-        className="w-281"
-        width="281"
-        height="500"
+        className="!m-0"
+        width="100%"
+        height="100%"
         src={`${embedUrl}?autoplay=1&loop=1${userInteraction ? '' : '&mute=1'}`}
         title="Two Places to Define Tasks | Nx Workspaces"
         frameBorder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
-      ></iframe>
+      />
     </div>
   );
 }
