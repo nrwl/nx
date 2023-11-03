@@ -592,17 +592,17 @@
           },
           {
             "name": "Use Remote Caching",
-            "path": "/core-features/remote-cache",
+            "path": "/nx-cloud/features/remote-cache",
             "id": "remote-cache",
-            "isExternal": false,
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           },
           {
             "name": "Distribute Task Execution",
-            "path": "/core-features/distribute-task-execution",
+            "path": "/nx-cloud/features/distribute-task-execution",
             "id": "distribute-task-execution",
-            "isExternal": false,
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           },
@@ -684,17 +684,17 @@
       },
       {
         "name": "Use Remote Caching",
-        "path": "/core-features/remote-cache",
+        "path": "/nx-cloud/features/remote-cache",
         "id": "remote-cache",
-        "isExternal": false,
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
       {
         "name": "Distribute Task Execution",
-        "path": "/core-features/distribute-task-execution",
+        "path": "/nx-cloud/features/distribute-task-execution",
         "id": "distribute-task-execution",
-        "isExternal": false,
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
@@ -813,14 +813,6 @@
             "name": "What is a Task Pipeline",
             "path": "/concepts/task-pipeline-configuration",
             "id": "task-pipeline-configuration",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "How Affected Works",
-            "path": "/concepts/affected",
-            "id": "affected",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1058,14 +1050,6 @@
         "name": "What is a Task Pipeline",
         "path": "/concepts/task-pipeline-configuration",
         "id": "task-pipeline-configuration",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "How Affected Works",
-        "path": "/concepts/affected",
-        "id": "affected",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5593,6 +5577,79 @@
         "disableCollapsible": false
       },
       {
+        "name": "Features",
+        "path": "/nx-cloud/features",
+        "id": "features",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Use Remote Caching",
+            "path": "/nx-cloud/features/remote-cache",
+            "id": "remote-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Run Only Tasks Affected by a PR",
+            "path": "/nx-cloud/features/affected",
+            "id": "affected",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Distribute Task Execution",
+            "path": "/nx-cloud/features/distribute-task-execution",
+            "id": "distribute-task-execution",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Set up Nx Cloud On-Premise",
+            "path": "/nx-cloud/features/on-premise",
+            "id": "on-premise",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Use Remote Caching",
+        "path": "/nx-cloud/features/remote-cache",
+        "id": "remote-cache",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Run Only Tasks Affected by a PR",
+        "path": "/nx-cloud/features/affected",
+        "id": "affected",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Distribute Task Execution",
+        "path": "/nx-cloud/features/distribute-task-execution",
+        "id": "distribute-task-execution",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Nx Cloud On-Premise",
+        "path": "/nx-cloud/features/on-premise",
+        "id": "on-premise",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Recipes",
         "path": "/nx-cloud/recipes",
         "id": "recipes",
@@ -5689,6 +5746,79 @@
                 "name": "Enable GitLab MR Integration",
                 "path": "/nx-cloud/recipes/source-control-integration/gitlab",
                 "id": "gitlab",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "On-Premise",
+            "path": "/nx-cloud/recipes/on-premise",
+            "id": "on-premise",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Authenticate with a Single Admin",
+                "path": "/nx-cloud/recipes/on-premise/auth-single-admin",
+                "id": "auth-single-admin",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with GitHub",
+                "path": "/nx-cloud/recipes/on-premise/auth-github",
+                "id": "auth-github",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "On-Prem VM Setup",
+                "path": "/nx-cloud/recipes/on-premise/ami-setup",
+                "id": "ami-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with GitLab",
+                "path": "/nx-cloud/recipes/on-premise/auth-gitlab",
+                "id": "auth-gitlab",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate with BitBucket",
+                "path": "/nx-cloud/recipes/on-premise/auth-bitbucket",
+                "id": "auth-bitbucket",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate via SAML",
+                "path": "/nx-cloud/recipes/on-premise/auth-saml",
+                "id": "auth-saml",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Authenticate via SAML on Managed Version",
+                "path": "/nx-cloud/recipes/on-premise/auth-saml-managed",
+                "id": "auth-saml-managed",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Advanced Configuration",
+                "path": "/nx-cloud/recipes/on-premise/advanced-config",
+                "id": "advanced-config",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5903,6 +6033,143 @@
         "disableCollapsible": false
       },
       {
+        "name": "On-Premise",
+        "path": "/nx-cloud/recipes/on-premise",
+        "id": "on-premise",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Authenticate with a Single Admin",
+            "path": "/nx-cloud/recipes/on-premise/auth-single-admin",
+            "id": "auth-single-admin",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Authenticate with GitHub",
+            "path": "/nx-cloud/recipes/on-premise/auth-github",
+            "id": "auth-github",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "On-Prem VM Setup",
+            "path": "/nx-cloud/recipes/on-premise/ami-setup",
+            "id": "ami-setup",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Authenticate with GitLab",
+            "path": "/nx-cloud/recipes/on-premise/auth-gitlab",
+            "id": "auth-gitlab",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Authenticate with BitBucket",
+            "path": "/nx-cloud/recipes/on-premise/auth-bitbucket",
+            "id": "auth-bitbucket",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Authenticate via SAML",
+            "path": "/nx-cloud/recipes/on-premise/auth-saml",
+            "id": "auth-saml",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Authenticate via SAML on Managed Version",
+            "path": "/nx-cloud/recipes/on-premise/auth-saml-managed",
+            "id": "auth-saml-managed",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Advanced Configuration",
+            "path": "/nx-cloud/recipes/on-premise/advanced-config",
+            "id": "advanced-config",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with a Single Admin",
+        "path": "/nx-cloud/recipes/on-premise/auth-single-admin",
+        "id": "auth-single-admin",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with GitHub",
+        "path": "/nx-cloud/recipes/on-premise/auth-github",
+        "id": "auth-github",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "On-Prem VM Setup",
+        "path": "/nx-cloud/recipes/on-premise/ami-setup",
+        "id": "ami-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with GitLab",
+        "path": "/nx-cloud/recipes/on-premise/auth-gitlab",
+        "id": "auth-gitlab",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with BitBucket",
+        "path": "/nx-cloud/recipes/on-premise/auth-bitbucket",
+        "id": "auth-bitbucket",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate via SAML",
+        "path": "/nx-cloud/recipes/on-premise/auth-saml",
+        "id": "auth-saml",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate via SAML on Managed Version",
+        "path": "/nx-cloud/recipes/on-premise/auth-saml-managed",
+        "id": "auth-saml-managed",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Advanced Configuration",
+        "path": "/nx-cloud/recipes/on-premise/advanced-config",
+        "id": "advanced-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Other",
         "path": "/nx-cloud/recipes/other",
         "id": "other",
@@ -6028,159 +6295,6 @@
         "name": "End to End Encryption",
         "path": "/nx-cloud/account/encryption",
         "id": "encryption",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Run Nx Cloud On-Premise",
-        "path": "/nx-cloud/private-cloud",
-        "id": "private-cloud",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Get Started",
-            "path": "/nx-cloud/private-cloud/get-started",
-            "id": "get-started",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Authenticate with a Single Admin",
-            "path": "/nx-cloud/private-cloud/auth-single-admin",
-            "id": "auth-single-admin",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Authenticate with GitHub",
-            "path": "/nx-cloud/private-cloud/auth-github",
-            "id": "auth-github",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "On-Prem VM Setup",
-            "path": "/nx-cloud/private-cloud/ami-setup",
-            "id": "ami-setup",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Authenticate with GitLab",
-            "path": "/nx-cloud/private-cloud/auth-gitlab",
-            "id": "auth-gitlab",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Authenticate with BitBucket",
-            "path": "/nx-cloud/private-cloud/auth-bitbucket",
-            "id": "auth-bitbucket",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Authenticate via SAML",
-            "path": "/nx-cloud/private-cloud/auth-saml",
-            "id": "auth-saml",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Authenticate via SAML on Managed Version",
-            "path": "/nx-cloud/private-cloud/auth-saml-managed",
-            "id": "auth-saml-managed",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Advanced Configuration",
-            "path": "/nx-cloud/private-cloud/advanced-config",
-            "id": "advanced-config",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Get Started",
-        "path": "/nx-cloud/private-cloud/get-started",
-        "id": "get-started",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Authenticate with a Single Admin",
-        "path": "/nx-cloud/private-cloud/auth-single-admin",
-        "id": "auth-single-admin",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Authenticate with GitHub",
-        "path": "/nx-cloud/private-cloud/auth-github",
-        "id": "auth-github",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "On-Prem VM Setup",
-        "path": "/nx-cloud/private-cloud/ami-setup",
-        "id": "ami-setup",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Authenticate with GitLab",
-        "path": "/nx-cloud/private-cloud/auth-gitlab",
-        "id": "auth-gitlab",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Authenticate with BitBucket",
-        "path": "/nx-cloud/private-cloud/auth-bitbucket",
-        "id": "auth-bitbucket",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Authenticate via SAML",
-        "path": "/nx-cloud/private-cloud/auth-saml",
-        "id": "auth-saml",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Authenticate via SAML on Managed Version",
-        "path": "/nx-cloud/private-cloud/auth-saml-managed",
-        "id": "auth-saml-managed",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Advanced Configuration",
-        "path": "/nx-cloud/private-cloud/advanced-config",
-        "id": "advanced-config",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

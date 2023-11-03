@@ -96,7 +96,7 @@ You can also run a command for all the projects affected by your PR like this:
 npx nx affected -t test
 ```
 
-Learn more about the affected command [here](/concepts/affected).
+Learn more about the affected command [here](/nx-cloud/features/affected).
 
 ## Defining a Task Pipeline
 

@@ -57,7 +57,7 @@ The `build` and `test` jobs implement the CI workflow using `.distributed` as a 
 
 ## Distributed Task Execution with Nx Cloud
 
-Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
+Read more about [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution).
 
 ```yaml
 image: node:18

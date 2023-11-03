@@ -34,7 +34,7 @@ To understand why knowing the last successful build is important for the affecte
 
 ## Distributed Task Execution with Nx Cloud
 
-Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution). Use this [reusable GitHub workflow](https://github.com/nrwl/ci) to quickly set up DTE for your organization.
+Read more about [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution). Use this [reusable GitHub workflow](https://github.com/nrwl/ci) to quickly set up DTE for your organization.
 
 ```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI

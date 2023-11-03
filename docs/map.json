@@ -204,17 +204,17 @@
             },
             {
               "name": "Use Remote Caching",
-              "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
               "id": "remote-cache",
-              "tags": ["remote-cache"],
-              "file": "shared/core-features/remote-cache"
+              "file": "",
+              "path": "/nx-cloud/features/remote-cache",
+              "isExternal": true
             },
             {
               "name": "Distribute Task Execution",
-              "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
               "id": "distribute-task-execution",
-              "tags": ["distribute-task-execution"],
-              "file": "shared/core-features/distribute-task-execution"
+              "file": "",
+              "path": "/nx-cloud/features/distribute-task-execution",
+              "isExternal": true
             },
             {
               "name": "Explore the Graph",
@@ -299,12 +299,6 @@
               "tags": ["run-tasks", "use-task-executors"],
               "id": "task-pipeline-configuration",
               "file": "shared/concepts/task-pipeline-configuration"
-            },
-            {
-              "name": "How Affected Works",
-              "tags": ["run-tasks"],
-              "id": "affected",
-              "file": "shared/using-nx/affected"
             },
             {
               "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
@@ -1658,6 +1652,40 @@
           ]
         },
         {
+          "name": "Features",
+          "id": "features",
+          "description": "Features of Nx and Nx Cloud that improve CI",
+          "itemList": [
+            {
+              "name": "Use Remote Caching",
+              "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+              "id": "remote-cache",
+              "tags": ["remote-cache"],
+              "file": "shared/core-features/remote-cache"
+            },
+            {
+              "name": "Run Only Tasks Affected by a PR",
+              "tags": ["run-tasks"],
+              "id": "affected",
+              "file": "shared/using-nx/affected"
+            },
+            {
+              "name": "Distribute Task Execution",
+              "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
+              "id": "distribute-task-execution",
+              "tags": ["distribute-task-execution"],
+              "file": "shared/core-features/distribute-task-execution"
+            },
+            {
+              "name": "Set up Nx Cloud On-Premise",
+              "description": "Set up Nx Cloud on machines that you control",
+              "id": "on-premise",
+              "tags": ["on-premise"],
+              "file": "nx-cloud/private/get-started"
+            }
+          ]
+        },
+        {
           "name": "Recipes",
           "id": "recipes",
           "description": "Learn how to set up Nx Cloud for your workspace.",
@@ -1708,7 +1736,7 @@
             {
               "name": "Source Control Integration",
               "id": "source-control-integration",
-              "description": "Learn how to set up Nx Cloud for your workspace.",
+              "description": "Show Nx Cloud results directly in your pull request",
               "itemList": [
                 {
                   "name": "Enable GitHub PR Integration",
@@ -1724,6 +1752,53 @@
                   "name": "Enable GitLab MR Integration",
                   "id": "gitlab",
                   "file": "nx-cloud/set-up/gitlab"
+                }
+              ]
+            },
+            {
+              "name": "On-Premise",
+              "id": "on-premise",
+              "description": "Manage an on-premise installation of Nx Cloud",
+              "itemList": [
+                {
+                  "name": "Authenticate with a Single Admin",
+                  "id": "auth-single-admin",
+                  "file": "nx-cloud/private/auth-single-admin"
+                },
+                {
+                  "name": "Authenticate with GitHub",
+                  "id": "auth-github",
+                  "file": "nx-cloud/private/auth-github"
+                },
+                {
+                  "name": "On-Prem VM Setup",
+                  "id": "ami-setup",
+                  "file": "nx-cloud/private/ami-setup"
+                },
+                {
+                  "name": "Authenticate with GitLab",
+                  "id": "auth-gitlab",
+                  "file": "nx-cloud/private/auth-gitlab"
+                },
+                {
+                  "name": "Authenticate with BitBucket",
+                  "id": "auth-bitbucket",
+                  "file": "nx-cloud/private/auth-bitbucket"
+                },
+                {
+                  "name": "Authenticate via SAML",
+                  "id": "auth-saml",
+                  "file": "nx-cloud/private/auth-saml"
+                },
+                {
+                  "name": "Authenticate via SAML on Managed Version",
+                  "id": "auth-saml-managed",
+                  "file": "nx-cloud/private/auth-saml-managed"
+                },
+                {
+                  "name": "Advanced Configuration",
+                  "id": "advanced-config",
+                  "file": "nx-cloud/private/advanced-config"
                 }
               ]
             },
@@ -1776,58 +1851,6 @@
               "name": "End to End Encryption",
               "id": "encryption",
               "file": "nx-cloud/account/encryption"
-            }
-          ]
-        },
-        {
-          "name": "Run Nx Cloud On-Premise",
-          "id": "private-cloud",
-          "description": "Learn about Running Nx Cloud On-Premise",
-          "itemList": [
-            {
-              "name": "Get Started",
-              "id": "get-started",
-              "file": "nx-cloud/private/get-started"
-            },
-            {
-              "name": "Authenticate with a Single Admin",
-              "id": "auth-single-admin",
-              "file": "nx-cloud/private/auth-single-admin"
-            },
-            {
-              "name": "Authenticate with GitHub",
-              "id": "auth-github",
-              "file": "nx-cloud/private/auth-github"
-            },
-            {
-              "name": "On-Prem VM Setup",
-              "id": "ami-setup",
-              "file": "nx-cloud/private/ami-setup"
-            },
-            {
-              "name": "Authenticate with GitLab",
-              "id": "auth-gitlab",
-              "file": "nx-cloud/private/auth-gitlab"
-            },
-            {
-              "name": "Authenticate with BitBucket",
-              "id": "auth-bitbucket",
-              "file": "nx-cloud/private/auth-bitbucket"
-            },
-            {
-              "name": "Authenticate via SAML",
-              "id": "auth-saml",
-              "file": "nx-cloud/private/auth-saml"
-            },
-            {
-              "name": "Authenticate via SAML on Managed Version",
-              "id": "auth-saml-managed",
-              "file": "nx-cloud/private/auth-saml-managed"
-            },
-            {
-              "name": "Advanced Configuration",
-              "id": "advanced-config",
-              "file": "nx-cloud/private/advanced-config"
             }
           ]
         },
