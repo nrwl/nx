@@ -62,7 +62,8 @@ describe('convertEslintJsonToFlatConfig', () => {
       tree,
       '',
       '.eslintrc.json',
-      'eslint.config.js'
+      'eslint.config.js',
+      ['.eslintignore']
     );
 
     expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
@@ -119,7 +120,6 @@ describe('convertEslintJsonToFlatConfig', () => {
     `);
 
     expect(tree.exists('.eslintrc.json')).toBeFalsy();
-    expect(tree.exists('.eslintignore')).toBeFalsy();
   });
 
   it('should convert project configs', async () => {
@@ -174,7 +174,8 @@ describe('convertEslintJsonToFlatConfig', () => {
       tree,
       'mylib',
       '.eslintrc.json',
-      'eslint.config.js'
+      'eslint.config.js',
+      ['mylib/.eslintignore']
     );
 
     expect(tree.read('mylib/eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
@@ -229,6 +230,5 @@ describe('convertEslintJsonToFlatConfig', () => {
     `);
 
     expect(tree.exists('mylib/.eslintrc.json')).toBeFalsy();
-    expect(tree.exists('mylib/.eslintignore')).toBeFalsy();
   });
 });
