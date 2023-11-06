@@ -281,7 +281,7 @@
     },
     "update-angular-cli-version-17-0-0-rc-3": {
       "cli": "nx",
-      "version": "17.1.0-beta.1",
+      "version": "17.1.0-beta.3",
       "requires": {
         "@angular/core": ">=17.0.0-rc.2"
       },
@@ -290,7 +290,7 @@
     },
     "rename-browser-target-to-build-target": {
       "cli": "nx",
-      "version": "17.1.0-beta.1",
+      "version": "17.1.0-beta.3",
       "requires": {
         "@angular/core": ">=17.0.0-rc.2"
       },
@@ -299,7 +299,7 @@
     },
     "stub-performance-mark-in-jest-test-setup": {
       "cli": "nx",
-      "version": "17.1.0-beta.1",
+      "version": "17.1.0-beta.3",
       "requires": {
         "@angular/core": ">=17.0.0-rc.2"
       },
@@ -1383,7 +1383,7 @@
       }
     },
     "17.1.0": {
-      "version": "17.1.0-beta.1",
+      "version": "17.1.0-beta.3",
       "x-prompt": "Do you want to update the Angular version to v17?",
       "requires": {
         "@angular/core": ">=16.2.0 <17.0.0-rc.2"
