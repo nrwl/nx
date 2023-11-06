@@ -14,7 +14,7 @@ Here are some of the issues with the `derived` behavior that are addressed with 
 
 You can use [Nx Console](/core-features/integrate-with-editors) for an intuitive experience running generators.
 
-1. If you right-click a folder and choose `Nx generate`, the `directory` field will be populated with that folder path.
+1. If you right-click a folder and choose `Nx generate`, the `cwd` field will be populated with that folder path. This will execute the generator as if you were running it from that folder.
 2. As you fill out the generate form, Nx Console will show you a preview of where the new files will be generated.
 
 ## Prompting
