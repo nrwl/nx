@@ -41,6 +41,7 @@ import {
 import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
 import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
 import { FileMapCache } from '../project-graph/nx-deps-cache';
+import { CreatePackageJsonProjectsNextToProjectJson } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
 
 /**
  * Context for {@link CreateNodesFunction}
@@ -286,11 +287,6 @@ export async function loadNxPlugins(
 ): Promise<LoadedNxPlugin[]> {
   const result: LoadedNxPlugin[] = [...(await getDefaultPlugins(root))];
 
-  // TODO: These should be specified in nx.json
-  // Temporarily load js as if it were a plugin which is built into nx
-  // In the future, this will be optional and need to be specified in nx.json
-  result.push();
-
   plugins ??= [];
   for (const plugin of plugins) {
     result.push(await loadNxPluginAsync(plugin, paths, root));
@@ -514,7 +510,10 @@ function readPluginMainFromProjectConfiguration(
 }
 
 async function getDefaultPlugins(root: string): Promise<LoadedNxPlugin[]> {
-  const plugins: NxPluginV2[] = [await import('../plugins/js')];
+  const plugins: NxPluginV2[] = [
+    CreatePackageJsonProjectsNextToProjectJson,
+    await import('../plugins/js'),
+  ];
 
   if (shouldMergeAngularProjects(root, false)) {
     plugins.push(

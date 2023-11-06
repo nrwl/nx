@@ -57,6 +57,13 @@ export function mergeProjectConfigurationIntoRootMap(
     }
   }
 
+  if (project.namedInputs && matchingProject.namedInputs) {
+    updatedProjectConfiguration.namedInputs = {
+      ...matchingProject.namedInputs,
+      ...project.namedInputs,
+    };
+  }
+
   if (project.targets && matchingProject.targets) {
     updatedProjectConfiguration.targets = {
       ...matchingProject.targets,
