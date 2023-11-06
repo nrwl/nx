@@ -23,8 +23,10 @@ variables:
   ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
     NX_BRANCH: $(System.PullRequest.PullRequestId) # You can use $(System.PullRequest.PullRequestNumber if your pipeline is triggered by a PR from GitHub ONLY)
     TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
   ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
     NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
   HEAD_SHA: $(git rev-parse HEAD)
 
 jobs:
@@ -37,17 +39,19 @@ jobs:
         displayName: 'Set default Azure DevOps organization and project'
 
       # Get last successfull commit from Azure Devops CLI
-      - bash: |
+      - displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        bash: |
           LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
           if [ -z "$LAST_SHA" ]
           then
-            LAST_SHA=$DEFAULT_BASE_SHA
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
           fi
-          echo "Last successful commit SHA: $LAST_SHA"
-          echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
-        displayName: 'Get last successful commit SHA'
-        env:
-          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
       # Required for nx affected if we're on a branch
       - script: git branch --track main origin/main
@@ -132,6 +136,21 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
+      # Get last successfull commit from Azure Devops CLI
+      - displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+
       - script: git branch --track main origin/main
       - script: npm ci
       - script: npx nx-cloud start-ci-run --stop-agents-after="build"
