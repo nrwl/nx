@@ -42,7 +42,6 @@ import {
   getRelativeImportPath,
 } from '../utils/ast-utils';
 import { readProjectGraph } from '../utils/project-graph-utils';
-import type { RuleModule } from '@typescript-eslint/utils/ts-eslint';
 import { ESLintUtils } from '@typescript-eslint/utils';
 
 type Options = [
