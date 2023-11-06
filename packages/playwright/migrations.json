@@ -1,0 +1,9 @@
+{
+  "generators": {
+    "add-playwright-plugin": {
+      "version": "17.2.0-beta.0",
+      "description": "Add @nx/playwright/plugin",
+      "implementation": "./src/migrations/update-17-2-0/add-playwright-plugin"
+    }
+  }
+}

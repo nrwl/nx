@@ -54,6 +54,10 @@
     "./generators/*/schema.json": "./src/generators/*/schema.json",
     "./executors.json": "./executors.json",
     "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./plugin": "./plugin.js",
     "./preset": "./src/utils/preset.js"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
   }
 }
