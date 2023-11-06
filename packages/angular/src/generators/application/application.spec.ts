@@ -1099,7 +1099,10 @@ describe('app', () => {
     });
 
     it('should use "@angular-devkit/build-angular:browser-esbuild" for --bundler=esbuild', async () => {
-      await generateApp(appTree, 'my-app', { standalone: true });
+      await generateApp(appTree, 'my-app', {
+        standalone: true,
+        bundler: 'esbuild',
+      });
 
       const project = readProjectConfiguration(appTree, 'my-app');
       expect(project.targets.build.executor).toEqual(
