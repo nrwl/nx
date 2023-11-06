@@ -79,6 +79,12 @@ Type: `boolean`
 
 Output JSON
 
+### pretty
+
+Type: `boolean`
+
+Pretty print JSON output
+
 ### version
 
 Type: `boolean`

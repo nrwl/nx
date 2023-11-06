@@ -73,7 +73,11 @@ export async function showProjectsHandler(
   }
 
   if (args.json) {
-    console.log(JSON.stringify(Array.from(selectedProjects)));
+    if (args.pretty) {
+      console.dir(selectedProjects, { depth: null, colors: true });
+    } else {
+      console.log(JSON.stringify(Array.from(selectedProjects)));
+    }
   } else {
     for (const project of selectedProjects) {
       console.log(project);
@@ -93,7 +97,11 @@ export async function showProjectHandler(
     process.exit(1);
   }
   if (args.json) {
-    console.log(JSON.stringify(node.data));
+    if (args.pretty) {
+      console.dir(node.data, { depth: 10, colors: true });
+    } else {
+      console.log(JSON.stringify(node.data));
+    }
   } else {
     const chalk = require('chalk') as typeof import('chalk');
     const logIfExists = (label, key: keyof typeof node['data']) => {

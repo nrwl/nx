@@ -1,9 +1,10 @@
 import type { ProjectGraphProjectNode } from '../../config/project-graph';
-import { CommandModule, showHelp } from 'yargs';
+import { boolean, CommandModule, showHelp } from 'yargs';
 import { parseCSV, withAffectedOptions } from '../yargs-utils/shared-options';
 
 export interface NxShowArgs {
   json?: boolean;
+  pretty?: boolean;
 }
 
 export type ShowProjectsOptions = NxShowArgs & {
@@ -37,6 +38,11 @@ export const yargsShowCommand: CommandModule<
       .option('json', {
         type: 'boolean',
         description: 'Output JSON',
+      })
+      .option('pretty', {
+        type: 'boolean',
+        description: 'Pretty print JSON output',
+        implies: 'json',
       })
       .example(
         '$0 show projects',
