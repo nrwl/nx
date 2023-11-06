@@ -283,7 +283,7 @@
       "cli": "nx",
       "version": "17.1.0-beta.1",
       "requires": {
-        "@angular/core": ">=17.0.0-rc.1"
+        "@angular/core": ">=17.0.0-rc.2"
       },
       "description": "Update the @angular/cli package version to ~17.0.0-rc.3.",
       "factory": "./src/migrations/update-17-1-0/update-angular-cli"
@@ -292,7 +292,7 @@
       "cli": "nx",
       "version": "17.1.0-beta.1",
       "requires": {
-        "@angular/core": ">=17.0.0-rc.1"
+        "@angular/core": ">=17.0.0-rc.2"
       },
       "description": "Rename 'browserTarget' to 'buildTarget'.",
       "factory": "./src/migrations/update-17-1-0/browser-target-to-build-target"
@@ -301,7 +301,7 @@
       "cli": "nx",
       "version": "17.1.0-beta.1",
       "requires": {
-        "@angular/core": ">=17.0.0-rc.1"
+        "@angular/core": ">=17.0.0-rc.2"
       },
       "description": "Stubs out 'performance.mark' in the Jest test setup file.",
       "factory": "./src/migrations/update-17-1-0/stub-performance-mark-in-jest-test-setup"
@@ -1386,7 +1386,7 @@
       "version": "17.1.0-beta.1",
       "x-prompt": "Do you want to update the Angular version to v17?",
       "requires": {
-        "@angular/core": ">=16.2.0 <17.0.0-rc.1"
+        "@angular/core": ">=16.2.0 <17.0.0-rc.2"
       },
       "packages": {
         "@angular-devkit/architect": {
@@ -1410,7 +1410,7 @@
           "alwaysAddToPackageJson": false
         },
         "@angular/core": {
-          "version": "~17.0.0-rc.1",
+          "version": "~17.0.0-rc.2",
           "alwaysAddToPackageJson": true
         },
         "@angular/material": {
