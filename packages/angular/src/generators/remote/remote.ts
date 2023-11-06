@@ -9,7 +9,7 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { E2eTestRunner } from '../../utils/test-runners';
 import { applicationGenerator } from '../application/application';
 import { setupMf } from '../setup-mf/setup-mf';
-import { addSsr, findNextAvailablePort } from './lib';
+import { findNextAvailablePort, updateSsrSetup } from './lib';
 import type { Schema } from './schema';
 import { swcHelpersVersion } from '@nx/js/src/utils/versions';
 
@@ -80,7 +80,7 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
 
   let installTasks = [appInstallTask, installSwcHelpersTask];
   if (options.ssr) {
-    let ssrInstallTask = await addSsr(tree, {
+    let ssrInstallTask = await updateSsrSetup(tree, {
       appName: remoteProjectName,
       port,
       typescriptConfiguration,

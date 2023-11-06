@@ -1,4 +1,6 @@
+export * from './add-dependencies';
 export * from './generate-files';
+export * from './generate-server-ts-config';
 export * from './normalize-options';
 export * from './update-app-module';
 export * from './update-project-config';

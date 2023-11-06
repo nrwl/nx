@@ -7,27 +7,28 @@ import {
 import { lt } from 'semver';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
-import { join } from 'path';
 
-export function generateSSRFiles(tree: Tree, schema: Schema) {
-  const projectConfig = readProjectConfiguration(tree, schema.project);
-  const projectRoot = projectConfig.root;
-  const browserBundleOutputPath =
-    projectConfig.targets.build.options.outputPath;
+export function generateSSRFiles(
+  tree: Tree,
+  schema: Schema,
+  isUsingApplicationBuilder: boolean
+) {
+  const { root: projectRoot, targets } = readProjectConfiguration(
+    tree,
+    schema.project
+  );
+  const baseOutputPath = targets.build.options.outputPath;
+  const browserBundleOutputPath = joinPathFragments(baseOutputPath, 'browser');
 
   const pathToFiles = joinPathFragments(__dirname, '..', 'files');
-
-  generateFiles(tree, join(pathToFiles, 'base'), projectRoot, {
-    ...schema,
-    tpl: '',
-  });
+  const { version: angularVersion, major: angularMajorVersion } =
+    getInstalledAngularVersionInfo(tree);
 
   if (schema.standalone) {
     generateFiles(
       tree,
       joinPathFragments(pathToFiles, 'standalone'),
       projectRoot,
-
       { ...schema, browserBundleOutputPath, tpl: '' }
     );
   } else {
@@ -35,20 +36,31 @@ export function generateSSRFiles(tree: Tree, schema: Schema) {
       tree,
       joinPathFragments(pathToFiles, 'ngmodule', 'base'),
       projectRoot,
-
       { ...schema, browserBundleOutputPath, tpl: '' }
     );
-
-    const { version: angularVersion } = getInstalledAngularVersionInfo(tree);
 
     if (lt(angularVersion, '15.2.0')) {
       generateFiles(
         tree,
         joinPathFragments(pathToFiles, 'ngmodule', 'pre-v15-2'),
         projectRoot,
-
         { ...schema, browserBundleOutputPath, tpl: '' }
       );
     }
   }
+
+  generateFiles(
+    tree,
+    joinPathFragments(
+      pathToFiles,
+      'server',
+      ...(isUsingApplicationBuilder
+        ? ['application-builder']
+        : angularMajorVersion >= 17
+        ? ['server-builder', 'v17+']
+        : ['server-builder', 'pre-v17'])
+    ),
+    projectRoot,
+    { ...schema, browserBundleOutputPath, tpl: '' }
+  );
 }

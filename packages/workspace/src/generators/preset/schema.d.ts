@@ -16,4 +16,5 @@ export interface Schema {
   standaloneApi?: boolean;
   e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
   js?: boolean;
+  ssr?: boolean;
 }

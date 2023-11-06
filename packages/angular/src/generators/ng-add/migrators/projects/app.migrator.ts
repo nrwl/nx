@@ -30,8 +30,7 @@ type SupportedTargets =
   | 'prerender'
   | 'serve'
   | 'server'
-  | 'serveSsr'
-  | 'serve-ssr';
+  | 'serveSsr';
 const supportedTargets: Record<SupportedTargets, Target> = {
   build: {
     builders: [
@@ -57,10 +56,10 @@ const supportedTargets: Record<SupportedTargets, Target> = {
   serve: { builders: ['@angular-devkit/build-angular:dev-server'] },
   server: { builders: ['@angular-devkit/build-angular:server'] },
   serveSsr: {
-    builders: ['@nguniversal/builders:ssr-dev-server'],
-  },
-  'serve-ssr': {
-    builders: ['@angular-devkit/build-angular:ssr-dev-server'],
+    builders: [
+      '@nguniversal/builders:ssr-dev-server',
+      '@angular-devkit/build-angular:ssr-dev-server',
+    ],
   },
 };
 
@@ -427,10 +426,8 @@ export class AppMigrator extends ProjectMigrator<SupportedTargets> {
 
   private updateServeSsrTargetConfiguration(): void {
     if (
-      (!this.targetNames.serveSsr ||
-        this.shouldSkipTargetTypeMigration('serveSsr')) &&
-      (!this.targetNames['serve-ssr'] ||
-        this.shouldSkipTargetTypeMigration('serve-ssr'))
+      !this.targetNames.serveSsr ||
+      this.shouldSkipTargetTypeMigration('serveSsr')
     ) {
       return;
     }

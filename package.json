@@ -63,7 +63,6 @@
     "@ngrx/effects": "~16.0.0",
     "@ngrx/router-store": "~16.0.0",
     "@ngrx/store": "~16.0.0",
-    "@nguniversal/builders": "~16.2.0",
     "@nuxt/kit": "^3.7.4",
     "@nuxt/schema": "^3.7.4",
     "@nx/angular": "17.0.0-rc.2",
