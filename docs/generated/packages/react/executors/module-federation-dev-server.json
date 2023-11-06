@@ -100,6 +100,10 @@
         "description": "Whether the host that is running this executor is the first in the project tree to do so.",
         "default": true,
         "x-priority": "internal"
+      },
+      "parallel": {
+        "type": "number",
+        "description": "Max number of parallel processes for building static remotes"
       }
     },
     "presets": []

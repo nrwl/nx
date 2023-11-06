@@ -24,6 +24,7 @@ type ModuleFederationDevServerOptions = WebDevServerOptions & {
   skipRemotes?: string[];
   static?: boolean;
   isInitialHost?: boolean;
+  parallel?: number;
 };
 
 function getBuildOptions(buildTarget: string, context: ExecutorContext) {
@@ -79,6 +80,44 @@ export default async function* moduleFederationDevServer(
       root: context.root,
     }
   );
+
+  logger.info(`NX Building ${remotes.staticRemotes.length} static remotes...`);
+  await new Promise<void>((res) => {
+    const staticProcess = fork(
+      nxBin,
+      [
+        'run-many',
+        `--target=build`,
+        `--projects=${remotes.staticRemotes.join(',')}`,
+        ...(context.configurationName
+          ? [`--configuration=${context.configurationName}`]
+          : []),
+        ...(options.parallel ? [`--parallel=${options.parallel}`] : []),
+      ],
+      {
+        cwd: context.root,
+        stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+      }
+    );
+    staticProcess.stdout.on('data', (data) => {
+      const ANSII_CODE_REGEX =
+        /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g;
+      const stdoutString = data.toString().replace(ANSII_CODE_REGEX, '');
+      if (stdoutString.includes('Successfully ran target build')) {
+        staticProcess.stdout.removeAllListeners('data');
+        logger.info(`NX Built ${remotes.staticRemotes.length} static remotes`);
+        res();
+      }
+    });
+    staticProcess.stderr.on('data', (data) => logger.info(data.toString()));
+    staticProcess.on('exit', (code) => {
+      if (code !== 0) {
+        throw new Error(`Remote failed to start. See above for errors.`);
+      }
+    });
+    process.on('SIGTERM', () => staticProcess.kill('SIGTERM'));
+    process.on('exit', () => staticProcess.kill('SIGTERM'));
+  });
 
   let isCollectingStaticRemoteOutput = true;
   const devRemoteIters: AsyncIterable<{ success: boolean }>[] = [];
