@@ -6,6 +6,7 @@ import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { normalizeNewProjectPrefix } from '../../utils/project';
 import type { Schema } from '../schema';
 import type { NormalizedSchema } from './normalized-schema';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
 export async function normalizeOptions(
   host: Tree,
@@ -39,6 +40,12 @@ export async function normalizeOptions(
     'app'
   );
 
+  let bundler = options.bundler;
+  if (!bundler) {
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
+    bundler = angularMajorVersion >= 17 ? 'esbuild' : 'webpack';
+  }
+
   // Set defaults and then overwrite with user options
   return {
     style: 'css',
@@ -60,6 +67,6 @@ export async function normalizeOptions(
     e2eProjectRoot,
     e2eProjectName,
     parsedTags,
-    bundler: options.bundler ?? 'esbuild',
+    bundler,
   };
 }
