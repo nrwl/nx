@@ -152,14 +152,34 @@ const pluginList = [
   {
     logo: (
       <svg
-        className="mr-3 h-8 w-8 text-[#DD0031]"
-        fill="currentColor"
+        className="mr-3 h-8 w-8"
         role="img"
         viewBox="0 0 24 24"
         xmlns="http://www.w3.org/2000/svg"
       >
         <title>Angular</title>
-        <path d="M9.931 12.645h4.138l-2.07-4.908m0-7.737L.68 3.982l1.726 14.771L12 24l9.596-5.242L23.32 3.984 11.999.001zm7.064 18.31h-2.638l-1.422-3.503H8.996l-1.422 3.504h-2.64L12 2.65z" />
+        <path
+          fill="url(#a)"
+          d="m23.9 3.986-.862 12.805L14.786 0l9.115 3.986Zm-5.715 16.558-6.235 3.362-6.235-3.362 1.268-2.904h9.934l1.268 2.904ZM11.95 6.374l3.268 7.505H8.682l3.267-7.505ZM.854 16.79 0 3.986 9.115 0 .855 16.791Z"
+        />
+        <path
+          fill="url(#b)"
+          d="m23.9 3.986-.862 12.805L14.786 0l9.115 3.986Zm-5.715 16.558-6.235 3.362-6.235-3.362 1.268-2.904h9.934l1.268 2.904ZM11.95 6.374l3.268 7.505H8.682l3.267-7.505ZM.854 16.79 0 3.986 9.115 0 .855 16.791Z"
+        />
+        <defs>
+          <linearGradient id="a" x1="21%" x2="100%" y1="87.5%" y2="50%">
+            <stop stopColor="#E40035" />
+            <stop offset=".24" stopColor="#F60A48" />
+            <stop offset=".352" stopColor="#F20755" />
+            <stop offset=".494" stopColor="#DC087D" />
+            <stop offset=".745" stopColor="#9717E7" />
+            <stop offset="1" stopColor="#6C00F5" />
+          </linearGradient>
+          <linearGradient id="b" x1="16%" x2="67%" y1="12.5%" y2="71%">
+            <stop stopColor="#FF31D9" />
+            <stop offset="1" stopColor="#FF5BE1" stopOpacity="0" />
+          </linearGradient>
+        </defs>
       </svg>
     ),
     name: '@nx/angular',
