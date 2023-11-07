@@ -6,7 +6,7 @@ import { addTsConfigPath } from '@nx/js';
 export function setupTspathForRemote(tree: Tree, options: Schema) {
   const project = readProjectConfiguration(tree, options.name);
 
-  const exportPath = `./src/remote-entry.ts`;
+  const exportPath = `./src/remote-entry.${options.js ? 'js' : 'ts'}`;
 
   const exportName = 'Module';
 

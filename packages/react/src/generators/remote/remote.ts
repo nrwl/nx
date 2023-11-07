@@ -33,6 +33,13 @@ export function addModuleFederationFiles(
     tmpl: '',
   };
 
+  generateFiles(
+    host,
+    join(__dirname, `../files/${options.js ? 'common' : 'common-ts'}`),
+    options.appProjectRoot,
+    templateVariables
+  );
+
   const pathToModuleFederationFiles = options.typescriptConfiguration
     ? 'module-federation-ts'
     : 'module-federation';
@@ -43,23 +50,6 @@ export function addModuleFederationFiles(
     options.appProjectRoot,
     templateVariables
   );
-
-  if (options.typescriptConfiguration) {
-    const pathToWebpackConfig = joinPathFragments(
-      options.appProjectRoot,
-      'webpack.config.js'
-    );
-    const pathToWebpackProdConfig = joinPathFragments(
-      options.appProjectRoot,
-      'webpack.config.prod.js'
-    );
-    if (host.exists(pathToWebpackConfig)) {
-      host.delete(pathToWebpackConfig);
-    }
-    if (host.exists(pathToWebpackProdConfig)) {
-      host.delete(pathToWebpackProdConfig);
-    }
-  }
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
@@ -94,8 +84,8 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    join(options.appProjectRoot, 'src/main.tsx'),
-    join(options.appProjectRoot, 'src/bootstrap.tsx')
+    join(options.appProjectRoot, `src/main.${options.js ? 'js' : 'tsx'}`),
+    join(options.appProjectRoot, `src/bootstrap.${options.js ? 'js' : 'tsx'}`)
   );
 
   addModuleFederationFiles(host, options);

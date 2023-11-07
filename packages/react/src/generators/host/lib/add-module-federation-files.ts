@@ -35,13 +35,22 @@ export function addModuleFederationFiles(
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    joinPathFragments(options.appProjectRoot, 'src/main.tsx'),
-    joinPathFragments(options.appProjectRoot, 'src/bootstrap.tsx')
+    joinPathFragments(
+      options.appProjectRoot,
+      `src/main.${options.js ? 'js' : 'tsx'}`
+    ),
+    joinPathFragments(
+      options.appProjectRoot,
+      `src/bootstrap.${options.js ? 'js' : 'tsx'}`
+    )
   );
 
   generateFiles(
     host,
-    joinPathFragments(__dirname, `../files/common`),
+    joinPathFragments(
+      __dirname,
+      `../files/${options.js ? 'common' : 'common-ts'}`
+    ),
     options.appProjectRoot,
     templateVariables
   );

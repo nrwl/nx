@@ -16,13 +16,14 @@ export function updateModuleFederationProject(
     devServerPort?: number;
     typescriptConfiguration?: boolean;
     dynamic?: boolean;
+    js?: boolean;
   }
 ): GeneratorCallback {
   const projectConfig = readProjectConfiguration(host, options.projectName);
 
   projectConfig.targets.build.options = {
     ...projectConfig.targets.build.options,
-    main: `${options.appProjectRoot}/src/main.ts`,
+    main: `${options.appProjectRoot}/src/main.${options.js ? 'js' : 'ts'}`,
     webpackConfig: `${options.appProjectRoot}/webpack.config.${
       options.typescriptConfiguration ? 'ts' : 'js'
     }`,
