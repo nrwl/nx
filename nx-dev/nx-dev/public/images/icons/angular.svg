@@ -1,18 +1,1 @@
-<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Angular</title>
-    <path fill="url(#a)" d="m23.9 3.986-.862 12.805L14.786 0l9.115 3.986Zm-5.715 16.558-6.235 3.362-6.235-3.362 1.268-2.904h9.934l1.268 2.904ZM11.95 6.374l3.268 7.505H8.682l3.267-7.505ZM.854 16.79 0 3.986 9.115 0 .855 16.791Z"/>
-    <path fill="url(#b)" d="m23.9 3.986-.862 12.805L14.786 0l9.115 3.986Zm-5.715 16.558-6.235 3.362-6.235-3.362 1.268-2.904h9.934l1.268 2.904ZM11.95 6.374l3.268 7.505H8.682l3.267-7.505ZM.854 16.79 0 3.986 9.115 0 .855 16.791Z"/>
-    <defs>
-      <linearGradient id="a" x1="21%" x2="100%" y1="87.5%" y2="50%">
-        <stop stop-color="#E40035"/>
-        <stop offset=".24" stop-color="#F60A48"/>
-        <stop offset=".352" stop-color="#F20755"/>
-        <stop offset=".494" stop-color="#DC087D"/>
-        <stop offset=".745" stop-color="#9717E7"/>
-        <stop offset="1" stop-color="#6C00F5"/>
-      </linearGradient>
-      <linearGradient id="b" x1="16%" x2="67%" y1="12.5%" y2="71%">
-        <stop stop-color="#FF31D9"/>
-        <stop offset="1" stop-color="#FF5BE1" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-  </svg>
+<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>Angular</title><path d="M16.712 17.711H7.288l-1.204 2.916L12 24l5.916-3.373-1.204-2.916ZM14.692 0l7.832 16.855.814-12.856L14.692 0ZM9.308 0 .662 3.999l.814 12.856L9.308 0Zm-.405 13.93h6.198L12 6.396 8.903 13.93Z"/></svg>
