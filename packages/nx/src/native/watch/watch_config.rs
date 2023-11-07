@@ -11,10 +11,10 @@ pub(super) async fn create_runtime(
     additional_globs: &[&str],
     use_ignore: bool,
 ) -> napi::Result<RuntimeConfig> {
-    let ignore_files = if use_ignore {
+    let (ignore_files, nx_ignore_file) = if use_ignore {
         get_ignore_files(origin)
     } else {
-        vec![]
+        (vec![], None)
     };
 
     trace!(
@@ -30,6 +30,14 @@ pub(super) async fn create_runtime(
     filter
         .add_globs(additional_globs, Some(&origin.into()))
         .map_err(anyhow::Error::from)?;
+
+    // always add the .nxignore file after all other ignores are loaded so that it has the highest priority
+    if let Some(nx_ignore_file) = nx_ignore_file {
+        filter
+            .add_file(&nx_ignore_file)
+            .await
+            .map_err(anyhow::Error::from)?;
+    }
 
     let mut runtime = RuntimeConfig::default();
     runtime.filterer(Arc::new(WatchFilterer {
