@@ -77,10 +77,10 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
     Now you can use the module from your host app like this:
 
     Static import:
-    import { MyComponent } from '${schema.name}/${remoteName}';
+    import { MyComponent } from '${remoteName}/${schema.name}';
     
     Dynamic import:
-    import('${schema.name}/${remoteName}').then((m) => m.${remoteName});
+    import('${remoteName}/${schema.name}').then((m) => m.${schema.name});
   `
   );
   return runTasksInSerial(...tasks);
