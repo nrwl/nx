@@ -20,7 +20,7 @@ import {
   setupTspathForRemote,
   setupServeTarget,
   updateHostAppRoutes,
-  updateTsConfigTarget,
+  updateTsConfig,
 } from './lib';
 import { nxVersion } from '../../utils/versions';
 
@@ -46,7 +46,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
   generateWebpackConfig(tree, options, projectConfig.root, remotesWithPorts);
 
   changeBuildTarget(tree, options);
-  updateTsConfigTarget(tree, options);
+  updateTsConfig(tree, options);
   setupServeTarget(tree, options);
 
   fixBootstrap(tree, projectConfig.root, options);
