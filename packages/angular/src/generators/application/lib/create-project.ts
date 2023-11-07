@@ -58,9 +58,7 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
         executor: buildExecutor,
         outputs: ['{options.outputPath}'],
         options: {
-          outputPath: `dist/${
-            !options.rootProject ? options.appProjectRoot : options.name
-          }`,
+          outputPath: options.outputPath,
           index: `${options.appProjectSourceRoot}/index.html`,
           [buildMainOptionName]: `${options.appProjectSourceRoot}/main.ts`,
           polyfills: ['zone.js'],

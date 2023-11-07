@@ -1,21 +1,21 @@
 import type { Tree } from '@nx/devkit';
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
+  readProjectConfiguration,
 } from '@nx/devkit';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
-  getInstalledAngularVersionInfo,
-  getInstalledPackageVersionInfo,
-  versions,
-} from '../utils/version-utils';
-import {
+  addDependencies,
   addHydration,
   generateSSRFiles,
+  generateTsConfigServerJsonForBrowserBuilder,
   normalizeOptions,
   setRouterInitialNavigation,
+  setServerTsConfigOptionsForApplicationBuilder,
   updateAppModule,
-  updateProjectConfig,
+  updateProjectConfigForApplicationBuilder,
+  updateProjectConfigForBrowserBuilder,
   validateOptions,
 } from './lib';
 import type { Schema } from './schema';
@@ -24,13 +24,16 @@ export async function setupSsr(tree: Tree, schema: Schema) {
   validateOptions(tree, schema);
   const options = normalizeOptions(tree, schema);
 
-  updateProjectConfig(tree, options);
-  generateSSRFiles(tree, options);
+  const { targets } = readProjectConfiguration(tree, options.project);
+  const isUsingApplicationBuilder =
+    targets.build.executor === '@angular-devkit/build-angular:application';
+
+  addDependencies(tree);
+  generateSSRFiles(tree, options, isUsingApplicationBuilder);
 
   if (!options.standalone) {
     updateAppModule(tree, options);
   }
-
   if (options.hydration) {
     addHydration(tree, options);
   }
@@ -40,24 +43,13 @@ export async function setupSsr(tree: Tree, schema: Schema) {
     setRouterInitialNavigation(tree, options);
   }
 
-  const pkgVersions = versions(tree);
-
-  addDependenciesToPackageJson(
-    tree,
-    {
-      '@nguniversal/express-engine':
-        getInstalledPackageVersionInfo(tree, '@nguniversal/express-engine')
-          ?.version ?? pkgVersions.ngUniversalVersion,
-      '@angular/platform-server':
-        getInstalledPackageVersionInfo(tree, '@angular/platform-server')
-          ?.version ?? pkgVersions.angularVersion,
-    },
-    {
-      '@nguniversal/builders':
-        getInstalledPackageVersionInfo(tree, '@nguniversal/builders')
-          ?.version ?? pkgVersions.ngUniversalVersion,
-    }
-  );
+  if (isUsingApplicationBuilder) {
+    updateProjectConfigForApplicationBuilder(tree, options);
+    setServerTsConfigOptionsForApplicationBuilder(tree, options);
+  } else {
+    updateProjectConfigForBrowserBuilder(tree, options);
+    generateTsConfigServerJsonForBrowserBuilder(tree, options);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);

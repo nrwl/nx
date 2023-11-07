@@ -71,14 +71,10 @@
     "@angular-devkit/schematics": "^17.0.0-rc.4",
     "@schematics/angular": "^17.0.0-rc.4",
     "@angular-devkit/core": "^17.0.0-rc.4",
-    "@nguniversal/builders": ">= 14.0.0 < 17.0.0",
     "rxjs": "^6.5.3 || ^7.5.0",
     "esbuild": "^0.19.2"
   },
   "peerDependenciesMeta": {
-    "@nguniversal/builders": {
-      "optional": true
-    },
     "esbuild": {
       "optional": true
     }

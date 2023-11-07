@@ -13,6 +13,7 @@ export function createTsConfig(
     style?: string;
     bundler?: string;
     rootProject?: boolean;
+    esModuleInterop?: boolean;
   },
   relativePathToRootTsConfig: string
 ) {
@@ -20,6 +21,7 @@ export function createTsConfig(
     compilerOptions: {
       target: 'es2022',
       useDefineForClassFields: false,
+      esModuleInterop: options.esModuleInterop ? true : undefined,
     },
     files: [],
     include: [],

@@ -157,6 +157,12 @@ Default: `false`
 
 Skip initializing a git repository
 
+### ssr
+
+Type: `boolean`
+
+Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application
+
 ### standaloneApi
 
 Type: `boolean`

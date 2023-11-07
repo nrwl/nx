@@ -1,7 +1,7 @@
-import { Tree } from '@nx/devkit';
+import { joinPathFragments, type Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { Linter } from '@nx/eslint';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
 import { normalizeNewProjectPrefix } from '../../utils/project';
 import type { Schema } from '../schema';
@@ -68,5 +68,10 @@ export async function normalizeOptions(
     e2eProjectName,
     parsedTags,
     bundler,
+    outputPath: joinPathFragments(
+      'dist',
+      !options.rootProject ? appProjectRoot : appProjectName
+    ),
+    ssr: options.ssr ?? false,
   };
 }

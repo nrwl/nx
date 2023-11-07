@@ -16,8 +16,8 @@ export const executors = [
 ];
 
 export default async function (tree: Tree) {
+  // update options from project configs
   executors.forEach((executor) => {
-    // update options from project configs
     forEachExecutorOptions<{
       browserTarget?: string;
       buildTarget?: string;
@@ -31,34 +31,34 @@ export default async function (tree: Tree) {
 
       updateProjectConfiguration(tree, project, projectConfiguration);
     });
-
-    // update options from nx.json target defaults
-    const nxJson = readNxJson(tree);
-    if (!nxJson.targetDefaults) {
-      return;
-    }
-
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      if (
-        !executors.includes(targetOrExecutor) &&
-        !executors.includes(targetConfig.executor)
-      ) {
-        continue;
-      }
-
-      if (targetConfig.options) {
-        updateConfig(targetConfig.options);
-      }
-
-      Object.values(targetConfig.configurations ?? {}).forEach((config) => {
-        updateConfig(config);
-      });
-    }
-
-    updateNxJson(tree, nxJson);
   });
+
+  // update options from nx.json target defaults
+  const nxJson = readNxJson(tree);
+  if (!nxJson.targetDefaults) {
+    return;
+  }
+
+  for (const [targetOrExecutor, targetConfig] of Object.entries(
+    nxJson.targetDefaults
+  )) {
+    if (
+      !executors.includes(targetOrExecutor) &&
+      !executors.includes(targetConfig.executor)
+    ) {
+      continue;
+    }
+
+    if (targetConfig.options) {
+      updateConfig(targetConfig.options);
+    }
+
+    Object.values(targetConfig.configurations ?? {}).forEach((config) => {
+      updateConfig(config);
+    });
+  }
+
+  updateNxJson(tree, nxJson);
 
   await formatFiles(tree);
 }
