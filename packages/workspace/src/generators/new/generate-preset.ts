@@ -79,6 +79,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.e2eTestRunner !== undefined
         ? `--e2eTestRunner=${opts.e2eTestRunner}`
         : null,
+      opts.ssr ? `--ssr` : null,
     ].filter((e) => !!e);
   }
 }

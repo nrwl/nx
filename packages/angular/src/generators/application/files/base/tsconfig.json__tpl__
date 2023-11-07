@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "target": "es2022",
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false<% if (isUsingApplicationBuilder) { %>,
+    "esModuleInterop": true<% } %>
   },
   "files": [],
   "include": [],

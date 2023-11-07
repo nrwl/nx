@@ -61,6 +61,7 @@ interface AngularArguments extends BaseArguments {
   standaloneApi: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
   bundler: 'webpack' | 'esbuild';
+  ssr: boolean;
 }
 
 interface VueArguments extends BaseArguments {
@@ -177,6 +178,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
             choices: ['cypress', 'playwright', 'none'],
             type: 'string',
+          })
+          .option('ssr', {
+            describe: chalk.dim`Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application`,
+            type: 'boolean',
           }),
         withNxCloud,
         withCI,
@@ -759,6 +764,7 @@ async function determineAngularOptions(
   let appName: string;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let bundler: undefined | 'webpack' | 'esbuild' = undefined;
+  let ssr: undefined | boolean = undefined;
 
   const standaloneApi = parsedArgs.standaloneApi;
   const routing = parsedArgs.routing;
@@ -835,6 +841,22 @@ async function determineAngularOptions(
     style = reply.style;
   }
 
+  if (parsedArgs.ssr !== undefined) {
+    ssr = parsedArgs.ssr;
+  } else {
+    const reply = await enquirer.prompt<{ ssr: 'Yes' | 'No' }>([
+      {
+        name: 'ssr',
+        message:
+          'Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?',
+        type: 'autocomplete',
+        choices: [{ name: 'Yes' }, { name: 'No' }],
+        initial: 'No' as any,
+      },
+    ]);
+    ssr = reply.ssr === 'Yes';
+  }
+
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
   return {
@@ -845,6 +867,7 @@ async function determineAngularOptions(
     routing,
     e2eTestRunner,
     bundler,
+    ssr,
   };
 }
 

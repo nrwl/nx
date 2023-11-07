@@ -1,3 +1,4 @@
+import { updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
@@ -470,6 +471,22 @@ describe('Host App Generator', () => {
       ).toMatchSnapshot();
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
+    });
+
+    describe('compat', () => {
+      it('should generate the correct main.server.ts', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          dependencies: {
+            '@angular/core': '15.2.0',
+          },
+        }));
+
+        await generateTestHostApplication(tree, { name: 'test', ssr: true });
+
+        expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
+      });
     });
   });
 

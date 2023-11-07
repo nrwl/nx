@@ -4,6 +4,7 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
+  updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -381,6 +382,22 @@ describe('MF Remote App Generator', () => {
         tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
       ).toMatchSnapshot();
       expect(project.targets['static-server']).toMatchSnapshot();
+    });
+
+    describe('compat', () => {
+      it('should generate the correct main.server.ts', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          dependencies: {
+            '@angular/core': '15.2.0',
+          },
+        }));
+
+        await generateTestRemoteApplication(tree, { name: 'test', ssr: true });
+
+        expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
+      });
     });
   });
 
