@@ -2,13 +2,16 @@ import {
   checkFilesExist,
   cleanupProject,
   getPackageManagerCommand,
+  getSelectedPackageManager,
   newProject,
   runCLI,
   runCommand,
   uniq,
-  updateJson,
 } from '@nx/e2e/utils';
 
+const pmc = getPackageManagerCommand({
+  packageManager: getSelectedPackageManager(),
+});
 describe('Next.js Storybook', () => {
   let proj: string;
 
@@ -16,8 +19,7 @@ describe('Next.js Storybook', () => {
 
   afterAll(() => cleanupProject());
 
-  // TODO (@mandarini): Re-enable this test
-  xit('should run a Next.js based Storybook setup', async () => {
+  it('should run a Next.js based Storybook setup', async () => {
     const appName = uniq('app');
 
     runCLI(`generate @nx/next:app ${appName} --no-interactive`);
@@ -25,13 +27,13 @@ describe('Next.js Storybook', () => {
       `generate @nx/next:component Foo --project=${appName} --no-interactive`
     );
 
-    // Currently due to auto-installing peer deps in pnpm, the generator can fail while installing deps with unmet peet deps.
     runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`,
-      {
-        silenceError: true,
-      }
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
     );
+
+    // It seems that we need to run install twice for some reason.
+    // This is only true on CI. On normal repos, it works as expected.
+    runCommand(pmc.install);
 
     runCLI(`build-storybook ${appName}`);
     checkFilesExist(`dist/storybook/${appName}/index.html`);
