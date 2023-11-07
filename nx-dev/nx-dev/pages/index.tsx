@@ -3,13 +3,13 @@ import {
   ExtensibleAndIntegrated,
   GettingStarted,
   Hero,
-  LogoCloud,
+  ImproveWorstCiCase,
   Migrate,
   MigrationsAndCodeGeneration,
   MonorepoStyles,
   Newsletter,
-  NxIsFast,
   NxStatistics,
+  NxWithCi,
   Testimonials,
 } from '@nx/nx-dev/ui-home';
 import { NextSeo } from 'next-seo';
@@ -39,24 +39,24 @@ export default function Index(): JSX.Element {
         }}
       />
       <h1 className="sr-only">Next generation monorepo tool</h1>
-      <AnnouncementBanner />
+      {/*<AnnouncementBanner />*/}
       <Header />
       <main id="main" role="main">
         <div className="w-full">
           {/*HERO COMPONENT*/}
           <Hero />
-          {/*LOGO CLOUD*/}
-          <LogoCloud />
+          {/*NX CI*/}
+          <NxWithCi />
           {/*NX STATISTICS*/}
           <NxStatistics />
-          {/*NX IS FAST*/}
-          <NxIsFast />
-          {/*MIGRATE*/}
-          <Migrate />
           {/*MONOREPO STYLES*/}
           <MonorepoStyles />
+          {/*WORST CASE CI TIMES*/}
+          <ImproveWorstCiCase />
           {/*EXTENSIBLE & INTEGRATED*/}
           <ExtensibleAndIntegrated />
+          {/*MIGRATE*/}
+          <Migrate />
           {/*AFFECTED & CODE GENERATION*/}
           <MigrationsAndCodeGeneration />
           {/*GETTING STARTED*/}

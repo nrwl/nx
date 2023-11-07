@@ -7,7 +7,7 @@ import {
   ServerStackIcon,
 } from '@heroicons/react/24/outline';
 import { CogIcon } from '@heroicons/react/24/solid';
-import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { Button, ButtonLink, SectionHeading } from '@nx/nx-dev/ui-common';
 import {
   animate,
   motion,
@@ -67,20 +67,17 @@ export function NxIsFast(): JSX.Element {
   }, [controls, inView, progress]);
 
   return (
-    <article
-      id="nx-is-fast"
-      className="relative bg-slate-50 py-28 dark:bg-slate-800/40"
-    >
+    <article id="nx-is-fast" className="relative ">
       <motion.div
         ref={ref}
         animate={controls}
-        className="mx-auto max-w-7xl px-4 pt-12 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:px-8 lg:pt-16"
+        className="mx-auto max-w-7xl px-4 py-12 sm:grid sm:grid-cols-2 sm:gap-8 sm:px-6 lg:px-8 lg:py-16"
       >
         <div>
           <header>
-            <SectionHeading as="h1" variant="title" id="nx-is-fast">
+            {/*<SectionHeading as="h1" variant="title" id="nx-is-fast">
               Nx is fast
-            </SectionHeading>
+            </SectionHeading>*/}
             <SectionHeading
               as="p"
               variant="display"
@@ -134,8 +131,8 @@ export function NxIsFast(): JSX.Element {
         </div>
       </motion.div>
       <div className="mx-auto max-w-7xl px-4 pt-12 sm:px-6 lg:px-8 lg:pt-16">
-        <dl className="grid grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-4">
-          <div key="Never rebuild the same code twice" className="group">
+        <dl className="grid grid-cols-1 gap-16 sm:grid-cols-2">
+          {/*<div key="Never rebuild the same code twice" className="group">
             <dt>
               <div className="relative flex h-12 w-12">
                 <CogIcon
@@ -164,62 +161,72 @@ export function NxIsFast(): JSX.Element {
               </span>{' '}
               from its cache.
             </dd>
-          </div>
-          <div key="Distributed task execution" className="group">
-            <dt>
-              <div className="relative flex h-12 w-12">
-                <ServerStackIcon
-                  className="h-8 w-8 text-blue-500 dark:text-sky-500"
-                  aria-hidden="true"
-                />
-                <CogIcon
-                  className="absolute bottom-0 right-0 h-8 w-8 text-purple-500 opacity-0 transition-opacity group-hover:opacity-100 group-hover:motion-safe:animate-spin dark:text-fuchsia-500"
-                  aria-hidden="true"
-                />
-              </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
-                <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
-                Distributed task execution (DTE)
-              </p>
-            </dt>
-            <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
-              Smart, automated, dynamic distribution of tasks across multiple
-              machines to get{' '}
-              <span className="font-medium">
-                maximum parallelization and CPU efficient
-              </span>{' '}
-              CI runs.
-            </dd>
-          </div>
-          <div key="Computation caching" className="group">
-            <dt>
-              <div className="relative flex h-12 w-12">
-                <CloudArrowDownIcon
-                  className="h-8 w-8 text-blue-500 dark:text-sky-500"
-                  aria-hidden="true"
-                />
-                <CubeTransparentIcon
-                  className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-8 group-hover:-translate-y-1 group-hover:opacity-100 dark:text-fuchsia-500"
-                  aria-hidden="true"
-                />
-                <CubeTransparentIcon
-                  className="5 absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-5 group-hover:translate-y-6 group-hover:opacity-100 dark:text-fuchsia-500"
-                  aria-hidden="true"
-                />
-              </div>
-              <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">
-                <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>
-                Remote caching
-              </p>
-            </dt>
-            <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">
-              <span className="font-medium">
-                Share your local computation cache
-              </span>{' '}
-              with team mates and your CI system for maximum efficiency.
-            </dd>
-          </div>
-          <div key="Efficient execution" className="group">
+            <div className="m-4 flex flex-row-reverse">
+              <ButtonLink
+                size="small"
+                variant="secondary"
+                title="Learn how caching works in Nx"
+                href="/concepts/how-caching-works"
+              >
+                Learn more about caching
+              </ButtonLink>
+            </div>
+          </div>*/}
+          {/*<div key="Distributed task execution" className="group">*/}
+          {/*  <dt>*/}
+          {/*    <div className="relative flex h-12 w-12">*/}
+          {/*      <ServerStackIcon*/}
+          {/*        className="h-8 w-8 text-blue-500 dark:text-sky-500"*/}
+          {/*        aria-hidden="true"*/}
+          {/*      />*/}
+          {/*      <CogIcon*/}
+          {/*        className="absolute bottom-0 right-0 h-8 w-8 text-purple-500 opacity-0 transition-opacity group-hover:opacity-100 group-hover:motion-safe:animate-spin dark:text-fuchsia-500"*/}
+          {/*        aria-hidden="true"*/}
+          {/*      />*/}
+          {/*    </div>*/}
+          {/*    <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">*/}
+          {/*      <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>*/}
+          {/*      Distributed task execution (DTE)*/}
+          {/*    </p>*/}
+          {/*  </dt>*/}
+          {/*  <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">*/}
+          {/*    Smart, automated, dynamic distribution of tasks across multiple*/}
+          {/*    machines to get{' '}*/}
+          {/*    <span className="font-medium">*/}
+          {/*      maximum parallelization and CPU efficient*/}
+          {/*    </span>{' '}*/}
+          {/*    CI runs.*/}
+          {/*  </dd>*/}
+          {/*</div>*/}
+          {/*<div key="Computation caching" className="group">*/}
+          {/*  <dt>*/}
+          {/*    <div className="relative flex h-12 w-12">*/}
+          {/*      <CloudArrowDownIcon*/}
+          {/*        className="h-8 w-8 text-blue-500 dark:text-sky-500"*/}
+          {/*        aria-hidden="true"*/}
+          {/*      />*/}
+          {/*      <CubeTransparentIcon*/}
+          {/*        className="absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-8 group-hover:-translate-y-1 group-hover:opacity-100 dark:text-fuchsia-500"*/}
+          {/*        aria-hidden="true"*/}
+          {/*      />*/}
+          {/*      <CubeTransparentIcon*/}
+          {/*        className="5 absolute inset-0 h-8 w-8 text-purple-500 opacity-0 transition-all group-hover:translate-x-5 group-hover:translate-y-6 group-hover:opacity-100 dark:text-fuchsia-500"*/}
+          {/*        aria-hidden="true"*/}
+          {/*      />*/}
+          {/*    </div>*/}
+          {/*    <p className="relative mt-4 text-base font-medium leading-6 text-slate-900 dark:text-slate-100">*/}
+          {/*      <span className="absolute -left-4 h-full w-0.5 bg-blue-500 dark:bg-sky-500"></span>*/}
+          {/*      Remote caching*/}
+          {/*    </p>*/}
+          {/*  </dt>*/}
+          {/*  <dd className="mt-2 text-base text-slate-500 dark:text-slate-400">*/}
+          {/*    <span className="font-medium">*/}
+          {/*      Share your local computation cache*/}
+          {/*    </span>{' '}*/}
+          {/*    with team mates and your CI system for maximum efficiency.*/}
+          {/*  </dd>*/}
+          {/*</div>*/}
+          {/*<div key="Efficient execution" className="group">
             <dt>
               <div className="relative flex h-12 w-12">
                 <AcademicCapIcon
@@ -248,7 +255,17 @@ export function NxIsFast(): JSX.Element {
               </span>{' '}
               and what tasks need to be re-run.
             </dd>
-          </div>
+            <div className="m-4 flex flex-row-reverse">
+              <ButtonLink
+                size="small"
+                variant="secondary"
+                title="Learn how the `affected` command works"
+                href="/concepts/affected"
+              >
+                Learn more about the "affect" command
+              </ButtonLink>
+            </div>
+          </div>*/}
         </dl>
       </div>
     </article>
