@@ -973,25 +973,34 @@ export const frameworkIcons: Record<
     image: (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        enableBackground="new 0 0 250 250"
-        version="1.1"
-        className="w-full h-full"
-        viewBox="0 0 250 250"
-        xmlSpace="preserve"
+        className="w-full h-full text-black dark:text-white"
+        viewBox="0 0 24 24"
+        fill="currentColor"
       >
         <title>Angular</title>
+        <title>Angular</title>
         <path
-          d="M125 30L125 30 125 30 31.9 63.2 46.1 186.3 125 230 125 230 125 230 203.9 186.3 218.1 63.2z"
-          fill="#DD0031"
-        ></path>
+          fill="url(#a)"
+          d="m23.9 3.986-.862 12.805L14.786 0l9.115 3.986Zm-5.715 16.558-6.235 3.362-6.235-3.362 1.268-2.904h9.934l1.268 2.904ZM11.95 6.374l3.268 7.505H8.682l3.267-7.505ZM.854 16.79 0 3.986 9.115 0 .855 16.791Z"
+        />
         <path
-          d="M125 30L125 52.2 125 52.1 125 153.4 125 153.4 125 230 125 230 203.9 186.3 218.1 63.2 125 30z"
-          fill="#C3002F"
-        ></path>
-        <path
-          d="M125 52.1L66.8 182.6h21.7l11.7-29.2h49.4l11.7 29.2H183L125 52.1zm17 83.3h-34l17-40.9 17 40.9z"
-          fill="#FFFFFF"
-        ></path>
+          fill="url(#b)"
+          d="m23.9 3.986-.862 12.805L14.786 0l9.115 3.986Zm-5.715 16.558-6.235 3.362-6.235-3.362 1.268-2.904h9.934l1.268 2.904ZM11.95 6.374l3.268 7.505H8.682l3.267-7.505ZM.854 16.79 0 3.986 9.115 0 .855 16.791Z"
+        />
+        <defs>
+          <linearGradient id="a" x1="21%" x2="100%" y1="87.5%" y2="50%">
+            <stop stopColor="#E40035" />
+            <stop offset=".24" stopColor="#F60A48" />
+            <stop offset=".352" stopColor="#F20755" />
+            <stop offset=".494" stopColor="#DC087D" />
+            <stop offset=".745" stopColor="#9717E7" />
+            <stop offset="1" stopColor="#6C00F5" />
+          </linearGradient>
+          <linearGradient id="b" x1="16%" x2="67%" y1="12.5%" y2="71%">
+            <stop stopColor="#FF31D9" />
+            <stop offset="1" stopColor="#FF5BE1" stopOpacity="0" />
+          </linearGradient>
+        </defs>
       </svg>
     ),
   },
