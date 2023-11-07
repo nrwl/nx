@@ -2149,6 +2149,20 @@
           ]
         },
         {
+          "name": "nuxt",
+          "id": "nuxt",
+          "description": "Nuxt package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "path": "/nx-api/nuxt",
+              "name": "Overview of the Nx Nuxt Plugin",
+              "description": "The Nx Plugin for Nuxt contains generators for managing Nuxt applications within a Nx workspace. This page also explains how to configure Nuxt on your Nx workspace.",
+              "file": "shared/packages/nuxt/nuxt-plugin"
+            }
+          ]
+        },
+        {
           "name": "webpack",
           "id": "webpack",
           "description": "Webpack package.",

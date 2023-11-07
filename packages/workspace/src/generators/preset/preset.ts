@@ -102,6 +102,32 @@ async function createPreset(tree: Tree, options: Schema) {
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
       unitTestRunner: 'vitest',
     });
+  } else if (options.preset === Preset.Nuxt) {
+    const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
+      '/nuxt');
+
+    return nuxtApplicationGenerator(tree, {
+      name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
+      style: options.style,
+      linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+    });
+  } else if (options.preset === Preset.NuxtStandalone) {
+    const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
+      '/nuxt');
+
+    return nuxtApplicationGenerator(tree, {
+      name: options.name,
+      directory: '.',
+      projectNameAndRootFormat: 'as-provided',
+      style: options.style,
+      linter: options.linter,
+      rootProject: true,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      unitTestRunner: 'vitest',
+    });
   } else if (options.preset === Preset.NextJs) {
     const { applicationGenerator: nextApplicationGenerator } = require('@nx' +
       '/next');

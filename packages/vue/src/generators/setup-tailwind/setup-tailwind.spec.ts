@@ -16,6 +16,9 @@ describe('vue setup-tailwind generator', () => {
     ${`src/assets/styles.css`}
     ${`src/assets/styles.scss`}
     ${`src/assets/styles.less`}
+    ${`src/assets/css/styles.css`}
+    ${`src/assets/css/styles.scss`}
+    ${`src/assets/css/styles.less`}
   `('should update existing stylesheet', async ({ stylesPath }) => {
     const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'example', {

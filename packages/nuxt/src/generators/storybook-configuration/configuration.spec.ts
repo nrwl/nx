@@ -2,8 +2,8 @@ import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import applicationGenerator from '../application/application';
-import componentGenerator from '../component/component';
 import storybookConfigurationGenerator from './configuration';
+import { componentGenerator } from '@nx/vue';
 
 const componentContent = `<script setup lang="ts">
 defineProps<{
@@ -45,7 +45,9 @@ describe('nuxt:storybook-configuration', () => {
     expect(
       appTree.read('test-ui-app/.storybook/preview.ts', 'utf-8')
     ).toMatchSnapshot();
-    expect(appTree.exists('test-ui-app/tsconfig.storybook.json')).toBeTruthy();
+    expect(
+      appTree.read('test-ui-app/tsconfig.storybook.json', 'utf-8')
+    ).toMatchSnapshot();
   });
 
   it('should generate stories for components and not pages', async () => {

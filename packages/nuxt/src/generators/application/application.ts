@@ -1,10 +1,9 @@
-import * as path from 'path';
 import {
   addProjectConfiguration,
-  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  joinPathFragments,
   offsetFromRoot,
   runTasksInSerial,
   toJS,
@@ -19,13 +18,17 @@ import { updateGitIgnore } from '../../utils/update-gitignore';
 import { addBuildTarget, addServeTarget } from './lib/add-targets';
 import { Linter } from '@nx/eslint';
 import { addE2e } from './lib/add-e2e';
-import { nxVersion } from '../../utils/versions';
 import { addLinting } from '../../utils/add-linting';
+import { addVitest } from './lib/add-vitest';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeOptions(tree, schema);
+
+  const outputPath = joinPathFragments('dist', options.appProjectRoot);
+
+  const projectOffsetFromRoot = offsetFromRoot(options.appProjectRoot);
 
   const nuxtInitTask = await nuxtInitGenerator(tree, {
     ...options,
@@ -40,13 +43,25 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     targets: {},
   });
 
-  generateFiles(tree, path.join(__dirname, './files'), options.appProjectRoot, {
-    ...options,
-    offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-    title: options.projectName,
-    dot: '.',
-    tmpl: '',
-  });
+  generateFiles(
+    tree,
+    joinPathFragments(__dirname, './files'),
+    options.appProjectRoot,
+    {
+      ...options,
+      offsetFromRoot: projectOffsetFromRoot,
+      title: options.projectName,
+      dot: '.',
+      tmpl: '',
+      style: options.style,
+    }
+  );
+
+  if (options.style === 'none') {
+    tree.delete(
+      joinPathFragments(options.appProjectRoot, `src/assets/css/styles.none`)
+    );
+  }
 
   createTsConfig(
     tree,
@@ -54,12 +69,13 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       projectRoot: options.appProjectRoot,
       rootProject: options.rootProject,
       unitTestRunner: options.unitTestRunner,
+      outputPath,
     },
     getRelativePathToRootTsConfig(tree, options.appProjectRoot)
   );
 
-  addServeTarget(tree, options.name, options.appProjectRoot);
-  addBuildTarget(tree, options.name, options.appProjectRoot);
+  addServeTarget(tree, options.name);
+  addBuildTarget(tree, options.name, outputPath);
 
   updateGitIgnore(tree);
 
@@ -74,15 +90,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   );
 
   if (options.unitTestRunner === 'vitest') {
-    const { vitestGenerator } = ensurePackage('@nx/vite', nxVersion);
-    tasks.push(
-      await vitestGenerator(tree, {
-        uiFramework: 'none',
-        project: options.projectName,
-        coverageProvider: 'c8',
-        skipFormat: true,
-      })
-    );
+    addVitest(tree, options, options.appProjectRoot, projectOffsetFromRoot);
   }
 
   tasks.push(await addE2e(tree, options));
