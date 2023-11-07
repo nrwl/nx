@@ -4,7 +4,13 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 export default defineNuxtConfig({
   srcDir: 'src',
   devtools: { enabled: true },
-  css: ['~/assets/css/styles.css'],
+  devServer: {
+    host: 'localhost',
+    port: 4200,
+  },
+  <% if (style !== 'none') { %>
+  css: ['~/assets/css/styles.<%= style %>'],
+  <% } %>
   vite: {
     plugins: [
       nxViteTsPaths()
