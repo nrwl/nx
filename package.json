@@ -227,6 +227,7 @@
     "ng-packagr": "~16.2.0",
     "node-fetch": "^2.6.7",
     "npm-package-arg": "11.0.1",
+    "nuxi": "npm:nuxi-nightly@3.9.2-1699007958.251cab5",
     "nx": "17.0.0-rc.2",
     "octokit": "^2.0.14",
     "open": "^8.4.0",

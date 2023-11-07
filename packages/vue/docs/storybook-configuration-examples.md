@@ -1,7 +1,18 @@
-This generator will set up Storybook for your **Vue** project. You can also use this generator to generate Storybook configuration for your **Next.js** project. By default, starting Nx 16, Storybook v7 is used.
+---
+title: Storybook configuration generator examples
+description: This page contains examples for the @nx/vue:storybook-configuration generator.
+---
+
+This generator will set up Storybook for your **Vue** project. You can also use this generator to generate Storybook configuration for your **Nuxt** project.
 
 ```bash
 nx g @nx/vue:storybook-configuration project-name
+```
+
+or
+
+```bash
+nx g @nx/nuxt:storybook-configuration project-name
 ```
 
 You can read more about how this generator works, in the [Storybook for Vue overview page](/recipes/storybook/overview-vue#generate-storybook-configuration-for-a-vue-project).

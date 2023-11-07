@@ -10,27 +10,28 @@ import {
   nuxtDevtoolsVersion,
   nuxtVersion,
   h3Version,
+  nuxtUiTemplatesVersion,
 } from '../../utils/versions';
 import {
   lessVersion,
   sassVersion,
   vueRouterVersion,
   vueVersion,
+  vueTscVersion,
 } from '@nx/vue';
 import { InitSchema } from './schema';
 
 function updateDependencies(host: Tree, schema: InitSchema) {
-  let dependencies: { [key: string]: string } = {
-    vue: vueVersion,
-  };
-
   let devDependencies: { [key: string]: string } = {
     '@nx/nuxt': nxVersion,
+    '@nx/vite': nxVersion, // needed for the nxViteTsPaths plugin
     '@nuxt/devtools': nuxtDevtoolsVersion,
+    '@nuxt/ui-templates': nuxtUiTemplatesVersion,
     nuxt: nuxtVersion,
     h3: h3Version,
     vue: vueVersion,
     'vue-router': vueRouterVersion,
+    'vue-tsc': vueTscVersion,
   };
 
   if (schema.style === 'scss') {
