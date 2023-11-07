@@ -1,16 +1,10 @@
 # Configuring CI Using Azure Pipelines and Nx
 
-Below is an example of an Azure Pipelines setup for an Nx workspace - building and testing only what is affected.
+There are two general approaches to setting up CI with Nx - using a single pipeline or using distributed task execution. For smaller repositories, a single pipeline is faster and cheaper, but once a full CI run starts taking 10 to 15 minutes, distributed task execution becomes the better option. Distributed task execution allows you to keep the CI pipeline fast as you scale. As the repository grows, all you need to do is add more agents.
 
-{% callout type="note" title="Check your Shallow Fetch settings" %}
+## Single Pipeline
 
-Nx needs additional Git history available for `affected` to function correctly. Make sure Shallow fetching is disabled in your pipeline settings UI. For more info, check out this article from Microsoft [here](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/steps-checkout?view=azure-pipelines#shallow-fetch).
-
-{% /callout %}
-
-Unlike `GitHub Actions` and `CircleCI`, you don't have the metadata to help you track the last successful run on `main`. In the example below, the base is set to `HEAD~1` (for push) or branching point (for pull requests), but a more robust solution would be to tag an SHA in the main job once it succeeds and then use this tag as a base. You can also try [using the devops CLI within the pipeline yaml](#get-the-commit-of-the-last-successful-build). See the [nx-tag-successful-ci-run](https://github.com/nrwl/nx-tag-successful-ci-run) and [nx-set-shas](https://github.com/nrwl/nx-set-shas) (version 1 implements tagging mechanism) repositories for more information.
-
-We also have to set `NX_BRANCH` explicitly. NX_BRANCH does not impact the functionality of your runs, but does provide a human-readable label to easily identify them in the Nx Cloud app.
+Below is an example of an Azure Pipelines setup that runs on a single pipeline, building and testing only what is affected.
 
 ```yaml {% fileName="azure-pipelines.yml" %}
 trigger:
@@ -60,6 +54,16 @@ jobs:
       - script: npx nx affected --base=$(BASE_SHA) -t lint,test,build --parallel=3 --configuration=ci
 ```
 
+{% callout type="note" title="Check your Shallow Fetch settings" %}
+
+Nx needs additional Git history available for [`affected`](/nx-cloud/features/affected) to function correctly. Make sure Shallow fetching is disabled in your pipeline settings UI. For more info, check out this article from Microsoft [here](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/steps-checkout?view=azure-pipelines#shallow-fetch).
+
+{% /callout %}
+
+Unlike `GitHub Actions` and `CircleCI`, you don't have the metadata to help you track the last successful run on `main`. In the example below, the base is set to `HEAD~1` (for push) or branching point (for pull requests), but a more robust solution would be to tag a SHA in the main job once it succeeds and then use this tag as a base. You can also try [using the devops CLI within the pipeline yaml](#get-the-commit-of-the-last-successful-build). See the [nx-tag-successful-ci-run](https://github.com/nrwl/nx-tag-successful-ci-run) and [nx-set-shas](https://github.com/nrwl/nx-set-shas) (version 1 implements tagging mechanism) repositories for more information.
+
+We also have to set `NX_BRANCH` explicitly. NX_BRANCH does not impact the functionality of your runs, but does provide a human-readable label to easily identify them in the Nx Cloud app.
+
 The `main` job implements the CI workflow.
 
 ## Get the Commit of the Last Successful Build
@@ -99,11 +103,17 @@ By default the command returns an entire JSON object with all the information. B
 
 Finally we extract the result in a common [custom variable](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/set-variables-scripts?view=azure-devops&tabs=bash) named `BASE_SHA` used later by `nx affected` commands
 
-## Distributed Task Execution with Nx Cloud
+## Distributed Task Execution
 
-Read more about [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution).
+To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can run this generator:
 
-```yaml
+```shell
+npx nx g ci-workflow --ci=azure
+```
+
+Or you can copy and paste the workflow below:
+
+```yaml {% fileName="azure-pipelines.yml" %}
 trigger:
   - main
 pr:
@@ -155,7 +165,15 @@ jobs:
       - script: npm ci
       - script: npx nx-cloud start-ci-run --stop-agents-after="build"
       - script: npx nx-cloud record -- npx nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build --parallel=3 --configuration=ci
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build --parallel=2 --configuration=ci
 ```
 
-You can also use our [ci-workflow generator](/nx-api/workspace/generators/ci-workflow) to generate the pipeline file.
+This configuration is setting up two types of jobs - a main job and three agent jobs.
+
+The main job tells Nx Cloud to use DTE and then runs normal Nx commands as if this were a single pipeline set up. Once the commands are done, it notifies Nx Cloud to stop the agent jobs.
+
+The agent jobs set up the repo and then wait for Nx Cloud to assign them tasks.
+
+{% callout type="warning" title="Two Types of Parallelization" %}
+The agent strategy of `parallel: 3` and the `nx affected --parallel=2` flag both parallelize tasks, but in different ways. The way this workflow is written, there will be 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
+{% /callout %}

@@ -94,7 +94,7 @@ The second workflow is for the agents:
 The `number-of-agents` property controls how many agent jobs are created. Note that this property should be the same number for each workflow.
 
 {% callout type="warning" title="Two Types of Parallelization" %}
-The `number-of-agents` property and the `--parallel` flag both parallelize tasks, but in different ways. The way this workflow is written, there will 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
+The `number-of-agents` property and the `--parallel` flag both parallelize tasks, but in different ways. The way this workflow is written, there will be 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
 {% /callout %}
 
 ## Custom Distributed CI with Nx Cloud
