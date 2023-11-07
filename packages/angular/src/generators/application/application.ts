@@ -8,6 +8,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { angularInitGenerator } from '../init/init';
+import { setupSsr } from '../setup-ssr/setup-ssr';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
 import {
   addE2e,
@@ -76,6 +77,13 @@ export async function applicationGeneratorInternal(
     enableStrictTypeChecking(tree, options);
   } else {
     setApplicationStrictDefault(tree, false);
+  }
+
+  if (options.ssr) {
+    await setupSsr(tree, {
+      project: options.name,
+      standalone: options.standalone,
+    });
   }
 
   if (!options.skipFormat) {

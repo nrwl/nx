@@ -6,30 +6,22 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import type { Schema } from '../schema';
-
-import setupSsr from '../../setup-ssr/setup-ssr';
+import { join } from 'path';
 import {
   corsVersion,
-  expressVersion,
   moduleFederationNodeVersion,
   typesCorsVersion,
-  typesExpressVersion,
 } from '../../../utils/versions';
-import { join } from 'path';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
+import type { Schema } from '../schema';
 
-export async function addSsr(
+export async function updateSsrSetup(
   tree: Tree,
   options: Schema,
   appName: string,
   typescriptConfiguration: boolean
 ) {
   let project = readProjectConfiguration(tree, appName);
-
-  await setupSsr(tree, {
-    project: appName,
-    standalone: options.standalone,
-  });
 
   tree.rename(
     joinPathFragments(project.sourceRoot, 'main.server.ts'),
@@ -40,17 +32,22 @@ export async function addSsr(
     "import('./src/main.server');"
   );
 
-  const browserBundleOutput = joinPathFragments(
-    project.targets.build.options.outputPath,
-    'browser'
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  generateFiles(
+    tree,
+    join(
+      __dirname,
+      '../files/common',
+      angularMajorVersion >= 17 ? 'v17+' : 'pre-v17'
+    ),
+    project.root,
+    {
+      appName,
+      browserBundleOutput: project.targets.build.options.outputPath,
+      standalone: options.standalone,
+      tmpl: '',
+    }
   );
-
-  generateFiles(tree, join(__dirname, '../files/common'), project.root, {
-    appName,
-    browserBundleOutput,
-    standalone: options.standalone,
-    tmpl: '',
-  });
 
   const pathToTemplateFiles = typescriptConfiguration ? 'ts' : 'js';
 
@@ -83,12 +80,10 @@ export async function addSsr(
     tree,
     {
       cors: corsVersion,
-      express: expressVersion,
       '@module-federation/node': moduleFederationNodeVersion,
     },
     {
       '@types/cors': typesCorsVersion,
-      '@types/express': typesExpressVersion,
     }
   );
 

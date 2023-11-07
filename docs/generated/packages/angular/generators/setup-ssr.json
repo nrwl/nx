@@ -55,7 +55,7 @@
       },
       "hydration": {
         "type": "boolean",
-        "description": "Set up Hydration for the SSR application. _Note: This is only supported in Angular versions >= 16.0.0_."
+        "description": "Set up Hydration for the SSR application. It defaults to `true` for Angular versions >= 17.0.0. Otherwise, it defaults to `false`. _Note: This is only supported in Angular versions >= 16.0.0_."
       },
       "skipFormat": {
         "type": "boolean",

@@ -30,4 +30,5 @@ export interface Schema {
   rootProject?: boolean;
   minimal?: boolean;
   bundler?: 'webpack' | 'esbuild';
+  ssr?: boolean;
 }

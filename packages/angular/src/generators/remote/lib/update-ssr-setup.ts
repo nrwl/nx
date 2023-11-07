@@ -6,17 +6,15 @@ import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nx/devkit';
-
-import setupSsr from '../../setup-ssr/setup-ssr';
+import { join } from 'path';
 import {
   corsVersion,
-  expressVersion,
   moduleFederationNodeVersion,
   typesCorsVersion,
-  typesExpressVersion,
 } from '../../../utils/versions';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 
-export async function addSsr(
+export async function updateSsrSetup(
   tree: Tree,
   {
     appName,
@@ -32,11 +30,6 @@ export async function addSsr(
 ) {
   let project = readProjectConfiguration(tree, appName);
 
-  await setupSsr(tree, {
-    project: appName,
-    standalone,
-  });
-
   tree.rename(
     joinPathFragments(project.sourceRoot, 'main.server.ts'),
     joinPathFragments(project.sourceRoot, 'bootstrap.server.ts')
@@ -47,18 +40,20 @@ export async function addSsr(
     "import('./src/main.server');"
   );
 
-  const browserBundleOutput = joinPathFragments(
-    project.targets.build.options.outputPath,
-    'browser'
-  );
-  const serverBundleOutput = joinPathFragments(
-    project.targets.build.options.outputPath,
-    'server'
+  const browserBundleOutput = project.targets.build.options.outputPath;
+  const serverBundleOutput = project.targets.build.options.outputPath.replace(
+    /\/browser$/,
+    '/server'
   );
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   generateFiles(
     tree,
-    joinPathFragments(__dirname, `../files/common`),
+    join(
+      __dirname,
+      '../files/common',
+      angularMajorVersion >= 17 ? 'v17+' : 'pre-v17'
+    ),
     project.root,
     {
       appName,
@@ -125,12 +120,10 @@ export async function addSsr(
     tree,
     {
       cors: corsVersion,
-      express: expressVersion,
       '@module-federation/node': moduleFederationNodeVersion,
     },
     {
       '@types/cors': typesCorsVersion,
-      '@types/express': typesExpressVersion,
     }
   );
 

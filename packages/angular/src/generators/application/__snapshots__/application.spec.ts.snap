@@ -293,6 +293,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-dir-my-app:build",
+        "staticFilePath": "dist/apps/my-dir/my-app/browser",
       },
     },
     "test": {
@@ -411,6 +412,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "strictTemplates": true,
   },
   "compilerOptions": {
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -527,6 +529,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "staticFilePath": "dist/apps/my-app/browser",
       },
     },
     "test": {
@@ -645,6 +648,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "strictTemplates": true,
   },
   "compilerOptions": {
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -825,6 +829,7 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
     "strictTemplates": true,
   },
   "compilerOptions": {
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -984,6 +989,7 @@ exports[`app nested should create project configs 1`] = `
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "staticFilePath": "dist/my-dir/my-app/browser",
       },
     },
     "test": {
@@ -1132,6 +1138,7 @@ exports[`app not nested should create project configs 1`] = `
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "staticFilePath": "dist/my-app/browser",
       },
     },
     "test": {
@@ -1250,6 +1257,7 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
     "strictTemplates": true,
   },
   "compilerOptions": {
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,

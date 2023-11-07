@@ -10,7 +10,7 @@ import { E2eTestRunner } from '../../utils/test-runners';
 import applicationGenerator from '../application/application';
 import remoteGenerator from '../remote/remote';
 import { setupMf } from '../setup-mf/setup-mf';
-import { addSsr } from './lib';
+import { updateSsrSetup } from './lib';
 import type { Schema } from './schema';
 
 export async function host(tree: Tree, options: Schema) {
@@ -78,7 +78,7 @@ export async function hostInternal(tree: Tree, schema: Schema) {
 
   let installTasks = [appInstallTask];
   if (options.ssr) {
-    let ssrInstallTask = await addSsr(
+    let ssrInstallTask = await updateSsrSetup(
       tree,
       options,
       hostProjectName,
