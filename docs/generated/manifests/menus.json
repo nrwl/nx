@@ -7955,6 +7955,90 @@
         "disableCollapsible": false
       },
       {
+        "id": "nuxt",
+        "path": "/nx-api/nuxt",
+        "name": "nuxt",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/nuxt/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview of the Nx Nuxt Plugin",
+                "path": "/nx-api/nuxt/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "executors",
+            "path": "/nx-api/nuxt/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "build",
+                "path": "/nx-api/nuxt/executors/build",
+                "name": "build",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "serve",
+                "path": "/nx-api/nuxt/executors/serve",
+                "name": "serve",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/nuxt/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/nuxt/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/nx-api/nuxt/generators/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "storybook-configuration",
+                "path": "/nx-api/nuxt/generators/storybook-configuration",
+                "name": "storybook-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "nx",
         "path": "/nx-api/nx",
         "name": "nx",
