@@ -114,11 +114,19 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             workspaceRoot: root,
           });
         for (const node in projectNodes) {
-          projectNodes[node].name ??= node;
-          mergeProjectConfigurationIntoRootMap(
-            projectRootMap,
-            projectNodes[node]
-          );
+          mergeProjectConfigurationIntoRootMap(projectRootMap, {
+            // If root is specified in config, that will overwrite this.
+            // Specifying it here though allows plugins to return something like
+            // {
+            //   projects: {
+            //     [root]: { targets: buildTargetsFromFile(f) }
+            //   }
+            // }
+            // Otherwise, the root would have to be specified in the config as well
+            // which would be a bit redundant.
+            root: node,
+            ...projectNodes[node],
+          });
         }
         Object.assign(externalNodes, pluginExternalNodes);
       }

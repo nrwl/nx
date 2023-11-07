@@ -40,7 +40,6 @@ import {
 } from '../adapter/angular-json';
 import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
 import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
-import { FileMapCache } from '../project-graph/nx-deps-cache';
 import { CreatePackageJsonProjectsNextToProjectJson } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
 
 /**
@@ -60,7 +59,14 @@ export type CreateNodesFunction<T = unknown> = (
   options: T | undefined,
   context: CreateNodesContext
 ) => {
-  projects?: Record<string, ProjectConfiguration>;
+  /**
+   * A map of project root -> project configuration
+   */
+  projects?: Record<string, Optional<ProjectConfiguration, 'root'>>;
+
+  /**
+   * A map of external node name -> external node. External nodes do not have a root, so the key is their name.
+   */
   externalNodes?: Record<string, ProjectGraphExternalNode>;
 };
 
@@ -311,12 +317,12 @@ function ensurePluginIsV2(plugin: NxPlugin): NxPluginV2 {
       createNodes: [
         `*/**/${combineGlobPatterns(plugin.projectFilePatterns)}`,
         (configFilePath) => {
-          const name = toProjectName(configFilePath);
+          const root = dirname(configFilePath);
           return {
             projects: {
-              [name]: {
-                name,
-                root: dirname(configFilePath),
+              [root]: {
+                name: toProjectName(configFilePath),
+                root,
                 targets: plugin.registerProjectTargets?.(configFilePath),
               },
             },
@@ -535,3 +541,5 @@ function getDefaultPluginsSync(root: string): LoadedNxPlugin[] {
     plugin: p,
   }));
 }
+
+type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;

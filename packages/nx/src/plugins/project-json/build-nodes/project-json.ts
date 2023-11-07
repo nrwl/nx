@@ -9,13 +9,14 @@ export const CreateProjectJsonProjectsPlugin: NxPluginV2 = {
   name: 'nx-core-build-project-json-nodes',
   createNodes: [
     '{project.json,**/project.json}',
-    (file, _, context) => {
-      const root = context.workspaceRoot;
-      const json = readJsonFile<ProjectConfiguration>(join(root, file));
+    (file, _, { workspaceRoot }) => {
+      const json = readJsonFile<ProjectConfiguration>(
+        join(workspaceRoot, file)
+      );
       const project = buildProjectFromProjectJson(json, file);
       return {
         projects: {
-          [project.name]: project,
+          [project.root]: project,
         },
       };
     },

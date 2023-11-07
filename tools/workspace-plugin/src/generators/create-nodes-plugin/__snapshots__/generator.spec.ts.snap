@@ -88,11 +88,10 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     }
 
     options = normalizeOptions(options);
-    const projectName = basename(projectRoot);
 
     return {
       projects: {
-        [projectName]: {
+        [projectRoot]: {
           root: projectRoot,
           projectType: 'library',
           targets: buildEslintTargets(
