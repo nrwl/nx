@@ -3,7 +3,7 @@ import { SectionHeading, TestimonialCard } from '@nx/nx-dev/ui-common';
 export function Testimonials(): JSX.Element {
   const column1 = [
     {
-      link: 'https://twitter.com/antoinepairet/status/1488882179434328065',
+      link: 'https://x.com/antoinepairet/status/1488882179434328065',
       title: 'Co-founder and CTO at @HealthRosa',
       author: 'Antoine Pairet',
       imageUrl: '/images/testimonials/antoine-pairet.jpg',
@@ -11,7 +11,7 @@ export function Testimonials(): JSX.Element {
         "I can't recommend @NxDevTools enough! Go use it, your future self says thanks ;-). Have a doubt or a question? Reach out to @nrwl_io, they are kind, smart, and willing to help",
     },
     {
-      link: 'https://twitter.com/danm_t/status/1504832834271330313',
+      link: 'https://x.com/danm_t/status/1504832834271330313',
       title: 'Developer',
       author: 'Daniel Marin',
       imageUrl: '/images/testimonials/daniel-marin.jpg',
@@ -28,7 +28,7 @@ export function Testimonials(): JSX.Element {
       content:
         "Supporting @NxDevTools was an exciting goal for @StackBlitz: it's a remarkably elegant setup – but also a great test for WebContainers' maturity, so we're so happy to have reached this milestone!",
       imageUrl: '/images/testimonials/tomek-sulkowski.jpg',
-      link: 'https://twitter.com/sulco/status/1455207019942748162',
+      link: 'https://x.com/sulco/status/1455207019942748162',
       title: '@StackBlitz Founding Engineer & DevRel',
     },
     {
@@ -36,7 +36,7 @@ export function Testimonials(): JSX.Element {
       content:
         'Just set up a full-stack Angular/NestJS app with @NxDevTools. One command, about 5 minutes, and a working full-stack "hello world". Probably just saved about 2 hours.',
       imageUrl: '/images/testimonials/michael-bromley.jpg',
-      link: 'https://twitter.com/i/web/status/1403437555769561090',
+      link: 'https://x.com/i/web/status/1403437555769561090',
       title: 'Creator of @vendure_io',
     },
   ];
@@ -45,7 +45,7 @@ export function Testimonials(): JSX.Element {
       author: 'Kent C. Dodds',
       content: 'Wow, @NxDevTools is no joke. This is awesome!',
       imageUrl: '/images/testimonials/kent-c-dodds.jpg',
-      link: 'https://twitter.com/kentcdodds/status/1487079957536788480',
+      link: 'https://x.com/kentcdodds/status/1487079957536788480',
       title: 'Teacher, OSS',
     },
     {
@@ -53,7 +53,7 @@ export function Testimonials(): JSX.Element {
       content:
         "There is a lot to be learned from @nrwl_io's Nx developer experience. It is exemplary.",
       imageUrl: '/images/testimonials/tejas-kumar.jpg',
-      link: 'https://twitter.com/TejasKumar_/status/1503676694208655361',
+      link: 'https://x.com/TejasKumar_/status/1503676694208655361',
       title: 'Director of Developer Relations, @xatabase',
     },
     {
@@ -61,11 +61,11 @@ export function Testimonials(): JSX.Element {
       content:
         'Beautiful! I’m using NX on a nextjs/tailwind project and I must say it’s such a nice developer experience',
       imageUrl: '/images/testimonials/alan-montgomery.jpg',
-      link: 'https://twitter.com/93alan/status/1488825290973405184',
+      link: 'https://x.com/93alan/status/1488825290973405184',
       title: 'Senior React Dev/Mobile Team Lead @Idox',
     },
     {
-      link: 'https://twitter.com/241Dev/status/1487531051484278791',
+      link: 'https://x.com/241Dev/status/1487531051484278791',
       title: 'Web Engineer',
       author: 'Akira Tsuboi',
       imageUrl: '/images/testimonials/akira-tsuboi.jpg',

@@ -14,8 +14,8 @@ export function ConfHealthAndSafety(): JSX.Element {
             <p className="mb-4">
               We do not tolerate harassment of conference participants in any
               form. Sexual language and imagery are not appropriate for any
-              conference venue, including talks, workshops, parties, Twitter,
-              and other online media.
+              conference venue, including talks, workshops, parties, X, and
+              other online media.
             </p>
             <p className="mb-4">
               Conference participants violating these rules may be sanctioned or

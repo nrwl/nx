@@ -124,12 +124,12 @@ export default function ConfPage(): JSX.Element {
                   <p className="mb-6 mt-6 sm:text-lg">
                     Follow us on{' '}
                     <a
-                      href="https://twitter.com/nxdevtools"
+                      href="https://x.com/nxdevtools"
                       rel="noreferrer"
                       target="_blank"
                       className="text-blue-500 dark:text-sky-500"
                     >
-                      Twitter
+                      X
                     </a>
                     ,{' '}
                     <a
@@ -492,12 +492,12 @@ export default function ConfPage(): JSX.Element {
       </main>
       <Footer />
       <Script
-        id="twitter-campain-pixelcode"
+        id="x-campain-pixelcode"
         strategy="afterInteractive"
         dangerouslySetInnerHTML={{
           __html: `
         !function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);
-        },s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',
+        },s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-x.com/uwt.js',
         a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');
         twq('config','obtp4'); 
         `,

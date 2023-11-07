@@ -57,5 +57,5 @@ Connect on our channels and with the Nx Community to ask questions, get help and
 - Reach out for [Enterprise Support](https://nx.app/enterprise)
 - Join our [Discord Community](https://go.nx.dev/community)
 - Subscribe to our [Youtube Channel](https://www.youtube.com/@nxdevtools)
-- Follow us on [Twitter](https://twitter.com/nxdevtools)
+- Follow us on [X](https://x.com/nxdevtools)
 - Subscribe [to our tech newsletter](https://go.nrwl.io/nx-newsletter)

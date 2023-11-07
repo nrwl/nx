@@ -1,6 +1,6 @@
 # Distributed Task Execution Guide
 
-The illustrations in this guide are created by Nrwlian [Nicole Oliver](https://twitter.com/nixcodes)
+The illustrations in this guide are created by Nrwlian [Nicole Oliver](https://x.com/nixcodes)
 
 ![how does distributed task execution work in Nx Cloud?](/shared/images/dte/how-does-dte-work.jpeg)
 
@@ -55,6 +55,6 @@ execution, showing the performance gains, and comparing to sharding/binning.
 
 ## Illustration
 
-Here is the full illustrated explanation page that [Nicole Oliver](https://twitter.com/nixcodes) made:
+Here is the full illustrated explanation page that [Nicole Oliver](https://x.com/nixcodes) made:
 
 ![How Does DTE Work Explainer](/shared/images/dte/nx-cloud-how-does-dte-work.png)

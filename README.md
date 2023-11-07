@@ -39,7 +39,7 @@ width="100%" alt="Nx - Smart, Fast and Extensible Build System"></a></p>
 - [Nx.Dev Community Page: Community Discord Channel, Newsletter, etc.](https://nx.dev/community)
 - [The Nx Show Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a
   regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
-- [Follow Nx on Twitter](https://twitter.com/NxDevTools)
+- [Follow Nx on X](https://x.com/NxDevTools)
 
 ## Want to help?
 

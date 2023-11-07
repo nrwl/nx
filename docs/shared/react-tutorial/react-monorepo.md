@@ -1034,6 +1034,6 @@ Here's some more things you can dive into next:
 Also, make sure you
 
 - [Join the Official Nx Discord Server](https://go.nx.dev/community) to ask questions and find out the latest news about Nx.
-- [Follow Nx on Twitter](https://twitter.com/nxdevtools) to stay up to date with Nx news
+- [Follow Nx on X](https://x.com/nxdevtools) to stay up to date with Nx news
 - [Read our Nx blog](https://blog.nrwl.io/)
 - [Subscribe to our Youtube channel](https://www.youtube.com/@nxdevtools) for demos and Nx insights

@@ -4,7 +4,7 @@ export interface Member {
   imageUrl?: string;
   name: string;
   description: string;
-  twitter?: string;
+  x?: string;
 }
 
 export function MemberCard(data: Member): JSX.Element {
@@ -18,14 +18,14 @@ export function MemberCard(data: Member): JSX.Element {
       <div className="col-span-3 md:col-span-2">
         <h5 className="font-input-mono mb-3">{data.name}</h5>
         <p>{data.description}</p>
-        {data.twitter ? (
+        {data.x ? (
           <a
             className="font-input-mono mt-6 block"
-            href={'https://twitter.com/' + data.twitter}
+            href={'https://x.com/' + data.x}
             target="_blank"
             rel="noreferrer"
           >
-            @{data.twitter}
+            @{data.x}
           </a>
         ) : null}
       </div>
