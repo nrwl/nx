@@ -1,4 +1,4 @@
-use crate::native::utils::glob::build_glob_set;
+use crate::native::glob::build_glob_set;
 use crate::native::utils::path::Normalize;
 use crate::native::workspace::types::ConfigurationParserResult;
 
@@ -12,7 +12,7 @@ pub(super) fn glob_files(
     files: Option<&[(PathBuf, String)]>,
 ) -> napi::Result<Vec<String>, WorkspaceErrors> {
     let Some(files) = files else {
-        return Ok(Default::default())
+        return Ok(Default::default());
     };
 
     let globs =
@@ -33,8 +33,7 @@ pub(super) fn get_project_configurations<ConfigurationParser>(
 where
     ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
 {
-    let config_paths =
-        glob_files(globs, files).map_err(anyhow::Error::from)?;
+    let config_paths = glob_files(globs, files).map_err(anyhow::Error::from)?;
 
     parse_configurations(config_paths)
 }

@@ -1,6 +1,9 @@
+mod glob_group;
+mod glob_parser;
+mod glob_transform;
+
+use crate::native::glob::glob_transform::convert_glob;
 use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
-use once_cell::sync::Lazy;
-use regex::Regex;
 use std::fmt::Debug;
 use std::path::Path;
 use tracing::trace;
@@ -69,136 +72,25 @@ impl NxGlobSet {
 pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<NxGlobSet> {
     let result = globs
         .iter()
-        .map(|s| convert_glob(s.as_ref()))
+        .map(|s| {
+            let glob = s.as_ref();
+            if glob.contains('!') || glob.contains('|') || glob.contains('(') {
+                convert_glob(glob)
+            } else {
+                Ok(vec![glob.to_string()])
+            }
+        })
         .collect::<anyhow::Result<Vec<_>>>()?
-        .into_iter()
-        .flatten()
-        .collect::<Vec<_>>();
+        .concat();
 
-    trace!(?globs, ?result, "converted globs to result");
+    trace!(?globs, ?result, "converted globs");
 
     NxGlobSetBuilder::new(&result)?.build()
-}
-
-// path/!{cache}/**
-static NEGATIVE_DIR_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"!\{(.*?)}").unwrap());
-// path/**/(subdir1|subdir2)/*.(js|ts)
-static GROUP_PATTERNS_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\((.*?)\)").unwrap());
-// path/{cache}*
-static SINGLE_PATTERN_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"\{(.*)}\*").unwrap());
-
-/// Converts a glob string to a list of globs
-/// e.g. `path/!(cache)/**` -> `path/**`, `!path/cache/**`
-fn convert_glob(glob: &str) -> anyhow::Result<Vec<String>> {
-    // If there are no negations or multiple patterns, return the glob as is
-    if !glob.contains('!') && !glob.contains('|') && !glob.contains('(') {
-        return Ok(vec![glob.to_string()]);
-    }
-
-    let glob = GROUP_PATTERNS_REGEX.replace_all(glob, |caps: &regex::Captures| {
-        format!("{{{}}}", &caps[1].replace('|', ","))
-    });
-
-    let mut globs: Vec<String> = Vec::new();
-
-    // push a glob directory glob that is either "path/*" or "path/**"
-    globs.push(
-        NEGATIVE_DIR_REGEX
-            .replace_all(&glob, |caps: &regex::Captures| {
-                let capture = caps.get(0);
-                match capture {
-                    Some(capture) => {
-                        let char = glob.as_bytes()[capture.end()] as char;
-                        if char == '*' {
-                            "".to_string()
-                        } else {
-                            "*".to_string()
-                        }
-                    }
-                    None => "".to_string(),
-                }
-            })
-            .into(),
-    );
-
-    let matches: Vec<_> = NEGATIVE_DIR_REGEX.find_iter(&glob).collect();
-
-    // convert negative captures to globs (e.g. "path/!{cache,dir}/**" -> "!path/{cache,dir}/**")
-    if matches.len() == 1 {
-        globs.push(format!(
-            "!{}",
-            SINGLE_PATTERN_REGEX
-                .replace(&glob, |caps: &regex::Captures| { format!("{}*", &caps[1]) })
-                .replace('!', "")
-        ));
-    } else {
-        // if there is more than one negative capture, convert each capture to a *, and negate the whole glob
-        for matched in matches {
-            let a = glob.replace(matched.as_str(), "*");
-            globs.push(format!("!{}", a.replace('!', "")));
-        }
-    }
-
-    Ok(globs)
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::assert_eq;
-
-    #[test]
-    fn convert_globs_full_convert() {
-        let full_convert =
-            convert_glob("dist/!(cache|cache2)/**/!(README|LICENSE).(js|ts)").unwrap();
-        assert_eq!(
-            full_convert,
-            [
-                "dist/*/**/*.{js,ts}",
-                "!dist/*/**/{README,LICENSE}.{js,ts}",
-                "!dist/{cache,cache2}/**/*.{js,ts}",
-            ]
-        );
-    }
-
-    #[test]
-    fn convert_globs_no_dirs() {
-        let no_dirs = convert_glob("dist/**/!(README|LICENSE).(js|ts)").unwrap();
-        assert_eq!(
-            no_dirs,
-            ["dist/**/*.{js,ts}", "!dist/**/{README,LICENSE}.{js,ts}"]
-        );
-    }
-
-    #[test]
-    fn convert_globs_no_files() {
-        let no_files = convert_glob("dist/!(cache|cache2)/**/*.(js|ts)").unwrap();
-        assert_eq!(
-            no_files,
-            ["dist/*/**/*.{js,ts}", "!dist/{cache,cache2}/**/*.{js,ts}"]
-        );
-    }
-
-    #[test]
-    fn convert_globs_no_extensions() {
-        let no_extensions = convert_glob("dist/!(cache|cache2)/**/*.js").unwrap();
-        assert_eq!(
-            no_extensions,
-            ["dist/*/**/*.js", "!dist/{cache,cache2}/**/*.js"]
-        );
-    }
-
-    #[test]
-    fn convert_globs_no_patterns() {
-        let no_patterns = convert_glob("dist/**/*.js").unwrap();
-        assert_eq!(no_patterns, ["dist/**/*.js",]);
-    }
-
-    #[test]
-    fn convert_globs_single_negative() {
-        let negative_single_dir = convert_glob("packages/!(package-a)*").unwrap();
-        assert_eq!(negative_single_dir, ["packages/*", "!packages/package-a*"]);
-    }
 
     #[test]
     fn should_work_with_simple_globs() {
@@ -275,6 +167,7 @@ mod test {
         // matches
         assert!(glob_set.is_match("dist/nested/file.txt"));
         assert!(glob_set.is_match("dist/nested/file.md"));
+        assert!(glob_set.is_match("dist/nested/doublenested/triplenested/file.txt"));
         // no matches
         assert!(!glob_set.is_match("dist/file.txt"));
         assert!(!glob_set.is_match("dist/cache/nested/README.txt"));
@@ -321,5 +214,73 @@ mod test {
         assert!(!glob_set.is_match("packages/package-a-b"));
         assert!(!glob_set.is_match("packages/package-a-b/nested"));
         assert!(!glob_set.is_match("packages/package-b/nested"));
+    }
+
+    #[test]
+    fn should_handle_complex_extglob_patterns() {
+        let glob_set = build_glob_set(&["**/?(*.)+(spec|test).[jt]s?(x)?(.snap)"]).unwrap();
+        // matches
+        assert!(glob_set.is_match("packages/package-a/spec.jsx.snap"));
+        assert!(glob_set.is_match("packages/package-a/spec.js.snap"));
+        assert!(glob_set.is_match("packages/package-a/spec.jsx"));
+        assert!(glob_set.is_match("packages/package-a/spec.js"));
+        assert!(glob_set.is_match("packages/package-a/spec.tsx.snap"));
+        assert!(glob_set.is_match("packages/package-a/spec.ts.snap"));
+        assert!(glob_set.is_match("packages/package-a/spec.tsx"));
+        assert!(glob_set.is_match("packages/package-a/spec.ts"));
+        assert!(glob_set.is_match("packages/package-a/file.spec.jsx.snap"));
+        assert!(glob_set.is_match("packages/package-a/file.spec.js.snap"));
+        assert!(glob_set.is_match("packages/package-a/file.spec.jsx"));
+        assert!(glob_set.is_match("packages/package-a/file.spec.js"));
+        assert!(glob_set.is_match("packages/package-a/file.spec.tsx.snap"));
+        assert!(glob_set.is_match("packages/package-a/file.spec.ts.snap"));
+        assert!(glob_set.is_match("packages/package-a/file.spec.tsx"));
+        assert!(glob_set.is_match("packages/package-a/file.spec.ts"));
+        assert!(glob_set.is_match("spec.jsx.snap"));
+        assert!(glob_set.is_match("spec.js.snap"));
+        assert!(glob_set.is_match("spec.jsx"));
+        assert!(glob_set.is_match("spec.js"));
+        assert!(glob_set.is_match("spec.tsx.snap"));
+        assert!(glob_set.is_match("spec.ts.snap"));
+        assert!(glob_set.is_match("spec.tsx"));
+        assert!(glob_set.is_match("spec.ts"));
+        assert!(glob_set.is_match("file.spec.jsx.snap"));
+        assert!(glob_set.is_match("file.spec.js.snap"));
+        assert!(glob_set.is_match("file.spec.jsx"));
+        assert!(glob_set.is_match("file.spec.js"));
+        assert!(glob_set.is_match("file.spec.tsx.snap"));
+        assert!(glob_set.is_match("file.spec.ts.snap"));
+        assert!(glob_set.is_match("file.spec.tsx"));
+        assert!(glob_set.is_match("file.spec.ts"));
+
+        // no matches
+        assert!(!glob_set.is_match("packages/package-a/spec.jsx.snapx"));
+        assert!(!glob_set.is_match("packages/package-a/spec.js.snapx"));
+        assert!(!glob_set.is_match("packages/package-a/file.ts"));
+
+        let glob_set = build_glob_set(&["**/!(*.module).ts"]).unwrap();
+        //matches
+        assert!(glob_set.is_match("test.ts"));
+        assert!(glob_set.is_match("nested/comp.test.ts"));
+        //no matches
+        assert!(!glob_set.is_match("test.module.ts"));
+
+        let glob_set = build_glob_set(&["**/*.*(component,module).ts?(x)"]).unwrap();
+        //matches
+        assert!(glob_set.is_match("test.component.ts"));
+        assert!(glob_set.is_match("test.module.ts"));
+        assert!(glob_set.is_match("test.component.tsx"));
+        assert!(glob_set.is_match("test.module.tsx"));
+        assert!(glob_set.is_match("nested/comp.test.component.ts"));
+        assert!(glob_set.is_match("nested/comp.test.module.ts"));
+        assert!(glob_set.is_match("nested/comp.test.component.tsx"));
+        assert!(glob_set.is_match("nested/comp.test.module.tsx"));
+        //no matches
+        assert!(!glob_set.is_match("test.ts"));
+        assert!(!glob_set.is_match("test.component.spec.ts"));
+        assert!(!glob_set.is_match("test.module.spec.ts"));
+        assert!(!glob_set.is_match("test.component.spec.tsx"));
+        assert!(!glob_set.is_match("test.module.spec.tsx"));
+        assert!(!glob_set.is_match("nested/comp.test.component.spec.ts"));
     }
 }

@@ -1,4 +1,5 @@
 pub mod cache;
+pub mod glob;
 pub mod hasher;
 mod logger;
 pub mod plugins;
