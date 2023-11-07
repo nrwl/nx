@@ -97,7 +97,7 @@ Finally we extract the result in a common [custom variable](https://learn.micros
 
 ## Distributed Task Execution with Nx Cloud
 
-Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
+Read more about [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution).
 
 ```yaml
 trigger:

@@ -36,7 +36,7 @@ It should be a user token, not the project token.
 
 ## Distributed Task Execution with Nx Cloud
 
-Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
+Read more about [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution).
 
 ```yaml {% fileName=".circleci/config.yml" %}
 version: 2.1

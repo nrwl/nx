@@ -1,46 +1,136 @@
-# How Affected Works
+# Run Only Tasks Affected by a PR
 
-{% callout type="note" title="First thing!" %}
-Before reading this guide, [check out the mental model guide](/concepts/mental-model). It will help you understand how computation caching fits into the rest of Nx.
-{% /callout %}
+As your workspace grows, re-testing, re-building an re-linting all projects becomes too slow. To address this Nx implements code change analysis to determine the minimum set of projects that were affected by the change. How does this work?
 
-When you run `nx test app1`, you are telling Nx to run the app1:test task plus all the tasks it depends on.
+```shell
+nx affected -t <task>
+```
 
-When you run `nx run-many -t test -p app1 lib`, you are telling Nx to do the same for two tasks app1:test
-and lib:test.
-
-When you run `nx run-many -t test`, you are telling Nx to do this for all the projects.
-
-As your workspace grows, retesting all projects becomes too slow. To address this Nx implements code change analysis to
-get the min set of projects that need to be retested. How does it work?
-
-When you run `nx affected -t test`, Nx looks at the files you changed in your PR, it will look at the nature of
-change (what exactly did you update in those files), and it uses this to figure the list of projects in the workspace
+When you run `nx affected -t test`, Nx uses Git to determine the files you changed in your PR, it will look at the nature of
+change (what exactly did you update in those files), and it uses this to determine the list of projects in the workspace
 that can be affected by this change. It then runs the `run-many` command with that list.
 
 For instance, if my PR changes `lib`, and I then run `nx affected -t test`, Nx figures out that `app1` and `app2`
 depend on `lib`, so it will invoke `nx run-many -t test -p app1 app2 lib`.
 
-![affected](/shared/mental-model/affected.svg)
+{% side-by-side %}
+{% graph title="Changing app1 can only affect app1" height="250px" %}
+
+```json
+{
+  "projects": [
+    {
+      "type": "app",
+      "name": "app1",
+      "data": {}
+    },
+    {
+      "type": "app",
+      "name": "app2",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib",
+      "data": {}
+    }
+  ],
+  "groupByFolder": false,
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "dependencies": {
+    "app1": [
+      {
+        "target": "lib",
+        "source": "app1",
+        "type": "direct"
+      }
+    ],
+    "app2": [
+      {
+        "target": "lib",
+        "source": "app2",
+        "type": "direct"
+      }
+    ],
+    "lib": []
+  },
+  "affectedProjectIds": ["app1"]
+}
+```
+
+{% /graph %}
+
+{% graph title="Changing lib can affect lib, app1 and app2" height="250px" %}
+
+```json
+{
+  "projects": [
+    {
+      "type": "app",
+      "name": "app1",
+      "data": {}
+    },
+    {
+      "type": "app",
+      "name": "app2",
+      "data": {}
+    },
+    {
+      "type": "lib",
+      "name": "lib",
+      "data": {}
+    }
+  ],
+  "groupByFolder": false,
+  "workspaceLayout": {
+    "appsDir": "apps",
+    "libsDir": "libs"
+  },
+  "dependencies": {
+    "app1": [
+      {
+        "target": "lib",
+        "source": "app1",
+        "type": "direct"
+      }
+    ],
+    "app2": [
+      {
+        "target": "lib",
+        "source": "app2",
+        "type": "direct"
+      }
+    ],
+    "lib": []
+  },
+  "affectedProjectIds": ["app1", "app2", "lib"]
+}
+```
+
+{% /graph %}
+{% /side-by-side %}
 
 Nx analyzes the nature of the changes. For example, if you change the version of Next.js in the package.json, Nx knows
 that `app2` cannot be affected by it, so it only retests `app1`.
 
-## Project Graph
+## Visualize Affected Projects
 
-To visualise what is affected, run:
+To visualize what is affected, run:
 
 ```shell
 nx affected:graph
 ```
 
-## CI
+## Specify Which SHAs to Use to Calculate Affected Code
 
 The SHAs you pass must be defined in the git repository. The `main` and `HEAD` SHAs are what you normally use while developing. Most likely you will want to provision other SHAs in your CI environment.
 
 ```shell
-nx affected:build --base= origin/main --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
-nx affected:build --base= origin/main~1 --head= origin/main # rerun what is affected by the last commit in main
+nx affected:build --base=origin/main --head=$PR_BRANCH_NAME # where PR_BRANCH_NAME is defined by your CI system
+nx affected:build --base=origin/main~1 --head=origin/main # rerun what is affected by the last commit in main
 ```
 
 You can also set the base and head SHAs as env variables:
@@ -49,6 +139,8 @@ You can also set the base and head SHAs as env variables:
 NX_BASE=origin/main~1
 NX_HEAD=origin/main
 ```
+
+Typically, you want to set the base SHA not the the most recent commit on the `main` branch, but rather that latest commit that successfully passed in CI. In other words, in order to be certain that the repo is in a good state, we need to check all the changes that have happened since the last time the repo was in a good state. See the setup guide for your CI provider to learn how to calculate the last successful commit.
 
 ## Ignoring Files from Affected Commands
 

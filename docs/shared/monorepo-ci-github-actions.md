@@ -41,7 +41,7 @@ To understand why knowing the last successful build is important for the affecte
 
 ## Distributed Task Execution
 
-To set up [Distributed Task Execution (DTE)](/core-features/distribute-task-execution), you can run this generator:
+To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can run this generator:
 
 ```shell
 npx nx g ci-workflow --ci=github
