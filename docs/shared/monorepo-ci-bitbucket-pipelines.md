@@ -32,7 +32,7 @@ The `pull-requests` and `main` jobs implement the CI workflow.
 
 ## Distributed Task Execution
 
-This pipeline uses [Distributed Task Execution (DTE)](/core-features/distribute-task-execution) to automatically distribute work across multiple agent processes.
+This pipeline uses [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution) to automatically distribute work across multiple agent processes.
 
 ```yaml
 image: node:20
