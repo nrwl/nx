@@ -23,13 +23,13 @@ export function addModuleFederationFiles(
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    join(options.appProjectRoot, 'src/main.tsx'),
-    join(options.appProjectRoot, 'src/bootstrap.tsx')
+    join(options.appProjectRoot, `src/main.${options.js ? 'js' : 'tsx'}`),
+    join(options.appProjectRoot, `src/bootstrap.${options.js ? 'js' : 'tsx'}`)
   );
 
   generateFiles(
     host,
-    join(__dirname, `../files/common`),
+    join(__dirname, `../files/${options.js ? 'common' : 'common-ts'}`),
     options.appProjectRoot,
     templateVariables
   );
@@ -44,21 +44,4 @@ export function addModuleFederationFiles(
     options.appProjectRoot,
     templateVariables
   );
-
-  if (options.typescriptConfiguration) {
-    const pathToWebpackConfig = joinPathFragments(
-      options.appProjectRoot,
-      'webpack.config.js'
-    );
-    const pathToWebpackProdConfig = joinPathFragments(
-      options.appProjectRoot,
-      'webpack.config.prod.js'
-    );
-    if (host.exists(pathToWebpackConfig)) {
-      host.delete(pathToWebpackConfig);
-    }
-    if (host.exists(pathToWebpackProdConfig)) {
-      host.delete(pathToWebpackProdConfig);
-    }
-  }
 }

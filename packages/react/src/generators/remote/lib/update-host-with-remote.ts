@@ -105,7 +105,16 @@ export function updateHostWithRemote(
 }
 
 function findAppComponentPath(host: Tree, sourceRoot: string) {
-  const locations = ['app/app.tsx', 'app/App.tsx', 'app.tsx', 'App.tsx'];
+  const locations = [
+    'app/app.jsx',
+    'app/App.jsx',
+    'app.jsx',
+    'App.jsx',
+    'app/app.tsx',
+    'app/App.tsx',
+    'app.tsx',
+    'App.tsx',
+  ];
   for (const loc of locations) {
     if (host.exists(joinPathFragments(sourceRoot, loc))) {
       return joinPathFragments(sourceRoot, loc);
