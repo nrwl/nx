@@ -8,7 +8,6 @@ import {
 import { configurationGenerator } from '@nx/jest';
 import { Linter } from '@nx/eslint';
 import { addTsConfigPath } from '@nx/js';
-import { lt } from 'semver';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
@@ -63,13 +62,6 @@ export async function libraryGeneratorInternal(
   if (schema.addTailwind && !schema.buildable && !schema.publishable) {
     throw new Error(
       `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
-    );
-  }
-
-  const userInstalledAngularVersion = getInstalledAngularVersionInfo(tree);
-  if (lt(userInstalledAngularVersion.version, '14.1.0') && schema.standalone) {
-    throw new Error(
-      `The "--standalone" option is not supported in Angular versions < 14.1.0.`
     );
   }
 
@@ -149,6 +141,7 @@ async function addUnitTestRunner(
       'src',
       'test-setup.ts'
     );
+    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
     if (options.strict && host.exists(setupFile)) {
       const contents = host.read(setupFile, 'utf-8');
       host.write(
@@ -160,7 +153,17 @@ globalThis.ngJest = {
     errorOnUnknownProperties: true,
   },
 };
-${contents}`
+${contents}${
+          angularMajorVersion >= 17
+            ? `
+/**
+* Angular uses performance.mark() which is not supported by jsdom. Stub it out
+* to avoid errors.
+*/
+global.performance.mark = jest.fn();
+`
+            : ''
+        }`
       );
     }
   }

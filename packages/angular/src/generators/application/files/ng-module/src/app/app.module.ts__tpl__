@@ -9,7 +9,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';<% } %>
   declarations: [AppComponent<% if(!minimal) { %>, NxWelcomeComponent<% } %>],
   imports: [
     BrowserModule,<% if(routing) { %>
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),<% } %>
+    RouterModule.forRoot(appRoutes),<% } %>
   ],
   providers: [],
   bootstrap: [AppComponent],

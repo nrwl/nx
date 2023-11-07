@@ -1,27 +1,28 @@
-import type { Schema } from './schema';
 import {
   logger,
   readCachedProjectGraph,
   readNxJson,
   workspaceRoot,
 } from '@nx/devkit';
-import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
-import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
-import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
-import {
-  getDynamicRemotes,
-  getStaticRemotes,
-  validateDevRemotes,
-} from '../utilities/module-federation';
-import { existsSync } from 'fs';
-import { extname, join } from 'path';
 import {
   getModuleFederationConfig,
   getRemotes,
 } from '@nx/webpack/src/utils/module-federation';
 import { fork } from 'child_process';
+import { existsSync } from 'fs';
+import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
+import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { extname, join } from 'path';
 import { combineLatest, concatMap, from, switchMap } from 'rxjs';
+import { validateDevRemotes } from '../utilities/module-federation';
+import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
+import type {
+  NormalizedSchema,
+  Schema,
+  SchemaWithBrowserTarget,
+  SchemaWithBuildTarget,
+} from './schema';
 
 export function executeModuleFederationDevServerBuilder(
   schema: Schema,
@@ -29,7 +30,7 @@ export function executeModuleFederationDevServerBuilder(
 ): ReturnType<typeof executeWebpackDevServerBuilder | any> {
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
-  const { ...options } = schema;
+  const options = normalizeOptions(schema);
   const projectGraph = readCachedProjectGraph();
   const { projects: workspaceProjects } =
     readProjectsConfigurationFromProjectGraph(projectGraph);
@@ -44,7 +45,7 @@ export function executeModuleFederationDevServerBuilder(
           port: options.port,
           host: options.host,
           ssl: options.ssl,
-          buildTarget: options.browserTarget,
+          buildTarget: options.buildTarget,
           parallel: false,
           spa: false,
           withDeps: false,
@@ -272,3 +273,21 @@ export function executeModuleFederationDevServerBuilder(
 export default require('@angular-devkit/architect').createBuilder(
   executeModuleFederationDevServerBuilder
 );
+
+function normalizeOptions(schema: Schema): NormalizedSchema {
+  let buildTarget = (schema as SchemaWithBuildTarget).buildTarget;
+  if ((schema as SchemaWithBrowserTarget).browserTarget) {
+    buildTarget ??= (schema as SchemaWithBrowserTarget).browserTarget;
+    delete (schema as SchemaWithBrowserTarget).browserTarget;
+  }
+
+  return {
+    ...schema,
+    buildTarget,
+    host: schema.host ?? 'localhost',
+    port: schema.port ?? 4200,
+    liveReload: schema.liveReload ?? true,
+    open: schema.open ?? false,
+    ssl: schema.ssl ?? false,
+  };
+}

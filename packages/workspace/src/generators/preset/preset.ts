@@ -31,6 +31,8 @@ async function createPreset(tree: Tree, options: Schema) {
       standalone: options.standaloneApi,
       routing: options.routing,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      bundler: options.bundler,
+      ssr: options.ssr,
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -47,6 +49,8 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: true,
       standalone: options.standaloneApi,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      bundler: options.bundler,
+      ssr: options.ssr,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +

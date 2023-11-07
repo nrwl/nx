@@ -678,7 +678,9 @@ function getListOfRoutes(
 
 export function isNgStandaloneApp(tree: Tree, projectName: string) {
   const project = readProjectConfiguration(tree, projectName);
-  const mainFile = project.targets?.build?.options?.main;
+  const mainFile =
+    project.targets?.build?.options?.main ??
+    project.targets?.build?.options?.browser;
 
   if (project.projectType !== 'application' || !mainFile) {
     return false;
@@ -873,7 +875,8 @@ export function readBootstrapInfo(
 
   let mainPath;
   try {
-    mainPath = config.targets.build.options.main;
+    mainPath =
+      config.targets.build.options.main ?? config.targets.build.options.browser;
   } catch (e) {
     throw new Error('Main file cannot be located');
   }

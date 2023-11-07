@@ -85,10 +85,10 @@ export function addDependenciesToPackageJsonIfDontExist(
 export function versions(tree: Tree) {
   const majorAngularVersion = getInstalledAngularMajorVersion(tree);
   switch (majorAngularVersion) {
-    case 14:
-      return backwardCompatibleVersions.angularV14;
     case 15:
       return backwardCompatibleVersions.angularV15;
+    case 16:
+      return backwardCompatibleVersions.angularV16;
     default:
       return latestVersions;
   }

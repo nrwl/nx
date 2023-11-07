@@ -60,6 +60,8 @@ interface AngularArguments extends BaseArguments {
   routing: boolean;
   standaloneApi: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
+  bundler: 'webpack' | 'esbuild';
+  ssr: boolean;
 }
 
 interface VueArguments extends BaseArguments {
@@ -149,10 +151,12 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('standaloneApi', {
             describe: chalk.dim`Use Standalone Components if generating an Angular app`,
             type: 'boolean',
+            default: true,
           })
           .option('routing', {
             describe: chalk.dim`Add a routing setup for an Angular app`,
             type: 'boolean',
+            default: true,
           })
           .option('bundler', {
             describe: chalk.dim`Bundler to be used to build the app`,
@@ -174,6 +178,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
             choices: ['cypress', 'playwright', 'none'],
             type: 'string',
+          })
+          .option('ssr', {
+            describe: chalk.dim`Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application`,
+            type: 'boolean',
           }),
         withNxCloud,
         withCI,
@@ -754,9 +762,12 @@ async function determineAngularOptions(
   let preset: Preset;
   let style: string;
   let appName: string;
-  let standaloneApi: boolean;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let routing: boolean;
+  let bundler: undefined | 'webpack' | 'esbuild' = undefined;
+  let ssr: undefined | boolean = undefined;
+
+  const standaloneApi = parsedArgs.standaloneApi;
+  const routing = parsedArgs.routing;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.Angular) {
     preset = parsedArgs.preset;
@@ -776,6 +787,30 @@ async function determineAngularOptions(
       preset = Preset.AngularMonorepo;
       appName = await determineAppName(parsedArgs);
     }
+  }
+
+  if (parsedArgs.bundler) {
+    bundler = parsedArgs.bundler;
+  } else {
+    const reply = await enquirer.prompt<{ bundler: 'esbuild' | 'webpack' }>([
+      {
+        name: 'bundler',
+        message: `Which bundler would you like to use?`,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'esbuild',
+            message: 'esbuild [ https://esbuild.github.io/ ]',
+          },
+          {
+            name: 'webpack',
+            message: 'Webpack [ https://webpack.js.org/ ]',
+          },
+        ],
+        initial: 'esbuild' as any,
+      },
+    ]);
+    bundler = reply.bundler;
   }
 
   if (parsedArgs.style) {
@@ -806,55 +841,34 @@ async function determineAngularOptions(
     style = reply.style;
   }
 
-  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-
-  if (parsedArgs.standaloneApi !== undefined) {
-    standaloneApi = parsedArgs.standaloneApi;
+  if (parsedArgs.ssr !== undefined) {
+    ssr = parsedArgs.ssr;
   } else {
-    const reply = await enquirer.prompt<{ standaloneApi: 'Yes' | 'No' }>([
+    const reply = await enquirer.prompt<{ ssr: 'Yes' | 'No' }>([
       {
-        name: 'standaloneApi',
+        name: 'ssr',
         message:
-          'Would you like to use Standalone Components in your application?',
+          'Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?',
         type: 'autocomplete',
-        choices: [
-          {
-            name: 'No',
-          },
-          {
-            name: 'Yes',
-          },
-        ],
+        choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 'No' as any,
       },
     ]);
-    standaloneApi = reply.standaloneApi === 'Yes';
+    ssr = reply.ssr === 'Yes';
   }
 
-  if (parsedArgs.routing !== undefined) {
-    routing = parsedArgs.routing;
-  } else {
-    const reply = await enquirer.prompt<{ routing: 'Yes' | 'No' }>([
-      {
-        name: 'routing',
-        message: 'Would you like to add routing?',
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-          },
+  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
-          {
-            name: 'No',
-          },
-        ],
-        initial: 'Yes' as any,
-      },
-    ]);
-    routing = reply.routing === 'Yes';
-  }
-
-  return { preset, style, appName, standaloneApi, routing, e2eTestRunner };
+  return {
+    preset,
+    style,
+    appName,
+    standaloneApi,
+    routing,
+    e2eTestRunner,
+    bundler,
+    ssr,
+  };
 }
 
 async function determineNodeOptions(
