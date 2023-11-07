@@ -35,7 +35,7 @@ export function addModuleFederationFiles(
 
   generateFiles(
     host,
-    join(__dirname, `../files/${options.js ? 'common' : 'common-ts'}`),
+    join(__dirname, `./files/${options.js ? 'common' : 'common-ts'}`),
     options.appProjectRoot,
     templateVariables
   );
