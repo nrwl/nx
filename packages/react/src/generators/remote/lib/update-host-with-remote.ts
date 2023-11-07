@@ -25,6 +25,7 @@ export function updateHostWithRemote(
   }
 
   const hostConfig = readProjectConfiguration(host, hostName);
+
   let moduleFederationConfigPath = joinPathFragments(
     hostConfig.root,
     'module-federation.config.js'
@@ -106,10 +107,10 @@ export function updateHostWithRemote(
 
 function findAppComponentPath(host: Tree, sourceRoot: string) {
   const locations = [
-    'app/app.jsx',
-    'app/App.jsx',
-    'app.jsx',
-    'App.jsx',
+    'app/app.js',
+    'app/App.js',
+    'app.js',
+    'App.js',
     'app/app.tsx',
     'app/App.tsx',
     'app.tsx',

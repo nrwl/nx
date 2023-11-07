@@ -3,7 +3,7 @@ import { ProjectGraph, readJson, readNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import remote from './remote';
-import { getRootTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
+import { getRootTsConfigPathInTree } from '@nx/js';
 
 jest.mock('@nx/devkit', () => {
   const original = jest.requireActual('@nx/devkit');
