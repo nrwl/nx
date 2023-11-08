@@ -1,4 +1,5 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
+import type { PackageCompatVersions } from '../../../utils/backward-compatible-versions';
 import {
   getInstalledAngularVersionInfo,
   getInstalledPackageVersionInfo,
@@ -26,10 +27,10 @@ export function addDependencies(tree: Tree): void {
   } else {
     dependencies['@nguniversal/express-engine'] =
       getInstalledPackageVersionInfo(tree, '@nguniversal/express-engine')
-        ?.version ?? pkgVersions.ngUniversalVersion;
+        ?.version ?? (pkgVersions as PackageCompatVersions).ngUniversalVersion;
     devDependencies['@nguniversal/builders'] =
       getInstalledPackageVersionInfo(tree, '@nguniversal/builders')?.version ??
-      pkgVersions.ngUniversalVersion;
+      (pkgVersions as PackageCompatVersions).ngUniversalVersion;
   }
 
   addDependenciesToPackageJson(tree, dependencies, devDependencies);

@@ -1,15 +1,22 @@
 import * as latestVersions from './versions';
 
 type SupportedVersions = 'angularV15' | 'angularV16';
-export type PackageVersionNames = Exclude<
+
+export type LatestPackageVersionNames = Exclude<
   keyof typeof latestVersions,
   'nxVersion'
 >;
-export type PackageVersions = Record<PackageVersionNames, string>;
+export type CompatPackageVersionNames =
+  | LatestPackageVersionNames
+  // Can be removed when dropping support for Angular v16
+  | 'ngUniversalVersion';
+
+export type PackageLatestVersions = Record<LatestPackageVersionNames, string>;
+export type PackageCompatVersions = Record<CompatPackageVersionNames, string>;
 
 export const backwardCompatibleVersions: Record<
   SupportedVersions,
-  PackageVersions
+  PackageCompatVersions
 > = {
   angularV15: {
     angularVersion: '~15.2.0',
