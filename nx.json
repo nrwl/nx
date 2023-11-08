@@ -26,6 +26,13 @@
     ]
   },
   "release": {
+    "releaseTagPattern": "{version}",
+    "changelog": {
+      "workspaceChangelog": {
+        "createRelease": "github",
+        "file": false
+      }
+    },
     "groups": {
       "npm": {
         "projects": [

@@ -191,9 +191,9 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   };
 }
 
-export function getCommitHash(ref: string) {
+export async function getCommitHash(ref: string) {
   try {
-    return execCommand('git', ['rev-parse', ref]);
+    return (await execCommand('git', ['rev-parse', ref])).trim();
   } catch (e) {
     throw new Error(`Unknown revision: ${ref}`);
   }
