@@ -10,6 +10,11 @@ export default async function (tree: Tree): Promise<void> {
   const angularProjects = await getProjectsFilteredByDependencies(tree, [
     'npm:@angular/core',
   ]);
+
+  if (!angularProjects.length) {
+    return;
+  }
+
   const jestConfigFiles = new Set<string>();
 
   const projectGraph = await createProjectGraphAsync();
