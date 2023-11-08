@@ -209,6 +209,7 @@ function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
     }
   } else {
     try {
+      // nx-ignore-next-line
       const cli = require.resolve('@angular/cli/lib/init.js', {
         paths: [workspace.dir],
       });

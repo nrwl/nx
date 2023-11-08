@@ -10,8 +10,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/nx-dev/ui-home"],
       "options": {
-        "jestConfig": "nx-dev/ui-home/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "nx-dev/ui-home/jest.config.ts"
       }
     }
   }

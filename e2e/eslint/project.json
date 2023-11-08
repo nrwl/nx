@@ -9,7 +9,6 @@
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "e2e/eslint/jest.config.ts",
-        "passWithNoTests": true,
         "runInBand": true
       },
       "outputs": ["{workspaceRoot}/coverage/e2e/eslint"]
