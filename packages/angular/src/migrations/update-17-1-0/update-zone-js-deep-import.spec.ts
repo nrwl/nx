@@ -20,7 +20,7 @@ describe('update-zone-js-deep-imports migration', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should replace replace import from "zone.js"', async () => {
+  it('should replace replace import from "zone.js/dist/zone"', async () => {
     addProject(tree, 'app1', { name: 'app1', root: 'apps/app1' }, [
       'npm:@angular/core',
     ]);
@@ -30,7 +30,7 @@ describe('update-zone-js-deep-imports migration', () => {
     /***************************************************************************************************
      * Zone JS is required by default for Angular itself.
      */
-    import 'zone.js'; // Included with Angular CLI.
+    import 'zone.js/dist/zone'; // Included with Angular CLI.
 
     /***************************************************************************************************
      * APPLICATION IMPORTS
@@ -54,7 +54,7 @@ describe('update-zone-js-deep-imports migration', () => {
     `);
   });
 
-  it('should replace replace import from "zone.js/testing"', async () => {
+  it('should replace replace import from "zone.js/dist/zone-testing"', async () => {
     addProject(tree, 'app1', { name: 'app1', root: 'apps/app1' }, [
       'npm:@angular/core',
     ]);
@@ -62,8 +62,8 @@ describe('update-zone-js-deep-imports migration', () => {
       'apps/app1/src/test.ts',
       `
       // This file is required by karma.conf.js and loads recursively all the .spec and framework files
-      import 'zone.js';
-      import 'zone.js/testing';
+      import 'zone.js/dist/zone';
+      import 'zone.js/dist/zone-testing';
       import { getTestBed } from '@angular/core/testing';
       import {
         BrowserDynamicTestingModule,
