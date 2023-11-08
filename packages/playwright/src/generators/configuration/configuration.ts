@@ -36,8 +36,18 @@ export async function configurationGenerator(
     ...options,
   });
 
-  addE2eTarget(tree, options);
+  const hasPlugin = readNxJson(tree).plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/playwright/plugin'
+      : p.plugin === '@nx/playwright/plugin'
+  );
+
+  if (!hasPlugin) {
+    addE2eTarget(tree, options);
+  }
+
   setupE2ETargetDefaults(tree);
+
   tasks.push(
     await addLinterToPlaywrightProject(tree, {
       project: options.project,

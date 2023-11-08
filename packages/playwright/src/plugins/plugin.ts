@@ -144,20 +144,25 @@ function getOutputs(
   const { reporter, outputDir } = playwrightConfig;
 
   if (reporter) {
+    const DEFAULT_REPORTER_OUTPUT = getOutput('playwright-report');
     if (reporter === 'html' || reporter === 'json') {
       // Reporter is a string, so it uses the default output directory.
-      outputs.push(getOutput('playwright-report'));
+      outputs.push(DEFAULT_REPORTER_OUTPUT);
     } else if (Array.isArray(reporter)) {
       for (const r of reporter) {
         const [, opts] = r;
         // There are a few different ways to specify an output file or directory
         // depending on the reporter. This is a best effort to find the output.
-        if (opts.outputFile) {
+        if (!opts) {
+          outputs.push(DEFAULT_REPORTER_OUTPUT);
+        } else if (opts.outputFile) {
           outputs.push(getOutput(opts.outputFile));
         } else if (opts.outputDir) {
           outputs.push(getOutput(opts.outputDir));
         } else if (opts.outputFolder) {
           outputs.push(getOutput(opts.outputFolder));
+        } else {
+          outputs.push(DEFAULT_REPORTER_OUTPUT);
         }
       }
     }
