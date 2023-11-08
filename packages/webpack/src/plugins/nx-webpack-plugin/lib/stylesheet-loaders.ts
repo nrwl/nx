@@ -21,9 +21,10 @@ export function getCommonLoadersForCssModules(
   // load component css as raw strings
   return [
     {
-      loader: options.extractCss
-        ? MiniCssExtractPlugin.loader
-        : require.resolve('style-loader'),
+      loader:
+        options.extractCss && !options.ssr
+          ? MiniCssExtractPlugin.loader
+          : require.resolve('style-loader'),
     },
     {
       loader: require.resolve('css-loader'),
@@ -54,9 +55,10 @@ export function getCommonLoadersForGlobalCss(
 ) {
   return [
     {
-      loader: options.extractCss
-        ? MiniCssExtractPlugin.loader
-        : require.resolve('style-loader'),
+      loader:
+        options.extractCss && !options.ssr
+          ? MiniCssExtractPlugin.loader
+          : require.resolve('style-loader'),
     },
     { loader: require.resolve('css-loader'), options: { url: false } },
     {
@@ -76,10 +78,12 @@ export function getCommonLoadersForGlobalStyle(
   includePaths: string[]
 ) {
   return [
-    {
-      loader: MiniCssExtractPlugin.loader,
-      options: { esModule: true },
-    },
+    options.extractCss && !options.ssr
+      ? {
+          loader: MiniCssExtractPlugin.loader,
+          options: { esModule: true },
+        }
+      : { loader: require.resolve('style-loader') },
     { loader: require.resolve('css-loader'), options: { url: false } },
     {
       loader: require.resolve('postcss-loader'),
