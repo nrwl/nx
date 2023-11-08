@@ -50,6 +50,23 @@ export function addModuleFederationFiles(
     options.appProjectRoot,
     templateVariables
   );
+
+  if (options.typescriptConfiguration) {
+    const pathToWebpackConfig = joinPathFragments(
+      options.appProjectRoot,
+      'webpack.config.js'
+    );
+    const pathToWebpackProdConfig = joinPathFragments(
+      options.appProjectRoot,
+      'webpack.config.prod.js'
+    );
+    if (host.exists(pathToWebpackConfig)) {
+      host.delete(pathToWebpackConfig);
+    }
+    if (host.exists(pathToWebpackProdConfig)) {
+      host.delete(pathToWebpackProdConfig);
+    }
+  }
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
