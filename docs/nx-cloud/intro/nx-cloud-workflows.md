@@ -5,6 +5,8 @@ src="https://www.youtube.com/embed/JG1FWfZFByM"
 title="Introducing Nx Cloud Workflows"
 width="100%" /%}
 
+{% call-to-action title="Sign Up for Early Access" icon="nxcloud" description="Experience Nx Cloud Workflows for yourself" url="https://cloud.nx.app/workflows-early-access" /%}
+
 ## Powerful CI Capabilities Optimized for Nx monorepos
 
 Just like Nx and Nx Cloud, Nx Cloud Workflows enables you to offload tedious technical tasks so that you can focus on more mission-critical tasks. With a traditional CI platform, you are responsible for telling the CI platform exactly what commands to execute in which environments and what to do with the artifacts. Nx Cloud by itself can automate parallelizing tasks and sharing build artifacts across machines, but you still have to create agent machines on your CI platform.
