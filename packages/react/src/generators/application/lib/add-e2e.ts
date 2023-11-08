@@ -8,6 +8,7 @@ import {
 import { webStaticServeGenerator } from '@nx/web';
 
 import { nxVersion } from '../../../utils/versions';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from '../schema';
 
 export async function addE2e(
@@ -16,10 +17,12 @@ export async function addE2e(
 ): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      webStaticServeGenerator(tree, {
-        buildTarget: `${options.projectName}:build`,
-        targetName: 'serve-static',
-      });
+      if (!hasWebpackPlugin(tree)) {
+        webStaticServeGenerator(tree, {
+          buildTarget: `${options.projectName}:build`,
+          targetName: 'serve-static',
+        });
+      }
 
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/cypress')

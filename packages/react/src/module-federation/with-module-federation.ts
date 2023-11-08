@@ -1,15 +1,15 @@
 import { ModuleFederationConfig } from '@nx/webpack/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
-import type { AsyncNxWebpackPlugin } from '@nx/webpack';
+import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 /**
  * @param {ModuleFederationConfig} options
- * @return {Promise<AsyncNxWebpackPlugin>}
+ * @return {Promise<AsyncNxComposableWebpackPlugin>}
  */
 export async function withModuleFederation(
   options: ModuleFederationConfig
-): Promise<AsyncNxWebpackPlugin> {
+): Promise<AsyncNxComposableWebpackPlugin> {
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options);
 

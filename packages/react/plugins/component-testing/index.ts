@@ -8,7 +8,6 @@ import {
   joinPathFragments,
   logger,
   parseTargetString,
-  ProjectGraph,
   readCachedProjectGraph,
   readTargetOptions,
   stripIndents,
@@ -235,11 +234,9 @@ function buildTargetWebpack(
     normalizeOptions,
   } = require('@nx/webpack/src/executors/webpack/lib/normalize-options');
   const {
-    resolveCustomWebpackConfig,
-  } = require('@nx/webpack/src/utils/webpack/custom-webpack');
-  const {
-    getWebpackConfig,
-  } = require('@nx/webpack/src/executors/webpack/lib/get-webpack-config');
+    resolveUserDefinedWebpackConfig,
+  } = require('@nx/webpack/src/utils/webpack/resolve-user-defined-webpack-config');
+  const { withNx } = require('@nx/webpack/src/utils/with-nx');
 
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),
@@ -251,7 +248,7 @@ function buildTargetWebpack(
   let customWebpack: any;
 
   if (options.webpackConfig) {
-    customWebpack = resolveCustomWebpackConfig(
+    customWebpack = resolveUserDefinedWebpackConfig(
       options.webpackConfig,
       options.tsConfig.startsWith(context.root)
         ? options.tsConfig
@@ -262,12 +259,8 @@ function buildTargetWebpack(
   return async () => {
     customWebpack = await customWebpack;
     // TODO(jack): Once webpackConfig is always set in @nx/webpack:webpack, we no longer need this default.
-    const defaultWebpack = getWebpackConfig(context, {
+    const defaultWebpack = withNx({
       ...options,
-      // cypress will generate its own index.html from component-index.html
-      generateIndexHtml: false,
-      // causes issues with buildable libraries with ENOENT: no such file or directory, scandir error
-      extractLicenses: false,
       root: workspaceRoot,
       projectRoot: ctProjectConfig.root,
       sourceRoot: ctProjectConfig.sourceRoot,
