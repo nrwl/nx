@@ -9,7 +9,6 @@ export const zoneJsVersion = '~0.14.0';
 export const angularJsVersion = '1.7.9';
 export const tsLibVersion = '^2.3.0';
 
-export const ngUniversalVersion = '~16.2.0';
 export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.5';
 export const expressVersion = '~4.18.2';

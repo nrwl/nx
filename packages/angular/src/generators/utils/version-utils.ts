@@ -1,9 +1,13 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { addDependenciesToPackageJson, readJson } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
+import {
+  backwardCompatibleVersions,
+  type PackageCompatVersions,
+  type PackageLatestVersions,
+} from '../../utils/backward-compatible-versions';
 import * as latestVersions from '../../utils/versions';
 import { angularVersion } from '../../utils/versions';
-import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 
 export function getInstalledAngularVersion(tree: Tree): string {
   const pkgJson = readJson(tree, 'package.json');
@@ -82,7 +86,9 @@ export function addDependenciesToPackageJsonIfDontExist(
   );
 }
 
-export function versions(tree: Tree) {
+export function versions(
+  tree: Tree
+): PackageLatestVersions | PackageCompatVersions {
   const majorAngularVersion = getInstalledAngularMajorVersion(tree);
   switch (majorAngularVersion) {
     case 15:
