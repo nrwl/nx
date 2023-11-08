@@ -14,7 +14,6 @@ import addLintingGenerator from '../add-linting/add-linting';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
 import {
   addDependenciesToPackageJsonIfDontExist,
-  getInstalledAngularVersionInfo,
   versions,
 } from '../utils/version-utils';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
@@ -141,7 +140,6 @@ async function addUnitTestRunner(
       'src',
       'test-setup.ts'
     );
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(host);
     if (options.strict && host.exists(setupFile)) {
       const contents = host.read(setupFile, 'utf-8');
       host.write(
@@ -153,17 +151,7 @@ globalThis.ngJest = {
     errorOnUnknownProperties: true,
   },
 };
-${contents}${
-          angularMajorVersion >= 17
-            ? `
-/**
-* Angular uses performance.mark() which is not supported by jsdom. Stub it out
-* to avoid errors.
-*/
-global.performance.mark = jest.fn();
-`
-            : ''
-        }`
+${contents}`
       );
     }
   }

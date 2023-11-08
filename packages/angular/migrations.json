@@ -297,15 +297,6 @@
       "description": "Rename 'browserTarget' to 'buildTarget'.",
       "factory": "./src/migrations/update-17-1-0/browser-target-to-build-target"
     },
-    "stub-performance-mark-in-jest-test-setup": {
-      "cli": "nx",
-      "version": "17.1.0-beta.3",
-      "requires": {
-        "@angular/core": ">=17.0.0-rc.3"
-      },
-      "description": "Stubs out 'performance.mark' in the Jest test setup file.",
-      "factory": "./src/migrations/update-17-1-0/stub-performance-mark-in-jest-test-setup"
-    },
     "replace-nguniversal-builders": {
       "cli": "nx",
       "version": "17.1.0-beta.3",
