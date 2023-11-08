@@ -135,7 +135,7 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
       await writeFile(
         path.join(ngEntryPoint.destinationPath, 'package.json'),
         JSON.stringify(
-          { module: relativeUnixFromDestPath(destinationFiles.fesm2022) },
+          { module: relativeUnixFromDestPath(destinationFiles.esm2022) }, // esm2022 is used since ng-packager-lite does not provide fesm2022
           undefined,
           2
         )
