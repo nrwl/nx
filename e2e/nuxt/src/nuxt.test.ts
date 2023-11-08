@@ -38,8 +38,7 @@ describe('Nuxt Plugin', () => {
     expect(result).toContain(`Successfully ran target test for project ${app}`);
   });
 
-  // TODO(katerina): Enable when TypeScript version is 5.2.2 - when Angular 17 PR is merged
-  xit('should lint application', async () => {
+  it('should lint application', async () => {
     const result = runCLI(`lint ${app}`);
     expect(result).toContain(`Successfully ran target lint for project ${app}`);
   });
