@@ -1648,6 +1648,18 @@
               "name": "Nx Cloud Workflows",
               "id": "nx-cloud-workflows",
               "file": "nx-cloud/intro/nx-cloud-workflows"
+            },
+            {
+              "name": "Tutorials",
+              "id": "tutorials",
+              "description": "Tutorials setting up CI with Nx",
+              "itemList": [
+                {
+                  "name": "Circle CI with Nx",
+                  "id": "circle",
+                  "file": "nx-cloud/tutorial/circle"
+                }
+              ]
             }
           ]
         },
