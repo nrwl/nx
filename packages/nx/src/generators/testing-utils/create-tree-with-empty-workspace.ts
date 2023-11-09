@@ -43,9 +43,6 @@ function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
         lint: {
           cache: true,
         },
-        e2e: {
-          cache: true,
-        },
       },
     })
   );

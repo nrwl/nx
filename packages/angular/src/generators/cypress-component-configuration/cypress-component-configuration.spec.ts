@@ -213,10 +213,6 @@ describe('Cypress Component Testing Configuration', () => {
           generateTests: false,
         });
       }).resolves;
-
-      expect(
-        require('@nx/devkit').createProjectGraphAsync
-      ).not.toHaveBeenCalled();
     });
     it('should use own project config', async () => {
       await generateTestApplication(tree, {
