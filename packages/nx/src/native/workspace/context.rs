@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 use crate::native::types::FileData;
 use crate::native::utils::path::Normalize;
+use napi::bindgen_prelude::*;
 use parking_lot::lock_api::MutexGuard;
 use parking_lot::{Condvar, Mutex, RawMutex};
 use rayon::prelude::*;
@@ -151,17 +152,20 @@ impl WorkspaceContext {
     #[napi]
     pub fn get_workspace_files<ConfigurationParser>(
         &self,
+        env: Env,
         globs: Vec<String>,
         parse_configurations: ConfigurationParser,
-    ) -> napi::Result<NxWorkspaceFiles, WorkspaceErrors>
+    ) -> anyhow::Result<Option<Object>>
     where
-        ConfigurationParser: Fn(Vec<String>) -> napi::Result<HashMap<String, String>>,
+        ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
     {
         workspace_files::get_files(
+            env,
             globs,
             parse_configurations,
             self.files_worker.get_files().as_deref(),
         )
+        .map_err(anyhow::Error::from)
     }
 
     #[napi]
@@ -172,17 +176,22 @@ impl WorkspaceContext {
     #[napi]
     pub fn get_project_configurations<ConfigurationParser>(
         &self,
+        env: Env,
         globs: Vec<String>,
         parse_configurations: ConfigurationParser,
-    ) -> napi::Result<HashMap<String, String>>
+    ) -> napi::Result<Object>
     where
-        ConfigurationParser: Fn(Vec<String>) -> napi::Result<HashMap<String, String>>,
+        ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
     {
-        config_files::get_project_configurations(
+        let promise = config_files::get_project_configurations(
             globs,
             self.files_worker.get_files().as_deref(),
             parse_configurations,
-        )
+        )?;
+        env.spawn_future(async move {
+            let result = promise.await?;
+            Ok(result)
+        })
     }
 
     #[napi]

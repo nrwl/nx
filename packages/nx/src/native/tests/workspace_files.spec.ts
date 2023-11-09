@@ -6,7 +6,7 @@ import { readJsonFile } from '../../utils/fileutils';
 
 describe('workspace files', () => {
   function createParseConfigurationsFunction(tempDir: string) {
-    return (filenames: string[]) => {
+    return async (filenames: string[]) => {
       const res = {};
       for (const filename of filenames) {
         const json = readJsonFile(join(tempDir, filename));
@@ -51,9 +51,20 @@ describe('workspace files', () => {
     let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
 
     const context = new WorkspaceContext(fs.tempDir);
+<<<<<<< HEAD
     let { projectFileMap, globalFiles } = context.getWorkspaceFiles(
       globs,
       createParseConfigurationsFunction(fs.tempDir)
+=======
+    let { projectFileMap, projectConfigurations, globalFiles } =
+      (await context.getWorkspaceFiles(
+        globs,
+        createParseConfigurationsFunction(fs.tempDir)
+      )) as any;
+
+    let sortedConfigs = Object.values(projectConfigurations).sort((a, b) =>
+      a['name'].localeCompare(b['name'])
+>>>>>>> 6d080c8bf (feat(core): make createNodes async)
     );
 
     expect(projectFileMap).toMatchInlineSnapshot(`
@@ -128,6 +139,7 @@ describe('workspace files', () => {
     `);
   });
 
+<<<<<<< HEAD
   it('should assign files to the root project if it exists', async () => {
     const fs = new TempFs('workspace-files');
     const nxJson: NxJsonConfiguration = {};
@@ -179,6 +191,110 @@ describe('workspace files', () => {
       ]
     `);
   });
+=======
+  // it('should assign files to the root project if it exists', async () => {
+  //   const fs = new TempFs('workspace-files');
+  //   const nxJson: NxJsonConfiguration = {};
+  //   await fs.createFiles({
+  //     './nx.json': JSON.stringify(nxJson),
+  //     './package.json': JSON.stringify({
+  //       name: 'repo-name',
+  //       version: '0.0.0',
+  //       dependencies: {},
+  //     }),
+  //     './project.json': JSON.stringify({
+  //       name: 'repo-name',
+  //     }),
+  //     './src/index.js': '',
+  //     './jest.config.js': '',
+  //   });
+  //
+  //   const context = new WorkspaceContext(fs.tempDir);
+  //
+  //   const globs = ['project.json', '**/project.json', '**/package.json'];
+  //   const { globalFiles, projectFileMap } = context.getWorkspaceFiles(
+  //     globs,
+  //     createParseConfigurationsFunction(fs.tempDir)
+  //   );
+  //
+  //   expect(globalFiles).toEqual([]);
+  //   expect(projectFileMap['repo-name']).toMatchInlineSnapshot(`
+  //     [
+  //       {
+  //         "file": "jest.config.js",
+  //         "hash": "3244421341483603138",
+  //       },
+  //       {
+  //         "file": "nx.json",
+  //         "hash": "1389868326933519382",
+  //       },
+  //       {
+  //         "file": "package.json",
+  //         "hash": "14409636362330144230",
+  //       },
+  //       {
+  //         "file": "project.json",
+  //         "hash": "4357927788053707201",
+  //       },
+  //       {
+  //         "file": "src/index.js",
+  //         "hash": "3244421341483603138",
+  //       },
+  //     ]
+  //   `);
+  // });
+  //
+  // it('should dedupe configuration files', async () => {
+  //   const fs = new TempFs('workspace-files');
+  //   const nxJson: NxJsonConfiguration = {};
+  //   await fs.createFiles({
+  //     './nx.json': JSON.stringify(nxJson),
+  //     './package.json': JSON.stringify({
+  //       name: 'repo-name',
+  //       version: '0.0.0',
+  //       dependencies: {},
+  //     }),
+  //     './project.json': JSON.stringify({
+  //       name: 'repo-name',
+  //     }),
+  //     './libs/project1/project.json': JSON.stringify({
+  //       name: 'project1',
+  //     }),
+  //     './libs/project1/package.json': JSON.stringify({
+  //       name: 'project1',
+  //     }),
+  //     './libs/project1/index.js': '',
+  //   });
+  //
+  //   const context = new WorkspaceContext(fs.tempDir);
+  //   let globs = ['project.json', '**/project.json', '**/package.json'];
+  //
+  //   let nodes = context.getProjectConfigurations(globs, (filenames) => {
+  //     const res = {};
+  //     for (const filename of filenames) {
+  //       const json = readJsonFile(join(fs.tempDir, filename));
+  //       res[json.name] = {
+  //         ...json,
+  //         root: dirname(filename),
+  //       };
+  //     }
+  //     return {
+  //       externalNodes: {},
+  //       projectNodes: res,
+  //     };
+  //   });
+  //   expect(nodes.projectNodes).toEqual({
+  //     project1: {
+  //       name: 'project1',
+  //       root: 'libs/project1',
+  //     },
+  //     'repo-name': expect.objectContaining({
+  //       name: 'repo-name',
+  //       root: '.',
+  //     }),
+  //   });
+  // });
+>>>>>>> 6d080c8bf (feat(core): make createNodes async)
 
   // describe('errors', () => {
   //   it('it should infer names of configuration files without a name', async () => {
