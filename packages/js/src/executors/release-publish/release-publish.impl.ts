@@ -102,10 +102,17 @@ export default async function runExecutor(
 
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
       if (
+        // handle npm conflict error
         stdoutData.error?.code === 'EPUBLISHCONFLICT' ||
+        // handle npm conflict error when the package has a scope
         (stdoutData.error?.code === 'E403' &&
           stdoutData.error?.summary?.includes(
             'You cannot publish over the previously published versions'
+          )) ||
+        // handle verdaccio conflict error
+        (stdoutData.error?.code === 'E409' &&
+          stdoutData.error?.summary?.includes(
+            'this package is already present'
           ))
       ) {
         console.warn(
