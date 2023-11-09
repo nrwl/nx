@@ -1,4 +1,3 @@
-use napi::JsObject;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -9,15 +8,13 @@ use crate::native::types::FileData;
 use crate::native::utils::path::Normalize;
 use crate::native::workspace::config_files;
 use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors};
-use crate::native::workspace::types::{ConfigurationParserResult, FileLocation};
+use crate::native::workspace::types::FileLocation;
 
 #[napi(object)]
 #[derive(Default)]
 pub struct NxWorkspaceFiles {
     pub project_file_map: HashMap<String, Vec<FileData>>,
     pub global_files: Vec<FileData>,
-    pub project_configurations: HashMap<String, JsObject>,
-    pub external_nodes: HashMap<String, JsObject>,
 }
 
 pub(super) fn get_files<ConfigurationParser>(
@@ -26,18 +23,17 @@ pub(super) fn get_files<ConfigurationParser>(
     file_data: Option<&[(PathBuf, String)]>,
 ) -> napi::Result<NxWorkspaceFiles, WorkspaceErrors>
 where
-    ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
+    ConfigurationParser: Fn(Vec<String>) -> napi::Result<HashMap<String, String>>,
 {
     let Some(file_data) = file_data else {
-        return Ok(Default::default())
+        return Ok(Default::default());
     };
 
     trace!("{globs:?}");
-    let parsed_graph_nodes =
+    let root_map = transform_root_map(
         config_files::get_project_configurations(globs, Some(file_data), parse_configurations)
-            .map_err(|e| InternalWorkspaceErrors::ParseError(e.to_string()))?;
-
-    let root_map = create_root_map(&parsed_graph_nodes.project_nodes);
+            .map_err(|e| InternalWorkspaceErrors::ParseError(e.to_string()))?,
+    );
 
     trace!(?root_map);
 
@@ -89,19 +85,12 @@ where
     Ok(NxWorkspaceFiles {
         project_file_map,
         global_files,
-        external_nodes: parsed_graph_nodes.external_nodes,
-        project_configurations: parsed_graph_nodes.project_nodes,
     })
 }
 
-fn create_root_map(
-    project_configurations: &HashMap<String, JsObject>,
-) -> hashbrown::HashMap<PathBuf, String> {
-    project_configurations
-        .iter()
-        .map(|(project_name, project_configuration)| {
-            let root: String = project_configuration.get("root").unwrap().unwrap();
-            (PathBuf::from(root), project_name.clone())
-        })
+fn transform_root_map(root_map: HashMap<String, String>) -> hashbrown::HashMap<PathBuf, String> {
+    root_map
+        .into_iter()
+        .map(|(project_root, project_name)| (PathBuf::from(project_root), project_name))
         .collect()
 }
