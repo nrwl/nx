@@ -68,6 +68,7 @@ import { getRootTsConfigPath } from '@nx/js';
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { readdirSync } from 'fs';
+import { ExecutorOptions } from '@nx/js/src/utils/schema';
 
 export interface EslintPluginOptions {
   targetName?: string;

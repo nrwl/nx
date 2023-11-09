@@ -34,6 +34,10 @@ export async function generatorGenerator(tree: Tree) {
     (json) => {
       if (json['exports']) {
         json['exports']['./plugin'] = './plugin.js';
+      } else {
+        json['exports'] = {
+          './plugin': './plugin.js',
+        };
       }
       return json;
     }
