@@ -128,7 +128,10 @@ export class Watcher {
   origin: string
   /**
    * Creates a new Watcher instance.
-   * If `useIgnore` is set to false, no ignores will be used, even when `additionalGlobs` is set
+   * Will always ignore the following directories:
+   * * .git/
+   * * node_modules/
+   * * .nx/
    */
   constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
   watch(callback: (err: string | null, events: WatchEvent[]) => void): void
