@@ -14,7 +14,7 @@ import {
 } from './project-graph';
 import { toOldFormat } from '../adapter/angular-json';
 import { getIgnoreObject } from '../utils/ignore';
-import { retrieveProjectConfigurationsSync } from './utils/retrieve-workspace-files';
+import { retrieveProjectConfigurationsSync } from './utils/retrieve-workspace-files.deprecated';
 
 export interface Change {
   type: string;

@@ -3,7 +3,7 @@ import { dirname } from 'path';
 import type { NxJsonConfiguration } from './nx-json';
 import { readNxJson } from './nx-json';
 import { ProjectsConfigurations } from './workspace-json-project-json';
-import { retrieveProjectConfigurationsSync } from '../project-graph/utils/retrieve-workspace-files';
+import { retrieveProjectConfigurationsSync } from '../project-graph/utils/retrieve-workspace-files.deprecated';
 
 // TODO(v18): remove this class
 /**

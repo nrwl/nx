@@ -37,10 +37,8 @@ export async function getPluginCapabilities(
   includeRuntimeCapabilities = false
 ): Promise<PluginCapabilities | null> {
   try {
-    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
-      pluginName,
-      getNxRequirePaths(workspaceRoot)
-    );
+    const { json: packageJson, path: packageJsonPath } =
+      await readPluginPackageJson(pluginName, getNxRequirePaths(workspaceRoot));
     const pluginModule = includeRuntimeCapabilities
       ? await tryGetModule(packageJson, workspaceRoot)
       : ({} as Record<string, unknown>);

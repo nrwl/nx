@@ -2,9 +2,8 @@ use napi::bindgen_prelude::{Object, Promise};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use napi::{Env, JsObject};
+use napi::Env;
 use rayon::prelude::*;
-use serde_json::Value;
 use tracing::trace;
 
 use crate::native::types::FileData;
