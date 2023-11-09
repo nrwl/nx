@@ -104,14 +104,14 @@ export const enum WorkspaceErrors {
   Generic = 'Generic'
 }
 export interface ConfigurationParserResult {
-  projectNodes: Record<string, object>
-  externalNodes: Record<string, object>
+  projectNodes: Record<string, any>
+  externalNodes: Record<string, any>
 }
 export interface NxWorkspaceFiles {
   projectFileMap: Record<string, Array<FileData>>
   globalFiles: Array<FileData>
-  projectConfigurations: Record<string, object>
-  externalNodes: Record<string, object>
+  projectConfigurations: Record<string, any>
+  externalNodes: Record<string, any>
 }
 export class ImportResult {
   file: string
@@ -137,9 +137,9 @@ export class Watcher {
 export class WorkspaceContext {
   workspaceRoot: string
   constructor(workspaceRoot: string)
-  getWorkspaceFiles(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): NxWorkspaceFiles
+  getWorkspaceFiles(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Promise<ConfigurationParserResult>): object | null
   glob(globs: Array<string>): Array<string>
-  getProjectConfigurations(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => ConfigurationParserResult): ConfigurationParserResult
+  getProjectConfigurations(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Promise<ConfigurationParserResult>): object
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   allFileData(): Array<FileData>
 }

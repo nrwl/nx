@@ -3,6 +3,7 @@ use std::collections::HashMap;
 
 use crate::native::types::FileData;
 use crate::native::utils::path::Normalize;
+use napi::bindgen_prelude::*;
 use parking_lot::lock_api::MutexGuard;
 use parking_lot::{Condvar, Mutex, RawMutex};
 use rayon::prelude::*;
@@ -70,7 +71,7 @@ impl FilesWorker {
     pub fn get_files(&self) -> Option<MutexGuard<'_, RawMutex, Files>> {
         let Some(files_sync) = &self.0 else {
             trace!("there were no files because the workspace root did not exist");
-            return None
+            return None;
         };
 
         let (files_lock, cvar) = &files_sync.deref();
@@ -93,7 +94,7 @@ impl FilesWorker {
     ) -> HashMap<String, String> {
         let Some(files_sync) = &self.0 else {
             trace!("there were no files because the workspace root did not exist");
-           return HashMap::new();
+            return HashMap::new();
         };
 
         let (files_lock, _) = &files_sync.deref();
@@ -108,8 +109,8 @@ impl FilesWorker {
             .par_iter()
             .filter_map(|path| {
                 let full_path = workspace_root_path.join(path);
-                let Ok( content ) = std::fs::read(full_path) else {
-                    trace!( "could not read file: ?full_path");
+                let Ok(content) = std::fs::read(full_path) else {
+                    trace!("could not read file: ?full_path");
                     return None;
                 };
                 Some((path.to_string(), xxh3::xxh3_64(&content).to_string()))
@@ -149,13 +150,15 @@ impl WorkspaceContext {
     #[napi]
     pub fn get_workspace_files<ConfigurationParser>(
         &self,
+        env: Env,
         globs: Vec<String>,
         parse_configurations: ConfigurationParser,
-    ) -> napi::Result<NxWorkspaceFiles, WorkspaceErrors>
+    ) -> anyhow::Result<Option<Object>>
     where
-        ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
+        ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<ConfigurationParserResult>>,
     {
         workspace_files::get_files(
+            env,
             globs,
             parse_configurations,
             self.files_worker
@@ -163,13 +166,11 @@ impl WorkspaceContext {
                 .as_deref()
                 .map(|files| files.as_slice()),
         )
+        .map_err(anyhow::Error::from)
     }
 
     #[napi]
-    pub fn glob(
-        &self,
-        globs: Vec<String>,
-    ) -> napi::Result<Vec<String>, WorkspaceErrors> {
+    pub fn glob(&self, globs: Vec<String>) -> napi::Result<Vec<String>, WorkspaceErrors> {
         config_files::glob_files(
             globs,
             self.files_worker
@@ -182,20 +183,25 @@ impl WorkspaceContext {
     #[napi]
     pub fn get_project_configurations<ConfigurationParser>(
         &self,
+        env: Env,
         globs: Vec<String>,
         parse_configurations: ConfigurationParser,
-    ) -> napi::Result<ConfigurationParserResult>
+    ) -> napi::Result<Object>
     where
-        ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
+        ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<ConfigurationParserResult>>,
     {
-        config_files::get_project_configurations(
+        let promise = config_files::get_project_configurations(
             globs,
             self.files_worker
                 .get_files()
                 .as_deref()
                 .map(|files| files.as_slice()),
             parse_configurations,
-        )
+        )?;
+        env.spawn_future(async move {
+            let result = promise.await?;
+            Ok(result)
+        })
     }
 
     #[napi]
