@@ -101,7 +101,7 @@ exports[`lib should add vue, vite and vitest to package.json 1`] = `
     "@typescript-eslint/eslint-plugin": "^6.9.1",
     "@typescript-eslint/parser": "^6.9.1",
     "@vitejs/plugin-vue": "^4.3.1",
-    "@vitest/coverage-c8": "~0.32.0",
+    "@vitest/coverage-v8": "~0.32.0",
     "@vitest/ui": "~0.32.0",
     "@vue/eslint-config-prettier": "7.1.0",
     "@vue/eslint-config-typescript": "^11.0.3",
