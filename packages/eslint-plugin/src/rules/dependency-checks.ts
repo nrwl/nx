@@ -11,7 +11,6 @@ import {
   getPackageJson,
   getProductionDependencies,
 } from '../utils/package-json-utils';
-import type { RuleModule } from '@typescript-eslint/utils/ts-eslint';
 import { ESLintUtils } from '@typescript-eslint/utils';
 
 export type Options = [

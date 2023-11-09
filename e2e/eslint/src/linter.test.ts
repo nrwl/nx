@@ -8,6 +8,7 @@ import {
   newProject,
   readFile,
   readJson,
+  renameFile,
   runCLI,
   runCreateWorkspace,
   setMaxWorkers,
@@ -542,6 +543,7 @@ describe('Linter', () => {
     it('should convert integrated to flat config', () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
+      const mylib2 = uniq('mylib2');
 
       runCreateWorkspace(myapp, {
         preset: 'react-monorepo',
@@ -554,18 +556,34 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/js:lib ${mylib} --directory libs/${mylib} --projectNameAndRootFormat as-provided`
       );
+      runCLI(
+        `generate @nx/js:lib ${mylib2} --directory libs/${mylib2} --projectNameAndRootFormat as-provided`
+      );
 
       // migrate to flat structure
       runCLI(`generate @nx/eslint:convert-to-flat-config`);
       checkFilesExist(
         'eslint.config.js',
         `apps/${myapp}/eslint.config.js`,
-        `libs/${mylib}/eslint.config.js`
+        `libs/${mylib}/eslint.config.js`,
+        `libs/${mylib2}/eslint.config.js`
       );
       checkFilesDoNotExist(
         '.eslintrc.json',
         `apps/${myapp}/.eslintrc.json`,
-        `libs/${mylib}/.eslintrc.json`
+        `libs/${mylib}/.eslintrc.json`,
+        `libs/${mylib2}/.eslintrc.json`
+      );
+
+      // move eslint.config one step up
+      // to test the absence of the flat eslint config in the project root folder
+      renameFile(`libs/${mylib2}/eslint.config.js`, `libs/eslint.config.js`);
+      updateFile(
+        `libs/eslint.config.js`,
+        readFile(`libs/eslint.config.js`).replace(
+          `../../eslint.config.js`,
+          `../eslint.config.js`
+        )
       );
 
       const outFlat = runCLI(`affected -t lint`, {

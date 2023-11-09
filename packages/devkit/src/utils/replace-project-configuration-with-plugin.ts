@@ -54,7 +54,7 @@ export function replaceProjectConfigurationsWithPlugin<T = unknown>(
       for (const [targetName, targetConfig] of Object.entries(node.targets)) {
         const targetFromProjectConfig = projectConfig.targets[targetName];
 
-        if (targetFromProjectConfig.executor !== targetConfig.executor) {
+        if (targetFromProjectConfig?.executor !== targetConfig.executor) {
           continue;
         }
 

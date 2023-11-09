@@ -71,8 +71,8 @@
     },
     "standalone": {
       "type": "boolean",
-      "description": "Whether the application is a standalone application. _Note: This is only supported in Angular versions >= 14.1.0_",
-      "default": false
+      "description": "Whether the application is a standalone application.",
+      "default": true
     },
     "typescriptConfiguration": {
       "type": "boolean",

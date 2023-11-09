@@ -40,7 +40,7 @@ describe('nx package.json workspaces plugin', () => {
       .toMatchInlineSnapshot(`
       {
         "projects": {
-          "root": {
+          ".": {
             "name": "root",
             "projectType": "library",
             "root": ".",
@@ -68,7 +68,7 @@ describe('nx package.json workspaces plugin', () => {
       .toMatchInlineSnapshot(`
       {
         "projects": {
-          "lib-a": {
+          "packages/lib-a": {
             "name": "lib-a",
             "projectType": "library",
             "root": "packages/lib-a",
@@ -96,7 +96,7 @@ describe('nx package.json workspaces plugin', () => {
       .toMatchInlineSnapshot(`
       {
         "projects": {
-          "lib-b": {
+          "packages/lib-b": {
             "implicitDependencies": [
               "lib-a",
             ],

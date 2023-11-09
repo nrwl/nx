@@ -34,7 +34,12 @@ import {
   pleaseUpgrade,
   storybookMajorVersion,
 } from '../../utils/utilities';
-import { coreJsVersion, nxVersion, tsNodeVersion } from '../../utils/versions';
+import {
+  coreJsVersion,
+  nxVersion,
+  tsLibVersion,
+  tsNodeVersion,
+} from '../../utils/versions';
 import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 
 export async function configurationGenerator(
@@ -96,6 +101,8 @@ export async function configurationGenerator(
   const mainDir =
     !!nextBuildTarget && projectType === 'application' ? 'components' : 'src';
 
+  const usesVite = !!viteBuildTarget || schema.uiFramework.endsWith('-vite');
+
   createProjectStorybookDir(
     tree,
     schema.name,
@@ -109,7 +116,7 @@ export async function configurationGenerator(
     mainDir,
     !!nextBuildTarget,
     compiler === 'swc',
-    !!viteBuildTarget || schema.uiFramework.endsWith('-vite'),
+    usesVite,
     viteConfigFilePath
   );
 
@@ -172,6 +179,10 @@ export async function configurationGenerator(
 
   if (schema.tsConfiguration) {
     devDeps['ts-node'] = tsNodeVersion;
+  }
+
+  if (usesVite && !viteConfigFilePath) {
+    devDeps['tslib'] = tsLibVersion;
   }
 
   if (schema.interactionTests) {

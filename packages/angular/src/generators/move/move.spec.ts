@@ -39,6 +39,7 @@ describe('@nx/angular:move', () => {
       simpleName: true,
       skipFormat: false,
       unitTestRunner: UnitTestRunner.Jest,
+      standalone: false,
     });
 
     jest
@@ -335,6 +336,7 @@ describe('@nx/angular:move', () => {
         simpleName: true,
         skipFormat: false,
         unitTestRunner: UnitTestRunner.Jest,
+        standalone: false,
       });
       addProjectToGraph('my-lib');
 
@@ -355,7 +357,11 @@ describe('@nx/angular:move', () => {
   });
 
   it('should move project correctly when --project-name-and-root-format=derived', async () => {
-    await generateTestLibrary(tree, { name: 'mylib2', buildable: true });
+    await generateTestLibrary(tree, {
+      name: 'mylib2',
+      buildable: true,
+      standalone: false,
+    });
     addProjectToGraph('mylib2');
 
     await angularMoveGenerator(tree, {

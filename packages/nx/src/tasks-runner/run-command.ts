@@ -493,7 +493,9 @@ function getTasksRunnerPath(
     // No tasksRunnerOptions for given --runner
     nxJson.nxCloudAccessToken ||
     // No runner prop in tasks runner options, check if access token is set.
-    nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken;
+    nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken ||
+    // Cloud access token specified in env var.
+    process.env.NX_CLOUD_ACCESS_TOKEN;
 
   return isCloudRunner ? 'nx-cloud' : require.resolve('./default-tasks-runner');
 }
@@ -517,6 +519,10 @@ export function getRunnerOptions(
     ...nxArgs,
   };
 
+  // NOTE: we don't pull from env here because the cloud package
+  // supports it within nx-cloud's implementation. We could
+  // normalize it here, and that may make more sense, but
+  // leaving it as is for now.
   if (nxJson.nxCloudAccessToken && isCloudDefault) {
     result.accessToken ??= nxJson.nxCloudAccessToken;
   }

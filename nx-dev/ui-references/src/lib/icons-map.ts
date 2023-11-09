@@ -16,6 +16,7 @@ export const iconsMap: Record<string, string> = {
   nest: '/images/icons/nestjs.svg',
   next: '/images/icons/nextdotjs.svg',
   node: '/images/icons/nodedotjs.svg',
+  nuxt: '/images/icons/nuxtdotjs.svg',
   nx: '/images/icons/nx.svg',
   playwright: '/images/icons/playwright.svg',
   plugin: '/images/icons/nx.svg',

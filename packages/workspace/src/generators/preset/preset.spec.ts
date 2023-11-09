@@ -52,6 +52,17 @@ describe('preset', () => {
     expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
   });
 
+  it(`should create files (preset = ${Preset.Nuxt})`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.Nuxt,
+      style: 'css',
+      linter: 'eslint',
+    });
+    expect(tree.exists('apps/proj/src/app.vue')).toBe(true);
+    expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
+  });
+
   it(`should create files (preset = ${Preset.NextJs})`, async () => {
     await presetGenerator(tree, {
       name: 'proj',
@@ -119,6 +130,19 @@ describe('preset', () => {
       e2eTestRunner: 'cypress',
     });
     expect(tree.exists('vite.config.ts')).toBe(true);
+    expect(
+      readProjectConfiguration(tree, 'proj').targets.serve
+    ).toMatchSnapshot();
+  });
+
+  it(`should create files (preset = ${Preset.NuxtStandalone})`, async () => {
+    await presetGenerator(tree, {
+      name: 'proj',
+      preset: Preset.NuxtStandalone,
+      style: 'css',
+      e2eTestRunner: 'cypress',
+    });
+    expect(tree.exists('nuxt.config.ts')).toBe(true);
     expect(
       readProjectConfiguration(tree, 'proj').targets.serve
     ).toMatchSnapshot();

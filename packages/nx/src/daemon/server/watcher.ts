@@ -69,12 +69,6 @@ export async function watchOutputFiles(cb: FileWatcherCallback) {
       return cb(err, null);
     }
 
-    events = events.filter((event) => {
-      return (
-        !event.path.startsWith('.git') && !event.path.includes('node_modules')
-      );
-    });
-
     if (events.length !== 0) {
       cb(null, events);
     }

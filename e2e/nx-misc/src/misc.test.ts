@@ -428,7 +428,6 @@ describe('migrate', () => {
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
         env: {
-          ...process.env,
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
@@ -479,7 +478,6 @@ describe('migrate', () => {
     // runs migrations
     runCLI('migrate --run-migrations=migrations.json', {
       env: {
-        ...process.env,
         NX_MIGRATE_SKIP_INSTALL: 'true',
         NX_MIGRATE_USE_LOCAL: 'true',
       },
@@ -493,7 +491,6 @@ describe('migrate', () => {
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
         env: {
-          ...process.env,
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
@@ -503,7 +500,6 @@ describe('migrate', () => {
     // runs migrations with createCommits enabled
     runCLI('migrate --run-migrations=migrations.json --create-commits', {
       env: {
-        ...process.env,
         NX_MIGRATE_SKIP_INSTALL: 'true',
         NX_MIGRATE_USE_LOCAL: 'true',
       },
@@ -522,7 +518,6 @@ describe('migrate', () => {
         'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
         {
           env: {
-            ...process.env,
             NX_MIGRATE_SKIP_INSTALL: 'true',
             NX_MIGRATE_USE_LOCAL: 'true',
           },
@@ -534,7 +529,6 @@ describe('migrate', () => {
         `migrate --run-migrations=migrations.json --create-commits --commit-prefix="'chore(core): AUTOMATED - '"`,
         {
           env: {
-            ...process.env,
             NX_MIGRATE_SKIP_INSTALL: 'true',
             NX_MIGRATE_USE_LOCAL: 'true',
           },
@@ -553,7 +547,6 @@ describe('migrate', () => {
       'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
       {
         env: {
-          ...process.env,
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
@@ -565,7 +558,6 @@ describe('migrate', () => {
       `migrate --run-migrations=migrations.json --commit-prefix CUSTOM_PREFIX`,
       {
         env: {
-          ...process.env,
           NX_MIGRATE_SKIP_INSTALL: 'true',
           NX_MIGRATE_USE_LOCAL: 'true',
         },
@@ -584,7 +576,6 @@ describe('migrate', () => {
     // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
     const output = runCLI(`migrate --run-migrations`, {
       env: {
-        ...process.env,
         NX_MIGRATE_SKIP_INSTALL: 'true',
         NX_MIGRATE_USE_LOCAL: 'true',
       },
@@ -602,7 +593,6 @@ describe('migrate', () => {
     // Invalid: runs migrations with a custom commit-prefix but without enabling --create-commits
     const output = runCLI(`migrate --run-migrations --if-exists`, {
       env: {
-        ...process.env,
         NX_MIGRATE_SKIP_INSTALL: 'true',
         NX_MIGRATE_USE_LOCAL: 'true',
       },

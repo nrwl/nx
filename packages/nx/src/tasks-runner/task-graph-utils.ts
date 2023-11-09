@@ -1,23 +1,23 @@
-import { TaskGraph } from '../config/task-graph';
-
 function _findCycle(
-  taskGraph: TaskGraph,
-  taskId: string,
+  graph: { dependencies: Record<string, string[]> },
+  id: string,
   visited: { [taskId: string]: boolean },
   path: string[]
 ) {
-  if (visited[taskId]) return null;
-  visited[taskId] = true;
+  if (visited[id]) return null;
+  visited[id] = true;
 
-  for (const d of taskGraph.dependencies[taskId]) {
+  for (const d of graph.dependencies[id]) {
     if (path.includes(d)) return [...path, d];
-    const cycle = _findCycle(taskGraph, d, visited, [...path, d]);
+    const cycle = _findCycle(graph, d, visited, [...path, d]);
     if (cycle) return cycle;
   }
   return null;
 }
 
-export function findCycle(taskGraph: TaskGraph): string[] | null {
+export function findCycle(taskGraph: {
+  dependencies: Record<string, string[]>;
+}): string[] | null {
   const visited = {};
   for (const t of Object.keys(taskGraph.dependencies)) {
     visited[t] = false;
@@ -32,34 +32,37 @@ export function findCycle(taskGraph: TaskGraph): string[] | null {
 }
 
 function _makeAcyclic(
-  taskGraph: TaskGraph,
-  taskId: string,
+  graph: { dependencies: Record<string, string[]> },
+  id: string,
   visited: { [taskId: string]: boolean },
   path: string[]
 ) {
-  if (visited[taskId]) return;
-  visited[taskId] = true;
+  if (visited[id]) return;
+  visited[id] = true;
 
-  const deps = taskGraph.dependencies[taskId];
+  const deps = graph.dependencies[id];
   for (const d of [...deps]) {
     if (path.includes(d)) {
       deps.splice(deps.indexOf(d), 1);
     } else {
-      _makeAcyclic(taskGraph, d, visited, [...path, d]);
+      _makeAcyclic(graph, d, visited, [...path, d]);
     }
   }
   return null;
 }
 
-export function makeAcyclic(taskGraph: TaskGraph): void {
+export function makeAcyclic(graph: {
+  roots: string[];
+  dependencies: Record<string, string[]>;
+}): void {
   const visited = {};
-  for (const t of Object.keys(taskGraph.dependencies)) {
+  for (const t of Object.keys(graph.dependencies)) {
     visited[t] = false;
   }
-  for (const t of Object.keys(taskGraph.dependencies)) {
-    _makeAcyclic(taskGraph, t, visited, [t]);
+  for (const t of Object.keys(graph.dependencies)) {
+    _makeAcyclic(graph, t, visited, [t]);
   }
-  taskGraph.roots = Object.keys(taskGraph.dependencies).filter(
-    (t) => taskGraph.dependencies[t].length === 0
+  graph.roots = Object.keys(graph.dependencies).filter(
+    (t) => graph.dependencies[t].length === 0
   );
 }
