@@ -104,7 +104,7 @@ export default async function runExecutor(
       if (
         stdoutData.error?.code === 'EPUBLISHCONFLICT' ||
         (stdoutData.error?.code === 'E403' &&
-          stdoutData.error?.body?.error?.includes(
+          stdoutData.error?.summary?.includes(
             'You cannot publish over the previously published versions'
           ))
       ) {
@@ -117,12 +117,7 @@ export default async function runExecutor(
       }
 
       console.error('npm publish error:');
-      if (stdoutData.error.summary) {
-        console.error(stdoutData.error.summary);
-      }
-      if (stdoutData.error.detail) {
-        console.error(stdoutData.error.detail);
-      }
+      console.error(JSON.stringify(stdoutData, null, 2));
       return {
         success: false,
       };
