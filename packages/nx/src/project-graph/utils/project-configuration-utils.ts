@@ -96,6 +96,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
 ): {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
+  rootMap: Record<string, string>;
 } {
   const projectRootMap: Map<string, ProjectConfiguration> = new Map();
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
@@ -133,9 +134,12 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     }
   }
 
+  const rootMap = createRootMap(projectRootMap);
+
   return {
     projects: readProjectConfigurationsFromRootMap(projectRootMap),
     externalNodes,
+    rootMap,
   };
 }
 
@@ -289,4 +293,11 @@ export function readTargetDefaultsForTarget(
     // If the executor is not defined, the only key we have is the target name.
     return targetDefaults?.[targetName];
   }
+}
+function createRootMap(projectRootMap: Map<string, ProjectConfiguration>) {
+  const map: Record<string, string> = {};
+  for (const [projectRoot, { name: projectName }] of projectRootMap) {
+    map[projectRoot] = projectName;
+  }
+  return map;
 }

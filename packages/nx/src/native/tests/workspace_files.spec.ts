@@ -10,15 +10,9 @@ describe('workspace files', () => {
       const res = {};
       for (const filename of filenames) {
         const json = readJsonFile(join(tempDir, filename));
-        res[json.name] = {
-          ...json,
-          root: dirname(filename),
-        };
+        res[dirname(filename)] = json.name;
       }
-      return {
-        projectNodes: res,
-        externalNodes: {},
-      };
+      return res;
     };
   }
 
@@ -57,14 +51,9 @@ describe('workspace files', () => {
     let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
 
     const context = new WorkspaceContext(fs.tempDir);
-    let { projectFileMap, projectConfigurations, globalFiles } =
-      context.getWorkspaceFiles(
-        globs,
-        createParseConfigurationsFunction(fs.tempDir)
-      );
-
-    let sortedConfigs = Object.values(projectConfigurations).sort((a, b) =>
-      a['name'].localeCompare(b['name'])
+    let { projectFileMap, globalFiles } = context.getWorkspaceFiles(
+      globs,
+      createParseConfigurationsFunction(fs.tempDir)
     );
 
     expect(projectFileMap).toMatchInlineSnapshot(`
@@ -120,30 +109,6 @@ describe('workspace files', () => {
           },
         ],
       }
-    `);
-    expect(sortedConfigs).toMatchInlineSnapshot(`
-      [
-        {
-          "name": "nested-project",
-          "root": "libs/nested/project",
-        },
-        {
-          "name": "package-project",
-          "root": "libs/package-project",
-        },
-        {
-          "name": "project1",
-          "root": "libs/project1",
-        },
-        {
-          "name": "project2",
-          "root": "libs/project2",
-        },
-        {
-          "name": "project3",
-          "root": "libs/project3",
-        },
-      ]
     `);
     expect(globalFiles).toMatchInlineSnapshot(`
       [
@@ -213,57 +178,6 @@ describe('workspace files', () => {
         },
       ]
     `);
-  });
-
-  it('should dedupe configuration files', async () => {
-    const fs = new TempFs('workspace-files');
-    const nxJson: NxJsonConfiguration = {};
-    await fs.createFiles({
-      './nx.json': JSON.stringify(nxJson),
-      './package.json': JSON.stringify({
-        name: 'repo-name',
-        version: '0.0.0',
-        dependencies: {},
-      }),
-      './project.json': JSON.stringify({
-        name: 'repo-name',
-      }),
-      './libs/project1/project.json': JSON.stringify({
-        name: 'project1',
-      }),
-      './libs/project1/package.json': JSON.stringify({
-        name: 'project1',
-      }),
-      './libs/project1/index.js': '',
-    });
-
-    const context = new WorkspaceContext(fs.tempDir);
-    let globs = ['project.json', '**/project.json', '**/package.json'];
-
-    let nodes = context.getProjectConfigurations(globs, (filenames) => {
-      const res = {};
-      for (const filename of filenames) {
-        const json = readJsonFile(join(fs.tempDir, filename));
-        res[json.name] = {
-          ...json,
-          root: dirname(filename),
-        };
-      }
-      return {
-        externalNodes: {},
-        projectNodes: res,
-      };
-    });
-    expect(nodes.projectNodes).toEqual({
-      project1: {
-        name: 'project1',
-        root: 'libs/project1',
-      },
-      'repo-name': expect.objectContaining({
-        name: 'repo-name',
-        root: '.',
-      }),
-    });
   });
 
   // describe('errors', () => {
