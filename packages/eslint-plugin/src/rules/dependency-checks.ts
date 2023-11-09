@@ -22,6 +22,7 @@ export type Options = [
     ignoredDependencies?: string[];
     ignoredFiles?: string[];
     includeTransitiveDependencies?: boolean;
+    useLocalPathsForWorkspaceDependencies?: boolean;
   }
 ];
 
@@ -53,6 +54,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
           checkObsoleteDependencies: { type: 'boolean' },
           checkVersionMismatches: { type: 'boolean' },
           includeTransitiveDependencies: { type: 'boolean' },
+          useLocalPathsForWorkspaceDependencies: { type: 'boolean' },
         },
         additionalProperties: false,
       },
@@ -73,6 +75,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
       ignoredDependencies: [],
       ignoredFiles: [],
       includeTransitiveDependencies: false,
+      useLocalPathsForWorkspaceDependencies: false,
     },
   ],
   create(
@@ -86,6 +89,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
         checkObsoleteDependencies,
         checkVersionMismatches,
         includeTransitiveDependencies,
+        useLocalPathsForWorkspaceDependencies,
       },
     ]
   ) {
@@ -136,6 +140,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
       {
         includeTransitiveDependencies,
         ignoredFiles,
+        useLocalPathsForWorkspaceDependencies,
       }
     );
     const expectedDependencyNames = Object.keys(npmDependencies);
@@ -203,6 +208,8 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
         return;
       }
       if (
+        npmDependencies[packageName].startsWith('file:') ||
+        packageRange.startsWith('file:') ||
         npmDependencies[packageName] === '*' ||
         packageRange === '*' ||
         satisfies(npmDependencies[packageName], packageRange, {
