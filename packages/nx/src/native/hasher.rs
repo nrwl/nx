@@ -3,11 +3,15 @@ use crate::native::walker::nx_walker;
 use std::collections::HashMap;
 use xxhash_rust::xxh3;
 
+pub fn hash(content: &[u8]) -> String {
+    xxh3::xxh3_64(content).to_string()
+}
+
 #[napi]
 pub fn hash_array(input: Vec<String>) -> String {
     let joined = input.join(",");
     let content = joined.as_bytes();
-    xxh3::xxh3_64(content).to_string()
+    hash(content)
 }
 
 #[napi]
@@ -16,7 +20,7 @@ pub fn hash_file(file: String) -> Option<String> {
         return None;
     };
 
-    Some(xxh3::xxh3_64(&content).to_string())
+    Some(hash(&content))
 }
 
 #[napi]

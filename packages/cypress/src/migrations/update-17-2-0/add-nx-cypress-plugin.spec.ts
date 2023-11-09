@@ -52,7 +52,9 @@ describe('add-nx-cypress-plugin migration', () => {
           },
           ciDevServerTarget: 'my-app:serve-static',
         },
-        e2e: {},
+        e2e: {
+          specPattern: '**/*.cy.ts',
+        },
       })
     );
     updateProjectConfiguration(tree, 'e2e', {
@@ -77,7 +79,13 @@ describe('add-nx-cypress-plugin migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'e2e').targets.e2e).toBeUndefined();
+    expect(readProjectConfiguration(tree, 'e2e').targets.e2e).toEqual({
+      configurations: {
+        ci: {
+          devServerTarget: 'my-app:serve-static',
+        },
+      },
+    });
   });
 
   it('should not the e2e target when it uses a different executor', async () => {
@@ -119,7 +127,9 @@ describe('add-nx-cypress-plugin migration', () => {
           },
           ciDevServerTarget: 'my-app:serve-static',
         },
-        e2e: {},
+        e2e: {
+          specPattern: '**/*.cy.ts',
+        },
       })
     );
     updateProjectConfiguration(tree, 'e2e', {
@@ -148,6 +158,11 @@ describe('add-nx-cypress-plugin migration', () => {
     expect(readProjectConfiguration(tree, 'e2e').targets.e2e).toEqual({
       options: {
         watch: false,
+      },
+      configurations: {
+        ci: {
+          devServerTarget: 'my-app:serve-static',
+        },
       },
     });
   });

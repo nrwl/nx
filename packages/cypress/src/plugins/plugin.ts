@@ -1,9 +1,12 @@
 import {
+  CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  readJsonFile,
   TargetConfiguration,
+  writeJsonFile,
 } from '@nx/devkit';
-import { basename, dirname, extname, join } from 'path';
+import { dirname, extname, join } from 'path';
 import { registerTsProject } from '@nx/js/src/internal';
 
 import { getRootTsConfigPath } from '@nx/js';
@@ -11,12 +14,45 @@ import { getRootTsConfigPath } from '@nx/js';
 import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { readdirSync } from 'fs';
+import { existsSync, readdirSync } from 'fs';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 
 export interface CypressPluginOptions {
+  ciTargetName?: string;
   targetName?: string;
   componentTestingTargetName?: string;
 }
+
+const cachePath = join(projectGraphCacheDirectory, 'cypress.hash');
+const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
+
+const calculatedTargets: Record<
+  string,
+  Record<string, TargetConfiguration>
+> = {};
+
+function readTargetsCache(): Record<
+  string,
+  Record<string, TargetConfiguration<CypressExecutorOptions>>
+> {
+  return readJsonFile(cachePath);
+}
+
+function writeTargetsToCache(
+  targets: Record<
+    string,
+    Record<string, TargetConfiguration<CypressExecutorOptions>>
+  >
+) {
+  writeJsonFile(cachePath, targets);
+}
+
+export const createDependencies: CreateDependencies = () => {
+  writeTargetsToCache(calculatedTargets);
+  return [];
+};
 
 export const createNodes: CreateNodes<CypressPluginOptions> = [
   '**/cypress.config.{js,ts,mjs,mts,cjs,cts}',
@@ -33,19 +69,19 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
       return {};
     }
 
-    const projectName = basename(projectRoot);
+    const hash = calculateHashForCreateNodes(projectRoot, options, context);
+
+    const targets = targetsCache[hash]
+      ? targetsCache[hash]
+      : buildCypressTargets(configFilePath, projectRoot, options, context);
+
+    calculatedTargets[hash] = targets;
 
     return {
       projects: {
-        [projectName]: {
-          root: projectRoot,
+        [projectRoot]: {
           projectType: 'application',
-          targets: buildCypressTargets(
-            configFilePath,
-            projectRoot,
-            options,
-            context
-          ),
+          targets,
         },
       },
     };
@@ -99,7 +135,6 @@ function getOutputs(
 
   return outputs;
 }
-
 function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
@@ -183,10 +218,56 @@ function buildCypressTargets(
 
     const ciDevServerTarget: string = cypressEnv?.ciDevServerTarget;
     if (ciDevServerTarget) {
-      targets[options.targetName].configurations ??= {};
+      const specPatterns = Array.isArray(cypressConfig.e2e.specPattern)
+        ? cypressConfig.e2e.specPattern.map((p) => join(projectRoot, p))
+        : [join(projectRoot, cypressConfig.e2e.specPattern)];
 
-      targets[options.targetName].configurations['ci'] = {
-        devServerTarget: ciDevServerTarget,
+      const excludeSpecPatterns: string[] = !cypressConfig.e2e
+        .excludeSpecPattern
+        ? cypressConfig.e2e.excludeSpecPattern
+        : Array.isArray(cypressConfig.e2e.excludeSpecPattern)
+        ? cypressConfig.e2e.excludeSpecPattern.map((p) => join(projectRoot, p))
+        : [join(projectRoot, cypressConfig.e2e.excludeSpecPattern)];
+      const specFiles = globWithWorkspaceContext(
+        context.workspaceRoot,
+        specPatterns,
+        excludeSpecPatterns
+      );
+
+      const dependsOn: TargetConfiguration['dependsOn'] = [];
+      const outputs = getOutputs(projectRoot, cypressConfig, 'e2e');
+      const inputs =
+        'production' in namedInputs
+          ? ['default', '^production']
+          : ['default', '^default'];
+      for (const file of specFiles) {
+        const targetName = options.ciTargetName + '--' + file;
+        targets[targetName] = {
+          ...targets[options.targetName],
+          outputs,
+          inputs,
+          cache: true,
+          configurations: undefined,
+          options: {
+            ...targets[options.targetName].options,
+            devServerTarget: ciDevServerTarget,
+            spec: file,
+          },
+        };
+        dependsOn.push({
+          target: targetName,
+          projects: 'self',
+          params: 'forward',
+        });
+      }
+      targets[options.ciTargetName] ??= {};
+
+      targets[options.ciTargetName] = {
+        executor: 'nx:noop',
+        cache: true,
+        inputs,
+        outputs,
+        dependsOn,
       };
     }
   }
@@ -260,5 +341,6 @@ function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
   options ??= {};
   options.targetName ??= 'e2e';
   options.componentTestingTargetName ??= 'component-test';
+  options.ciTargetName ??= 'e2e-ci';
   return options;
 }
