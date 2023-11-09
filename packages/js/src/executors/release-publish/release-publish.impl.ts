@@ -124,7 +124,17 @@ export default async function runExecutor(
       }
 
       console.error('npm publish error:');
-      console.error(JSON.stringify(stdoutData, null, 2));
+      if (stdoutData.error.summary) {
+        console.error(stdoutData.error.summary);
+      }
+      if (stdoutData.error.detail) {
+        console.error(stdoutData.error.detail);
+      }
+
+      if (context.isVerbose) {
+        console.error('npm publish stdout:');
+        console.error(JSON.stringify(stdoutData, null, 2));
+      }
       return {
         success: false,
       };
