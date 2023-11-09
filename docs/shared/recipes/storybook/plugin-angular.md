@@ -92,6 +92,7 @@ import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'feature-ui-my-button',
+  standalone: true,
   templateUrl: './my-button.component.html',
   styleUrls: ['./my-button.component.css'],
 })

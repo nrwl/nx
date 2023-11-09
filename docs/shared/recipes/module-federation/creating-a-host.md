@@ -64,7 +64,6 @@ CREATE apps/angular/shell/src/app/app.component.css
 CREATE apps/angular/shell/src/app/app.component.html
 CREATE apps/angular/shell/src/app/app.component.spec.ts
 CREATE apps/angular/shell/src/app/app.component.ts
-CREATE apps/angular/shell/src/app/app.module.ts
 CREATE apps/angular/shell/src/app/app.routes.ts
 CREATE apps/angular/shell/src/app/nx-welcome.component.ts
 CREATE apps/angular/shell/src/main.ts
@@ -183,7 +182,6 @@ CREATE apps/angular/with-remotes/shell/src/app/app.component.css
 CREATE apps/angular/with-remotes/shell/src/app/app.component.html
 CREATE apps/angular/with-remotes/shell/src/app/app.component.spec.ts
 CREATE apps/angular/with-remotes/shell/src/app/app.component.ts
-CREATE apps/angular/with-remotes/shell/src/app/app.module.ts
 CREATE apps/angular/with-remotes/shell/src/app/app.routes.ts
 CREATE apps/angular/with-remotes/shell/src/app/nx-welcome.component.ts
 CREATE apps/angular/with-remotes/shell/src/main.ts
@@ -205,7 +203,6 @@ CREATE apps/angular/with-remotes/ng-remote1/tsconfig.app.json
 CREATE apps/angular/with-remotes/ng-remote1/tsconfig.editor.json
 CREATE apps/angular/with-remotes/ng-remote1/tsconfig.json
 CREATE apps/angular/with-remotes/ng-remote1/src/app/app.component.ts
-CREATE apps/angular/with-remotes/ng-remote1/src/app/app.module.ts
 CREATE apps/angular/with-remotes/ng-remote1/src/app/app.routes.ts
 CREATE apps/angular/with-remotes/ng-remote1/src/main.ts
 CREATE apps/angular/with-remotes/ng-remote1/.eslintrc.json
@@ -213,7 +210,6 @@ CREATE apps/angular/with-remotes/ng-remote1/jest.config.ts
 CREATE apps/angular/with-remotes/ng-remote1/src/test-setup.ts
 CREATE apps/angular/with-remotes/ng-remote1/tsconfig.spec.json
 CREATE apps/angular/with-remotes/ng-remote1/src/app/remote-entry/entry.component.ts
-CREATE apps/angular/with-remotes/ng-remote1/src/app/remote-entry/entry.module.ts
 CREATE apps/angular/with-remotes/ng-remote1/src/app/remote-entry/entry.routes.ts
 CREATE apps/angular/with-remotes/ng-remote1/src/app/remote-entry/nx-welcome.component.ts
 CREATE apps/angular/with-remotes/ng-remote1/module-federation.config.ts
@@ -232,7 +228,6 @@ CREATE apps/angular/with-remotes/ng-remote2/tsconfig.app.json
 CREATE apps/angular/with-remotes/ng-remote2/tsconfig.editor.json
 CREATE apps/angular/with-remotes/ng-remote2/tsconfig.json
 CREATE apps/angular/with-remotes/ng-remote2/src/app/app.component.ts
-CREATE apps/angular/with-remotes/ng-remote2/src/app/app.module.ts
 CREATE apps/angular/with-remotes/ng-remote2/src/app/app.routes.ts
 CREATE apps/angular/with-remotes/ng-remote2/src/main.ts
 CREATE apps/angular/with-remotes/ng-remote2/.eslintrc.json
@@ -240,7 +235,6 @@ CREATE apps/angular/with-remotes/ng-remote2/jest.config.ts
 CREATE apps/angular/with-remotes/ng-remote2/src/test-setup.ts
 CREATE apps/angular/with-remotes/ng-remote2/tsconfig.spec.json
 CREATE apps/angular/with-remotes/ng-remote2/src/app/remote-entry/entry.component.ts
-CREATE apps/angular/with-remotes/ng-remote2/src/app/remote-entry/entry.module.ts
 CREATE apps/angular/with-remotes/ng-remote2/src/app/remote-entry/entry.routes.ts
 CREATE apps/angular/with-remotes/ng-remote2/src/app/remote-entry/nx-welcome.component.ts
 CREATE apps/angular/with-remotes/ng-remote2/module-federation.config.ts

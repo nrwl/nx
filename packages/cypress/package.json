@@ -34,13 +34,13 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "@nx/devkit": "file:../devkit",
+    "@nx/eslint": "file:../eslint",
+    "@nx/js": "file:../js",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "detect-port": "^1.5.1",
     "semver": "7.5.3",
-    "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/eslint": "file:../eslint"
+    "tslib": "^2.3.0"
   },
   "peerDependencies": {
     "cypress": ">= 3 < 14"

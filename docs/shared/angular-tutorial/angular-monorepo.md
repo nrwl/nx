@@ -55,10 +55,10 @@ Create a new Angular monorepo with the following command:
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · angular-store
+✔ Which bundler would you like to use? · esbuild
 ✔ Default stylesheet format · css
+✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
 ✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Would you like to use Standalone Components in your application? · Yes
-✔ Would you like to add routing? · Yes
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
@@ -132,11 +132,11 @@ All targets, such as `serve`, `build`, `test` or your custom ones, are defined i
   "name": "angular-store",
   ...
   "targets": {
-    "serve": { ... },
     "build": { ... },
-    "preview": { ... },
-    "test": { ... },
+    "serve": { ... },
+    "extract-i18n": { ... },
     "lint": { ... },
+    "test": { ... },
     "serve-static": { ... },
   },
 }
