@@ -65,13 +65,14 @@ impl FilesWorker {
         FilesWorker(Some(files_lock))
     }
 
-    pub fn get_files(&self) -> Option<MutexGuard<'_, RawMutex, Files>> {
+    pub fn get_files(&self) -> Option<Vec<(PathBuf, String)>> {
         let Some(files_sync) = &self.0 else {
             trace!("there were no files because the workspace root did not exist");
             return None;
         };
 
         let (files_lock, cvar) = &files_sync.deref();
+        trace!("locking files");
         let mut files = files_lock.lock();
         let files_len = files.len();
         if files_len == 0 {
@@ -79,8 +80,11 @@ impl FilesWorker {
             cvar.wait(&mut files);
         }
 
+        let cloned_files = files.clone();
+        drop(files);
+
         trace!("files are available");
-        Some(files)
+        Some(cloned_files)
     }
 
     pub fn update_files(
@@ -156,22 +160,13 @@ impl WorkspaceContext {
         workspace_files::get_files(
             globs,
             parse_configurations,
-            self.files_worker
-                .get_files()
-                .as_deref()
-                .map(|files| files.as_slice()),
+            self.files_worker.get_files().as_deref(),
         )
     }
 
     #[napi]
     pub fn glob(&self, globs: Vec<String>) -> napi::Result<Vec<String>, WorkspaceErrors> {
-        config_files::glob_files(
-            globs,
-            self.files_worker
-                .get_files()
-                .as_deref()
-                .map(|files| files.as_slice()),
-        )
+        config_files::glob_files(globs, self.files_worker.get_files().as_deref())
     }
 
     #[napi]
@@ -185,10 +180,7 @@ impl WorkspaceContext {
     {
         config_files::get_project_configurations(
             globs,
-            self.files_worker
-                .get_files()
-                .as_deref()
-                .map(|files| files.as_slice()),
+            self.files_worker.get_files().as_deref(),
             parse_configurations,
         )
     }
