@@ -36,7 +36,7 @@ describe('nuxt:storybook-configuration', () => {
   it('should configure with vue3 framework and styles import', async () => {
     appTree = await createTestApp('test-ui-app');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
     });
 
     expect(
@@ -59,7 +59,7 @@ describe('nuxt:storybook-configuration', () => {
     appTree.write('test-ui-app/src/pages/about.vue', componentContent);
 
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
       generateStories: true,
     });
 
