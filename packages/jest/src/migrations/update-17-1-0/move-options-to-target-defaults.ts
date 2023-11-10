@@ -174,7 +174,7 @@ function isTargetDefaultUsed(
           targetName,
           targetDefaults,
           // It might seem like we should use the graph here too but we don't want to pass an executor which was processed in the graph
-          projectMap.get(p.name).targets?.[targetName]?.executor
+          projectMap.get(p.name)?.targets?.[targetName]?.executor
         ) === targetDefault
       ) {
         return true;
