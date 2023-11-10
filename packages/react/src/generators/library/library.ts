@@ -147,7 +147,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
       project: options.name,
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       testEnvironment: 'jsdom',
