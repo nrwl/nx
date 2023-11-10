@@ -28,6 +28,7 @@ exports[`app generated files content - as-provided general application should co
 
 exports[`app generated files content - as-provided general application should configure nuxt correctly 1`] = `
 "import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -203,6 +204,7 @@ exports[`app generated files content - as-provided general application should cr
 
 exports[`app generated files content - as-provided styles setup should configure css 1`] = `
 "import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -224,6 +226,7 @@ export default defineNuxtConfig({
 
 exports[`app generated files content - as-provided styles setup should configure less 1`] = `
 "import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -245,6 +248,7 @@ export default defineNuxtConfig({
 
 exports[`app generated files content - as-provided styles setup should configure scss 1`] = `
 "import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
@@ -266,6 +270,7 @@ export default defineNuxtConfig({
 
 exports[`app generated files content - as-provided styles setup should not configure styles 1`] = `
 "import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { defineNuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
