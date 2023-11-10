@@ -51,5 +51,5 @@ launch-templates:
           git config --global user.email test@test.com
           git config --global user.name "Test Test"
 
-      - name: Load Cargo Env
-        script: source "$HOME/.cargo/env"
+      - name: Print Cargo Info
+        script: cargo --version
