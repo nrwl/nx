@@ -559,4 +559,46 @@ describe('move-options-to-target-defaults migration', () => {
       },
     });
   });
+
+  it("should't error if a project is present in the graph but not using project.json", async () => {
+    projectGraph.nodes['csproj'] = {
+      name: 'csproj',
+      type: 'lib',
+      data: {
+        root: 'csproj',
+        targets: {
+          build: {
+            command: 'echo HELLO',
+          },
+        },
+      },
+    };
+    addProjectConfiguration(tree, 'proj1', {
+      root: 'proj1',
+      targets: {
+        test: {
+          executor: '@nx/jest:jest',
+          options: {
+            jestConfig: 'jest.config.js',
+            passWithNoTests: true,
+          },
+          configurations: {
+            ci: {
+              ci: true,
+              codeCoverage: true,
+            },
+          },
+        },
+      },
+    });
+    updateNxJson(tree, {
+      targetDefaults: {
+        build: {
+          inputs: ['default', '^production'],
+        },
+      },
+    });
+    const promise = update(tree);
+    await expect(promise).resolves.not.toThrow();
+  });
 });
