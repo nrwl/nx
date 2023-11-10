@@ -30,7 +30,15 @@ const mainFields = ['module', 'main'];
 
 export function applyBaseConfig(
   options: NormalizedNxWebpackPluginOptions,
-  config: Partial<WebpackOptionsNormalized | Configuration> = {}
+  config: Partial<WebpackOptionsNormalized | Configuration> = {},
+  {
+    useNormalizedEntry,
+  }: {
+    // webpack.Configuration allows arrays to be set on a single entry
+    // webpack then normalizes them to { import: "..." } objects
+    // This option allows use to preserve existing composePlugins behavior where entry.main is an array.
+    useNormalizedEntry?: boolean;
+  } = {}
 ): void {
   const plugins: WebpackPluginInstance[] = [
     new NxTsconfigPathsWebpackPlugin(options),
@@ -85,7 +93,11 @@ export function applyBaseConfig(
 
   config.entry ??= {};
   entries.forEach((entry) => {
-    config.entry[entry.name] = { import: entry.import };
+    if (useNormalizedEntry) {
+      config.entry[entry.name] = { import: entry.import };
+    } else {
+      config.entry[entry.name] = entry.import;
+    }
   });
 
   if (options.progress) {
