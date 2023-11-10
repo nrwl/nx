@@ -15,10 +15,7 @@ launchTemplates:
       NX_E2E_RUN_E2E: 'true'
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
       NX_CLOUD_ACCESS_TOKEN: '{{secrets.NX_CLOUD_ACCESS_TOKEN}}'
-    on:
-      - events:
-          - CREATE_RUN_GROUP
-    steps:
+    init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
 
@@ -54,7 +51,5 @@ launchTemplates:
           git config --global user.email test@test.com
           git config --global user.name "Test Test"
 
-      - name: Run Agent
-        script: |
-          source "$HOME/.cargo/env"
-          npx nx-cloud start-agent
+      - name: Load Cargo Env
+        script: source "$HOME/.cargo/env"
