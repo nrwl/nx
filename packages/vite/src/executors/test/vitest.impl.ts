@@ -108,12 +108,14 @@ async function getSettings(
   const packageJson = existsSync(packageJsonPath)
     ? readJsonFile(packageJsonPath)
     : undefined;
-  let provider: 'v8' | 'c8' = 'v8';
+  let provider: 'v8' | 'istanbul' | 'custom';
   if (
-    packageJson?.dependencies?.['@vitest/coverage-c8'] ||
-    packageJson?.devDependencies?.['@vitest/coverage-c8']
+    packageJson?.dependencies?.['@vitest/coverage-istanbul'] ||
+    packageJson?.devDependencies?.['@vitest/coverage-istanbul']
   ) {
-    provider = 'c8';
+    provider = 'istanbul';
+  } else {
+    provider = 'v8';
   }
   const offset = relative(workspaceRoot, context.cwd);
   // if reportsDirectory is not provided vitest will remove all files in the project root
