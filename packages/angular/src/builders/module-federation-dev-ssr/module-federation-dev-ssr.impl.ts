@@ -98,7 +98,8 @@ export function executeModuleFederationDevSSRBuilder(
       const { schema } = getExecutorInformation(
         collection,
         executor,
-        workspaceRoot
+        workspaceRoot,
+        workspaceProjects
       );
 
       if (schema.additionalProperties || 'verbose' in schema.properties) {
@@ -141,6 +142,7 @@ export function executeModuleFederationDevSSRBuilder(
             target,
             configuration: context.target.configuration,
             runOptions,
+            projects: workspaceProjects,
           },
           options.verbose
         ).then((obs) =>

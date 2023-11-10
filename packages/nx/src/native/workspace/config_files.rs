@@ -1,7 +1,7 @@
 use crate::native::glob::build_glob_set;
 use crate::native::utils::path::Normalize;
 use std::collections::HashMap;
-use napi::bindgen_prelude::{Object, Promise};
+use napi::bindgen_prelude::Promise;
 
 use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors};
 use rayon::prelude::*;

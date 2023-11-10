@@ -16,7 +16,6 @@ use xxhash_rust::xxh3;
 
 use crate::native::walker::nx_walker;
 use crate::native::workspace::errors::WorkspaceErrors;
-use crate::native::workspace::workspace_files::NxWorkspaceFiles;
 use crate::native::workspace::{config_files, workspace_files};
 
 #[napi]
@@ -149,7 +148,7 @@ impl WorkspaceContext {
         }
     }
 
-    #[napi]
+    #[napi(ts_return_type = "Promise<NxWorkspaceFiles>")]
     pub fn get_workspace_files<ConfigurationParser>(
         &self,
         env: Env,
@@ -173,7 +172,7 @@ impl WorkspaceContext {
         config_files::glob_files(globs, self.files_worker.get_files().as_deref())
     }
 
-    #[napi]
+    #[napi(ts_return_type = "Promise<Record<string, string>>")]
     pub fn get_project_configurations<ConfigurationParser>(
         &self,
         env: Env,

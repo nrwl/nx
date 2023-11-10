@@ -19,7 +19,7 @@ export function setupWorkspaceContext(workspaceRoot: string) {
 export function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
   globs: string[],
-  parseConfigurations: (files: string[]) => Record<string, string>
+  parseConfigurations: (files: string[]) => Promise<Record<string, string>>
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.getWorkspaceFiles(globs, parseConfigurations);
@@ -36,7 +36,7 @@ export function globWithWorkspaceContext(
 export function getProjectConfigurationsFromContext(
   workspaceRoot: string,
   globs: string[],
-  parseConfigurations: (files: string[]) => Record<string, string>
+  parseConfigurations: (files: string[]) => Promise<Record<string, string>>
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.getProjectConfigurations(globs, parseConfigurations);

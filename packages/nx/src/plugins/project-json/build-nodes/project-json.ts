@@ -3,9 +3,9 @@ import { dirname, join } from 'node:path';
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import { toProjectName } from '../../../config/workspaces';
 import { readJsonFile } from '../../../utils/fileutils';
-import { NxPluginV2 } from '../../../utils/nx-plugin';
+import { CreateNodes, NxPluginV2 } from '../../../utils/nx-plugin';
 
-export const CreateProjectJsonProjectsPlugin: NxPluginV2 = {
+export const CreateProjectJsonProjectsPlugin: NxPluginV2<void, CreateNodes> = {
   name: 'nx-core-build-project-json-nodes',
   createNodes: [
     '{project.json,**/project.json}',

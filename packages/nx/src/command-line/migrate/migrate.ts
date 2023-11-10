@@ -62,6 +62,10 @@ import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../../project-graph/project-graph';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1404,6 +1408,9 @@ export async function executeMigrations(
           root,
           m.package,
           m.name,
+          readProjectsConfigurationFromProjectGraph(
+            await createProjectGraphAsync()
+          ).projects,
           isVerbose
         );
 
