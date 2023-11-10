@@ -1,4 +1,4 @@
-launchTemplates:
+launch-templates:
   linux-medium:
     env:
       CI: 'true'
