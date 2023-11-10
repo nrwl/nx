@@ -25,7 +25,15 @@ import MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 export function applyWebConfig(
   options: NormalizedNxWebpackPluginOptions,
-  config: Partial<WebpackOptionsNormalized | Configuration> = {}
+  config: Partial<WebpackOptionsNormalized | Configuration> = {},
+  {
+    useNormalizedEntry,
+  }: {
+    // webpack.Configuration allows arrays to be set on a single entry
+    // webpack then normalizes them to { import: "..." } objects
+    // This option allows use to preserve existing composePlugins behavior where entry.main is an array.
+    useNormalizedEntry?: boolean;
+  } = {}
 ): void {
   const plugins: WebpackPluginInstance[] = [];
 
@@ -70,7 +78,7 @@ export function applyWebConfig(
     );
   }
 
-  const entry: { [key: string]: { import: string[] } } = {};
+  const entries: { [key: string]: { import: string[] } } = {};
   const globalStylePaths: string[] = [];
 
   // Determine hashing format.
@@ -97,10 +105,10 @@ export function applyWebConfig(
     normalizeExtraEntryPoints(options.styles, 'styles').forEach((style) => {
       const resolvedPath = path.resolve(options.root, style.input);
       // Add style entry points.
-      if (entry[style.bundleName]) {
-        entry[style.bundleName].import.push(resolvedPath);
+      if (entries[style.bundleName]) {
+        entries[style.bundleName].import.push(resolvedPath);
       } else {
-        entry[style.bundleName] = { import: [resolvedPath] };
+        entries[style.bundleName] = { import: [resolvedPath] };
       }
 
       // Add global css paths.
@@ -315,7 +323,13 @@ export function applyWebConfig(
   if (Array.isArray(config.entry))
     throw new Error('Entry array is not supported. Use an object.');
 
-  config.entry = { ...config.entry, ...entry };
+  Object.entries(entries).forEach(([entryName, entryData]) => {
+    if (useNormalizedEntry) {
+      config.entry[entryName] = { import: entryData.import };
+    } else {
+      config.entry[entryName] = entryData.import;
+    }
+  });
 
   config.optimization = {
     ...config.optimization,
