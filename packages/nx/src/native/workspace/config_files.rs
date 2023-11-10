@@ -1,4 +1,4 @@
-use crate::native::utils::glob::build_glob_set;
+use crate::native::glob::build_glob_set;
 use crate::native::utils::path::Normalize;
 use std::collections::HashMap;
 
