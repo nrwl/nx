@@ -21,7 +21,7 @@ Note, the Nx team's focus is on building the best possible developer productivit
 
 ### Quick Overview Comparison
 
-Here's a quick side-by-side overview comparing the features between the Angular CLI and Nx. _(Kudos to [Daniel Glejzner](https://twitter.com/DanielGlejzner) for helping with this)_
+Here's a quick side-by-side overview comparing the features between the Angular CLI and Nx. _(Kudos to [Daniel Glejzner](https://x.com/DanielGlejzner) for helping with this)_
 
 | Feature/Tool                                                                                               | Angular CLI     | Nx            |
 | ---------------------------------------------------------------------------------------------------------- | --------------- | ------------- |

@@ -41,7 +41,7 @@ export default function CustomApp({
           siteName: 'Nx',
           type: 'website',
         }}
-        twitter={{
+        x={{
           site: '@nxdevtools',
           cardType: 'summary_large_image',
         }}

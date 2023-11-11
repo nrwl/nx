@@ -72,7 +72,7 @@ function main() {
     }
 
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules
-    // https://twitter.com/BenLesh/status/1192478226385428483?s=20
+    // https://x.com/BenLesh/status/1192478226385428483?s=20
     if (!(Symbol as any).observable)
       (Symbol as any).observable = Symbol('observable polyfill');
 

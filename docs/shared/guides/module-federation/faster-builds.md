@@ -274,7 +274,7 @@ To analyze your bundle, run build with `--statsJson` and use a tool
 like [`webpack-bundle-analyzer`](https://www.npmjs.com/package/webpack-bundle-analyzer) to the size of your bundles.
 
 If you have any feedback regarding this feature, we'd love to hear from you--check
-our [community page](https://nx.dev/community) for links to our Discord and Twitter.
+our [community page](https://nx.dev/community) for links to our Discord and X.
 {% /callout %}
 
 ## Distributed computation caching with Nx Cloud

@@ -17,12 +17,12 @@ export default function Community(): JSX.Element {
     <>
       <NextSeo
         title="Nx Community"
-        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Discord and Twitter"
+        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Discord and X"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx Community',
           description:
-            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Discord and Twitter',
+            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Discord and X',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
