@@ -56,6 +56,7 @@ function buildStaticRemotes(
       [
         'run-many',
         `--target=build`,
+        `--all=false`,
         `--projects=${remotes.staticRemotes.join(',')}`,
         ...(context.target.configuration
           ? [`--configuration=${context.target.configuration}`]
