@@ -105,6 +105,12 @@ export async function hostGeneratorInternal(
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }
 
+  if (!options.setParserOptionsProject) {
+    host.delete(
+      joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
+    );
+  }
+
   if (!options.skipFormat) {
     await formatFiles(host);
   }
