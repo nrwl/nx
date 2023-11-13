@@ -41,11 +41,6 @@ import { shouldMergeAngularProjects } from '../adapter/angular-json';
 import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
 import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
 import { CreatePackageJsonProjectsNextToProjectJson } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
-import {
-  mergeProjectConfigurationIntoRootMap,
-  readProjectConfigurationsFromRootMap,
-} from '../project-graph/utils/project-configuration-utils';
-import { globWithWorkspaceContext } from './workspace-context';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
 
 /**
@@ -228,7 +223,7 @@ export async function loadNxPluginAsync(
   if (pluginModule) {
     return { plugin: pluginModule, options };
   }
-
+  performance.mark(`Load Nx Plugin: ${moduleName} - start`);
   let { pluginPath, name } = await getPluginPathAndName(
     moduleName,
     paths,
@@ -240,6 +235,12 @@ export async function loadNxPluginAsync(
   );
   plugin.name ??= name;
   nxPluginCache.set(moduleName, plugin);
+  performance.mark(`Load Nx Plugin: ${moduleName} - end`);
+  performance.measure(
+    `Load Nx Plugin: ${moduleName}`,
+    `Load Nx Plugin: ${moduleName} - start`,
+    `Load Nx Plugin: ${moduleName} - end`
+  );
   return { plugin, options };
 }
 

@@ -175,13 +175,17 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
   > = [];
 
+  const resolvingPromiseCount: Record<string, number> = {};
+
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const { plugin, options } of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
+    performance.mark(`${plugin.name}:createNodes - start`);
     if (!pattern) {
       continue;
     }
     for (const file of projectFiles) {
+      performance.mark(`${plugin.name}:createNodes:${file} - start`);
       if (minimatch(file, pattern, { dot: true })) {
         try {
           let r = createNodes(file, options, {
@@ -190,15 +194,39 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
           });
 
           if (r instanceof Promise) {
+            resolvingPromiseCount[plugin.name] ??= 0;
+            resolvingPromiseCount[plugin.name]++;
+
             results.push(
               r
                 .catch((e) => {
-                  errorUnableToCreateNodes(file, plugin.name, e);
-                  throw e;
+                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                  throw new CreateNodesError(
+                    `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
+                    e
+                  );
                 })
-                .then((r) => ({ ...r, file, pluginName: plugin.name }))
+                .then((r) => {
+                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                  resolvingPromiseCount[plugin.name]--;
+                  if (resolvingPromiseCount[plugin.name] === 0) {
+                    performance.mark(`${plugin.name}:createNodes - end`);
+                    performance.measure(
+                      `${plugin.name}:createNodes`,
+                      `${plugin.name}:createNodes - start`,
+                      `${plugin.name}:createNodes - end`
+                    );
+                  }
+                  return { ...r, file, pluginName: plugin.name };
+                })
             );
           } else {
+            performance.mark(`${plugin.name}:createNodes:${file} - end`);
+            performance.measure(
+              `${plugin.name}:createNodes:${file}`,
+              `${plugin.name}:createNodes:${file} - start`,
+              `${plugin.name}:createNodes:${file} - end`
+            );
             results.push({
               ...r,
               file,
@@ -206,9 +234,21 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             });
           }
         } catch (e) {
-          errorUnableToCreateNodes(file, plugin.name, e);
+          throw new CreateNodesError(
+            `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
+            e
+          );
         }
       }
+    }
+    // If there are no promises (counter undefined) or all promises have resolved (counter === 0)
+    if (!resolvingPromiseCount[plugin.name]) {
+      performance.mark(`${plugin.name}:createNodes - end`);
+      performance.measure(
+        `${plugin.name}:createNodes`,
+        `${plugin.name}:createNodes - start`,
+        `${plugin.name}:createNodes - end`
+      );
     }
   }
 
@@ -240,7 +280,10 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             [file, pluginName]
           );
         } catch (e) {
-          errorUnableToMergeProject(project[node], file, pluginName, e);
+          throw new CreateNodesError(
+            `Unable to merge project information for "${project.root}" from ${result.file} using plugin ${result.pluginName}.`,
+            e
+          );
         }
       }
       Object.assign(externalNodes, pluginExternalNodes);
@@ -295,34 +338,21 @@ export function readProjectConfigurationsFromRootMap(
   return projects;
 }
 
-function errorUnableToCreateNodes(
-  plugin: string,
-  file: string,
-  e: Error | unknown
-) {
-  const message = `Unable to create nodes for ${file} using plugin ${plugin}. ${
-    e instanceof Error ? `\n\n\t Inner Error: ${e.stack}` : e
-  } }`;
-  // This error occurs most often during a callback that's evaluated
-  // while rust is running. This means the stack trace and error message
-  // get hidden, and makes things harder to debug. Logging the error
-  // here ensures that the error is visible.
-  console.error(message);
-  throw new Error(message);
-}
-
-function errorUnableToMergeProject(
-  project: ProjectConfiguration,
-  file: string,
-  plugin: string,
-  e: Error | unknown
-) {
-  const message = `Unable to merge project information for "${project.root}"
-  } from ${file} using plugin ${plugin}. ${
-    e instanceof Error ? `\n\n\t Inner Error: ${e.stack}` : e
-  }`;
-  console.error(message);
-  throw new Error(message);
+class CreateNodesError extends Error {
+  constructor(msg, cause: Error | unknown) {
+    const message = `${msg} ${
+      !cause
+        ? ''
+        : cause instanceof Error
+        ? `\n\n\t Inner Error: ${cause.stack}`
+        : cause
+    }`;
+    // These errors are thrown during a JS callback which is invoked via rust.
+    // The errors messaging gets lost in the rust -> js -> rust transition, but
+    // logging the error here will ensure that it is visible in the console.
+    console.error(message);
+    super(message, { cause });
+  }
 }
 
 /**
