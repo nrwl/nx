@@ -187,7 +187,9 @@ async function testCtAndE2eInProject(
 ) {
   let appName = uniq(`${projectType}-cy-app`);
   runCLI(
-    `generate @nx/${projectType}:app ${appName} --e2eTestRunner=none --no-interactive`
+    `generate @nx/${projectType}:app ${appName} --e2eTestRunner=none --no-interactive ${
+      projectType === 'angular' ? '--bundler=webpack' : ''
+    }`
   );
   runCLI(
     `generate @nx/${projectType}:component btn --project=${appName} --no-interactive`

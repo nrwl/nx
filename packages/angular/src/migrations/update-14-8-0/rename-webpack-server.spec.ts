@@ -14,6 +14,11 @@ describe('renameWebpackServer', () => {
 
     updateJson(tree, 'apps/remote/project.json', (json) => {
       json.targets.serve.executor = '@nrwl/angular:webpack-server';
+      // Nx 14.x.x generates apps with browserTarget
+      json.targets.serve.configurations = {
+        development: { browserTarget: 'remote:build:development' },
+        production: { browserTarget: 'remote:build:production' },
+      };
       return json;
     });
 

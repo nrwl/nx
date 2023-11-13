@@ -51,7 +51,7 @@ describe('NxPlugin e2e-project Generator', () => {
 
     expect(tree.exists('apps/my-plugin-e2e/tsconfig.json')).toBeTruthy();
     expect(
-      tree.exists('apps/my-plugin-e2e/tests/my-plugin.spec.ts')
+      tree.exists('apps/my-plugin-e2e/src/my-plugin.spec.ts')
     ).toBeTruthy();
   });
 
@@ -119,19 +119,12 @@ describe('NxPlugin e2e-project Generator', () => {
     expect(project.targets.e2e).toBeTruthy();
     expect(project.targets.e2e).toMatchInlineSnapshot(`
       {
-        "configurations": {
-          "ci": {
-            "ci": true,
-            "codeCoverage": true,
-          },
-        },
         "dependsOn": [
           "^build",
         ],
         "executor": "@nx/jest:jest",
         "options": {
           "jestConfig": "apps/my-plugin-e2e/jest.config.ts",
-          "passWithNoTests": true,
           "runInBand": true,
         },
         "outputs": [

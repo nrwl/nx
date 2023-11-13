@@ -22,3 +22,4 @@ export { componentTestGenerator } from './src/generators/component-test/componen
 export { setupTailwindGenerator } from './src/generators/setup-tailwind/setup-tailwind';
 export type { SupportedStyles } from './typings/style';
 export * from './plugins/with-react';
+export { NxReactWebpackPlugin } from './plugins/nx-react-webpack-plugin/nx-react-webpack-plugin';

@@ -60,25 +60,26 @@ export async function retrieveWorkspaceFiles(
   );
 
   performance.mark('get-workspace-files:start');
+  let projects: Record<string, ProjectConfiguration>;
+  let externalNodes: Record<string, ProjectGraphExternalNode>;
 
-  const { projectConfigurations, projectFileMap, globalFiles, externalNodes } =
-    getNxWorkspaceFilesFromContext(
-      workspaceRoot,
-      globs,
-      (configs: string[]) => {
-        const projectConfigurations = createProjectConfigurations(
-          workspaceRoot,
-          nxJson,
-          configs,
-          plugins
-        );
+  const { projectFileMap, globalFiles } = getNxWorkspaceFilesFromContext(
+    workspaceRoot,
+    globs,
+    (configs: string[]) => {
+      const projectConfigurations = createProjectConfigurations(
+        workspaceRoot,
+        nxJson,
+        configs,
+        plugins
+      );
 
-        return {
-          projectNodes: projectConfigurations.projects,
-          externalNodes: projectConfigurations.externalNodes,
-        };
-      }
-    ) as NxWorkspaceFiles;
+      projects = projectConfigurations.projects;
+
+      externalNodes = projectConfigurations.externalNodes;
+      return projectConfigurations.rootMap;
+    }
+  ) as NxWorkspaceFiles;
   performance.mark('get-workspace-files:end');
   performance.measure(
     'get-workspace-files',
@@ -94,9 +95,9 @@ export async function retrieveWorkspaceFiles(
     },
     projectConfigurations: {
       version: 2,
-      projects: projectConfigurations,
+      projects,
     } as ProjectsConfigurations,
-    externalNodes: externalNodes as Record<string, ProjectGraphExternalNode>,
+    externalNodes,
   };
 }
 
@@ -176,26 +177,30 @@ function _retrieveProjectConfigurations(
   externalNodes: Record<string, ProjectGraphExternalNode>;
   projectNodes: Record<string, ProjectConfiguration>;
 } {
-  return getProjectConfigurationsFromContext(
+  let result: {
+    externalNodes: Record<string, ProjectGraphExternalNode>;
+    projectNodes: Record<string, ProjectConfiguration>;
+  };
+  getProjectConfigurationsFromContext(
     workspaceRoot,
     globs,
     (configs: string[]) => {
-      const projectConfigurations = createProjectConfigurations(
+      const { projects, externalNodes, rootMap } = createProjectConfigurations(
         workspaceRoot,
         nxJson,
         configs,
         plugins
       );
 
-      return {
-        projectNodes: projectConfigurations.projects,
-        externalNodes: projectConfigurations.externalNodes,
+      result = {
+        projectNodes: projects,
+        externalNodes: externalNodes,
       };
+
+      return rootMap;
     }
-  ) as {
-    externalNodes: Record<string, ProjectGraphExternalNode>;
-    projectNodes: Record<string, ProjectConfiguration>;
-  };
+  );
+  return result;
 }
 
 export async function retrieveProjectConfigurationPaths(
@@ -232,24 +237,28 @@ export function retrieveProjectConfigurationsWithoutPluginInference(
     return projectsWithoutPluginCache.get(cacheKey);
   }
 
-  const projectConfigurations = getProjectConfigurationsFromContext(
+  let projects: Record<string, ProjectConfiguration>;
+  getProjectConfigurationsFromContext(
     root,
     projectGlobPatterns,
     (configs: string[]) => {
-      const { projects } = createProjectConfigurations(root, nxJson, configs, [
-        { plugin: getNxPackageJsonWorkspacesPlugin(root) },
-        { plugin: CreateProjectJsonProjectsPlugin },
-      ]);
-      return {
-        projectNodes: projects,
-        externalNodes: {},
-      };
+      const projectConfigurations = createProjectConfigurations(
+        root,
+        nxJson,
+        configs,
+        [
+          { plugin: getNxPackageJsonWorkspacesPlugin(root) },
+          { plugin: CreateProjectJsonProjectsPlugin },
+        ]
+      );
+      projects = projectConfigurations.projects;
+      return projectConfigurations.rootMap;
     }
-  ).projectNodes as Record<string, ProjectConfiguration>;
+  );
 
-  projectsWithoutPluginCache.set(cacheKey, projectConfigurations);
+  projectsWithoutPluginCache.set(cacheKey, projects);
 
-  return projectConfigurations;
+  return projects;
 }
 
 function buildAllWorkspaceFiles(
@@ -258,8 +267,9 @@ function buildAllWorkspaceFiles(
 ): FileData[] {
   performance.mark('get-all-workspace-files:start');
   let fileData: FileData[] = Object.values(projectFileMap).flat();
-
-  fileData = fileData.concat(globalFiles);
+  fileData = fileData
+    .concat(globalFiles)
+    .sort((a, b) => a.file.localeCompare(b.file));
   performance.mark('get-all-workspace-files:end');
   performance.measure(
     'get-all-workspace-files',
@@ -278,10 +288,11 @@ export function createProjectConfigurations(
 ): {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
+  rootMap: Record<string, string>;
 } {
   performance.mark('build-project-configs:start');
 
-  const { projects, externalNodes } =
+  const { projects, externalNodes, rootMap } =
     buildProjectsConfigurationsFromProjectPathsAndPlugins(
       nxJson,
       configFiles,
@@ -301,6 +312,7 @@ export function createProjectConfigurations(
   return {
     projects: projectConfigurations,
     externalNodes,
+    rootMap,
   };
 }
 

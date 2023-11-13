@@ -277,19 +277,39 @@ export function removeTasksFromTaskGraph(
   graph: TaskGraph,
   ids: string[]
 ): TaskGraph {
-  const tasks = {};
+  const newGraph = removeIdsFromGraph<Task>(graph, ids, graph.tasks);
+  return {
+    dependencies: newGraph.dependencies,
+    roots: newGraph.roots,
+    tasks: newGraph.mapWithIds,
+  };
+}
+
+export function removeIdsFromGraph<T>(
+  graph: {
+    roots: string[];
+    dependencies: Record<string, string[]>;
+  },
+  ids: string[],
+  mapWithIds: Record<string, T>
+): {
+  mapWithIds: Record<string, T>;
+  roots: string[];
+  dependencies: Record<string, string[]>;
+} {
+  const filteredMapWithIds = {};
   const dependencies = {};
   const removedSet = new Set(ids);
-  for (let taskId of Object.keys(graph.tasks)) {
-    if (!removedSet.has(taskId)) {
-      tasks[taskId] = graph.tasks[taskId];
-      dependencies[taskId] = graph.dependencies[taskId].filter(
-        (depTaskId) => !removedSet.has(depTaskId)
+  for (let id of Object.keys(mapWithIds)) {
+    if (!removedSet.has(id)) {
+      filteredMapWithIds[id] = mapWithIds[id];
+      dependencies[id] = graph.dependencies[id].filter(
+        (depId) => !removedSet.has(depId)
       );
     }
   }
   return {
-    tasks,
+    mapWithIds: filteredMapWithIds,
     dependencies: dependencies,
     roots: Object.keys(dependencies).filter(
       (k) => dependencies[k].length === 0

@@ -33,8 +33,8 @@ export function mergeProjectConfigurationIntoRootMap(
 
   // The next blocks handle properties that should be themselves merged (e.g. targets, tags, and implicit dependencies)
   if (project.tags && matchingProject.tags) {
-    updatedProjectConfiguration.tags = matchingProject.tags.concat(
-      project.tags
+    updatedProjectConfiguration.tags = Array.from(
+      new Set(matchingProject.tags.concat(project.tags))
     );
   }
 
@@ -44,9 +44,23 @@ export function mergeProjectConfigurationIntoRootMap(
   }
 
   if (project.generators && matchingProject.generators) {
-    updatedProjectConfiguration.generators = {
-      ...matchingProject.generators,
-      ...project.generators,
+    // Start with generators config in new project.
+    updatedProjectConfiguration.generators = { ...project.generators };
+
+    // For each generator that was already defined, shallow merge the options.
+    // Project contains the new info, so it has higher priority.
+    for (const generator in matchingProject.generators) {
+      updatedProjectConfiguration.generators[generator] = {
+        ...matchingProject.generators[generator],
+        ...project.generators[generator],
+      };
+    }
+  }
+
+  if (project.namedInputs && matchingProject.namedInputs) {
+    updatedProjectConfiguration.namedInputs = {
+      ...matchingProject.namedInputs,
+      ...project.namedInputs,
     };
   }
 
@@ -55,6 +69,17 @@ export function mergeProjectConfigurationIntoRootMap(
       ...matchingProject.targets,
       ...project.targets,
     };
+    for (const target in matchingProject.targets) {
+      if (target in matchingProject.targets && target in project.targets) {
+        // If the target is defined in both places, merge the options
+        // Project contains the new info, so it has higher priority.
+        // Options from matchingProject are used as defaults.
+        updatedProjectConfiguration.targets[target] = mergeTargetConfigurations(
+          project.targets[target],
+          matchingProject.targets[target]
+        );
+      }
+    }
   }
 
   projectRootMap.set(
@@ -71,6 +96,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
 ): {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
+  rootMap: Record<string, string>;
 } {
   const projectRootMap: Map<string, ProjectConfiguration> = new Map();
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
@@ -89,20 +115,31 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
             workspaceRoot: root,
           });
         for (const node in projectNodes) {
-          projectNodes[node].name ??= node;
-          mergeProjectConfigurationIntoRootMap(
-            projectRootMap,
-            projectNodes[node]
-          );
+          mergeProjectConfigurationIntoRootMap(projectRootMap, {
+            // If root is specified in config, that will overwrite this.
+            // Specifying it here though allows plugins to return something like
+            // {
+            //   projects: {
+            //     [root]: { targets: buildTargetsFromFile(f) }
+            //   }
+            // }
+            // Otherwise, the root would have to be specified in the config as well
+            // which would be a bit redundant.
+            root: node,
+            ...projectNodes[node],
+          });
         }
         Object.assign(externalNodes, pluginExternalNodes);
       }
     }
   }
 
+  const rootMap = createRootMap(projectRootMap);
+
   return {
     projects: readProjectConfigurationsFromRootMap(projectRootMap),
     externalNodes,
+    rootMap,
   };
 }
 
@@ -144,43 +181,51 @@ export function readProjectConfigurationsFromRootMap(
   return projects;
 }
 
+/**
+ * Merges two configurations for a target.
+ *
+ * Most properties from `target` will overwrite any properties from `baseTarget`.
+ * Options and configurations are treated differently - they are merged together if the executor definition is compatible.
+ *
+ * @param target The configuration for the target with higher priority
+ * @param baseTarget The configuration for the target that should be overwritten.
+ * @returns A merged target configuration
+ */
 export function mergeTargetConfigurations(
-  projectConfiguration: ProjectConfiguration,
-  target: string,
-  targetDefaults: TargetDefaults[string]
+  target: TargetConfiguration,
+  baseTarget: TargetConfiguration
 ): TargetConfiguration {
-  const targetConfiguration = projectConfiguration.targets?.[target];
-
-  if (!targetConfiguration) {
-    throw new Error(
-      `Attempted to merge targetDefaults for ${projectConfiguration.name}.${target}, which doesn't exist.`
-    );
-  }
-
   const {
     configurations: defaultConfigurations,
     options: defaultOptions,
     ...defaults
-  } = targetDefaults;
+  } = baseTarget;
   const result = {
     ...defaults,
-    ...targetConfiguration,
+    ...target,
   };
 
   // Target is "compatible", e.g. executor is defined only once or is the same
   // in both places. This means that it is likely safe to merge options
-  if (
-    !targetDefaults.executor ||
-    !targetConfiguration.executor ||
-    targetDefaults.executor === targetConfiguration.executor
-  ) {
-    result.options = { ...defaultOptions, ...targetConfiguration?.options };
+  if (isCompatibleTarget(defaults, target)) {
+    result.options = { ...defaultOptions, ...target?.options };
     result.configurations = mergeConfigurations(
       defaultConfigurations,
-      targetConfiguration.configurations
+      target.configurations
     );
   }
   return result as TargetConfiguration;
+}
+
+/**
+ * Checks if targets options are compatible - used when merging configurations
+ * to avoid merging options for @nx/js:tsc into something like @nx/webpack:webpack.
+ *
+ * If the executors are both specified and don't match, the options aren't considered
+ * "compatible" and shouldn't be merged.
+ */
+function isCompatibleTarget(a: TargetConfiguration, b: TargetConfiguration) {
+  return !a.executor || !b.executor || a.executor === b.executor;
 }
 
 function mergeConfigurations<T extends Object>(
@@ -248,4 +293,11 @@ export function readTargetDefaultsForTarget(
     // If the executor is not defined, the only key we have is the target name.
     return targetDefaults?.[targetName];
   }
+}
+function createRootMap(projectRootMap: Map<string, ProjectConfiguration>) {
+  const map: Record<string, string> = {};
+  for (const [projectRoot, { name: projectName }] of projectRootMap) {
+    map[projectRoot] = projectName;
+  }
+  return map;
 }

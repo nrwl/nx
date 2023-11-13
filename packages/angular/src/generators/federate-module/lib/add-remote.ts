@@ -1,11 +1,9 @@
-import { GeneratorCallback, stripIndents, type Tree } from '@nx/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { lt } from 'semver';
-import { getRemoteIfExists } from './check-remote-exists';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
-import { type Schema } from '../schema';
-import remoteGenerator from '../../remote/remote';
 import { E2eTestRunner, UnitTestRunner } from '../../../utils/test-runners';
+import remoteGenerator from '../../remote/remote';
+import { type Schema } from '../schema';
+import { getRemoteIfExists } from './check-remote-exists';
 
 export async function addRemote(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -14,16 +12,6 @@ export async function addRemote(tree: Tree, schema: Schema) {
   let projectRoot, remoteName;
 
   if (!remote) {
-    const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
-
-    if (
-      lt(installedAngularVersionInfo.version, '14.1.0') &&
-      schema.standalone
-    ) {
-      throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
-    }
-
     const remoteGeneratorCallback = await remoteGenerator(tree, {
       name: schema.remote,
       directory: schema.remoteDirectory,

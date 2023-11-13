@@ -46,14 +46,14 @@ Now that we have created the module, we need to configure it to be federated.
 {%tab label="React"%}
 
 ```shell
-nx generate @nx/react:federate-module Hello --remote=greeting --path=hello/src/index.ts --projectNameAndRootFormat=as-provided
+nx generate @nx/react:federate-module hello/src/index.ts --name=hello --remote=greeting --projectNameAndRootFormat=as-provided
 ```
 
 {% /tab %}
 {%tab label="Angular"%}
 
 ```shell
-nx generate @nx/angular:federate-module Hello --remote=greeting --path=hello/src/index.ts --projectNameAndRootFormat=as-provided
+nx generate @nx/angular:federate-module hello/src/index.ts --name=hello --remote=greeting --projectNameAndRootFormat=as-provided
 ```
 
 {% /tab %}

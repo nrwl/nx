@@ -28,13 +28,6 @@ export function updateWorkspace(
         normalizePath(projectConfig.root),
         `jest.config.${options.js ? 'js' : 'ts'}`
       ),
-      passWithNoTests: true,
-    },
-    configurations: {
-      ci: {
-        ci: true,
-        codeCoverage: true,
-      },
     },
   };
 

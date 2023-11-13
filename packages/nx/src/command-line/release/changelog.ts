@@ -24,8 +24,9 @@ import { filterReleaseGroups } from './config/filter-release-groups';
 import {
   GitCommit,
   getGitDiff,
-  getLastGitTag,
+  getLatestGitTagForPattern,
   parseCommits,
+  getCommitHash,
 } from './utils/git';
 import {
   GithubRelease,
@@ -38,6 +39,7 @@ import {
 import { launchEditor } from './utils/launch-editor';
 import { parseChangelogMarkdown } from './utils/markdown';
 import { printChanges, printDiff } from './utils/print-changes';
+import { handleErrors } from '../../utils/params';
 
 class ReleaseVersion {
   rawVersion: string;
@@ -63,91 +65,122 @@ class ReleaseVersion {
 }
 
 export async function changelogHandler(args: ChangelogOptions): Promise<void> {
-  // Right now, the given version must be valid semver in order to proceed
-  if (!valid(args.version)) {
-    output.error({
-      title: `The given version "${args.version}" is not a valid semver version. Please provide your version in the format "1.0.0", "1.0.0-beta.1" etc`,
-    });
-    process.exit(1);
-  }
-
-  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const nxJson = readNxJson();
-
-  if (args.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-
-  // Apply default configuration to any optional user configuration
-  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
-    projectGraph,
-    nxJson.release
-  );
-  if (configError) {
-    return await handleNxReleaseConfigError(configError);
-  }
-
-  const {
-    error: filterError,
-    releaseGroups,
-    releaseGroupToFilteredProjects,
-  } = filterReleaseGroups(
-    projectGraph,
-    nxReleaseConfig,
-    args.projects,
-    args.groups
-  );
-  if (filterError) {
-    output.error(filterError);
-    process.exit(1);
-  }
-
-  const releaseVersion = new ReleaseVersion({
-    version: args.version,
-    releaseTagPattern: nxReleaseConfig.releaseTagPattern,
-  });
-
-  const from = args.from || (await getLastGitTag());
-  if (!from) {
-    output.error({
-      title: `Unable to determine the previous git tag, please provide an explicit git reference using --from`,
-    });
-    process.exit(1);
-  }
-  const rawCommits = await getGitDiff(from, args.to);
-
-  // Parse as conventional commits
-  const commits = parseCommits(rawCommits).filter((c) => {
-    const type = c.type;
-    // Always ignore non user-facing commits for now
-    // TODO: allow this filter to be configurable via config in a future release
-    if (type === 'feat' || type === 'fix' || type === 'perf') {
-      return true;
+  return handleErrors(args.verbose, async () => {
+    // Right now, the given version must be valid semver in order to proceed
+    if (!valid(args.version)) {
+      output.error({
+        title: `The given version "${args.version}" is not a valid semver version. Please provide your version in the format "1.0.0", "1.0.0-beta.1" etc`,
+      });
+      process.exit(1);
     }
-    return false;
-  });
 
-  const tree = new FsTree(workspaceRoot, args.verbose);
+    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+    const nxJson = readNxJson();
+    const commitHash = await getCommitHash(args.to);
 
-  await generateChangelogForWorkspace(
-    tree,
-    releaseVersion,
-    !!args.dryRun,
-    // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "workspace"
-    args.interactive === 'all' || args.interactive === 'workspace',
-    commits,
-    nxReleaseConfig.changelog.workspaceChangelog,
-    args.gitRemote
-  );
+    if (args.verbose) {
+      process.env.NX_VERBOSE_LOGGING = 'true';
+    }
 
-  if (args.projects?.length) {
+    // Apply default configuration to any optional user configuration
+    const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
+      projectGraph,
+      nxJson.release
+    );
+    if (configError) {
+      return await handleNxReleaseConfigError(configError);
+    }
+
+    const {
+      error: filterError,
+      releaseGroups,
+      releaseGroupToFilteredProjects,
+    } = filterReleaseGroups(
+      projectGraph,
+      nxReleaseConfig,
+      args.projects,
+      args.groups
+    );
+    if (filterError) {
+      output.error(filterError);
+      process.exit(1);
+    }
+
+    const releaseVersion = new ReleaseVersion({
+      version: args.version,
+      releaseTagPattern: nxReleaseConfig.releaseTagPattern,
+    });
+
+    const from =
+      args.from ||
+      (await getLatestGitTagForPattern(nxReleaseConfig.releaseTagPattern))?.tag;
+    if (!from) {
+      output.error({
+        title: `Unable to determine the previous git tag, please provide an explicit git reference using --from`,
+      });
+      process.exit(1);
+    }
+    const rawCommits = await getGitDiff(from, args.to);
+
+    // Parse as conventional commits
+    const commits = parseCommits(rawCommits).filter((c) => {
+      const type = c.type;
+      // Always ignore non user-facing commits for now
+      // TODO: allow this filter to be configurable via config in a future release
+      if (type === 'feat' || type === 'fix' || type === 'perf') {
+        return true;
+      }
+      return false;
+    });
+
+    const tree = new FsTree(workspaceRoot, args.verbose);
+
+    await generateChangelogForWorkspace(
+      tree,
+      releaseVersion,
+      !!args.dryRun,
+      // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "workspace"
+      args.interactive === 'all' || args.interactive === 'workspace',
+      commitHash,
+      commits,
+      nxReleaseConfig.changelog.workspaceChangelog,
+      args.gitRemote
+    );
+
+    if (args.projects?.length) {
+      /**
+       * Run changelog generation for all remaining release groups and filtered projects within them
+       */
+      for (const releaseGroup of releaseGroups) {
+        const projectNodes = Array.from(
+          releaseGroupToFilteredProjects.get(releaseGroup)
+        ).map((name) => projectGraph.nodes[name]);
+
+        await generateChangelogForProjects(
+          tree,
+          args.version,
+          !!args.dryRun,
+          // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "projects"
+          args.interactive === 'all' || args.interactive === 'projects',
+          commitHash,
+          commits,
+          releaseGroup.changelog,
+          releaseGroup.releaseTagPattern,
+          projectNodes,
+          args.gitRemote
+        );
+      }
+
+      return process.exit(0);
+    }
+
     /**
-     * Run changelog generation for all remaining release groups and filtered projects within them
+     * Run changelog generation for all remaining release groups
      */
     for (const releaseGroup of releaseGroups) {
-      const projectNodes = Array.from(
-        releaseGroupToFilteredProjects.get(releaseGroup)
-      ).map((name) => projectGraph.nodes[name]);
+      const projectNodes = releaseGroup.projects.map(
+        (name) => projectGraph.nodes[name]
+      );
 
       await generateChangelogForProjects(
         tree,
@@ -155,6 +188,7 @@ export async function changelogHandler(args: ChangelogOptions): Promise<void> {
         !!args.dryRun,
         // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "projects"
         args.interactive === 'all' || args.interactive === 'projects',
+        commitHash,
         commits,
         releaseGroup.changelog,
         releaseGroup.releaseTagPattern,
@@ -163,38 +197,14 @@ export async function changelogHandler(args: ChangelogOptions): Promise<void> {
       );
     }
 
-    return process.exit(0);
-  }
+    if (args.dryRun) {
+      logger.warn(
+        `\nNOTE: The "dryRun" flag means no changelogs were actually created.`
+      );
+    }
 
-  /**
-   * Run changelog generation for all remaining release groups
-   */
-  for (const releaseGroup of releaseGroups) {
-    const projectNodes = releaseGroup.projects.map(
-      (name) => projectGraph.nodes[name]
-    );
-
-    await generateChangelogForProjects(
-      tree,
-      args.version,
-      !!args.dryRun,
-      // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "projects"
-      args.interactive === 'all' || args.interactive === 'projects',
-      commits,
-      releaseGroup.changelog,
-      releaseGroup.releaseTagPattern,
-      projectNodes,
-      args.gitRemote
-    );
-  }
-
-  if (args.dryRun) {
-    logger.warn(
-      `\nNOTE: The "dryRun" flag means no changelogs were actually created.`
-    );
-  }
-
-  process.exit(0);
+    process.exit(0);
+  });
 }
 
 function isPrerelease(version: string): boolean {
@@ -227,6 +237,7 @@ async function generateChangelogForWorkspace(
   releaseVersion: ReleaseVersion,
   dryRun: boolean,
   interactive: boolean,
+  commit: string,
   commits: GitCommit[],
   config: NxReleaseConfig['changelog']['workspaceChangelog'],
   gitRemote?: string
@@ -419,6 +430,7 @@ async function generateChangelogForWorkspace(
           version: releaseVersion.gitTag,
           prerelease: releaseVersion.isPrerelease,
           body: contents,
+          commit,
         },
         existingGithubReleaseForVersion
       );
@@ -433,6 +445,7 @@ async function generateChangelogForProjects(
   rawVersion: string,
   dryRun: boolean,
   interactive: boolean,
+  commit: string,
   commits: GitCommit[],
   config: NxReleaseConfig['changelog']['projectChangelogs'],
   releaseTagPattern: string,
@@ -647,6 +660,7 @@ async function generateChangelogForProjects(
             version: releaseVersion.gitTag,
             prerelease: releaseVersion.isPrerelease,
             body: contents,
+            commit,
           },
           existingGithubReleaseForVersion
         );

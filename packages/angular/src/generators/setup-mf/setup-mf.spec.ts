@@ -1,9 +1,4 @@
-import {
-  readJson,
-  readProjectConfiguration,
-  Tree,
-  updateJson,
-} from '@nx/devkit';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestApplication } from '../utils/testing';
 import { setupMf } from './setup-mf';
@@ -16,10 +11,12 @@ describe('Init MF', () => {
     await generateTestApplication(tree, {
       name: 'app1',
       routing: true,
+      standalone: false,
     });
     await generateTestApplication(tree, {
       name: 'remote1',
       routing: true,
+      standalone: false,
     });
   });
 
@@ -34,6 +31,7 @@ describe('Init MF', () => {
         appName: app,
         mfType: type,
         typescriptConfiguration: false,
+        standalone: false,
       });
 
       // ASSERT
@@ -63,6 +61,7 @@ describe('Init MF', () => {
         appName: app,
         mfType: type,
         typescriptConfiguration: true,
+        standalone: false,
       });
 
       // ASSERT
@@ -94,6 +93,7 @@ describe('Init MF', () => {
       await setupMf(tree, {
         appName: app,
         mfType: type,
+        standalone: false,
       });
 
       // ASSERT
@@ -118,6 +118,7 @@ describe('Init MF', () => {
       await setupMf(tree, {
         appName: app,
         mfType: type,
+        standalone: false,
       });
 
       // ASSERT
@@ -141,6 +142,7 @@ describe('Init MF', () => {
         appName: app,
         mfType: type,
         typescriptConfiguration: false,
+        standalone: false,
       });
 
       // ASSERT
@@ -169,6 +171,7 @@ describe('Init MF', () => {
         appName: app,
         mfType: type,
         typescriptConfiguration: true,
+        standalone: false,
       });
 
       // ASSERT
@@ -192,6 +195,7 @@ describe('Init MF', () => {
       appName: 'app1',
       mfType: 'host',
       federationType: 'dynamic',
+      standalone: false,
     });
 
     // ASSERT
@@ -206,6 +210,7 @@ describe('Init MF', () => {
       appName: 'remote1',
       mfType: 'remote',
       prefix: 'my-org',
+      standalone: false,
     });
 
     // ASSERT
@@ -219,7 +224,11 @@ describe('Init MF', () => {
 
   it('should generate the remote entry component correctly when prefix is not provided', async () => {
     // ACT
-    await setupMf(tree, { appName: 'remote1', mfType: 'remote' });
+    await setupMf(tree, {
+      appName: 'remote1',
+      mfType: 'remote',
+      standalone: false,
+    });
 
     // ASSERT
     expect(
@@ -234,6 +243,7 @@ describe('Init MF', () => {
       mfType: 'host',
       remotes: ['remote1'],
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -252,6 +262,7 @@ describe('Init MF', () => {
       mfType: 'host',
       remotes: ['remote1'],
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -269,6 +280,7 @@ describe('Init MF', () => {
       appName: 'app1',
       mfType: 'host',
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ACT
@@ -277,6 +289,7 @@ describe('Init MF', () => {
       mfType: 'remote',
       host: 'app1',
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -290,6 +303,7 @@ describe('Init MF', () => {
       appName: 'app1',
       mfType: 'host',
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ACT
@@ -298,6 +312,7 @@ describe('Init MF', () => {
       mfType: 'remote',
       host: 'app1',
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -309,12 +324,14 @@ describe('Init MF', () => {
     // ARRANGE
     await generateTestApplication(tree, {
       name: 'remote2',
+      standalone: false,
     });
 
     await setupMf(tree, {
       appName: 'app1',
       mfType: 'host',
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     await setupMf(tree, {
@@ -323,6 +340,7 @@ describe('Init MF', () => {
       host: 'app1',
       port: 4201,
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ACT
@@ -332,6 +350,7 @@ describe('Init MF', () => {
       host: 'app1',
       port: 4202,
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -343,12 +362,14 @@ describe('Init MF', () => {
     // ARRANGE
     await generateTestApplication(tree, {
       name: 'remote2',
+      standalone: false,
     });
 
     await setupMf(tree, {
       appName: 'app1',
       mfType: 'host',
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     await setupMf(tree, {
@@ -357,6 +378,7 @@ describe('Init MF', () => {
       host: 'app1',
       port: 4201,
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ACT
@@ -366,6 +388,7 @@ describe('Init MF', () => {
       host: 'app1',
       port: 4202,
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -378,12 +401,14 @@ describe('Init MF', () => {
     await generateTestApplication(tree, {
       name: 'remote2',
       routing: true,
+      standalone: false,
     });
 
     await setupMf(tree, {
       appName: 'app1',
       mfType: 'host',
       routing: true,
+      standalone: false,
     });
 
     await setupMf(tree, {
@@ -392,6 +417,7 @@ describe('Init MF', () => {
       host: 'app1',
       port: 4201,
       routing: true,
+      standalone: false,
     });
 
     // ACT
@@ -401,6 +427,7 @@ describe('Init MF', () => {
       host: 'app1',
       port: 4202,
       routing: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -413,6 +440,7 @@ describe('Init MF', () => {
     await generateTestApplication(tree, {
       name: 'test-app',
       routing: true,
+      standalone: false,
     });
 
     // ACT
@@ -421,6 +449,7 @@ describe('Init MF', () => {
       mfType: 'host',
       routing: true,
       e2eProjectName: 'test-app-e2e',
+      standalone: false,
     });
 
     // ASSERT
@@ -442,6 +471,7 @@ describe('Init MF', () => {
         routing: true,
         federationType: 'dynamic',
         typescriptConfiguration: false,
+        standalone: false,
       });
 
       // ASSERT
@@ -462,6 +492,7 @@ describe('Init MF', () => {
         routing: true,
         federationType: 'dynamic',
         typescriptConfiguration: true,
+        standalone: false,
       });
 
       // ASSERT
@@ -475,48 +506,6 @@ describe('Init MF', () => {
     });
   });
 
-  it('should generate bootstrap with environments for ng14', async () => {
-    // ARRANGE
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: {
-        ...json.dependencies,
-        '@angular/core': '14.1.0',
-      },
-    }));
-
-    await generateTestApplication(tree, {
-      name: 'ng14',
-      routing: true,
-      standalone: true,
-    });
-
-    // ACT
-    await setupMf(tree, {
-      appName: 'ng14',
-      mfType: 'host',
-      routing: true,
-      standalone: true,
-    });
-
-    // ASSERT
-    expect(tree.read('ng14/src/bootstrap.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { bootstrapApplication } from '@angular/platform-browser';
-      import { appConfig } from './app/app.config';
-      import { RemoteEntryComponent } from './app/remote-entry/entry.component';
-      import { enableProdMode } from '@angular/core';
-      import { environment } from './environments/environment';
-      if (environment.production) {
-        enableProdMode();
-      }
-
-      bootstrapApplication(RemoteEntryComponent, appConfig).catch((err) =>
-        console.error(err)
-      );
-      "
-    `);
-  });
-
   it('should add a remote to dynamic host correctly', async () => {
     // ARRANGE
     await setupMf(tree, {
@@ -525,6 +514,7 @@ describe('Init MF', () => {
       routing: true,
       federationType: 'dynamic',
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ACT
@@ -535,6 +525,7 @@ describe('Init MF', () => {
       host: 'app1',
       routing: true,
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -557,6 +548,7 @@ describe('Init MF', () => {
       routing: true,
       federationType: 'dynamic',
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ACT
@@ -567,6 +559,7 @@ describe('Init MF', () => {
       host: 'app1',
       routing: true,
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -579,27 +572,5 @@ describe('Init MF', () => {
       remote1: 'http://localhost:4201',
     });
     expect(tree.read('app1/src/app/app.routes.ts', 'utf-8')).toMatchSnapshot();
-  });
-
-  it('should throw an error when installed version of angular < 14.1.0 and --standalone is used', async () => {
-    // ARRANGE
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: {
-        ...json.dependencies,
-        '@angular/core': '14.0.0',
-      },
-    }));
-
-    // ACT & ASSERT
-    await expect(
-      setupMf(tree, {
-        appName: 'app1',
-        mfType: 'host',
-        standalone: true,
-      })
-    ).rejects.toThrow(
-      'The --standalone flag is not supported in your current version of Angular (14.0.0). Please update to a version of Angular that supports Standalone Components (>= 14.1.0).'
-    );
   });
 });

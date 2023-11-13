@@ -1,7 +1,7 @@
 # Distribute Task Execution (DTE)
 
 Nx speeds up your average CI time with [caching](/core-features/cache-task-results) and
-the [affected command](/concepts/affected). But neither of these features help with the worst case scenario. When
+the [affected command](/nx-cloud/features/affected). But neither of these features help with the worst case scenario. When
 something at the core of your repo has been modified and every task needs to be run in CI, the only way to improve the
 performance is by adding more agent jobs and efficiently parallelizing the tasks.
 
@@ -150,11 +150,11 @@ CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly.
 
 Read the guides for more information on how to configure them in CI.
 
-- [Overview](/recipes/ci/ci-setup#distributed-ci-with-nx-cloud)
-- [Azure Pipelines](/recipes/ci/monorepo-ci-azure#distributed-ci-with-nx-cloud)
-- [Circle CI](/recipes/ci/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
-- [GitHub Actions](/recipes/ci/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
-- [Jenkins](/recipes/ci/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
+- [Overview](/nx-cloud/recipes/set-up/ci-setup#distributed-ci-with-nx-cloud)
+- [Azure Pipelines](/nx-cloud/recipes/set-up/monorepo-ci-azure#distributed-ci-with-nx-cloud)
+- [Circle CI](/nx-cloud/recipes/set-up/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
+- [GitHub Actions](/nx-cloud/recipes/set-up/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
+- [Jenkins](/nx-cloud/recipes/set-up/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
 
 Note that only cacheable operations can be distributed because they have to be replayed on the main job.
 

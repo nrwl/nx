@@ -1,8 +1,16 @@
-import { workspaceRoot } from '@nx/devkit';
+import {
+  createProjectGraphAsync,
+  logger,
+  parseTargetString,
+  workspaceRoot,
+} from '@nx/devkit';
 import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
+import { ChildProcess, fork } from 'node:child_process';
+import { createExecutorContext } from '../src/utils/ct-helpers';
+import { startDevServer } from '../src/utils/start-dev-server';
 
 interface BaseCypressPreset {
   videosFolder: string;
@@ -18,6 +26,7 @@ export interface NxComponentTestingOptions {
    */
   ctTargetName?: string;
   bundler?: 'vite' | 'webpack';
+  compiler?: 'swc' | 'babel';
 }
 
 export function nxBaseCypressPreset(
@@ -64,29 +73,66 @@ export function nxBaseCypressPreset(
  *   }
  * })
  *
- * @param pathToConfig will be used to construct the output paths for videos and screenshots
  */
 export function nxE2EPreset(
   pathToConfig: string,
   options?: NxCypressE2EPresetOptions
 ) {
   const basePath = options?.cypressDir || 'src';
-  const baseConfig = {
+  const baseConfig: any /** Cypress.EndToEndConfigOptions */ = {
     ...nxBaseCypressPreset(pathToConfig),
     fileServerFolder: '.',
     supportFile: `${basePath}/support/e2e.ts`,
     specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
     fixturesFolder: `${basePath}/fixtures`,
+    env: {
+      devServerTargets: options?.devServerTargets,
+      devServerTargetOptions: {},
+      ciDevServerTarget: options?.ciDevServerTarget,
+    },
+    async setupNodeEvents(on, config) {
+      if (options?.bundler === 'vite') {
+        on('file:preprocessor', vitePreprocessor());
+      }
+      if (!config.env.devServerTargets) {
+        return;
+      }
+      const devServerTarget =
+        config.env.devServerTarget ?? config.env.devServerTargets['default'];
+
+      if (!devServerTarget) {
+        return;
+      }
+      if (!config.baseUrl && devServerTarget) {
+        const graph = await createProjectGraphAsync();
+        const target = parseTargetString(devServerTarget, graph);
+        const context = createExecutorContext(
+          graph,
+          graph.nodes[target.project].data?.targets,
+          target.project,
+          target.target,
+          target.configuration
+        );
+
+        const devServer = startDevServer(
+          {
+            devServerTarget,
+            ...config.env.devServerTargetOptions,
+          },
+          context
+        );
+        on('after:run', () => {
+          devServer.return();
+        });
+        const devServerValue = (await devServer.next()).value;
+        if (!devServerValue) {
+          return;
+        }
+        return { ...config, baseUrl: devServerValue.baseUrl };
+      }
+    },
   };
 
-  if (options?.bundler === 'vite') {
-    return {
-      ...baseConfig,
-      setupNodeEvents(on) {
-        on('file:preprocessor', vitePreprocessor());
-      },
-    };
-  }
   return baseConfig;
 }
 
@@ -98,4 +144,7 @@ export type NxCypressE2EPresetOptions = {
    * default is 'src'
    **/
   cypressDir?: string;
+
+  devServerTargets?: Record<string, string>;
+  ciDevServerTarget?: string;
 };

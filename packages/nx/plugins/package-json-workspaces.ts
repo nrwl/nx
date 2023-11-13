@@ -30,13 +30,14 @@ export function getNxPackageJsonWorkspacesPlugin(root: string): NxPluginV2 {
 
 export function createNodeFromPackageJson(pkgJsonPath: string, root: string) {
   const json: PackageJson = readJsonFile(join(root, pkgJsonPath));
+  const project = buildProjectConfigurationFromPackageJson(
+    json,
+    pkgJsonPath,
+    readNxJson(root)
+  );
   return {
     projects: {
-      [json.name]: buildProjectConfigurationFromPackageJson(
-        json,
-        pkgJsonPath,
-        readNxJson(root)
-      ),
+      [project.root]: project,
     },
   };
 }

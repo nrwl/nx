@@ -23,6 +23,7 @@ import {
   markRootPackageJsonAsNxProject,
   printFinalMessage,
   runInstall,
+  updateGitIgnore,
 } from './utils';
 import { nxVersion } from '../../../utils/versions';
 
@@ -117,6 +118,7 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
 
   const pmc = getPackageManagerCommand();
 
+  updateGitIgnore(repoRoot);
   addDepsToPackageJson(repoRoot);
   addNestPluginToPackageJson(repoRoot);
   markRootPackageJsonAsNxProject(

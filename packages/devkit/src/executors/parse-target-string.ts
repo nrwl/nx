@@ -66,7 +66,8 @@ export function parseTargetString(
   if (
     !projectGraph.nodes[maybeProject] &&
     projectGraphOrCtx &&
-    'projectName' in projectGraphOrCtx
+    'projectName' in projectGraphOrCtx &&
+    maybeProject !== projectGraphOrCtx.projectName
   ) {
     targetString = `${projectGraphOrCtx.projectName}:${targetString}`;
   }

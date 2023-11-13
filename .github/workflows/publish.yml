@@ -155,34 +155,35 @@ jobs:
   build-freebsd:
      runs-on: macos-12
      name: Build FreeBSD
+     timeout-minutes: 45
      steps:
        - uses: actions/checkout@v3
        - name: Build
          id: build
-         uses: vmactions/freebsd-vm@v0
+         uses: cross-platform-actions/action@v0.21.0
          env:
            DEBUG: napi:*
-           RUSTUP_HOME: /usr/local/rustup
-           CARGO_HOME: /usr/local/cargo
            RUSTUP_IO_THREADS: 1
          with:
-           envs: DEBUG RUSTUP_HOME CARGO_HOME RUSTUP_IO_THREADS
-           usesh: true
-           mem: 4096
-           prepare: |
-             pkg install -y -f curl node libnghttp2 npm
-             npm install --location=global --ignore-scripts pnpm
+           operating_system: freebsd
+           version: '13.2'
+           architecture: x86-64
+           environment_variables: DEBUG RUSTUP_IO_THREADS CI
+           shell: bash
+           run: |
+             env
+             whoami
+             sudo pkg install -y -f node libnghttp2 npm git
+             sudo npm install --location=global --ignore-scripts pnpm
              curl https://sh.rustup.rs -sSf --output rustup.sh
              sh rustup.sh -y --profile minimal --default-toolchain stable
-             export PATH="/usr/local/cargo/bin:$PATH"
+             source "$HOME/.cargo/env"
              echo "~~~~ rustc --version ~~~~"
              rustc --version
              echo "~~~~ node -v ~~~~"
              node -v
              echo "~~~~ pnpm --version ~~~~"
              pnpm --version
-           run: |
-             export PATH="/usr/local/cargo/bin:$PATH"
              pwd
              ls -lah
              whoami
@@ -191,9 +192,13 @@ jobs:
              mkdir -p /Users/runner/work/_temp/_github_workflow
              echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
              pnpm install --frozen-lockfile --ignore-scripts
-             pnpm nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
+             pnpm nx run-many --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+             pnpm nx reset
              rm -rf node_modules
              rm -rf dist
+             echo "KILL ALL NODE PROCESSES"
+             killall node
+             echo "COMPLETE"
        - name: Upload artifact
          uses: actions/upload-artifact@v3
          with:
@@ -234,6 +239,13 @@ jobs:
           git checkout -b publish/$GITHUB_REF_NAME
           npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
           pnpm nx-release --local=false $GITHUB_REF_NAME
+      - name: Trigger Docs Release
+        # Publish docs only on a full release and when publishing the latest version
+        if: ${{ !github.event.release.prerelease && github.event.release.target_commitish == 'master' }}
+        run: |
+          # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
+          git branch -f website
+          git push -f origin website
     env:
       GH_TOKEN: ${{ github.token }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

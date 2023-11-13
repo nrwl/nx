@@ -2,14 +2,17 @@ import {
   addProjectConfiguration,
   ProjectConfiguration,
   readJson,
+  readNxJson,
   readProjectConfiguration,
   Tree,
   updateJson,
+  updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { installedCypressVersion } from '../../utils/cypress-version';
 import { componentConfigurationGenerator } from './component-configuration';
+import { cypressInitGenerator } from '../init/init';
 
 jest.mock('../../utils/cypress-version');
 let projectConfig: ProjectConfiguration = {
@@ -95,11 +98,43 @@ describe('Cypress Component Configuration', () => {
     jest.clearAllMocks();
   });
 
+  it('should not add the target when @nx/cypress/plugin is registered', async () => {
+    process.env.NX_PCV3 = 'true';
+    await cypressInitGenerator(tree, {});
+    const nxJson = readNxJson(tree);
+    nxJson.namedInputs = {
+      default: ['{projectRoot}/**/*'],
+      production: ['default'],
+    };
+    updateNxJson(tree, nxJson);
+
+    await componentConfigurationGenerator(tree, {
+      project: 'cool-lib',
+      skipFormat: false,
+    });
+
+    expect(
+      readProjectConfiguration(tree, 'cool-lib').targets['component-test']
+    ).toBeUndefined();
+
+    expect(readNxJson(tree).namedInputs.production).toMatchInlineSnapshot(`
+      [
+        "default",
+        "!{projectRoot}/cypress/**/*",
+        "!{projectRoot}/**/*.cy.[jt]s?(x)",
+        "!{projectRoot}/cypress.config.[jt]s",
+      ]
+    `);
+
+    delete process.env.NX_PCV3;
+  });
+
   it('should add base cypress component testing config', async () => {
     mockedInstalledCypressVersion.mockReturnValue(10);
     await componentConfigurationGenerator(tree, {
       project: 'cool-lib',
       skipFormat: false,
+      jsx: true,
     });
     const projectConfig = readProjectConfiguration(tree, 'cool-lib');
     expect(tree.exists('libs/cool-lib/cypress.config.ts')).toEqual(true);

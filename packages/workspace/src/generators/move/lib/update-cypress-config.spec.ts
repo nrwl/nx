@@ -90,7 +90,7 @@ import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 export default defineConfig({
   e2e: {
-    nxE2EPreset(__dirname),
+    ...nxE2EPreset(__dirname),
     videosFolder: '../../dist/cypress/my-lib/videos',
     screenshotsFolder: '../../dist/cypress/my-lib/screenshots',
   }

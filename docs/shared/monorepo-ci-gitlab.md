@@ -55,11 +55,9 @@ build:
 
 The `build` and `test` jobs implement the CI workflow using `.distributed` as a template to keep the CI configuration file more readable.
 
-{% nx-cloud-section %}
+## Distributed Task Execution with Nx Cloud
 
-## Distributed CI with Nx Cloud
-
-Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
+Read more about [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution).
 
 ```yaml
 image: node:18
@@ -118,5 +116,3 @@ nx-dte-agent3:
   extends: .dte-agent
   stage: affected
 ```
-
-{% /nx-cloud-section %}

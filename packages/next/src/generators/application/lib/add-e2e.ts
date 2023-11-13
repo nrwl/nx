@@ -12,18 +12,24 @@ import { NormalizedSchema } from './normalize-options';
 
 export async function addE2e(host: Tree, options: NormalizedSchema) {
   if (options.e2eTestRunner === 'cypress') {
-    const { cypressProjectGenerator } = ensurePackage<
+    const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
-    return cypressProjectGenerator(host, {
+    addProjectConfiguration(host, options.e2eProjectName, {
+      root: options.e2eProjectRoot,
+      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+      targets: {},
+      tags: [],
+      implicitDependencies: [options.projectName],
+    });
+    return configurationGenerator(host, {
       ...options,
       linter: Linter.EsLint,
-      name: options.e2eProjectName,
-      directory: options.e2eProjectRoot,
-      // the name and root are already normalized, instruct the generator to use them as is
-      projectNameAndRootFormat: 'as-provided',
-      project: options.projectName,
+      project: options.e2eProjectName,
+      directory: 'src',
       skipFormat: true,
+      devServerTarget: `${options.projectName}:serve`,
+      jsx: true,
     });
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<
