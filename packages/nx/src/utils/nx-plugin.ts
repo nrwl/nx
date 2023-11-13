@@ -64,17 +64,7 @@ export type CreateNodesFunction<T = unknown> = (
   projectConfigurationFile: string,
   options: T | undefined,
   context: CreateNodesContext
-) => CreateNodesResult;
-
-/**
- * A function which parses a configuration file into a set of nodes.
- * Used for creating nodes for the {@link ProjectGraph}
- */
-export type CreateNodesFunctionAsync<T = unknown> = (
-  projectConfigurationFile: string,
-  options: T | undefined,
-  context: CreateNodesContext
-) => Promise<CreateNodesResult>;
+) => CreateNodesResult | Promise<CreateNodesResult>;
 
 export interface CreateNodesResult {
   /**
@@ -94,11 +84,6 @@ export interface CreateNodesResult {
 export type CreateNodes<T = unknown> = readonly [
   projectFilePattern: string,
   createNodesFunction: CreateNodesFunction<T>
-];
-
-export type CreateNodesAsync<T = unknown> = readonly [
-  projectFilePattern: string,
-  createNodesFunction: CreateNodesFunctionAsync<T>
 ];
 
 /**
@@ -145,19 +130,14 @@ export type CreateDependencies<T = unknown> = (
 /**
  * A plugin for Nx which creates nodes and dependencies for the {@link ProjectGraph}
  */
-export type NxPluginV2<
-  TOptions = unknown,
-  TCreateNodes extends CreateNodes<TOptions> | CreateNodesAsync<TOptions> =
-    | CreateNodes<TOptions>
-    | CreateNodesAsync<TOptions>
-> = {
+export type NxPluginV2<TOptions = unknown> = {
   name: string;
 
   /**
    * Provides a file pattern and function that retrieves configuration info from
    * those files. e.g. { '**\/*.csproj': buildProjectsFromCsProjFile }
    */
-  createNodes?: TCreateNodes;
+  createNodes?: CreateNodes;
 
   // Todo(@AgentEnder): This shouldn't be a full processor, since its only responsible for defining edges between projects. What do we want the API to be?
   /**
