@@ -28,27 +28,27 @@ To get started:
 
 1. [Fork the nx-shop repo](https://github.com/isaacplmann/nx-shops/fork) and then clone it to your local machine
 
-    ```shell
-    git clone git@github.com:<your-username>/nx-shops.git
-    ```
+   ```shell
+   git clone git@github.com:<your-username>/nx-shops.git
+   ```
 
 2. Install dependencies (this repo uses [PNPM](https://pnpm.io/) but you should be able to also use any other package manager)
 
-    ```shell
-    pnpm i
-    ```
+   ```shell
+   pnpm i
+   ```
 
 3. Explore the structure of the repo using **the Nx Graph**
 
-    ```shell
-    pnpm nx graph
-    ```
+   ```shell
+   pnpm nx graph
+   ```
 
 4. Finally, make sure all task are working on your machine, by running lint, test, build and e2e on all projects of the workspace
 
-    ```shell
-    pnpm nx run-many -t lint,test,build,e2e
-    ```
+   ```shell
+   pnpm nx run-many -t lint,test,build,e2e
+   ```
 
 ## Set-up Circle CI
 
