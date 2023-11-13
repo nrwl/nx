@@ -119,6 +119,11 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     );
     updateProjectConfiguration(host, options.projectName, projectConfig);
   }
+  if (!options.setParserOptionsProject) {
+    host.delete(
+      joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
+    );
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

@@ -68,6 +68,7 @@ export async function remoteInternal(tree: Tree, schema: Schema) {
     standalone: options.standalone,
     prefix: options.prefix,
     typescriptConfiguration,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 
   const installSwcHelpersTask = addDependenciesToPackageJson(
