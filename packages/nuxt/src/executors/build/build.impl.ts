@@ -1,10 +1,10 @@
 import { ExecutorContext, joinPathFragments } from '@nx/devkit';
 import { NuxtBuildExecutorOptions } from './schema';
-
-// Required because nuxi is ESM package.
-export function loadNuxiDynamicImport() {
-  return Function('return import("nuxi")')() as Promise<typeof import('nuxi')>;
-}
+import {
+  getCommonNuxtConfigOverrides,
+  loadNuxiDynamicImport,
+  loadNuxtKitDynamicImport,
+} from '../../utils/executor-utils';
 
 export async function* nuxtBuildExecutor(
   options: NuxtBuildExecutorOptions,
@@ -13,40 +13,21 @@ export async function* nuxtBuildExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   const { runCommand } = await loadNuxiDynamicImport();
+  const { loadNuxtConfig } = await loadNuxtKitDynamicImport();
+  const config = await loadNuxtConfig({
+    cwd: joinPathFragments(context.root, projectRoot),
+  });
+
   try {
     await runCommand('build', [projectRoot], {
       overrides: {
         ...options,
-        workspaceDir: context.root,
-        buildDir: joinPathFragments(context.root, options.outputPath, '.nuxt'),
-        typescript: {
-          typeCheck: true,
-          tsConfig: {
-            extends: joinPathFragments(
-              context.root,
-              projectRoot,
-              'tsconfig.app.json'
-            ),
-          },
-        },
-        imports: {
-          autoImport: false,
-        },
-        nitro: {
-          output: {
-            dir: joinPathFragments(context.root, options.outputPath, '.output'),
-            serverDir: joinPathFragments(
-              context.root,
-              options.outputPath,
-              '.output/server'
-            ),
-            publicDir: joinPathFragments(
-              context.root,
-              options.outputPath,
-              '.output/public'
-            ),
-          },
-        },
+        ...getCommonNuxtConfigOverrides(
+          config,
+          context.root,
+          projectRoot,
+          options.outputPath
+        ),
       },
     });
     return { success: true };

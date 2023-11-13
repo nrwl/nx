@@ -31,6 +31,8 @@ describe('Nuxt Plugin', () => {
     expect(result).toContain(
       `Successfully ran target build for project ${app}`
     );
+    checkFilesExist(`dist/${app}/.nuxt/nuxt.d.ts`);
+    checkFilesExist(`dist/${app}/.output/nitro.json`);
   });
 
   it('should test application', async () => {
