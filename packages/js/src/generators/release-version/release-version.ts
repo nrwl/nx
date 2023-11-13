@@ -1,4 +1,5 @@
 import {
+  ProjectGraphProjectNode,
   Tree,
   formatFiles,
   joinPathFragments,
@@ -44,19 +45,28 @@ export async function releaseVersionGenerator(
 
     const projects = options.projects;
 
+    const createResolvePackageRoot =
+      (customPackageRoot?: string) =>
+      (projectNode: ProjectGraphProjectNode): string => {
+        // Default to the project root if no custom packageRoot
+        if (!customPackageRoot) {
+          return projectNode.data.root;
+        }
+        return interpolate(customPackageRoot, {
+          workspaceRoot: '',
+          projectRoot: projectNode.data.root,
+          projectName: projectNode.name,
+        });
+      };
+
+    const resolvePackageRoot = createResolvePackageRoot(options.packageRoot);
+
     // Resolve any custom package roots for each project upfront as they will need to be reused during dependency resolution
     const projectNameToPackageRootMap = new Map<string, string>();
     for (const project of projects) {
       projectNameToPackageRootMap.set(
         project.name,
-        // Default to the project root if no custom packageRoot
-        !options.packageRoot
-          ? project.data.root
-          : interpolate(options.packageRoot, {
-              workspaceRoot: '',
-              projectRoot: project.data.root,
-              projectName: project.name,
-            })
+        resolvePackageRoot(project)
       );
     }
 
@@ -306,7 +316,10 @@ To fix this you will either need to add a package.json file at that location, or
         tree,
         options.projectGraph,
         projects,
-        projectNameToPackageRootMap
+        projectNameToPackageRootMap,
+        resolvePackageRoot,
+        // includeAll when the release group is independent, as we may be filtering to a specific subset of projects, but we still want to update their dependents
+        options.releaseGroup.projectsRelationship === 'independent'
       );
 
       const newVersion = deriveNewSemverVersion(

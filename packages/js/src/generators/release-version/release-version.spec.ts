@@ -131,7 +131,7 @@ To fix this you will either need to add a package.json file at that location, or
       });
     });
 
-    it('updates local dependencies only where it needs to', async () => {
+    it('should update local dependencies only where it needs to', async () => {
       await releaseVersionGenerator(tree, {
         onVersionData() {},
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -381,6 +381,81 @@ To fix this you will either need to add a package.json file at that location, or
             },
             "name": "project-with-devDependency-on-my-pkg",
             "version": "4.5.6",
+          }
+        `);
+      });
+
+      it(`should update dependents even when filtering to a subset of projects which do not include those dependents`, async () => {
+        expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+          '0.0.1'
+        );
+        expect(
+          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+        ).toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "my-lib": "0.0.1",
+            },
+            "name": "project-with-dependency-on-my-pkg",
+            "version": "0.0.1",
+          }
+        `);
+        expect(
+          readJson(
+            tree,
+            'libs/project-with-devDependency-on-my-pkg/package.json'
+          )
+        ).toMatchInlineSnapshot(`
+          {
+            "devDependencies": {
+              "my-lib": "0.0.1",
+            },
+            "name": "project-with-devDependency-on-my-pkg",
+            "version": "0.0.1",
+          }
+        `);
+
+        await releaseVersionGenerator(tree, {
+          onVersionData() {},
+          projects: [projectGraph.nodes['my-lib']], // version only my-lib
+          projectGraph,
+          specifier: '9.9.9', // user CLI specifier override set, no prompting should occur
+          currentVersionResolver: 'disk',
+          specifierSource: 'prompt',
+          releaseGroup: createReleaseGroup('independent'),
+        });
+
+        expect(readJson(tree, 'libs/my-lib/package.json'))
+          .toMatchInlineSnapshot(`
+          {
+            "name": "my-lib",
+            "version": "9.9.9",
+          }
+        `);
+
+        expect(
+          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+        ).toMatchInlineSnapshot(`
+          {
+            "dependencies": {
+              "my-lib": "9.9.9",
+            },
+            "name": "project-with-dependency-on-my-pkg",
+            "version": "0.0.1",
+          }
+        `);
+        expect(
+          readJson(
+            tree,
+            'libs/project-with-devDependency-on-my-pkg/package.json'
+          )
+        ).toMatchInlineSnapshot(`
+          {
+            "devDependencies": {
+              "my-lib": "9.9.9",
+            },
+            "name": "project-with-devDependency-on-my-pkg",
+            "version": "0.0.1",
           }
         `);
       });
