@@ -8,49 +8,47 @@ description: In this tutorial you'll set up continuous integration with Circle C
 In this tutorial we're going to learn how to leverage Nx to setup a scalable CI pipeline on Circle CI. You're going to learn
 
 - how to set up Circle CI and configure Nx
-- how to only run tasks for projects that got touched in a given PR
+- how to run tasks for only the projects that were affected by a given PR
 - how to enable remote caching
 - how to parallelize and distribute tasks across multiple machines
 
-Note, many of these optimizations are incremental, meaning you can only run tasks for affected projects and stop there. Then later add caching to further improve as you experience slow CI runs or even go further and distribute tasks across machines.
+Note, many of these optimizations are incremental, meaning you could set up running tasks for only affected projects and stop there. Later when you experience slow CI runs, you could add caching to further improve CI performance or even go further and distribute tasks across machines.
 
 ## Example Repository
 
-To follow along with this tutorial, we recommend using the [nx-shops sample repository](https://github.com/isaacplmann/nx-shops). You can also use your own repository or one created by following one of the [Learn Nx tutorials](https://nx.dev/getting-started/intro#learn-nx).
+To follow along with this tutorial, we recommend using the [nx-shops sample repository](https://github.com/isaacplmann/nx-shops). The pipeline configuration that you create in this tutorial could be used in most repositories, so you could try out this same tutorial on your own repository or one created by following one of the [Learn Nx tutorials](https://nx.dev/getting-started/intro#learn-nx).
 
-The repository you choose should have the following characteristics:
+The `nx-shops` repo is useful to demonstrate the value of the CI pipeline because it has the following characteristics:
 
 - Multiple Nx projects with interdependencies
 - Defined lint, test, build and e2e tasks
-- Some of the tasks should take more than a few seconds to complete
+- Running all the tasks takes more than a minute to finish
 
-For the sake of this tutorial we're going forward with the `nx-shops` repo. To get started
+To get started:
 
-**Fork the example repo**
+1. [Fork the nx-shop repo](https://github.com/isaacplmann/nx-shops/fork) and then clone it to your local machine
 
-[Fork the nx-shop repo](https://github.com/isaacplmann/nx-shops/fork) and then clone it to your local machine
+    ```shell
+    git clone git@github.com:<your-username>/nx-shops.git
+    ```
 
-```shell
-git clone git@github.com:<your-username>/nx-shops.git
-```
+2. Install dependencies (this repo uses [PNPM](https://pnpm.io/) but you should be able to also use any other package manager)
 
-**Install dependencies** (this repo uses [PNPM](https://pnpm.io/) but you should be able to also use any other package manager)
+    ```shell
+    pnpm i
+    ```
 
-```shell
-pnpm i
-```
+3. Explore the structure of the repo using **the Nx Graph**
 
-Explore the structure of the repo using **the Nx Graph**
+    ```shell
+    pnpm nx graph
+    ```
 
-```shell
-pnpm nx graph
-```
+4. Finally, make sure all task are working on your machine, by running lint, test, build and e2e on all projects of the workspace
 
-Finally, make sure all task are working on your machine, by running lint, test, build and e2e on all projects of the workspace
-
-```shell
-pnpm nx run-many -t lint,test,build,e2e
-```
+    ```shell
+    pnpm nx run-many -t lint,test,build,e2e
+    ```
 
 ## Set-up Circle CI
 
@@ -143,7 +141,7 @@ workflows:
           name: Nx Cloud Main
 ```
 
-Once `node_modules` are in place, you can run normal Nx commands. In this case, we run `pnpm nx build cart`. Push the changes to your repository by creating a new PR an verifying the new CI pipeline correctly builds our application.
+Once `node_modules` are in place, you can run normal Nx commands. In this case, we run `pnpm nx build cart`. Push the changes to your repository by creating a new PR and verifying the new CI pipeline correctly builds our application.
 
 ![Building a single app with nx](/nx-cloud/tutorial/circle-single-build-success.jpg)
 
@@ -229,7 +227,7 @@ Clearly this is not a scalable solution as it requires us to manually add every 
 
 This change makes our CI pipeline configuration more maintainable. For a small repository, this might be good enough, but after a little bit of growth this approach will cause your CI times to become unmanageable.
 
-Nx comes with a dedicated ["affected" command](/nx-cloud/features/affected) to help with that by only running tasks for projects that were touched in a given PR.
+Nx comes with a dedicated ["affected" command](/nx-cloud/features/affected) to help with that by only running tasks for projects that were affected by the changes in a given PR.
 
 ```{% command="nx affected -t build" %}
     ✔  nx run shared-product-types:build (404ms)
@@ -244,13 +242,13 @@ Nx comes with a dedicated ["affected" command](/nx-cloud/features/affected) to h
 
 ### Configuring the Comparison Range for Affected Commands
 
-To understand which projects are affected, Nx uses the Git history and the [project graph](/core-features/explore-graph). Git has the knowledge which files changed, and the Nx project graph has the knowledge which projects those files belong to.
+To understand which projects are affected, Nx uses the Git history and the [project graph](/core-features/explore-graph). Git knows which files changed, and the Nx project graph knows which projects those files belong to.
 
-The affected command takes a `base` and `head` commit. The default `base` is your `main` branch and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values. This is generally what you want when developing locally, but in CI, you might want to customize these values.
+The affected command takes a `base` and `head` commit. The default `base` is your `main` branch and the default `head` is your current file system. This is generally what you want when developing locally, but in CI, you need to customize these values.
 
 The goal of the CI pipeline is to make sure that the current state of the repository is a good one. To ensure this, we want to verify all the changes **since the last successful CI run** - not just since the last commit on `main`.
 
-While you could do this manually by yourself, we created the [`nrwl/nx` Circle CI orb](https://github.com/nrwl/nx-orb#background) to help with that. It provides you with the `nx/set-shas` step which automatically sets the `$NX_BASE` and `$NX_HEAD` environment variables to the correct commit SHAs for you to use in the affected command.
+While you could calculate this yourself, we created the [`nrwl/nx` Circle CI orb](https://github.com/nrwl/nx-orb#background) to help with that. It provides you with the `nx/set-shas` step which automatically sets the `$NX_BASE` and `$NX_HEAD` environment variables to the correct commit SHAs for you to use in the affected command.
 
 In order to use the `nrwl/nx` orb, you need to enable the use of third-party Circle CI orbs in your organization settings. In the Circle CI project dashboard, go to `Organization Settings -> Security` and select `Yes` under Orb Security Settings: Allow Uncertified Orbs.
 
@@ -311,9 +309,7 @@ When you check the CI logs for this PR, you'll notice that no tasks were run by 
 
 ## Enable Remote Caching on Circle CI
 
-Just reducing the number of projects to run via [affected commands](/nx-cloud/features/affected) (as seen in the previous section) is helpful, but might sometimes not be enough. We still need to run all the affected projects which sometimes (depending on the change) might be quite a few. Caching can help here.
-
-By default [Nx caches the results of tasks](/core-features/cache-task-results) on your local machine. That cache isn't being used in CI though. To leverage the same cache also in CI we need to enable [remote caching](/nx-cloud/features/remote-cache) with Nx Cloud.
+Reducing the number of tasks to run via [affected commands](/nx-cloud/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/core-features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. The [Nx Cloud remote cache](/nx-cloud/features/remote-cache) can eliminate that waste for you.
 
 ```{% command="pnpm nx connect" %}
 ✔ Enable distributed caching to make your CI faster · Yes
@@ -353,7 +349,7 @@ When Circle CI now processes our tasks they'll only take a fraction of the usual
 
 ![Circle CI after enabling remote caching](/nx-cloud/tutorial/circle-ci-remote-cache.png)
 
-The commands could be restored from the remote cache because the had previously ran them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be readOnly or read/write. [Our docs page](/nx-cloud/account/scenarios) has more details on various scenarios and how to configure them.
+The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on various scenarios](/nx-cloud/account/scenarios) and how to configure them.
 
 You might also want to learn more about [how to fine-tune caching](/recipes/running-tasks/customizing-inputs) to get even better results.
 
