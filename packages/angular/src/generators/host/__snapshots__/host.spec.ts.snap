@@ -916,7 +916,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
   title = 'host';
