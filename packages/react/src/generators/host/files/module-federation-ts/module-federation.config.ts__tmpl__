@@ -15,8 +15,11 @@ const config: ModuleFederationConfig = {
      *
      */
     remotes: [
-        <% remotes.forEach(function(r) {%> "<%= r.fileName %>", <% }); %>
-],
+            <% if (static) { 
+         remotes.forEach(function(r) { %> "<%= r.fileName %>", <% }); 
+       }
+    %>
+  ],
 };
 
 export default config;

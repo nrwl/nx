@@ -33,6 +33,7 @@ export async function setupSsrForHost(
     project.root,
     {
       ...options,
+      static: !options?.dynamic,
       remotes: defaultRemoteManifest.map(({ name, port }) => {
         return {
           ...names(name),
