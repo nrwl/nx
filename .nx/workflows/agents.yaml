@@ -52,4 +52,4 @@ launch-templates:
           git config --global user.name "Test Test"
 
       - name: Load Cargo Env
-        script: source "$HOME/.cargo/env"
+        script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
