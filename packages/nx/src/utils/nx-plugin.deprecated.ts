@@ -1,25 +1,7 @@
-import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
-import {
-  NxAngularJsonPlugin,
-  shouldMergeAngularProjects,
-} from '../adapter/angular-json';
-import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
+import { shouldMergeAngularProjects } from '../adapter/angular-json';
 import { ProjectGraphProcessor } from '../config/project-graph';
-import {
-  ProjectConfiguration,
-  TargetConfiguration,
-} from '../config/workspace-json-project-json';
-import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
-import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
-import { getNxRequirePaths } from './installation-directory';
-import {
-  ensurePluginIsV2,
-  getPluginPathAndName,
-  LoadedNxPlugin,
-  nxPluginCache,
-  NxPluginV2,
-} from './nx-plugin';
-import { workspaceRoot } from './workspace-root';
+import { TargetConfiguration } from '../config/workspace-json-project-json';
+import { LoadedNxPlugin, NxPluginV2 } from './nx-plugin';
 
 /**
  * @deprecated Add targets to the projects in a {@link CreateNodes} function instead. This will be removed in Nx 18

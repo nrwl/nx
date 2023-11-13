@@ -8,7 +8,6 @@ import {
 import { NX_PREFIX } from '../../utils/logger';
 import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { output } from '../../utils/output';
 
 import minimatch = require('minimatch');
 
@@ -147,31 +146,12 @@ export function mergeProjectConfigurationIntoRootMap(
   );
 }
 
-type CreateNodesResultWithMetadata = {
-  result: CreateNodesResult | Promise<CreateNodesResult>;
-  pluginName: string;
-  file: string;
-};
-
-type ConfigurationResult = {
+export type ConfigurationResult = {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
   rootMap: Record<string, string>;
   sourceMaps: ConfigurationSourceMaps;
 };
-
-/**
- * ** DO NOT USE ** - Please use without the `skipAsync` parameter.
- * @deprecated
- * @todo(@agentender): Remove in Nx 18 alongside the removal of its usage.
- */
-export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
-  nxJson: NxJsonConfiguration,
-  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  plugins: LoadedNxPlugin[],
-  root: string,
-  skipAsync: true
-): ConfigurationResult;
 
 /**
  * Transforms a list of project paths into a map of project configurations.
@@ -185,17 +165,15 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   plugins: LoadedNxPlugin[],
-  root: string,
-  skipAsync?: false
-): Promise<ConfigurationResult>;
-export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
-  nxJson: NxJsonConfiguration,
-  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  plugins: LoadedNxPlugin[],
-  root: string = workspaceRoot,
-  skipAsync: boolean = false
-): ConfigurationResult | Promise<ConfigurationResult> {
-  const results: Array<CreateNodesResultWithMetadata> = [];
+  root: string = workspaceRoot
+): Promise<ConfigurationResult> {
+  type CreateNodesResultWithContext = CreateNodesResult & {
+    file: string;
+    pluginName: string;
+  };
+  const results: Array<
+    CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
+  > = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const { plugin, options } of plugins) {
@@ -205,88 +183,78 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     }
     for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
-        results.push({
-          result: createNodes(file, options, {
+        try {
+          let r = createNodes(file, options, {
             nxJsonConfiguration: nxJson,
             workspaceRoot: root,
-          }),
-          pluginName: plugin.name,
-          file,
-        });
+          });
+
+          if (r instanceof Promise) {
+            results.push(
+              r
+                .catch((e) => {
+                  errorUnableToCreateNodes(file, plugin.name, e);
+                  throw e;
+                })
+                .then((r) => ({ ...r, file, pluginName: plugin.name }))
+            );
+          } else {
+            results.push({
+              ...r,
+              file,
+              pluginName: plugin.name,
+            });
+          }
+        } catch (e) {
+          errorUnableToCreateNodes(file, plugin.name, e);
+        }
       }
     }
   }
 
-  return skipAsync
-    ? combineSyncConfigurationResults(results)
-    : combineAsyncConfigurationResults(results);
-}
+  return Promise.all(results).then((results) => {
+    const projectRootMap: Map<string, ProjectConfiguration> = new Map();
+    const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+    const configurationSourceMaps: Record<
+      string,
+      Record<string, SourceInformation>
+    > = {};
 
-function combineSyncConfigurationResults(
-  resultsWithMetadata: CreateNodesResultWithMetadata[]
-): ConfigurationResult {
-  const projectRootMap: Map<string, ProjectConfiguration> = new Map();
-  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
-  const configurationSourceMaps: Record<
-    string,
-    Record<string, SourceInformation>
-  > = {};
-
-  let warned = false;
-  for (const { result, pluginName, file } of resultsWithMetadata) {
-    if (typeof result === 'object' && 'then' in result) {
-      if (!warned) {
-        output.warn({
-          title: 'One or more plugins in this workspace are async.',
-          bodyLines: [
-            'Configuration from these plugins will not be visible to readWorkspaceConfig or readWorkspaceConfiguration. If you are using these methods, consider reading project info from the graph with createProjectGraphAsync instead.',
-            'If you are not using one of these methods, please open an issue at http://github.com/nrwl/nx',
-          ],
-        });
-        warned = true;
-      }
-      continue;
-    }
-    const { projects: projectNodes, externalNodes: pluginExternalNodes } =
-      result;
-    for (const node in projectNodes) {
-      mergeProjectConfigurationIntoRootMap(
-        projectRootMap,
-        {
+    for (const result of results) {
+      const {
+        projects: projectNodes,
+        externalNodes: pluginExternalNodes,
+        file,
+        pluginName,
+      } = result;
+      for (const node in projectNodes) {
+        const project = {
           root: node,
           ...projectNodes[node],
-        },
-        configurationSourceMaps,
-        [pluginName, file]
-      );
+        };
+        try {
+          mergeProjectConfigurationIntoRootMap(
+            projectRootMap,
+            project,
+            configurationSourceMaps,
+            [file, pluginName]
+          );
+        } catch (e) {
+          errorUnableToMergeProject(project[node], file, pluginName, e);
+        }
+      }
+      Object.assign(externalNodes, pluginExternalNodes);
     }
-    Object.assign(externalNodes, pluginExternalNodes);
-  }
 
-  const rootMap = createRootMap(projectRootMap);
+    const rootMap = createRootMap(projectRootMap);
 
-  return {
-    projects: readProjectConfigurationsFromRootMap(projectRootMap),
-    externalNodes,
-    rootMap,
-    sourceMaps: configurationSourceMaps,
-  };
-}
-
-function combineAsyncConfigurationResults(
-  results: Array<CreateNodesResultWithMetadata>
-): Promise<ConfigurationResult> {
-  return Promise.all(
-    results.map((resultWithMetadata) =>
-      typeof resultWithMetadata.result === 'object' &&
-      'then' in resultWithMetadata.result
-        ? resultWithMetadata.result.then((resolvedResult) => ({
-            ...resultWithMetadata,
-            result: resolvedResult,
-          }))
-        : resultWithMetadata
-    )
-  ).then((r) => combineSyncConfigurationResults(r));
+    return {
+      projects: readProjectConfigurationsFromRootMap(projectRootMap),
+      externalNodes,
+      rootMap,
+      sourceMaps: configurationSourceMaps,
+    };
+  });
 }
 
 export function readProjectConfigurationsFromRootMap(
@@ -325,6 +293,36 @@ export function readProjectConfigurationsFromRootMap(
     );
   }
   return projects;
+}
+
+function errorUnableToCreateNodes(
+  plugin: string,
+  file: string,
+  e: Error | unknown
+) {
+  const message = `Unable to create nodes for ${file} using plugin ${plugin}. ${
+    e instanceof Error ? `\n\n\t Inner Error: ${e.stack}` : e
+  } }`;
+  // This error occurs most often during a callback that's evaluated
+  // while rust is running. This means the stack trace and error message
+  // get hidden, and makes things harder to debug. Logging the error
+  // here ensures that the error is visible.
+  console.error(message);
+  throw new Error(message);
+}
+
+function errorUnableToMergeProject(
+  project: ProjectConfiguration,
+  file: string,
+  plugin: string,
+  e: Error | unknown
+) {
+  const message = `Unable to merge project information for "${project.root}"
+  } from ${file} using plugin ${plugin}. ${
+    e instanceof Error ? `\n\n\t Inner Error: ${e.stack}` : e
+  }`;
+  console.error(message);
+  throw new Error(message);
 }
 
 /**
