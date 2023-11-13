@@ -133,7 +133,7 @@ export async function* viteBuildExecutor(
         }
         // result must be closed when present.
         // see https://rollupjs.org/guide/en/#rollupwatch
-        if ('result' in event && event.result) {
+        if ('result' in event && typeof event.result !== 'undefined') {
           event.result.close();
         }
       });
