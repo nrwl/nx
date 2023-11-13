@@ -44,6 +44,10 @@
   },
   "packageJsonUpdates": {
     "17.2.0": {
+      "vitest": {
+        "version": "~0.34.6",
+        "alwaysAddToPackageJson": false
+      },
       "@vitest/coverage-v8": {
         "version": "~0.34.6",
         "alwaysAddToPackageJson": false
