@@ -62,6 +62,7 @@ import {
   resolveImplementation,
   resolveSchema,
 } from '../config/schema-utils';
+import { ProjectGraph } from '../config/project-graph';
 
 export async function createBuilderContext(
   builderInfo: {
@@ -72,7 +73,7 @@ export async function createBuilderContext(
   context: ExecutorContext
 ) {
   require('nx/src/adapter/compat');
-  const fsHost = new NxScopedHost(context.root);
+  const fsHost = new NxScopedHost(context.root, context.projectGraph);
   const { workspace } = await workspaces.readWorkspace(
     'angular.json',
     workspaces.createWorkspaceHost(fsHost)
@@ -151,6 +152,7 @@ export async function createBuilderContext(
 
 export async function scheduleTarget(
   root: string,
+  projectGraph: ProjectGraph,
   opts: {
     project: string;
     target: string;
@@ -162,7 +164,7 @@ export async function scheduleTarget(
   const { Architect } = require('@angular-devkit/architect');
 
   const logger = getLogger(verbose);
-  const fsHost = new NxScopedHost(root);
+  const fsHost = new NxScopedHost(root, projectGraph);
   const { workspace } = await workspaces.readWorkspace(
     'angular.json',
     workspaces.createWorkspaceHost(fsHost)
@@ -373,7 +375,10 @@ async function runSchematic(
 type AngularProjectConfiguration = ProjectConfiguration & { prefix?: string };
 
 export class NxScopedHost extends virtualFs.ScopedHost<any> {
-  constructor(private root: string) {
+  constructor(
+    private readonly root: string,
+    private readonly projectGraph?: ProjectGraph
+  ) {
     super(new NodeJsSyncHost(), normalize(root));
   }
 
@@ -392,23 +397,25 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
 
   private readMergedWorkspaceConfiguration() {
     return zip(
-      from(createProjectGraphAsync()),
       this.readExistingAngularJson(),
       this.readJson<NxJsonConfiguration>('nx.json')
     ).pipe(
-      concatMap(([graph, angularJson, nxJson]) => {
+      concatMap(([angularJson, nxJson]) => {
         const workspaceConfig = (angularJson || { projects: {} }) as any;
         workspaceConfig.cli ??= nxJson.cli;
         workspaceConfig.schematics ??= nxJson.generators;
         const projectJsonReads: Observable<[string, ProjectConfiguration]>[] =
           [];
-        for (let projectName of Object.keys(graph.nodes)) {
+        for (let projectName of Object.keys(this.projectGraph.nodes)) {
           if (!workspaceConfig.projects[projectName]) {
             projectJsonReads.push(
               zip(
                 of(projectName),
                 this.readJson<ProjectConfiguration>(
-                  join(graph.nodes[projectName].data.root, 'project.json')
+                  join(
+                    this.projectGraph.nodes[projectName].data.root,
+                    'project.json'
+                  )
                 )
               )
             );
@@ -421,7 +428,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
               .forEach(([projectName, project]) => {
                 workspaceConfig.projects[projectName] = {
                   ...project,
-                  root: graph.nodes[projectName].data.root,
+                  root: this.projectGraph.nodes[projectName].data.root,
                 };
               });
 
@@ -589,8 +596,12 @@ export function arrayBufferToString(buffer: any) {
 }
 
 export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
-  constructor(root: string, private readonly host: Tree) {
-    super(root);
+  constructor(
+    root: string,
+    projectGraph: ProjectGraph,
+    private readonly host: Tree
+  ) {
+    super(root, projectGraph);
   }
 
   read(path: Path): Observable<FileBuffer> {
@@ -675,12 +686,14 @@ function findMatchingFileChange(host: Tree, path: Path) {
 
 export async function generate(
   root: string,
+  projectGraph: ProjectGraph,
   opts: GenerateOptions,
   verbose: boolean
 ) {
   const logger = getLogger(verbose);
   const fsHost = new NxScopeHostUsedForWrappedSchematics(
     root,
+    projectGraph,
     new FsTree(
       root,
       verbose,
@@ -767,6 +780,7 @@ function createPromptProvider() {
 
 export async function runMigration(
   root: string,
+  projectGraph: ProjectGraph,
   packageName: string,
   migrationName: string,
   isVerbose: boolean
@@ -774,6 +788,7 @@ export async function runMigration(
   const logger = getLogger(isVerbose);
   const fsHost = new NxScopeHostUsedForWrappedSchematics(
     root,
+    projectGraph,
     new FsTree(
       root,
       isVerbose,
@@ -867,6 +882,7 @@ let mockedSchematics = null;
 export function mockSchematicsForTesting(schematics: {
   [name: string]: (
     host: Tree,
+    projectGraph: ProjectGraph,
     generatorOptions: { [k: string]: any }
   ) => Promise<void>;
 }) {
@@ -888,7 +904,11 @@ export function wrapAngularDevkitSchematic(
   // were written with Nx in mind, and may care about tags.
   require('./compat');
 
-  return async (host: Tree, generatorOptions: { [k: string]: any }) => {
+  return async (
+    host: Tree,
+    projectGraph: ProjectGraph,
+    generatorOptions: { [k: string]: any }
+  ) => {
     if (
       mockedSchematics &&
       mockedSchematics[`${collectionName}:${generatorName}`]
@@ -936,7 +956,11 @@ export function wrapAngularDevkitSchematic(
       }
     };
 
-    const fsHost = new NxScopeHostUsedForWrappedSchematics(host.root, host);
+    const fsHost = new NxScopeHostUsedForWrappedSchematics(
+      host.root,
+      projectGraph,
+      host
+    );
 
     const options = {
       generatorOptions,

@@ -26,7 +26,11 @@ describe('ngcli-adapter', () => {
     );
 
     // ACT
-    await wrappedSchematic(tree, { name: 'test', project: 'test' });
+    await wrappedSchematic(
+      tree,
+      { nodes: {}, externalNodes: {}, dependencies: {} },
+      { name: 'test', project: 'test' }
+    );
 
     // ASSERT
     expect(tree.exists('src/lib/test.ts')).toBeTruthy();

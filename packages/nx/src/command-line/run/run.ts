@@ -185,6 +185,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
       await import('../../adapter/ngcli-adapter')
     ).scheduleTarget(
       root,
+      projectGraph,
       {
         project,
         target,
