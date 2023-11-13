@@ -5,8 +5,9 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
-import { LoadedNxPlugin } from '../../utils/nx-plugin';
+import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { output } from '../../utils/output';
 
 import minimatch = require('minimatch');
 
@@ -88,18 +89,48 @@ export function mergeProjectConfigurationIntoRootMap(
   );
 }
 
+type ConfigurationResult = {
+  projects: Record<string, ProjectConfiguration>;
+  externalNodes: Record<string, ProjectGraphExternalNode>;
+  rootMap: Record<string, string>;
+};
+
+/**
+ * ** DO NOT USE ** - Please use without the `skipAsync` parameter.
+ * @deprecated
+ * @todo(@agentender): Remove in Nx 18 alongside the removal of its usage.
+ */
 export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   plugins: LoadedNxPlugin[],
-  root: string = workspaceRoot
-): {
-  projects: Record<string, ProjectConfiguration>;
-  externalNodes: Record<string, ProjectGraphExternalNode>;
-  rootMap: Record<string, string>;
-} {
-  const projectRootMap: Map<string, ProjectConfiguration> = new Map();
-  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+  root: string,
+  skipAsync: true
+): ConfigurationResult;
+
+/**
+ * Transforms a list of project paths into a map of project configurations.
+ *
+ * @param nxJson The NxJson configuration
+ * @param projectFiles A list of files identified as projects
+ * @param plugins The plugins that should be used to infer project configuration
+ * @param root The workspace root
+ */
+export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
+  nxJson: NxJsonConfiguration,
+  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
+  plugins: LoadedNxPlugin[],
+  root: string,
+  skipAsync?: false
+): Promise<ConfigurationResult>;
+export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
+  nxJson: NxJsonConfiguration,
+  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
+  plugins: LoadedNxPlugin[],
+  root: string = workspaceRoot,
+  skipAsync: boolean = false
+): ConfigurationResult | Promise<ConfigurationResult> {
+  const results: Array<CreateNodesResult | Promise<CreateNodesResult>> = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const { plugin, options } of plugins) {
@@ -109,29 +140,51 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     }
     for (const file of projectFiles) {
       if (minimatch(file, pattern, { dot: true })) {
-        const { projects: projectNodes, externalNodes: pluginExternalNodes } =
+        results.push(
           createNodes(file, options, {
             nxJsonConfiguration: nxJson,
             workspaceRoot: root,
-          });
-        for (const node in projectNodes) {
-          mergeProjectConfigurationIntoRootMap(projectRootMap, {
-            // If root is specified in config, that will overwrite this.
-            // Specifying it here though allows plugins to return something like
-            // {
-            //   projects: {
-            //     [root]: { targets: buildTargetsFromFile(f) }
-            //   }
-            // }
-            // Otherwise, the root would have to be specified in the config as well
-            // which would be a bit redundant.
-            root: node,
-            ...projectNodes[node],
-          });
-        }
-        Object.assign(externalNodes, pluginExternalNodes);
+          })
+        );
       }
     }
+  }
+
+  return skipAsync
+    ? combineSyncConfigurationResults(results)
+    : combineAsyncConfigurationResults(results);
+}
+
+function combineSyncConfigurationResults(
+  results: (CreateNodesResult | Promise<CreateNodesResult>)[]
+): ConfigurationResult {
+  const projectRootMap: Map<string, ProjectConfiguration> = new Map();
+  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+
+  let warned = false;
+  for (const result of results) {
+    if (typeof result === 'object' && 'then' in result) {
+      if (!warned) {
+        output.warn({
+          title: 'One or more plugins in this workspace are async.',
+          bodyLines: [
+            'Configuration from these plugins will not be visible to readWorkspaceConfig or readWorkspaceConfiguration. If you are using these methods, consider reading project info from the graph with createProjectGraphAsync instead.',
+            'If you are not using one of these methods, please open an issue at http://github.com/nrwl/nx',
+          ],
+        });
+        warned = true;
+      }
+      continue;
+    }
+    const { projects: projectNodes, externalNodes: pluginExternalNodes } =
+      result;
+    for (const node in projectNodes) {
+      mergeProjectConfigurationIntoRootMap(projectRootMap, {
+        root: node,
+        ...projectNodes[node],
+      });
+    }
+    Object.assign(externalNodes, pluginExternalNodes);
   }
 
   const rootMap = createRootMap(projectRootMap);
@@ -141,6 +194,12 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     externalNodes,
     rootMap,
   };
+}
+
+function combineAsyncConfigurationResults(
+  results: Array<CreateNodesResult | Promise<CreateNodesResult>>
+): Promise<ConfigurationResult> {
+  return Promise.all(results).then((r) => combineSyncConfigurationResults(r));
 }
 
 export function readProjectConfigurationsFromRootMap(
