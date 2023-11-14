@@ -6,7 +6,7 @@ exports[`component Generator --flat should create the component correctly and ex
 @Component({
   selector: 'proj-example',
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "
@@ -18,7 +18,7 @@ exports[`component Generator --flat should create the component correctly and no
 @Component({
   selector: 'proj-example',
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "
@@ -42,7 +42,19 @@ exports[`component Generator --path should create the component correctly and ex
 @Component({
   selector: 'proj-example',
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
+})
+export class ExampleComponent {}
+"
+`;
+
+exports[`component Generator compat should inline styles when --inline-style=true 1`] = `
+"import { Component } from '@angular/core';
+
+@Component({
+  selector: 'proj-example',
+  templateUrl: './example.component.html',
+  styles: \`\`,
 })
 export class ExampleComponent {}
 "
@@ -54,7 +66,7 @@ exports[`component Generator secondary entry points should create the component 
 @Component({
   selector: 'proj-example',
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "
@@ -72,7 +84,7 @@ exports[`component Generator should create component files correctly: component 
 @Component({
   selector: 'proj-example',
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "
@@ -121,7 +133,7 @@ exports[`component Generator should create the component correctly and export it
 @Component({
   selector: 'proj-example',
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "
@@ -142,7 +154,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "
@@ -154,7 +166,7 @@ exports[`component Generator should create the component correctly and not expor
 @Component({
   selector: 'proj-example',
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "
@@ -169,7 +181,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "
@@ -181,7 +193,7 @@ exports[`component Generator should create the component correctly and not expor
 @Component({
   selector: 'proj-example',
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "
@@ -193,7 +205,7 @@ exports[`component Generator should create the component correctly but not expor
 @Component({
   selector: 'proj-example',
   templateUrl: './example.component.html',
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "
@@ -205,7 +217,7 @@ exports[`component Generator should inline styles when --inline-style=true 1`] =
 @Component({
   selector: 'proj-example',
   templateUrl: './example.component.html',
-  styles: [],
+  styles: \`\`,
 })
 export class ExampleComponent {}
 "
@@ -217,7 +229,7 @@ exports[`component Generator should inline template when --inline-template=true 
 @Component({
   selector: 'proj-example',
   template: \`<p>example works!</p>\`,
-  styleUrls: ['./example.component.css'],
+  styleUrl: './example.component.css',
 })
 export class ExampleComponent {}
 "

@@ -4,10 +4,20 @@ import { defineNuxtConfig } from 'nuxt/config';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   srcDir: 'src',
+  buildDir: '<%= buildDirectory %>',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
     port: 4200,
+  },
+  typescript: {
+    typeCheck: true,
+    tsConfig: {
+      extends: '<%= projectRoot %>/tsconfig.app.json',
+    },
+  },
+  imports: {
+    autoImport: false,
   },
   <% if (style !== 'none') { %>
   css: ['~/assets/css/styles.<%= style %>'],
@@ -16,5 +26,12 @@ export default defineNuxtConfig({
     plugins: [
       nxViteTsPaths()
     ],
-  }
+  },
+  nitro: {
+    output: {
+      dir: '<%= nitroOutputDir %>',
+      serverDir: '<%= nitroOutputDir %>/server',
+      publicDir: '<%= nitroOutputDir %>/public',
+    },
+  },
 });

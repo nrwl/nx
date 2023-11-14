@@ -33,14 +33,31 @@ import { defineNuxtConfig } from 'nuxt/config';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   srcDir: 'src',
+  buildDir: 'dist/my-app/.nuxt',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
     port: 4200,
   },
+  typescript: {
+    typeCheck: true,
+    tsConfig: {
+      extends: 'my-app/tsconfig.app.json',
+    },
+  },
+  imports: {
+    autoImport: false,
+  },
 
   vite: {
     plugins: [nxViteTsPaths()],
+  },
+  nitro: {
+    output: {
+      dir: 'dist/my-app/.output',
+      serverDir: 'dist/my-app/.output/server',
+      publicDir: 'dist/my-app/.output/public',
+    },
   },
 });
 "
@@ -55,12 +72,12 @@ exports[`app generated files content - as-provided general application should co
   "targets": {
     "serve": {
       "executor": "@nx/nuxt:serve",
-      "outputs": ["{options.outputFile}"],
+      "outputs": ["{options.outputPath}"],
       "options": {}
     },
     "build": {
       "executor": "@nx/nuxt:build",
-      "outputs": ["{options.outputFile}"],
+      "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/my-app"
       }
@@ -209,16 +226,33 @@ import { defineNuxtConfig } from 'nuxt/config';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   srcDir: 'src',
+  buildDir: 'dist/myapp1/.nuxt',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
     port: 4200,
+  },
+  typescript: {
+    typeCheck: true,
+    tsConfig: {
+      extends: 'myapp1/tsconfig.app.json',
+    },
+  },
+  imports: {
+    autoImport: false,
   },
 
   css: ['~/assets/css/styles.css'],
 
   vite: {
     plugins: [nxViteTsPaths()],
+  },
+  nitro: {
+    output: {
+      dir: 'dist/myapp1/.output',
+      serverDir: 'dist/myapp1/.output/server',
+      publicDir: 'dist/myapp1/.output/public',
+    },
   },
 });
 "
@@ -231,16 +265,33 @@ import { defineNuxtConfig } from 'nuxt/config';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   srcDir: 'src',
+  buildDir: 'dist/myapp3/.nuxt',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
     port: 4200,
+  },
+  typescript: {
+    typeCheck: true,
+    tsConfig: {
+      extends: 'myapp3/tsconfig.app.json',
+    },
+  },
+  imports: {
+    autoImport: false,
   },
 
   css: ['~/assets/css/styles.less'],
 
   vite: {
     plugins: [nxViteTsPaths()],
+  },
+  nitro: {
+    output: {
+      dir: 'dist/myapp3/.output',
+      serverDir: 'dist/myapp3/.output/server',
+      publicDir: 'dist/myapp3/.output/public',
+    },
   },
 });
 "
@@ -253,16 +304,33 @@ import { defineNuxtConfig } from 'nuxt/config';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   srcDir: 'src',
+  buildDir: 'dist/myapp2/.nuxt',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
     port: 4200,
+  },
+  typescript: {
+    typeCheck: true,
+    tsConfig: {
+      extends: 'myapp2/tsconfig.app.json',
+    },
+  },
+  imports: {
+    autoImport: false,
   },
 
   css: ['~/assets/css/styles.scss'],
 
   vite: {
     plugins: [nxViteTsPaths()],
+  },
+  nitro: {
+    output: {
+      dir: 'dist/myapp2/.output',
+      serverDir: 'dist/myapp2/.output/server',
+      publicDir: 'dist/myapp2/.output/public',
+    },
   },
 });
 "
@@ -275,14 +343,31 @@ import { defineNuxtConfig } from 'nuxt/config';
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   srcDir: 'src',
+  buildDir: 'dist/myapp4/.nuxt',
   devtools: { enabled: true },
   devServer: {
     host: 'localhost',
     port: 4200,
   },
+  typescript: {
+    typeCheck: true,
+    tsConfig: {
+      extends: 'myapp4/tsconfig.app.json',
+    },
+  },
+  imports: {
+    autoImport: false,
+  },
 
   vite: {
     plugins: [nxViteTsPaths()],
+  },
+  nitro: {
+    output: {
+      dir: 'dist/myapp4/.output',
+      serverDir: 'dist/myapp4/.output/server',
+      publicDir: 'dist/myapp4/.output/public',
+    },
   },
 });
 "

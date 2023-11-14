@@ -23,7 +23,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 @Component({
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {}
 "
@@ -81,7 +81,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 @Component({
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {}
 "
@@ -125,7 +125,7 @@ import { RouterModule } from '@angular/router';
   imports: [RouterModule],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {}
 "
@@ -169,7 +169,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
   imports: [],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {}
 "
@@ -714,7 +714,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
   title = 'standalone';
@@ -782,7 +782,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   imports: [NxWelcomeComponent],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
   title = 'standalone';

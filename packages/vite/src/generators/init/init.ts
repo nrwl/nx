@@ -19,7 +19,6 @@ import {
   vitePluginDtsVersion,
   vitePluginReactSwcVersion,
   vitePluginReactVersion,
-  vitestUiVersion,
   vitestVersion,
   viteVersion,
 } from '../../utils/versions';

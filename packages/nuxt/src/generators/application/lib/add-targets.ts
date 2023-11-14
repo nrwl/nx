@@ -8,7 +8,7 @@ export function addServeTarget(tree: Tree, projectName: string) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['serve'] = {
     executor: '@nx/nuxt:serve',
-    outputs: ['{options.outputFile}'],
+    outputs: ['{options.outputPath}'],
     options: {},
   };
   updateProjectConfiguration(tree, projectName, projectConfig);
@@ -22,7 +22,7 @@ export function addBuildTarget(
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['build'] = {
     executor: '@nx/nuxt:build',
-    outputs: ['{options.outputFile}'],
+    outputs: ['{options.outputPath}'],
     options: {
       outputPath: outputPath,
     },

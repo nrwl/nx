@@ -6,7 +6,7 @@ import { readJsonFile } from '../../utils/fileutils';
 
 describe('workspace files', () => {
   function createParseConfigurationsFunction(tempDir: string) {
-    return (filenames: string[]) => {
+    return async (filenames: string[]) => {
       const res = {};
       for (const filename of filenames) {
         const json = readJsonFile(join(tempDir, filename));
@@ -51,7 +51,7 @@ describe('workspace files', () => {
     let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
 
     const context = new WorkspaceContext(fs.tempDir);
-    let { projectFileMap, globalFiles } = context.getWorkspaceFiles(
+    let { projectFileMap, globalFiles } = await context.getWorkspaceFiles(
       globs,
       createParseConfigurationsFunction(fs.tempDir)
     );
@@ -148,7 +148,7 @@ describe('workspace files', () => {
     const context = new WorkspaceContext(fs.tempDir);
 
     const globs = ['project.json', '**/project.json', '**/package.json'];
-    const { globalFiles, projectFileMap } = context.getWorkspaceFiles(
+    const { globalFiles, projectFileMap } = await context.getWorkspaceFiles(
       globs,
       createParseConfigurationsFunction(fs.tempDir)
     );

@@ -28,6 +28,7 @@ exports[`remote generator should create the remote with the correct config files
 exports[`remote generator should create the remote with the correct config files 3`] = `
 "module.exports = {
   name: 'test',
+
   exposes: {
     './Module': './src/remote-entry.ts',
   },
@@ -65,6 +66,7 @@ exports[`remote generator should create the remote with the correct config files
 
 const config: ModuleFederationConfig = {
   name: 'test',
+
   exposes: {
     './Module': './src/remote-entry.ts',
   },
