@@ -1,6 +1,6 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import type { Linter } from '@nx/eslint';
-import type { SupportedStyles } from '../../../typings';
+import type { SupportedStyles } from '../../../typings/style';
 import type { NormalizedSchema as ApplicationNormalizedSchema } from '../application/schema';
 
 export interface Schema {
