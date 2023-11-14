@@ -16,7 +16,9 @@ Note, many of these optimizations are incremental, meaning you could set up runn
 
 ## Example Repository
 
-To follow along with this tutorial, we recommend using the [nx-shops sample repository](https://github.com/isaacplmann/nx-shops). The pipeline configuration that you create in this tutorial could be used in most repositories, so you could try out this same tutorial on your own repository or one created by following one of the [Learn Nx tutorials](https://nx.dev/getting-started/intro#learn-nx).
+To follow along with this tutorial, we recommend using the [nx-shops sample repository](https://github.com/nrwl/nx-shops).
+
+{% github-repository url="https://github.com/nrwl/nx-shops" /%}
 
 The `nx-shops` repo is useful to demonstrate the value of the CI pipeline because it has the following characteristics:
 
@@ -26,7 +28,7 @@ The `nx-shops` repo is useful to demonstrate the value of the CI pipeline becaus
 
 To get started:
 
-1. [Fork the nx-shop repo](https://github.com/isaacplmann/nx-shops/fork) and then clone it to your local machine
+1. [Fork the nx-shop repo](https://github.com/nrwl/nx-shops/fork) and then clone it to your local machine
 
    ```shell
    git clone git@github.com:<your-username>/nx-shops.git
@@ -79,8 +81,7 @@ workflows:
 
   ci:
     jobs:
-      - main:
-          name: Nx Cloud Main
+      - main
 ```
 
 Next, commit this change, push the branch and create a PR on your forked GitHub repository:
@@ -97,6 +98,8 @@ If everything was set up correctly, you should see a message from Circle CI in t
 Click on the job details and you should see the `Hello Circle CI` message in the logs.
 
 ![The "Hello Circle CI" message is printed in the logs](/nx-cloud/tutorial/Message%20Logged.png)
+
+Merge your PR into the `main` branch when you're ready to move to the next section.
 
 ## Configure Nx on Circle CI
 
@@ -137,8 +140,7 @@ workflows:
 
   ci:
     jobs:
-      - main:
-          name: Nx Cloud Main
+      - main
 ```
 
 Once `node_modules` are in place, you can run normal Nx commands. In this case, we run `pnpm nx build cart`. Push the changes to your repository by creating a new PR and verifying the new CI pipeline correctly builds our application.
@@ -151,7 +153,7 @@ You might have noticed that there's also a build running for `shared-header`, `s
 - don't need to make any changes to our pipeline as our `cart` app grows and depends on more projects
 - don't need to worry about the order of the builds
 
-Merge your PR into the `main` branch.
+Merge your PR into the `main` branch when you're ready to move to the next section.
 
 ## Optimize our CI by caching NPM dependencies
 
@@ -190,13 +192,12 @@ workflows:
 
   ci:
     jobs:
-      - main:
-          name: Nx Cloud Main
+      - main
 ```
 
 The `restore_cache` and `save_cache` steps are using a hash key that is created from the contents of the `pnpm-lock.yaml` file. This way if the `pnpm-lock.yaml` file remains the same, the next CI pipeline can pull from the cache instead of downloading `node_modules` again. This is similar to the way [Nx hashes input files to cache the results of tasks](/core-features/cache-task-results).
 
-Create a new branch with these changes and submit a PR to your repo to test them.
+Create a new branch with these changes and submit a PR to your repo to test them. Merge your PR into the `main` branch when you're ready to move to the next section.
 
 ## Process Only Affected Projects
 
@@ -206,7 +207,6 @@ So far we only ran the build for our `cart` application. There are other apps in
 pnpm nx build cart
 pnpm nx build admin
 pnpm nx build landing-page
-pnpm nx build products
 ```
 
 Clearly this is not a scalable solution as it requires us to manually add every new app to the pipeline (and it doesn't include other tasks like `lint`, `test` etc). To improve this we can change the command to run the `build` for all projects like
@@ -217,12 +217,11 @@ Clearly this is not a scalable solution as it requires us to manually add every 
     ✔  nx run shared-header:build (467ms)
     ✔  nx run landing-page:build:production (3s)
     ✔  nx run admin:build:production (3s)
-    ✔  nx run products:build (6s)
     ✔  nx run cart:build:production (3s)
 
  ————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for 7 projects (16s)
+ >  NX   Successfully ran target build for 6 projects (10s)
 ```
 
 This change makes our CI pipeline configuration more maintainable. For a small repository, this might be good enough, but after a little bit of growth this approach will cause your CI times to become unmanageable.
@@ -307,6 +306,8 @@ When you check the CI logs for this PR, you'll notice that no tasks were run by 
 }
 ```
 
+Merge your PR into the `main` branch when you're ready to move to the next section.
+
 ## Enable Remote Caching on Circle CI
 
 Reducing the number of tasks to run via [affected commands](/nx-cloud/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/core-features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. The [Nx Cloud remote cache](/nx-cloud/features/remote-cache) can eliminate that waste for you.
@@ -353,6 +354,8 @@ The commands could be restored from the remote cache because we had run them loc
 
 You might also want to learn more about [how to fine-tune caching](/recipes/running-tasks/customizing-inputs) to get even better results.
 
+Merge your PR into the `main` branch when you're ready to move to the next section.
+
 ## Parallelize Tasks across Multiple Machines
 
 The affected command and remote caching help speed up the average CI time, but there will be some PRs that affect everything in the repository. The only way to speed up that worst case scenario is through efficient parallelization. The best way to parallelize CI with Nx is to use [distributed task execution (DTE)](/nx-cloud/features/distribute-task-execution).
@@ -396,7 +399,7 @@ jobs:
   main: ...
 ```
 
-The `main` job looks very similar to the previous configuration, with the addition of a single line above and below the `nx affected` commands.
+The `main` job looks very similar to the previous configuration, with the addition of a single line above the `nx affected` commands.
 
 ```yaml {% fileName=".circleci/config.yml" highlightLines=[24,29] %}
 version: 2.1
@@ -426,13 +429,10 @@ jobs:
 
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=3 --configuration=ci
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD -t e2e --parallel=1
-
-      - run: pnpm nx-cloud stop-all-agents
 ```
 
 - `nx-cloud start-ci-run` lets Nx know that all the tasks after this line should be orchestrated with Nx Cloud's DTE process
 - `--stop-agents-after="e2e"` lets Nx Cloud know which line is the last command in this pipeline. Once there are no more e2e tasks for an agent to run, Nx Cloud will automatically shut them down. This way you're not wasting money on idle agents while a particularly long e2e task is running on a single agent.
-- `nx-cloud stop-all-agents` notifies every agent that all the tasks are completed and they can shut down.
 
 Finally in the `workflows` section we instantiate the number of agents we want to run. The **full pipeline configuration** looks like this:
 
@@ -483,8 +483,6 @@ jobs:
 
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=3 --configuration=ci
       - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD -t e2e --parallel=1
-
-      - run: pnpm nx-cloud stop-all-agents
 workflows:
   build:
     jobs:
