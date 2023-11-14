@@ -96,7 +96,8 @@ async function parseExecutorAndTarget(
   const { schema, implementationFactory } = getExecutorInformation(
     nodeModule,
     executor,
-    root
+    root,
+    projectsConfigurations.projects
   );
 
   return { executor, implementationFactory, nodeModule, schema, targetConfig };
@@ -154,7 +155,14 @@ async function runExecutorInternal<T extends { success: boolean }>(
     isVerbose
   );
 
-  if (getExecutorInformation(nodeModule, executor, root).isNxExecutor) {
+  if (
+    getExecutorInformation(
+      nodeModule,
+      executor,
+      root,
+      projectsConfigurations.projects
+    ).isNxExecutor
+  ) {
     const implementation = implementationFactory() as Executor<any>;
     const r = implementation(combinedOptions, {
       root,
@@ -190,6 +198,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
         target,
         configuration,
         runOptions: combinedOptions,
+        projects: projectsConfigurations.projects,
       },
       isVerbose
     );

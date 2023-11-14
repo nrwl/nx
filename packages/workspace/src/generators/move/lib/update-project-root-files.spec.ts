@@ -47,4 +47,38 @@ describe('updateProjectRootFiles', () => {
       `coverageDirectory: '../../coverage/my-source'`
     );
   });
+
+  it('should handle cypress configs correctly', async () => {
+    const cypressConfigContents = `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) },
+});
+`;
+    const cypressConfigPath = 'apps/my-app-e2e/cypress.config.ts';
+    await libraryGenerator(tree, {
+      name: 'e2e',
+      root: 'e2e',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    const projectConfig = readProjectConfiguration(tree, 'e2e');
+    tree.write(cypressConfigPath, cypressConfigContents);
+    const schema: NormalizedSchema = {
+      projectName: 'e2e',
+      destination: 'apps/my-app-e2e',
+      importPath: '@proj/e2e',
+      updateImportPath: false,
+      newProjectName: 'my-app-e2e',
+      relativeToRootDestination: 'apps/my-app-e2e',
+    };
+
+    updateProjectRootFiles(tree, schema, projectConfig);
+
+    const cypressConfigAfter = tree.read(cypressConfigPath, 'utf-8');
+    expect(cypressConfigAfter).toContain(
+      `e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) }`
+    );
+  });
 });

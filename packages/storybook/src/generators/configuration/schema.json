@@ -6,9 +6,9 @@
   "description": "Add Storybook configuration to a UI library or an application.",
   "type": "object",
   "properties": {
-    "name": {
+    "project": {
       "type": "string",
-      "aliases": ["project", "projectName"],
+      "aliases": ["name", "projectName"],
       "description": "Project for which to generate Storybook configuration.",
       "$default": {
         "$source": "argv",
@@ -103,6 +103,6 @@
       "x-priority": "internal"
     }
   },
-  "required": ["name", "uiFramework"],
+  "required": ["project", "uiFramework"],
   "examplesFile": "../../../docs/configuration-generator-examples.md"
 }

@@ -11,16 +11,6 @@ nx g @nx/angular:component my-component
 
 {% /tab %}
 
-{% tab label="Standalone Component" %}
-
-Create a standalone component named `my-component`:
-
-```bash
-nx g @nx/angular:component my-component --standalone
-```
-
-{% /tab %}
-
 {% tab label="Single File Component" %}
 
 Create a component named `my-component` with inline styles and inline template:

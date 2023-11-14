@@ -1710,7 +1710,6 @@ describe('app migrator', () => {
       ).toStrictEqual([
         'build',
         'lint',
-        'e2e',
         'myCustomTest',
         'myCustomLint',
         'myCustomBuild',
@@ -1742,7 +1741,7 @@ describe('app migrator', () => {
       const { targetDefaults } = readNxJson(tree);
       expect(
         Object.keys(targetDefaults).filter((f) => targetDefaults[f].cache)
-      ).toStrictEqual(['build', 'lint', 'e2e', 'myCustomTest']);
+      ).toStrictEqual(['build', 'lint', 'myCustomTest', 'e2e']);
     });
   });
 });

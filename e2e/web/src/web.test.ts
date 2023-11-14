@@ -425,7 +425,6 @@ describe('CLI - Environment Variables', () => {
       `run-many --target build --outputHashing=none --optimization=false`,
       {
         env: {
-          ...process.env,
           NODE_ENV: 'test',
           NX_BUILD: '52',
           NX_API: 'QA',

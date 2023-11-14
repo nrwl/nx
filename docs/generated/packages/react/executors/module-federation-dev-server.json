@@ -104,6 +104,10 @@
       "parallel": {
         "type": "number",
         "description": "Max number of parallel processes for building static remotes"
+      },
+      "staticRemotesPort": {
+        "type": "number",
+        "description": "The port at which to serve the file-server for the static remotes."
       }
     },
     "presets": []

@@ -56,7 +56,7 @@ export async function configurationGenerator(
 
   const { projectType, targets, root } = readProjectConfiguration(
     tree,
-    schema.name
+    schema.project
   );
   const { nextBuildTarget, compiler, viteBuildTarget } =
     findStorybookAndBuildTargetsAndCompiler(targets);
@@ -74,14 +74,14 @@ export async function configurationGenerator(
   if (viteBuildTarget) {
     if (schema.uiFramework === '@storybook/react-webpack5') {
       logger.info(
-        `Your project ${schema.name} uses Vite as a bundler.
+        `Your project ${schema.project} uses Vite as a bundler.
         Nx will configure Storybook for this project to use Vite as well.`
       );
       schema.uiFramework = '@storybook/react-vite';
     }
     if (schema.uiFramework === '@storybook/web-components-webpack5') {
       logger.info(
-        `Your project ${schema.name} uses Vite as a bundler.
+        `Your project ${schema.project} uses Vite as a bundler.
         Nx will configure Storybook for this project to use Vite as well.`
       );
       schema.uiFramework = '@storybook/web-components-vite';
@@ -105,7 +105,7 @@ export async function configurationGenerator(
 
   createProjectStorybookDir(
     tree,
-    schema.name,
+    schema.project,
     schema.uiFramework,
     schema.js,
     schema.tsConfiguration,
@@ -138,11 +138,11 @@ export async function configurationGenerator(
   addStorybookToNamedInputs(tree);
 
   if (schema.uiFramework === '@storybook/angular') {
-    addAngularStorybookTask(tree, schema.name, schema.interactionTests);
+    addAngularStorybookTask(tree, schema.project, schema.interactionTests);
   } else {
     addStorybookTask(
       tree,
-      schema.name,
+      schema.project,
       schema.uiFramework,
       schema.interactionTests
     );
@@ -154,10 +154,10 @@ export async function configurationGenerator(
 
   // TODO(katerina): Nx 18 -> remove Cypress
   if (schema.configureCypress) {
-    const e2eProject = await getE2EProjectName(tree, schema.name);
+    const e2eProject = await getE2EProjectName(tree, schema.project);
     if (!e2eProject) {
       const cypressTask = await cypressProjectGenerator(tree, {
-        name: schema.name,
+        name: schema.project,
         js: schema.js,
         linter: schema.linter,
         directory: schema.cypressDirectory,
@@ -170,7 +170,7 @@ export async function configurationGenerator(
       tasks.push(cypressTask);
     } else {
       logger.warn(
-        `There is already an e2e project setup for ${schema.name}, called ${e2eProject}.`
+        `There is already an e2e project setup for ${schema.project}, called ${e2eProject}.`
       );
     }
   }

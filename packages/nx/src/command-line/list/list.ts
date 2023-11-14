@@ -31,19 +31,19 @@ export interface ListArgs {
  *
  */
 export async function listHandler(args: ListArgs): Promise<void> {
-  if (args.plugin) {
-    await listPluginCapabilities(args.plugin);
-  } else {
-    const nxJson = readNxJson();
-    const corePlugins = fetchCorePlugins();
-    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const nxJson = readNxJson();
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const projects = readProjectsConfigurationFromProjectGraph(projectGraph);
 
-    const localPlugins = await getLocalWorkspacePlugins(
-      readProjectsConfigurationFromProjectGraph(projectGraph),
-      nxJson
-    );
+  if (args.plugin) {
+    await listPluginCapabilities(args.plugin, projects.projects);
+  } else {
+    const corePlugins = fetchCorePlugins();
+
+    const localPlugins = await getLocalWorkspacePlugins(projects, nxJson);
     const installedPlugins = await getInstalledPluginsAndCapabilities(
-      workspaceRoot
+      workspaceRoot,
+      projects.projects
     );
 
     if (localPlugins.size) {

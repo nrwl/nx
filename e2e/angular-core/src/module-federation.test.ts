@@ -316,6 +316,8 @@ describe('Angular Module Federation', () => {
     const module = uniq('module');
     const host = uniq('host');
 
+    const hostPort = 4200;
+
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
     );
@@ -383,7 +385,7 @@ describe('Angular Module Federation', () => {
         `e2e ${host}-e2e --no-watch --verbose`,
         (output) => output.includes('All specs passed!')
       );
-      await killProcessAndPorts(hostE2eResults.pid);
+      await killProcessAndPorts(hostE2eResults.pid, hostPort, hostPort + 1);
     }
   }, 500_000);
 
@@ -393,6 +395,7 @@ describe('Angular Module Federation', () => {
     const childRemote = uniq('childremote');
     const module = uniq('module');
     const host = uniq('host');
+    const hostPort = 4200;
 
     runCLI(
       `generate @nx/angular:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
@@ -478,7 +481,7 @@ describe('Angular Module Federation', () => {
         `e2e ${host}-e2e --no-watch --verbose`,
         (output) => output.includes('All specs passed!')
       );
-      await killProcessAndPorts(hostE2eResults.pid);
+      await killProcessAndPorts(hostE2eResults.pid, hostPort, hostPort + 1);
     }
   }, 500_000);
 });

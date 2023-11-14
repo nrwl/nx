@@ -71,7 +71,12 @@ async function promptForCollection(
         resolvedCollectionName,
         normalizedGeneratorName,
         generatorConfiguration: { ['x-deprecated']: deprecated, hidden },
-      } = getGeneratorInformation(collectionName, generatorName, workspaceRoot);
+      } = getGeneratorInformation(
+        collectionName,
+        generatorName,
+        workspaceRoot,
+        projectsConfiguration.projects
+      );
       if (hidden) {
         continue;
       }
@@ -96,7 +101,12 @@ async function promptForCollection(
         resolvedCollectionName,
         normalizedGeneratorName,
         generatorConfiguration: { ['x-deprecated']: deprecated, hidden },
-      } = getGeneratorInformation(name, generatorName, workspaceRoot);
+      } = getGeneratorInformation(
+        name,
+        generatorName,
+        workspaceRoot,
+        projectsConfiguration.projects
+      );
       if (hidden) {
         continue;
       }
@@ -158,7 +168,12 @@ async function promptForCollection(
             return true;
           }
           try {
-            getGeneratorInformation(value, generatorName, workspaceRoot);
+            getGeneratorInformation(
+              value,
+              generatorName,
+              workspaceRoot,
+              projectsConfiguration.projects
+            );
             return true;
           } catch {
             logger.error(`\nCould not find ${value}:${generatorName}`);
@@ -316,7 +331,8 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
     } = getGeneratorInformation(
       opts.collectionName,
       opts.generatorName,
-      workspaceRoot
+      workspaceRoot,
+      projectsConfigurations.projects
     );
 
     if (deprecated) {
@@ -360,7 +376,8 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       getGeneratorInformation(
         opts.collectionName,
         normalizedGeneratorName,
-        workspaceRoot
+        workspaceRoot,
+        projectsConfigurations.projects
       ).isNxGenerator
     ) {
       const host = new FsTree(
@@ -400,6 +417,7 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
           ...opts,
           generatorOptions: combinedOpts,
         },
+        projectsConfigurations.projects,
         verbose
       );
     }

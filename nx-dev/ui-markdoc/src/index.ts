@@ -17,6 +17,8 @@ import { CustomLink } from './lib/nodes/link.component';
 import { link } from './lib/nodes/link.schema';
 import { Callout } from './lib/tags/callout.component';
 import { callout } from './lib/tags/callout.schema';
+import { CallToAction } from './lib/tags/call-to-action.component';
+import { callToAction } from './lib/tags/call-to-action.schema';
 import { Card, Cards, LinkCard } from './lib/tags/cards.component';
 import { card, cards, linkCard } from './lib/tags/cards.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
@@ -66,6 +68,7 @@ export const getMarkdocCustomConfig = (
     },
     tags: {
       callout,
+      'call-to-action': callToAction,
       card,
       cards,
       'link-card': linkCard,
@@ -90,6 +93,7 @@ export const getMarkdocCustomConfig = (
   },
   components: {
     Callout,
+    CallToAction,
     Card,
     Cards,
     LinkCard,

@@ -336,7 +336,7 @@ export class AppElement extends HTMLElement {
 nx g @nx/angular:lib ui
 
 <span># Add a component</span>
-nx g @nx/angular:component button --project ui</pre>
+nx g @nx/angular:component ui/src/lib/button</pre>
           </details>
           <details>
             <summary>

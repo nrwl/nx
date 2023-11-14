@@ -39,7 +39,7 @@ describe('nx project.json plugin', () => {
       .toMatchInlineSnapshot(`
       {
         "projects": {
-          "root": {
+          ".": {
             "name": "root",
             "root": ".",
             "targets": {
@@ -53,7 +53,7 @@ describe('nx project.json plugin', () => {
       .toMatchInlineSnapshot(`
       {
         "projects": {
-          "lib-a": {
+          "packages/lib-a": {
             "name": "lib-a",
             "root": "packages/lib-a",
             "targets": {

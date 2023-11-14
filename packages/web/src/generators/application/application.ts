@@ -238,7 +238,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
     });
