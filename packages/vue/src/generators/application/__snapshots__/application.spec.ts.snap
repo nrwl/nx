@@ -112,15 +112,15 @@ exports[`application generator should set up project correctly with given option
       "executor": "@nx/vite:dev-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "test:build"
+        "buildTarget": "build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "test:build:development",
+          "buildTarget": "build:development",
           "hmr": true
         },
         "production": {
-          "buildTarget": "test:build:production",
+          "buildTarget": "build:production",
           "hmr": false
         }
       }
@@ -129,14 +129,14 @@ exports[`application generator should set up project correctly with given option
       "executor": "@nx/vite:preview-server",
       "defaultConfiguration": "development",
       "options": {
-        "buildTarget": "test:build"
+        "buildTarget": "build"
       },
       "configurations": {
         "development": {
-          "buildTarget": "test:build:development"
+          "buildTarget": "build:development"
         },
         "production": {
-          "buildTarget": "test:build:production"
+          "buildTarget": "build:production"
         }
       }
     },
@@ -151,7 +151,7 @@ exports[`application generator should set up project correctly with given option
     "serve-static": {
       "executor": "@nx/web:file-server",
       "options": {
-        "buildTarget": "test:build"
+        "buildTarget": "build"
       }
     }
   }

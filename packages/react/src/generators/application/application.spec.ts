@@ -436,11 +436,11 @@ describe('app', () => {
     const targetConfig = projectsConfigurations.get('my-app').targets;
     expect(targetConfig.serve.executor).toEqual('@nx/webpack:dev-server');
     expect(targetConfig.serve.options).toEqual({
-      buildTarget: 'my-app:build',
+      buildTarget: 'build',
       hmr: true,
     });
     expect(targetConfig.serve.configurations.production).toEqual({
-      buildTarget: 'my-app:build:production',
+      buildTarget: 'build:production',
       hmr: false,
     });
   });
@@ -456,10 +456,10 @@ describe('app', () => {
     const targetConfig = projectsConfigurations.get('my-app').targets;
     expect(targetConfig.serve.executor).toEqual('@nx/vite:dev-server');
     expect(targetConfig.serve.options).toEqual({
-      buildTarget: 'my-app:build',
+      buildTarget: 'build',
     });
     expect(targetConfig.serve.configurations.production).toEqual({
-      buildTarget: 'my-app:build:production',
+      buildTarget: 'build:production',
       hmr: false,
     });
   });
@@ -1026,7 +1026,7 @@ describe('app', () => {
       expect(targetConfig.build.executor).toEqual('@nx/vite:build');
       expect(targetConfig.serve.executor).toEqual('@nx/vite:dev-server');
       expect(targetConfig.serve.options).toEqual({
-        buildTarget: 'my-app:build',
+        buildTarget: 'build',
       });
     });
 

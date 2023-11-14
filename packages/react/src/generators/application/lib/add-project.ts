@@ -109,15 +109,15 @@ function createServeTarget(options: NormalizedSchema): TargetConfiguration {
     executor: '@nx/webpack:dev-server',
     defaultConfiguration: 'development',
     options: {
-      buildTarget: `${options.projectName}:build`,
+      buildTarget: `build`,
       hmr: true,
     },
     configurations: {
       development: {
-        buildTarget: `${options.projectName}:build:development`,
+        buildTarget: `build:development`,
       },
       production: {
-        buildTarget: `${options.projectName}:build:production`,
+        buildTarget: `build:production`,
         hmr: false,
       },
     },

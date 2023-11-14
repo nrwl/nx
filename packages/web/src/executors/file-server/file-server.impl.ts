@@ -111,7 +111,7 @@ function createFileWatcher(
 
 export function normalizeOptions(options: Schema, context: ExecutorContext) {
   const result = { ...options };
-  
+
   // Normalizes build target to be project:target:configuration,
   // while keeping support for just `target` or `target:configuration`
   if (result.buildTarget) {
@@ -133,6 +133,8 @@ export default async function* fileServerExecutor(
   options: Schema,
   context: ExecutorContext
 ) {
+  options = normalizeOptions(options, context);
+
   if (!options.buildTarget && !options.staticFilePath) {
     throw new Error("You must set either 'buildTarget' or 'staticFilePath'.");
   }

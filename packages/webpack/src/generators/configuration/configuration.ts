@@ -140,11 +140,11 @@ function addServeTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
       serve: {
         executor: '@nx/webpack:dev-server',
         options: {
-          buildTarget: `${options.project}:build`,
+          buildTarget: `build`,
         },
         configurations: {
           production: {
-            buildTarget: `${options.project}:build:production`,
+            buildTarget: `build:production`,
           },
         },
       },

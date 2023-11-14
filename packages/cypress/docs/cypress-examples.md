@@ -40,7 +40,7 @@ In some _frontend_ application, add a 'static-serve' target.
 "serve-static": {
   "executor": "@nx/web:file-server",
   "options":{
-    "buildTarget": "frontend:build"
+    "buildTarget": "build"
   }
 }
 ```

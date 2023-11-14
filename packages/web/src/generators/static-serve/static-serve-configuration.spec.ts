@@ -27,7 +27,7 @@ describe('Static serve configuration generator', () => {
       {
         "executor": "@nx/web:file-server",
         "options": {
-          "buildTarget": "react-app:build",
+          "buildTarget": "build",
         },
       }
     `);
@@ -41,7 +41,7 @@ describe('Static serve configuration generator', () => {
       {
         "executor": "@nx/web:file-server",
         "options": {
-          "buildTarget": "angular-app:build",
+          "buildTarget": "build",
         },
       }
     `);
@@ -54,7 +54,7 @@ describe('Static serve configuration generator', () => {
       {
         "executor": "@nx/web:file-server",
         "options": {
-          "buildTarget": "storybook:build-storybook",
+          "buildTarget": "build-storybook",
           "staticFilePath": "dist/storybook/storybook",
         },
       }
@@ -74,7 +74,7 @@ describe('Static serve configuration generator', () => {
       {
         "executor": "@nx/web:file-server",
         "options": {
-          "buildTarget": "react-app:build",
+          "buildTarget": "build",
         },
       }
     `);
@@ -99,7 +99,7 @@ describe('Static serve configuration generator', () => {
       {
         "executor": "@nx/web:file-server",
         "options": {
-          "buildTarget": "angular-app:build",
+          "buildTarget": "build",
           "staticFilePath": "dist/angular-app",
         },
       }

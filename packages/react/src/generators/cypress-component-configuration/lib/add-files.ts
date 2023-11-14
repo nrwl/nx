@@ -28,7 +28,7 @@ export async function addFiles(
   const actualBundler =
     options.buildTarget !== undefined && options.bundler
       ? options.bundler
-      : await getBundlerFromTarget(found, tree);
+      : await getBundlerFromTarget(tree, found, projectConfig);
 
   if (options.bundler && options.bundler !== actualBundler) {
     logger.warn(

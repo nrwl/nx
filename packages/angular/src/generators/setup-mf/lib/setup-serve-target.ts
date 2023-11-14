@@ -26,7 +26,7 @@ export function setupServeTarget(host: Tree, options: Schema) {
       executor: '@nx/web:file-server',
       defaultConfiguration: 'production',
       options: {
-        buildTarget: `${options.appName}:build`,
+        buildTarget: 'build',
         port: options.port,
         watch: false,
       },

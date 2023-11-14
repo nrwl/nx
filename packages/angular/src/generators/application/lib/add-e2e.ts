@@ -79,7 +79,7 @@ function addFileServerTarget(
   projectConfig.targets[targetName] = {
     executor: '@nx/web:file-server',
     options: {
-      buildTarget: `${options.name}:build`,
+      buildTarget: 'build',
       port: options.port,
       staticFilePath: isUsingApplicationBuilder
         ? joinPathFragments(options.outputPath, 'browser')

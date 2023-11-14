@@ -393,10 +393,10 @@ describe('app', () => {
     const targets = readProjectConfiguration(tree, 'my-app').targets;
     expect(targets.serve.executor).toEqual('@nx/webpack:dev-server');
     expect(targets.serve.options).toEqual({
-      buildTarget: 'my-app:build',
+      buildTarget: 'build',
     });
     expect(targets.serve.configurations.production).toEqual({
-      buildTarget: 'my-app:build:production',
+      buildTarget: 'build:production',
     });
   });
 
@@ -425,10 +425,10 @@ describe('app', () => {
     const targets = readProjectConfiguration(tree, 'my-app').targets;
     expect(targets.serve.executor).toEqual('@nx/vite:dev-server');
     expect(targets.serve.options).toEqual({
-      buildTarget: 'my-app:build',
+      buildTarget: 'build',
     });
     expect(targets.serve.configurations.production).toEqual({
-      buildTarget: 'my-app:build:production',
+      buildTarget: 'build:production',
       hmr: false,
     });
   });
@@ -654,7 +654,7 @@ describe('app', () => {
       expect(targetConfig.build.executor).toEqual('@nx/vite:build');
       expect(targetConfig.serve.executor).toEqual('@nx/vite:dev-server');
       expect(targetConfig.serve.options).toEqual({
-        buildTarget: 'my-app:build',
+        buildTarget: 'build',
       });
     });
     it('should add dependencies in package.json', () => {

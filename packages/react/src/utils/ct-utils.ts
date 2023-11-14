@@ -1,6 +1,7 @@
 import {
   createProjectGraphAsync,
   parseTargetString,
+  ProjectConfiguration,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
@@ -58,8 +59,9 @@ function assertValidConfig(config: unknown) {
 }
 
 export async function getBundlerFromTarget(
+  tree: Tree,
   found: FoundTarget,
-  tree: Tree
+  projectConfig: ProjectConfiguration
 ): Promise<'vite' | 'webpack'> {
   if (found.target && found.config?.executor) {
     return found.config.executor === '@nrwl/vite:build' ||
@@ -68,11 +70,22 @@ export async function getBundlerFromTarget(
       : 'webpack';
   }
 
-  const { target, project } = parseTargetString(
-    found.target,
-    await createProjectGraphAsync()
-  );
-  const projectConfig = readProjectConfiguration(tree, project);
+  const graph = await createProjectGraphAsync();
+  const { target, project } = (() => {
+    try {
+      return parseTargetString(found.target, graph);
+    } catch {
+      return parseTargetString(
+        [projectConfig.name, found.target].join(':'),
+        graph
+      );
+    }
+  })();
+
+  if (project !== projectConfig.name) {
+    projectConfig = readProjectConfiguration(tree, project);
+  }
+
   const executor = projectConfig?.targets?.[target]?.executor;
   return executor === '@nrwl/vite:build' || executor === '@nx/vite:build'
     ? 'vite'

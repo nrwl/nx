@@ -57,7 +57,7 @@ export function updateModuleFederationProject(
     executor: '@nx/web:file-server',
     defaultConfiguration: 'production',
     options: {
-      buildTarget: `${options.projectName}:build`,
+      buildTarget: 'build',
       watch: false,
       port: options.devServerPort,
     },

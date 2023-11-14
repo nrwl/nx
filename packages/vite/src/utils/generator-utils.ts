@@ -256,7 +256,7 @@ export function addOrChangeServeTarget(
   if (project.targets[target]) {
     const serveTarget = project.targets[target];
     const serveOptions: ViteDevServerExecutorOptions = {
-      buildTarget: `${options.project}:build`,
+      buildTarget: `build`,
       https: project.targets[target].options?.https,
       hmr: project.targets[target].options?.hmr,
       open: project.targets[target].options?.open,
@@ -271,15 +271,15 @@ export function addOrChangeServeTarget(
       executor: '@nx/vite:dev-server',
       defaultConfiguration: 'development',
       options: {
-        buildTarget: `${options.project}:build`,
+        buildTarget: `build`,
       },
       configurations: {
         development: {
-          buildTarget: `${options.project}:build:development`,
+          buildTarget: `build:development`,
           hmr: true,
         },
         production: {
-          buildTarget: `${options.project}:build:production`,
+          buildTarget: `build:production`,
           hmr: false,
         },
       },
@@ -305,7 +305,7 @@ export function addPreviewTarget(
   const project = readProjectConfiguration(tree, options.project);
 
   const previewOptions: VitePreviewServerExecutorOptions = {
-    buildTarget: `${options.project}:build`,
+    buildTarget: `build`,
   };
 
   project.targets ??= {};
@@ -327,10 +327,10 @@ export function addPreviewTarget(
     options: previewOptions,
     configurations: {
       development: {
-        buildTarget: `${options.project}:build:development`,
+        buildTarget: `build:development`,
       },
       production: {
-        buildTarget: `${options.project}:build:production`,
+        buildTarget: `build:production`,
       },
     },
   };

@@ -90,11 +90,11 @@ describe('webpackProject', () => {
       serve: {
         executor: '@nx/webpack:dev-server',
         options: {
-          buildTarget: 'mypkg:build',
+          buildTarget: 'build',
         },
         configurations: {
           production: {
-            buildTarget: `mypkg:build:production`,
+            buildTarget: `build:production`,
           },
         },
       },
