@@ -2,7 +2,7 @@ name: E2E matrix
 
 on:
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 5 * * *"
   workflow_dispatch:
     inputs:
       debug_enabled:

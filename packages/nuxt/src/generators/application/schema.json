@@ -42,7 +42,7 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["jest", "vitest", "none"],
+      "enum": ["vitest", "none"],
       "description": "Test runner to use for unit tests.",
       "x-prompt": "Which unit test runner would you like to use?",
       "default": "none"
@@ -80,7 +80,24 @@
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",
-      "default": "css"
+      "alias": "s",
+      "default": "css",
+      "x-prompt": {
+        "message": "Which stylesheet format would you like to use?",
+        "type": "list",
+        "items": [
+          { "value": "css", "label": "CSS" },
+          {
+            "value": "scss",
+            "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+          },
+          {
+            "value": "less",
+            "label": "LESS              [ http://lesscss.org            ]"
+          },
+          { "value": "none", "label": "None" }
+        ]
+      }
     },
     "setParserOptionsProject": {
       "type": "boolean",

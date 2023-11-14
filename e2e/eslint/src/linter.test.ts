@@ -8,6 +8,7 @@ import {
   newProject,
   readFile,
   readJson,
+  renameFile,
   runCLI,
   runCreateWorkspace,
   setMaxWorkers,
@@ -16,13 +17,6 @@ import {
   updateJson,
 } from '@nx/e2e/utils';
 import * as ts from 'typescript';
-
-/**
- * Importing this helper from @typescript-eslint/type-utils to ensure
- * compatibility with TS < 4.8 due to the API change in TS4.8.
- * This helper allows for support of TS <= 4.8.
- */
-import { getModifiers } from '@typescript-eslint/type-utils';
 
 describe('Linter', () => {
   describe('Integrated', () => {
@@ -494,7 +488,7 @@ describe('Linter', () => {
           `libs/${mylib}/src/lib/${mylib}.ts`,
           (content) =>
             `import { names } from '@nx/devkit';\n\n` +
-            content.replace(/return .*;/, `return names(${mylib}).className;`)
+            content.replace(/=> .*;/, `=> names(${mylib}).className;`)
         );
 
         // output should now report missing dependency
@@ -549,6 +543,7 @@ describe('Linter', () => {
     it('should convert integrated to flat config', () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
+      const mylib2 = uniq('mylib2');
 
       runCreateWorkspace(myapp, {
         preset: 'react-monorepo',
@@ -561,18 +556,34 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/js:lib ${mylib} --directory libs/${mylib} --projectNameAndRootFormat as-provided`
       );
+      runCLI(
+        `generate @nx/js:lib ${mylib2} --directory libs/${mylib2} --projectNameAndRootFormat as-provided`
+      );
 
       // migrate to flat structure
       runCLI(`generate @nx/eslint:convert-to-flat-config`);
       checkFilesExist(
         'eslint.config.js',
         `apps/${myapp}/eslint.config.js`,
-        `libs/${mylib}/eslint.config.js`
+        `libs/${mylib}/eslint.config.js`,
+        `libs/${mylib2}/eslint.config.js`
       );
       checkFilesDoNotExist(
         '.eslintrc.json',
         `apps/${myapp}/.eslintrc.json`,
-        `libs/${mylib}/.eslintrc.json`
+        `libs/${mylib}/.eslintrc.json`,
+        `libs/${mylib2}/.eslintrc.json`
+      );
+
+      // move eslint.config one step up
+      // to test the absence of the flat eslint config in the project root folder
+      renameFile(`libs/${mylib2}/eslint.config.js`, `libs/eslint.config.js`);
+      updateFile(
+        `libs/eslint.config.js`,
+        readFile(`libs/eslint.config.js`).replace(
+          `../../eslint.config.js`,
+          `../eslint.config.js`
+        )
       );
 
       const outFlat = runCLI(`affected -t lint`, {
@@ -680,7 +691,9 @@ describe('Linter', () => {
       // should have plugin extends
       expect(appEslint.overrides[0].extends).toBeDefined();
       expect(appEslint.overrides[1].extends).toBeDefined();
-      expect(e2eEslint.overrides[0].extends).toBeDefined();
+      expect(
+        e2eEslint.overrides.some((override) => override.extends)
+      ).toBeTruthy();
 
       runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -691,7 +704,9 @@ describe('Linter', () => {
       // should have no plugin extends
       expect(appEslint.overrides[0].extends).toBeUndefined();
       expect(appEslint.overrides[1].extends).toBeUndefined();
-      expect(e2eEslint.overrides[0].extends).toBeUndefined();
+      expect(
+        e2eEslint.overrides.some((override) => override.extends)
+      ).toBeFalsy();
     });
 
     it('(Angular standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
@@ -708,7 +723,9 @@ describe('Linter', () => {
 
       // should have plugin extends
       expect(appEslint.overrides[1].extends).toBeDefined();
-      expect(e2eEslint.overrides[0].extends).toBeDefined();
+      expect(
+        e2eEslint.overrides.some((override) => override.extends)
+      ).toBeTruthy();
 
       runCLI(`generate @nx/js:lib ${mylib} --no-interactive`);
       verifySuccessfulMigratedSetup(myapp, mylib);
@@ -720,7 +737,9 @@ describe('Linter', () => {
       expect(appEslint.overrides[1].extends).toEqual([
         'plugin:@nx/angular-template',
       ]);
-      expect(e2eEslint.overrides[0].extends).toBeUndefined();
+      expect(
+        e2eEslint.overrides.some((override) => override.extends)
+      ).toBeFalsy();
     });
 
     it('(Node standalone) should set root project config to app and e2e app and migrate when another lib is added', async () => {
@@ -839,7 +858,7 @@ function updateGeneratedRuleImplementation(
         ) {
           return ts.factory.updateMethodDeclaration(
             node,
-            getModifiers(node),
+            node.modifiers,
             node.asteriskToken,
             node.name,
             node.questionToken,

@@ -24,6 +24,10 @@ npm install -D @nx/react
 yarn add -D @nx/react
 ```
 
+{% callout type="note" title="React Tutorials" %}
+For a full tutorial experience, follow the [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial) or the [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+{% /callout %}
+
 ### Creating Applications and Libraries
 
 You can add a new application with the following:
@@ -124,6 +128,8 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
+- [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial)
+- [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
 - [Using Cypress](/nx-api/cypress)
 - [Using Jest](/nx-api/jest)
 - [Using Storybook](/recipes/storybook/overview-react)

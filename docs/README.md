@@ -149,6 +149,8 @@ You can also statically highlight a set of lines (the user won't be able to chan
 ‎```
 ````
 
+You can also specify ranges like `highlightLines=[2,3,"8-10"]`.
+
 #### Terminal command
 
 To display a terminal command, use:
@@ -220,16 +222,6 @@ We can display a special button inviting the reader to go to a VSCode marketplac
 
 ```markdown
 {% install-nx-console /%}
-```
-
-#### Nx Cloud section
-
-We can display Nx Cloud related content in the documentation with a visual cue.
-
-```markdown
-{% nx-cloud-section %}
-Your content goes here.
-{% /nx-cloud-section %}
 ```
 
 #### Side by side

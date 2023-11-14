@@ -1,10 +1,7 @@
-import { basename, dirname, relative, resolve } from 'path';
-import { statSync } from 'fs';
-import { normalizePath } from '@nx/devkit';
+import { resolve } from 'path';
 
+import { normalizeAssets } from '../../../plugins/nx-webpack-plugin/lib/normalize-options';
 import type {
-  AssetGlobPattern,
-  FileReplacement,
   NormalizedWebpackExecutorOptions,
   WebpackExecutorOptions,
 } from '../schema';
@@ -21,11 +18,7 @@ export function normalizeOptions(
     projectRoot,
     sourceRoot,
     target: options.target ?? 'web',
-    main: resolve(root, options.main),
-    outputPath: resolve(root, options.outputPath),
     outputFileName: options.outputFileName ?? 'main.js',
-    tsConfig: resolve(root, options.tsConfig),
-    fileReplacements: normalizeFileReplacements(root, options.fileReplacements),
     assets: normalizeAssets(options.assets, root, sourceRoot),
     webpackConfig: normalizePluginPath(options.webpackConfig, root),
     optimization:
@@ -35,18 +28,7 @@ export function normalizeOptions(
             styles: options.optimization,
           }
         : options.optimization,
-    polyfills: options.polyfills ? resolve(root, options.polyfills) : undefined,
   };
-}
-
-function normalizeFileReplacements(
-  root: string,
-  fileReplacements: FileReplacement[]
-): FileReplacement[] {
-  return fileReplacements.map((fileReplacement) => ({
-    replace: resolve(root, fileReplacement.replace),
-    with: resolve(root, fileReplacement.with),
-  }));
 }
 
 export function normalizePluginPath(pluginPath: void | string, root: string) {
@@ -58,51 +40,4 @@ export function normalizePluginPath(pluginPath: void | string, root: string) {
   } catch {
     return resolve(root, pluginPath);
   }
-}
-
-export function normalizeAssets(
-  assets: any[],
-  root: string,
-  sourceRoot: string
-): AssetGlobPattern[] {
-  return assets.map((asset) => {
-    if (typeof asset === 'string') {
-      const assetPath = normalizePath(asset);
-      const resolvedAssetPath = resolve(root, assetPath);
-      const resolvedSourceRoot = resolve(root, sourceRoot);
-
-      if (!resolvedAssetPath.startsWith(resolvedSourceRoot)) {
-        throw new Error(
-          `The ${resolvedAssetPath} asset path must start with the project source root: ${sourceRoot}`
-        );
-      }
-
-      const isDirectory = statSync(resolvedAssetPath).isDirectory();
-      const input = isDirectory
-        ? resolvedAssetPath
-        : dirname(resolvedAssetPath);
-      const output = relative(resolvedSourceRoot, resolve(root, input));
-      const glob = isDirectory ? '**/*' : basename(resolvedAssetPath);
-      return {
-        input,
-        output,
-        glob,
-      };
-    } else {
-      if (asset.output.startsWith('..')) {
-        throw new Error(
-          'An asset cannot be written to a location outside of the output path.'
-        );
-      }
-
-      const assetPath = normalizePath(asset.input);
-      const resolvedAssetPath = resolve(root, assetPath);
-      return {
-        ...asset,
-        input: resolvedAssetPath,
-        // Now we remove starting slash to make Webpack place it from the output root.
-        output: asset.output.replace(/^\//, ''),
-      };
-    }
-  });
 }

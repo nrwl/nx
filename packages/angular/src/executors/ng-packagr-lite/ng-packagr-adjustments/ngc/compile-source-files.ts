@@ -20,10 +20,10 @@ import {
 } from 'ng-packagr/lib/ng-package/nodes';
 import { augmentProgramWithVersioning } from 'ng-packagr/lib/ts/cache-compiler-host';
 import * as log from 'ng-packagr/lib/utils/log';
-import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import { join } from 'node:path';
 import * as ts from 'typescript';
 import { getInstalledAngularVersionInfo } from '../../../utilities/angular-version-utils';
+import { ngCompilerCli } from '../../../utilities/ng-compiler-cli';
 import { NgPackagrOptions } from '../ng-package/options.di';
 import { StylesheetProcessor } from '../styles/stylesheet-processor';
 import { cacheCompilerHost } from '../ts/cache-compiler-host';
@@ -230,6 +230,26 @@ export async function compileSourceFiles(
   }
 
   const transformers = angularCompiler.prepareEmit().transformers;
+
+  if ('getSemanticDiagnosticsOfNextAffectedFile' in builder) {
+    while (
+      builder.emitNextAffectedFile(
+        (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
+          if (fileName.endsWith('.tsbuildinfo')) {
+            tsCompilerHost.writeFile(
+              fileName,
+              data,
+              writeByteOrderMark,
+              onError,
+              sourceFiles
+            );
+          }
+        }
+      )
+    ) {
+      // empty
+    }
+  }
 
   const angularVersion = getInstalledAngularVersionInfo();
   const incrementalCompilation: typeof angularCompiler.incrementalCompilation =

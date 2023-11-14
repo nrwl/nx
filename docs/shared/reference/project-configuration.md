@@ -788,3 +788,15 @@ If you only wish for some scripts to be used as Nx targets, you can specify them
   }
 }
 ```
+
+{% short-embeds %}
+{% short-video
+title="Two Places To Define Tasks"
+embedUrl="https://www.youtube.com/embed/_oFHSXxa77E" /%}
+{% short-video
+title="Nx w/ Non-JS Languages?"
+embedUrl="https://www.youtube.com/embed/VnIDJYqipdY" /%}
+{% short-video
+title="Running Many Tasks at Once"
+embedUrl="https://www.youtube.com/embed/-lyN72D13uc" /%}
+{% /short-embeds %}

@@ -2,13 +2,17 @@
 
 ### NX_BRANCH and NX_CI_EXECUTION_ID
 
-When running commands on CI, `nx-cloud` needs to know the current branch and the current CI execution ID (something that
-uniquely identifies the current CI run or job). **For most CI providers, `nx-cloud` is able to determine both
-automatically, and you don't need to do anything.** For others, you need to set the `NX_BRANCH` and `NX_CI_EXECUTION_ID`
-env variables manually. You need to set them on the main job and on all agents, and the values have to match.
+{% callout type="info" %}
+For most CI providers, `nx-cloud` is able to determine both `NX_BRANCH` and `NX_CI_EXECUTION_ID` automatically.
+{% /callout %}
 
-To make GitHub, BitBucket and GitLab integrations works, you need to set `NX_BRANCH` to the PR number, when the PR
-number is available.
+When running commands on CI, `nx-cloud` needs to know the current branch and the current CI execution ID (something that
+uniquely identifies the current CI run or job). If you find you need to provide the `NX_BRANCH` and `NX_CI_EXECUTION_ID`
+env variables manually you will need to set them on the main job _and_ on all agents. The value on the main job must match the value on the agent in each case.
+
+{% callout type="warning" title="Version Control Integrations" %}
+To make the GitHub, BitBucket and GitLab integrations work, `NX_BRANCH` must be set to the PR number, when available. Any other value will result in the integration failing and you won't get an Nx Cloud Report posted.
+{% /callout %}
 
 Nx Cloud uses `NX_CI_EXECUTION_ID` to match the agents and the main job. Sometimes you might have multiple
 main jobs (e.g., when running CI on both Linux and Windows or when running the same commands against different versions

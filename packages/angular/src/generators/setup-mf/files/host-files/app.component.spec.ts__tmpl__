@@ -10,9 +10,11 @@ describe('AppComponent', () => {
       imports: [
         RouterTestingModule.withRoutes([
           { path: '', component: NxWelcomeComponent },
-        ]),
-      ],
-      declarations: [AppComponent, NxWelcomeComponent],
+        ]),<% if (standalone) { %>
+        AppComponent,
+        NxWelcomeComponent,<% } %>
+      ],<% if (!standalone) { %>
+      declarations: [AppComponent, NxWelcomeComponent],<% } %>
     }).compileComponents();
   });
 

@@ -115,34 +115,7 @@ Learn more [about configuring inputs including `namedInputs`](/recipes/running-t
 
 ## Where is the Cache Stored?
 
-By default the cache is stored locally in your `node_modules/.cache`. Cache results are stored for a week before they get deleted. You can customize the cache location in the `nx.json`:
-
-{% tabs %}
-{% tab label="Nx >= 17" %}
-
-```json {% fileName="nx.json"%}
-{
-  "cacheDirectory": "/tmp/mycache"
-}
-```
-
-{% /tab %}
-{% tab label="Nx < 17" %}
-
-```json {% fileName="nx.json"%}
-{
-  "tasksRunnerOptions": {
-    "default": {
-      "options": {
-        "cacheDirectory": "/tmp/mycache"
-      }
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
+The cache is stored in `.nx/cache` by default. You can also [change where the cache](/recipes/running-tasks/change-cache-location) is stored if you want.
 
 ## Enable Remote Caching
 
@@ -152,7 +125,7 @@ You can enable remote caching by connecting to [Nx Cloud](/nx-cloud). To connect
 npx nx connect
 ```
 
-Learn more about [remote caching](/core-features/remote-cache).
+Learn more about [remote caching](/nx-cloud/features/remote-cache).
 
 ## Turn off or Skip the Cache
 
@@ -162,7 +135,7 @@ If you want to ignore the cache (both reads and writes), use the `--skip-nx-cach
 nx build header --skip-nx-cache
 ```
 
-Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached targets](/core-features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/core-features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
+Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached targets](/core-features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/nx-cloud/features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
 
 ## Clear the Local Cache
 

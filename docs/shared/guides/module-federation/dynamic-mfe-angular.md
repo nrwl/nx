@@ -1,5 +1,9 @@
 # Advanced Angular Micro Frontends with Dynamic Module Federation
 
+{% callout type="caution" title="Caution" %}
+This guide has not been updated for Angular 17. We will be updating it shortly.
+{% /callout %}
+
 Dynamic Module Federation is a technique that allows an application to determine the location of its remote applications at runtime. It helps to achieve the use case of **“Build once, deploy everywhere”**.
 
 “Build once, deploy everywhere” is the concept of being able to create a single build artefact of your application and deploy it to multiple environments such as staging and production.

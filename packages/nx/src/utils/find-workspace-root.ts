@@ -25,6 +25,7 @@ export interface WorkspaceTypeAndRoot {
 
 function isAngularCliInstalled(root: string): boolean {
   try {
+    // nx-ignore-next-line
     require.resolve('@angular/cli', {
       paths: [root],
     });

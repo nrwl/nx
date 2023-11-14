@@ -41,7 +41,7 @@
       "oneOf": [
         {
           "type": "array",
-          "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'. _Note: supported in Angular versions >= 15.0.0_.",
+          "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'.",
           "items": {
             "type": "string",
             "uniqueItems": true
@@ -106,7 +106,7 @@
               "input": {
                 "type": "string",
                 "description": "The file to include.",
-                "pattern": "\\.(?:css|scss|sass|less|styl)$"
+                "pattern": "\\.(?:css|scss|sass|less)$"
               },
               "bundleName": {
                 "type": "string",
@@ -125,7 +125,7 @@
           {
             "type": "string",
             "description": "The file to include.",
-            "pattern": "\\.(?:css|scss|sass|less|styl)$"
+            "pattern": "\\.(?:css|scss|sass|less)$"
           }
         ]
       },
@@ -228,7 +228,7 @@
     },
     "outputPath": {
       "type": "string",
-      "description": "The full path for the new output directory, relative to the current workspace.\n\nBy default, writes output to a folder named dist/ in the current project."
+      "description": "The full path for the new output directory, relative to the current workspace."
     },
     "resourcesOutputPath": {
       "type": "string",
@@ -278,12 +278,12 @@
     },
     "vendorChunk": {
       "type": "boolean",
-      "description": "Generate a seperate bundle containing only vendor libraries. This option should only be used for development to reduce the incremental compilation time.",
+      "description": "Generate a separate bundle containing only vendor libraries. This option should only be used for development to reduce the incremental compilation time.",
       "default": false
     },
     "commonChunk": {
       "type": "boolean",
-      "description": "Generate a seperate bundle containing code used across multiple bundles.",
+      "description": "Generate a separate bundle containing code used across multiple bundles.",
       "default": true
     },
     "baseHref": {
@@ -439,7 +439,7 @@
       "enum": ["none", "anonymous", "use-credentials"]
     },
     "allowedCommonJsDependencies": {
-      "description": "A list of CommonJS packages that are allowed to be used without a build time warning.",
+      "description": "A list of CommonJS or AMD packages that are allowed to be used without a build time warning. Use `'*'` to allow all.",
       "type": "array",
       "items": {
         "type": "string"

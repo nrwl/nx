@@ -64,7 +64,8 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
       module.exports = { ...nxPreset }`
     );
 
-    addTestInputs(tree);
+    updateProductionFileSet(tree);
+    addJestTargetDefaults(tree);
   }
   if (options.rootProject) {
     // we don't want any config to be made because the `configurationGenerator` will do it.
@@ -113,7 +114,7 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
   }
 }
 
-function addTestInputs(tree: Tree) {
+function updateProductionFileSet(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
@@ -135,14 +136,33 @@ function addTestInputs(tree: Tree) {
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
-  // Test targets depend on all their project's sources + production sources of dependencies
+  updateNxJson(tree, nxJson);
+}
+
+function addJestTargetDefaults(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  const productionFileSet = nxJson.namedInputs?.production;
+
   nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults.test ??= {};
-  nxJson.targetDefaults.test.inputs ??= [
+  nxJson.targetDefaults['@nx/jest:jest'] ??= {};
+  nxJson.targetDefaults['@nx/jest:jest'].cache ??= true;
+
+  // Test targets depend on all their project's sources + production sources of dependencies
+  nxJson.targetDefaults['@nx/jest:jest'].inputs ??= [
     'default',
     productionFileSet ? '^production' : '^default',
+    '{workspaceRoot}/jest.preset.js',
   ];
-  nxJson.targetDefaults.test.inputs.push('{workspaceRoot}/jest.preset.js');
+
+  nxJson.targetDefaults['@nx/jest:jest'].options ??= {
+    passWithNoTests: true,
+  };
+  nxJson.targetDefaults['@nx/jest:jest'].configurations ??= {
+    ci: {
+      ci: true,
+      codeCoverage: true,
+    },
+  };
 
   updateNxJson(tree, nxJson);
 }

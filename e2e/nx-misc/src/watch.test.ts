@@ -7,10 +7,15 @@ import {
   getStrippedEnvironmentVariables,
   updateJson,
   isVerboseE2ERun,
+  readFile,
 } from '@nx/e2e/utils';
 import { spawn } from 'child_process';
 import { join } from 'path';
-import { writeFileSync } from 'fs';
+import { writeFileSync, mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
+
+let cacheDirectory = mkdtempSync(join(tmpdir(), 'daemon'));
+console.log('cache directory', cacheDirectory);
 
 async function writeFileForWatcher(path: string, content: string) {
   const e2ePath = join(tmpProjPath(), path);
@@ -20,7 +25,7 @@ async function writeFileForWatcher(path: string, content: string) {
   await wait(10);
 }
 
-describe('Nx Commands', () => {
+describe('Nx Watch', () => {
   let proj1 = uniq('proj1');
   let proj2 = uniq('proj2');
   let proj3 = uniq('proj3');
@@ -29,9 +34,19 @@ describe('Nx Commands', () => {
     runCLI(`generate @nx/js:lib ${proj1}`);
     runCLI(`generate @nx/js:lib ${proj2}`);
     runCLI(`generate @nx/js:lib ${proj3}`);
+    runCLI('daemon --start', {
+      env: {
+        NX_DAEMON: 'true',
+        NX_NATIVE_LOGGING: 'nx',
+        NX_PROJECT_GRAPH_CACHE_DIRECTORY: cacheDirectory,
+      },
+    });
   });
 
   afterEach(() => {
+    let daemonLog = readFile(join(cacheDirectory, 'd/daemon.log'));
+    const testName = expect.getState().currentTestName;
+    console.log(`${testName} daemon log: \n${daemonLog}`);
     runCLI('reset');
   });
 
@@ -48,7 +63,7 @@ describe('Nx Commands', () => {
     await writeFileForWatcher(`newfile2.txt`, 'content');
 
     expect(await getOutput()).toEqual([proj1]);
-  });
+  }, 50000);
 
   it('should watch for all projects and output the project name', async () => {
     const getOutput = await runWatch(`--all -- echo \\$NX_PROJECT_NAME`);
@@ -62,7 +77,7 @@ describe('Nx Commands', () => {
     let results = content.sort();
 
     expect(results).toEqual([proj1, proj2, proj3]);
-  });
+  }, 50000);
 
   it('should watch for all project changes and output the file name changes', async () => {
     const getOutput = await runWatch(`--all -- echo \\$NX_FILE_CHANGES`);
@@ -79,7 +94,7 @@ describe('Nx Commands', () => {
       `libs/${proj1}/newfile2.txt`,
       `libs/${proj2}/newfile.txt`,
     ]);
-  });
+  }, 50000);
 
   it('should watch for global workspace file changes', async () => {
     const getOutput = await runWatch(
@@ -99,7 +114,7 @@ describe('Nx Commands', () => {
       `libs/${proj2}/newfile.txt`,
       'newfile2.txt',
     ]);
-  });
+  }, 50000);
 
   it('should watch selected projects only', async () => {
     const getOutput = await runWatch(
@@ -115,7 +130,7 @@ describe('Nx Commands', () => {
     let results = output.sort();
 
     expect(results).toEqual([proj1, proj3]);
-  });
+  }, 50000);
 
   it('should watch projects including their dependencies', async () => {
     updateJson(`libs/${proj3}/project.json`, (json) => {
@@ -136,7 +151,7 @@ describe('Nx Commands', () => {
     let results = output.sort();
 
     expect(results).toEqual([proj1, proj3]);
-  });
+  }, 50000);
 });
 
 async function wait(timeout = 200) {

@@ -204,17 +204,17 @@
             },
             {
               "name": "Use Remote Caching",
-              "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
               "id": "remote-cache",
-              "tags": ["remote-cache"],
-              "file": "shared/core-features/remote-cache"
+              "file": "",
+              "path": "/nx-cloud/features/remote-cache",
+              "isExternal": true
             },
             {
               "name": "Distribute Task Execution",
-              "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
               "id": "distribute-task-execution",
-              "tags": ["distribute-task-execution"],
-              "file": "shared/core-features/distribute-task-execution"
+              "file": "",
+              "path": "/nx-cloud/features/distribute-task-execution",
+              "isExternal": true
             },
             {
               "name": "Explore the Graph",
@@ -299,12 +299,6 @@
               "tags": ["run-tasks", "use-task-executors"],
               "id": "task-pipeline-configuration",
               "file": "shared/concepts/task-pipeline-configuration"
-            },
-            {
-              "name": "How Affected Works",
-              "tags": ["run-tasks"],
-              "id": "affected",
-              "file": "shared/using-nx/affected"
             },
             {
               "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
@@ -472,10 +466,21 @@
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
                 },
                 {
+                  "name": "Change Cache Location",
+                  "id": "change-cache-location",
+                  "file": "shared/recipes/running-tasks/change-cache-location"
+                },
+                {
                   "name": "Running Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks", "use-task-executors"],
                   "file": "shared/recipes/running-tasks/running-custom-commands"
+                },
+                {
+                  "name": "Run Tasks in Parallel",
+                  "id": "run-tasks-in-parallel",
+                  "tags": ["run-tasks"],
+                  "file": "shared/recipes/running-tasks/run-tasks-in-parallel"
                 },
                 {
                   "name": "Run Root-Level NPM Scripts with Nx",
@@ -931,51 +936,21 @@
               ]
             },
             {
-              "name": "CI",
-              "id": "ci",
-              "description": "All recipes about how to use Nx to make your CI faster.",
+              "name": "Installation",
+              "id": "installation",
+              "description": "Installing Nx",
               "itemList": [
                 {
-                  "name": "CI Setup",
-                  "id": "ci-setup",
-                  "tags": ["distribute-task-execution"],
-                  "file": "shared/ci-overview"
+                  "name": "Install Nx in a Non-Javascript Repo",
+                  "id": "install-non-javascript",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/install-non-javascript"
                 },
                 {
-                  "name": "Prepare applications for deployment via CI",
-                  "id": "ci-deployment",
-                  "tags": ["docker", "deploy"],
-                  "file": "shared/recipes/ci-deployment"
-                },
-                {
-                  "name": "Setting up Azure Pipelines",
-                  "id": "monorepo-ci-azure",
-                  "file": "shared/monorepo-ci-azure"
-                },
-                {
-                  "name": "Setting up CircleCI",
-                  "id": "monorepo-ci-circle-ci",
-                  "file": "shared/monorepo-ci-circle-ci"
-                },
-                {
-                  "name": "Setting up GitHub Actions",
-                  "id": "monorepo-ci-github-actions",
-                  "file": "shared/monorepo-ci-github-actions"
-                },
-                {
-                  "name": "Setting up Jenkins",
-                  "id": "monorepo-ci-jenkins",
-                  "file": "shared/monorepo-ci-jenkins"
-                },
-                {
-                  "name": "Setting up GitLab",
-                  "id": "monorepo-ci-gitlab",
-                  "file": "shared/monorepo-ci-gitlab"
-                },
-                {
-                  "name": "Setting up Bitbucket",
-                  "id": "monorepo-ci-bitbucket-pipelines",
-                  "file": "shared/monorepo-ci-bitbucket-pipelines"
+                  "name": "Update Your Global Nx Installation",
+                  "id": "update-global-installation",
+                  "tags": ["installation"],
+                  "file": "shared/recipes/installation/update-global-installation"
                 }
               ]
             },
@@ -1389,9 +1364,9 @@
               "file": "shared/deprecated/workspace-lint"
             },
             {
-              "name": "workspace-layout",
-              "id": "workspace-layout",
-              "file": "shared/deprecated/workspace-layout"
+              "name": "As Provided vs. Derived",
+              "id": "as-provided-vs-derived",
+              "file": "shared/deprecated/as-provided-vs-derived"
             },
             {
               "name": "Workspace Generators",
@@ -1483,7 +1458,7 @@
               "id": "nx-cloud-documentation",
               "file": "",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "path": "/nx-cloud/intro/what-is-nx-cloud",
+              "path": "/nx-cloud/intro/ci-with-nx",
               "isExternal": true
             },
             {
@@ -1665,9 +1640,9 @@
           "description": "Learn about basic Nx Cloud knowledge.",
           "itemList": [
             {
-              "name": "What is Nx Cloud?",
-              "id": "what-is-nx-cloud",
-              "file": "nx-cloud/intro/nx-cloud"
+              "name": "CI with Nx",
+              "id": "ci-with-nx",
+              "file": "nx-cloud/intro/ci-with-nx"
             },
             {
               "name": "Nx Cloud Workflows",
@@ -1677,29 +1652,173 @@
           ]
         },
         {
-          "name": "Set Up",
-          "id": "set-up",
+          "name": "Features",
+          "id": "features",
+          "description": "Features of Nx and Nx Cloud that improve CI",
+          "itemList": [
+            {
+              "name": "Use Remote Caching",
+              "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+              "id": "remote-cache",
+              "tags": ["remote-cache"],
+              "file": "shared/core-features/remote-cache"
+            },
+            {
+              "name": "Run Only Tasks Affected by a PR",
+              "tags": ["run-tasks"],
+              "id": "affected",
+              "file": "shared/using-nx/affected"
+            },
+            {
+              "name": "Distribute Task Execution",
+              "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
+              "id": "distribute-task-execution",
+              "tags": ["distribute-task-execution"],
+              "file": "shared/core-features/distribute-task-execution"
+            },
+            {
+              "name": "Set up Nx Cloud On-Premise",
+              "description": "Set up Nx Cloud on machines that you control",
+              "id": "on-premise",
+              "tags": ["on-premise"],
+              "file": "nx-cloud/private/get-started"
+            }
+          ]
+        },
+        {
+          "name": "Recipes",
+          "id": "recipes",
           "description": "Learn how to set up Nx Cloud for your workspace.",
           "itemList": [
             {
-              "name": "Record Non-Nx Commands",
-              "id": "record-commands",
-              "file": "nx-cloud/set-up/record-commands"
+              "name": "Set Up CI",
+              "id": "set-up",
+              "description": "Learn how to set up Nx Cloud for your workspace.",
+              "itemList": [
+                {
+                  "name": "CI Setup",
+                  "id": "ci-setup",
+                  "tags": ["distribute-task-execution"],
+                  "file": "shared/ci-overview"
+                },
+                {
+                  "name": "Setting up Azure Pipelines",
+                  "id": "monorepo-ci-azure",
+                  "file": "shared/monorepo-ci-azure"
+                },
+                {
+                  "name": "Setting up CircleCI",
+                  "id": "monorepo-ci-circle-ci",
+                  "file": "shared/monorepo-ci-circle-ci"
+                },
+                {
+                  "name": "Setting up GitHub Actions",
+                  "id": "monorepo-ci-github-actions",
+                  "file": "shared/monorepo-ci-github-actions"
+                },
+                {
+                  "name": "Setting up Jenkins",
+                  "id": "monorepo-ci-jenkins",
+                  "file": "shared/monorepo-ci-jenkins"
+                },
+                {
+                  "name": "Setting up GitLab",
+                  "id": "monorepo-ci-gitlab",
+                  "file": "shared/monorepo-ci-gitlab"
+                },
+                {
+                  "name": "Setting up Bitbucket",
+                  "id": "monorepo-ci-bitbucket-pipelines",
+                  "file": "shared/monorepo-ci-bitbucket-pipelines"
+                }
+              ]
             },
             {
-              "name": "Enable GitHub PR Integration",
-              "id": "github",
-              "file": "nx-cloud/set-up/github"
+              "name": "Source Control Integration",
+              "id": "source-control-integration",
+              "description": "Show Nx Cloud results directly in your pull request",
+              "itemList": [
+                {
+                  "name": "Enable GitHub PR Integration",
+                  "id": "github",
+                  "file": "nx-cloud/set-up/github"
+                },
+                {
+                  "name": "Enable Bitbucket Cloud PR Integration",
+                  "id": "bitbucket-cloud",
+                  "file": "nx-cloud/set-up/bitbucket-cloud"
+                },
+                {
+                  "name": "Enable GitLab MR Integration",
+                  "id": "gitlab",
+                  "file": "nx-cloud/set-up/gitlab"
+                }
+              ]
             },
             {
-              "name": "Enable Bitbucket Cloud PR Integration",
-              "id": "bitbucket-cloud",
-              "file": "nx-cloud/set-up/bitbucket-cloud"
+              "name": "On-Premise",
+              "id": "on-premise",
+              "description": "Manage an on-premise installation of Nx Cloud",
+              "itemList": [
+                {
+                  "name": "Authenticate with a Single Admin",
+                  "id": "auth-single-admin",
+                  "file": "nx-cloud/private/auth-single-admin"
+                },
+                {
+                  "name": "Authenticate with GitHub",
+                  "id": "auth-github",
+                  "file": "nx-cloud/private/auth-github"
+                },
+                {
+                  "name": "On-Prem VM Setup",
+                  "id": "ami-setup",
+                  "file": "nx-cloud/private/ami-setup"
+                },
+                {
+                  "name": "Authenticate with GitLab",
+                  "id": "auth-gitlab",
+                  "file": "nx-cloud/private/auth-gitlab"
+                },
+                {
+                  "name": "Authenticate with BitBucket",
+                  "id": "auth-bitbucket",
+                  "file": "nx-cloud/private/auth-bitbucket"
+                },
+                {
+                  "name": "Authenticate via SAML",
+                  "id": "auth-saml",
+                  "file": "nx-cloud/private/auth-saml"
+                },
+                {
+                  "name": "Authenticate via SAML on Managed Version",
+                  "id": "auth-saml-managed",
+                  "file": "nx-cloud/private/auth-saml-managed"
+                },
+                {
+                  "name": "Advanced Configuration",
+                  "id": "advanced-config",
+                  "file": "nx-cloud/private/advanced-config"
+                }
+              ]
             },
             {
-              "name": "Enable GitLab MR Integration",
-              "id": "gitlab",
-              "file": "nx-cloud/set-up/gitlab"
+              "name": "Other",
+              "id": "other",
+              "description": "Learn how to set up Nx Cloud for your workspace.",
+              "itemList": [
+                {
+                  "name": "Record Non-Nx Commands",
+                  "id": "record-commands",
+                  "file": "nx-cloud/set-up/record-commands"
+                },
+                {
+                  "name": "Prepare applications for deployment via CI",
+                  "id": "ci-deployment",
+                  "tags": ["docker", "deploy"],
+                  "file": "shared/recipes/ci-deployment"
+                }
+              ]
             }
           ]
         },
@@ -1732,58 +1851,6 @@
               "name": "End to End Encryption",
               "id": "encryption",
               "file": "nx-cloud/account/encryption"
-            }
-          ]
-        },
-        {
-          "name": "Enterprise + On Prem",
-          "id": "private-cloud",
-          "description": "Learn about Nx Cloud Enterprise + On-Prem.",
-          "itemList": [
-            {
-              "name": "Get Started",
-              "id": "get-started",
-              "file": "nx-cloud/private/get-started"
-            },
-            {
-              "name": "Authenticate with a Single Admin",
-              "id": "auth-single-admin",
-              "file": "nx-cloud/private/auth-single-admin"
-            },
-            {
-              "name": "Authenticate with GitHub",
-              "id": "auth-github",
-              "file": "nx-cloud/private/auth-github"
-            },
-            {
-              "name": "On-Prem VM Setup",
-              "id": "ami-setup",
-              "file": "nx-cloud/private/ami-setup"
-            },
-            {
-              "name": "Authenticate with GitLab",
-              "id": "auth-gitlab",
-              "file": "nx-cloud/private/auth-gitlab"
-            },
-            {
-              "name": "Authenticate with BitBucket",
-              "id": "auth-bitbucket",
-              "file": "nx-cloud/private/auth-bitbucket"
-            },
-            {
-              "name": "Authenticate via SAML",
-              "id": "auth-saml",
-              "file": "nx-cloud/private/auth-saml"
-            },
-            {
-              "name": "Authenticate via SAML on Managed Version",
-              "id": "auth-saml-managed",
-              "file": "nx-cloud/private/auth-saml-managed"
-            },
-            {
-              "name": "Advanced Configuration",
-              "id": "advanced-config",
-              "file": "nx-cloud/private/advanced-config"
             }
           ]
         },
@@ -2078,6 +2145,20 @@
               "name": "Overview of the Nx Vue Plugin",
               "description": "The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace. This page also explains how to configure Vue on your Nx workspace.",
               "file": "shared/packages/vue/vue-plugin"
+            }
+          ]
+        },
+        {
+          "name": "nuxt",
+          "id": "nuxt",
+          "description": "Nuxt package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "path": "/nx-api/nuxt",
+              "name": "Overview of the Nx Nuxt Plugin",
+              "description": "The Nx Plugin for Nuxt contains generators for managing Nuxt applications within a Nx workspace. This page also explains how to configure Nuxt on your Nx workspace.",
+              "file": "shared/packages/nuxt/nuxt-plugin"
             }
           ]
         },

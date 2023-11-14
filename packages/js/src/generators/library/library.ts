@@ -74,7 +74,9 @@ export async function libraryGeneratorInternal(
 
   addProject(tree, options);
 
-  tasks.push(addProjectDependencies(tree, options));
+  if (!options.skipPackageJson) {
+    tasks.push(addProjectDependencies(tree, options));
+  }
 
   if (options.publishable) {
     tasks.push(await setupVerdaccio(tree, { ...options, skipFormat: true }));
@@ -99,6 +101,7 @@ export async function libraryGeneratorInternal(
         project: options.name,
         includeLib: true,
         includeVitest: options.unitTestRunner === 'vitest',
+        testEnvironment: options.testEnvironment,
       },
       false
     );
@@ -125,7 +128,7 @@ export async function libraryGeneratorInternal(
     const vitestTask = await vitestGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       skipFormat: true,
       testEnvironment: options.testEnvironment,
     });
@@ -136,6 +139,7 @@ export async function libraryGeneratorInternal(
         project: options.name,
         includeLib: false,
         includeVitest: true,
+        testEnvironment: options.testEnvironment,
       },
       true
     );
@@ -706,7 +710,6 @@ function addProjectDependencies(
   }
 
   // Vite is being installed in the next step if bundler is vite
-
   // noop
   return () => {};
 }

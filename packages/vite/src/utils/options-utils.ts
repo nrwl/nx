@@ -155,8 +155,13 @@ export function getViteBuildOptions(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
+  const outputPath = joinPathFragments(
+    'dist',
+    projectRoot != '.' ? projectRoot : context.projectName
+  );
+
   return {
-    outDir: relative(projectRoot, options.outputPath),
+    outDir: relative(projectRoot, options.outputPath ?? outputPath),
     emptyOutDir: options.emptyOutDir,
     reportCompressedSize: true,
     cssCodeSplit: options.cssCodeSplit,

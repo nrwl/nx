@@ -15,7 +15,10 @@ describe('Nuxt Plugin', () => {
     proj = newProject({
       unsetProjectNameAndRootFormat: false,
     });
-    runCLI(`generate @nx/nuxt:app ${app} --unitTestRunner=none`);
+    runCLI(`generate @nx/nuxt:app ${app} --unitTestRunner=vitest`);
+    runCLI(
+      `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`
+    );
   });
 
   afterAll(() => {
@@ -28,11 +31,23 @@ describe('Nuxt Plugin', () => {
     expect(result).toContain(
       `Successfully ran target build for project ${app}`
     );
+    checkFilesExist(`dist/${app}/.nuxt/nuxt.d.ts`);
+    checkFilesExist(`dist/${app}/.output/nitro.json`);
+  });
+
+  it('should test application', async () => {
+    const result = runCLI(`test ${app}`);
+    expect(result).toContain(`Successfully ran target test for project ${app}`);
+  });
+
+  it('should lint application', async () => {
+    const result = runCLI(`lint ${app}`);
+    expect(result).toContain(`Successfully ran target lint for project ${app}`);
   });
 
   it('should build storybook for app', () => {
     runCLI(
-      `generate @nx/vue:storybook-configuration ${app} --generateStories --no-interactive`
+      `generate @nx/nuxt:storybook-configuration ${app} --generateStories --no-interactive`
     );
     runCLI(`run ${app}:build-storybook --verbose`);
     checkFilesExist(`dist/storybook/${app}/index.html`);

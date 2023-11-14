@@ -239,7 +239,7 @@ function withNx(
 
       const userWebpackConfig = nextConfig.webpack;
 
-      const { createWebpackConfig } = require('../src/utils/config');
+      const { createWebpackConfig } = require('@nx/next/src/utils/config');
       nextConfig.webpack = (a, b) =>
         createWebpackConfig(
           workspaceRoot,

@@ -141,70 +141,70 @@
       },
       "standalone": {
         "type": "boolean",
-        "description": "Generate a library that uses a standalone component instead of a module as the entry point. _Note: This is only supported in Angular versions >= 14.1.0_",
-        "default": false
+        "description": "Generate a library that uses a standalone component instead of a module as the entry point.",
+        "default": true
       },
       "displayBlock": {
-        "description": "Specifies if the component generated style will contain `:host { display: block; }`. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+        "description": "Specifies if the component generated style will contain `:host { display: block; }`. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
         "type": "boolean",
         "default": false,
         "alias": "b"
       },
       "inlineStyle": {
-        "description": "Include styles inline in the component.ts file. Only CSS styles can be included inline. By default, an external styles file is created and referenced in the component.ts file. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+        "description": "Include styles inline in the component.ts file. Only CSS styles can be included inline. By default, an external styles file is created and referenced in the component.ts file. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
         "type": "boolean",
         "default": false,
         "alias": "s"
       },
       "inlineTemplate": {
-        "description": "Include template inline in the component.ts file. By default, an external template file is created and referenced in the component.ts file. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+        "description": "Include template inline in the component.ts file. By default, an external template file is created and referenced in the component.ts file. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
         "type": "boolean",
         "default": false,
         "alias": "t"
       },
       "viewEncapsulation": {
-        "description": "The view encapsulation strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+        "description": "The view encapsulation strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
         "enum": ["Emulated", "None", "ShadowDom"],
         "type": "string",
         "alias": "v"
       },
       "changeDetection": {
-        "description": "The change detection strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+        "description": "The change detection strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
         "enum": ["Default", "OnPush"],
         "type": "string",
         "default": "Default",
         "alias": "c"
       },
       "style": {
-        "description": "The file extension or preprocessor to use for style files, or `none` to skip generating the style file. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+        "description": "The file extension or preprocessor to use for style files, or `none` to skip generating the style file. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
         "type": "string",
         "default": "css",
         "enum": ["css", "scss", "sass", "less", "none"]
       },
       "skipTests": {
         "type": "boolean",
-        "description": "Do not create `spec.ts` test files for the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+        "description": "Do not create `spec.ts` test files for the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
         "default": false
       },
       "selector": {
         "type": "string",
         "format": "html-selector",
-        "description": "The HTML selector to use for this component. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_"
+        "description": "The HTML selector to use for this component. Disclaimer: This option is only valid when `--standalone` is set to `true`."
       },
       "skipSelector": {
         "type": "boolean",
         "default": false,
-        "description": "Specifies if the component should have a selector or not. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_"
+        "description": "Specifies if the component should have a selector or not. Disclaimer: This option is only valid when `--standalone` is set to `true`."
       },
       "flat": {
         "type": "boolean",
         "default": false,
-        "description": "Ensure the generated standalone component is not placed in a subdirectory. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_"
+        "description": "Ensure the generated standalone component is not placed in a subdirectory. Disclaimer: This option is only valid when `--standalone` is set to `true`."
       }
     },
     "additionalProperties": false,
     "required": ["name"],
-    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Library\" %}\n\nCreates the `my-ui-lib` library with an `ui` tag:\n\n```bash\nnx g @nx/angular:library my-ui-lib --tags=ui\n```\n\n{% /tab %}\n\n{% tab label=\"Publishable Library\" %}\n\nCreates the `my-lib` library that can be built producing an output following the Angular Package Format (APF) to be distributed as an NPM package:\n\n```bash\nnx g @nx/angular:library my-lib --publishable --import-path=@my-org/my-lib\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable Library\" %}\n\nCreates the `my-lib` library with support for incremental builds:\n\n```bash\nnx g @nx/angular:library my-lib --buildable\n```\n\n{% /tab %}\n\n{% tab label=\"Nested Folder & Import\"%}\nCreates the `my-lib` library in the `nested` directory and sets the import path to `@myorg/nested/my-lib`:\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=nested`. See the [workspace layout documentation](/deprecated/workspace-layout) for more details.\n{% /callout %}\n\n```bash\nnx g @nx/angular:library --directory=libs/nested/my-lib --importPath=@myorg/nested/my-lib my-lib\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone component\"%}\nCreates the `my-standalone-lib` library with a standalone component as an entry point instead of an ng-module. The component can be used via the `myorg-standalone-component` selector.\n\n```bash\nnx g @nx/angular:library --standalone --selector=myorg-standalone-component  my-standalone-lib\n```\n\n{% /tab %}\n",
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Library\" %}\n\nCreates the `my-ui-lib` library with an `ui` tag:\n\n```bash\nnx g @nx/angular:library my-ui-lib --tags=ui\n```\n\n{% /tab %}\n\n{% tab label=\"Publishable Library\" %}\n\nCreates the `my-lib` library that can be built producing an output following the Angular Package Format (APF) to be distributed as an NPM package:\n\n```bash\nnx g @nx/angular:library my-lib --publishable --import-path=@my-org/my-lib\n```\n\n{% /tab %}\n\n{% tab label=\"Buildable Library\" %}\n\nCreates the `my-lib` library with support for incremental builds:\n\n```bash\nnx g @nx/angular:library my-lib --buildable\n```\n\n{% /tab %}\n\n{% tab label=\"Nested Folder & Import\"%}\nCreates the `my-lib` library in the `nested` directory and sets the import path to `@myorg/nested/my-lib`:\n\n{% callout type=\"note\" title=\"Directory Flag Behavior Changes\" %}\nThe command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, use `--directory=nested`. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.\n{% /callout %}\n\n```bash\nnx g @nx/angular:library --directory=libs/nested/my-lib --importPath=@myorg/nested/my-lib my-lib\n```\n\n{% /tab %}\n",
     "presets": []
   },
   "aliases": ["lib"],

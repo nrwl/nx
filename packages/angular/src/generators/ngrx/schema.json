@@ -42,13 +42,13 @@
     },
     "parent": {
       "type": "string",
-      "description": "The path to the file where the state will be registered. For NgModule usage, this will be your `app.module.ts` for your root state, or your Feature Module for feature state. For Standalone API usage, this will be your `app.config.ts` file for your root state, or the Routes definition file for your feature state. The host directory will create/use the new state directory. _Note: The Standalone API usage is only supported in Angular versions >= 14.1.0_.",
+      "description": "The path to the file where the state will be registered. For NgModule usage, this will be your `app.module.ts` for your root state, or your Feature Module for feature state. For Standalone API usage, this will be your `app.config.ts` file for your root state, or the Routes definition file for your feature state. The host directory will create/use the new state directory.",
       "x-prompt": "What is the path to the module or Routes definition where this NgRx state should be registered?",
       "x-priority": "important"
     },
     "route": {
       "type": "string",
-      "description": "The route that the Standalone NgRx Providers should be added to. _Note: This is only supported in Angular versions >= 14.1.0_.",
+      "description": "The route that the Standalone NgRx Providers should be added to.",
       "default": "''"
     },
     "directory": {

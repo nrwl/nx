@@ -108,12 +108,14 @@ async function getSettings(
   const packageJson = existsSync(packageJsonPath)
     ? readJsonFile(packageJsonPath)
     : undefined;
-  let provider: 'v8' | 'c8' = 'v8';
+  let provider: 'v8' | 'istanbul' | 'custom';
   if (
-    packageJson?.dependencies?.['@vitest/coverage-c8'] ||
-    packageJson?.devDependencies?.['@vitest/coverage-c8']
+    packageJson?.dependencies?.['@vitest/coverage-istanbul'] ||
+    packageJson?.devDependencies?.['@vitest/coverage-istanbul']
   ) {
-    provider = 'c8';
+    provider = 'istanbul';
+  } else {
+    provider = 'v8';
   }
   const offset = relative(workspaceRoot, context.cwd);
   // if reportsDirectory is not provided vitest will remove all files in the project root
@@ -129,6 +131,18 @@ async function getSettings(
   const viteConfigPath = options.config
     ? options.config // config is expected to be from the workspace root
     : findViteConfig(joinPathFragments(context.root, projectRoot));
+
+  if (!viteConfigPath) {
+    throw new Error(
+      stripIndents`
+      Unable to load test config from config file ${viteConfigPath}.
+      
+      Please make sure that vitest is configured correctly, 
+      or use the @nx/vite:vitest generator to configure it for you.
+      You can read more here: https://nx.dev/nx-api/vite/generators/vitest
+      `
+    );
+  }
 
   const resolvedProjectRoot = resolve(workspaceRoot, projectRoot);
   const resolvedViteConfigPath = resolve(

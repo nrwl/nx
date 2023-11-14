@@ -22,10 +22,8 @@ import {
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   FileMap,
-  ProjectFileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
-  ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -34,6 +32,7 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
+import { getNxRequirePaths } from '../utils/installation-directory';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
@@ -231,7 +230,12 @@ async function updateProjectGraphWithPlugins(
   context: CreateDependenciesContext,
   initProjectGraph: ProjectGraph
 ) {
-  const plugins = await loadNxPlugins(context.nxJsonConfiguration?.plugins);
+  const plugins = await loadNxPlugins(
+    context.nxJsonConfiguration?.plugins,
+    getNxRequirePaths(),
+    context.workspaceRoot,
+    context.projects
+  );
   let graph = initProjectGraph;
   for (const { plugin } of plugins) {
     try {

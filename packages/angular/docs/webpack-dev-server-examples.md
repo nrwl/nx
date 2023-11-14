@@ -18,10 +18,10 @@ Your `project.json` file should contain a `build` and `serve` target that matche
     "executor": "@nx/angular:webpack-dev-server",
     "configurations": {
         "production": {
-            "browserTarget": "appName:build:production"
+            "buildTarget": "appName:build:production"
         },
         "development": {
-            "browserTarget": "appName:build:development"
+            "buildTarget": "appName:build:development"
         }
     },
     "defaultConfiguration": "development",

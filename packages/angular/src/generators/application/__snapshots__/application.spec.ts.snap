@@ -9,10 +9,7 @@ import { appRoutes } from './app.routes';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-  ],
+  imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
   providers: [],
   bootstrap: [AppComponent],
 })
@@ -26,7 +23,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 @Component({
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {}
 "
@@ -84,7 +81,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
 @Component({
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {}
 "
@@ -128,7 +125,7 @@ import { RouterModule } from '@angular/router';
   imports: [RouterModule],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {}
 "
@@ -172,7 +169,7 @@ exports[`app --minimal should skip "nx-welcome.component.ts" file and references
   imports: [],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {}
 "
@@ -219,12 +216,9 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "build": {
       "configurations": {
         "development": {
-          "buildOptimizer": false,
           "extractLicenses": false,
-          "namedChunks": true,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": true,
         },
         "production": {
           "budgets": [
@@ -243,14 +237,14 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
           "apps/my-dir/my-app/src/favicon.ico",
           "apps/my-dir/my-app/src/assets",
         ],
+        "browser": "apps/my-dir/my-app/src/main.ts",
         "index": "apps/my-dir/my-app/src/index.html",
-        "main": "apps/my-dir/my-app/src/main.ts",
         "outputPath": "dist/apps/my-dir/my-app",
         "polyfills": [
           "zone.js",
@@ -268,7 +262,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "my-dir-my-app:build",
+        "buildTarget": "my-dir-my-app:build",
       },
     },
     "lint": {
@@ -286,10 +280,10 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "serve": {
       "configurations": {
         "development": {
-          "browserTarget": "my-dir-my-app:build:development",
+          "buildTarget": "my-dir-my-app:build:development",
         },
         "production": {
-          "browserTarget": "my-dir-my-app:build:production",
+          "buildTarget": "my-dir-my-app:build:production",
         },
       },
       "defaultConfiguration": "development",
@@ -299,19 +293,13 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-dir-my-app:build",
+        "staticFilePath": "dist/apps/my-dir/my-app/browser",
       },
     },
     "test": {
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true,
-        },
-      },
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "apps/my-dir/my-app/jest.config.ts",
-        "passWithNoTests": true,
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
@@ -369,6 +357,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -383,9 +372,12 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   },
   "extends": "../../../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;
@@ -420,6 +412,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "strictTemplates": true,
   },
   "compilerOptions": {
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -459,12 +452,9 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "build": {
       "configurations": {
         "development": {
-          "buildOptimizer": false,
           "extractLicenses": false,
-          "namedChunks": true,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": true,
         },
         "production": {
           "budgets": [
@@ -483,14 +473,14 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
           "apps/my-app/src/favicon.ico",
           "apps/my-app/src/assets",
         ],
+        "browser": "apps/my-app/src/main.ts",
         "index": "apps/my-app/src/index.html",
-        "main": "apps/my-app/src/main.ts",
         "outputPath": "dist/apps/my-app",
         "polyfills": [
           "zone.js",
@@ -508,7 +498,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "my-app:build",
+        "buildTarget": "my-app:build",
       },
     },
     "lint": {
@@ -526,10 +516,10 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "serve": {
       "configurations": {
         "development": {
-          "browserTarget": "my-app:build:development",
+          "buildTarget": "my-app:build:development",
         },
         "production": {
-          "browserTarget": "my-app:build:production",
+          "buildTarget": "my-app:build:production",
         },
       },
       "defaultConfiguration": "development",
@@ -539,19 +529,13 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "staticFilePath": "dist/apps/my-app/browser",
       },
     },
     "test": {
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true,
-        },
-      },
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "apps/my-app/jest.config.ts",
-        "passWithNoTests": true,
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
@@ -609,6 +593,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -623,9 +608,12 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
   },
   "extends": "../../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;
@@ -660,6 +648,7 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     "strictTemplates": true,
   },
   "compilerOptions": {
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -699,14 +688,11 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 
 exports[`app --standalone should generate a standalone app correctly with routing 2`] = `
 "import { ApplicationConfig } from '@angular/core';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+  providers: [provideRouter(appRoutes)],
 };
 "
 `;
@@ -728,7 +714,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
   title = 'standalone';
@@ -796,7 +782,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   imports: [NxWelcomeComponent],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
   title = 'standalone';
@@ -843,6 +829,7 @@ exports[`app --strict should enable strict type checking: app tsconfig.json 1`] 
     "strictTemplates": true,
   },
   "compilerOptions": {
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
@@ -874,6 +861,7 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -888,11 +876,25 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
   },
   "extends": "../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
+`;
+
+exports[`app angular v15 support should import "ApplicationConfig" from "@angular/platform-browser" 1`] = `
+"import { ApplicationConfig } from '@angular/platform-browser';
+import { provideRouter } from '@angular/router';
+import { appRoutes } from './app.routes';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideRouter(appRoutes)],
+};
+"
 `;
 
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
@@ -910,12 +912,9 @@ exports[`app nested should create project configs 1`] = `
     "build": {
       "configurations": {
         "development": {
-          "buildOptimizer": false,
           "extractLicenses": false,
-          "namedChunks": true,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": true,
         },
         "production": {
           "budgets": [
@@ -934,14 +933,14 @@ exports[`app nested should create project configs 1`] = `
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
           "my-dir/my-app/src/favicon.ico",
           "my-dir/my-app/src/assets",
         ],
+        "browser": "my-dir/my-app/src/main.ts",
         "index": "my-dir/my-app/src/index.html",
-        "main": "my-dir/my-app/src/main.ts",
         "outputPath": "dist/my-dir/my-app",
         "polyfills": [
           "zone.js",
@@ -959,7 +958,7 @@ exports[`app nested should create project configs 1`] = `
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "my-app:build",
+        "buildTarget": "my-app:build",
       },
     },
     "lint": {
@@ -977,10 +976,10 @@ exports[`app nested should create project configs 1`] = `
     "serve": {
       "configurations": {
         "development": {
-          "browserTarget": "my-app:build:development",
+          "buildTarget": "my-app:build:development",
         },
         "production": {
-          "browserTarget": "my-app:build:production",
+          "buildTarget": "my-app:build:production",
         },
       },
       "defaultConfiguration": "development",
@@ -990,19 +989,13 @@ exports[`app nested should create project configs 1`] = `
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "staticFilePath": "dist/my-dir/my-app/browser",
       },
     },
     "test": {
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true,
-        },
-      },
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "my-dir/my-app/jest.config.ts",
-        "passWithNoTests": true,
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
@@ -1068,12 +1061,9 @@ exports[`app not nested should create project configs 1`] = `
     "build": {
       "configurations": {
         "development": {
-          "buildOptimizer": false,
           "extractLicenses": false,
-          "namedChunks": true,
           "optimization": false,
           "sourceMap": true,
-          "vendorChunk": true,
         },
         "production": {
           "budgets": [
@@ -1092,14 +1082,14 @@ exports[`app not nested should create project configs 1`] = `
         },
       },
       "defaultConfiguration": "production",
-      "executor": "@angular-devkit/build-angular:browser",
+      "executor": "@angular-devkit/build-angular:application",
       "options": {
         "assets": [
           "my-app/src/favicon.ico",
           "my-app/src/assets",
         ],
+        "browser": "my-app/src/main.ts",
         "index": "my-app/src/index.html",
-        "main": "my-app/src/main.ts",
         "outputPath": "dist/my-app",
         "polyfills": [
           "zone.js",
@@ -1117,7 +1107,7 @@ exports[`app not nested should create project configs 1`] = `
     "extract-i18n": {
       "executor": "@angular-devkit/build-angular:extract-i18n",
       "options": {
-        "browserTarget": "my-app:build",
+        "buildTarget": "my-app:build",
       },
     },
     "lint": {
@@ -1135,10 +1125,10 @@ exports[`app not nested should create project configs 1`] = `
     "serve": {
       "configurations": {
         "development": {
-          "browserTarget": "my-app:build:development",
+          "buildTarget": "my-app:build:development",
         },
         "production": {
-          "browserTarget": "my-app:build:production",
+          "buildTarget": "my-app:build:production",
         },
       },
       "defaultConfiguration": "development",
@@ -1148,19 +1138,13 @@ exports[`app not nested should create project configs 1`] = `
       "executor": "@nx/web:file-server",
       "options": {
         "buildTarget": "my-app:build",
+        "staticFilePath": "dist/my-app/browser",
       },
     },
     "test": {
-      "configurations": {
-        "ci": {
-          "ci": true,
-          "codeCoverage": true,
-        },
-      },
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "my-app/jest.config.ts",
-        "passWithNoTests": true,
       },
       "outputs": [
         "{workspaceRoot}/coverage/{projectRoot}",
@@ -1218,6 +1202,7 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
   "compilerOptions": {
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -1232,9 +1217,12 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
   },
   "extends": "../tsconfig.base.json",
   "include": [
-    "src/**/*.ts",
-    "src/**/*.js",
+    "**/*.ts",
+    "**/*.js",
     "cypress.config.ts",
+    "**/*.cy.ts",
+    "**/*.cy.js",
+    "**/*.d.ts",
   ],
 }
 `;
@@ -1269,6 +1257,7 @@ exports[`app not nested should generate files: tsconfig.json 1`] = `
     "strictTemplates": true,
   },
   "compilerOptions": {
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,

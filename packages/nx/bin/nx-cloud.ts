@@ -44,6 +44,11 @@ async function invokeCommandWithNxCloudClient(options: CloudTaskRunnerOptions) {
     const body = ['Cannot run commands from the `nx-cloud` CLI.'];
 
     if (e instanceof NxCloudEnterpriseOutdatedError) {
+      try {
+        // TODO: Remove this when all enterprise customers have updated.
+        // Try requiring the bin from the `nx-cloud` package.
+        return require('nx-cloud/bin/nx-cloud');
+      } catch {}
       body.push(
         'If you are an Nx Enterprise customer, please reach out to your assigned Developer Productivity Engineer.',
         'If you are NOT an Nx Enterprise customer but are seeing this message, please reach out to cloud-support@nrwl.io.'

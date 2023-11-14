@@ -28,10 +28,10 @@ describe('Angular Projects', () => {
   beforeAll(() => {
     proj = newProject();
     runCLI(
-      `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:lib ${lib1} --add-module-spec --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib1} --no-standalone --add-module-spec --project-name-and-root-format=as-provided --no-interactive`
     );
     app1DefaultModule = readFile(`${app1}/src/app/app.module.ts`);
     app1DefaultComponentTemplate = readFile(
@@ -52,7 +52,7 @@ describe('Angular Projects', () => {
   it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
-      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --standalone=true --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );
 
     const esbuildApp = uniq('esbuild-app');
@@ -65,12 +65,18 @@ describe('Angular Projects', () => {
       `
         import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
-        import { ${names(lib1).className}Module } from '@${proj}/${lib1}';
+        import { RouterModule } from '@angular/router';
         import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
         import { NxWelcomeComponent } from './nx-welcome.component';
+        import { ${names(lib1).className}Module } from '@${proj}/${lib1}';
 
         @NgModule({
-          imports: [BrowserModule, ${names(lib1).className}Module],
+          imports: [
+            BrowserModule,
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+            ${names(lib1).className}Module
+          ],
           declarations: [AppComponent, NxWelcomeComponent],
           bootstrap: [AppComponent]
         })
@@ -84,14 +90,14 @@ describe('Angular Projects', () => {
     );
     checkFilesExist(`dist/${app1}/main.js`);
     checkFilesExist(`dist/my-dir/${standaloneApp}/main.js`);
-    checkFilesExist(`dist/my-dir/${esbuildApp}/main.js`);
+    checkFilesExist(`dist/my-dir/${esbuildApp}/browser/main.js`);
     // This is a loose requirement because there are a lot of
     // influences external from this project that affect this.
     const es2015BundleSize = getSize(tmpProjPath(`dist/${app1}/main.js`));
     console.log(
       `The current es2015 bundle size is ${es2015BundleSize / 1000} KB`
     );
-    expect(es2015BundleSize).toBeLessThanOrEqual(160000);
+    expect(es2015BundleSize).toBeLessThanOrEqual(220000);
 
     // check unit tests
     runCLI(
@@ -195,35 +201,40 @@ describe('Angular Projects', () => {
     // ARRANGE
     const esbuildApp = uniq('esbuild-app');
     runCLI(
-      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
 
     const buildableLib = uniq('buildlib1');
     const buildableChildLib = uniq('buildlib2');
 
     runCLI(
-      `generate @nx/angular:library ${buildableLib} --buildable=true --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${buildableLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:library ${buildableChildLib} --buildable=true --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
 
     // update the app module to include a ref to the buildable lib
     updateFile(
       `${app1}/src/app/app.module.ts`,
       `
-        import { BrowserModule } from '@angular/platform-browser';
         import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
         import {${
           names(buildableLib).className
         }Module} from '@${proj}/${buildableLib}';
 
-        import { AppComponent } from './app.component';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-
         @NgModule({
           declarations: [AppComponent, NxWelcomeComponent],
-          imports: [BrowserModule, ${names(buildableLib).className}Module],
+          imports: [
+            BrowserModule,
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+            ${names(buildableLib).className}Module
+          ],
           providers: [],
           bootstrap: [AppComponent],
         })
@@ -233,18 +244,23 @@ describe('Angular Projects', () => {
     updateFile(
       `${esbuildApp}/src/app/app.module.ts`,
       `
-        import { BrowserModule } from '@angular/platform-browser';
         import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
         import {${
           names(buildableLib).className
         }Module} from '@${proj}/${buildableLib}';
 
-        import { AppComponent } from './app.component';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-
         @NgModule({
           declarations: [AppComponent, NxWelcomeComponent],
-          imports: [BrowserModule, ${names(buildableLib).className}Module],
+          imports: [
+            BrowserModule,
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+            ${names(buildableLib).className}Module
+          ],
           providers: [],
           bootstrap: [AppComponent],
         })
@@ -283,6 +299,9 @@ describe('Angular Projects', () => {
       config.targets.build.executor = '@nx/angular:browser-esbuild';
       config.targets.build.options = {
         ...config.targets.build.options,
+        outputPath: `dist/${esbuildApp}`,
+        main: config.targets.build.options.browser,
+        browser: undefined,
         buildLibsFromSource: false,
       };
       return config;
@@ -316,14 +335,14 @@ describe('Angular Projects', () => {
     const entryPoint = uniq('entrypoint');
 
     runCLI(
-      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib} --publishable --importPath=@${proj}/${lib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
       `generate @nx/angular:secondary-entry-point --name=${entryPoint} --library=${lib} --no-interactive`
     );
 
     runCLI(
-      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:library ${childLib} --publishable=true --importPath=@${proj}/${childLib} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
       `generate @nx/angular:secondary-entry-point --name=sub --library=${childLib} --no-interactive`
@@ -359,7 +378,7 @@ describe('Angular Projects', () => {
     const libName = uniq('lib1');
 
     runCLI(
-      `generate @nx/angular:app ${appName} --project-name-and-root-format=derived --no-interactive`
+      `generate @nx/angular:app ${appName} --no-standalone --project-name-and-root-format=derived --no-interactive`
     );
 
     // check files are generated with the layout directory ("apps/")
@@ -375,7 +394,7 @@ describe('Angular Projects', () => {
     );
 
     runCLI(
-      `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=derived`
+      `generate @nx/angular:lib ${libName} --no-standalone --buildable --project-name-and-root-format=derived`
     );
 
     // check files are generated with the layout directory ("libs/")
@@ -400,12 +419,12 @@ describe('Angular Projects', () => {
     // assert scoped project names are not supported when --project-name-and-root-format=derived
     expect(() =>
       runCLI(
-        `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=derived`
+        `generate @nx/angular:lib ${libName} --buildable --no-standalone --project-name-and-root-format=derived`
       )
     ).toThrow();
 
     runCLI(
-      `generate @nx/angular:lib ${libName} --buildable --project-name-and-root-format=as-provided`
+      `generate @nx/angular:lib ${libName} --buildable --no-standalone --project-name-and-root-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and

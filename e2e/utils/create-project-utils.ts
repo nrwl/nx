@@ -151,6 +151,7 @@ export function runCreateWorkspace(
     docker,
     nextAppDir,
     e2eTestRunner,
+    ssr,
   }: {
     preset: string;
     appName?: string;
@@ -167,6 +168,7 @@ export function runCreateWorkspace(
     docker?: boolean;
     nextAppDir?: boolean;
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
+    ssr?: boolean;
   }
 ) {
   projName = name;
@@ -222,6 +224,10 @@ export function runCreateWorkspace(
 
   if (isCI) {
     command += ` --verbose`;
+  }
+
+  if (ssr !== undefined) {
+    command += ` --ssr=${ssr}`;
   }
 
   try {

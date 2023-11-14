@@ -5,7 +5,7 @@ use std::thread::available_parallelism;
 use crossbeam_channel::{unbounded, Receiver};
 use ignore::WalkBuilder;
 
-use crate::native::utils::glob::build_glob_set;
+use crate::native::glob::build_glob_set;
 
 use walkdir::WalkDir;
 
