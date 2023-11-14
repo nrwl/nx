@@ -109,6 +109,26 @@ function createFileWatcher(
   );
 }
 
+export function normalizeOptions(options: Schema, context: ExecutorContext) {
+  const result = { ...options };
+  
+  // Normalizes build target to be project:target:configuration,
+  // while keeping support for just `target` or `target:configuration`
+  if (result.buildTarget) {
+    const { target, project, configuration } = parseTargetString(
+      options.buildTarget,
+      context
+    );
+    result.buildTarget = [
+      project,
+      target,
+      ...(configuration ? [configuration] : []),
+    ].join(':');
+  }
+
+  return result;
+}
+
 export default async function* fileServerExecutor(
   options: Schema,
   context: ExecutorContext
@@ -146,8 +166,6 @@ export default async function* fileServerExecutor(
     };
 
     if (options.watch) {
-      const projectRoot =
-        context.projectsConfigurations.projects[context.projectName].root;
       disposeWatch = await createFileWatcher(context.projectName, run);
     }
 
