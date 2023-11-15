@@ -7,15 +7,10 @@ import {
   getStrippedEnvironmentVariables,
   updateJson,
   isVerboseE2ERun,
-  readFile,
 } from '@nx/e2e/utils';
 import { spawn } from 'child_process';
 import { join } from 'path';
-import { writeFileSync, mkdtempSync } from 'fs';
-import { tmpdir } from 'os';
-
-let cacheDirectory = mkdtempSync(join(tmpdir(), 'daemon'));
-console.log('cache directory', cacheDirectory);
+import { writeFileSync } from 'fs';
 
 async function writeFileForWatcher(path: string, content: string) {
   const e2ePath = join(tmpProjPath(), path);
@@ -38,15 +33,11 @@ describe('Nx Watch', () => {
       env: {
         NX_DAEMON: 'true',
         NX_NATIVE_LOGGING: 'nx',
-        NX_PROJECT_GRAPH_CACHE_DIRECTORY: cacheDirectory,
       },
     });
   });
 
   afterEach(() => {
-    let daemonLog = readFile(join(cacheDirectory, 'd/daemon.log'));
-    const testName = expect.getState().currentTestName;
-    console.log(`${testName} daemon log: \n${daemonLog}`);
     runCLI('reset');
   });
 
