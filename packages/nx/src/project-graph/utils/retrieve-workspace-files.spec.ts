@@ -1,4 +1,4 @@
-import { getDefaultPlugins } from 'nx/src/utils/nx-plugin';
+import { getDefaultPlugins } from '../../utils/nx-plugin';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { retrieveProjectConfigurationPaths } from './retrieve-workspace-files';
 

@@ -250,7 +250,7 @@ export async function loadNxPlugins(
   root = workspaceRoot,
   projects?: Record<string, ProjectConfiguration>
 ): Promise<LoadedNxPlugin[]> {
-  const result: LoadedNxPlugin[] = [...(await getDefaultPlugins(root))];
+  const result: LoadedNxPlugin[] = [];
 
   // When loading plugins for `createNodes`, we don't know what projects exist yet.
   projects ??= await retrieveProjectConfigurationsWithoutPluginInference(root);
@@ -262,10 +262,7 @@ export async function loadNxPlugins(
   }
 
   // We push the nx core node plugins onto the end, s.t. it overwrites any other plugins
-  result.push(
-    { plugin: getNxPackageJsonWorkspacesPlugin(root) },
-    { plugin: CreateProjectJsonProjectsPlugin }
-  );
+  result.push(...(await getDefaultPlugins(root)));
 
   return result;
 }
@@ -502,13 +499,17 @@ export async function getDefaultPlugins(
   const plugins: NxPluginV2[] = [
     CreatePackageJsonProjectsNextToProjectJson,
     await import('../plugins/js'),
+    ...(shouldMergeAngularProjects(root, false)
+      ? [
+          await import('../adapter/angular-json').then(
+            (m) => m.NxAngularJsonPlugin
+          ),
+        ]
+      : []),
+    getNxPackageJsonWorkspacesPlugin(root),
+    CreateProjectJsonProjectsPlugin,
   ];
 
-  if (shouldMergeAngularProjects(root, false)) {
-    plugins.push(
-      await import('../adapter/angular-json').then((m) => m.NxAngularJsonPlugin)
-    );
-  }
   return plugins.map((p) => ({
     plugin: p,
   }));

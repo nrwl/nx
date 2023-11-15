@@ -3,12 +3,9 @@ import { basename, join, relative } from 'path';
 import {
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
-  getNxPackageJsonWorkspacesPlugin,
 } from '../../../plugins/package-json-workspaces';
-import {
-  buildProjectFromProjectJson,
-  CreateProjectJsonProjectsPlugin,
-} from '../../plugins/project-json/build-nodes/project-json';
+import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
+import { getDefaultPluginsSync } from '../../utils/nx-plugin.deprecated';
 import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {
   ProjectConfiguration,
@@ -28,7 +25,6 @@ import { readNxJson } from './nx-json';
 import type { Tree } from '../tree';
 
 import minimatch = require('minimatch');
-import { getDefaultPluginsSync } from 'nx/src/utils/nx-plugin.deprecated';
 
 export { readNxJson, updateNxJson } from './nx-json';
 
@@ -196,7 +192,6 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
       readJson(tree, p)
     ),
   ];
-
   const globbedFiles = retrieveProjectConfigurationPaths(
     tree.root,
     getDefaultPluginsSync(tree.root)

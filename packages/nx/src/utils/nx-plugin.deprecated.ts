@@ -1,6 +1,9 @@
+import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
 import { shouldMergeAngularProjects } from '../adapter/angular-json';
 import { ProjectGraphProcessor } from '../config/project-graph';
 import { TargetConfiguration } from '../config/workspace-json-project-json';
+import { CreatePackageJsonProjectsNextToProjectJson } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
+import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
 import { LoadedNxPlugin, NxPluginV2 } from './nx-plugin';
 
 /**
@@ -37,11 +40,16 @@ export type NxPluginV1 = {
  * @todo(@agentender) v18: Remove this fn when we remove readWorkspaceConfig
  */
 export function getDefaultPluginsSync(root: string): LoadedNxPlugin[] {
-  const plugins: NxPluginV2[] = [require('../plugins/js')];
+  const plugins: NxPluginV2[] = [
+    CreatePackageJsonProjectsNextToProjectJson,
+    require('../plugins/js'),
+    ...(shouldMergeAngularProjects(root, false)
+      ? [require('../adapter/angular-json').NxAngularJsonPlugin]
+      : []),
+    getNxPackageJsonWorkspacesPlugin(root),
+    CreateProjectJsonProjectsPlugin,
+  ];
 
-  if (shouldMergeAngularProjects(root, false)) {
-    plugins.push(require('../adapter/angular-json').NxAngularJsonPlugin);
-  }
   return plugins.map((p) => ({
     plugin: p,
   }));
