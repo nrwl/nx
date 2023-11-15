@@ -88,6 +88,8 @@ jobs:
       NX_CI_EXECUTION_ENV: 'linux'
     steps:
       - checkout
+      - run: node -e "console.log(require('os').cpus().length)"
+      - run: cat /proc/sys/fs/inotify/max_user_watches
       - run: npx nx-cloud@next start-ci-run --distributes-on="8 linux-medium" --stop-agents-after="e2e"
       - run:
           command: |
@@ -134,6 +136,7 @@ jobs:
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
     steps:
       - checkout
+      - run: node -e "console.log(require('os').cpus().length)"
       - restore_cache:
           name: Restore Homebrew packages
           keys:
