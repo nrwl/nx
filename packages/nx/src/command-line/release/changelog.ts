@@ -630,7 +630,7 @@ async function generateChangelogForProjects(
     let contents = await changelogRenderer({
       commits,
       releaseVersion: releaseVersion.rawVersion,
-      project: null,
+      project: project.name,
       repoSlug: githubRepoSlug,
       entryWhenNoChanges:
         typeof config.entryWhenNoChanges === 'string'
