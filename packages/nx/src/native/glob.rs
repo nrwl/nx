@@ -69,11 +69,22 @@ impl NxGlobSet {
     }
 }
 
+fn potential_glob_split(
+    glob: &str,
+) -> itertools::Either<std::str::Split<char>, std::iter::Once<&str>> {
+    use itertools::Either::*;
+    if glob.starts_with('{') && glob.ends_with('}') {
+        Left(glob.trim_matches('{').trim_end_matches('}').split(','))
+    } else {
+        Right(std::iter::once(glob))
+    }
+}
+
 pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Result<NxGlobSet> {
     let result = globs
         .iter()
-        .map(|s| {
-            let glob = s.as_ref();
+        .flat_map(|s| potential_glob_split(s.as_ref()))
+        .map(|glob| {
             if glob.contains('!') || glob.contains('|') || glob.contains('(') {
                 convert_glob(glob)
             } else {
@@ -214,6 +225,12 @@ mod test {
         assert!(!glob_set.is_match("packages/package-a-b"));
         assert!(!glob_set.is_match("packages/package-a-b/nested"));
         assert!(!glob_set.is_match("packages/package-b/nested"));
+
+        let glob_set = build_glob_set(&["packages/!(package-a)*/package.json"]).unwrap();
+        assert!(glob_set.is_match("packages/package-b/package.json"));
+        assert!(glob_set.is_match("packages/package-c/package.json"));
+        assert!(!glob_set.is_match("packages/package-a/package.json"));
+        assert!(!glob_set.is_match("packages/package/a/package.json"));
     }
 
     #[test]
@@ -282,5 +299,25 @@ mod test {
         assert!(!glob_set.is_match("test.component.spec.tsx"));
         assert!(!glob_set.is_match("test.module.spec.tsx"));
         assert!(!glob_set.is_match("nested/comp.test.component.spec.ts"));
+    }
+
+    #[test]
+    fn supports_brace_expansion() {
+        let glob_set = build_glob_set(&["{packages,apps}/*"]).unwrap();
+        assert!(glob_set.is_match("packages/package-a"));
+        assert!(glob_set.is_match("apps/app-a"));
+        assert!(!glob_set.is_match("apps/app-a/nested"));
+
+        let glob_set = build_glob_set(&["{package-lock.json,yarn.lock,pnpm-lock.yaml}"]).unwrap();
+        assert!(glob_set.is_match("package-lock.json"));
+        assert!(glob_set.is_match("yarn.lock"));
+        assert!(glob_set.is_match("pnpm-lock.yaml"));
+
+        let glob_set =
+            build_glob_set(&["{packages/!(package-a)*/package.json,packages/*/package.json}"])
+                .unwrap();
+        assert!(glob_set.is_match("packages/package-b/package.json"));
+        assert!(glob_set.is_match("packages/package-c/package.json"));
+        assert!(!glob_set.is_match("packages/package-a/package.json"));
     }
 }
