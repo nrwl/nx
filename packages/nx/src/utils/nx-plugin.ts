@@ -496,7 +496,9 @@ function readPluginMainFromProjectConfiguration(
   return main;
 }
 
-async function getDefaultPlugins(root: string): Promise<LoadedNxPlugin[]> {
+export async function getDefaultPlugins(
+  root: string
+): Promise<LoadedNxPlugin[]> {
   const plugins: NxPluginV2[] = [
     CreatePackageJsonProjectsNextToProjectJson,
     await import('../plugins/js'),

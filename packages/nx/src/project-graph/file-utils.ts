@@ -17,9 +17,8 @@ import {
 } from './project-graph';
 import { toOldFormat } from '../adapter/angular-json';
 import { getIgnoreObject } from '../utils/ignore';
-import { retrieveProjectConfigurationPathsWithoutPluginInference } from './utils/retrieve-workspace-files';
+import { retrieveProjectConfigurationPaths } from './utils/retrieve-workspace-files';
 import {
-  buildProjectsConfigurationsFromProjectPathsAndPlugins,
   mergeProjectConfigurationIntoRootMap,
   readProjectConfigurationsFromRootMap,
 } from './utils/project-configuration-utils';
@@ -181,8 +180,10 @@ export { readNxJson, workspaceLayout } from '../config/configuration';
  * TODO(v18): Remove this function.
  */
 function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
-  const projectFiles =
-    retrieveProjectConfigurationPathsWithoutPluginInference(root);
+  const projectFiles = retrieveProjectConfigurationPaths(
+    root,
+    getDefaultPluginsSync(root)
+  );
   const plugins = getDefaultPluginsSync(root);
 
   const projectRootMap: Map<string, ProjectConfiguration> = new Map();
