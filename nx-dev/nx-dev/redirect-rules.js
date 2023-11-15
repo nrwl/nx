@@ -437,6 +437,13 @@ const nxCloudUrls = {
     '/nx-cloud/recipes/on-premise/auth-saml-managed',
   '/nx-cloud/private-cloud/advanced-config':
     '/nx-cloud/recipes/on-premise/advanced-config',
+  '/concepts/dte': '/nx-cloud/concepts/dte',
+  '/nx-cloud/intro/nx-cloud-workflows': '/nx-cloud/concepts/nx-cloud-workflows',
+  '/nx-cloud/account': '/nx-cloud/recipes/security',
+  '/nx-cloud/account/google-auth': '/nx-cloud/recipes/security/google-auth',
+  '/nx-cloud/account/access-tokens': '/nx-cloud/recipes/security/access-tokens',
+  '/nx-cloud/account/scenarios': '/nx-cloud/concepts/scenarios',
+  '/nx-cloud/account/encryption': '/nx-cloud/concepts/encryption',
 };
 
 /**
