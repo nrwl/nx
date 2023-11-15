@@ -4,6 +4,7 @@
     "defaultBase": "master"
   },
   "namedInputs": {
+    "bust": ["default"],
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
       "default",
