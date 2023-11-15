@@ -21,6 +21,7 @@ import {
   getNxPackageJsonWorkspacesPlugin,
 } from '../../../plugins/package-json-workspaces';
 import {
+  ConfigurationSourceMaps,
   SourceInformation,
   buildProjectsConfigurationsFromProjectPathsAndPlugins,
 } from './project-configuration-utils';
@@ -59,7 +60,7 @@ export async function retrieveWorkspaceFiles(
   performance.mark('get-workspace-files:start');
   let projects: Record<string, ProjectConfiguration>;
   let externalNodes: Record<string, ProjectGraphExternalNode>;
-  let sourceMaps: Record<string, Record<string, SourceInformation>>;
+  let sourceMaps: ConfigurationSourceMaps;
 
   const { projectFileMap, globalFiles } = (await getNxWorkspaceFilesFromContext(
     workspaceRoot,
@@ -113,7 +114,7 @@ export async function retrieveProjectConfigurations(
 ): Promise<{
   externalNodes: Record<string, ProjectGraphExternalNode>;
   projectNodes: Record<string, ProjectConfiguration>;
-  sourceMaps: Record<string, Record<string, SourceInformation>>;
+  sourceMaps: ConfigurationSourceMaps;
 }> {
   const plugins = await loadNxPlugins(
     nxJson?.plugins ?? [],
@@ -131,7 +132,7 @@ export async function retrieveProjectConfigurationsWithAngularProjects(
 ): Promise<{
   externalNodes: Record<string, ProjectGraphExternalNode>;
   projectNodes: Record<string, ProjectConfiguration>;
-  sourceMaps: Record<string, Record<string, SourceInformation>>;
+  sourceMaps: ConfigurationSourceMaps;
 }> {
   const plugins = await loadNxPlugins(
     nxJson?.plugins ?? [],
@@ -158,12 +159,12 @@ function _retrieveProjectConfigurations(
 ): Promise<{
   externalNodes: Record<string, ProjectGraphExternalNode>;
   projectNodes: Record<string, ProjectConfiguration>;
-  sourceMaps: Record<string, Record<string, SourceInformation>>;
+  sourceMaps: ConfigurationSourceMaps;
 }> {
   let result: {
     externalNodes: Record<string, ProjectGraphExternalNode>;
     projectNodes: Record<string, ProjectConfiguration>;
-    sourceMaps: Record<string, Record<string, SourceInformation>>;
+    sourceMaps: ConfigurationSourceMaps;
   };
   return getProjectConfigurationsFromContext(
     workspaceRoot,
@@ -274,7 +275,7 @@ export async function createProjectConfigurations(
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
   rootMap: Record<string, string>;
-  sourceMaps: Record<string, Record<string, SourceInformation>>;
+  sourceMaps: ConfigurationSourceMaps;
 }> {
   performance.mark('build-project-configs:start');
 

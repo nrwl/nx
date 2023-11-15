@@ -3,6 +3,7 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import {
+  ConfigurationSourceMaps,
   SourceInformation,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
@@ -547,7 +548,7 @@ describe('project-configuration-utils', () => {
     describe('source map', () => {
       it('should add new project info', () => {
         const rootMap = new RootMapBuilder().getRootMap();
-        const sourceMap: Record<string, Record<string, SourceInformation>> = {
+        const sourceMap: ConfigurationSourceMaps = {
           'libs/lib-a': {},
         };
         mergeProjectConfigurationIntoRootMap(
@@ -655,7 +656,7 @@ describe('project-configuration-utils', () => {
 
       it('should merge root level properties', () => {
         const rootMap = new Map();
-        const sourceMap: Record<string, Record<string, SourceInformation>> = {
+        const sourceMap: ConfigurationSourceMaps = {
           'libs/lib-a': {},
         };
         mergeProjectConfigurationIntoRootMap(
@@ -693,7 +694,7 @@ describe('project-configuration-utils', () => {
 
       it('should merge target properties for compatible targets', () => {
         const rootMap = new RootMapBuilder().getRootMap();
-        const sourceMap: Record<string, Record<string, SourceInformation>> = {
+        const sourceMap: ConfigurationSourceMaps = {
           'libs/lib-a': {},
         };
         mergeProjectConfigurationIntoRootMap(
@@ -771,7 +772,7 @@ describe('project-configuration-utils', () => {
 
       it('should override target options & configurations for incompatible targets', () => {
         const rootMap = new RootMapBuilder().getRootMap();
-        const sourceMap: Record<string, Record<string, SourceInformation>> = {
+        const sourceMap: ConfigurationSourceMaps = {
           'libs/lib-a': {},
         };
         mergeProjectConfigurationIntoRootMap(
@@ -843,7 +844,7 @@ describe('project-configuration-utils', () => {
 
       it('should not merge top level properties for incompatible targets', () => {
         const rootMap = new RootMapBuilder().getRootMap();
-        const sourceMap: Record<string, Record<string, SourceInformation>> = {
+        const sourceMap: ConfigurationSourceMaps = {
           'libs/lib-a': {},
         };
         mergeProjectConfigurationIntoRootMap(
@@ -889,7 +890,7 @@ describe('project-configuration-utils', () => {
 
       it('should merge generator property', () => {
         const rootMap = new RootMapBuilder().getRootMap();
-        const sourceMap: Record<string, Record<string, SourceInformation>> = {
+        const sourceMap: ConfigurationSourceMaps = {
           'libs/lib-a': {},
         };
         mergeProjectConfigurationIntoRootMap(
@@ -1011,7 +1012,7 @@ class RootMapBuilder {
 }
 
 function assertCorrectKeysInSourceMap(
-  sourceMaps: Record<string, Record<string, SourceInformation>>,
+  sourceMaps: ConfigurationSourceMaps,
   root: string,
   ...tuples: [string, string][]
 ) {

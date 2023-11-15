@@ -13,17 +13,21 @@ import { output } from '../../utils/output';
 import minimatch = require('minimatch');
 
 export type SourceInformation = [string, string];
+export type ConfigurationSourceMaps = Record<
+  string,
+  Record<string, SourceInformation>
+>;
 
 export function mergeProjectConfigurationIntoRootMap(
   projectRootMap: Map<string, ProjectConfiguration>,
   project: ProjectConfiguration,
-  projectConfigSourceMaps?: Record<string, Record<string, SourceInformation>>,
+  configurationSourceMaps?: ConfigurationSourceMaps,
   sourceInformation?: SourceInformation
 ): void {
-  if (projectConfigSourceMaps && !projectConfigSourceMaps[project.root]) {
-    projectConfigSourceMaps[project.root] = {};
+  if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
+    configurationSourceMaps[project.root] = {};
   }
-  const sourceMap = projectConfigSourceMaps?.[project.root];
+  const sourceMap = configurationSourceMaps?.[project.root];
 
   let matchingProject = projectRootMap.get(project.root);
 
@@ -160,7 +164,7 @@ type ConfigurationResult = {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
   rootMap: Record<string, string>;
-  sourceMaps: Record<string, Record<string, SourceInformation>>;
+  sourceMaps: ConfigurationSourceMaps;
 };
 
 /**
@@ -230,7 +234,7 @@ function combineSyncConfigurationResults(
 ): ConfigurationResult {
   const projectRootMap: Map<string, ProjectConfiguration> = new Map();
   const externalNodes: Record<string, ProjectGraphExternalNode> = {};
-  const projectRootSourceMaps: Record<
+  const configurationSourceMaps: Record<
     string,
     Record<string, SourceInformation>
   > = {};
@@ -259,7 +263,7 @@ function combineSyncConfigurationResults(
           root: node,
           ...projectNodes[node],
         },
-        projectRootSourceMaps,
+        configurationSourceMaps,
         [pluginName, file]
       );
     }
@@ -272,7 +276,7 @@ function combineSyncConfigurationResults(
     projects: readProjectConfigurationsFromRootMap(projectRootMap),
     externalNodes,
     rootMap,
-    sourceMaps: projectRootSourceMaps,
+    sourceMaps: configurationSourceMaps,
   };
 }
 
