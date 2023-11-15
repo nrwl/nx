@@ -41,7 +41,7 @@ exports[`preset should create files (preset = nuxt-standalone) 1`] = `
   "executor": "@nx/nuxt:serve",
   "options": {},
   "outputs": [
-    "{options.outputFile}",
+    "{options.outputPath}",
   ],
 }
 `;

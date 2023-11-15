@@ -6,9 +6,9 @@
   "description": "Set up Storybook for a React app or library.",
   "type": "object",
   "properties": {
-    "name": {
+    "project": {
       "type": "string",
-      "aliases": ["project", "projectName"],
+      "aliases": ["name", "projectName"],
       "description": "Project for which to generate Storybook configuration.",
       "$default": {
         "$source": "argv",
@@ -90,6 +90,6 @@
       ]
     }
   },
-  "required": ["name"],
+  "required": ["project"],
   "examplesFile": "../../../docs/storybook-configuration-examples.md"
 }

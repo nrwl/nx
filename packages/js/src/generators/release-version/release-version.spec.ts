@@ -164,6 +164,68 @@ To fix this you will either need to add a package.json file at that location, or
       outputSpy.mockRestore();
     });
   });
+
+  describe('package with mixed "prod" and "dev" dependencies', () => {
+    beforeEach(() => {
+      projectGraph = createWorkspaceWithPackageDependencies(tree, {
+        'my-app': {
+          projectRoot: 'libs/my-app',
+          packageName: 'my-app',
+          version: '0.0.1',
+          packageJsonPath: 'libs/my-app/package.json',
+          localDependencies: [
+            {
+              projectName: 'my-lib-1',
+              dependencyCollection: 'dependencies',
+              version: '0.0.1',
+            },
+            {
+              projectName: 'my-lib-2',
+              dependencyCollection: 'devDependencies',
+              version: '0.0.1',
+            },
+          ],
+        },
+        'my-lib-1': {
+          projectRoot: 'libs/my-lib-1',
+          packageName: 'my-lib-1',
+          version: '0.0.1',
+          packageJsonPath: 'libs/my-lib-1/package.json',
+          localDependencies: [],
+        },
+        'my-lib-2': {
+          projectRoot: 'libs/my-lib-2',
+          packageName: 'my-lib-2',
+          version: '0.0.1',
+          packageJsonPath: 'libs/my-lib-2/package.json',
+          localDependencies: [],
+        },
+      });
+    });
+
+    it('updates local dependencies only where it needs to', async () => {
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: 'major',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup(),
+      });
+
+      expect(readJson(tree, 'libs/my-app/package.json')).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib-1": "1.0.0",
+          },
+          "devDependencies": {
+            "my-lib-2": "1.0.0",
+          },
+          "name": "my-app",
+          "version": "1.0.0",
+        }
+      `);
+    });
+  });
 });
 
 function createReleaseGroup(

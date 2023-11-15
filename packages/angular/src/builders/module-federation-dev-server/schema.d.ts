@@ -22,6 +22,7 @@ interface BaseSchema {
   static?: boolean;
   isInitialHost?: boolean;
   parallel?: number;
+  staticRemotesPort?: number;
 }
 
 export type SchemaWithBrowserTarget = BaseSchema & {

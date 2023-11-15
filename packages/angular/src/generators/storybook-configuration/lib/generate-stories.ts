@@ -8,15 +8,15 @@ export async function generateStories(
   tree: Tree,
   options: StorybookConfigurationOptions
 ) {
-  const project = readProjectConfiguration(tree, options.name);
+  const project = readProjectConfiguration(tree, options.project);
   const e2eProjectName = getE2eProjectName(
-    options.name,
+    options.project,
     project.root,
     options.cypressDirectory
   );
 
   await angularStoriesGenerator(tree, {
-    name: options.name,
+    name: options.project,
     generateCypressSpecs:
       options.configureCypress && options.generateCypressSpecs,
     cypressProject: e2eProjectName,

@@ -39,14 +39,18 @@ export class NxWebpackPlugin {
       deleteOutputDir(this.options.root, this.options.outputPath);
     }
 
-    applyBaseConfig(this.options, compiler.options);
+    applyBaseConfig(this.options, compiler.options, {
+      useNormalizedEntry: true,
+    });
 
     if (compiler.options.target) {
       this.options.target = compiler.options.target;
     }
 
     if (this.options.target === 'web' || this.options.target === 'webworker') {
-      applyWebConfig(this.options, compiler.options);
+      applyWebConfig(this.options, compiler.options, {
+        useNormalizedEntry: true,
+      });
     }
   }
 

@@ -79,7 +79,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     const projectRoot = dirname(configFilePath);
 
     // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(projectRoot);
+    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
     if (
       !siblingFiles.includes('package.json') &&
       !siblingFiles.includes('project.json')
@@ -88,11 +88,10 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     }
 
     options = normalizeOptions(options);
-    const projectName = basename(projectRoot);
 
     return {
       projects: {
-        [projectName]: {
+        [projectRoot]: {
           root: projectRoot,
           projectType: 'library',
           targets: buildEslintTargets(
@@ -262,7 +261,7 @@ export default async function update(tree: Tree) {
 
   const rootMappings = createProjectRootMappingsFromProjectConfigurations(proj);
 
-  replaceProjectConfigurationsWithPlugin(
+  await replaceProjectConfigurationsWithPlugin(
     tree,
     rootMappings,
     '@nx/eslint/plugin',

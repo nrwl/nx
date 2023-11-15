@@ -331,13 +331,13 @@ describe('Nx Running Tests', () => {
       runCLI(`generate @nx/web:app ${myapp}`);
 
       const buildWithDaemon = runCLI(`build ${myapp}`, {
-        env: { ...process.env, NX_DAEMON: 'false' },
+        env: { NX_DAEMON: 'false' },
       });
 
       expect(buildWithDaemon).toContain('Successfully ran target build');
 
       const buildAgain = runCLI(`build ${myapp}`, {
-        env: { ...process.env, NX_DAEMON: 'false' },
+        env: { NX_DAEMON: 'false' },
       });
 
       expect(buildAgain).toContain('[local cache]');
@@ -614,7 +614,7 @@ describe('Nx Running Tests', () => {
 
       // testing run many with daemon disabled
       const buildWithDaemon = runCLI(`run-many --target=build`, {
-        env: { ...process.env, NX_DAEMON: 'false' },
+        env: { NX_DAEMON: 'false' },
       });
       expect(buildWithDaemon).toContain(`Successfully ran target build`);
     }, 1000000);

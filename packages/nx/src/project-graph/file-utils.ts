@@ -14,7 +14,10 @@ import {
 } from './project-graph';
 import { toOldFormat } from '../adapter/angular-json';
 import { getIgnoreObject } from '../utils/ignore';
-import { retrieveProjectConfigurationsSync } from './utils/retrieve-workspace-files';
+import { retrieveProjectConfigurationPathsWithoutPluginInference } from './utils/retrieve-workspace-files';
+import { buildProjectsConfigurationsFromProjectPathsAndPlugins } from './utils/project-configuration-utils';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { getDefaultPluginsSync } from '../utils/nx-plugin.deprecated';
 
 export interface Change {
   type: string;
@@ -139,7 +142,7 @@ export function readWorkspaceConfig(opts: {
   } catch {
     configuration = {
       version: 2,
-      projects: retrieveProjectConfigurationsSync(root, nxJson).projectNodes,
+      projects: getProjectsSyncNoInference(root, nxJson).projects,
     };
   }
   if (opts.format === 'angularCli') {
@@ -164,3 +167,14 @@ export function readPackageJson(): any {
 export { FileData };
 // TODO(17): Remove these exports
 export { readNxJson, workspaceLayout } from '../config/configuration';
+
+function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
+  const paths = retrieveProjectConfigurationPathsWithoutPluginInference(root);
+  return buildProjectsConfigurationsFromProjectPathsAndPlugins(
+    nxJson,
+    paths,
+    getDefaultPluginsSync(root),
+    root,
+    true
+  );
+}

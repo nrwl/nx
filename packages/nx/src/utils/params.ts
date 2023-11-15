@@ -33,7 +33,8 @@ type PropertyDescription = {
   $default?:
     | { $source: 'argv'; index: number }
     | { $source: 'projectName' }
-    | { $source: 'unparsed' };
+    | { $source: 'unparsed' }
+    | { $source: 'workingDirectory' };
   additionalProperties?: boolean;
   const?: any;
   'x-prompt'?:
@@ -698,6 +699,13 @@ export function convertSmartDefaultsIntoNamedParams(
       opts[k] === undefined &&
       v.format === 'path' &&
       v.visible === false &&
+      relativeCwd
+    ) {
+      opts[k] = relativeCwd.replace(/\\/g, '/');
+    } else if (
+      opts[k] === undefined &&
+      v.$default !== undefined &&
+      v.$default.$source === 'workingDirectory' &&
       relativeCwd
     ) {
       opts[k] = relativeCwd.replace(/\\/g, '/');
