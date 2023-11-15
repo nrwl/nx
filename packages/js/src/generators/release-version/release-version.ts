@@ -377,14 +377,14 @@ To fix this you will either need to add a package.json file at that location, or
       };
     }
 
-    // Invoke callback to track updates for later use within the version command (e.g. git tagging)
-    options.onVersionData(versionData);
-
     /**
      * Ensure that formatting is applied so that version bump diffs are as mimimal as possible
      * within the context of the user's workspace.
      */
     await formatFiles(tree);
+
+    // Return the version data so that it can be leveraged by the overall version command
+    return versionData;
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       output.error({

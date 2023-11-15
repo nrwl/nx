@@ -56,8 +56,6 @@ export interface ReleaseVersionGeneratorSchema {
   packageRoot?: string;
   currentVersionResolver?: 'registry' | 'disk' | 'git-tag';
   currentVersionResolverMetadata?: Record<string, unknown>;
-  // Callback to track version data within generator run to be leveraged later in the command
-  onVersionData: (data: VersionData) => void;
 }
 
 export async function versionHandler(args: VersionOptions): Promise<void> {
@@ -293,9 +291,6 @@ async function runVersionOnProjects(
     projects: projectNames.map((p) => projectGraph.nodes[p]),
     projectGraph,
     releaseGroup,
-    onVersionData: (data) => {
-      appendVersionData(versionData, data);
-    },
   };
 
   // Apply generator defaults from schema.json file etc
@@ -313,7 +308,21 @@ async function runVersionOnProjects(
   );
 
   const releaseVersionGenerator = generatorData.implementationFactory();
-  await releaseVersionGenerator(tree, combinedOpts);
+
+  // We expect all version generator implementations to return a VersionData object, rather than a GeneratorCallback
+  const versionDataForProjects = (await releaseVersionGenerator(
+    tree,
+    combinedOpts
+  )) as unknown as VersionData;
+
+  if (typeof versionDataForProjects === 'function') {
+    throw new Error(
+      `The version generator ${generatorData.collectionName}:${generatorData.normalizedGeneratorName} returned a function instead of an expected VersionData object`
+    );
+  }
+
+  // Merge the extra version data into the existing
+  appendVersionData(versionData, versionDataForProjects);
 }
 
 function printAndFlushChanges(tree: Tree, isDryRun: boolean) {

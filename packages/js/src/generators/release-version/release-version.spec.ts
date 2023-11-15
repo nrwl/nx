@@ -58,6 +58,18 @@ describe('release-version', () => {
     jest.clearAllMocks();
   });
 
+  it('should return a versionData object', async () => {
+    expect(
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: 'major',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+      })
+    ).toMatchInlineSnapshot();
+  });
+
   describe('not all given projects have package.json files', () => {
     beforeEach(() => {
       tree.delete('libs/my-lib/package.json');
@@ -72,7 +84,6 @@ describe('release-version', () => {
       });
 
       await releaseVersionGenerator(tree, {
-        onVersionData() {},
         projects: Object.values(projectGraph.nodes), // version all projects
         projectGraph,
         specifier: 'major',
@@ -133,7 +144,6 @@ To fix this you will either need to add a package.json file at that location, or
 
     it('should update local dependencies only where it needs to', async () => {
       await releaseVersionGenerator(tree, {
-        onVersionData() {},
         projects: Object.values(projectGraph.nodes), // version all projects
         projectGraph,
         specifier: 'major',
@@ -162,7 +172,6 @@ To fix this you will either need to add a package.json file at that location, or
         '0.0.1'
       );
       await releaseVersionGenerator(tree, {
-        onVersionData() {},
         projects: Object.values(projectGraph.nodes), // version all projects
         projectGraph,
         specifier: 'major',
@@ -174,7 +183,6 @@ To fix this you will either need to add a package.json file at that location, or
       );
 
       await releaseVersionGenerator(tree, {
-        onVersionData() {},
         projects: Object.values(projectGraph.nodes), // version all projects
         projectGraph,
         specifier: 'minor',
@@ -186,7 +194,6 @@ To fix this you will either need to add a package.json file at that location, or
       );
 
       await releaseVersionGenerator(tree, {
-        onVersionData() {},
         projects: Object.values(projectGraph.nodes), // version all projects
         projectGraph,
         specifier: 'patch',
@@ -198,7 +205,6 @@ To fix this you will either need to add a package.json file at that location, or
       );
 
       await releaseVersionGenerator(tree, {
-        onVersionData() {},
         projects: Object.values(projectGraph.nodes), // version all projects
         projectGraph,
         specifier: '1.2.3', // exact version
@@ -212,7 +218,6 @@ To fix this you will either need to add a package.json file at that location, or
 
     it(`should apply the updated version to the projects, including updating dependents`, async () => {
       await releaseVersionGenerator(tree, {
-        onVersionData() {},
         projects: Object.values(projectGraph.nodes), // version all projects
         projectGraph,
         specifier: 'major',
@@ -281,7 +286,6 @@ To fix this you will either need to add a package.json file at that location, or
         ).toEqual('0.0.1');
 
         await releaseVersionGenerator(tree, {
-          onVersionData() {},
           projects: Object.values(projectGraph.nodes), // version all projects
           projectGraph,
           specifier: '', // no specifier override set, each individual project will be prompted
@@ -341,7 +345,6 @@ To fix this you will either need to add a package.json file at that location, or
         ).toEqual('0.0.1');
 
         await releaseVersionGenerator(tree, {
-          onVersionData() {},
           projects: Object.values(projectGraph.nodes), // version all projects
           projectGraph,
           specifier: '4.5.6', // user CLI specifier override set, no prompting should occur
@@ -416,7 +419,6 @@ To fix this you will either need to add a package.json file at that location, or
         `);
 
         await releaseVersionGenerator(tree, {
-          onVersionData() {},
           projects: [projectGraph.nodes['my-lib']], // version only my-lib
           projectGraph,
           specifier: '9.9.9', // user CLI specifier override set, no prompting should occur
