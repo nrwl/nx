@@ -451,21 +451,6 @@ async function generateChangelogForWorkspace(
       printAndFlushChanges(tree, !!dryRun, 3, false, noDiffInChangelogMessage);
   }
 
-  // Schedule tagging of the repo with the release version for the whole workspace, if applicable
-  if (args.gitTag ?? nxReleaseConfig.changelog.git.tag) {
-    postGitTasks.push(async () => {
-      output.logSingleLine(`Tagging commit with git`);
-      await gitTag({
-        tag: releaseVersion.gitTag,
-        message: args.gitTagMessage || nxReleaseConfig.changelog.git.tagMessage,
-        additionalArgs:
-          args.gitTagArgs || nxReleaseConfig.changelog.git.tagArgs,
-        dryRun,
-        verbose,
-      });
-    });
-  }
-
   if (config.createRelease === 'github') {
     if (!githubRepoSlug) {
       output.error({
