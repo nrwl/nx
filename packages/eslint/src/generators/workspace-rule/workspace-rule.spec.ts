@@ -1,4 +1,4 @@
-import { NxJsonConfiguration, readJson, Tree } from '@nx/devkit';
+import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintWorkspaceRuleGenerator } from './workspace-rule';
 

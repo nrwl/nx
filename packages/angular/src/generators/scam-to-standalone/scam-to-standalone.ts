@@ -1,10 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import {
-  formatFiles,
-  getProjects,
-  joinPathFragments,
-  stripIndents,
-} from '@nx/devkit';
+import { formatFiles, getProjects, joinPathFragments } from '@nx/devkit';
 import type { Schema } from './schema';
 import {
   convertScamToStandalone,
@@ -15,20 +10,11 @@ import {
   verifyIsInlineScam,
   verifyModuleIsScam,
 } from './lib';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
-import { lt } from 'semver';
 
 export async function scamToStandalone(
   tree: Tree,
   { component, project: projectName, skipFormat }: Schema
 ) {
-  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
-
-  if (lt(installedAngularVersionInfo.version, '14.1.0')) {
-    throw new Error(stripIndents`This generator is only supported with Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
-    You can resolve this error by migrating to Angular 14.1.0.`);
-  }
-
   const projects = getProjects(tree);
   let project = getTargetProject(projectName, projects);
 

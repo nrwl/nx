@@ -74,6 +74,11 @@
       "enum": ["eslint"],
       "default": "eslint"
     },
+    "dynamic": {
+      "type": "boolean",
+      "description": "Should the host application use dynamic federation?",
+      "default": false
+    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",

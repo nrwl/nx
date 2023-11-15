@@ -17,11 +17,13 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ## Options
 
-### configuration
+### all
 
-Type: `string`
+Type: `boolean`
 
-This is the configuration to use when performing tasks on projects
+Default: `true`
+
+[deprecated] `run-many` runs all targets on all projects in the workspace if no projects are provided. This option is no longer required.
 
 ### exclude
 
@@ -34,6 +36,12 @@ Exclude certain projects from being processed
 Type: `string`
 
 Show the task graph of the command. Pass a file path to save the graph data instead of viewing it in the browser.
+
+### help
+
+Type: `boolean`
+
+Show help
 
 ### nxBail
 
@@ -51,25 +59,17 @@ Default: `false`
 
 Ignore cycles in the task graph
 
-### output-style
-
-Type: `string`
-
-Choices: [dynamic, static, stream, stream-without-prefixes, compact]
-
-Defines how Nx emits outputs tasks logs
-
 ### parallel
 
 Type: `string`
 
 Max number of parallel processes [default is 3]
 
-### project
+### projects
 
 Type: `string`
 
-Target project
+Projects to run. (comma/space delimited project names and/or patterns)
 
 ### runner
 

@@ -141,20 +141,20 @@ export function addAngularStorybookTask(
 export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
   const nrwlWeb = ensurePackage<typeof import('@nx/web')>('@nx/web', nxVersion);
   nrwlWeb.webStaticServeGenerator(tree, {
-    buildTarget: `${opts.name}:build-storybook`,
-    outputPath: joinPathFragments('dist/storybook', opts.name),
+    buildTarget: `${opts.project}:build-storybook`,
+    outputPath: joinPathFragments('dist/storybook', opts.project),
     targetName: 'static-storybook',
   });
 
-  const projectConfig = readProjectConfiguration(tree, opts.name);
+  const projectConfig = readProjectConfiguration(tree, opts.project);
 
   projectConfig.targets['static-storybook'].configurations = {
     ci: {
-      buildTarget: `${opts.name}:build-storybook:ci`,
+      buildTarget: `${opts.project}:build-storybook:ci`,
     },
   };
 
-  updateProjectConfiguration(tree, opts.name, projectConfig);
+  updateProjectConfiguration(tree, opts.project, projectConfig);
 }
 
 export function createStorybookTsconfigFile(
@@ -282,7 +282,7 @@ export function configureTsProjectConfig(
   tree: Tree,
   schema: StorybookConfigureSchema
 ) {
-  const { name: projectName } = schema;
+  const { project: projectName } = schema;
 
   let tsConfigPath: string;
   let tsConfigContent: TsConfig;
@@ -323,7 +323,7 @@ export function configureTsSolutionConfig(
   tree: Tree,
   schema: StorybookConfigureSchema
 ) {
-  const { name: projectName } = schema;
+  const { project: projectName } = schema;
 
   const { root } = readProjectConfiguration(tree, projectName);
   const tsConfigPath = join(root, 'tsconfig.json');
@@ -368,7 +368,7 @@ export function configureTsSolutionConfig(
  * This is done within the eslint config file.
  */
 export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
-  const { name: projectName } = schema;
+  const { project: projectName } = schema;
 
   const { root } = readProjectConfiguration(tree, projectName);
 

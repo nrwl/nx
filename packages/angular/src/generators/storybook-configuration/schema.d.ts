@@ -4,7 +4,7 @@ export interface StorybookConfigurationOptions {
   configureStaticServe?: boolean;
   generateStories: boolean;
   linter: Linter;
-  name: string;
+  project: string;
   tsConfiguration?: boolean;
   skipFormat?: boolean;
   ignorePaths?: string[];

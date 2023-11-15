@@ -1,27 +1,41 @@
 ---
-title: Set up Storybook for Vue Projects
-description: This guide explains how to set up Storybook for Vue projects in your Nx workspace.
+title: Set up Storybook for Vue and Nuxt Projects
+description: This guide explains how to set up Storybook for Vue and Nuxt projects in your Nx workspace.
 ---
 
-# Set up Storybook for Vue Projects
+# Set up Storybook for Vue and Nuxt Projects
 
-This guide will walk you through setting up [Storybook](https://storybook.js.org) for Vue projects in your Nx workspace.
+This guide will walk you through setting up [Storybook](https://storybook.js.org) for Vue and Nuxt projects in your Nx workspace.
 
 {% callout type="warning" title="Set up Storybook in your workspace" %}
 You first need to set up Storybook for your Nx workspace, if you haven't already. You can read the [Storybook plugin overview guide](/nx-api/storybook) to get started.
 {% /callout %}
 
-## Generate Storybook Configuration for a Vue project
+## Generate Storybook Configuration for a Vue or Nuxt project
 
-You can generate Storybook configuration for an individual Vue project by using the [`@nx/vue:storybook-configuration` generator](/nx-api/vue/generators/storybook-configuration), like this:
+You can generate Storybook configuration for an individual Vue or Nuxt project by using the [`@nx/vue:storybook-configuration` generator](/nx-api/vue/generators/storybook-configuration), like this:
+
+{% tabs %}
+{% tab label="Vue" %}
 
 ```shell
 nx g @nx/vue:storybook-configuration project-name
 ```
 
+{% /tab %}
+{% tab label="Nuxt" %}
+
+```shell
+nx g @nx/nuxt:storybook-configuration my-nuxt-app
+```
+
+{% /tab %}
+
+{% /tabs %}
+
 ## Auto-generate Stories
 
-The [`@nx/vue:storybook-configuration` generator](/nx-api/vue/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library. The stories will be generated using [Component Story Format 3 (CSF3)](https://storybook.js.org/blog/storybook-csf3-is-here/).
+The [`@nx/vue:storybook-configuration` generator](/nx-api/vue/generators/storybook-configuration) has the option to automatically generate `*.stories.ts` files for each component declared in the library.
 
 ```text
 <some-folder>/
@@ -31,9 +45,23 @@ The [`@nx/vue:storybook-configuration` generator](/nx-api/vue/generators/storybo
 
 If you add more components to your project, and want to generate stories for all your (new) components at any point, you can use the [`@nx/vue:stories` generator](/nx-api/vue/generators/stories):
 
+{% tabs %}
+{% tab label="Vue" %}
+
 ```shell
 nx g @nx/vue:stories --project=<project-name>
 ```
+
+{% /tab %}
+{% tab label="Nuxt" %}
+
+```shell
+nx g @nx/nuxt:stories --project=<project-name>
+```
+
+{% /tab %}
+
+{% /tabs %}
 
 {% callout type="note" title="Example" %}
 Let's take for a example a library in your workspace, under `libs/feature/ui`, called `feature-ui`. This library contains a component, called `my-button`.

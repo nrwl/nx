@@ -8,6 +8,9 @@ export const graph: Schema = {
     jsonFile: {
       type: 'String',
     },
+    title: {
+      type: 'String',
+    },
     type: {
       type: 'String',
       matches: ['project', 'task'],

@@ -1,6 +1,8 @@
 import { readJson, Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { moveGenerator } from './move';
+// nx-ignore-next-line
+const { applicationGenerator } = require('@nx/react');
 
 // nx-ignore-next-line
 const { libraryGenerator } = require('@nx/js');
@@ -175,6 +177,50 @@ describe('move', () => {
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
     expect(tree.exists('jest.config.ts')).toBeTruthy();
     expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
+  });
+
+  it('should support moving standalone repos', async () => {
+    // Test that these are not moved
+    tree.write('.gitignore', '');
+    tree.write('README.md', '');
+
+    await applicationGenerator(tree, {
+      name: 'react-app',
+      rootProject: true,
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'cypress',
+      linter: 'eslint',
+      style: 'css',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    // Test that this does not get moved
+    tree.write('other-lib/index.ts', '');
+
+    await moveGenerator(tree, {
+      projectName: 'react-app',
+      updateImportPath: false,
+      destination: 'apps/react-app',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    await moveGenerator(tree, {
+      projectName: 'e2e',
+      updateImportPath: false,
+      destination: 'apps/react-app-e2e',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    expect(tree.read('apps/react-app-e2e/cypress.config.ts').toString())
+      .toMatchInlineSnapshot(`
+      "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+      import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) },
+      });
+      "
+    `);
   });
 
   it('should move project correctly when --project-name-and-root-format=derived', async () => {

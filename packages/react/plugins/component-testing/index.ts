@@ -160,7 +160,7 @@ export function nxComponentTestingPreset(
     const { buildBaseWebpackConfig } = require('./webpack-fallback');
     webpackConfig = buildBaseWebpackConfig({
       tsConfigPath: findTsConfig(normalizedProjectRootPath),
-      compiler: 'babel',
+      compiler: options?.compiler || 'babel',
     });
   }
 

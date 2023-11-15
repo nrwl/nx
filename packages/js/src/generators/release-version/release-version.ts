@@ -270,13 +270,10 @@ To fix this you will either need to add a package.json file at that location, or
       );
 
       const dependentProjects = Object.values(localPackageDependencies)
-        .filter((localPackageDependencies) => {
-          return localPackageDependencies.some(
-            (localPackageDependency) =>
-              localPackageDependency.target === project.name
-          );
-        })
-        .flat();
+        .flat()
+        .filter((localPackageDependency) => {
+          return localPackageDependency.target === project.name;
+        });
 
       if (dependentProjects.length > 0) {
         log(

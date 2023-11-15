@@ -1,9 +1,4 @@
-import {
-  addProjectConfiguration,
-  stripIndents,
-  updateJson,
-  writeJson,
-} from '@nx/devkit';
+import { addProjectConfiguration, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { componentGenerator } from './component';
 
@@ -33,6 +28,7 @@ describe('component Generator', () => {
     await componentGenerator(tree, {
       name: 'example',
       project: 'lib1',
+      standalone: false,
     });
 
     // ASSERT
@@ -79,6 +75,7 @@ describe('component Generator', () => {
       name: 'example',
       project: 'lib1',
       skipTests: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -113,6 +110,7 @@ describe('component Generator', () => {
       name: 'example',
       project: 'lib1',
       inlineTemplate: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -150,6 +148,7 @@ describe('component Generator', () => {
       name: 'example',
       project: 'lib1',
       inlineStyle: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -187,6 +186,7 @@ describe('component Generator', () => {
       name: 'example',
       project: 'lib1',
       style: 'none',
+      standalone: false,
     });
 
     // ASSERT
@@ -232,6 +232,7 @@ describe('component Generator', () => {
       name: 'example',
       project: 'lib1',
       export: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -270,7 +271,6 @@ describe('component Generator', () => {
     await componentGenerator(tree, {
       name: 'example',
       project: 'lib1',
-      standalone: true,
       export: true,
     });
 
@@ -314,6 +314,7 @@ describe('component Generator', () => {
       name: 'example',
       project: 'lib1',
       export: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -354,7 +355,6 @@ describe('component Generator', () => {
     await componentGenerator(tree, {
       name: 'example',
       project: 'lib1',
-      standalone: true,
       export: false,
     });
 
@@ -397,6 +397,7 @@ describe('component Generator', () => {
       name: 'example',
       project: 'lib1',
       skipImport: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -437,6 +438,7 @@ describe('component Generator', () => {
       name: 'example',
       project: 'lib1',
       export: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -476,6 +478,7 @@ describe('component Generator', () => {
       name: 'example',
       project: 'lib1',
       export: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -511,6 +514,7 @@ describe('component Generator', () => {
         project: 'lib1',
         flat: true,
         export: true,
+        standalone: false,
       });
 
       // ASSERT
@@ -551,6 +555,7 @@ describe('component Generator', () => {
         project: 'lib1',
         flat: true,
         export: false,
+        standalone: false,
       });
 
       // ASSERT
@@ -595,6 +600,7 @@ describe('component Generator', () => {
         project: 'lib1',
         path: 'libs/lib1/src/lib/mycomp',
         export: true,
+        standalone: false,
       });
 
       // ASSERT
@@ -638,6 +644,7 @@ describe('component Generator', () => {
           project: 'lib1',
           path: 'apps/app1/src/mycomp',
           export: false,
+          standalone: false,
         })
       ).rejects.toThrow();
     });
@@ -683,6 +690,7 @@ describe('component Generator', () => {
           project: 'lib1',
           module,
           export: true,
+          standalone: false,
         });
 
         // ASSERT
@@ -723,6 +731,7 @@ describe('component Generator', () => {
         project: 'shared-ui',
         export: true,
         flat: false,
+        standalone: false,
       });
 
       // ASSERT
@@ -771,6 +780,7 @@ describe('component Generator', () => {
         project: 'lib1',
         module: 'not-exported',
         export: true,
+        standalone: false,
       });
 
       // ASSERT
@@ -808,6 +818,7 @@ describe('component Generator', () => {
           project: 'lib1',
           path: 'libs/lib1/src/lib',
           module: 'not-found',
+          standalone: false,
         })
       ).rejects.toThrow();
     });
@@ -849,6 +860,7 @@ describe('component Generator', () => {
           name: 'example',
           project: 'lib1',
           path: 'libs/lib1/src/lib',
+          standalone: false,
         })
       ).rejects.toThrow();
     });
@@ -902,6 +914,7 @@ describe('component Generator', () => {
         project: 'lib1',
         path: 'libs/lib1/secondary/src/lib',
         export: true,
+        standalone: false,
       });
 
       // ASSERT
@@ -961,6 +974,7 @@ describe('component Generator', () => {
         name: 'example',
         project: 'lib1',
         export: true,
+        standalone: false,
       });
 
       // ASSERT
@@ -972,31 +986,40 @@ describe('component Generator', () => {
     });
   });
 
-  it('should error correctly when Angular version does not support standalone', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: {
-        '@angular/core': '14.0.0',
-      },
-    }));
+  describe('compat', () => {
+    it('should inline styles when --inline-style=true', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      addProjectConfiguration(tree, 'lib1', {
+        projectType: 'library',
+        sourceRoot: 'libs/lib1/src',
+        root: 'libs/lib1',
+      });
+      tree.write(
+        'libs/lib1/src/lib/lib.module.ts',
+        `
+      import { NgModule } from '@angular/core';
+      
+      @NgModule({
+        declarations: [],
+        exports: []
+      })
+      export class LibModule {}`
+      );
+      tree.write('libs/lib1/src/index.ts', '');
 
-    addProjectConfiguration(tree, 'lib1', {
-      projectType: 'library',
-      sourceRoot: 'libs/lib1/src',
-      root: 'libs/lib1',
-    });
-
-    // ACT & ASSERT
-    await expect(
-      componentGenerator(tree, {
+      await componentGenerator(tree, {
         name: 'example',
         project: 'lib1',
-        standalone: true,
-      })
-    ).rejects
-      .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using "14.0.0".
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
+        inlineStyle: true,
+        standalone: false,
+      });
+
+      expect(
+        tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.exists('libs/lib1/src/lib/example/example.component.css')
+      ).toBe(false);
+    });
   });
 });

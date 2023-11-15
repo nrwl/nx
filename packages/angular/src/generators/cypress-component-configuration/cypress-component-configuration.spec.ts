@@ -213,14 +213,11 @@ describe('Cypress Component Testing Configuration', () => {
           generateTests: false,
         });
       }).resolves;
-
-      expect(
-        require('@nx/devkit').createProjectGraphAsync
-      ).not.toHaveBeenCalled();
     });
     it('should use own project config', async () => {
       await generateTestApplication(tree, {
         name: 'fancy-app',
+        bundler: 'webpack',
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
@@ -259,6 +256,7 @@ describe('Cypress Component Testing Configuration', () => {
     it('should use the project graph to find the correct project config', async () => {
       await generateTestApplication(tree, {
         name: 'fancy-app',
+        bundler: 'webpack',
       });
       await generateTestLibrary(tree, {
         name: 'fancy-lib',

@@ -15,6 +15,7 @@ export interface Schema {
   standalone?: boolean;
   skipE2E?: boolean;
   typescriptConfiguration?: boolean;
+  setParserOptionsProject?: boolean;
 }
 
 export interface NormalizedOptions extends Schema {

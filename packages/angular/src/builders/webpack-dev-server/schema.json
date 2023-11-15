@@ -9,13 +9,19 @@
   "presets": [
     {
       "name": "Using a Different Port",
-      "keys": ["browserTarget", "port"]
+      "keys": ["buildTarget", "port"]
     }
   ],
   "properties": {
     "browserTarget": {
       "type": "string",
-      "description": "A browser builder target to serve in the format of `project:target[:configuration]`. You can also pass in more than one configuration name as a comma-separated list. Example: `project:target:production,staging`.",
+      "description": "A browser builder target to serve in the format of `project:target[:configuration]`. Ignored if `buildTarget` is set.",
+      "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
+      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v18."
+    },
+    "buildTarget": {
+      "type": "string",
+      "description": "A build builder target to serve in the format of `project:target[:configuration]`.",
       "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$"
     },
     "port": {
@@ -112,5 +118,5 @@
     }
   },
   "additionalProperties": false,
-  "required": ["browserTarget"]
+  "anyOf": [{ "required": ["buildTarget"] }, { "required": ["browserTarget"] }]
 }

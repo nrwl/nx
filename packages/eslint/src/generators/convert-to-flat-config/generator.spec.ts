@@ -12,6 +12,7 @@ import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { lintProjectGenerator } from '../lint-project/lint-project';
 import { Linter } from '../utils/linter';
 import { eslintrcVersion } from '../../utils/versions';
+import { read } from 'fs';
 
 describe('convert-to-flat-config generator', () => {
   let tree: Tree;
@@ -153,7 +154,7 @@ describe('convert-to-flat-config generator', () => {
     ).toEqual(eslintrcVersion);
   });
 
-  it('should add global gitignores', async () => {
+  it('should add global eslintignores', async () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
@@ -164,7 +165,39 @@ describe('convert-to-flat-config generator', () => {
     tree.write('.eslintignore', 'ignore/me');
     await convertToFlatConfigGenerator(tree, options);
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchSnapshot();
+    const config = tree.read('eslint.config.js', 'utf-8');
+    expect(config).toContain('ignore/me');
+    expect(config).toMatchSnapshot();
+    expect(tree.exists('.eslintignore')).toBeFalsy();
+  });
+
+  it('should handle custom eslintignores', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    tree.write('another-folder/.myeslintignore', 'ignore/me');
+    updateJson(tree, 'libs/test-lib/project.json', (json) => {
+      json.targets.lint.options.ignorePath = 'another-folder/.myeslintignore';
+      return json;
+    });
+    tree.write('libs/test-lib/.eslintignore', 'ignore/me/as/well');
+
+    await convertToFlatConfigGenerator(tree, options);
+
+    expect(
+      tree.read('libs/test-lib/eslint.config.js', 'utf-8')
+    ).toMatchSnapshot();
+    expect(tree.exists('another-folder/.myeslintignore')).toBeFalsy();
+    expect(tree.exists('libs/test-lib/.eslintignore')).toBeFalsy();
+
+    expect(
+      readJson(tree, 'libs/test-lib/project.json').targets.lint.options
+        .ignorePath
+    ).toBeUndefined();
   });
 
   it('should add settings', async () => {

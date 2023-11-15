@@ -20,20 +20,11 @@ import {
   setupTspathForRemote,
   setupServeTarget,
   updateHostAppRoutes,
-  updateTsConfigTarget,
+  updateTsConfig,
 } from './lib';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { nxVersion } from '../../utils/versions';
-import { lt } from 'semver';
 
 export async function setupMf(tree: Tree, rawOptions: Schema) {
-  const installedAngularInfo = getInstalledAngularVersionInfo(tree);
-  if (lt(installedAngularInfo.version, '14.1.0') && rawOptions.standalone) {
-    throw new Error(
-      `The --standalone flag is not supported in your current version of Angular (${installedAngularInfo.version}). Please update to a version of Angular that supports Standalone Components (>= 14.1.0).`
-    );
-  }
-
   const options = normalizeOptions(tree, rawOptions);
   const projectConfig = readProjectConfiguration(tree, options.appName);
 
@@ -55,7 +46,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
   generateWebpackConfig(tree, options, projectConfig.root, remotesWithPorts);
 
   changeBuildTarget(tree, options);
-  updateTsConfigTarget(tree, options);
+  updateTsConfig(tree, options);
   setupServeTarget(tree, options);
 
   fixBootstrap(tree, projectConfig.root, options);

@@ -2,7 +2,6 @@ import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   getProjects,
-  joinPathFragments,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
@@ -27,7 +26,6 @@ import {
   typesNodeVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
-import { JestExecutorOptions } from '../../executors/jest/schema';
 
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 

@@ -1,9 +1,4 @@
-import {
-  ExecutorContext,
-  logger,
-  stripIndents,
-  workspaceRoot,
-} from '@nx/devkit';
+import { ExecutorContext, logger, stripIndents } from '@nx/devkit';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
@@ -42,7 +37,7 @@ async function getWebpackConfigs(
   }
 
   let customWebpack = null;
-  if (options.webpackConfig) {
+  if (options.webpackConfig && options.tsConfig) {
     customWebpack = resolveCustomWebpackConfig(
       options.webpackConfig,
       options.tsConfig.startsWith(context.root)
@@ -59,14 +54,18 @@ async function getWebpackConfigs(
     ? {}
     : getWebpackConfig(context, options);
 
-  if (customWebpack) {
+  if (typeof customWebpack === 'function') {
+    // Old behavior, call the Nx-specific webpack config function that user exports
     return await customWebpack(config, {
       options,
       context,
       configuration: context.configurationName, // backwards compat
     });
+  } else if (customWebpack) {
+    // New behavior, we want the webpack config to export object
+    return customWebpack;
   } else {
-    // If the user has no webpackConfig specified then we always have to apply
+    // Fallback case, if we cannot find a webpack config path
     return config;
   }
 }
@@ -87,6 +86,9 @@ export async function* webpackExecutor(
   _options: WebpackExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<WebpackExecutorEvent, WebpackExecutorEvent, undefined> {
+  // Pass to NxWebpackPlugin so we can get the CLI overrides.
+  process.env['NX_WEBPACK_EXECUTOR_RAW_OPTIONS'] = JSON.stringify(_options);
+
   const metadata = context.projectsConfigurations.projects[context.projectName];
   const sourceRoot = metadata.sourceRoot;
   const options = normalizeOptions(
@@ -144,7 +146,7 @@ export async function* webpackExecutor(
   }
 
   // Delete output path before bundling
-  if (options.deleteOutputPath) {
+  if (options.deleteOutputPath && options.outputPath) {
     deleteOutputDir(context.root, options.outputPath);
   }
 

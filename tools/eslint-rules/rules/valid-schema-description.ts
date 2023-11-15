@@ -10,7 +10,7 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
     type: 'problem',
     docs: {
       description: `Ensures that nx schemas contain valid descriptions in order to provide consistent --help output for commands`,
-      recommended: 'error',
+      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [],

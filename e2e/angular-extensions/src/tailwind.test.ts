@@ -316,37 +316,23 @@ describe('Tailwind support', () => {
   });
 
   describe('Applications', () => {
-    const updateAppComponent = (app: string) => {
-      updateFile(
-        `${app}/src/app/app.component.html`,
-        `<button class="custom-btn text-white">Click me!</button>`
+    const readAppStylesBundle = (outputPath: string) => {
+      const stylesBundlePath = listFiles(outputPath).find((file) =>
+        /^styles[\.-]/.test(file)
       );
-
-      updateFile(
-        `${app}/src/app/app.component.css`,
-        `.custom-btn {
-          @apply m-md p-sm;
-        }`
-      );
-    };
-
-    const readAppStylesBundle = (app: string) => {
-      const stylesBundlePath = listFiles(`dist/${app}`).find((file) =>
-        file.startsWith('styles.')
-      );
-      const stylesBundle = readFile(`dist/${app}/${stylesBundlePath}`);
+      const stylesBundle = readFile(`${outputPath}/${stylesBundlePath}`);
 
       return stylesBundle;
     };
 
     const assertAppComponentStyles = (
-      app: string,
+      outputPath: string,
       appSpacing: typeof spacing['root']
     ) => {
-      const mainBundlePath = listFiles(`dist/${app}`).find((file) =>
-        file.startsWith('main.')
+      const mainBundlePath = listFiles(outputPath).find((file) =>
+        /^main[\.-]/.test(file)
       );
-      const mainBundle = readFile(`dist/${app}/${mainBundlePath}`);
+      const mainBundle = readFile(`${outputPath}/${mainBundlePath}`);
       let expectedStylesRegex = new RegExp(
         `styles:\\[\\"\\.custom\\-btn\\[_ngcontent\\-%COMP%\\]{margin:${appSpacing.md};padding:${appSpacing.sm}}\\"\\]`
       );
@@ -354,25 +340,13 @@ describe('Tailwind support', () => {
       expect(mainBundle).toMatch(expectedStylesRegex);
     };
 
-    it('should build correctly and only output the tailwind utilities used', async () => {
-      const appWithTailwind = uniq('app-with-tailwind');
-      runCLI(
-        `generate @nx/angular:app ${appWithTailwind} --add-tailwind --project-name-and-root-format=as-provided --no-interactive`
-      );
-      updateJson(join(appWithTailwind, 'project.json'), (config) => {
-        config.targets.build.executor = '@nx/angular:webpack-browser';
-        config.targets.build.options = {
-          ...config.targets.build.options,
-          buildLibsFromSource: false,
-        };
-        return config;
-      });
+    const setupTailwindAndProjectDependencies = (appName: string) => {
       updateTailwindConfig(
-        `${appWithTailwind}/tailwind.config.js`,
+        `${appName}/tailwind.config.js`,
         spacing.projectVariant1
       );
       updateFile(
-        `${appWithTailwind}/src/app/app.module.ts`,
+        `${appName}/src/app/app.module.ts`,
         `import { NgModule } from '@angular/core';
         import { BrowserModule } from '@angular/platform-browser';
         import { LibModule as LibModule1 } from '@${project}/${buildLibWithTailwind.name}';
@@ -389,12 +363,58 @@ describe('Tailwind support', () => {
         export class AppModule {}
         `
       );
-      updateAppComponent(appWithTailwind);
+      updateFile(
+        `${appName}/src/app/app.component.html`,
+        `<button class="custom-btn text-white">Click me!</button>`
+      );
+
+      updateFile(
+        `${appName}/src/app/app.component.css`,
+        `.custom-btn {
+          @apply m-md p-sm;
+        }`
+      );
+    };
+
+    it('should build correctly and only output the tailwind utilities used', async () => {
+      const appWithTailwind = uniq('app-with-tailwind');
+      runCLI(
+        `generate @nx/angular:app ${appWithTailwind} --add-tailwind --project-name-and-root-format=as-provided --no-interactive`
+      );
+      setupTailwindAndProjectDependencies(appWithTailwind);
 
       runCLI(`build ${appWithTailwind}`);
 
-      assertAppComponentStyles(appWithTailwind, spacing.projectVariant1);
-      let stylesBundle = readAppStylesBundle(appWithTailwind);
+      const outputPath = `dist/${appWithTailwind}/browser`;
+      assertAppComponentStyles(outputPath, spacing.projectVariant1);
+      let stylesBundle = readAppStylesBundle(outputPath);
+      expect(stylesBundle).toContain('.text-white');
+      expect(stylesBundle).not.toContain('.text-black');
+      expect(stylesBundle).toContain(`.${buildLibWithTailwind.buttonBgColor}`);
+      expect(stylesBundle).toContain(`.${pubLibWithTailwind.buttonBgColor}`);
+      expect(stylesBundle).not.toContain(`.${defaultButtonBgColor}`);
+    });
+
+    it('should build correctly and only output the tailwind utilities used when using webpack and incremental builds', async () => {
+      const appWithTailwind = uniq('app-with-tailwind');
+      runCLI(
+        `generate @nx/angular:app ${appWithTailwind} --add-tailwind --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      );
+      setupTailwindAndProjectDependencies(appWithTailwind);
+      updateJson(join(appWithTailwind, 'project.json'), (config) => {
+        config.targets.build.executor = '@nx/angular:webpack-browser';
+        config.targets.build.options = {
+          ...config.targets.build.options,
+          buildLibsFromSource: false,
+        };
+        return config;
+      });
+
+      runCLI(`build ${appWithTailwind}`);
+
+      const outputPath = `dist/${appWithTailwind}`;
+      assertAppComponentStyles(outputPath, spacing.projectVariant1);
+      let stylesBundle = readAppStylesBundle(outputPath);
       expect(stylesBundle).toContain('.text-white');
       expect(stylesBundle).not.toContain('.text-black');
       expect(stylesBundle).toContain(`.${buildLibWithTailwind.buttonBgColor}`);

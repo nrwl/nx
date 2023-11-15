@@ -14,9 +14,9 @@ We'll be using an Nx plugin called [@nx/vite](/nx-api/vite). Although we are usi
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
 {% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/core-features/remote-cache" %}✅ Share Your Cache{% /pill %}
+{% pill url="/nx-cloud/features/remote-cache" %}✅ Share Your Cache{% /pill %}
 {% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
-{% pill url="/core-features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
+{% pill url="/nx-cloud/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
 {% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}

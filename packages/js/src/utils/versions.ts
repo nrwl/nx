@@ -11,7 +11,7 @@ export const typesNodeVersion = '18.7.1';
 export const verdaccioVersion = '^5.0.4';
 
 // Typescript
-export const typescriptVersion = '~5.1.3';
+export const typescriptVersion = '~5.2.2';
 /**
  * The minimum version is currently determined from the lowest version
  * that's supported by the lowest Angular supported version, e.g.

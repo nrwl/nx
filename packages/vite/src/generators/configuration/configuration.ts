@@ -232,7 +232,7 @@ export async function viteConfigurationGenerator(
       project: schema.project,
       uiFramework: schema.uiFramework,
       inSourceTests: schema.inSourceTests,
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       skipViteConfig: true,
       testTarget: testTargetName,
       skipFormat: true,

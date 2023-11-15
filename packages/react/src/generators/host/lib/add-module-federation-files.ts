@@ -1,15 +1,21 @@
 import { NormalizedSchema } from '../schema';
-import { generateFiles, joinPathFragments, names } from '@nx/devkit';
-import { join } from 'path';
+import {
+  Tree,
+  generateFiles,
+  joinPathFragments,
+  names,
+  readProjectConfiguration,
+} from '@nx/devkit';
 
 export function addModuleFederationFiles(
-  host,
+  host: Tree,
   options: NormalizedSchema,
   defaultRemoteManifest: { name: string; port: number }[]
 ) {
   const templateVariables = {
     ...names(options.name),
     ...options,
+    static: !options?.dynamic,
     tmpl: '',
     remotes: defaultRemoteManifest.map(({ name, port }) => {
       return {
@@ -19,17 +25,23 @@ export function addModuleFederationFiles(
     }),
   };
 
+  const projectConfig = readProjectConfiguration(host, options.name);
+  const pathToMFManifest = joinPathFragments(
+    projectConfig.sourceRoot,
+    'assets/module-federation.manifest.json'
+  );
+
   // Module federation requires bootstrap code to be dynamically imported.
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    join(options.appProjectRoot, 'src/main.tsx'),
-    join(options.appProjectRoot, 'src/bootstrap.tsx')
+    joinPathFragments(options.appProjectRoot, 'src/main.tsx'),
+    joinPathFragments(options.appProjectRoot, 'src/bootstrap.tsx')
   );
 
   generateFiles(
     host,
-    join(__dirname, `../files/common`),
+    joinPathFragments(__dirname, `../files/common`),
     options.appProjectRoot,
     templateVariables
   );
@@ -40,25 +52,35 @@ export function addModuleFederationFiles(
   // New entry file is created here.
   generateFiles(
     host,
-    join(__dirname, `../files/${pathToModuleFederationFiles}`),
+    joinPathFragments(__dirname, `../files/${pathToModuleFederationFiles}`),
     options.appProjectRoot,
     templateVariables
   );
 
-  if (options.typescriptConfiguration) {
+  function deleteFileIfExists(host, filePath) {
+    if (host.exists(filePath)) {
+      host.delete(filePath);
+    }
+  }
+
+  function processWebpackConfig(options, host, fileName) {
     const pathToWebpackConfig = joinPathFragments(
       options.appProjectRoot,
-      'webpack.config.js'
+      fileName
     );
-    const pathToWebpackProdConfig = joinPathFragments(
-      options.appProjectRoot,
-      'webpack.config.prod.js'
-    );
-    if (host.exists(pathToWebpackConfig)) {
-      host.delete(pathToWebpackConfig);
-    }
-    if (host.exists(pathToWebpackProdConfig)) {
-      host.delete(pathToWebpackProdConfig);
+    deleteFileIfExists(host, pathToWebpackConfig);
+  }
+
+  if (options.typescriptConfiguration) {
+    processWebpackConfig(options, host, 'webpack.config.js');
+    processWebpackConfig(options, host, 'webpack.config.prod.js');
+  }
+
+  if (options.dynamic) {
+    processWebpackConfig(options, host, 'webpack.config.prod.js');
+    processWebpackConfig(options, host, 'webpack.config.prod.ts');
+    if (!host.exists(pathToMFManifest)) {
+      host.write(pathToMFManifest, '{}');
     }
   }
 }

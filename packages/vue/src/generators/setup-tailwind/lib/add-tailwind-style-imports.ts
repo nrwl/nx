@@ -8,6 +8,11 @@ const knownStylesheetLocations = [
   'src/styles.scss',
   'src/styles.less',
 
+  // What we generate for nuxt by default
+  'src/assets/css/styles.css',
+  'src/assets/css/styles.scss',
+  'src/assets/css/styles.less',
+
   // Other common locations (e.g. what `npm create vue` does)
   'src/assets/styles.css',
   'src/assets/styles.scss',

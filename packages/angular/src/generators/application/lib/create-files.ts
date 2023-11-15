@@ -11,7 +11,10 @@ export async function createFiles(
   options: NormalizedSchema,
   rootOffset: string
 ) {
-  const installedAngularInfo = getInstalledAngularVersionInfo(tree);
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  const isUsingApplicationBuilder =
+    angularMajorVersion >= 17 && options.bundler === 'esbuild';
+
   const substitutions = {
     rootSelector: `${options.prefix}-root`,
     appName: options.name,
@@ -24,8 +27,9 @@ export async function createFiles(
     minimal: options.minimal,
     nxWelcomeSelector: `${options.prefix}-nx-welcome`,
     rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
-    installedAngularInfo,
+    angularMajorVersion,
     rootOffset,
+    isUsingApplicationBuilder,
     tpl: '',
   };
 
@@ -36,15 +40,6 @@ export async function createFiles(
     substitutions
   );
 
-  if (installedAngularInfo.major === 14) {
-    generateFiles(
-      tree,
-      joinPathFragments(__dirname, '../files/v14'),
-      options.appProjectRoot,
-      substitutions
-    );
-  }
-
   if (options.standalone) {
     generateFiles(
       tree,
@@ -53,7 +48,7 @@ export async function createFiles(
       substitutions
     );
   } else {
-    await generateFiles(
+    generateFiles(
       tree,
       joinPathFragments(__dirname, '../files/ng-module'),
       options.appProjectRoot,
@@ -65,7 +60,13 @@ export async function createFiles(
     tree,
     options.appProjectRoot,
     'app',
-    options,
+    {
+      bundler: options.bundler,
+      rootProject: options.rootProject,
+      strict: options.strict,
+      style: options.style,
+      esModuleInterop: isUsingApplicationBuilder,
+    },
     getRelativePathToRootTsConfig(tree, options.appProjectRoot)
   );
 

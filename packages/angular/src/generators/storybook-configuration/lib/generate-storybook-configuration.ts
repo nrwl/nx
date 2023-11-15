@@ -8,7 +8,7 @@ export async function generateStorybookConfiguration(
 ): Promise<GeneratorCallback> {
   const { configurationGenerator } = ensurePackage('@nx/storybook', nxVersion);
   return await configurationGenerator(tree, {
-    name: options.name,
+    project: options.project,
     uiFramework: '@storybook/angular',
     configureCypress: options.configureCypress,
     linter: options.linter,

@@ -4,13 +4,12 @@ import {
   installPackagesTask,
   offsetFromRoot,
   readNxJson,
-  stripIndents,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
 import { angularInitGenerator } from '../init/init';
+import { setupSsr } from '../setup-ssr/setup-ssr';
 import { setupTailwindGenerator } from '../setup-tailwind/setup-tailwind';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
   addE2e,
   addLinting,
@@ -24,8 +23,6 @@ import {
   updateEditorTsConfig,
 } from './lib';
 import type { Schema } from './schema';
-import { gte, lt } from 'semver';
-import { prompt } from 'enquirer';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -41,25 +38,6 @@ export async function applicationGeneratorInternal(
   tree: Tree,
   schema: Partial<Schema>
 ): Promise<GeneratorCallback> {
-  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
-
-  if (lt(installedAngularVersionInfo.version, '14.1.0') && schema.standalone) {
-    throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
-  }
-
-  if (
-    gte(installedAngularVersionInfo.version, '14.1.0') &&
-    schema.standalone === undefined &&
-    process.env.NX_INTERACTIVE === 'true'
-  ) {
-    schema.standalone = await prompt({
-      name: 'standalone-components',
-      message: 'Would you like to use Standalone Components?',
-      type: 'confirm',
-    }).then((a) => a['standalone-components']);
-  }
-
   const options = await normalizeOptions(tree, schema);
   const rootOffset = offsetFromRoot(options.appProjectRoot);
 
@@ -99,6 +77,13 @@ export async function applicationGeneratorInternal(
     enableStrictTypeChecking(tree, options);
   } else {
     setApplicationStrictDefault(tree, false);
+  }
+
+  if (options.ssr) {
+    await setupSsr(tree, {
+      project: options.name,
+      standalone: options.standalone,
+    });
   }
 
   if (!options.skipFormat) {

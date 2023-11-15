@@ -11,7 +11,7 @@ jest.mock('fs', () => {
 });
 
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import type { ProjectConfiguration, Tree } from '@nx/devkit';
+import { formatFiles, ProjectConfiguration, Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
@@ -825,6 +825,8 @@ describe('e2e migrator', () => {
           createMigrator(project);
 
           await migrator.migrate();
+
+          await formatFiles(tree);
 
           expect(tree.exists('apps/app1-e2e/cypress.config.ts')).toBe(true);
           const cypressConfig = tree.read(

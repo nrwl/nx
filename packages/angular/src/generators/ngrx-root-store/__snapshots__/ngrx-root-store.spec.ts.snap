@@ -18,7 +18,7 @@ import { UsersFacade } from './+state/users.facade';
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+    RouterModule.forRoot(appRoutes),
     StoreModule.forRoot(
       {},
       {
@@ -89,7 +89,7 @@ import { UsersEffects } from './+state/users.effects';
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+    RouterModule.forRoot(appRoutes),
     StoreModule.forRoot(
       {},
       {
@@ -372,7 +372,7 @@ import { StoreRouterConnectingModule } from '@ngrx/router-store';
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+    RouterModule.forRoot(appRoutes),
     StoreModule.forRoot(
       {},
       {
@@ -409,7 +409,7 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
   declarations: [AppComponent, NxWelcomeComponent],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+    RouterModule.forRoot(appRoutes),
     StoreModule.forRoot(
       {},
       {
@@ -433,10 +433,7 @@ export class AppModule {}
 
 exports[`NgRxRootStoreGenerator Standalone APIs should add a facade when --facade=true 1`] = `
 "import { ApplicationConfig } from '@angular/core';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
@@ -451,7 +448,7 @@ export const appConfig: ApplicationConfig = {
     UsersFacade,
     provideEffects(),
     provideStore(),
-    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+    provideRouter(appRoutes),
   ],
 };
 "
@@ -490,10 +487,7 @@ export class UsersFacade {
 
 exports[`NgRxRootStoreGenerator Standalone APIs should add a root module and root state when --minimal=false 1`] = `
 "import { ApplicationConfig } from '@angular/core';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
@@ -506,7 +500,7 @@ export const appConfig: ApplicationConfig = {
     provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
     provideEffects(),
     provideStore(),
-    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+    provideRouter(appRoutes),
   ],
 };
 "
@@ -759,30 +753,20 @@ describe('Users Selectors', () => {
 
 exports[`NgRxRootStoreGenerator Standalone APIs should add an empty root module when --minimal=true 1`] = `
 "import { ApplicationConfig } from '@angular/core';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideEffects(),
-    provideStore(),
-    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
-  ],
+  providers: [provideEffects(), provideStore(), provideRouter(appRoutes)],
 };
 "
 `;
 
 exports[`NgRxRootStoreGenerator Standalone APIs should instrument the store devtools when "addDevTools: true" 1`] = `
 "import { ApplicationConfig, isDevMode } from '@angular/core';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
@@ -793,7 +777,7 @@ export const appConfig: ApplicationConfig = {
     provideStoreDevtools({ logOnly: !isDevMode() }),
     provideEffects(),
     provideStore(),
-    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+    provideRouter(appRoutes),
   ],
 };
 "

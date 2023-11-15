@@ -39,4 +39,8 @@ export function generateWebpackConfig(
       standalone: options.standalone,
     }
   );
+
+  if (!options.setParserOptionsProject) {
+    tree.delete(joinPathFragments(appRoot, 'tsconfig.lint.json'));
+  }
 }

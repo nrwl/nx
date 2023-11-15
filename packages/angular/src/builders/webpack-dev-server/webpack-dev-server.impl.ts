@@ -2,24 +2,27 @@ import {
   joinPathFragments,
   parseTargetString,
   readCachedProjectGraph,
-  readNxJson,
 } from '@nx/devkit';
+import { getRootTsConfigPath } from '@nx/js';
+import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
-import { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { existsSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
+import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { from } from 'rxjs';
+import { switchMap } from 'rxjs/operators';
+import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
   mergeCustomWebpackConfig,
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
 import { normalizeOptions } from './lib';
-import type { Schema } from './schema';
-import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import { from } from 'rxjs';
-import { switchMap } from 'rxjs/operators';
-import { getRootTsConfigPath } from '@nx/js';
-import { join } from 'path';
+import type {
+  NormalizedSchema,
+  Schema,
+  SchemaWithBrowserTarget,
+} from './schema';
 
 type BuildTargetOptions = {
   tsConfig: string;
@@ -36,7 +39,7 @@ export function executeWebpackDevServerBuilder(
 
   const options = normalizeOptions(rawOptions);
 
-  const parsedBrowserTarget = parseTargetString(options.browserTarget, {
+  const parsedBuildTarget = parseTargetString(options.buildTarget, {
     cwd: context.currentDirectory,
     projectGraph: readCachedProjectGraph(),
     projectName: context.target.project,
@@ -44,16 +47,16 @@ export function executeWebpackDevServerBuilder(
     isVerbose: false,
   });
   const browserTargetProjectConfiguration = readCachedProjectConfiguration(
-    parsedBrowserTarget.project
+    parsedBuildTarget.project
   );
 
   const buildTarget =
-    browserTargetProjectConfiguration.targets[parsedBrowserTarget.target];
+    browserTargetProjectConfiguration.targets[parsedBuildTarget.target];
 
   const buildTargetOptions: BuildTargetOptions = {
     ...buildTarget.options,
-    ...(parsedBrowserTarget.configuration
-      ? buildTarget.configurations[parsedBrowserTarget.configuration]
+    ...(parsedBuildTarget.configuration
+      ? buildTarget.configurations[parsedBuildTarget.configuration]
       : buildTarget.defaultConfiguration
       ? buildTarget.configurations[buildTarget.defaultConfiguration]
       : {}),
@@ -96,7 +99,7 @@ export function executeWebpackDevServerBuilder(
   if (!buildLibsFromSource) {
     const { tsConfigPath, dependencies: foundDependencies } =
       createTmpTsConfigForBuildableLibs(buildTargetOptions.tsConfig, context, {
-        target: parsedBrowserTarget.target,
+        target: parsedBuildTarget.target,
       });
     dependencies = foundDependencies;
 
@@ -120,9 +123,11 @@ export function executeWebpackDevServerBuilder(
     buildTargetOptions.tsConfig = tsConfigPath;
   }
 
+  const delegateBuilderOptions = getDelegateBuilderOptions(options);
+
   return from(import('@angular-devkit/build-angular')).pipe(
     switchMap(({ executeDevServerBuilder }) =>
-      executeDevServerBuilder(options, context, {
+      executeDevServerBuilder(delegateBuilderOptions, context, {
         webpackConfiguration: async (baseWebpackConfig) => {
           if (!buildLibsFromSource) {
             const workspaceDependencies = dependencies
@@ -137,7 +142,7 @@ export function executeWebpackDevServerBuilder(
                 // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
                 new WebpackNxBuildCoordinationPlugin(
                   `nx run-many --target=${
-                    parsedBrowserTarget.target
+                    parsedBuildTarget.target
                   } --projects=${workspaceDependencies.join(',')}`
                 )
               );
@@ -173,3 +178,16 @@ export function executeWebpackDevServerBuilder(
 export default require('@angular-devkit/architect').createBuilder(
   executeWebpackDevServerBuilder
 ) as any;
+
+function getDelegateBuilderOptions(options: NormalizedSchema) {
+  const delegatedBuilderOptions = { ...options };
+  const { major } = getInstalledAngularVersionInfo();
+  if (major <= 17) {
+    (
+      delegatedBuilderOptions as unknown as SchemaWithBrowserTarget
+    ).browserTarget = delegatedBuilderOptions.buildTarget;
+    delete delegatedBuilderOptions.buildTarget;
+  }
+
+  return delegatedBuilderOptions;
+}

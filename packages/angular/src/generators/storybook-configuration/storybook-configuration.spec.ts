@@ -46,7 +46,7 @@ describe('StorybookConfiguration generator', () => {
 
   it('should only configure storybook', async () => {
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: false,
     });
 
@@ -66,7 +66,7 @@ describe('StorybookConfiguration generator', () => {
 
   it('should configure storybook to use webpack 5', async () => {
     await storybookConfigurationGenerator(tree, {
-      name: libName,
+      project: libName,
       generateStories: false,
       linter: Linter.None,
     });
@@ -78,7 +78,7 @@ describe('StorybookConfiguration generator', () => {
 
   it('should configure storybook with interaction tests and install dependencies', async () => {
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: true,
     });
 
@@ -138,7 +138,7 @@ describe('StorybookConfiguration generator', () => {
     });
 
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: true,
     });
 
@@ -175,7 +175,7 @@ describe('StorybookConfiguration generator', () => {
     });
 
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: true,
     });
 

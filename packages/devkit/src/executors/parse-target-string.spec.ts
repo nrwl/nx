@@ -62,6 +62,27 @@ describe('parseTargetString', () => {
       target: 'build',
     });
   });
+
+  // When running a converted executor, its possible that the context has a project name that
+  // isn't present within the project graph. In these cases, this function should still behave predictably.
+  it('should produce accurate results if the project graph doesnt contain the project', () => {
+    expect(
+      parseTargetString('foo:build', { ...mockContext, projectName: 'foo' })
+    ).toEqual({
+      project: 'foo',
+      target: 'build',
+    });
+    expect(
+      parseTargetString('foo:build:production', {
+        ...mockContext,
+        projectName: 'foo',
+      })
+    ).toEqual({
+      project: 'foo',
+      target: 'build',
+      configuration: 'production',
+    });
+  });
 });
 
 describe('targetToTargetString', () => {

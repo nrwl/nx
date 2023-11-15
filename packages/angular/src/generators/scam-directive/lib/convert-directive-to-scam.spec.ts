@@ -19,6 +19,7 @@ describe('convertDirectiveToScam', () => {
       skipImport: true,
       export: false,
       flat: false,
+      standalone: false,
     });
 
     // ACT
@@ -75,6 +76,7 @@ describe('convertDirectiveToScam', () => {
       skipImport: true,
       export: false,
       flat: false,
+      standalone: false,
     });
 
     // ACT
@@ -125,6 +127,7 @@ describe('convertDirectiveToScam', () => {
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
     });
 
     // ACT
@@ -181,6 +184,7 @@ describe('convertDirectiveToScam', () => {
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
     });
 
     // ACT
@@ -232,6 +236,7 @@ describe('convertDirectiveToScam', () => {
       export: false,
       flat: false,
       path: 'apps/app1/src/app/random',
+      standalone: false,
     });
 
     // ACT
@@ -289,6 +294,7 @@ describe('convertDirectiveToScam', () => {
       export: false,
       flat: true,
       path: 'apps/app1/src/app/random',
+      standalone: false,
     });
 
     // ACT

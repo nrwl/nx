@@ -85,13 +85,17 @@ The automated migration supports Angular CLI workspaces with a standard structur
 
 Currently, the automated migration supports workspaces using the following executors (builders):
 
+- `@angular-devkit/build-angular:application`
 - `@angular-devkit/build-angular:browser`
+- `@angular-devkit/build-angular:browser-esbuild`
 - `@angular-devkit/build-angular:dev-server`
 - `@angular-devkit/build-angular:extract-i18n`
 - `@angular-devkit/build-angular:karma`
 - `@angular-devkit/build-angular:ng-packagr`
+- `@angular-devkit/build-angular:prerender`
 - `@angular-devkit/build-angular:protractor`
 - `@angular-devkit/build-angular:server`
+- `@angular-devkit/build-angular:ssr-dev-server`
 - `@angular-eslint/builder:lint`
 - `@cypress/schematic:cypress`
 - `@nguniversal/builders:prerender`
@@ -117,7 +121,7 @@ Learn more about the advantages of Nx in the following guides:
 - [Using Cypress for e2e tests](/nx-api/cypress)
 - [Using Jest for unit tests](/nx-api/jest)
 - [Computation Caching](/concepts/how-caching-works)
-- [Rebuilding and Retesting What is Affected](/concepts/affected)
+- [Rebuilding and Retesting What is Affected](/nx-cloud/features/affected)
 - [Integrate with Editors](/core-features/integrate-with-editors)
 - [Advanced Angular Micro Frontends with Dynamic Module Federation](/recipes/angular/dynamic-module-federation-with-angular)
 

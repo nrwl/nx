@@ -104,7 +104,7 @@ Able to find CT project, ${!!ctProjectConfig}.`);
     assets: buildAssets,
     outputPath: buildOuputPath,
     outputFileName: 'main.js',
-    compiler: 'swc',
+    compiler: options?.compiler || 'swc',
     tsConfig: join(
       ctExecutorContext.root,
       ctProjectConfig.root,

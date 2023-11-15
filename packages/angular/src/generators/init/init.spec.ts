@@ -375,7 +375,7 @@ bar
     });
   });
 
-  describe('v14 support', () => {
+  describe('v15 support', () => {
     let tree: Tree;
     beforeEach(() => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -383,7 +383,7 @@ bar
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~14.2.0',
+          '@angular/core': '~15.2.0',
         },
       }));
     });
@@ -400,43 +400,43 @@ bar
       const { dependencies, devDependencies } = readJson(tree, 'package.json');
 
       expect(dependencies['@angular/animations']).toEqual(
-        backwardCompatibleVersions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion
       );
       expect(dependencies['@angular/common']).toEqual(
-        backwardCompatibleVersions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion
       );
       expect(dependencies['@angular/compiler']).toEqual(
-        backwardCompatibleVersions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion
       );
       expect(dependencies['@angular/core']).toEqual(
-        backwardCompatibleVersions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion
       );
       expect(dependencies['@angular/platform-browser']).toEqual(
-        backwardCompatibleVersions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion
       );
       expect(dependencies['@angular/platform-browser-dynamic']).toEqual(
-        backwardCompatibleVersions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion
       );
       expect(dependencies['@angular/router']).toEqual(
-        backwardCompatibleVersions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion
       );
       expect(dependencies['rxjs']).toEqual(
-        backwardCompatibleVersions.angularV14.rxjsVersion
+        backwardCompatibleVersions.angularV15.rxjsVersion
       );
       expect(dependencies['zone.js']).toEqual(
-        backwardCompatibleVersions.angularV14.zoneJsVersion
+        backwardCompatibleVersions.angularV15.zoneJsVersion
       );
       expect(devDependencies['@angular/cli']).toEqual(
-        backwardCompatibleVersions.angularV14.angularDevkitVersion
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
       );
       expect(devDependencies['@angular/compiler-cli']).toEqual(
-        backwardCompatibleVersions.angularV14.angularDevkitVersion
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
       );
       expect(devDependencies['@angular/language-service']).toEqual(
-        backwardCompatibleVersions.angularV14.angularVersion
+        backwardCompatibleVersions.angularV15.angularVersion
       );
       expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions.angularV14.angularDevkitVersion
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
       );
 
       // codelyzer should no longer be there by default
@@ -449,11 +449,11 @@ bar
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~14.0.0',
+          '@angular/core': '~15.0.0',
         },
         devDependencies: {
           ...json.devDependencies,
-          '@angular-devkit/build-angular': '~14.0.0',
+          '@angular-devkit/build-angular': '~15.0.0',
         },
       }));
 
@@ -463,20 +463,20 @@ bar
       // ASSERT
       const { dependencies, devDependencies } = readJson(tree, 'package.json');
 
-      expect(dependencies['@angular/animations']).toBe('~14.0.0');
-      expect(dependencies['@angular/common']).toBe('~14.0.0');
-      expect(dependencies['@angular/compiler']).toBe('~14.0.0');
-      expect(dependencies['@angular/core']).toBe('~14.0.0');
-      expect(dependencies['@angular/platform-browser']).toBe('~14.0.0');
-      expect(dependencies['@angular/platform-browser-dynamic']).toBe('~14.0.0');
-      expect(dependencies['@angular/router']).toBe('~14.0.0');
+      expect(dependencies['@angular/animations']).toBe('~15.0.0');
+      expect(dependencies['@angular/common']).toBe('~15.0.0');
+      expect(dependencies['@angular/compiler']).toBe('~15.0.0');
+      expect(dependencies['@angular/core']).toBe('~15.0.0');
+      expect(dependencies['@angular/platform-browser']).toBe('~15.0.0');
+      expect(dependencies['@angular/platform-browser-dynamic']).toBe('~15.0.0');
+      expect(dependencies['@angular/router']).toBe('~15.0.0');
       expect(dependencies['rxjs']).toBeDefined();
       expect(dependencies['tslib']).toBeDefined();
       expect(dependencies['zone.js']).toBeDefined();
-      expect(devDependencies['@angular/cli']).toBe('~14.0.0');
-      expect(devDependencies['@angular/compiler-cli']).toBe('~14.0.0');
-      expect(devDependencies['@angular/language-service']).toBe('~14.0.0');
-      expect(devDependencies['@angular-devkit/build-angular']).toBe('~14.0.0');
+      expect(devDependencies['@angular/cli']).toBe('~15.0.0');
+      expect(devDependencies['@angular/compiler-cli']).toBe('~15.0.0');
+      expect(devDependencies['@angular/language-service']).toBe('~15.0.0');
+      expect(devDependencies['@angular-devkit/build-angular']).toBe('~15.0.0');
     });
 
     it('should not overwrite already installed dependencies', async () => {
@@ -485,8 +485,8 @@ bar
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/animations': '~14.0.1',
-          '@angular/core': '~14.0.0',
+          '@angular/animations': '~15.0.1',
+          '@angular/core': '~15.0.0',
         },
       }));
 
@@ -496,8 +496,8 @@ bar
       // ASSERT
       const { dependencies } = readJson(tree, 'package.json');
 
-      expect(dependencies['@angular/animations']).toBe('~14.0.1');
-      expect(dependencies['@angular/core']).toBe('~14.0.0');
+      expect(dependencies['@angular/animations']).toBe('~15.0.1');
+      expect(dependencies['@angular/core']).toBe('~15.0.0');
     });
 
     describe('--unit-test-runner', () => {
@@ -516,7 +516,7 @@ bar
           expect(devDependencies['@nx/jest']).toBeDefined();
           expect(devDependencies['jest']).toBeDefined();
           expect(devDependencies['jest-preset-angular']).toEqual(
-            backwardCompatibleVersions.angularV14.jestPresetAngularVersion
+            backwardCompatibleVersions.angularV15.jestPresetAngularVersion
           );
         });
 

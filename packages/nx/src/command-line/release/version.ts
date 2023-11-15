@@ -51,6 +51,7 @@ export interface ReleaseVersionGeneratorSchema {
 
 export async function versionHandler(args: VersionOptions): Promise<void> {
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const { projects } = readProjectsConfigurationFromProjectGraph(projectGraph);
   const nxJson = readNxJson();
 
   if (args.verbose) {
@@ -98,6 +99,7 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
           releaseGroup.version.generator
         ),
         configGeneratorOptions: releaseGroup.version.generatorOptions,
+        projects,
       });
 
       const releaseGroupProjectNames = Array.from(
@@ -133,6 +135,7 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
         releaseGroup.version.generator
       ),
       configGeneratorOptions: releaseGroup.version.generatorOptions,
+      projects,
     });
 
     await runVersionOnProjects(
@@ -260,9 +263,15 @@ function resolveGeneratorData({
   collectionName,
   generatorName,
   configGeneratorOptions,
+  projects,
 }): GeneratorData {
   const { normalizedGeneratorName, schema, implementationFactory } =
-    getGeneratorInformation(collectionName, generatorName, workspaceRoot);
+    getGeneratorInformation(
+      collectionName,
+      generatorName,
+      workspaceRoot,
+      projects
+    );
 
   return {
     collectionName,

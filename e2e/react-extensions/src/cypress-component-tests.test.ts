@@ -165,6 +165,24 @@ export default Input;
     }
   }, 300_000);
 
+  it('should successfully component test lib being used in app using babel compiler', () => {
+    runCLI(
+      `generate @nx/react:cypress-component-configuration --project=${usedInAppLibName} --generate-tests`
+    );
+    updateFile(`libs/${usedInAppLibName}/cypress.config.ts`, (content) => {
+      // apply babel compiler
+      return content.replace(
+        'nxComponentTestingPreset(__filename)',
+        'nxComponentTestingPreset(__filename, {compiler: "babel"})'
+      );
+    });
+    if (runE2ETests()) {
+      expect(runCLI(`component-test ${usedInAppLibName} --no-watch`)).toContain(
+        'All specs passed!'
+      );
+    }
+  }, 300_000);
+
   it('should test buildable lib not being used in app', () => {
     createFile(
       `libs/${buildableLibName}/src/lib/input/input.cy.tsx`,

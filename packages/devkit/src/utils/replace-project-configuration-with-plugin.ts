@@ -3,7 +3,7 @@ import type {
   TargetConfiguration,
 } from 'nx/src/config/workspace-json-project-json';
 import type { Tree } from 'nx/src/generators/tree';
-import type { CreateNodes } from 'nx/src/utils/nx-plugin';
+import type { CreateNodes, CreateNodesAsync } from 'nx/src/utils/nx-plugin';
 import { requireNx } from '../../nx';
 const {
   readNxJson,
@@ -15,13 +15,13 @@ const {
   updateProjectConfiguration,
 } = requireNx();
 
-export function replaceProjectConfigurationsWithPlugin<T = unknown>(
+export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,
   rootMappings: Map<string, string>,
   pluginPath: string,
-  createNodes: CreateNodes<T>,
+  createNodes: CreateNodes<T> | CreateNodesAsync<T>,
   pluginOptions: T
-): void {
+): Promise<void> {
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string' ? p === pluginPath : p.plugin === pluginPath
@@ -45,7 +45,7 @@ export function replaceProjectConfigurationsWithPlugin<T = unknown>(
     try {
       const projectName = findProjectForPath(configFile, rootMappings);
       const projectConfig = readProjectConfiguration(tree, projectName);
-      const nodes = createNodesFunction(configFile, pluginOptions, {
+      const nodes = await createNodesFunction(configFile, pluginOptions, {
         workspaceRoot: tree.root,
         nxJsonConfiguration: readNxJson(tree),
       });
@@ -54,7 +54,7 @@ export function replaceProjectConfigurationsWithPlugin<T = unknown>(
       for (const [targetName, targetConfig] of Object.entries(node.targets)) {
         const targetFromProjectConfig = projectConfig.targets[targetName];
 
-        if (targetFromProjectConfig.executor !== targetConfig.executor) {
+        if (targetFromProjectConfig?.executor !== targetConfig.executor) {
           continue;
         }
 

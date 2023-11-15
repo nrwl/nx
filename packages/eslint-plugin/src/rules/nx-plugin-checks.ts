@@ -1,5 +1,6 @@
 import type { AST } from 'jsonc-eslint-parser';
 import type { TSESLint } from '@typescript-eslint/utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 import {
   ProjectGraphProjectNode,
@@ -10,11 +11,9 @@ import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
 import { existsSync } from 'fs';
 import { registerTsProject } from '@nx/js/src/internal';
 import * as path from 'path';
-
-import { createESLintRule } from '../utils/create-eslint-rule';
+import { join } from 'path';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { valid } from 'semver';
-import { join } from 'path';
 
 type Options = [
   {
@@ -49,12 +48,12 @@ export type MessageIds =
 
 export const RULE_NAME = 'nx-plugin-checks';
 
-export default createESLintRule<Options, MessageIds>({
+export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
   name: RULE_NAME,
   meta: {
     docs: {
       description: 'Checks common nx-plugin configuration files for validity',
-      recommended: 'error',
+      recommended: 'recommended',
     },
     schema: [
       {

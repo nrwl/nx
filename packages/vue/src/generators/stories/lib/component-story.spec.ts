@@ -116,7 +116,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     component: true,
     skipFormat: true,
     skipTsConfig: false,
-    unitTestRunner: 'jest',
+    unitTestRunner: 'vitest',
     projectNameAndRootFormat: 'as-provided',
   });
 

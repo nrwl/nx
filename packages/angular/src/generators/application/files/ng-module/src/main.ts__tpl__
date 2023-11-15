@@ -1,11 +1,5 @@
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';<% if(installedAngularInfo.major === 14) { %>
-import { enableProdMode } from '@angular/core';<% } %>
-import { AppModule } from './app/app.module';<% if(installedAngularInfo.major === 14) { %>
-import { environment } from './environments/environment';
-
-if(environment.production) {
-  enableProdMode();
-}<% } %>
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { AppModule } from './app/app.module';
 
 platformBrowserDynamic()
   .bootstrapModule(AppModule)

@@ -211,7 +211,7 @@ function findPropertyAssignment(
   ) as PropertyAssignment;
 }
 
-let tsUtils: typeof import('@typescript-eslint/type-utils');
-function getTsEsLintTypeUtils(): typeof import('@typescript-eslint/type-utils') {
+let tsUtils;
+function getTsEsLintTypeUtils() {
   return tsUtils ?? require('@typescript-eslint/type-utils');
 }

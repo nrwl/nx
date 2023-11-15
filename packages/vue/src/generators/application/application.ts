@@ -14,7 +14,6 @@ import { addLinting } from '../../utils/add-linting';
 import { addE2e } from './lib/add-e2e';
 import { createApplicationFiles } from './lib/create-application-files';
 import { addVite } from './lib/add-vite';
-import { addJest } from './lib/add-jest';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 
 export async function applicationGenerator(
@@ -61,14 +60,6 @@ export async function applicationGenerator(
   );
 
   tasks.push(await addVite(tree, options));
-
-  if (options.unitTestRunner === 'jest')
-    tasks.push(
-      await addJest(tree, {
-        name: options.name,
-        projectRoot: options.appProjectRoot,
-      })
-    );
 
   tasks.push(await addE2e(tree, options));
 

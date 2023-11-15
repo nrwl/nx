@@ -27,7 +27,8 @@ export function convertEslintJsonToFlatConfig(
   tree: Tree,
   root: string,
   sourceFile: string,
-  destinationFile: string
+  destinationFile: string,
+  ignorePaths: string[]
 ) {
   const importsMap = new Map<string, string>();
   const exportElements: ts.Expression[] = [];
@@ -174,19 +175,20 @@ export function convertEslintJsonToFlatConfig(
     }
   }
 
-  if (tree.exists(`${root}/.eslintignore`)) {
-    const patterns = tree
-      .read(`${root}/.eslintignore`, 'utf-8')
-      .split('\n')
-      .filter((line) => line.length > 0 && line !== 'node_modules')
-      .map((path) => mapFilePath(path, root));
-    if (patterns.length > 0) {
-      exportElements.push(generateAst({ ignores: patterns }));
+  for (const ignorePath of ignorePaths) {
+    if (tree.exists(ignorePath)) {
+      const patterns = tree
+        .read(ignorePath, 'utf-8')
+        .split('\n')
+        .filter((line) => line.length > 0 && line !== 'node_modules')
+        .map((path) => mapFilePath(path, root));
+      if (patterns.length > 0) {
+        exportElements.push(generateAst({ ignores: patterns }));
+      }
     }
   }
 
   tree.delete(join(root, sourceFile));
-  tree.delete(join(root, '.eslintignore'));
 
   // create the node list and print it to new file
   const nodeList = createNodeList(

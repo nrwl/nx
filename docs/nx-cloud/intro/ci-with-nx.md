@@ -4,9 +4,9 @@ When implemented well, continuous integration (CI) allows a team of developers t
 
 ## Core Features
 
-- Test only the code that might have been [affected](/concepts/affected) by a PR
-- Improve the average CI time with [remote caching](/core-features/remote-cache)
-- Improve the worst case CI time with [distributed task execution](/core-features/distribute-task-execution)
+- Test only the code that might have been [affected](/nx-cloud/features/affected) by a PR
+- Improve the average CI time with [remote caching](/nx-cloud/features/remote-cache)
+- Improve the worst case CI time with [distributed task execution](/nx-cloud/features/distribute-task-execution)
 - Quickly troubleshoot errors that occur in CI
 - Create a simple but powerful pipeline configuration that easily scales with your codebase
 

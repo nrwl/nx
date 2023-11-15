@@ -9,7 +9,6 @@
     "@nx/",
     "@angular-devkit",
     "@angular-eslint/",
-    "@nguniversal/builders",
     "@schematics",
     "@phenomnomnominal/tsquery",
     "@typescript-eslint/",

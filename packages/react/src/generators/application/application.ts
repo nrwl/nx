@@ -192,7 +192,7 @@ export async function applicationGeneratorInternal(
 
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       project: options.projectName,
       inSourceTests: options.inSourceTests,
       skipFormat: true,

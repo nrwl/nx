@@ -1,4 +1,3 @@
-import type { Tree } from '@nx/devkit';
 import type {
   InterfaceDeclaration,
   MethodSignature,
@@ -6,13 +5,15 @@ import type {
   PropertyAssignment,
   PropertySignature,
 } from 'typescript';
+import { NxCypressE2EPresetOptions } from '../../plugins/cypress-preset';
 
 const TS_QUERY_EXPORT_CONFIG_PREFIX =
   ':matches(ExportAssignment, BinaryExpression:has(Identifier[name="module"]):has(Identifier[name="exports"]))';
 
 export async function addDefaultE2EConfig(
   cyConfigContents: string,
-  options: { directory: string; bundler?: string }
+  options: NxCypressE2EPresetOptions,
+  baseUrl: string
 ) {
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
@@ -27,29 +28,29 @@ export async function addDefaultE2EConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    const configValue =
-      options.bundler === 'vite'
-        ? `nxE2EPreset(__filename, { cypressDir: '${options.directory}', bundler: 'vite' })`
-        : `nxE2EPreset(__filename, { cypressDir: '${options.directory}' })`;
+    const configValue = `nxE2EPreset(__filename, ${JSON.stringify(options)})`;
 
     updatedConfigContents = tsquery.replace(
       cyConfigContents,
       `${TS_QUERY_EXPORT_CONFIG_PREFIX} ObjectLiteralExpression:first-child`,
       (node: ObjectLiteralExpression) => {
+        let baseUrlContents = baseUrl ? `,\nbaseUrl: '${baseUrl}'` : '';
         if (node.properties.length > 0) {
           return `{
   ${node.properties.map((p) => p.getText()).join(',\n')},
-  e2e: ${configValue} 
+  e2e: { ...${configValue}${baseUrlContents} } 
 }`;
         }
         return `{
-  e2e: ${configValue}
+  e2e: { ...${configValue}${baseUrlContents} }
 }`;
       }
     );
-    updatedConfigContents = `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';\n${updatedConfigContents}`;
-  }
 
+    return `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+    
+    ${updatedConfigContents}`;
+  }
   return updatedConfigContents;
 }
 

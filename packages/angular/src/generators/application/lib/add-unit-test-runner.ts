@@ -1,9 +1,7 @@
 import { Tree, joinPathFragments } from '@nx/devkit';
-import type { NormalizedSchema } from './normalized-schema';
-
 import { configurationGenerator } from '@nx/jest';
-
 import { UnitTestRunner } from '../../../utils/test-runners';
+import type { NormalizedSchema } from './normalized-schema';
 
 export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
   if (options.unitTestRunner === UnitTestRunner.Jest) {

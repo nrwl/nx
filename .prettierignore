@@ -36,3 +36,5 @@ graph/client/src/assets/generated-task-graphs
 CODEOWNERS
 
 /.nx/cache
+
+.pnpm-store

@@ -11,7 +11,6 @@ describe('Nx Cloud', () => {
   beforeAll(() => {
     runCLI('connect --no-interactive', {
       env: {
-        ...process.env,
         NX_CLOUD_API: 'https://staging.nx.app',
       },
     });

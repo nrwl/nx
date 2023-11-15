@@ -79,6 +79,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.e2eTestRunner !== undefined
         ? `--e2eTestRunner=${opts.e2eTestRunner}`
         : null,
+      opts.ssr ? `--ssr` : null,
     ].filter((e) => !!e);
   }
 }
@@ -129,6 +130,18 @@ function getPresetDependencies({
           '@nx/playwright':
             e2eTestRunner === 'playwright' ? nxVersion : undefined,
           '@nx/vite': nxVersion,
+        },
+      };
+
+    case Preset.Nuxt:
+    case Preset.NuxtStandalone:
+      return {
+        dependencies: {},
+        dev: {
+          '@nx/nuxt': nxVersion,
+          '@nx/cypress': e2eTestRunner === 'cypress' ? nxVersion : undefined,
+          '@nx/playwright':
+            e2eTestRunner === 'playwright' ? nxVersion : undefined,
         },
       };
 

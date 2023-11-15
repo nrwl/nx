@@ -379,7 +379,7 @@ export default App;
             environment: 'jsdom',
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             coverage: {
-              provider: "c8",
+              provider: "v8",
               enabled: true,
               lines: 100,
               statements: 100,

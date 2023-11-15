@@ -45,6 +45,7 @@ export async function normalizeOptions(
     e2eProjectName,
     e2eProjectRoot,
     parsedTags,
+    style: options.style ?? 'none',
   } as NormalizedSchema;
 
   normalized.unitTestRunner ??= 'vitest';

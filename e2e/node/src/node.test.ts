@@ -528,7 +528,7 @@ ${jslib}();
       runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
       setMaxWorkers(join('apps', nestapp, 'project.json'));
 
-      packageInstall('@nestjs/swagger', undefined, '^6.0.0');
+      packageInstall('@nestjs/swagger', undefined, '^7.0.0');
 
       updateJson(join('apps', nestapp, 'project.json'), (config) => {
         config.targets.build.options.tsPlugins = ['@nestjs/swagger/plugin'];
@@ -641,7 +641,7 @@ describe('nest libraries', function () {
     const nestlib = uniq('nestlib');
     runCLI(`generate @nx/nest:lib ${nestlib} --buildable`);
 
-    packageInstall('@nestjs/swagger', undefined, '~6.3.0');
+    packageInstall('@nestjs/swagger', undefined, '^7.0.0');
 
     updateJson(join('libs', nestlib, 'project.json'), (config) => {
       config.targets.build.options.transformers = [

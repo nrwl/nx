@@ -32,6 +32,7 @@ interface Schema {
   routing?: boolean;
   packageManager?: PackageManager;
   e2eTestRunner?: 'cypress' | 'playwright' | 'detox' | 'jest' | 'none';
+  ssr?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

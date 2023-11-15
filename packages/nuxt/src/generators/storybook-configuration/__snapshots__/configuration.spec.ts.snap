@@ -29,3 +29,24 @@ export default config;
 `;
 
 exports[`nuxt:storybook-configuration should configure with vue3 framework and styles import 2`] = `""`;
+
+exports[`nuxt:storybook-configuration should configure with vue3 framework and styles import 3`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "emitDecoratorMetadata": true,
+    "composite": true
+  },
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
+  "include": [
+    "src/**/*.stories.ts",
+    "src/**/*.stories.js",
+    "src/**/*.stories.jsx",
+    "src/**/*.stories.tsx",
+    "src/**/*.stories.mdx",
+    ".storybook/*.js",
+    ".storybook/*.ts"
+  ]
+}
+"
+`;

@@ -17,7 +17,6 @@ import { createLibraryFiles } from './lib/create-library-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import componentGenerator from '../component/component';
 import { addVite } from './lib/add-vite';
-import { addJest } from './lib/add-jest';
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -51,9 +50,6 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
   createLibraryFiles(tree, options);
 
   tasks.push(await addVite(tree, options));
-
-  if (options.unitTestRunner === 'jest')
-    tasks.push(await addJest(tree, options));
 
   if (options.component) {
     await componentGenerator(tree, {

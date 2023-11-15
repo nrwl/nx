@@ -102,10 +102,17 @@ export default async function runExecutor(
 
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
       if (
+        // handle npm conflict error
         stdoutData.error?.code === 'EPUBLISHCONFLICT' ||
+        // handle npm conflict error when the package has a scope
         (stdoutData.error?.code === 'E403' &&
-          stdoutData.error?.body?.error?.includes(
+          stdoutData.error?.summary?.includes(
             'You cannot publish over the previously published versions'
+          )) ||
+        // handle verdaccio conflict error
+        (stdoutData.error?.code === 'E409' &&
+          stdoutData.error?.summary?.includes(
+            'this package is already present'
           ))
       ) {
         console.warn(
@@ -122,6 +129,11 @@ export default async function runExecutor(
       }
       if (stdoutData.error.detail) {
         console.error(stdoutData.error.detail);
+      }
+
+      if (context.isVerbose) {
+        console.error('npm publish stdout:');
+        console.error(JSON.stringify(stdoutData, null, 2));
       }
       return {
         success: false,

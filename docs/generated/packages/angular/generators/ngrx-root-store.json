@@ -29,7 +29,7 @@
       },
       "route": {
         "type": "string",
-        "description": "The route that the Standalone NgRx Providers should be added to. _Note: This is only supported in Angular versions >= 14.1.0_.",
+        "description": "The route that the Standalone NgRx Providers should be added to.",
         "default": "''"
       },
       "directory": {

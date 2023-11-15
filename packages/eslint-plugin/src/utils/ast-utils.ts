@@ -110,7 +110,18 @@ function hasMemberExport(exportedMember, filePath) {
 }
 
 export function getRelativeImportPath(exportedMember, filePath, basePath) {
-  if (lstatSync(filePath).isDirectory()) {
+  const status = lstatSync(filePath, {
+    throwIfNoEntry: false,
+  });
+  if (!status /*not existed, but probably not full file with an extension*/) {
+    // try to find an extension that exists
+    const ext = ['.ts', '.tsx', '.js', '.jsx'].find((ext) =>
+      lstatSync(filePath + ext, { throwIfNoEntry: false })
+    );
+    if (ext) {
+      filePath += ext;
+    }
+  } else if (status.isDirectory()) {
     const file = readdirSync(filePath).find((file) =>
       /^index\.[jt]sx?$/.exec(file)
     );
@@ -118,18 +129,6 @@ export function getRelativeImportPath(exportedMember, filePath, basePath) {
       filePath = joinPathFragments(filePath, file);
     } else {
       return;
-    }
-  } else if (
-    !lstatSync(filePath, {
-      throwIfNoEntry: false,
-    }) /*not folder, but probably not full file with an extension either*/
-  ) {
-    // try to find an extension that exists
-    const ext = ['.ts', '.tsx', '.js', '.jsx'].find((ext) =>
-      lstatSync(filePath + ext, { throwIfNoEntry: false })
-    );
-    if (ext) {
-      filePath += ext;
     }
   }
 

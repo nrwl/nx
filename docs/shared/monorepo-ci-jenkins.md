@@ -51,7 +51,7 @@ The `pr` and `main` jobs implement the CI workflow.
 
 ## Distributed Task Execution with Nx Cloud
 
-Read more about [Distributed Task Execution (DTE)](/core-features/distribute-task-execution).
+Read more about [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution).
 
 ```groovy
 pipeline {

@@ -43,12 +43,3 @@ nx g @nx/angular:library --directory=libs/nested/my-lib --importPath=@myorg/nest
 ```
 
 {% /tab %}
-
-{% tab label="Standalone component"%}
-Creates the `my-standalone-lib` library with a standalone component as an entry point instead of an ng-module. The component can be used via the `myorg-standalone-component` selector.
-
-```bash
-nx g @nx/angular:library --standalone --selector=myorg-standalone-component  my-standalone-lib
-```
-
-{% /tab %}

@@ -121,7 +121,7 @@ Because Nx uses distributed computation caching to replay all the tasks back on 
 
 ## Conclusion
 
-If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Cloud with Distributed Task Execution](/core-features/distribute-task-execution). You can generate a simple workflow for common CI providers with a single command and then customize from there.
+If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Cloud with Distributed Task Execution](/nx-cloud/features/distribute-task-execution). You can generate a simple workflow for common CI providers with a single command and then customize from there.
 
 Nx Cloud is [free for up to 300 CI Pipeline Executions](https://nx.app/pricing/) per month. Most organizations do not exceed the free tier. If you're working on an open source repo, we'll give you a coupon for unlimited free use of Nx Cloud.
 

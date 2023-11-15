@@ -31,6 +31,8 @@ async function createPreset(tree: Tree, options: Schema) {
       standalone: options.standaloneApi,
       routing: options.routing,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      bundler: options.bundler,
+      ssr: options.ssr,
     });
   } else if (options.preset === Preset.AngularStandalone) {
     const {
@@ -47,6 +49,8 @@ async function createPreset(tree: Tree, options: Schema) {
       rootProject: true,
       standalone: options.standaloneApi,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      bundler: options.bundler,
+      ssr: options.ssr,
     });
   } else if (options.preset === Preset.ReactMonorepo) {
     const { applicationGenerator: reactApplicationGenerator } = require('@nx' +
@@ -93,6 +97,32 @@ async function createPreset(tree: Tree, options: Schema) {
       '/vue');
 
     return vueApplicationGenerator(tree, {
+      name: options.name,
+      directory: '.',
+      projectNameAndRootFormat: 'as-provided',
+      style: options.style,
+      linter: options.linter,
+      rootProject: true,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+      unitTestRunner: 'vitest',
+    });
+  } else if (options.preset === Preset.Nuxt) {
+    const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
+      '/nuxt');
+
+    return nuxtApplicationGenerator(tree, {
+      name: options.name,
+      directory: join('apps', options.name),
+      projectNameAndRootFormat: 'as-provided',
+      style: options.style,
+      linter: options.linter,
+      e2eTestRunner: options.e2eTestRunner ?? 'cypress',
+    });
+  } else if (options.preset === Preset.NuxtStandalone) {
+    const { applicationGenerator: nuxtApplicationGenerator } = require('@nx' +
+      '/nuxt');
+
+    return nuxtApplicationGenerator(tree, {
       name: options.name,
       directory: '.',
       projectNameAndRootFormat: 'as-provided',

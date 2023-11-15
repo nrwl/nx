@@ -17,7 +17,7 @@ describe('vitest generator', () => {
   const options: VitestGeneratorSchema = {
     project: 'my-test-react-app',
     uiFramework: 'react',
-    coverageProvider: 'c8',
+    coverageProvider: 'v8',
   };
 
   beforeEach(() => {

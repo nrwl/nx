@@ -122,7 +122,7 @@ function getExample(
   callingGenerator: string,
   formats: ProjectNameAndRootFormats
 ) {
-  return `Example: nx g ${callingGenerator} ${formats['as-provided'].projectName} --directory ${formats['as-provided'].projectRoot}`;
+  return `Example: nx g ${callingGenerator} ${formats['derived'].projectName} --directory ${formats['derived'].projectRoot}`;
 }
 
 async function determineFormat(

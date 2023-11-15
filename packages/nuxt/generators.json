@@ -1,6 +1,7 @@
 {
   "name": "Nx Nuxt",
   "version": "0.1",
+  "extends": ["@nx/vue"],
   "generators": {
     "init": {
       "factory": "./src/generators/init/init",
@@ -15,29 +16,10 @@
       "aliases": ["app"],
       "description": "Create a Nuxt application."
     },
-    "component": {
-      "factory": "./src/generators/component/component",
-      "schema": "./src/generators/component/schema.json",
-      "aliases": ["c"],
-      "x-type": "component",
-      "description": "Create a Vue component for your Nuxt application."
-    },
-    "page": {
-      "factory": "./src/generators/page/page",
-      "schema": "./src/generators/page/schema.json",
-      "x-type": "page",
-      "description": "Create a new page for your Nuxt application."
-    },
     "storybook-configuration": {
       "factory": "./src/generators/storybook-configuration/configuration",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Set up storybook for a Nuxt app.",
-      "hidden": false
-    },
-    "stories": {
-      "factory": "./src/generators/stories/stories",
-      "schema": "./src/generators/stories/schema.json",
-      "description": "Create stories for all components declared in an app or library.",
       "hidden": false
     }
   }

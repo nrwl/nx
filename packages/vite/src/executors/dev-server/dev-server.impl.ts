@@ -77,6 +77,7 @@ export async function* viteDevServerExecutor(
 
 async function runViteDevServer(server: ViteDevServer): Promise<void> {
   await server.listen();
+
   server.printUrls();
 
   const processOnExit = async () => {

@@ -71,6 +71,7 @@
               "@ngrx/store",
               "@storybook/angular",
               "@module-federation/node",
+              "@nguniversal/builders",
               // installed dynamically by the library generator
               "ng-packagr",
               // ng-packagr deps, some are handled if not installed

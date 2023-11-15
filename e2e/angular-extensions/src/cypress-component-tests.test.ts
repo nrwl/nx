@@ -130,7 +130,7 @@ describe('Angular Cypress Component Tests', () => {
 
 function createApp(appName: string) {
   runCLI(
-    `generate @nx/angular:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
+    `generate @nx/angular:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
   );
   runCLI(
     `generate @nx/angular:component fancy-component --project=${appName} --no-interactive`

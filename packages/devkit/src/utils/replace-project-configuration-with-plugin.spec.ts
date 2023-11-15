@@ -59,7 +59,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
       },
     });
 
-    replaceProjectConfigurationsWithPlugin(
+    await replaceProjectConfigurationsWithPlugin(
       tree,
       new Map([['proj', 'proj']]),
       'plugin-path',
@@ -88,7 +88,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -117,7 +117,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -134,7 +134,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
   });
 
   describe('inputs', () => {
-    it('should not be removed if there are additional inputs', () => {
+    it('should not be removed if there are additional inputs', async () => {
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
         targets: {
@@ -149,7 +149,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -162,7 +162,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
       });
     });
 
-    it('should not be removed if there are additional inputs which are objects', () => {
+    it('should not be removed if there are additional inputs which are objects', async () => {
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
         targets: {
@@ -183,7 +183,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -202,7 +202,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
       });
     });
 
-    it('should not be removed if there are less inputs', () => {
+    it('should not be removed if there are less inputs', async () => {
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
         targets: {
@@ -217,7 +217,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -232,7 +232,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
   });
 
   describe('outputs', () => {
-    it('should not be removed if there are additional outputs', () => {
+    it('should not be removed if there are additional outputs', async () => {
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
         targets: {
@@ -251,7 +251,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -268,7 +268,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
       });
     });
 
-    it('should not be removed if there are less outputs', () => {
+    it('should not be removed if there are less outputs', async () => {
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
         targets: {
@@ -282,7 +282,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -297,7 +297,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
   });
 
   describe('dependsOn', () => {
-    it('should be removed when it is the same', () => {
+    it('should be removed when it is the same', async () => {
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
         targets: {
@@ -311,7 +311,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -324,7 +324,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
       ).toBeUndefined();
     });
 
-    it('should not be removed when there are more dependent tasks', () => {
+    it('should not be removed when there are more dependent tasks', async () => {
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
         targets: {
@@ -338,7 +338,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -351,7 +351,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
       });
     });
 
-    it('should not be removed when there are less dependent tasks', () => {
+    it('should not be removed when there are less dependent tasks', async () => {
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
         targets: {
@@ -365,7 +365,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -380,7 +380,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
   });
 
   describe('defaultConfiguration', () => {
-    it('should not be removed when the defaultConfiguration is different', () => {
+    it('should not be removed when the defaultConfiguration is different', async () => {
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
         targets: {
@@ -394,7 +394,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',
@@ -409,7 +409,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
   });
 
   describe('configurations', () => {
-    it('should not be removed when an additional configuration is defined', () => {
+    it('should not be removed when an additional configuration is defined', async () => {
       addProjectConfiguration(tree, 'proj', {
         root: 'proj',
         targets: {
@@ -427,7 +427,7 @@ describe('replaceProjectConfigurationsWithPlugin', () => {
         },
       });
 
-      replaceProjectConfigurationsWithPlugin(
+      await replaceProjectConfigurationsWithPlugin(
         tree,
         new Map([['proj', 'proj']]),
         'plugin-path',

@@ -84,7 +84,7 @@ const LARGE_BUFFER = 1024 * 1000000;
       maxBuffer: LARGE_BUFFER,
     });
 
-    let changelogCommand = `pnpm nx release changelog ${options.version} --tagVersionPrefix="" --file false --create-release github --interactive`;
+    let changelogCommand = `pnpm nx release changelog ${options.version} --interactive workspace`;
     if (options.from) {
       changelogCommand += ` --from ${options.from}`;
     }

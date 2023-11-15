@@ -18,7 +18,6 @@ import {
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
 import type { BrowserBuilderSchema } from './schema';
-import { validateOptions } from './validate-options';
 
 function shouldSkipInitialTargetRun(
   projectGraph: ProjectGraph,
@@ -48,7 +47,6 @@ export function executeWebpackBrowserBuilder(
   options: BrowserBuilderSchema,
   context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/architect').BuilderOutput> {
-  validateOptions(options);
   options.buildLibsFromSource ??= true;
 
   const {

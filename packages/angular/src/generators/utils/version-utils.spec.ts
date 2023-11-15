@@ -6,7 +6,7 @@ import {
 } from './version-utils';
 
 describe('angularVersionUtils', () => {
-  test.each(['14.0.0', '~14.1.0', '^14.2.0', '~14.3.0-beta.0'])(
+  test.each(['15.0.0', '~15.1.0', '^15.2.0', '~15.3.0-beta.0'])(
     'should return correct major version',
     (ngVersion) => {
       // ARRANGE
@@ -22,15 +22,15 @@ describe('angularVersionUtils', () => {
       const angularVersion = getInstalledAngularMajorVersion(tree);
 
       // ASSERT
-      expect(angularVersion).toBe(14);
+      expect(angularVersion).toBe(15);
     }
   );
 
   test.each([
-    ['14.0.0', '14.0.0'],
-    ['~14.1.0', '14.1.0'],
-    ['^14.2.0', '14.2.0'],
-    ['~14.3.0-beta.0', '14.3.0'],
+    ['15.0.0', '15.0.0'],
+    ['~15.1.0', '15.1.0'],
+    ['^15.2.0', '15.2.0'],
+    ['~15.3.0-beta.0', '15.3.0'],
   ])('should return correct major version', (ngVersion, expectedVersion) => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();

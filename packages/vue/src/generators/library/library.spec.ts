@@ -84,14 +84,6 @@ describe('lib', () => {
     expect(readJson(tree, '/package.json')).toMatchSnapshot();
   });
 
-  it('should add correct jest.config.ts and dependencies to package.json', async () => {
-    await libraryGenerator(tree, { ...defaultSchema, unitTestRunner: 'jest' });
-    expect(readJson(tree, '/package.json')).toMatchSnapshot();
-    expect(readJson(tree, '.eslintrc.json')).toMatchSnapshot();
-    expect(tree.read('my-lib/jest.config.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('my-lib/.babelrc', 'utf-8')).toMatchSnapshot();
-  });
-
   it('should update root tsconfig.base.json', async () => {
     await libraryGenerator(tree, defaultSchema);
     const tsconfigJson = readJson(tree, '/tsconfig.base.json');

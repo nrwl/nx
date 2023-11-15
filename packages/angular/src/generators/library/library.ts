@@ -8,14 +8,12 @@ import {
 import { configurationGenerator } from '@nx/jest';
 import { Linter } from '@nx/eslint';
 import { addTsConfigPath } from '@nx/js';
-import { lt } from 'semver';
 import init from '../../generators/init/init';
 import { E2eTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
 import {
   addDependenciesToPackageJsonIfDontExist,
-  getInstalledAngularVersionInfo,
   versions,
 } from '../utils/version-utils';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
@@ -63,13 +61,6 @@ export async function libraryGeneratorInternal(
   if (schema.addTailwind && !schema.buildable && !schema.publishable) {
     throw new Error(
       `To use "--addTailwind" option, you have to set either "--buildable" or "--publishable".`
-    );
-  }
-
-  const userInstalledAngularVersion = getInstalledAngularVersionInfo(tree);
-  if (lt(userInstalledAngularVersion.version, '14.1.0') && schema.standalone) {
-    throw new Error(
-      `The "--standalone" option is not supported in Angular versions < 14.1.0.`
     );
   }
 

@@ -23,7 +23,7 @@ export function createTsConfig(
       jsxImportSource: 'vue',
       moduleResolution: 'node',
       resolveJsonModule: true,
-      verbatimModuleSyntax: options.unitTestRunner !== 'jest',
+      verbatimModuleSyntax: true,
     },
     files: [],
     include: [],

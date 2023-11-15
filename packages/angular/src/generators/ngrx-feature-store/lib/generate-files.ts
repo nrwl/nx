@@ -2,7 +2,6 @@ import type { Tree } from '@nx/devkit';
 import { generateFiles, joinPathFragments, names } from '@nx/devkit';
 import type { NormalizedNgRxFeatureStoreGeneratorOptions } from './normalize-options';
 import { lt } from 'semver';
-import { getInstalledAngularVersion } from '../../utils/version-utils';
 
 export function generateFilesFromTemplates(
   tree: Tree,
@@ -15,7 +14,7 @@ export function generateFilesFromTemplates(
 
   generateFiles(
     tree,
-    joinPathFragments(__dirname, '..', 'files', 'base'),
+    joinPathFragments(__dirname, '..', 'files'),
     options.parentDirectory,
     {
       ...options,
@@ -26,22 +25,6 @@ export function generateFilesFromTemplates(
       tmpl: '',
     }
   );
-
-  const angularVersion = getInstalledAngularVersion(tree);
-  if (lt(angularVersion, '14.1.0')) {
-    generateFiles(
-      tree,
-      joinPathFragments(__dirname, '..', 'files', 'no-inject'),
-      options.parentDirectory,
-      {
-        ...options,
-        ...projectNames,
-        fileName,
-        relativeFileName: projectNames.fileName,
-        tmpl: '',
-      }
-    );
-  }
 
   if (!options.facade) {
     tree.delete(

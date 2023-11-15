@@ -51,12 +51,6 @@ export default async function run(
     joinPathFragments(workspaceRoot, 'eslint.config.js')
   );
 
-  if (!eslintConfigPath && hasFlatConfig) {
-    const projectRoot =
-      context.projectsConfigurations.projects[context.projectName].root;
-    eslintConfigPath = joinPathFragments(projectRoot, 'eslint.config.js');
-  }
-
   const { eslint, ESLint } = await resolveAndInstantiateESLint(
     eslintConfigPath,
     normalizedOptions,

@@ -1352,6 +1352,7 @@ dependencies = [
  "napi",
  "napi-build",
  "napi-derive",
+ "nom",
  "once_cell",
  "parking_lot",
  "rayon",

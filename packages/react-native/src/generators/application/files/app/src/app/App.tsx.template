@@ -472,7 +472,7 @@ export const App = () => {
                   @nx/react-native:component \
                 </Text>
                 <Text style={[styles.textXS, styles.monospace]}>
-                  button --project ui
+                  ui/src/lib/button
                 </Text>
               </View>
               <View style={styles.listItem}>

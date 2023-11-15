@@ -11,7 +11,6 @@ export const vueTsconfigVersion = '^0.4.0';
 // test deps
 export const vueTestUtilsVersion = '^2.4.1';
 export const vitePluginVueVersion = '^4.3.1';
-export const vueJest3Version = '^29.2.6';
 
 // linting deps
 export const vueEslintConfigPrettierVersion = '7.1.0';

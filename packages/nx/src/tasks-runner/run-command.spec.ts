@@ -3,6 +3,7 @@ import { getRunner } from './run-command';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { join } from 'path';
 import { nxCloudTasksRunnerShell } from '../nx-cloud/nx-cloud-tasks-runner-shell';
+import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
 describe('getRunner', () => {
   let nxJson: NxJsonConfiguration;
@@ -77,7 +78,12 @@ describe('getRunner', () => {
   it('uses default runner when no tasksRunnerOptions are present', () => {
     jest.mock(join(__dirname, './default-tasks-runner.ts'), () => mockRunner);
 
-    const { tasksRunner } = getRunner({}, {});
+    const { tasksRunner } = withEnvironmentVariables(
+      {
+        NX_CLOUD_ACCESS_TOKEN: undefined,
+      },
+      () => getRunner({}, {})
+    );
 
     expect(tasksRunner).toEqual(mockRunner);
   });
@@ -98,6 +104,16 @@ describe('getRunner', () => {
         "url": "https://my-nx-cloud.app",
       }
     `);
+  });
+
+  it('uses cloud runner when tasksRunnerOptions are not present and accessToken is set in env', () => {
+    const { tasksRunner } = withEnvironmentVariables(
+      {
+        NX_CLOUD_ACCESS_TOKEN: 'xxx-xx-xxx',
+      },
+      () => getRunner({}, {})
+    );
+    expect(tasksRunner).toEqual(nxCloudTasksRunnerShell);
   });
 
   it('reads options from base properties if no runner options provided', () => {

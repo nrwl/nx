@@ -38,6 +38,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             Preset.ReactStandalone,
             Preset.VueMonorepo,
             Preset.VueStandalone,
+            Preset.Nuxt,
+            Preset.NuxtStandalone,
             Preset.AngularMonorepo,
             Preset.AngularStandalone,
             Preset.Nest,
@@ -111,9 +113,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               "^production",
             ],
           },
-          "e2e": {
-            "cache": true,
-          },
           "lint": {
             "cache": true,
           },
@@ -156,9 +155,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               "production",
               "^production",
             ],
-          },
-          "e2e": {
-            "cache": true,
           },
           "lint": {
             "cache": true,
@@ -221,9 +217,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             "dependsOn": [
               "^build",
             ],
-          },
-          "e2e": {
-            "cache": true,
           },
           "lint": {
             "cache": true,

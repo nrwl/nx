@@ -4,7 +4,7 @@
     "outDir": "<%= rootOffset %>dist/out-tsc",
     "types": []
   },
-  "files": ["src/main.ts"<% if(installedAngularInfo.major === 14) { %>, "src/polyfills.ts"<% } %>],
+  "files": ["src/main.ts"],
   "include": ["src/**/*.d.ts"],
   "exclude": ["jest.config.ts", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }

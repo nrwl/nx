@@ -792,7 +792,7 @@ export function NxWelcome({ title }: { title: string }) {
                 <span># Generate UI lib</span>
                 nx g @nx/react:lib ui
                 <span># Add a component</span>
-                nx g @nx/react:component button --project ui
+                nx g @nx/react:component ui/src/lib/button
               </pre>
             </details>
             <details>

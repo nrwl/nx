@@ -2,6 +2,12 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
 import { readJson, writeJson } from '../../generators/utils/json';
 import { Tree } from '../../generators/tree';
+
+const verifyOrUpdateNxCloudClient = jest.fn();
+jest.mock('../../nx-cloud/update-manager', () => ({
+  ...jest.requireActual('../../nx-cloud/update-manager'),
+  verifyOrUpdateNxCloudClient,
+}));
 import migrate from './use-minimal-config-for-tasks-runner-options';
 
 describe('use-minimal-config-for-tasks-runner-options migration', () => {
@@ -123,6 +129,35 @@ describe('use-minimal-config-for-tasks-runner-options migration', () => {
     expect(nxJson.tasksRunnerOptions.default.options).toMatchInlineSnapshot(`
       {
         "maskedProperties": "secret",
+      }
+    `);
+    expect(nxJson.tasksRunnerOptions.default.runner).not.toBeDefined();
+  });
+
+  it('should add useLightClient false for outdated enterprise customers', async () => {
+    writeJson<NxJsonConfiguration>(tree, 'nx.json', {
+      tasksRunnerOptions: {
+        default: {
+          runner: 'nx-cloud',
+          options: {
+            accessToken: 'abc123',
+            url: 'https://nx-cloud.example.com',
+          },
+        },
+      },
+    });
+    verifyOrUpdateNxCloudClient.mockImplementation(() => {
+      throw new Error();
+    });
+
+    await migrate(tree);
+
+    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+    expect(nxJson.nxCloudAccessToken).toEqual('abc123');
+    expect(nxJson.nxCloudUrl).toEqual('https://nx-cloud.example.com');
+    expect(nxJson.tasksRunnerOptions.default.options).toMatchInlineSnapshot(`
+      {
+        "useLightClient": false,
       }
     `);
     expect(nxJson.tasksRunnerOptions.default.runner).not.toBeDefined();

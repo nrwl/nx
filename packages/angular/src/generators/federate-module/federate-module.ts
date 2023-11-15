@@ -19,6 +19,9 @@ export async function federateModuleGenerator(tree: Tree, schema: Schema) {
     
     Path: ${schema.path}`);
   }
+
+  schema.standalone = schema.standalone ?? true;
+
   const { tasks, projectRoot, remoteName } = await addRemote(tree, schema);
 
   addFileToRemoteTsconfig(tree, remoteName, schema.path);

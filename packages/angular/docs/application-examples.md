@@ -35,16 +35,6 @@ nx g @nx/angular:app my-app --inlineStyle --inlineTemplate
 
 {% /tab %}
 
-{% tab label="Standalone Components application" %}
-
-Create an application that is setup to use standalone components:
-
-```bash
-nx g @nx/angular:app my-app --standalone
-```
-
-{% /tab %}
-
 {% tab label="Set custom prefix and tags" %}
 
 Set the prefix to apply to generated selectors and add tags to the application (used for linting).

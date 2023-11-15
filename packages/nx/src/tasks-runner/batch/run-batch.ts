@@ -16,10 +16,19 @@ import {
 import { readNxJson } from '../../config/configuration';
 import { isAsyncIterator } from '../../utils/async-iterator';
 import { getExecutorInformation } from '../../command-line/run/executor-utils';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
-function getBatchExecutor(executorName: string) {
+function getBatchExecutor(
+  executorName: string,
+  projects: Record<string, ProjectConfiguration>
+) {
   const [nodeModule, exportName] = executorName.split(':');
-  return getExecutorInformation(nodeModule, exportName, workspaceRoot);
+  return getExecutorInformation(
+    nodeModule,
+    exportName,
+    workspaceRoot,
+    projects
+  );
 }
 
 async function runTasks(
@@ -32,7 +41,10 @@ async function runTasks(
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
   const nxJsonConfiguration = readNxJson();
-  const batchExecutor = getBatchExecutor(executorName);
+  const batchExecutor = getBatchExecutor(
+    executorName,
+    projectsConfigurations.projects
+  );
   const tasks = Object.values(batchTaskGraph.tasks);
   const context: ExecutorContext = {
     root: workspaceRoot,

@@ -6,11 +6,10 @@ import {
   names,
 } from '@nx/devkit';
 import { addToNgModule, findModule } from '../utils';
-import { normalizeOptions, validateOptions } from './lib';
+import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function directiveGenerator(tree: Tree, schema: Schema) {
-  validateOptions(tree, schema);
   const options = await normalizeOptions(tree, schema);
 
   generateFiles(

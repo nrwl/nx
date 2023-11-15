@@ -11,6 +11,7 @@ export async function normalizeOptions(
   host: Tree,
   schema: Schema
 ): Promise<NormalizedSchema> {
+  schema.standalone = schema.standalone ?? true;
   // Create a schema with populated default values
   const options: Schema = {
     buildable: false,

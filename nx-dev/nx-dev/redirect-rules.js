@@ -417,6 +417,26 @@ const nxCloudUrls = {
     '/nx-cloud/recipes/source-control-integration/bitbucket-cloud',
   '/nx-cloud/set-up/gitlab':
     '/nx-cloud/recipes/source-control-integration/gitlab',
+  '/core-features/remote-cache': '/nx-cloud/features/remote-cache',
+  '/core-features/distribute-task-execution':
+    '/nx-cloud/features/distribute-task-execution',
+  '/concepts/affected': '/nx-cloud/features/affected',
+  '/nx-cloud/private-cloud': '/nx-cloud/recipes/on-premise',
+  '/nx-cloud/private-cloud/get-started': '/nx-cloud/features/on-premise',
+  '/nx-cloud/private-cloud/auth-single-admin':
+    '/nx-cloud/recipes/on-premise/auth-single-admin',
+  '/nx-cloud/private-cloud/auth-github':
+    '/nx-cloud/recipes/on-premise/auth-github',
+  '/nx-cloud/private-cloud/ami-setup': '/nx-cloud/recipes/on-premise/ami-setup',
+  '/nx-cloud/private-cloud/auth-gitlab':
+    '/nx-cloud/recipes/on-premise/auth-gitlab',
+  '/nx-cloud/private-cloud/auth-bitbucket':
+    '/nx-cloud/recipes/on-premise/auth-bitbucket',
+  '/nx-cloud/private-cloud/auth-saml': '/nx-cloud/recipes/on-premise/auth-saml',
+  '/nx-cloud/private-cloud/auth-saml-managed':
+    '/nx-cloud/recipes/on-premise/auth-saml-managed',
+  '/nx-cloud/private-cloud/advanced-config':
+    '/nx-cloud/recipes/on-premise/advanced-config',
 };
 
 /**

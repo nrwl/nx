@@ -29,6 +29,11 @@
       "version": "16.5.0-beta.2",
       "description": "Add test-setup.ts to ignored files in production input",
       "implementation": "./src/migrations/update-16-5-0/add-test-setup-to-inputs-ignore"
+    },
+    "move-options-to-target-defaults": {
+      "version": "17.1.0-beta.2",
+      "description": "Move jest executor options to nx.json targetDefaults",
+      "implementation": "./src/migrations/update-17-1-0/move-options-to-target-defaults"
     }
   },
   "packageJsonUpdates": {

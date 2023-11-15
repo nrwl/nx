@@ -14,22 +14,9 @@ describe('directive generator', () => {
       sourceRoot: 'test/src',
       projectType: 'application',
     });
-
-    tree.write(
-      'test/src/app/test.module.ts',
-      `import {NgModule} from "@angular/core";
-    @NgModule({
-      imports: [],
-      declarations: [],
-      exports: []
-    })
-    export class TestModule {}`
-    );
   });
 
-  it('should generate a directive with test files and attach to the NgModule automatically', async () => {
-    // ARRANGE
-
+  it('should generate correctly', async () => {
     // ACT
     await generateDirectiveWithDefaultOptions(tree);
 
@@ -40,107 +27,19 @@ describe('directive generator', () => {
     expect(
       tree.read('test/src/app/test.directive.spec.ts', 'utf-8')
     ).toMatchSnapshot();
-    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
   });
 
-  it('should import the directive correctly when flat=false', async () => {
+  it('should not import the directive into an existing module', async () => {
     // ARRANGE
+    addModule(tree);
 
     // ACT
-    await generateDirectiveWithDefaultOptions(tree, { flat: false });
+    await generateDirectiveWithDefaultOptions(tree);
 
     // ASSERT
-    expect(
-      tree.read('test/src/app/test/test.directive.ts', 'utf-8')
-    ).toMatchSnapshot();
-    expect(
-      tree.read('test/src/app/test/test.directive.spec.ts', 'utf-8')
-    ).toMatchSnapshot();
-    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
-  });
-
-  it('should not import the directive when standalone=true', async () => {
-    // ARRANGE
-
-    // ACT
-    await generateDirectiveWithDefaultOptions(tree, { standalone: true });
-
-    // ASSERT
-    expect(
-      tree.read('test/src/app/test.directive.ts', 'utf-8')
-    ).toMatchSnapshot();
-    expect(
-      tree.read('test/src/app/test.directive.spec.ts', 'utf-8')
-    ).toMatchSnapshot();
-    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
-  });
-
-  it('should import the directive correctly when flat=false and path is nested deeper', async () => {
-    // ARRANGE
-
-    // ACT
-    await generateDirectiveWithDefaultOptions(tree, {
-      flat: false,
-      path: 'test/src/app/my-directives',
-    });
-
-    // ASSERT
-    expect(
-      tree.read('test/src/app/my-directives/test/test.directive.ts', 'utf-8')
-    ).toMatchSnapshot();
-    expect(
-      tree.read(
-        'test/src/app/my-directives/test/test.directive.spec.ts',
-        'utf-8'
-      )
-    ).toMatchSnapshot();
-    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
-  });
-
-  it('should export the directive correctly when flat=false and path is nested deeper', async () => {
-    // ARRANGE
-
-    // ACT
-    await generateDirectiveWithDefaultOptions(tree, {
-      flat: false,
-      path: 'test/src/app/my-directives',
-      export: true,
-    });
-
-    // ASSERT
-    expect(
-      tree.read('test/src/app/my-directives/test/test.directive.ts', 'utf-8')
-    ).toMatchSnapshot();
-    expect(
-      tree.read(
-        'test/src/app/my-directives/test/test.directive.spec.ts',
-        'utf-8'
-      )
-    ).toMatchSnapshot();
-    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
-  });
-
-  it('should not import the directive when skipImport=true', async () => {
-    // ARRANGE
-
-    // ACT
-    await generateDirectiveWithDefaultOptions(tree, {
-      flat: false,
-      path: 'test/src/app/my-directives',
-      skipImport: true,
-    });
-
-    // ASSERT
-    expect(
-      tree.read('test/src/app/my-directives/test/test.directive.ts', 'utf-8')
-    ).toMatchSnapshot();
-    expect(
-      tree.read(
-        'test/src/app/my-directives/test/test.directive.spec.ts',
-        'utf-8'
-      )
-    ).toMatchSnapshot();
-    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
+      'TestDirective'
+    );
   });
 
   it('should not generate test file when skipTests=true', async () => {
@@ -155,14 +54,127 @@ describe('directive generator', () => {
 
     // ASSERT
     expect(
-      tree.read('test/src/app/my-directives/test/test.directive.ts', 'utf-8')
-    ).toMatchSnapshot();
-    expect(
       tree.exists('test/src/app/my-directives/test/test.directive.spec.ts')
     ).toBeFalsy();
-    expect(tree.read('test/src/app/test.module.ts', 'utf-8')).toMatchSnapshot();
+  });
+
+  describe('--no-standalone', () => {
+    beforeEach(() => {
+      addModule(tree);
+    });
+
+    it('should generate a directive with test files and attach to the NgModule automatically', async () => {
+      // ARRANGE
+
+      // ACT
+      await generateDirectiveWithDefaultOptions(tree, { standalone: false });
+
+      // ASSERT
+      expect(
+        tree.read('test/src/app/test.directive.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('test/src/app/test.directive.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('test/src/app/test.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should import the directive correctly when flat=false', async () => {
+      // ARRANGE
+
+      // ACT
+      await generateDirectiveWithDefaultOptions(tree, {
+        flat: false,
+        standalone: false,
+      });
+
+      // ASSERT
+      expect(
+        tree.read('test/src/app/test/test.directive.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('test/src/app/test/test.directive.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('test/src/app/test.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should import the directive correctly when flat=false and path is nested deeper', async () => {
+      // ARRANGE
+
+      // ACT
+      await generateDirectiveWithDefaultOptions(tree, {
+        flat: false,
+        path: 'test/src/app/my-directives',
+        standalone: false,
+      });
+
+      // ASSERT
+      expect(
+        tree.read('test/src/app/my-directives/test/test.directive.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(
+          'test/src/app/my-directives/test/test.directive.spec.ts',
+          'utf-8'
+        )
+      ).toMatchSnapshot();
+      expect(
+        tree.read('test/src/app/test.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should export the directive correctly when flat=false and path is nested deeper', async () => {
+      // ARRANGE
+
+      // ACT
+      await generateDirectiveWithDefaultOptions(tree, {
+        flat: false,
+        path: 'test/src/app/my-directives',
+        export: true,
+        standalone: false,
+      });
+
+      // ASSERT
+      expect(
+        tree.read('test/src/app/test.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should not import the directive when skipImport=true', async () => {
+      // ARRANGE
+
+      // ACT
+      await generateDirectiveWithDefaultOptions(tree, {
+        flat: false,
+        path: 'test/src/app/my-directives',
+        skipImport: true,
+        standalone: false,
+      });
+
+      // ASSERT
+      expect(tree.read('test/src/app/test.module.ts', 'utf-8')).not.toContain(
+        'TestDirective'
+      );
+    });
   });
 });
+
+function addModule(tree: Tree) {
+  tree.write(
+    'test/src/app/test.module.ts',
+    `import {NgModule} from "@angular/core";
+  @NgModule({
+    imports: [],
+    declarations: [],
+    exports: []
+  })
+  export class TestModule {}`
+  );
+}
 
 async function generateDirectiveWithDefaultOptions(
   tree: Tree,

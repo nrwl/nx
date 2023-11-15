@@ -115,9 +115,6 @@ exports[`Ignore @nx/react/plugins/storybook in Storybook eslint plugin should up
         "{projectRoot}/tsconfig.storybook.json",
       ],
     },
-    "e2e": {
-      "cache": true,
-    },
     "lint": {
       "cache": true,
     },

@@ -128,7 +128,7 @@ export async function libraryGeneratorInternal(
     const vitestTask = await vitestGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       skipFormat: true,
       testEnvironment: options.testEnvironment,
     });

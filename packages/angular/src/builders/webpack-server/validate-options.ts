@@ -8,7 +8,6 @@ export function validateOptions(options: Schema): void {
   const angularVersionInfo = getInstalledAngularVersionInfo();
   validateAssets(options, angularVersionInfo);
   validateBuildOptimizer(options, angularVersionInfo);
-  validateBundleDependencies(options, angularVersionInfo);
   validateVendorChunk(options, angularVersionInfo);
 }
 
@@ -30,16 +29,6 @@ function validateBuildOptimizer(
   if (major < 16 && options.buildOptimizer) {
     throw new Error(stripIndents`The "buildOptimizer" option is supported from Angular >= 16.0.0. You are currently using "${version}".
     You can resolve this error by removing the "buildOptimizer" option.`);
-  }
-}
-
-function validateBundleDependencies(
-  options: Schema,
-  { major, version }: VersionInfo
-): void {
-  if (major >= 15 && options.bundleDependencies) {
-    throw new Error(stripIndents`The "bundleDependencies" option was removed in Angular version 15. You are currently using "${version}".
-    You can resolve this error by removing the "bundleDependencies" option.`);
   }
 }
 

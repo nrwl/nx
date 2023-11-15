@@ -8,9 +8,11 @@ import { verifyOrUpdateNxCloudClient } from '../src/nx-cloud/update-manager';
 import { getCloudOptions } from '../src/nx-cloud/utilities/get-cloud-options';
 import { isNxCloudUsed } from '../src/utils/nx-cloud-utils';
 import { readNxJson } from '../src/config/nx-json';
+import { setupWorkspaceContext } from '../src/utils/workspace-context';
 
 (async () => {
   try {
+    setupWorkspaceContext(workspaceRoot);
     if (isMainNxPackage() && fileExists(join(workspaceRoot, 'nx.json'))) {
       const b = new Date();
       assertSupportedPlatform();

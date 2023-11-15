@@ -23,3 +23,5 @@ export * from './src/utils/get-css-module-local-ident';
 export * from './src/utils/with-nx';
 export * from './src/utils/with-web';
 export * from './src/utils/module-federation/public-api';
+export { NxWebpackPlugin } from './src/plugins/nx-webpack-plugin/nx-webpack-plugin';
+export { NxTsconfigPathsWebpackPlugin } from './src/plugins/nx-typescript-webpack-plugin/nx-tsconfig-paths-webpack-plugin';

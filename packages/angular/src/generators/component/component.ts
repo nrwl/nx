@@ -1,16 +1,11 @@
 import type { Tree } from '@nx/devkit';
-import {
-  formatFiles,
-  generateFiles,
-  joinPathFragments,
-  names,
-} from '@nx/devkit';
+import { formatFiles, generateFiles, joinPathFragments } from '@nx/devkit';
 import { addToNgModule } from '../utils';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
   exportComponentInEntryPoint,
   findModuleFromOptions,
   normalizeOptions,
-  validateOptions,
 } from './lib';
 import type { Schema } from './schema';
 
@@ -25,9 +20,9 @@ export async function componentGeneratorInternal(
   tree: Tree,
   rawOptions: Schema
 ) {
-  validateOptions(tree, rawOptions);
   const options = await normalizeOptions(tree, rawOptions);
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   generateFiles(
     tree,
     joinPathFragments(__dirname, 'files'),
@@ -45,6 +40,7 @@ export async function componentGeneratorInternal(
       viewEncapsulation: options.viewEncapsulation,
       displayBlock: options.displayBlock,
       selector: options.selector,
+      angularMajorVersion,
       tpl: '',
     }
   );

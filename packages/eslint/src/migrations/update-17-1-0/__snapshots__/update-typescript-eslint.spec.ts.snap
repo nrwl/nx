@@ -1,0 +1,92 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`update-typescript-eslint migration should update the jest.config.ts 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'eslint-rules',
+  preset: '../../jest.preset.js',
+  transform: {
+    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../../coverage/tools/eslint-rules',
+  moduleNameMapper: {},
+};
+"
+`;
+
+exports[`update-typescript-eslint migration should update the rules 1`] = `
+"/**
+ * This file sets you up with structure needed for an ESLint rule.
+ *
+ * It leverages utilities from @typescript-eslint to allow TypeScript to
+ * provide autocompletions etc for the configuration.
+ *
+ * Your rule's custom logic will live within the create() method below
+ * and you can learn more about writing ESLint rules on the official guide:
+ *
+ * https://eslint.org/docs/developer-guide/working-with-rules
+ *
+ * You can also view many examples of existing rules here:
+ *
+ * https://github.com/typescript-eslint/typescript-eslint/tree/master/packages/eslint-plugin/src/rules
+ */
+
+import { ESLintUtils } from '@typescript-eslint/utils';
+
+// NOTE: The rule will be available in ESLint configs as "@nx/workspace/lint-rule"
+export const RULE_NAME = 'lint-rule';
+
+export const rule = ESLintUtils.RuleCreator(() => __filename)({
+  name: RULE_NAME,
+  meta: {
+    type: 'problem',
+    docs: {
+      description: \`\`,
+      recommended: 'recommended',
+    },
+    schema: [],
+    messages: {},
+  },
+  defaultOptions: [],
+  create(context) {
+    return {};
+  },
+});
+"
+`;
+
+exports[`update-typescript-eslint migration should update the tsconfig.json 1`] = `
+"{
+  "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16"
+  }
+}
+"
+`;
+
+exports[`update-typescript-eslint migration should update the tsconfig.json 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "**/*_spec.ts",
+    "**/*_test.ts",
+    "**/*.spec.tsx",
+    "**/*.test.tsx",
+    "**/*.spec.js",
+    "**/*.test.js",
+    "**/*.spec.jsx",
+    "**/*.test.jsx",
+    "**/*.d.ts",
+    "jest.config.ts"
+  ]
+}
+"
+`;

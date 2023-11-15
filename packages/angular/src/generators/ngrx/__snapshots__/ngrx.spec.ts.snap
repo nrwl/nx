@@ -669,10 +669,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 
 exports[`ngrx Standalone APIs should add a root module with feature module when minimal is set to false 2`] = `
 "import { ApplicationConfig } from '@angular/core';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
@@ -685,7 +682,7 @@ export const appConfig: ApplicationConfig = {
     provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
     provideEffects(),
     provideStore(),
-    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+    provideRouter(appRoutes),
   ],
 };
 "
@@ -704,20 +701,13 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 
 exports[`ngrx Standalone APIs should add an empty provideStore when minimal and root are set to true 2`] = `
 "import { ApplicationConfig } from '@angular/core';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideEffects(),
-    provideStore(),
-    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
-  ],
+  providers: [provideEffects(), provideStore(), provideRouter(appRoutes)],
 };
 "
 `;
@@ -735,10 +725,7 @@ bootstrapApplication(AppComponent, appConfig).catch((err) =>
 
 exports[`ngrx Standalone APIs should add facade provider when facade is true 2`] = `
 "import { ApplicationConfig } from '@angular/core';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
@@ -753,7 +740,7 @@ export const appConfig: ApplicationConfig = {
     provideEffects(),
     provideStore(),
     UsersFacade,
-    provideRouter(appRoutes, withEnabledBlockingInitialNavigation()),
+    provideRouter(appRoutes),
   ],
 };
 "
@@ -778,120 +765,6 @@ export const appRoutes: Routes = [
     ],
   },
 ];
-"
-`;
-
-exports[`ngrx angular v14 support should generate the ngrx effects using "inject" for versions >= 14.1.0 1`] = `
-"import { Injectable, inject } from '@angular/core';
-import { createEffect, Actions, ofType } from '@ngrx/effects';
-import { switchMap, catchError, of } from 'rxjs';
-import * as UsersActions from './users.actions';
-import * as UsersFeature from './users.reducer';
-
-@Injectable()
-export class UsersEffects {
-  private actions$ = inject(Actions);
-
-  init$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(UsersActions.initUsers),
-      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
-      catchError((error) => {
-        console.error('Error', error);
-        return of(UsersActions.loadUsersFailure({ error }));
-      })
-    )
-  );
-}
-"
-`;
-
-exports[`ngrx angular v14 support should generate the ngrx effects with no usage of "inject" 1`] = `
-"import { Injectable } from '@angular/core';
-import { createEffect, Actions, ofType } from '@ngrx/effects';
-
-import * as UsersActions from './users.actions';
-import * as UsersFeature from './users.reducer';
-
-import { switchMap, catchError, of } from 'rxjs';
-
-@Injectable()
-export class UsersEffects {
-  init$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(UsersActions.initUsers),
-      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
-      catchError((error) => {
-        console.error('Error', error);
-        return of(UsersActions.loadUsersFailure({ error }));
-      })
-    )
-  );
-
-  constructor(private readonly actions$: Actions) {}
-}
-"
-`;
-
-exports[`ngrx angular v14 support should generate the ngrx facade using "inject" for versions >= 14.1.0 1`] = `
-"import { Injectable, inject } from '@angular/core';
-import { select, Store, Action } from '@ngrx/store';
-
-import * as UsersActions from './users.actions';
-import * as UsersFeature from './users.reducer';
-import * as UsersSelectors from './users.selectors';
-
-@Injectable()
-export class UsersFacade {
-  private readonly store = inject(Store);
-
-  /**
-   * Combine pieces of state using createSelector,
-   * and expose them as observables through the facade.
-   */
-  loaded$ = this.store.pipe(select(UsersSelectors.selectUsersLoaded));
-  allUsers$ = this.store.pipe(select(UsersSelectors.selectAllUsers));
-  selectedUsers$ = this.store.pipe(select(UsersSelectors.selectEntity));
-
-  /**
-   * Use the initialization action to perform one
-   * or more tasks in your Effects.
-   */
-  init() {
-    this.store.dispatch(UsersActions.initUsers());
-  }
-}
-"
-`;
-
-exports[`ngrx angular v14 support should generate the ngrx facade with no usage of "inject" 1`] = `
-"import { Injectable } from '@angular/core';
-import { select, Store, Action } from '@ngrx/store';
-
-import * as UsersActions from './users.actions';
-import * as UsersFeature from './users.reducer';
-import * as UsersSelectors from './users.selectors';
-
-@Injectable()
-export class UsersFacade {
-  /**
-   * Combine pieces of state using createSelector,
-   * and expose them as observables through the facade.
-   */
-  loaded$ = this.store.pipe(select(UsersSelectors.selectUsersLoaded));
-  allUsers$ = this.store.pipe(select(UsersSelectors.selectAllUsers));
-  selectedUsers$ = this.store.pipe(select(UsersSelectors.selectEntity));
-
-  constructor(private readonly store: Store) {}
-
-  /**
-   * Use the initialization action to perform one
-   * or more tasks in your Effects.
-   */
-  init() {
-    this.store.dispatch(UsersActions.initUsers());
-  }
-}
 "
 `;
 

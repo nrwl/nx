@@ -1,16 +1,18 @@
-<script setup lang="ts">
-const route = useRoute();
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <main>
     <header>
-        <nav>
-            <NuxtLink to="/">Home</NuxtLink>
-            <NuxtLink to="/about">About</NuxtLink>
-        </nav>
+      <nav>
+        <NuxtLink to="/">
+          Home
+        </NuxtLink>
+        <NuxtLink to="/about">
+          About
+        </NuxtLink>
+      </nav>
     </header>
-    <nuxt-page></nuxt-page>
+    <nuxt-page />
   </main>
 </template>
 

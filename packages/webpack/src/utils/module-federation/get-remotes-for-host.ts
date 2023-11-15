@@ -114,7 +114,7 @@ export function getRemotes(
 
   const staticRemotes = knownRemotes.filter((r) => !devServeApps.has(r));
   const devServeRemotes = knownRemotes.filter((r) => devServeApps.has(r));
-  const remotePorts = knownRemotes.map(
+  const remotePorts = devServeRemotes.map(
     (r) => context.projectGraph.nodes[r].data.targets['serve'].options.port
   );
 

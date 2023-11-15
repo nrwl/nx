@@ -7,7 +7,7 @@ export interface Schema {
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   linter?: Linter;
   skipFormat?: boolean;
-  unitTestRunner?: 'jest' | 'vitest' | 'none';
+  unitTestRunner?: 'vitest' | 'none';
   e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   tags?: string;
   js?: boolean;

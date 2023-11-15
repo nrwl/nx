@@ -53,6 +53,17 @@ describe('remove-deprecated-build-options', () => {
     await expect(migration(tree)).resolves.not.toThrow();
   });
 
+  it('should work if a target is an empty object', async () => {
+    addProjectConfiguration(tree, 'proj', {
+      root: 'proj',
+      targets: {
+        build: {},
+      },
+    });
+
+    await expect(migration(tree)).resolves.not.toThrow();
+  });
+
   it('should not update community executors', async () => {
     addProjectConfiguration(tree, 'proj', {
       root: 'proj',

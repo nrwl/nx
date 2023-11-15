@@ -60,15 +60,11 @@ export const createNodes: CreateNodes = [
   '**/project.json',
   (projectConfigurationFile: string, opts, context: CreateNodesContext) => {
     const projectConfiguration = readJson(projectConfigurationFile);
-    const projectRoot = dirname(projectConfigurationFile);
-    const projectName = projectConfiguration.name;
+    const root = dirname(projectConfigurationFile);
 
     return {
       projects: {
-        [projectName]: {
-          ...projectConfiguration,
-          root: projectRoot,
-        },
+        [root]: projectConfiguration,
       },
     };
   },
@@ -244,12 +240,10 @@ export const createNodes: CreateNodes<MyPluginOptions> = [
   '**/project.json',
   (fileName, opts, ctx) => {
     const root = dirname(fileName);
-    const name = basename(fileName);
 
     return {
       projects: {
-        [name]: {
-          root,
+        [root]: {
           tags: opts.tagName ? [opts.tagName] : [],
         },
       },

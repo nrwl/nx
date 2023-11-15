@@ -1,5 +1,4 @@
 import { type EsBuildSchema } from './schema';
-import { validateOptions } from './lib/validate-options';
 import { type DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { type ExecutorContext, readCachedProjectGraph } from '@nx/devkit';
 import { createTmpTsConfigForBuildableLibs } from './lib/buildable-libs';
@@ -11,7 +10,6 @@ export default async function* esbuildExecutor(
   options: EsBuildSchema,
   context: ExecutorContext
 ) {
-  validateOptions(options);
   options.buildLibsFromSource ??= true;
 
   const { buildLibsFromSource, ...delegateExecutorOptions } = options;

@@ -50,7 +50,8 @@ describe('Move Angular Project', () => {
     expect(moveOutput).toContain(
       `CREATE ${newPath}/src/app/app.component.html`
     );
-    expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.module.ts`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.component.ts`);
+    expect(moveOutput).toContain(`CREATE ${newPath}/src/app/app.config.ts`);
     expect(moveOutput).toContain(`CREATE ${newPath}/src/assets/.gitkeep`);
   });
 
@@ -98,7 +99,7 @@ describe('Move Angular Project', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
     runCLI(
-      `generate @nx/angular:lib ${lib1} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib1} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
 
     /**
@@ -106,7 +107,7 @@ describe('Move Angular Project', () => {
      */
 
     runCLI(
-      `generate @nx/angular:lib ${lib2} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib2} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
 
     updateFile(
@@ -154,7 +155,7 @@ describe('Move Angular Project', () => {
     const lib1 = uniq('mylib');
     const lib2 = uniq('mylib');
     runCLI(
-      `generate @nx/angular:lib ${lib1} --project-name-and-root-format=derived --no-interactive`
+      `generate @nx/angular:lib ${lib1} --no-standalone --project-name-and-root-format=derived --no-interactive`
     );
 
     /**
@@ -162,7 +163,7 @@ describe('Move Angular Project', () => {
      */
 
     runCLI(
-      `generate @nx/angular:lib ${lib2} --project-name-and-root-format=derived --no-interactive`
+      `generate @nx/angular:lib ${lib2} --no-standalone --project-name-and-root-format=derived --no-interactive`
     );
 
     updateFile(

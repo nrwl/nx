@@ -1,3 +1,8 @@
+---
+title: Vue application generator examples
+description: This page contains examples for the @nx/vue:app generator.
+---
+
 ## Examples
 
 {% tabs %}

@@ -109,7 +109,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
   addProjectConfiguration(host, options.projectName, {
     root: options.projectRoot,
     projectType: 'application',
-    sourceRoot: `${options.projectRoot}/tests`,
+    sourceRoot: `${options.projectRoot}/src`,
     targets: {},
     implicitDependencies: [options.pluginName],
   });

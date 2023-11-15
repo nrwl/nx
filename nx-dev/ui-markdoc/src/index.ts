@@ -17,6 +17,8 @@ import { CustomLink } from './lib/nodes/link.component';
 import { link } from './lib/nodes/link.schema';
 import { Callout } from './lib/tags/callout.component';
 import { callout } from './lib/tags/callout.schema';
+import { CallToAction } from './lib/tags/call-to-action.component';
+import { callToAction } from './lib/tags/call-to-action.schema';
 import { Card, Cards, LinkCard } from './lib/tags/cards.component';
 import { card, cards, linkCard } from './lib/tags/cards.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
@@ -31,6 +33,12 @@ import { InstallNxConsole } from './lib/tags/install-nx-console.component';
 import { installNxConsole } from './lib/tags/install-nx-console.schema';
 import { Persona, Personas } from './lib/tags/personas.component';
 import { persona, personas } from './lib/tags/personas.schema';
+import {
+  ShortEmbeds,
+  shortEmbeds,
+  shortVideo,
+  ShortVideo,
+} from './lib/tags/short-embed';
 import { SideBySide } from './lib/tags/side-by-side.component';
 import { sideBySide } from './lib/tags/side-by-side.schema';
 import { Tab, Tabs } from './lib/tags/tabs.component';
@@ -60,6 +68,7 @@ export const getMarkdocCustomConfig = (
     },
     tags: {
       callout,
+      'call-to-action': callToAction,
       card,
       cards,
       'link-card': linkCard,
@@ -71,6 +80,8 @@ export const getMarkdocCustomConfig = (
       persona,
       personas,
       pill,
+      'short-embeds': shortEmbeds,
+      'short-video': shortVideo,
       'side-by-side': sideBySide,
       tab,
       tabs,
@@ -82,6 +93,7 @@ export const getMarkdocCustomConfig = (
   },
   components: {
     Callout,
+    CallToAction,
     Card,
     Cards,
     LinkCard,
@@ -96,6 +108,8 @@ export const getMarkdocCustomConfig = (
     Persona,
     Personas,
     Pill,
+    ShortEmbeds,
+    ShortVideo,
     SideBySide,
     Tab,
     Tabs,

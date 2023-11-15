@@ -1,20 +1,25 @@
-This generator will set up Storybook for your **Nuxt** project. You can also use this generator to generate Storybook configuration for your **Next.js** project. By default, starting Nx 16, Storybook v7 is used.
+---
+title: Storybook configuration generator examples
+description: This page contains examples for the @nx/nuxt:storybook-configuration generator.
+---
+
+This generator calls the `@nx/vue:storybook-configuration` generator under the hood. It will set up Storybook for your **Nuxt** project.
 
 ```bash
 nx g @nx/nuxt:storybook-configuration project-name
 ```
 
-You can read more about how this generator works, in the [Storybook for Nuxt overview page](/recipes/storybook/overview-nuxt#generate-storybook-configuration-for-a-nuxt-project).
+You can read more about how this generator works, in the [Storybook for Vue overview page](/recipes/storybook/overview-vue#generate-storybook-configuration-for-a-vue-project).
 
 When running this generator, you will be prompted to provide the following:
 
 - The `name` of the project you want to generate the configuration for.
-- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/nuxt/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, a `play` function will be added to your stories, and all the necessary dependencies will be installed. Also, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/nuxt/writing-tests/test-runner). You can read more about this in the [Nx Storybook interaction tests documentation page](/packages/storybook/documents/interaction-tests)..
+- Whether you want to set up [Storybook interaction tests](https://storybook.js.org/docs/vue/writing-tests/interaction-testing) (`interactionTests`). If you choose `yes`, a `play` function will be added to your stories, and all the necessary dependencies will be installed. Also, a `test-storybook` target will be generated in your project's `project.json`, with a command to invoke the [Storybook `test-runner`](https://storybook.js.org/docs/vue/writing-tests/test-runner). You can read more about this in the [Nx Storybook interaction tests documentation page](/packages/storybook/documents/interaction-tests)..
 - Whether you want to `generateStories` for the components in your project. If you choose `yes`, a `.stories.ts` file will be generated next to each of your components in your project.
 
 You must provide a `name` for the generator to work.
 
-By default, this generator will also set up [Storybook interaction tests](https://storybook.js.org/docs/nuxt/writing-tests/interaction-testing). If you don't want to set up Storybook interaction tests, you can pass the `--interactionTests=false` option, but it's not recommended.
+By default, this generator will also set up [Storybook interaction tests](https://storybook.js.org/docs/vue/writing-tests/interaction-testing). If you don't want to set up Storybook interaction tests, you can pass the `--interactionTests=false` option, but it's not recommended.
 
 There are a number of other options available. Let's take a look at some examples.
 

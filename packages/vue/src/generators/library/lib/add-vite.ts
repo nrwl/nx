@@ -53,7 +53,7 @@ export async function addVite(
     const vitestTask = await vitestGenerator(tree, {
       uiFramework: 'none',
       project: options.name,
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       testEnvironment: 'jsdom',

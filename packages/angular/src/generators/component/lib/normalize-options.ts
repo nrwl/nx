@@ -46,6 +46,7 @@ export async function normalizeOptions(
     projectName,
     changeDetection: options.changeDetection ?? 'Default',
     style: options.style ?? 'css',
+    standalone: options.standalone ?? true,
     directory,
     fileName,
     filePath,

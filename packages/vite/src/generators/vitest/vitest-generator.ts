@@ -19,7 +19,6 @@ import { VitestGeneratorSchema } from './schema';
 
 import initGenerator from '../init/init';
 import {
-  vitestCoverageC8Version,
   vitestCoverageIstanbulVersion,
   vitestCoverageV8Version,
 } from '../../utils/versions';
@@ -202,9 +201,9 @@ function getCoverageProviderDependency(
   coverageProvider: VitestGeneratorSchema['coverageProvider']
 ) {
   switch (coverageProvider) {
-    case 'c8':
+    case 'v8':
       return {
-        '@vitest/coverage-c8': vitestCoverageC8Version,
+        '@vitest/coverage-v8': vitestCoverageV8Version,
       };
     case 'istanbul':
       return {

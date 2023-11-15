@@ -14,6 +14,7 @@ import {
   resolveSchema,
 } from '../../config/schema-utils';
 import { getNxRequirePaths } from '../../utils/installation-directory';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 export function normalizeExecutorSchema(
   schema: Partial<ExecutorConfig['schema']>
@@ -40,7 +41,8 @@ const cachedExecutorInformation = {};
 export function getExecutorInformation(
   nodeModule: string,
   executor: string,
-  root: string
+  root: string,
+  projects: Record<string, ProjectConfiguration>
 ): ExecutorConfig & { isNgCompat: boolean; isNxExecutor: boolean } {
   try {
     const key = cacheKey(nodeModule, executor, root);
@@ -49,7 +51,8 @@ export function getExecutorInformation(
     const { executorsFilePath, executorConfig, isNgCompat } = readExecutorJson(
       nodeModule,
       executor,
-      root
+      root,
+      projects
     );
     const executorsDir = dirname(executorsFilePath);
     const schemaPath = resolveSchema(executorConfig.schema, executorsDir);
@@ -95,7 +98,8 @@ export function getExecutorInformation(
 function readExecutorJson(
   nodeModule: string,
   executor: string,
-  root: string
+  root: string,
+  projects: Record<string, ProjectConfiguration>
 ): {
   executorsFilePath: string;
   executorConfig: {
@@ -108,6 +112,7 @@ function readExecutorJson(
 } {
   const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
     nodeModule,
+    projects,
     root
       ? [root, __dirname, process.cwd(), ...getNxRequirePaths()]
       : [__dirname, process.cwd(), ...getNxRequirePaths()]

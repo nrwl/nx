@@ -1,7 +1,7 @@
 # Distribute Task Execution (DTE)
 
 Nx speeds up your average CI time with [caching](/core-features/cache-task-results) and
-the [affected command](/concepts/affected). But neither of these features help with the worst case scenario. When
+the [affected command](/nx-cloud/features/affected). But neither of these features help with the worst case scenario. When
 something at the core of your repo has been modified and every task needs to be run in CI, the only way to improve the
 performance is by adding more agent jobs and efficiently parallelizing the tasks.
 

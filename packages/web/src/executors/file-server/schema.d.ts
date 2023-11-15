@@ -5,7 +5,7 @@ export interface Schema {
   sslKey?: string;
   sslCert?: string;
   proxyUrl?: string;
-  buildTarget: string;
+  buildTarget?: string;
   parallel: boolean;
   maxParallel?: number;
   withDeps: boolean;

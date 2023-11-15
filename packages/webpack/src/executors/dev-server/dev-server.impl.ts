@@ -75,11 +75,23 @@ export async function* devServerExecutor(
       customWebpack = await customWebpack;
     }
 
-    config = await customWebpack(config, {
-      options: buildOptions,
-      context,
-      configuration: serveOptions.buildTarget.split(':')[2],
-    });
+    if (typeof customWebpack === 'function') {
+      // Old behavior, call the webpack function that is specific to Nx
+      config = await customWebpack(config, {
+        options: buildOptions,
+        context,
+        configuration: serveOptions.buildTarget.split(':')[2],
+      });
+    } else if (customWebpack) {
+      // New behavior, use the config object as is with devServer defaults
+      config = {
+        devServer: {
+          ...customWebpack.devServer,
+          ...config.devServer,
+        },
+        ...customWebpack,
+      };
+    }
   }
 
   return yield* eachValueFrom(
