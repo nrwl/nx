@@ -201,14 +201,6 @@ Choices: [all, workspace, projects]
 
 Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level
 
-##### tagVersionPrefix
-
-Type: `string`
-
-Default: `v`
-
-Prefix to apply to the version when creating the Github release tag
-
 ##### to
 
 Type: `string`
@@ -274,6 +266,12 @@ Type: `boolean`
 Default: `false`
 
 Ignore cycles in the task graph
+
+##### otp
+
+Type: `number`
+
+A one-time password for publishing to a registry that requires 2FA
 
 ##### output-style
 

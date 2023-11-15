@@ -37,13 +37,13 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     gitRemote?: string;
-    tagVersionPrefix?: string;
   };
 
 export type PublishOptions = NxReleaseArgs &
   RunManyOptions & {
     registry?: string;
     tag?: string;
+    otp?: number;
   };
 
 export const yargsReleaseCommand: CommandModule<
@@ -172,12 +172,6 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
             'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)',
           default: 'origin',
         })
-        .option('tagVersionPrefix', {
-          type: 'string',
-          description:
-            'Prefix to apply to the version when creating the Github release tag',
-          default: 'v',
-        })
         .check((argv) => {
           if (!argv.version) {
             throw new Error(
@@ -206,6 +200,11 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
       .option('tag', {
         type: 'string',
         description: 'The distribution tag to apply to the published package',
+      })
+      .option('otp', {
+        type: 'number',
+        description:
+          'A one-time password for publishing to a registry that requires 2FA',
       }),
   handler: (args) =>
     import('./publish').then((m) =>
