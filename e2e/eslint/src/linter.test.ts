@@ -772,6 +772,50 @@ describe('Linter', () => {
       expect(e2eEslint.overrides[0].extends).toBeUndefined();
     });
   });
+
+  describe('Project Config v3', () => {
+    let env: string | undefined;
+    const myapp = uniq('myapp');
+
+    beforeAll(() => {
+      env = process.env.NX_PCV3;
+      newProject({
+        name: uniq('eslint'),
+        unsetProjectNameAndRootFormat: false,
+      });
+      process.env.NX_PCV3 = 'true';
+    });
+
+    afterAll(() => {
+      if (env) {
+        process.env.NX_PCV3 = env;
+      } else {
+        delete process.env.NX_PCV3;
+      }
+    });
+
+    it('should lint example app', () => {
+      runCLI(
+        `generate @nx/react:app ${myapp}  --directory apps/${myapp} --unitTestRunner=none --bundler=vite --e2eTestRunner=cypress --style=css --no-interactive --projectNameAndRootFormat=as-provided`
+      );
+
+      const lintResults = runCLI(`lint ${myapp}`);
+      expect(lintResults).toContain('All files pass linting');
+
+      const { targets } = readJson(`apps/${myapp}/project.json`);
+      expect(targets.lint).not.toBeDefined();
+
+      const { plugins } = readJson('nx.json');
+      expect(plugins).toEqual([
+        {
+          plugin: '@nx/eslint/plugin',
+          options: {
+            targetName: 'lint',
+          },
+        },
+      ]);
+    });
+  });
 });
 
 /**
