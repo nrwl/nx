@@ -274,8 +274,6 @@ export async function createProjectConfigurations(
       workspaceRoot
     );
 
-  let projectConfigurations = projects;
-
   performance.mark('build-project-configs:end');
   performance.measure(
     'build-project-configs',
@@ -284,7 +282,7 @@ export async function createProjectConfigurations(
   );
 
   return {
-    projects: projectConfigurations,
+    projects,
     externalNodes,
     rootMap,
   };
