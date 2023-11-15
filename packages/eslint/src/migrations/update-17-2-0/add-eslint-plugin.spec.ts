@@ -35,14 +35,16 @@ describe('add-eslint-plugin migration', () => {
           executor: '@nx/eslint:lint',
           options: {
             lintFilePatterns: ['apps/my-app'],
-          }
+          },
         },
       },
     });
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'my-app').targets.lint).toBeUndefined();
+    expect(
+      readProjectConfiguration(tree, 'my-app').targets.lint
+    ).toBeUndefined();
   });
 
   it('should not remove the lint target when it uses different executor', async () => {
@@ -50,7 +52,7 @@ describe('add-eslint-plugin migration', () => {
       executor: '@bun/linter:lint',
       options: {
         lintFilePatterns: ['apps/my-app'],
-      }
+      },
     };
     updateProjectConfiguration(tree, 'my-app', {
       root: 'apps/my-app',
@@ -61,7 +63,9 @@ describe('add-eslint-plugin migration', () => {
 
     await update(tree);
 
-    expect(readProjectConfiguration(tree, 'my-app').targets.lint).toEqual(lintTarget);
+    expect(readProjectConfiguration(tree, 'my-app').targets.lint).toEqual(
+      lintTarget
+    );
   });
 
   it('should leave other options in', async () => {
@@ -73,8 +77,8 @@ describe('add-eslint-plugin migration', () => {
           options: {
             lintFilePatterns: ['apps/my-app'],
             format: 'stylish',
-            eslintConfig: '.eslintrc.js'
-          }
+            eslintConfig: '.eslintrc.js',
+          },
         },
       },
     });
@@ -84,8 +88,8 @@ describe('add-eslint-plugin migration', () => {
     expect(readProjectConfiguration(tree, 'my-app').targets.lint).toEqual({
       options: {
         format: 'stylish',
-        eslintConfig: '.eslintrc.js'
-      }
+        eslintConfig: '.eslintrc.js',
+      },
     });
   });
 });

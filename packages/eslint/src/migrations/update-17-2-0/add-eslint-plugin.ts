@@ -14,7 +14,7 @@ export default async function update(tree: Tree) {
     '@nx/eslint/plugin',
     createNodes,
     {
-      targetName: 'lint'
+      targetName: 'lint',
     }
   );
 

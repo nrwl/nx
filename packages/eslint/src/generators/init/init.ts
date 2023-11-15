@@ -78,7 +78,7 @@ function addPlugin(tree: Tree) {
  */
 function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
   if (findEslintFile(tree)) {
-    return () => { };
+    return () => {};
   }
 
   if (!options.skipPackageJson) {
@@ -111,18 +111,18 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
 
   return !options.skipPackageJson
     ? addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@nx/eslint': nxVersion,
-        '@nx/eslint-plugin': nxVersion,
-        '@typescript-eslint/parser': typescriptESLintVersion,
-        '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
-        eslint: eslintVersion,
-        'eslint-config-prettier': eslintConfigPrettierVersion,
-      }
-    )
-    : () => { };
+        tree,
+        {},
+        {
+          '@nx/eslint': nxVersion,
+          '@nx/eslint-plugin': nxVersion,
+          '@typescript-eslint/parser': typescriptESLintVersion,
+          '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
+          eslint: eslintVersion,
+          'eslint-config-prettier': eslintConfigPrettierVersion,
+        }
+      )
+    : () => {};
 }
 
 export function lintInitGenerator(tree: Tree, options: LinterInitOptions) {

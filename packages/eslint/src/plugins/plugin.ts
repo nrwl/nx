@@ -76,7 +76,7 @@ function buildEslintTargets(
     inputs: targetDefaults?.inputs ?? [
       'default',
       '{workspaceRoot}/.eslintrc.json', // TODO: detect which eslint config file is the base one
-      '{workspaceRoot}/tools/eslint-rules/**/*'
+      '{workspaceRoot}/tools/eslint-rules/**/*',
     ],
     outputs: targetDefaults?.outputs ?? ['{options.outputFile}'],
     options: {
