@@ -1583,7 +1583,7 @@ describe('createNxReleaseConfig()', () => {
               },
             },
             "projectsRelationship": "independent",
-            "releaseTagPattern": "v{version}",
+            "releaseTagPattern": "{projectName}@{version}",
             "version": {
               "generator": "@nx/js:release-version",
               "generatorOptions": {},

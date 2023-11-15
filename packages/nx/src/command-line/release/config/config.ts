@@ -75,9 +75,15 @@ export async function createNxReleaseConfig(
     tagArgs: '',
   };
 
+  const defaultFixedReleaseTagPattern = 'v{version}';
+  const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
+
+  const workspaceProjectsRelationship =
+    userConfig.projectsRelationship || 'fixed';
+
   const WORKSPACE_DEFAULTS: Omit<NxReleaseConfig, 'groups'> = {
     // By default all projects in all groups are released together
-    projectsRelationship: 'fixed',
+    projectsRelationship: workspaceProjectsRelationship,
     git: gitDefaults,
     version: {
       git: gitDefaults,
@@ -110,12 +116,19 @@ export async function createNxReleaseConfig(
           }
         : false,
     },
-    releaseTagPattern: userConfig.releaseTagPattern || 'v{version}',
+    releaseTagPattern:
+      userConfig.releaseTagPattern ||
+      // The appropriate default releaseTagPattern is dependent upon the projectRelationships
+      (workspaceProjectsRelationship === 'independent'
+        ? defaultIndependentReleaseTagPattern
+        : defaultFixedReleaseTagPattern),
   };
+
+  const groupProjectsRelationship =
+    userConfig.projectsRelationship || WORKSPACE_DEFAULTS.projectsRelationship;
+
   const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
-    projectsRelationship:
-      userConfig.projectsRelationship ||
-      WORKSPACE_DEFAULTS.projectsRelationship,
+    projectsRelationship: groupProjectsRelationship,
     version: {
       generator: '@nx/js:release-version',
       generatorOptions: {},
@@ -130,7 +143,11 @@ export async function createNxReleaseConfig(
         includeAuthors: true,
       },
     },
-    releaseTagPattern: '{projectName}@{version}',
+    releaseTagPattern:
+      // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
+      groupProjectsRelationship === 'independent'
+        ? defaultIndependentReleaseTagPattern
+        : WORKSPACE_DEFAULTS.releaseTagPattern,
   };
 
   /**
@@ -185,11 +202,7 @@ export async function createNxReleaseConfig(
             ),
             // If the user has set something custom for releaseTagPattern at the top level, respect it for the catch all default group
             releaseTagPattern:
-              userConfig.releaseTagPattern ??
-              // ...otherwise the appropriate group default releaseTagPattern is dependent upon the projectRelationships
-              (GROUP_DEFAULTS.projectsRelationship === 'independent'
-                ? GROUP_DEFAULTS.releaseTagPattern
-                : WORKSPACE_DEFAULTS.releaseTagPattern),
+              userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
           },
@@ -273,7 +286,8 @@ export async function createNxReleaseConfig(
     }
 
     const projectsRelationship =
-      releaseGroup.projectsRelationship ?? GROUP_DEFAULTS.projectsRelationship;
+      releaseGroup.projectsRelationship || GROUP_DEFAULTS.projectsRelationship;
+
     const groupDefaults: NxReleaseConfig['groups']['string'] = {
       projectsRelationship,
       projects: matchingProjects,
@@ -290,11 +304,13 @@ export async function createNxReleaseConfig(
               releaseGroup.changelog || {}
             )
           : false,
-      // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
+
       releaseTagPattern:
-        projectsRelationship === 'independent'
-          ? GROUP_DEFAULTS.releaseTagPattern
-          : WORKSPACE_DEFAULTS.releaseTagPattern,
+        releaseGroup.releaseTagPattern ||
+        // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
+        (projectsRelationship === 'independent'
+          ? defaultIndependentReleaseTagPattern
+          : defaultFixedReleaseTagPattern),
     };
 
     releaseGroups[releaseGroupName] = deepMergeDefaults([groupDefaults], {
@@ -307,15 +323,12 @@ export async function createNxReleaseConfig(
   return {
     error: null,
     nxReleaseConfig: {
-      projectsRelationship:
-        userConfig.projectsRelationship ||
-        WORKSPACE_DEFAULTS.projectsRelationship,
+      projectsRelationship: WORKSPACE_DEFAULTS.projectsRelationship,
+      releaseTagPattern: WORKSPACE_DEFAULTS.releaseTagPattern,
       git: rootGitConfig,
       version: rootVersionConfig,
       changelog: rootChangelogConfig,
       groups: releaseGroups,
-      releaseTagPattern:
-        userConfig.releaseTagPattern || WORKSPACE_DEFAULTS.releaseTagPattern,
     },
   };
 }
