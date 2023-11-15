@@ -1,6 +1,7 @@
 use crate::native::glob::build_glob_set;
 use crate::native::utils::path::Normalize;
 use std::collections::HashMap;
+use napi::bindgen_prelude::Promise;
 
 use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors};
 use rayon::prelude::*;
@@ -29,9 +30,9 @@ pub(super) fn get_project_configurations<ConfigurationParser>(
     globs: Vec<String>,
     files: Option<&[(PathBuf, String)]>,
     parse_configurations: ConfigurationParser,
-) -> napi::Result<HashMap<String, String>>
+) -> napi::Result<Promise<HashMap<String, String>>>
 where
-    ConfigurationParser: Fn(Vec<String>) -> napi::Result<HashMap<String, String>>,
+    ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
 {
     let config_paths = glob_files(globs, files).map_err(anyhow::Error::from)?;
 

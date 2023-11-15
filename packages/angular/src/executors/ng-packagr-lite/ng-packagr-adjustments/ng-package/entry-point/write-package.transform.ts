@@ -135,7 +135,13 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
       await writeFile(
         path.join(ngEntryPoint.destinationPath, 'package.json'),
         JSON.stringify(
-          { module: relativeUnixFromDestPath(destinationFiles.fesm2022) },
+          {
+            module: relativeUnixFromDestPath(
+              angularVersion.major < 16
+                ? (destinationFiles as any).esm2020
+                : destinationFiles.esm2022
+            ),
+          },
           undefined,
           2
         )

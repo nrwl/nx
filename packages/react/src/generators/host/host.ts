@@ -39,6 +39,7 @@ export async function hostGeneratorInternal(
   const options: NormalizedSchema = {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
     typescriptConfiguration: schema.typescriptConfiguration ?? true,
+    dynamic: schema.dynamic ?? false,
   };
 
   const initTask = await applicationGenerator(host, {
@@ -71,6 +72,8 @@ export async function hostGeneratorInternal(
         skipFormat: true,
         projectNameAndRootFormat: options.projectNameAndRootFormat,
         typescriptConfiguration: options.typescriptConfiguration,
+        dynamic: options.dynamic,
+        host: options.name,
       });
       tasks.push(remoteTask);
       remotePort++;
@@ -103,6 +106,12 @@ export async function hostGeneratorInternal(
       `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
     );
     updateProjectConfiguration(host, options.projectName, projectConfig);
+  }
+
+  if (!options.setParserOptionsProject) {
+    host.delete(
+      joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
+    );
   }
 
   if (!options.skipFormat) {

@@ -60,6 +60,8 @@
     "@nestjs/schematics": "^9.1.0",
     "@nestjs/swagger": "^6.0.0",
     "@nestjs/testing": "^9.0.0",
+    "@nuxt/kit": "^3.8.1",
+    "@nuxt/schema":"^3.8.1",
     "@ngrx/effects": "~16.0.0",
     "@ngrx/router-store": "~16.0.0",
     "@ngrx/store": "~16.0.0",

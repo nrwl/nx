@@ -203,7 +203,8 @@ function startDevRemotes(
     const { schema } = getExecutorInformation(
       collection,
       executor,
-      workspaceRoot
+      workspaceRoot,
+      workspaceProjects
     );
     if (
       (options.verbose && schema.additionalProperties) ||
@@ -223,6 +224,7 @@ function startDevRemotes(
         target: 'serve',
         configuration: context.target.configuration,
         runOptions,
+        projects: workspaceProjects,
       },
       options.verbose
     ).then((obs) => {
@@ -279,8 +281,7 @@ export function executeModuleFederationDevServerBuilder(
           configurationName: context.target.configuration,
           cwd: context.currentDirectory,
           isVerbose: options.verbose,
-          projectsConfigurations:
-            readProjectsConfigurationFromProjectGraph(projectGraph),
+          projectsConfigurations: { projects: workspaceProjects, version: 2 },
           nxJsonConfiguration: readNxJson(),
         }
       )

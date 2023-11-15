@@ -36,7 +36,7 @@ export function app(): express.Express {
   // server.get('/api/**', (req, res) => { });
   // Serve static files from /browser
   // serve static files
-  server.use('/', express.static(browserBundles, { maxAge: '1y' }));
+  server.get('*.*', express.static(browserBundles, { maxAge: '1y' }));
   server.use('/server', express.static(serverBundles, { maxAge: '1y' }));
 
   // All regular routes use the Universal engine
