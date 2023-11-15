@@ -7,7 +7,7 @@ launch-templates:
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-      NX_VERBOSE_LOGGING: 'false'
+      NX_VERBOSE_LOGGING: 'true'
       NX_PERF_LOGGING: 'false'
       NX_NATIVE_LOGGING: 'false'
       SELECTED_PM: 'pnpm'
