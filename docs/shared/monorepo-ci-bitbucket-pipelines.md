@@ -73,7 +73,6 @@ pipelines:
                 - npx nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
                 - npx nx-cloud record -- npx nx format:check
                 - npx nx affected --target=lint,test,build --parallel=2
-                - npx nx-cloud stop-all-agents
           - step: *agent
           - step: *agent
           - step: *agent

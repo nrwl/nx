@@ -156,8 +156,8 @@ jobs:
       - name: Check out the default branch
         run: git branch --track main origin/main
 
-      - name: Initialize the Nx Cloud distributed CI run
-        run: npx nx-cloud start-ci-run
+      - name: Initialize the Nx Cloud distributed CI run and stop agents when the build tasks are done
+        run: npx nx-cloud start-ci-run --stop-agents-after=build
 
       - name: Run commands in parallel
         run: |
@@ -177,11 +177,6 @@ jobs:
           done
 
           exit 0
-
-      - name: Stop all running agents for this CI run
-        # It's important that we always run this step, otherwise in the case of any failures in preceding non-Nx steps, the agents will keep running and waste billable minutes
-        if: ${{ always() }}
-        run: npx nx-cloud stop-all-agents
 
   agents:
     name: Agent ${{ matrix.agent }}

@@ -111,10 +111,9 @@ nx-dte:
   stage: affected
   extends: .base-pipeline
   script:
-    - yarn nx-cloud start-ci-run
+    - yarn nx-cloud start-ci-run --stop-agents-after=build
     - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t test --parallel=3 --configuration=ci & yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t e2e --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t build --parallel=2
-    - yarn nx-cloud stop-all-agents
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=2
 
 # Create as many agents as you want
 nx-dte-agent1:

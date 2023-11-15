@@ -87,12 +87,10 @@ Nx Cloud's Distributed Task Execution removes the burden of the complex setup of
 The setup looks like this:
 
 ```yaml {% fileName="main-job.yml" %}
-# Coordinate the agents to run the tasks
-- npx nx-cloud start-ci-run
+# Coordinate the agents to run the tasks and stop agents when the build tasks are done
+- npx nx-cloud start-ci-run --stop-agents-after=build
 # Run any commands you want here
-- nx affected -t lint test build
-# Stop any run away agents
-- npx nx-cloud stop-all-agents
+- nx affected -t lint,test,build
 ```
 
 ```yaml {% fileName="agent.yml" %}
