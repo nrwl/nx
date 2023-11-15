@@ -17,6 +17,7 @@ import {
 import { Linter } from '../utils/linter';
 import { findEslintFile } from '../utils/eslint-file';
 import { getGlobalEsLintConfiguration } from './global-eslint-config';
+import { EslintPluginOptions } from '../../plugins/plugin';
 
 export interface LinterInitOptions {
   linter?: Linter;
@@ -49,12 +50,35 @@ function addTargetDefaults(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
+function addPlugin(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.plugins ??= [];
+
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/eslint/plugin'
+        : plugin.plugin === '@nx/eslint/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/eslint/plugin',
+    options: {
+      targetName: 'lint',
+    } as EslintPluginOptions,
+  });
+  updateNxJson(tree, nxJson);
+}
+
 /**
  * Initializes ESLint configuration in a workspace and adds necessary dependencies.
  */
 function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
   if (findEslintFile(tree)) {
-    return () => {};
+    return () => { };
   }
 
   if (!options.skipPackageJson) {
@@ -67,8 +91,6 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
     getGlobalEsLintConfiguration(options.unitTestRunner, options.rootProject)
   );
   tree.write('.eslintignore', 'node_modules\n');
-  addTargetDefaults(tree);
-
   if (tree.exists('.vscode/extensions.json')) {
     updateJson(tree, '.vscode/extensions.json', (json) => {
       json.recommendations ||= [];
@@ -80,20 +102,27 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
     });
   }
 
+  const addPlugins = process.env.NX_PCV3 === 'true';
+  if (addPlugins) {
+    addPlugin(tree);
+  } else {
+    addTargetDefaults(tree);
+  }
+
   return !options.skipPackageJson
     ? addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          '@nx/eslint': nxVersion,
-          '@nx/eslint-plugin': nxVersion,
-          '@typescript-eslint/parser': typescriptESLintVersion,
-          '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
-          eslint: eslintVersion,
-          'eslint-config-prettier': eslintConfigPrettierVersion,
-        }
-      )
-    : () => {};
+      tree,
+      {},
+      {
+        '@nx/eslint': nxVersion,
+        '@nx/eslint-plugin': nxVersion,
+        '@typescript-eslint/parser': typescriptESLintVersion,
+        '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
+        eslint: eslintVersion,
+        'eslint-config-prettier': eslintConfigPrettierVersion,
+      }
+    )
+    : () => { };
 }
 
 export function lintInitGenerator(tree: Tree, options: LinterInitOptions) {

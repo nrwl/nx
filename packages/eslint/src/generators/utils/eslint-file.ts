@@ -23,7 +23,7 @@ import {
 import ts = require('typescript');
 import { mapFilePath } from './flat-config/path-utils';
 
-export const eslintConfigFileWhitelist = [
+export const ESLINT_CONFIG_FILENAMES = [
   '.eslintrc',
   '.eslintrc.js',
   '.eslintrc.cjs',
@@ -43,7 +43,7 @@ export function findEslintFile(tree: Tree, projectRoot = ''): string | null {
   if (projectRoot === '' && tree.exists(baseEsLintFlatConfigFile)) {
     return baseEsLintFlatConfigFile;
   }
-  for (const file of eslintConfigFileWhitelist) {
+  for (const file of ESLINT_CONFIG_FILENAMES) {
     if (tree.exists(joinPathFragments(projectRoot, file))) {
       return file;
     }
@@ -148,7 +148,7 @@ function offsetFilePath(
   tree: Tree
 ): string {
   if (
-    eslintConfigFileWhitelist.some((eslintFile) =>
+    ESLINT_CONFIG_FILENAMES.some((eslintFile) =>
       pathToFile.includes(eslintFile)
     )
   ) {

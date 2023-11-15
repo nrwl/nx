@@ -27,16 +27,32 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./generators": "./generators.js",
+    "./generators/*/schema.json": "./src/generators/*/schema.json",
+    "./executors": "./executors.js",
+    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
+    "./src/executors/*.impl": "./src/executors/*.impl.js",
+    "./plugin": "./plugin.js"
+  },
   "executors": "./executors.json",
   "generators": "./generators.json",
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  },
   "peerDependencies": {
     "eslint": "^8.0.0",
     "js-yaml": "4.1.0"
   },
   "dependencies": {
-    "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
+    "tslib": "^2.3.0",
     "typescript": "~5.2.2"
   },
   "peerDependenciesMeta": {
