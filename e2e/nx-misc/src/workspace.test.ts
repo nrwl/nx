@@ -206,10 +206,6 @@ describe('Workspace Tests', () => {
       const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `shared/${lib1}/data-access/**/*.ts`,
-        `shared/${lib1}/data-access/package.json`,
-      ]);
 
       /**
        * Check that the import in lib2 has been updated
@@ -342,11 +338,6 @@ describe('Workspace Tests', () => {
       const lib3Config = readJson(join(lib3, 'project.json'));
       expect(lib3Config.implicitDependencies).toEqual([newName]);
 
-      expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `shared/${lib1}/data-access/**/*.ts`,
-        `shared/${lib1}/data-access/package.json`,
-      ]);
-
       /**
        * Check that the import in lib2 has been updated
        */
@@ -478,10 +469,6 @@ describe('Workspace Tests', () => {
       const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `packages/shared/${lib1}/data-access/**/*.ts`,
-        `packages/shared/${lib1}/data-access/package.json`,
-      ]);
       expect(project.tags).toEqual([]);
 
       /**
@@ -614,10 +601,6 @@ describe('Workspace Tests', () => {
       const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `${lib1}/data-access/**/*.ts`,
-        `${lib1}/data-access/package.json`,
-      ]);
 
       /**
        * Check that the import in lib2 has been updated
@@ -735,10 +718,6 @@ describe('Workspace Tests', () => {
       const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `shared/${lib1}/data-access/**/*.ts`,
-        `shared/${lib1}/data-access/package.json`,
-      ]);
 
       /**
        * Check that the import in lib2 has been updated

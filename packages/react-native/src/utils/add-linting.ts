@@ -31,7 +31,6 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     linter: options.linter,
     project: options.projectName,
     tsConfigPaths: options.tsConfigPaths,
-    eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
   });

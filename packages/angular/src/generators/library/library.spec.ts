@@ -1129,12 +1129,6 @@ describe('lib', () => {
           .toMatchInlineSnapshot(`
           {
             "executor": "@nx/eslint:lint",
-            "options": {
-              "lintFilePatterns": [
-                "my-lib/**/*.ts",
-                "my-lib/**/*.html",
-              ],
-            },
             "outputs": [
               "{options.outputFile}",
             ],
