@@ -109,7 +109,10 @@ function startStaticRemotesFileServer(
 
     if (!commonOutputDirectory) {
       commonOutputDirectory = directoryOfOutputPath;
-    } else if (commonOutputDirectory !== directoryOfOutputPath) {
+    } else if (
+      commonOutputDirectory !== directoryOfOutputPath ||
+      !outputPath.endsWith(app)
+    ) {
       shouldMoveToCommonLocation = true;
     }
   }
@@ -119,18 +122,10 @@ function startStaticRemotesFileServer(
     for (const app of remotes.staticRemotes) {
       const outputPath =
         projectGraph.nodes[app].data.targets['build'].options.outputPath;
-      const outputPathParts = outputPath.split('/');
-      cpSync(
-        outputPath,
-        join(
-          commonOutputDirectory,
-          outputPathParts[outputPathParts.length - 1]
-        ),
-        {
-          force: true,
-          recursive: true,
-        }
-      );
+      cpSync(outputPath, join(commonOutputDirectory, app), {
+        force: true,
+        recursive: true,
+      });
     }
   }
 
