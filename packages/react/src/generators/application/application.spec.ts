@@ -64,6 +64,8 @@ describe('app', () => {
         'vite/client',
         'node',
         'vitest',
+        '@nx/react/typings/cssmodule.d.ts',
+        '@nx/react/typings/image.d.ts',
       ]);
     });
 
