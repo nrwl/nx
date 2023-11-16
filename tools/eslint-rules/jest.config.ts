@@ -12,6 +12,5 @@ export default {
     ],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  testEnvironment: 'node',
   preset: '../../jest.preset.js',
 };

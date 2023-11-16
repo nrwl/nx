@@ -13,4 +13,5 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageReporters: ['html'],
   maxWorkers: 1,
+  testEnvironment: 'node',
 };

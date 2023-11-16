@@ -17,14 +17,10 @@ import {
 } from '../../config/project-graph';
 import type { NxWorkspaceFiles } from '../../native';
 import { getNxPackageJsonWorkspacesPlugin } from '../../../plugins/package-json-workspaces';
-<<<<<<< HEAD
 import {
   ConfigurationSourceMaps,
   buildProjectsConfigurationsFromProjectPathsAndPlugins,
 } from './project-configuration-utils';
-=======
-import { buildProjectsConfigurationsFromProjectPathsAndPlugins } from './project-configuration-utils';
->>>>>>> 640fa5bfa (fix(core): dont rerun create-nodes during project graph incremental recomputation)
 import {
   getDefaultPlugins,
   LoadedNxPlugin,

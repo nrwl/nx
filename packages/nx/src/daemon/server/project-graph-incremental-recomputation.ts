@@ -208,6 +208,7 @@ async function processFilesAndCreateAndSerializeProjectGraph() {
       configResult.projectNodes,
       nxJson
     );
+    writeSourceMaps(configResult.sourceMaps);
     return createAndSerializeProjectGraph(configResult.projectNodes);
   } catch (err) {
     return Promise.resolve({
@@ -236,7 +237,7 @@ function copyFileMap(m: FileMap) {
 }
 
 async function createAndSerializeProjectGraph(
-  projects: Record<string, ProjectConfiguration>
+  projects: Record<string, ProjectConfiguration>,
 ): Promise<{
   error: string | null;
   projectGraph: ProjectGraph | null;
@@ -275,8 +276,6 @@ async function createAndSerializeProjectGraph(
       'json-stringify-start',
       'json-stringify-end'
     );
-
-    writeSourceMaps(projectConfigurations.sourceMaps);
 
     return {
       error: null,
