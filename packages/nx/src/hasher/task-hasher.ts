@@ -130,7 +130,7 @@ export class InProcessTaskHasher implements TaskHasher {
   static version = '3.0';
   private taskHasher: TaskHasherImpl;
 
-  private useNativeTaskHasher = process.env.NX_NATIVE_TASK_HASHER === 'true';
+  private useNativeTaskHasher = process.env.NX_NATIVE_TASK_HASHER !== 'false';
 
   constructor(
     private readonly projectFileMap: ProjectFileMap,
