@@ -1,6 +1,6 @@
 launch-templates:
   linux-medium:
-    resource-class: 'docker_linux_amd64/medium+'
+    resource-class: 'docker_linux_amd64/extra_large'
     env:
       CI: 'true'
       GIT_AUTHOR_EMAIL: test@test.com
