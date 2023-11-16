@@ -37,19 +37,8 @@ CHANGELOG.md
 # Local dev files
 .env
 .bashrc
-.nx
 
 *.node
 
 # Fix for issue when working on the repo in a dev container
 .pnpm-store
-.nx/cache
-
-.cargo/.package-cache
-.cargo/bin/
-.cargo/env
-.cargo/registry/
-.local/
-.npm/
-.profile
-.rustup/
