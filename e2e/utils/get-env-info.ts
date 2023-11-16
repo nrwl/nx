@@ -136,9 +136,7 @@ export function ensureCypressInstallation() {
 }
 
 export function ensurePlaywrightBrowsersInstallation() {
-  const playwrightInstallArgs =
-    process.env.PLAYWRIGHT_INSTALL_ARGS || '--with-deps';
-  execSync(`npx playwright install ${playwrightInstallArgs}`, {
+  execSync('npx playwright install --with-deps --force', {
     stdio: isVerbose() ? 'inherit' : 'pipe',
     encoding: 'utf-8',
     cwd: tmpProjPath(),
