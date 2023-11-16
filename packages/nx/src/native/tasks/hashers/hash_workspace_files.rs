@@ -2,11 +2,9 @@ use std::sync::Arc;
 
 use anyhow::*;
 use dashmap::DashMap;
-use rayon::prelude::*;
 use tracing::trace;
 
 use crate::native::glob::build_glob_set;
-use crate::native::hasher::hash;
 use crate::native::types::FileData;
 
 pub fn hash_workspace_files(
@@ -29,23 +27,24 @@ pub fn hash_workspace_files(
 
     let glob = build_glob_set(&[file_set])?;
 
-    let files = all_workspace_files
-        .par_iter()
+    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+    for file in all_workspace_files
+        .iter()
         .filter(|file| glob.is_match(&file.file))
-        .map(|file| {
-            trace!("{:?} was found with glob {:?}", file.file, file_set);
-            file.hash.as_bytes()
-        })
-        .collect::<Vec<_>>()
-        .concat();
+    {
+        trace!("{:?} was found with glob {:?}", file.file, file_set);
+        hasher.update(file.hash.as_bytes());
+    }
+    let hashed_value = hasher.digest().to_string();
 
-    let hashed_value = hash(&files);
     cache.insert(file_set.to_string(), hashed_value.clone());
     Ok(hashed_value)
 }
 
 #[cfg(test)]
 mod test {
+    use crate::native::hasher::hash;
+
     use super::*;
     use dashmap::DashMap;
     use std::sync::Arc;

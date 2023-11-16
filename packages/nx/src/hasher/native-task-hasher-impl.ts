@@ -11,11 +11,11 @@ import {
   TaskHasher,
   NxWorkspaceFilesExternals,
 } from '../native';
-import {
-  transformNxJsonForRust,
-  transformProjectGraphForRust,
-} from '../native/transform-objects';
+import { transformProjectGraphForRust } from '../native/transform-objects';
 import { PartialHash, TaskHasherImpl } from './task-hasher';
+import { readJson } from '../generators/utils/json';
+import { readJsonFile } from '../utils/fileutils';
+import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 
 export class NativeTaskHasherImpl implements TaskHasherImpl {
   hasher: TaskHasher;
@@ -39,15 +39,18 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     this.allWorkspaceFilesRef = externals.allWorkspaceFiles;
     this.projectFileMapRef = externals.projectFiles;
 
-    this.planner = new HashPlanner(
-      transformNxJsonForRust(nxJson),
-      this.projectGraphRef
-    );
+    let tsconfig = readJsonFile(getRootTsConfigPath());
+    let paths = tsconfig.compilerOptions?.paths ?? {};
+    delete tsconfig.compilerOptions.paths;
+
+    this.planner = new HashPlanner(nxJson, this.projectGraphRef);
     this.hasher = new TaskHasher(
       workspaceRoot,
       this.projectGraphRef,
       this.projectFileMapRef,
       this.allWorkspaceFilesRef,
+      Buffer.from(JSON.stringify(tsconfig)),
+      paths,
       options
     );
   }

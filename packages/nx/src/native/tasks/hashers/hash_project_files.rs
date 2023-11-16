@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use crate::native::hasher::hash;
 use anyhow::*;
-use rayon::prelude::*;
 use tracing::trace;
 
 use crate::native::glob::build_glob_set;
@@ -15,13 +13,11 @@ pub fn hash_project_files(
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<String> {
     let collected_files = collect_files(project_name, project_root, file_sets, project_file_map)?;
-    Ok(hash(
-        &collected_files
-            .par_iter()
-            .map(|file| file.hash.as_bytes())
-            .collect::<Vec<_>>()
-            .concat(),
-    ))
+    let mut hasher = xxhash_rust::xxh3::Xxh3::new();
+    for file in collected_files {
+        hasher.update(file.hash.as_bytes());
+    }
+    Ok(hasher.digest().to_string())
 }
 
 /// base function that should be testable (to make sure that we're getting the proper files back)
@@ -54,6 +50,8 @@ fn collect_files<'a>(
 }
 #[cfg(test)]
 mod tests {
+    use crate::native::hasher::hash;
+
     use super::*;
     use std::collections::HashMap;
 

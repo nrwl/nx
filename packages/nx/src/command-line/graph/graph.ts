@@ -42,10 +42,7 @@ import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { HashPlanner, transferProjectGraph } from '../../native';
-import {
-  transformNxJsonForRust,
-  transformProjectGraphForRust,
-} from '../../native/transform-objects';
+import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 
@@ -686,7 +683,7 @@ async function createTaskGraphClientResponse(
   performance.mark('task graph generation:end');
 
   const planner = new HashPlanner(
-    transformNxJsonForRust(nxJson),
+    nxJson,
     transferProjectGraph(transformProjectGraphForRust(graph))
   );
   performance.mark('task hash plan generation:start');

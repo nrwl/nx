@@ -107,7 +107,6 @@ export interface DepsOutputsInput {
 /** Stripped version of the NxJson interface for use in rust */
 export interface NxJson {
   namedInputs?: Record<string, Array<JsInputs>>
-  targetDefaults?: Record<string, Target>
 }
 export const enum EventType {
   delete = 'delete',
@@ -153,8 +152,8 @@ export class HashPlanner {
   getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): JsExternal
 }
 export class TaskHasher {
-  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, options?: HasherOptions | undefined | null)
-  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>): Record<string, HashDetails>
+  constructor(workspaceRoot: string, projectGraph: ExternalObject<ProjectGraph>, projectFileMap: ExternalObject<ProjectFiles>, allWorkspaceFiles: ExternalObject<Array<FileData>>, tsConfig: Buffer, tsConfigPaths: Record<string, Array<string>>, options?: HasherOptions | undefined | null)
+  hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, jsEnv: Record<string, string>): NapiDashMap
 }
 export class Watcher {
   origin: string

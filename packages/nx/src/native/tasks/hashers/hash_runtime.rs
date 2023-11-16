@@ -18,7 +18,12 @@ pub fn hash_runtime(
     }
 
     let mut command_builder = if cfg!(target_os = "windows") {
-        let mut command = Command::new("cmd");
+        let comspec = std::env::var("COMSPEC");
+        let shell = comspec
+            .as_ref()
+            .map(|v| v.as_str())
+            .unwrap_or_else(|_| "cmd.exe");
+        let mut command = Command::new(shell);
         command.arg("/C");
         command
     } else {
