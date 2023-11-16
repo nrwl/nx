@@ -438,7 +438,7 @@ const nxCloudUrls = {
   '/nx-cloud/private-cloud/advanced-config':
     '/nx-cloud/recipes/on-premise/advanced-config',
   '/concepts/dte': '/nx-cloud/concepts/dte',
-  '/nx-cloud/intro/nx-cloud-workflows': '/nx-cloud/concepts/nx-cloud-workflows',
+  '/nx-cloud/intro/nx-cloud-workflows': '/nx-cloud/features/nx-cloud-workflows',
   '/nx-cloud/account': '/nx-cloud/recipes/security',
   '/nx-cloud/account/google-auth': '/nx-cloud/recipes/security/google-auth',
   '/nx-cloud/account/access-tokens': '/nx-cloud/recipes/security/access-tokens',
