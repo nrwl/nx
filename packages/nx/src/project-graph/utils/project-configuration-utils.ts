@@ -104,13 +104,6 @@ export function mergeProjectConfigurationIntoRootMap(
           ...matchingProject.generators[generator],
           ...project.generators[generator],
         };
-
-        if (sourceMap) {
-          for (const property in project.generators[generator]) {
-            sourceMap[`generators.${generator}.${property}`] =
-              sourceInformation;
-          }
-        }
       }
     }
   }
