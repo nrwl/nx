@@ -67,6 +67,8 @@ const deprecationWarning = stripIndents`
     In Nx 18, generating projects will no longer derive the name and root.
     Please provide the exact project name and root in the future.`;
 
+// dummy comment to produce affected graph similar to https://github.com/nrwl/nx/pull/20274
+
 export async function determineProjectNameAndRootOptions(
   tree: Tree,
   options: ProjectGenerationOptions
