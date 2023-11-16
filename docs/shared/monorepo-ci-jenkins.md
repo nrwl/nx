@@ -1,10 +1,10 @@
 # Configuring CI Using Jenkins and Nx
 
-There are two general approaches to setting up CI with Nx - using a single pipeline or using distributed task execution. For smaller repositories, a single pipeline is faster and cheaper, but once a full CI run starts taking 10 to 15 minutes, distributed task execution becomes the better option. Distributed task execution allows you to keep the CI pipeline fast as you scale. As the repository grows, all you need to do is add more agents.
+There are two general approaches to setting up CI with Nx - using a single job or distributing tasks across multiple jobs. For smaller repositories, a single job is faster and cheaper, but once a full CI run starts taking 10 to 15 minutes, using multiple jobs becomes the better option. Nx Cloud's distributed task execution allows you to keep the CI pipeline fast as you scale. As the repository grows, all you need to do is add more agents.
 
-## Single Pipeline
+## Process Only Affected Projects With One Job on Jenkins
 
-Below is an example of a Jenkins setup that runs on a single pipeline, building and testing only what is affected.
+Below is an example of an Jenkins setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/nx-cloud/features/affected) to run the tasks only for the projects that were affected by that PR.
 
 ```groovy
 pipeline {
@@ -47,11 +47,13 @@ pipeline {
 }
 ```
 
+### Get the Commit of the Last Successful Build
+
 Unlike `GitHub Actions` and `CircleCI`, you don't have the metadata to help you track the last successful run on `main`. In the example below, the base is set to `HEAD~1` (for push) or branching point (for pull requests), but a more robust solution would be to tag an SHA in the main job once it succeeds and then use this tag as a base. See the [nx-tag-successful-ci-run](https://github.com/nrwl/nx-tag-successful-ci-run) and [nx-set-shas](https://github.com/nrwl/nx-set-shas) (version 1 implements tagging mechanism) repositories for more information.
 
 We also have to set `NX_BRANCH` explicitly.
 
-## Distributed Task Execution
+## Distribute Tasks Across Agents on Jenkins
 
 To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can copy and paste the workflow below:
 

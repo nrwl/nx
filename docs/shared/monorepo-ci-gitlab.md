@@ -1,10 +1,10 @@
 # Configuring CI Using GitLab and Nx
 
-There are two general approaches to setting up CI with Nx - using a single pipeline or using distributed task execution. For smaller repositories, a single pipeline is faster and cheaper, but once a full CI run starts taking 10 to 15 minutes, distributed task execution becomes the better option. Distributed task execution allows you to keep the CI pipeline fast as you scale. As the repository grows, all you need to do is add more agents.
+There are two general approaches to setting up CI with Nx - using a single job or distributing tasks across multiple jobs. For smaller repositories, a single job is faster and cheaper, but once a full CI run starts taking 10 to 15 minutes, using multiple jobs becomes the better option. Nx Cloud's distributed task execution allows you to keep the CI pipeline fast as you scale. As the repository grows, all you need to do is add more agents.
 
-## Single Pipeline
+## Process Only Affected Projects With One Job on GitLab
 
-Below is an example of a GitLab pipeline setup that runs on a single pipeline, building and testing only what is affected.
+Below is an example of an GitLab setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/nx-cloud/features/affected) to run the tasks only for the projects that were affected by that PR.
 
 ```yaml {% fileName=".gitlab-ci.yml" %}
 image: node:18
@@ -59,7 +59,7 @@ build:
 
 The `build` and `test` jobs implement the CI workflow using `.distributed` as a template to keep the CI configuration file more readable.
 
-## Distributed Task Execution
+## Distribute Tasks Across Agents on GitLab
 
 To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can run this generator:
 

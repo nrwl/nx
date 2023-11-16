@@ -1,10 +1,10 @@
 # Configuring CI Using GitHub Actions and Nx
 
-There are two general approaches to setting up CI with Nx - using a single pipeline or using distributed task execution. For smaller repositories, a single pipeline is faster and cheaper, but once a full CI run starts taking 10 to 15 minutes, distributed task execution becomes the better option. Distributed task execution allows you to keep the CI pipeline fast as you scale. As the repository grows, all you need to do is add more agents.
+There are two general approaches to setting up CI with Nx - using a single job or distributing tasks across multiple jobs. For smaller repositories, a single job is faster and cheaper, but once a full CI run starts taking 10 to 15 minutes, using multiple jobs becomes the better option. Nx Cloud's distributed task execution allows you to keep the CI pipeline fast as you scale. As the repository grows, all you need to do is add more agents.
 
-## Single Pipeline
+## Process Only Affected Projects With One Job on GitHub Actions
 
-This is an example of a GitHub Actions setup that runs on a single pipeline, building and testing only what is affected.
+Below is an example of an GitHub Actions setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/nx-cloud/features/affected) to run the tasks only for the projects that were affected by that PR.
 
 ```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI
@@ -36,10 +36,12 @@ jobs:
       - run: npx nx affected -t lint,test,build --parallel=3
 ```
 
+### Get the Commit of the Last Successful Build
+
 `GitHub` can track the last successful run on the `main` branch and use this as a reference point for the `BASE`. The `nrwl/nx-set-shas` provides a convenient implementation of this functionality which you can drop into your existing CI config.
 To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation in Actions's docs](https://github.com/marketplace/actions/nx-set-shas#background).
 
-## Distributed Task Execution
+## Distribute Tasks Across Agents on GitHub Actions
 
 To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can run this generator:
 
@@ -97,7 +99,7 @@ The `number-of-agents` property controls how many agent jobs are created. Note t
 The `number-of-agents` property and the `--parallel` flag both parallelize tasks, but in different ways. The way this workflow is written, there will be 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
 {% /callout %}
 
-## Custom Distributed CI with Nx Cloud
+## Custom Distributed CI with Nx Cloud on GitHub Actions
 
 Our [reusable GitHub workflow](https://github.com/nrwl/ci) represents a good set of defaults that works for a large number of our users. However, reusable GitHub workflows come with their [limitations](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
 
