@@ -24,6 +24,27 @@
         "isExternal": false,
         "path": "/nx-cloud/intro/nx-cloud-workflows",
         "tags": []
+      },
+      {
+        "id": "tutorials",
+        "name": "Tutorials",
+        "description": "Tutorials setting up CI with Nx",
+        "file": "",
+        "itemList": [
+          {
+            "id": "circle",
+            "name": "Circle CI with Nx",
+            "description": "",
+            "file": "nx-cloud/tutorial/circle",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/intro/tutorials/circle",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/nx-cloud/intro/tutorials",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -48,6 +69,37 @@
     "itemList": [],
     "isExternal": false,
     "path": "/nx-cloud/intro/nx-cloud-workflows",
+    "tags": []
+  },
+  "/nx-cloud/intro/tutorials": {
+    "id": "tutorials",
+    "name": "Tutorials",
+    "description": "Tutorials setting up CI with Nx",
+    "file": "",
+    "itemList": [
+      {
+        "id": "circle",
+        "name": "Circle CI with Nx",
+        "description": "",
+        "file": "nx-cloud/tutorial/circle",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/intro/tutorials/circle",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/intro/tutorials",
+    "tags": []
+  },
+  "/nx-cloud/intro/tutorials/circle": {
+    "id": "circle",
+    "name": "Circle CI with Nx",
+    "description": "",
+    "file": "nx-cloud/tutorial/circle",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/intro/tutorials/circle",
     "tags": []
   },
   "/nx-cloud/features": {

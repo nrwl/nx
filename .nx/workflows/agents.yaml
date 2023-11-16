@@ -1,5 +1,6 @@
 launch-templates:
   linux-medium:
+    resource-class: 'docker_linux_amd64/medium+'
     env:
       CI: 'true'
       GIT_AUTHOR_EMAIL: test@test.com
@@ -7,8 +8,7 @@ launch-templates:
       GIT_COMMITTER_EMAIL: test@test.com
       GIT_COMMITTER_NAME: Test
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-      NX_VERBOSE_LOGGING: 'false'
-      NX_DAEMON: 'true'
+      NX_VERBOSE_LOGGING: 'true'
       NX_PERF_LOGGING: 'false'
       NX_NATIVE_LOGGING: 'false'
       SELECTED_PM: 'pnpm'

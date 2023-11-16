@@ -5556,6 +5556,23 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Tutorials",
+            "path": "/nx-cloud/intro/tutorials",
+            "id": "tutorials",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Circle CI with Nx",
+                "path": "/nx-cloud/intro/tutorials/circle",
+                "id": "circle",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5572,6 +5589,31 @@
         "name": "Nx Cloud Workflows",
         "path": "/nx-cloud/intro/nx-cloud-workflows",
         "id": "nx-cloud-workflows",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Tutorials",
+        "path": "/nx-cloud/intro/tutorials",
+        "id": "tutorials",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Circle CI with Nx",
+            "path": "/nx-cloud/intro/tutorials/circle",
+            "id": "circle",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Circle CI with Nx",
+        "path": "/nx-cloud/intro/tutorials/circle",
+        "id": "circle",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

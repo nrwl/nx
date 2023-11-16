@@ -9,7 +9,6 @@ use tracing::trace;
 use crate::native::types::FileData;
 use crate::native::utils::path::Normalize;
 use crate::native::workspace::config_files;
-use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors};
 use crate::native::workspace::types::FileLocation;
 
 #[napi(object)]
@@ -23,26 +22,20 @@ pub(super) fn get_files<ConfigurationParser>(
     env: Env,
     globs: Vec<String>,
     parse_configurations: ConfigurationParser,
-    file_data: Option<&[(PathBuf, String)]>,
+    file_data: &[(PathBuf, String)],
 ) -> napi::Result<Option<Object>>
 where
     ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
 {
-    let Some(file_data) = file_data else {
-        return Ok(Default::default());
-    };
-
     trace!("{globs:?}");
     let file_data = file_data.to_vec();
     let promise =
-        config_files::get_project_configurations(globs, Some(&file_data), parse_configurations)?;
+        config_files::get_project_configurations(globs, &file_data, parse_configurations)?;
 
     let result = env.spawn_future(async move {
         let parsed_graph_nodes = promise.await?;
 
-        let root_map = transform_root_map(
-            parsed_graph_nodes
-        );
+        let root_map = transform_root_map(parsed_graph_nodes);
 
         trace!(?root_map);
 
@@ -82,12 +75,14 @@ where
         for (file_location, file_data) in file_locations {
             match file_location {
                 FileLocation::Global => global_files.push(file_data),
-                FileLocation::Project(project_name) => match project_file_map.get_mut(&project_name) {
-                    None => {
-                        project_file_map.insert(project_name.clone(), vec![file_data]);
+                FileLocation::Project(project_name) => {
+                    match project_file_map.get_mut(&project_name) {
+                        None => {
+                            project_file_map.insert(project_name.clone(), vec![file_data]);
+                        }
+                        Some(project_files) => project_files.push(file_data),
                     }
-                    Some(project_files) => project_files.push(file_data),
-                },
+                }
             }
         }
 

@@ -267,6 +267,8 @@
   - [Intro](/nx-cloud/intro)
     - [CI with Nx](/nx-cloud/intro/ci-with-nx)
     - [Nx Cloud Workflows](/nx-cloud/intro/nx-cloud-workflows)
+    - [Tutorials](/nx-cloud/intro/tutorials)
+      - [Circle CI with Nx](/nx-cloud/intro/tutorials/circle)
   - [Features](/nx-cloud/features)
     - [Use Remote Caching](/nx-cloud/features/remote-cache)
     - [Run Only Tasks Affected by a PR](/nx-cloud/features/affected)
