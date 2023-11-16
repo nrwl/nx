@@ -1,37 +1,33 @@
 import { performance } from 'perf_hooks';
+import { readNxJson } from '../../config/nx-json';
 import {
   FileData,
   FileMap,
-  ProjectFileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
 } from '../../config/project-graph';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { hashArray } from '../../hasher/file-hasher';
 import { buildProjectGraphUsingProjectFileMap as buildProjectGraphUsingFileMap } from '../../project-graph/build-project-graph';
 import { updateFileMap } from '../../project-graph/file-map-utils';
 import {
-  nxProjectGraph,
   FileMapCache,
+  nxProjectGraph,
   readFileMapCache,
 } from '../../project-graph/nx-deps-cache';
-import { fileExists } from '../../utils/fileutils';
-import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
-import { serverLogger } from './logger';
-import { workspaceRoot } from '../../utils/workspace-root';
-import { execSync } from 'child_process';
-import { hashArray } from '../../hasher/file-hasher';
 import {
-  retrieveWorkspaceFiles,
   retrieveProjectConfigurations,
+  retrieveWorkspaceFiles,
 } from '../../project-graph/utils/retrieve-workspace-files';
-import {
-  ProjectConfiguration,
-  ProjectsConfigurations,
-} from '../../config/workspace-json-project-json';
-import { readNxJson } from '../../config/nx-json';
+import { fileExists } from '../../utils/fileutils';
+import { writeSourceMaps } from '../../utils/source-maps';
 import {
   resetWorkspaceContext,
   updateFilesInContext,
 } from '../../utils/workspace-context';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
+import { serverLogger } from './logger';
 
 let cachedSerializedProjectGraphPromise: Promise<{
   error: Error | null;
@@ -277,6 +273,8 @@ async function createAndSerializeProjectGraph(): Promise<{
       'json-stringify-start',
       'json-stringify-end'
     );
+
+    writeSourceMaps(projectConfigurations.sourceMaps);
 
     return {
       error: null,

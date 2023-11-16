@@ -3,6 +3,8 @@ import {
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import {
+  ConfigurationSourceMaps,
+  SourceInformation,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
   readProjectConfigurationsFromRootMap,
@@ -10,7 +12,7 @@ import {
 } from './project-configuration-utils';
 
 describe('project-configuration-utils', () => {
-  describe('target defaults', () => {
+  describe('target merging', () => {
     const targetDefaults = {
       'nx:run-commands': {
         options: {
@@ -49,6 +51,21 @@ describe('project-configuration-utils', () => {
           'other-executor'
         )
       ).toBeNull();
+    });
+
+    it('should not merge top level properties for incompatible targets', () => {
+      expect(
+        mergeTargetConfigurations(
+          {
+            executor: 'target2',
+            outputs: ['output1'],
+          },
+          {
+            executor: 'target',
+            inputs: ['input1'],
+          }
+        )
+      ).toEqual({ executor: 'target2', outputs: ['output1'] });
     });
 
     describe('options', () => {
@@ -431,7 +448,7 @@ describe('project-configuration-utils', () => {
       expect(merged.targets['newTarget']).toEqual(newTargetConfiguration);
     });
 
-    it('should concatenate tags', () => {
+    it('should concatenate tags and implicitDependencies', () => {
       const rootMap = new RootMapBuilder()
         .addProject({
           root: 'libs/lib-a',
@@ -527,6 +544,397 @@ describe('project-configuration-utils', () => {
         }
       `);
     });
+
+    describe('source map', () => {
+      it('should add new project info', () => {
+        const rootMap = new RootMapBuilder().getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo hello',
+                },
+                configurations: {
+                  dev: {
+                    command: 'echo dev',
+                  },
+                  production: {
+                    command: 'echo production',
+                  },
+                },
+              },
+            },
+            tags: ['a', 'b'],
+            implicitDependencies: ['lib-b'],
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+        expect(sourceMap).toMatchInlineSnapshot(`
+          {
+            "libs/lib-a": {
+              "implicitDependencies": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "implicitDependencies.lib-b": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "name": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "root": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "tags": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "tags.a": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "tags.b": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "targets": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "targets.build": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "targets.build.configurations": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "targets.build.configurations.dev": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "targets.build.configurations.dev.command": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "targets.build.configurations.production": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "targets.build.configurations.production.command": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "targets.build.executor": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "targets.build.options": [
+                "dummy",
+                "dummy.ts",
+              ],
+              "targets.build.options.command": [
+                "dummy",
+                "dummy.ts",
+              ],
+            },
+          }
+        `);
+      });
+
+      it('should merge root level properties', () => {
+        const rootMap = new Map();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            tags: ['a', 'b'],
+            projectType: 'application',
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            projectType: 'library',
+            tags: ['c'],
+            implicitDependencies: ['lib-b'],
+          },
+          sourceMap,
+          ['dummy2', 'dummy2.ts']
+        );
+        assertCorrectKeysInSourceMap(
+          sourceMap,
+          'libs/lib-a',
+          ['tags.a', 'dummy'],
+          ['tags.c', 'dummy2'],
+          ['projectType', 'dummy2'],
+          ['implicitDependencies.lib-b', 'dummy2']
+        );
+      });
+
+      it('should merge target properties for compatible targets', () => {
+        const rootMap = new RootMapBuilder().getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                inputs: ['input1'],
+                options: {
+                  command: 'echo hello',
+                  oldOption: 'value',
+                },
+                configurations: {
+                  dev: {
+                    command: 'echo dev',
+                    oldOption: 'old option',
+                  },
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                inputs: ['input2'],
+                outputs: ['output2'],
+                options: {
+                  oldOption: 'new value',
+                  newOption: 'value',
+                },
+                configurations: {
+                  dev: {
+                    command: 'echo dev 2',
+                    newOption: 'new option',
+                  },
+                  production: {
+                    command: 'echo production',
+                  },
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy2', 'dummy2.ts']
+        );
+
+        assertCorrectKeysInSourceMap(
+          sourceMap,
+          'libs/lib-a',
+          ['targets.build', 'dummy2'],
+          ['targets.build.executor', 'dummy'],
+          ['targets.build.inputs', 'dummy2'],
+          ['targets.build.outputs', 'dummy2'],
+          ['targets.build.options', 'dummy2'],
+          ['targets.build.options.command', 'dummy'],
+          ['targets.build.options.oldOption', 'dummy2'],
+          ['targets.build.options.newOption', 'dummy2'],
+          ['targets.build.configurations', 'dummy2'],
+          ['targets.build.configurations.dev.command', 'dummy2'],
+          ['targets.build.configurations.dev.oldOption', 'dummy'],
+          ['targets.build.configurations.dev.newOption', 'dummy2'],
+          ['targets.build.configurations.production.command', 'dummy2']
+        );
+      });
+
+      it('should override target options & configurations for incompatible targets', () => {
+        const rootMap = new RootMapBuilder().getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo hello',
+                  oldOption: 'value',
+                },
+                configurations: {
+                  dev: {
+                    command: 'echo dev',
+                    oldOption: 'old option',
+                  },
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                executor: 'other-executor',
+                options: {
+                  option1: 'option1',
+                },
+                configurations: {
+                  prod: {
+                    command: 'echo dev',
+                  },
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy2', 'dummy2.ts']
+        );
+        assertCorrectKeysInSourceMap(
+          sourceMap,
+          'libs/lib-a',
+          ['targets.build', 'dummy2'],
+          ['targets.build.executor', 'dummy2'],
+          ['targets.build.options', 'dummy2'],
+          ['targets.build.options.option1', 'dummy2'],
+          ['targets.build.configurations', 'dummy2'],
+          ['targets.build.configurations.prod', 'dummy2'],
+          ['targets.build.configurations.prod.command', 'dummy2']
+        );
+
+        expect(
+          sourceMap['libs/lib-a']['targets.build.configurations.dev']
+        ).toBeFalsy();
+        expect(sourceMap['libs/lib-a']['targets.build.outputs']).toBeFalsy();
+        expect(
+          sourceMap['libs/lib-a']['targets.build.options.command']
+        ).toBeFalsy();
+      });
+
+      it('should not merge top level properties for incompatible targets', () => {
+        const rootMap = new RootMapBuilder().getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                inputs: ['input1'],
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: {
+                executor: 'other-executor',
+                outputs: ['output1'],
+              },
+            },
+          },
+          sourceMap,
+          ['dummy2', 'dummy2.ts']
+        );
+        assertCorrectKeysInSourceMap(
+          sourceMap,
+          'libs/lib-a',
+          ['targets.build', 'dummy2'],
+          ['targets.build.executor', 'dummy2'],
+          ['targets.build.outputs', 'dummy2']
+        );
+
+        expect(sourceMap['libs/lib-a']['targets.build.inputs']).toBeFalsy();
+      });
+
+      it('should merge generator property', () => {
+        const rootMap = new RootMapBuilder().getRootMap();
+        const sourceMap: ConfigurationSourceMaps = {
+          'libs/lib-a': {},
+        };
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            name: 'lib-a',
+            root: 'libs/lib-a',
+            generators: {
+              '@nx/angular:component': {
+                option1: true,
+                option2: 'true',
+              },
+            },
+          },
+          sourceMap,
+          ['dummy', 'dummy.ts']
+        );
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          {
+            name: 'lib-a',
+            root: 'libs/lib-a',
+            generators: {
+              '@nx/angular:component': {
+                option1: false,
+                option3: {
+                  nested: 3,
+                },
+              },
+            },
+          },
+          sourceMap,
+          ['dummy2', 'dummy2.ts']
+        );
+
+        assertCorrectKeysInSourceMap(
+          sourceMap,
+          'libs/lib-a',
+          ['generators.@nx/angular:component.option1', 'dummy2'],
+          ['generators.@nx/angular:component.option2', 'dummy'],
+          ['generators.@nx/angular:component.option3', 'dummy2']
+        );
+      });
+    });
   });
 
   describe('readProjectsConfigurationsFromRootMap', () => {
@@ -601,4 +1009,23 @@ class RootMapBuilder {
   getRootMap() {
     return this.rootMap;
   }
+}
+
+function assertCorrectKeysInSourceMap(
+  sourceMaps: ConfigurationSourceMaps,
+  root: string,
+  ...tuples: [string, string][]
+) {
+  const sourceMap = sourceMaps[root];
+  tuples.forEach(([key, value]) => {
+    if (!sourceMap[key]) {
+      throw new Error(`Expected sourceMap to contain key ${key}`);
+    }
+    try {
+      expect(sourceMap[key][0]).toEqual(value);
+    } catch (error) {
+      // Enhancing the error message with the problematic key
+      throw new Error(`Assertion failed for key '${key}': \n ${error.message}`);
+    }
+  });
 }
