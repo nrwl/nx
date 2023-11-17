@@ -88,6 +88,11 @@ fn build_segment(
                 let on_group = build_segment(&built_glob, &group[1..], is_last_segment, true);
                 off_group.into_iter().chain(on_group).collect::<Vec<_>>()
             }
+            GlobGroup::NegatedWildcard(_) => {
+                let off_group = build_segment("*", &group[1..], is_last_segment, is_negative);
+                let on_group = build_segment(&built_glob, &group[1..], is_last_segment, true);
+                off_group.into_iter().chain(on_group).collect::<Vec<_>>()
+            }
             GlobGroup::OneOrMore(_)
             | GlobGroup::ExactOne(_)
             | GlobGroup::NonSpecial(_)
@@ -151,6 +156,15 @@ mod test {
     fn convert_globs_single_negative() {
         let negative_single_dir = convert_glob("packages/!(package-a)*").unwrap();
         assert_eq!(negative_single_dir, ["!packages/package-a*", "packages/*"]);
+    }
+
+    #[test]
+    fn convert_globs_single_negative_wildcard_directory() {
+        let negative_single_dir = convert_glob("packages/!(package-a)*/package.json").unwrap();
+        assert_eq!(
+            negative_single_dir,
+            ["!packages/package-a*/", "packages/*/package.json"]
+        );
     }
 
     #[test]
