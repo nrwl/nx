@@ -84,7 +84,7 @@ export async function buildProjectGraphWithoutDaemon() {
     projectConfigurations,
     externalNodes,
     sourceMaps,
-      rustReferences,
+    rustReferences,
   } = await retrieveWorkspaceFiles(workspaceRoot, nxJson);
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';

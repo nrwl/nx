@@ -71,13 +71,13 @@ export async function retrieveWorkspaceFiles(
           plugins
         );
 
-      projects = projectConfigurations.projects;
-      sourceMaps = projectConfigurations.sourceMaps;
+        projects = projectConfigurations.projects;
+        sourceMaps = projectConfigurations.sourceMaps;
 
-      externalNodes = projectConfigurations.externalNodes;
-      return projectConfigurations.rootMap;
-    }
-  )) as NxWorkspaceFiles;
+        externalNodes = projectConfigurations.externalNodes;
+        return projectConfigurations.rootMap;
+      }
+    )) as NxWorkspaceFiles;
   performance.mark('get-workspace-files:end');
   performance.measure(
     'get-workspace-files',

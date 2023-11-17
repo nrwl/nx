@@ -11,6 +11,7 @@ import {
 } from './task-hasher';
 
 describe('TaskHasher', () => {
+  process.env.NX_NATIVE_TASK_HASHER = 'false';
   const packageJson = {
     name: 'nrwl',
   };

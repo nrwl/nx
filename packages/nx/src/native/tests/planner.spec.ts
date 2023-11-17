@@ -9,7 +9,11 @@ import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { transformProjectGraphForRust } from '../transform-objects';
 
+
 describe('task planner', () => {
+  // disable NX_NATIVE_TASK_HASHER for this test because we need to compare the results of the new planner with the old task hasher
+  process.env.NX_NATIVE_TASK_HASHER = 'false';
+
   const packageJson = {
     name: 'nrwl',
   };
