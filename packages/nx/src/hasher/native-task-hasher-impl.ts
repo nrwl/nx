@@ -39,8 +39,8 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     this.allWorkspaceFilesRef = externals.allWorkspaceFiles;
     this.projectFileMapRef = externals.projectFiles;
 
-    let tsconfig = readJsonFile(getRootTsConfigPath());
-    let paths = tsconfig.compilerOptions?.paths ?? {};
+    const tsconfig = readJsonFile(getRootTsConfigPath());
+    const paths = tsconfig.compilerOptions?.paths ?? {};
     delete tsconfig.compilerOptions.paths;
 
     this.planner = new HashPlanner(nxJson, this.projectGraphRef);
