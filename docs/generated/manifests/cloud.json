@@ -40,6 +40,16 @@
             "isExternal": false,
             "path": "/nx-cloud/intro/tutorials/circle",
             "tags": []
+          },
+          {
+            "id": "github-actions",
+            "name": "GitHub Actions with Nx",
+            "description": "",
+            "file": "nx-cloud/tutorial/github-actions",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/intro/tutorials/github-actions",
+            "tags": []
           }
         ],
         "isExternal": false,
@@ -86,6 +96,16 @@
         "isExternal": false,
         "path": "/nx-cloud/intro/tutorials/circle",
         "tags": []
+      },
+      {
+        "id": "github-actions",
+        "name": "GitHub Actions with Nx",
+        "description": "",
+        "file": "nx-cloud/tutorial/github-actions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/intro/tutorials/github-actions",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -100,6 +120,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/nx-cloud/intro/tutorials/circle",
+    "tags": []
+  },
+  "/nx-cloud/intro/tutorials/github-actions": {
+    "id": "github-actions",
+    "name": "GitHub Actions with Nx",
+    "description": "",
+    "file": "nx-cloud/tutorial/github-actions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/intro/tutorials/github-actions",
     "tags": []
   },
   "/nx-cloud/features": {

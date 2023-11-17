@@ -87,11 +87,11 @@ git push -u origin HEAD
 
 If everything was set up correctly, you should see a message from GitHub Actions in the PR with a success status.
 
-![All checks have passed in the PR](/nx-cloud/tutorial/Circle%20PR%20passed.png)
+![All checks have passed in the PR](/nx-cloud/tutorial/gh-pr-passed.png)
 
 Click on the job details and you should see the `Hello GitHub Actions` message in the logs.
 
-![The "Hello GitHub Actions" message is printed in the logs](/nx-cloud/tutorial/Message%20Logged.png)
+![The "Hello GitHub Actions" message is printed in the logs](/nx-cloud/tutorial/gh-message.png)
 
 Merge your PR into the `main` branch when you're ready to move to the next section.
 
@@ -138,7 +138,7 @@ jobs:
 
 Once `node_modules` are in place, you can run normal Nx commands. In this case, we run `pnpm nx build cart`. Push the changes to your repository by creating a new PR and verifying the new CI pipeline correctly builds our application.
 
-![Building a single app with nx](/nx-cloud/tutorial/circle-single-build-success.jpg)
+![Building a single app with nx](/nx-cloud/tutorial/gh-single-build-success.jpg)
 
 You might have noticed that there's also a build running for `shared-header`, `shared-product-types` and `shared-product-ui`. These are projects in our workspace that `cart` depends on. Thanks to the [Nx task pipeline](/concepts/task-pipeline-configuration), Nx knows that it needs to build these projects first before building `cart`. This already helps us simplify our pipeline as we
 
@@ -248,7 +248,7 @@ While you could calculate this yourself, we created the [`nx-set-shas` GitHub Ac
 
 Let's adjust our CI pipeline configuration to use the affected command. Create a new branch called `ci-affected` and create a PR with the following configuration:
 
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[2,3,20,22,23] %}
+```yaml {% fileName=".github/workflows/ci.yml" highlightLines=["35-39"] %}
 name: CI
 on:
   push:
@@ -294,7 +294,7 @@ We're using the `--parallel` flag to run up to 3 `lint`, `test` or `build` tasks
 
 When you check the CI logs for this PR, you'll notice that no tasks were run by the `affected` command. That's because the `.github/workflows/ci.yml` file is not an input for any task. We should really double check every task whenever we make changes to the CI pipeline, so let's fix that by adding an entry in the `sharedGlobals` array in the `nx.json` file.
 
-```jsonc {% fileName="nx.json" %}
+```jsonc {% fileName="nx.json" highlightLines=[6] %}
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
@@ -315,7 +315,6 @@ Reducing the number of tasks to run via [affected commands](/nx-cloud/features/a
 
 ```{% command="pnpm nx connect" %}
 ✔ Enable distributed caching to make your CI faster · Yes
-$ nx g nx:connect-to-nx-cloud --quiet --no-interactive
 
  >  NX   Distributed caching via Nx Cloud has been enabled
 
@@ -349,7 +348,7 @@ Now let's commit the changes to a new `ci-caching` branch and create a PR. The o
 
 When GitHub Actions now processes our tasks they'll only take a fraction of the usual time. If you inspect the logs a little closer you'll see a note saying `[remote cache]`, indicating that the output has been pulled from the remote cache rather than running it. The full log of each command will still be printed since Nx restores that from the cache as well.
 
-![GitHub Actions after enabling remote caching](/nx-cloud/tutorial/circle-ci-remote-cache.png)
+![GitHub Actions after enabling remote caching](/nx-cloud/tutorial/gh-ci-remote-cache.png)
 
 The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on various scenarios](/nx-cloud/account/scenarios) and how to configure them.
 
@@ -369,140 +368,43 @@ Nx Cloud's DTE feature
 - collects the results and logs of all the tasks and presents them in a single view
 - automatically shuts down agents when they are no longer needed
 
-Let's enable DTE in our CI pipeline configuration. First let's define the agent which restores the NPM dependencies and then runs the `nx-cloud start-agent` command which notifies Nx Cloud that this machine is waiting to run tasks that are assigned to it. `no_output_timeout: 60m` means that this agent will automatically shut down if it doesn't receive any instructions for 60 minutes.
+Let's enable DTE in our CI pipeline configuration. We'll use two reusable workflows from the `nrwl/ci` repository. You can check out the full [API](https://github.com/nrwl/ci) for those workflows.
 
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=["5-25"] %}
-version: 2.1
-orbs:
-  nx: nrwl/nx@1.5.1
-jobs:
-  agent:
-    docker:
-      - image: cimg/node:lts-browsers
-    parameters:
-      ordinal:
-        type: integer
-    steps:
-      - checkout
-      - restore_cache:
-          key: npm-dependencies-{{ checksum "pnpm-lock.yaml" }}
-      - run:
-          name: install dependencies
-          command: pnpm install --frozen-lockfile
-      - save_cache:
-          key: npm-dependencies-{{ checksum "pnpm-lock.yaml" }}
-          paths:
-            - node_modules
-            - ~/.cache/Cypress
-      - run:
-          command: pnpm nx-cloud start-agent
-          no_output_timeout: 60m
-  main: ...
-```
-
-The `main` job looks very similar to the previous configuration, with the addition of a single line above the `nx affected` commands.
-
-```yaml {% fileName=".github/workflows/ci.yml" highlightLines=[24,29] %}
-version: 2.1
-orbs:
-  nx: nrwl/nx@1.5.1
-jobs:
-  agent:
-    - ...
-  main:
-    docker:
-      - image: cimg/node:lts-browsers
-    steps:
-      - checkout
-      - restore_cache:
-          key: npm-dependencies-{{ checksum "pnpm-lock.yaml" }}
-      - run:
-          name: install dependencies
-          command: pnpm install --frozen-lockfile
-      - save_cache:
-          key: npm-dependencies-{{ checksum "pnpm-lock.yaml" }}
-          paths:
-            - node_modules
-            - ~/.cache/Cypress
-      - nx/set-shas
-
-      - run: pnpm nx-cloud start-ci-run --stop-agents-after="e2e"
-
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=3 --configuration=ci
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD -t e2e --parallel=1
-```
-
-- `nx-cloud start-ci-run` lets Nx know that all the tasks after this line should be orchestrated with Nx Cloud's DTE process
-- `--stop-agents-after="e2e"` lets Nx Cloud know which line is the last command in this pipeline. Once there are no more e2e tasks for an agent to run, Nx Cloud will automatically shut them down. This way you're not wasting money on idle agents while a particularly long e2e task is running on a single agent.
-
-Finally in the `workflows` section we instantiate the number of agents we want to run. The **full pipeline configuration** looks like this:
-
-```yaml {% fileName=".github/workflows/ci.yml" %}
-version: 2.1
-orbs:
-  nx: nrwl/nx@1.5.1
-jobs:
-  agent:
-    docker:
-      - image: cimg/node:lts-browsers
-    parameters:
-      ordinal:
-        type: integer
-    steps:
-      - checkout
-      - restore_cache:
-          key: npm-dependencies-{{ checksum "pnpm-lock.yaml" }}
-      - run:
-          name: install dependencies
-          command: pnpm install --frozen-lockfile
-      - save_cache:
-          key: npm-dependencies-{{ checksum "pnpm-lock.yaml" }}
-          paths:
-            - node_modules
-            - ~/.cache/Cypress
-      - run:
-          command: pnpm nx-cloud start-agent
-          no_output_timeout: 60m
-  main:
-    docker:
-      - image: cimg/node:lts-browsers
-    steps:
-      - checkout
-      - restore_cache:
-          key: npm-dependencies-{{ checksum "pnpm-lock.yaml" }}
-      - run:
-          name: install dependencies
-          command: pnpm install --frozen-lockfile
-      - save_cache:
-          key: npm-dependencies-{{ checksum "pnpm-lock.yaml" }}
-          paths:
-            - node_modules
-            - ~/.cache/Cypress
-      - nx/set-shas
-
-      - run: pnpm nx-cloud start-ci-run --stop-agents-after="e2e"
-
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=3 --configuration=ci
-      - run: pnpm nx affected --base=$NX_BASE --head=$NX_HEAD -t e2e --parallel=1
-workflows:
-  build:
-    jobs:
-      - agent:
-          matrix:
-            parameters:
-              ordinal: [1, 2, 3]
+```yaml {% fileName=".github/workflows/ci.yml" highlightLines=["9-21"] %}
+name: CI
+on:
+  push:
+    branches:
       - main
+  pull_request:
+
+jobs:
+  main:
+    name: Nx Cloud - Main Job
+    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.0
+    with:
+      number-of-agents: 3
+      parallel-commands-on-agents: |
+        npx nx affected -t lint,test,build,e2e --parallel=2
+
+  agents:
+    name: Nx Cloud - Agents
+    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.0
+    with:
+      number-of-agents: 3
 ```
+
+This workflow runs all the affected tasks on 3 agents, with 2 tasks running in parallel on each agent.
 
 Try it out by creating a new PR with the above changes.
 
 Once GitHub Actions starts, you should see multiple agents running in parallel:
 
-![GitHub Actions showing multiple DTE agents](/nx-cloud/tutorial/circle-dte-multiple-agents.png)
+![GitHub Actions showing multiple DTE agents](/nx-cloud/tutorial/gh-dte-multiple-agents.png)
 
 If you open your Nx Cloud dashboard, you'll get a better view of the individual tasks and their corresponding logs.
 
-![Nx Cloud run details](/nx-cloud/tutorial/circle-nx-cloud-run-details.png)
+![Nx Cloud run details](/nx-cloud/tutorial/nx-cloud-run-details.png)
 
 With this pipeline configuration in place, no matter how large the repository scales, Nx Cloud will adjust and distribute tasks across agents in the optimal way. If CI pipelines start to slow down, just add some agents to the `ordinal: [1, 2, 3]` array. One of the main advantages is that such a pipeline definition is declarative. We just give instructions what commands to run, but not how to distribute them. As such even if our monorepo structure changes and evolves over time, the distribution will be taken care of by Nx Cloud.
 

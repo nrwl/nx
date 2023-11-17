@@ -5570,6 +5570,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "GitHub Actions with Nx",
+                "path": "/nx-cloud/intro/tutorials/github-actions",
+                "id": "github-actions",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -5606,6 +5614,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "GitHub Actions with Nx",
+            "path": "/nx-cloud/intro/tutorials/github-actions",
+            "id": "github-actions",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5614,6 +5630,14 @@
         "name": "Circle CI with Nx",
         "path": "/nx-cloud/intro/tutorials/circle",
         "id": "circle",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "GitHub Actions with Nx",
+        "path": "/nx-cloud/intro/tutorials/github-actions",
+        "id": "github-actions",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

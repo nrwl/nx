@@ -1658,6 +1658,11 @@
                   "name": "Circle CI with Nx",
                   "id": "circle",
                   "file": "nx-cloud/tutorial/circle"
+                },
+                {
+                  "name": "GitHub Actions with Nx",
+                  "id": "github-actions",
+                  "file": "nx-cloud/tutorial/github-actions"
                 }
               ]
             }
