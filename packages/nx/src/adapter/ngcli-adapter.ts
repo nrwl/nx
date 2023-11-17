@@ -1090,12 +1090,14 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         builderName
       );
       const builderInfo = this.readExecutor(packageName, builderName);
+      const { builders, executors } =
+        readJsonFile<ExecutorsJson>(executorsFilePath);
       return {
         name: builderStr,
         builderName,
         description:
-          readJsonFile<ExecutorsJson>(executorsFilePath).builders[builderName]
-            .description,
+          builders?.[builderName]?.description ??
+          executors?.[builderName]?.description,
         optionSchema: builderInfo.schema,
         import: resolveImplementation(
           executorConfig.implementation,
@@ -1128,7 +1130,8 @@ async function getWrappedWorkspaceNodeModulesArchitectHost(
         batchImplementation?: string;
         schema: string;
         hasher?: string;
-      } = executorsJson.builders?.[builder];
+      } =
+        executorsJson.builders?.[builder] ?? executorsJson.executors?.[builder];
       if (!executorConfig) {
         throw new Error(
           `Cannot find builder '${builder}' in ${executorsFilePath}.`
