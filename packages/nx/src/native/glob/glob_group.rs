@@ -13,7 +13,10 @@ pub enum GlobGroup<'a> {
     ExactOne(Cow<'a, str>),
     // !(a|b|c)
     Negated(Cow<'a, str>),
+    // !(a|b|c).js
     NegatedFileName(Cow<'a, str>),
+    // !(a|b|c)*
+    NegatedWildcard(Cow<'a, str>),
     NonSpecialGroup(Cow<'a, str>),
     NonSpecial(Cow<'a, str>),
 }
@@ -38,6 +41,13 @@ impl<'a> Display for GlobGroup<'a> {
                     write!(f, "{{{}}}.", s)
                 } else {
                     write!(f, "{}.", s)
+                }
+            }
+            GlobGroup::NegatedWildcard(s) => {
+                if s.contains(',') {
+                    write!(f, "{{{}}}*", s)
+                } else {
+                    write!(f, "{}*", s)
                 }
             }
             GlobGroup::NonSpecial(s) => write!(f, "{}", s),
