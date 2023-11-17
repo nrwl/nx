@@ -445,8 +445,29 @@ export function mergeTargetConfigurations(
  * If the executors are both specified and don't match, the options aren't considered
  * "compatible" and shouldn't be merged.
  */
-function isCompatibleTarget(a: TargetConfiguration, b: TargetConfiguration) {
-  return !a.executor || !b.executor || a.executor === b.executor;
+export function isCompatibleTarget(
+  a: TargetConfiguration,
+  b: TargetConfiguration
+) {
+  if (a.command || b.command) {
+    const aCommand =
+      a.command ??
+      (a.executor === 'nx:run-commands' ? a.options?.command : null);
+    const bCommand =
+      b.command ??
+      (b.executor === 'nx:run-commands' ? b.options?.command : null);
+
+    const sameCommand = aCommand === bCommand;
+    const aHasNoExecutor = !a.command && !a.executor;
+    const bHasNoExecutor = !b.command && !b.executor;
+
+    return sameCommand || aHasNoExecutor || bHasNoExecutor;
+  }
+
+  const oneHasNoExecutor = !a.executor || !b.executor;
+  const bothHaveSameExecutor = a.executor === b.executor;
+
+  return oneHasNoExecutor || bothHaveSameExecutor;
 }
 
 function mergeConfigurations<T extends Object>(

@@ -237,7 +237,7 @@ function copyFileMap(m: FileMap) {
 }
 
 async function createAndSerializeProjectGraph(
-  projects: Record<string, ProjectConfiguration>,
+  projects: Record<string, ProjectConfiguration>
 ): Promise<{
   error: string | null;
   projectGraph: ProjectGraph | null;

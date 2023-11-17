@@ -4,7 +4,7 @@ import {
 } from '../../config/workspace-json-project-json';
 import {
   ConfigurationSourceMaps,
-  SourceInformation,
+  isCompatibleTarget,
   mergeProjectConfigurationIntoRootMap,
   mergeTargetConfigurations,
   readProjectConfigurationsFromRootMap,
@@ -994,6 +994,112 @@ describe('project-configuration-utils', () => {
           },
         }
       `);
+    });
+  });
+
+  describe('isCompatibleTarget', () => {
+    it('should return true if only one target specifies an executor', () => {
+      expect(
+        isCompatibleTarget(
+          {
+            executor: 'nx:run-commands',
+          },
+          {}
+        )
+      ).toBe(true);
+    });
+
+    it('should return true if both targets specify the same executor', () => {
+      expect(
+        isCompatibleTarget(
+          {
+            executor: 'nx:run-commands',
+          },
+          {
+            executor: 'nx:run-commands',
+          }
+        )
+      ).toBe(true);
+    });
+
+    it('should return false if both targets specify different executors', () => {
+      expect(
+        isCompatibleTarget(
+          {
+            executor: 'nx:run-commands',
+          },
+          {
+            executor: 'other-executor',
+          }
+        )
+      ).toBe(false);
+    });
+
+    it('should return true if both targets specify the same command', () => {
+      expect(
+        isCompatibleTarget(
+          {
+            command: 'echo',
+          },
+          {
+            command: 'echo',
+          }
+        )
+      ).toBe(true);
+
+      expect(
+        isCompatibleTarget(
+          {
+            command: 'echo',
+          },
+          {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo',
+            },
+          }
+        )
+      ).toBe(true);
+    });
+
+    it('should return false if both targets specify different commands', () => {
+      expect(
+        isCompatibleTarget(
+          {
+            command: 'echo',
+          },
+          {
+            command: 'echo2',
+          }
+        )
+      ).toBe(false);
+
+      expect(
+        isCompatibleTarget(
+          {
+            command: 'echo',
+          },
+          {
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo2',
+            },
+          }
+        )
+      ).toBe(false);
+    });
+
+    it('should return false if one target specifies an executor and the other a command', () => {
+      expect(
+        isCompatibleTarget(
+          {
+            executor: 'nx:noop',
+          },
+          {
+            command: 'echo',
+          }
+        )
+      ).toBe(false);
     });
   });
 });
