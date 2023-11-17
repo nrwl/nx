@@ -11,7 +11,7 @@ describe('simplify-eslint-patterns migration', () => {
     tree.write('.eslintrc.json', '{}');
   });
 
-  it('should update nested projects lint patterns', async () => {
+  it('should remove pattern in matches default', async () => {
     addProjectConfiguration(tree, 'test-lib', {
       root: 'libs/test-lib',
       projectType: 'library',
@@ -28,12 +28,44 @@ describe('simplify-eslint-patterns migration', () => {
     await update(tree);
 
     const projJson = readJson(tree, 'libs/test-lib/project.json');
-    expect(projJson.targets.lint.options.lintFilePatterns).toEqual([
-      'libs/test-lib',
-    ]);
+    expect(projJson.targets.lint).toMatchInlineSnapshot(`
+      {
+        "executor": "@nx/eslint:lint",
+      }
+    `);
   });
 
-  it('should join multiple lint patterns', async () => {
+  it('should not remove options if other fields are set', async () => {
+    addProjectConfiguration(tree, 'test-lib', {
+      root: 'libs/test-lib',
+      projectType: 'library',
+      targets: {
+        lint: {
+          executor: '@nx/eslint:lint',
+          options: {
+            lintFilePatterns: ['libs/test-lib/**/*.{ts,html}'],
+            ignorePatterns: ['**/node_modules/**'],
+          },
+        },
+      },
+    });
+
+    await update(tree);
+
+    const projJson = readJson(tree, 'libs/test-lib/project.json');
+    expect(projJson.targets.lint).toMatchInlineSnapshot(`
+      {
+        "executor": "@nx/eslint:lint",
+        "options": {
+          "ignorePatterns": [
+            "**/node_modules/**",
+          ],
+        },
+      }
+    `);
+  });
+
+  it('should remove multiple lint patterns if matches default', async () => {
     addProjectConfiguration(tree, 'test-lib', {
       root: 'libs/test-lib',
       projectType: 'library',
@@ -54,9 +86,11 @@ describe('simplify-eslint-patterns migration', () => {
     await update(tree);
 
     const projJson = readJson(tree, 'libs/test-lib/project.json');
-    expect(projJson.targets.lint.options.lintFilePatterns).toEqual([
-      'libs/test-lib',
-    ]);
+    expect(projJson.targets.lint).toMatchInlineSnapshot(`
+      {
+        "executor": "@nx/eslint:lint",
+      }
+    `);
   });
 
   it('should persist external patterns', async () => {

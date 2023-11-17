@@ -25,11 +25,29 @@ export default async function update(tree: Tree) {
         const rootPattern = getLintRoot(projectConfiguration);
         const nonRootPatterns = projectConfiguration.targets[
           targetName
-        ].options.lintFilePatterns.filter((p) => !p.startsWith(rootPattern));
-        projectConfiguration.targets[targetName].options.lintFilePatterns = [
-          getLintRoot(projectConfiguration),
-          ...nonRootPatterns,
-        ];
+        ].options.lintFilePatterns.filter(
+          (p) => !p.startsWith(rootPattern) && !p.startsWith('{projectRoot}')
+        );
+
+        if (
+          nonRootPatterns.length === 0 &&
+          rootPattern === projectConfiguration.root
+        ) {
+          // delete the lintFilePatterns option if it's the only option and matches the root of the project
+          delete projectConfiguration.targets[targetName].options
+            .lintFilePatterns;
+          if (
+            Object.keys(projectConfiguration.targets[targetName].options)
+              .length === 0
+          ) {
+            delete projectConfiguration.targets[targetName].options;
+          }
+        } else {
+          projectConfiguration.targets[targetName].options.lintFilePatterns = [
+            rootPattern,
+            ...nonRootPatterns,
+          ];
+        }
       }
     }
 
@@ -41,7 +59,7 @@ export default async function update(tree: Tree) {
   await formatFiles(tree);
 }
 
-function getLintRoot({ root, sourceRoot }: ProjectConfiguration) {
+function getLintRoot({ root, sourceRoot }: ProjectConfiguration): string {
   if (root === '' || root === '.') {
     return sourceRoot || './src';
   }
