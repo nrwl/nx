@@ -285,7 +285,7 @@ function isFile(s) {
 }
 
 // Call the user-defined main.
-require('${mainFile}');
+module.exports = require('${mainFile}');
 `;
 }
 
