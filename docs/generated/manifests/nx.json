@@ -995,16 +995,6 @@
         "tags": []
       },
       {
-        "id": "dte",
-        "name": "Improve Worst Case CI Times",
-        "description": "",
-        "file": "shared/concepts/improve-worst-case-ci-times",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/dte",
-        "tags": ["distribute-task-execution"]
-      },
-      {
         "id": "task-pipeline-configuration",
         "name": "What is a Task Pipeline",
         "description": "",
@@ -1295,16 +1285,6 @@
     "isExternal": false,
     "path": "/concepts/types-of-configuration",
     "tags": []
-  },
-  "/concepts/dte": {
-    "id": "dte",
-    "name": "Improve Worst Case CI Times",
-    "description": "",
-    "file": "shared/concepts/improve-worst-case-ci-times",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/dte",
-    "tags": ["distribute-task-execution"]
   },
   "/concepts/task-pipeline-configuration": {
     "id": "task-pipeline-configuration",
