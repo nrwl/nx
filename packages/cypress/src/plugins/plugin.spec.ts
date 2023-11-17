@@ -37,6 +37,12 @@ describe('@nx/cypress/plugin', () => {
     mockCypressConfig(
       defineConfig({
         e2e: {
+          env: {
+            devServerTargets: {
+              default: 'my-app:serve',
+              production: 'my-app:serve:production',
+            },
+          },
           videosFolder: './dist/videos',
           screenshotsFolder: './dist/screenshots',
         },
@@ -58,18 +64,25 @@ describe('@nx/cypress/plugin', () => {
             "targets": {
               "e2e": {
                 "cache": true,
-                "executor": "@nx/cypress:cypress",
+                "command": "cypress run --config-file cypress.config.js --e2e",
+                "configurations": {
+                  "production": {
+                    "command": "cypress run --config-file cypress.config.js --e2e --env.devServerTarget my-app:serve:production",
+                  },
+                },
                 "inputs": [
                   "default",
                   "^production",
+                  {
+                    "externalDependencies": [
+                      "cypress",
+                    ],
+                  },
                 ],
                 "options": {
-                  "cypressConfig": "cypress.config.js",
-                  "testingType": "e2e",
+                  "cwd": ".",
                 },
                 "outputs": [
-                  "{options.videosFolder}",
-                  "{options.screenshotsFolder}",
                   "{projectRoot}/dist/videos",
                   "{projectRoot}/dist/screenshots",
                 ],
@@ -110,18 +123,20 @@ describe('@nx/cypress/plugin', () => {
             "targets": {
               "component-test": {
                 "cache": true,
-                "executor": "@nx/cypress:cypress",
+                "command": "cypress open --config-file cypress.config.js --component",
                 "inputs": [
                   "default",
                   "^production",
+                  {
+                    "externalDependencies": [
+                      "cypress",
+                    ],
+                  },
                 ],
                 "options": {
-                  "cypressConfig": "cypress.config.js",
-                  "testingType": "component",
+                  "cwd": ".",
                 },
                 "outputs": [
-                  "{options.videosFolder}",
-                  "{options.screenshotsFolder}",
                   "{projectRoot}/dist/videos",
                   "{projectRoot}/dist/screenshots",
                 ],
@@ -138,6 +153,8 @@ describe('@nx/cypress/plugin', () => {
       defineConfig({
         e2e: {
           specPattern: '**/*.cy.ts',
+          videosFolder: './dist/videos',
+          screenshotsFolder: './dist/screenshots',
           env: {
             devServerTargets: {
               default: 'my-app:serve',
@@ -164,24 +181,27 @@ describe('@nx/cypress/plugin', () => {
             "targets": {
               "e2e": {
                 "cache": true,
+                "command": "cypress run --config-file cypress.config.js --e2e",
                 "configurations": {
                   "production": {
-                    "devServerTarget": "my-app:serve:production",
+                    "command": "cypress run --config-file cypress.config.js --e2e --env.devServerTarget my-app:serve:production",
                   },
                 },
-                "executor": "@nx/cypress:cypress",
                 "inputs": [
                   "default",
                   "^production",
+                  {
+                    "externalDependencies": [
+                      "cypress",
+                    ],
+                  },
                 ],
                 "options": {
-                  "cypressConfig": "cypress.config.js",
-                  "devServerTarget": "my-app:serve",
-                  "testingType": "e2e",
+                  "cwd": ".",
                 },
                 "outputs": [
-                  "{options.videosFolder}",
-                  "{options.screenshotsFolder}",
+                  "{projectRoot}/dist/videos",
+                  "{projectRoot}/dist/screenshots",
                 ],
               },
               "e2e-ci": {
@@ -197,29 +217,32 @@ describe('@nx/cypress/plugin', () => {
                 "inputs": [
                   "default",
                   "^production",
+                  {
+                    "externalDependencies": [
+                      "cypress",
+                    ],
+                  },
                 ],
                 "outputs": [
-                  "{options.videosFolder}",
-                  "{options.screenshotsFolder}",
+                  "{projectRoot}/dist/videos",
+                  "{projectRoot}/dist/screenshots",
                 ],
               },
               "e2e-ci--test.cy.ts": {
                 "cache": true,
-                "configurations": undefined,
-                "executor": "@nx/cypress:cypress",
+                "command": "cypress run --config-file cypress.config.js --e2e --env.devServerTarget my-app:serve-static --spec test.cy.ts",
                 "inputs": [
                   "default",
                   "^production",
+                  {
+                    "externalDependencies": [
+                      "cypress",
+                    ],
+                  },
                 ],
-                "options": {
-                  "cypressConfig": "cypress.config.js",
-                  "devServerTarget": "my-app:serve-static",
-                  "spec": "test.cy.ts",
-                  "testingType": "e2e",
-                },
                 "outputs": [
-                  "{options.videosFolder}",
-                  "{options.screenshotsFolder}",
+                  "{projectRoot}/dist/videos",
+                  "{projectRoot}/dist/screenshots",
                 ],
               },
             },

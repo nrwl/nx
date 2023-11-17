@@ -1,6 +1,5 @@
 import {
   createProjectGraphAsync,
-  logger,
   parseTargetString,
   workspaceRoot,
 } from '@nx/devkit';
@@ -8,7 +7,6 @@ import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
-import { ChildProcess, fork } from 'node:child_process';
 import { createExecutorContext } from '../src/utils/ct-helpers';
 import { startDevServer } from '../src/utils/start-dev-server';
 
