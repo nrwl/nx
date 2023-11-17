@@ -90,6 +90,22 @@ mod tests {
         let result = collect_files(proj_name, proj_root, file_sets, &file_map).unwrap();
 
         assert_eq!(result, vec![&tsfile_1, &tsfile_2]);
+
+        let result = collect_files(
+            proj_name,
+            proj_root,
+            "!{projectRoot}/**/*.spec.ts",
+            &file_map,
+        )
+        .unwrap();
+        assert_eq!(
+            result,
+            vec![
+                &tsfile_1,
+                &tsfile_2,
+                /* testfile_2 is included because it ends with spectsx.snap */ &testfile_2
+            ]
+        );
     }
 
     #[test]

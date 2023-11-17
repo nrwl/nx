@@ -304,14 +304,14 @@ describe('native task hasher', () => {
           "child:ProjectConfiguration": "2562552455862160288",
           "child:TsConfig": "2264969541778889434",
           "child:{projectRoot}/**/*": "7694964870822928111",
-          "parent:!{projectRoot}/**/*.spec.ts": "3244421341483603138",
+          "parent:!{projectRoot}/**/*.spec.ts": "7663204892242899157",
           "parent:ProjectConfiguration": "4131510303084753861",
           "parent:TsConfig": "2264969541778889434",
           "{workspaceRoot}/.gitignore": "3244421341483603138",
           "{workspaceRoot}/.nxignore": "3244421341483603138",
           "{workspaceRoot}/nx.json": "4641558175996703359",
         },
-        "value": "3016278578194284680",
+        "value": "5825507912633865657",
       }
     `);
   });
@@ -370,14 +370,14 @@ describe('native task hasher', () => {
         {
           "details": {
             "AllExternalDependencies": "3244421341483603138",
-            "parent:!{projectRoot}/**/*.spec.ts": "3244421341483603138",
+            "parent:!{projectRoot}/**/*.spec.ts": "7663204892242899157",
             "parent:ProjectConfiguration": "8008830016795210968",
             "parent:TsConfig": "2264969541778889434",
             "{workspaceRoot}/.gitignore": "3244421341483603138",
             "{workspaceRoot}/.nxignore": "3244421341483603138",
             "{workspaceRoot}/nx.json": "4641558175996703359",
           },
-          "value": "10057965444919158304",
+          "value": "16919987205625802616",
         },
         {
           "details": {
@@ -466,7 +466,7 @@ describe('native task hasher', () => {
         {
           "details": {
             "AllExternalDependencies": "3244421341483603138",
-            "child:!{projectRoot}/**/*.spec.ts": "3244421341483603138",
+            "child:!{projectRoot}/**/*.spec.ts": "13790135045935437026",
             "child:ProjectConfiguration": "11541456798478268276",
             "child:TsConfig": "2264969541778889434",
             "env:MY_TEST_HASH_ENV": "17357374746554314488",
@@ -479,7 +479,7 @@ describe('native task hasher', () => {
             "{workspaceRoot}/global2": "13625885481717016690",
             "{workspaceRoot}/nx.json": "10897751101872977225",
           },
-          "value": "9281581535165031861",
+          "value": "1217581064022758580",
         },
       ]
     `);
