@@ -26,6 +26,8 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { getDefaultPluginsSync } from '../utils/nx-plugin.deprecated';
 import minimatch = require('minimatch');
 import { CreateNodesResult } from '../devkit-exports';
+import { CreatePackageJsonProjectsNextToProjectJson } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
+import { LoadedNxPlugin } from '../utils/nx-plugin';
 
 export interface Change {
   type: string;
@@ -184,7 +186,10 @@ function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
     root,
     getDefaultPluginsSync(root)
   );
-  const plugins = getDefaultPluginsSync(root);
+  const plugins: LoadedNxPlugin[] = [
+    { plugin: CreatePackageJsonProjectsNextToProjectJson },
+    ...getDefaultPluginsSync(root),
+  ];
 
   const projectRootMap: Map<string, ProjectConfiguration> = new Map();
 

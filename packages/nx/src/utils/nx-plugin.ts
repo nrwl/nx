@@ -250,7 +250,9 @@ export async function loadNxPlugins(
   root = workspaceRoot,
   projects?: Record<string, ProjectConfiguration>
 ): Promise<LoadedNxPlugin[]> {
-  const result: LoadedNxPlugin[] = [];
+  const result: LoadedNxPlugin[] = [
+    { plugin: CreatePackageJsonProjectsNextToProjectJson },
+  ];
 
   // When loading plugins for `createNodes`, we don't know what projects exist yet.
   projects ??= await retrieveProjectConfigurationsWithoutPluginInference(root);
@@ -497,7 +499,6 @@ export async function getDefaultPlugins(
   root: string
 ): Promise<LoadedNxPlugin[]> {
   const plugins: NxPluginV2[] = [
-    CreatePackageJsonProjectsNextToProjectJson,
     await import('../plugins/js'),
     ...(shouldMergeAngularProjects(root, false)
       ? [

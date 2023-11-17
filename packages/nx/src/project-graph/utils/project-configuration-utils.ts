@@ -171,15 +171,16 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     file: string;
     pluginName: string;
   };
-  const results: Array<
-    CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
-  > = [];
 
-  const resolvingPromiseCount: Record<string, number> = {};
+  const results: Array<Promise<Array<CreateNodesResultWithContext>>> = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const { plugin, options } of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
+    const pluginResults: Array<
+      CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
+    > = [];
+
     performance.mark(`${plugin.name}:createNodes - start`);
     if (!pattern) {
       continue;
@@ -194,10 +195,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
           });
 
           if (r instanceof Promise) {
-            resolvingPromiseCount[plugin.name] ??= 0;
-            resolvingPromiseCount[plugin.name]++;
-
-            results.push(
+            pluginResults.push(
               r
                 .catch((e) => {
                   performance.mark(`${plugin.name}:createNodes:${file} - end`);
@@ -208,15 +206,11 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
                 })
                 .then((r) => {
                   performance.mark(`${plugin.name}:createNodes:${file} - end`);
-                  resolvingPromiseCount[plugin.name]--;
-                  if (resolvingPromiseCount[plugin.name] === 0) {
-                    performance.mark(`${plugin.name}:createNodes - end`);
-                    performance.measure(
-                      `${plugin.name}:createNodes`,
-                      `${plugin.name}:createNodes - start`,
-                      `${plugin.name}:createNodes - end`
-                    );
-                  }
+                  performance.measure(
+                    `${plugin.name}:createNodes:${file}`,
+                    `${plugin.name}:createNodes:${file} - start`,
+                    `${plugin.name}:createNodes:${file} - end`
+                  );
                   return { ...r, file, pluginName: plugin.name };
                 })
             );
@@ -227,7 +221,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
               `${plugin.name}:createNodes:${file} - start`,
               `${plugin.name}:createNodes:${file} - end`
             );
-            results.push({
+            pluginResults.push({
               ...r,
               file,
               pluginName: plugin.name,
@@ -242,17 +236,21 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       }
     }
     // If there are no promises (counter undefined) or all promises have resolved (counter === 0)
-    if (!resolvingPromiseCount[plugin.name]) {
-      performance.mark(`${plugin.name}:createNodes - end`);
-      performance.measure(
-        `${plugin.name}:createNodes`,
-        `${plugin.name}:createNodes - start`,
-        `${plugin.name}:createNodes - end`
-      );
-    }
+    results.push(
+      Promise.all(pluginResults).then((results) => {
+        performance.mark(`${plugin.name}:createNodes - end`);
+        performance.measure(
+          `${plugin.name}:createNodes`,
+          `${plugin.name}:createNodes - start`,
+          `${plugin.name}:createNodes - end`
+        );
+        return results;
+      })
+    );
   }
 
   return Promise.all(results).then((results) => {
+    performance.mark('createNodes:merge - start');
     const projectRootMap: Map<string, ProjectConfiguration> = new Map();
     const externalNodes: Record<string, ProjectGraphExternalNode> = {};
     const configurationSourceMaps: Record<
@@ -260,7 +258,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       Record<string, SourceInformation>
     > = {};
 
-    for (const result of results) {
+    for (const result of results.flat()) {
       const {
         projects: projectNodes,
         externalNodes: pluginExternalNodes,
@@ -290,6 +288,13 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     }
 
     const rootMap = createRootMap(projectRootMap);
+
+    performance.mark('createNodes:merge - end');
+    performance.measure(
+      'createNodes:merge',
+      'createNodes:merge - start',
+      'createNodes:merge - end'
+    );
 
     return {
       projects: readProjectConfigurationsFromRootMap(projectRootMap),

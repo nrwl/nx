@@ -41,7 +41,6 @@ export type NxPluginV1 = {
  */
 export function getDefaultPluginsSync(root: string): LoadedNxPlugin[] {
   const plugins: NxPluginV2[] = [
-    CreatePackageJsonProjectsNextToProjectJson,
     require('../plugins/js'),
     ...(shouldMergeAngularProjects(root, false)
       ? [require('../adapter/angular-json').NxAngularJsonPlugin]
