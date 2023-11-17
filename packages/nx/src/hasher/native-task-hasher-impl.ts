@@ -26,7 +26,7 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
   options: HasherOptions | undefined;
 
   constructor(
-    private workspaceRoot: string,
+    workspaceRoot: string,
     nxJson: NxJsonConfiguration,
     projectGraph: ProjectGraph,
     externals: NxWorkspaceFilesExternals,
@@ -39,9 +39,15 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     this.allWorkspaceFilesRef = externals.allWorkspaceFiles;
     this.projectFileMapRef = externals.projectFiles;
 
-    const tsconfig = readJsonFile(getRootTsConfigPath());
-    const paths = tsconfig.compilerOptions?.paths ?? {};
-    delete tsconfig.compilerOptions.paths;
+    let tsconfig: { compilerOptions?: import('typescript').CompilerOptions } =
+      {};
+    let paths = {};
+    let rootTsConfigPath = getRootTsConfigPath();
+    if (rootTsConfigPath) {
+      tsconfig = readJsonFile(getRootTsConfigPath());
+      paths = tsconfig.compilerOptions?.paths ?? {};
+      delete tsconfig.compilerOptions.paths;
+    }
 
     this.planner = new HashPlanner(nxJson, this.projectGraphRef);
     this.hasher = new TaskHasher(
