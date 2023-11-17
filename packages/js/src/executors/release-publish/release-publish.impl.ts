@@ -43,7 +43,7 @@ export default async function runExecutor(
 
   if (projectPackageJson.private === true) {
     console.warn(
-      `Skipping ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`
+      `Skipped ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`
     );
     return {
       success: true,
@@ -51,9 +51,13 @@ export default async function runExecutor(
   }
 
   const npmPublishCommandSegments = [`npm publish --json`];
+  const npmViewCommandSegments = [
+    `npm view ${packageName} versions dist-tags --json`,
+  ];
 
   if (options.registry) {
     npmPublishCommandSegments.push(`--registry=${options.registry}`);
+    npmViewCommandSegments.push(`--registry=${options.registry}`);
   }
 
   if (options.tag) {
@@ -72,6 +76,100 @@ export default async function runExecutor(
   const registry =
     options.registry ?? execSync(`npm config get registry`).toString().trim();
   const tag = options.tag ?? execSync(`npm config get tag`).toString().trim();
+  const currentVersion = projectPackageJson.version;
+
+  try {
+    const result = execSync(npmViewCommandSegments.join(' '), {
+      env: processEnv(true),
+      cwd: packageRoot,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    const resultJson = JSON.parse(result.toString());
+    const distTags = resultJson['dist-tags'] || {};
+    if (distTags[tag] === currentVersion) {
+      console.warn(
+        `Skipped ${packageTxt}, as v${currentVersion} already exists in ${registry} with tag "${tag}"`
+      );
+      return {
+        success: true,
+      };
+    }
+
+    if (resultJson.versions.includes(currentVersion)) {
+      try {
+        if (!options.dryRun) {
+          execSync(
+            `npm dist-tag add ${packageName}@${currentVersion} ${tag} --registry=${registry}`,
+            {
+              env: processEnv(true),
+              cwd: packageRoot,
+              stdio: 'ignore',
+            }
+          );
+          console.log(
+            `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
+          );
+        } else {
+          console.log(
+            `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
+              'orange'
+            )('[dry-run]')} was set.\n`
+          );
+        }
+        return {
+          success: true,
+        };
+      } catch (err) {
+        try {
+          const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+
+          console.error('npm dist-tag add error:');
+          if (stdoutData.error.summary) {
+            console.error(stdoutData.error.summary);
+          }
+          if (stdoutData.error.detail) {
+            console.error(stdoutData.error.detail);
+          }
+
+          if (context.isVerbose) {
+            console.error('npm dist-tag add stdout:');
+            console.error(JSON.stringify(stdoutData, null, 2));
+          }
+          return {
+            success: false,
+          };
+        } catch (err) {
+          // npm v9 onwards seems to guarantee stdout will be well formed JSON when --json is used, so maybe we need to
+          // specify that as minimum supported version? (comes with node 18 and 20 by default)
+          console.error(
+            'Something unexpected went wrong when processing the npm dist-tag add output\n',
+            err
+          );
+          return {
+            success: false,
+          };
+        }
+      }
+    }
+  } catch (err) {
+    const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+    // If the error is that the package doesn't exist, then we can ignore it
+    if (
+      !(
+        stdoutData.error?.code?.includes('E404') &&
+        stdoutData.error?.summary?.includes('no such package available')
+      )
+    ) {
+      console.error(
+        `Something unexpected went wrong when checking for existing dist-tags.\n`,
+        err
+      );
+      return {
+        success: false,
+      };
+    }
+  }
 
   try {
     const output = execSync(npmPublishCommandSegments.join(' '), {
@@ -102,30 +200,7 @@ export default async function runExecutor(
     };
   } catch (err) {
     try {
-      const currentVersion = projectPackageJson.version;
-
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
-      if (
-        // handle npm conflict error
-        stdoutData.error?.code === 'EPUBLISHCONFLICT' ||
-        // handle npm conflict error when the package has a scope
-        (stdoutData.error?.code === 'E403' &&
-          stdoutData.error?.summary?.includes(
-            'You cannot publish over the previously published versions'
-          )) ||
-        // handle verdaccio conflict error
-        (stdoutData.error?.code === 'E409' &&
-          stdoutData.error?.summary?.includes(
-            'this package is already present'
-          ))
-      ) {
-        console.warn(
-          `Skipping ${packageTxt}, as v${currentVersion} has already been published to ${registry} with tag "${tag}"`
-        );
-        return {
-          success: true,
-        };
-      }
 
       console.error('npm publish error:');
       if (stdoutData.error.summary) {
