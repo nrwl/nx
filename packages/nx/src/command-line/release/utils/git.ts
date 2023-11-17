@@ -59,25 +59,30 @@ export async function getLatestGitTagForPattern(
     }
 
     const interpolatedTagPattern = interpolate(releaseTagPattern, {
-      version: ' ',
+      version: '%v%',
+      projectName: '%p%',
       ...additionalInterpolationData,
     });
 
-    const tagRegexp = `^${escapeRegExp(interpolatedTagPattern).replace(
-      ' ',
-      '(.+)'
-    )}`;
+    const tagRegexp = `^${escapeRegExp(interpolatedTagPattern)
+      .replace('%v%', '(.+)')
+      .replace('%p%', '(.+)')}`;
+
     const matchingSemverTags = tags.filter(
       (tag) =>
         // Do the match against SEMVER_REGEX to ensure that we skip tags that aren't valid semver versions
-        !!tag.match(tagRegexp) && tag.match(tagRegexp)[1]?.match(SEMVER_REGEX)
+        !!tag.match(tagRegexp) &&
+        tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
     );
 
     if (!matchingSemverTags.length) {
       return null;
     }
 
-    const [latestMatchingTag, version] = matchingSemverTags[0].match(tagRegexp);
+    const [latestMatchingTag, ...rest] = matchingSemverTags[0].match(tagRegexp);
+    const version = rest.filter((r) => {
+      return r.match(SEMVER_REGEX);
+    })[0];
 
     return {
       tag: latestMatchingTag,
