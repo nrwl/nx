@@ -65,7 +65,6 @@ It only uses language primitives and immutable objects
 
 - [CreateDependencies](../../devkit/documents/CreateDependencies)
 - [CreateNodes](../../devkit/documents/CreateNodes)
-- [CreateNodesAsync](../../devkit/documents/CreateNodesAsync)
 - [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 - [CustomHasher](../../devkit/documents/CustomHasher)
 - [DynamicDependency](../../devkit/documents/DynamicDependency)
