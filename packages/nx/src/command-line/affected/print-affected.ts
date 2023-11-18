@@ -78,7 +78,8 @@ async function createTasks(
     projectGraph,
     nxJson,
     null,
-    {}
+    // temporary option to enable the old task hasher
+    { useNodeTaskHasher: true }
   );
   const execCommand = getPackageManagerCommand().exec;
   const tasks = Object.values(taskGraph.tasks);

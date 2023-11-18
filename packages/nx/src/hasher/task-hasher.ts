@@ -158,29 +158,31 @@ export class InProcessTaskHasher implements TaskHasher {
       '.nxignore',
     ].map((d) => ({ fileset: `{workspaceRoot}/${d}` }));
 
-    this.taskHasher = !this.useNativeTaskHasher
-      ? new NodeTaskHasherImpl(
-          nxJson,
-          legacyRuntimeInputs,
-          legacyFilesetInputs,
-          this.projectFileMap,
-          this.allWorkspaceFiles,
-          this.projectGraph,
-          {
-            selectivelyHashTsConfig:
-              this.options.selectivelyHashTsConfig ?? false,
-          }
-        )
-      : new NativeTaskHasherImpl(
-          workspaceRoot,
-          nxJson,
-          this.projectGraph,
-          this.externalRustReferences,
-          {
-            selectivelyHashTsConfig:
-              this.options.selectivelyHashTsConfig ?? false,
-          }
-        );
+    this.taskHasher =
+      // options.useNodeTaskHasher is only used with print-affected. Which should be removed soon
+      !this.useNativeTaskHasher || options?.useNodeTaskHasher
+        ? new NodeTaskHasherImpl(
+            nxJson,
+            legacyRuntimeInputs,
+            legacyFilesetInputs,
+            this.projectFileMap,
+            this.allWorkspaceFiles,
+            this.projectGraph,
+            {
+              selectivelyHashTsConfig:
+                this.options.selectivelyHashTsConfig ?? false,
+            }
+          )
+        : new NativeTaskHasherImpl(
+            workspaceRoot,
+            nxJson,
+            this.projectGraph,
+            this.externalRustReferences,
+            {
+              selectivelyHashTsConfig:
+                this.options.selectivelyHashTsConfig ?? false,
+            }
+          );
   }
 
   async hashTasks(
