@@ -51,7 +51,6 @@ export type {
   NxPluginV2,
   ProjectTargetConfigurator,
   CreateNodes,
-  CreateNodesAsync,
   CreateNodesFunction,
   CreateNodesResult,
   CreateNodesContext,

@@ -12,7 +12,6 @@ export const getTouchedProjectsFromProjectGlobChanges: TouchedProjectLocator =
   async (touchedFiles, projectGraphNodes, nxJson): Promise<string[]> => {
     const globPattern = combineGlobPatterns(
       configurationGlobs(
-        workspaceRoot,
         await loadNxPlugins(
           nxJson?.plugins,
           getNxRequirePaths(workspaceRoot),

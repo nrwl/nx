@@ -997,7 +997,7 @@ Learn more about how to [enforce module boundaries](/core-features/enforce-modul
 
 ## Setting Up CI
 
-Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps decrease the average CI time with the [`affected` command](/nx-cloud/features/affected) and Nx Cloud's [distributed caching](/nx-cloud/features/remote-cache). Nx also [decreases the worst case CI time](/concepts/dte) with Nx Cloud's distributed task execution.
+Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps decrease the average CI time with the [`affected` command](/nx-cloud/features/affected) and Nx Cloud's [distributed caching](/nx-cloud/features/remote-cache). Nx also [decreases the worst case CI time](/nx-cloud/concepts/dte) with Nx Cloud's distributed task execution.
 
 To set up Nx Cloud run:
 

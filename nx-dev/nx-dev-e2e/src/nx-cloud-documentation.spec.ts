@@ -15,24 +15,20 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/nx-cloud/recipes/source-control-integration/github',
   },
   {
-    title: 'User Management',
-    path: '/nx-cloud/account/users',
-  },
-  {
     title: 'Connecting Nx Cloud to your existing Google identity provider',
-    path: '/nx-cloud/account/google-auth',
+    path: '/nx-cloud/recipes/security/google-auth',
   },
   {
     title: 'Access Tokens',
-    path: '/nx-cloud/account/access-tokens',
+    path: '/nx-cloud/recipes/security/access-tokens',
   },
   {
     title: 'Security Scenarios',
-    path: '/nx-cloud/account/scenarios',
+    path: '/nx-cloud/concepts/scenarios',
   },
   {
     title: 'End to End Encryption',
-    path: '/nx-cloud/account/encryption',
+    path: '/nx-cloud/concepts/encryption',
   },
   {
     title: 'Running Nx Cloud Enterprise',

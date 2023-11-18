@@ -9,7 +9,7 @@
     "emitDecoratorMetadata": true,
     "skipLibCheck": true,
     "types": ["node", "jest"],
-    "lib": ["ES2021"],
+    "lib": ["ES2022"],
     "declaration": true,
     "resolveJsonModule": true,
     "baseUrl": ".",

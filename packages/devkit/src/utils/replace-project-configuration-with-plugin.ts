@@ -3,7 +3,7 @@ import type {
   TargetConfiguration,
 } from 'nx/src/config/workspace-json-project-json';
 import type { Tree } from 'nx/src/generators/tree';
-import type { CreateNodes, CreateNodesAsync } from 'nx/src/utils/nx-plugin';
+import type { CreateNodes } from 'nx/src/utils/nx-plugin';
 import { requireNx } from '../../nx';
 const {
   readNxJson,
@@ -19,7 +19,7 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,
   rootMappings: Map<string, string>,
   pluginPath: string,
-  createNodes: CreateNodes<T> | CreateNodesAsync<T>,
+  createNodes: CreateNodes<T>,
   pluginOptions: T
 ): Promise<void> {
   const nxJson = readNxJson(tree);

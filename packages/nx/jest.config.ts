@@ -6,6 +6,5 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
   globals: {},
   displayName: 'nx',
-  testEnvironment: 'node',
   preset: '../../jest.preset.js',
 };

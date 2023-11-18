@@ -584,50 +584,6 @@
       "path": "/concepts/integrated-vs-package-based"
     }
   ],
-  "distribute-task-execution": [
-    {
-      "description": "",
-      "file": "shared/concepts/improve-worst-case-ci-times",
-      "id": "dte",
-      "name": "Improve Worst Case CI Times",
-      "path": "/concepts/dte"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/illustrated-dte-guide",
-      "id": "illustrated-dte",
-      "name": "Illustrated Distributed Task Execution",
-      "path": "/concepts/more-concepts/illustrated-dte"
-    },
-    {
-      "description": "",
-      "file": "",
-      "id": "nx-cloud-documentation",
-      "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/ci-with-nx"
-    },
-    {
-      "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
-      "file": "shared/core-features/distribute-task-execution",
-      "id": "distribute-task-execution",
-      "name": "Distribute Task Execution",
-      "path": "/nx-cloud/features/distribute-task-execution"
-    },
-    {
-      "description": "",
-      "file": "shared/ci-overview",
-      "id": "ci-setup",
-      "name": "CI Setup",
-      "path": "/nx-cloud/recipes/set-up/ci-setup"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
-      "id": "connect-to-nx-cloud",
-      "name": "connect-to-nx-cloud",
-      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
-    }
-  ],
   "repository-types": [
     {
       "description": "",
@@ -746,6 +702,50 @@
       "id": "module-federation-with-ssr",
       "name": "Setup Module Federation with SSR for React",
       "path": "/recipes/react/module-federation-with-ssr"
+    }
+  ],
+  "distribute-task-execution": [
+    {
+      "description": "",
+      "file": "shared/concepts/illustrated-dte-guide",
+      "id": "illustrated-dte",
+      "name": "Illustrated Distributed Task Execution",
+      "path": "/concepts/more-concepts/illustrated-dte"
+    },
+    {
+      "description": "",
+      "file": "",
+      "id": "nx-cloud-documentation",
+      "name": "Nx Cloud Documentation",
+      "path": "/nx-cloud/intro/ci-with-nx"
+    },
+    {
+      "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
+      "file": "shared/core-features/distribute-task-execution",
+      "id": "distribute-task-execution",
+      "name": "Distribute Task Execution",
+      "path": "/nx-cloud/features/distribute-task-execution"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/improve-worst-case-ci-times",
+      "id": "dte",
+      "name": "Improve Worst Case CI Times",
+      "path": "/nx-cloud/concepts/dte"
+    },
+    {
+      "description": "",
+      "file": "shared/ci-overview",
+      "id": "ci-setup",
+      "name": "CI Setup",
+      "path": "/nx-cloud/recipes/set-up/ci-setup"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
+      "id": "connect-to-nx-cloud",
+      "name": "connect-to-nx-cloud",
+      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
     }
   ],
   "create-your-own-plugin": [

@@ -60,9 +60,14 @@ function main() {
     if (
       workspace &&
       workspace.type === 'nx' &&
-      !['format', 'format:check', 'format:write', 'g', 'generate'].some(
-        (cmd) => process.argv[2] === cmd
-      )
+      ![
+        'format',
+        'format:check',
+        'format:write',
+        'g',
+        'generate',
+        'release',
+      ].some((cmd) => process.argv[2] === cmd)
     ) {
       require('v8-compile-cache');
     }

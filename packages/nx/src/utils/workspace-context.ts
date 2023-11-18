@@ -27,10 +27,20 @@ export function getNxWorkspaceFilesFromContext(
 
 export function globWithWorkspaceContext(
   workspaceRoot: string,
-  globs: string[]
+  globs: string[],
+  exclude?: string[]
 ) {
   ensureContextAvailable(workspaceRoot);
-  return workspaceContext.glob(globs);
+  return workspaceContext.glob(globs, exclude);
+}
+
+export function hashWithWorkspaceContext(
+  workspaceRoot: string,
+  globs: string[],
+  exclude?: string[]
+) {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext.hashFilesMatchingGlob(globs, exclude);
 }
 
 export function getProjectConfigurationsFromContext(

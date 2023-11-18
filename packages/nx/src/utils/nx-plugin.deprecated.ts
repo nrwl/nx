@@ -1,25 +1,10 @@
 import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
-import {
-  NxAngularJsonPlugin,
-  shouldMergeAngularProjects,
-} from '../adapter/angular-json';
-import { NxJsonConfiguration, PluginConfiguration } from '../config/nx-json';
+import { shouldMergeAngularProjects } from '../adapter/angular-json';
 import { ProjectGraphProcessor } from '../config/project-graph';
-import {
-  ProjectConfiguration,
-  TargetConfiguration,
-} from '../config/workspace-json-project-json';
+import { TargetConfiguration } from '../config/workspace-json-project-json';
+import { CreatePackageJsonProjectsNextToProjectJson } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
 import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
-import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
-import { getNxRequirePaths } from './installation-directory';
-import {
-  ensurePluginIsV2,
-  getPluginPathAndName,
-  LoadedNxPlugin,
-  nxPluginCache,
-  NxPluginV2,
-} from './nx-plugin';
-import { workspaceRoot } from './workspace-root';
+import { LoadedNxPlugin, NxPluginV2 } from './nx-plugin';
 
 /**
  * @deprecated Add targets to the projects in a {@link CreateNodes} function instead. This will be removed in Nx 18
@@ -55,11 +40,15 @@ export type NxPluginV1 = {
  * @todo(@agentender) v18: Remove this fn when we remove readWorkspaceConfig
  */
 export function getDefaultPluginsSync(root: string): LoadedNxPlugin[] {
-  const plugins: NxPluginV2[] = [require('../plugins/js')];
+  const plugins: NxPluginV2[] = [
+    require('../plugins/js'),
+    ...(shouldMergeAngularProjects(root, false)
+      ? [require('../adapter/angular-json').NxAngularJsonPlugin]
+      : []),
+    getNxPackageJsonWorkspacesPlugin(root),
+    CreateProjectJsonProjectsPlugin,
+  ];
 
-  if (shouldMergeAngularProjects(root, false)) {
-    plugins.push(require('../adapter/angular-json').NxAngularJsonPlugin);
-  }
   return plugins.map((p) => ({
     plugin: p,
   }));

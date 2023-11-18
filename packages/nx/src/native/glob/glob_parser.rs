@@ -58,6 +58,14 @@ fn negated_file_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str
     })(input)
 }
 
+fn negated_wildcard(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+    context("negated_wildcard", |input| {
+        let (input, result) = preceded(tag("!("), group)(input)?;
+        let (input, _) = tag("*")(input)?;
+        Ok((input, GlobGroup::NegatedWildcard(result)))
+    })(input)
+}
+
 fn non_special_character(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
     context(
         "non_special_character",
@@ -107,6 +115,7 @@ fn parse_segment(input: &str) -> IResult<&str, Vec<GlobGroup>, VerboseError<&str
                     one_or_more_group,
                     exact_one_group,
                     negated_file_group,
+                    negated_wildcard,
                     negated_group,
                     non_special_character,
                 )),
@@ -149,6 +158,7 @@ pub fn parse_glob(input: &str) -> anyhow::Result<(bool, Vec<Vec<GlobGroup>>)> {
 
 #[cfg(test)]
 mod test {
+
     use crate::native::glob::glob_group::GlobGroup;
     use crate::native::glob::glob_parser::parse_glob;
 
@@ -269,6 +279,19 @@ mod test {
                         GlobGroup::NonSpecial("[jt]s".into()),
                         GlobGroup::Negated("x".into())
                     ]
+                ]
+            )
+        );
+
+        let result = parse_glob("packages/!(package-a)*/package.json").unwrap();
+        assert_eq!(
+            result,
+            (
+                false,
+                vec![
+                    vec![GlobGroup::NonSpecial("packages".into())],
+                    vec![GlobGroup::NegatedWildcard("package-a".into()),],
+                    vec![GlobGroup::NonSpecial("package.json".into())]
                 ]
             )
         );

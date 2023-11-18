@@ -3,7 +3,10 @@ import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
 import { readNxJson } from '../config/configuration';
 import { FileData } from '../config/project-graph';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  ProjectsConfigurations,
+} from '../config/workspace-json-project-json';
 import type { NxArgs } from '../utils/command-line-utils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
@@ -14,10 +17,17 @@ import {
 } from './project-graph';
 import { toOldFormat } from '../adapter/angular-json';
 import { getIgnoreObject } from '../utils/ignore';
-import { retrieveProjectConfigurationPathsWithoutPluginInference } from './utils/retrieve-workspace-files';
-import { buildProjectsConfigurationsFromProjectPathsAndPlugins } from './utils/project-configuration-utils';
+import { retrieveProjectConfigurationPaths } from './utils/retrieve-workspace-files';
+import {
+  mergeProjectConfigurationIntoRootMap,
+  readProjectConfigurationsFromRootMap,
+} from './utils/project-configuration-utils';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { getDefaultPluginsSync } from '../utils/nx-plugin.deprecated';
+import minimatch = require('minimatch');
+import { CreateNodesResult } from '../devkit-exports';
+import { CreatePackageJsonProjectsNextToProjectJson } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
+import { LoadedNxPlugin } from '../utils/nx-plugin';
 
 export interface Change {
   type: string;
@@ -168,13 +178,45 @@ export { FileData };
 // TODO(17): Remove these exports
 export { readNxJson, workspaceLayout } from '../config/configuration';
 
+/**
+ * TODO(v18): Remove this function.
+ */
 function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
-  const paths = retrieveProjectConfigurationPathsWithoutPluginInference(root);
-  return buildProjectsConfigurationsFromProjectPathsAndPlugins(
-    nxJson,
-    paths,
-    getDefaultPluginsSync(root),
+  const projectFiles = retrieveProjectConfigurationPaths(
     root,
-    true
+    getDefaultPluginsSync(root)
   );
+  const plugins: LoadedNxPlugin[] = [
+    { plugin: CreatePackageJsonProjectsNextToProjectJson },
+    ...getDefaultPluginsSync(root),
+  ];
+
+  const projectRootMap: Map<string, ProjectConfiguration> = new Map();
+
+  // We iterate over plugins first - this ensures that plugins specified first take precedence.
+  for (const { plugin, options } of plugins) {
+    const [pattern, createNodes] = plugin.createNodes ?? [];
+    if (!pattern) {
+      continue;
+    }
+    for (const file of projectFiles) {
+      if (minimatch(file, pattern, { dot: true })) {
+        let r = createNodes(file, options, {
+          nxJsonConfiguration: nxJson,
+          workspaceRoot: root,
+        }) as CreateNodesResult;
+        for (const node in r.projects) {
+          const project = {
+            root: node,
+            ...r.projects[node],
+          };
+          mergeProjectConfigurationIntoRootMap(projectRootMap, project);
+        }
+      }
+    }
+  }
+
+  return {
+    projects: readProjectConfigurationsFromRootMap(projectRootMap),
+  };
 }

@@ -2,12 +2,21 @@ import { CreateNodesContext } from '@nx/devkit';
 import { defineConfig } from 'cypress';
 
 import { createNodes } from './plugin';
+import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { join } from 'path';
 
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
+  let tempFs: TempFs;
 
   beforeEach(async () => {
+    tempFs = new TempFs('cypress-plugin');
+
+    await tempFs.createFiles({
+      'package.json': '{}',
+      'test.cy.ts': '',
+    });
     context = {
       nxJsonConfiguration: {
         namedInputs: {
@@ -15,12 +24,13 @@ describe('@nx/cypress/plugin', () => {
           production: ['!{projectRoot}/**/*.spec.ts'],
         },
       },
-      workspaceRoot: '',
+      workspaceRoot: tempFs.tempDir,
     };
   });
 
   afterEach(() => {
     jest.resetModules();
+    tempFs.cleanup();
   });
 
   it('should add a target for e2e', () => {
@@ -45,7 +55,6 @@ describe('@nx/cypress/plugin', () => {
         "projects": {
           ".": {
             "projectType": "application",
-            "root": ".",
             "targets": {
               "e2e": {
                 "cache": true,
@@ -98,7 +107,6 @@ describe('@nx/cypress/plugin', () => {
         "projects": {
           ".": {
             "projectType": "application",
-            "root": ".",
             "targets": {
               "component-test": {
                 "cache": true,
@@ -125,10 +133,11 @@ describe('@nx/cypress/plugin', () => {
     `);
   });
 
-  it('should use nxMetadata to create additional configurations', () => {
+  it('should use ciDevServerTarget to create additional configurations', () => {
     mockCypressConfig(
       defineConfig({
         e2e: {
+          specPattern: '**/*.cy.ts',
           env: {
             devServerTargets: {
               default: 'my-app:serve',
@@ -152,14 +161,10 @@ describe('@nx/cypress/plugin', () => {
         "projects": {
           ".": {
             "projectType": "application",
-            "root": ".",
             "targets": {
               "e2e": {
                 "cache": true,
                 "configurations": {
-                  "ci": {
-                    "devServerTarget": "my-app:serve-static",
-                  },
                   "production": {
                     "devServerTarget": "my-app:serve:production",
                   },
@@ -179,22 +184,60 @@ describe('@nx/cypress/plugin', () => {
                   "{options.screenshotsFolder}",
                 ],
               },
+              "e2e-ci": {
+                "cache": true,
+                "dependsOn": [
+                  {
+                    "params": "forward",
+                    "projects": "self",
+                    "target": "e2e-ci--test.cy.ts",
+                  },
+                ],
+                "executor": "nx:noop",
+                "inputs": [
+                  "default",
+                  "^production",
+                ],
+                "outputs": [
+                  "{options.videosFolder}",
+                  "{options.screenshotsFolder}",
+                ],
+              },
+              "e2e-ci--test.cy.ts": {
+                "cache": true,
+                "configurations": undefined,
+                "executor": "@nx/cypress:cypress",
+                "inputs": [
+                  "default",
+                  "^production",
+                ],
+                "options": {
+                  "cypressConfig": "cypress.config.js",
+                  "devServerTarget": "my-app:serve-static",
+                  "spec": "test.cy.ts",
+                  "testingType": "e2e",
+                },
+                "outputs": [
+                  "{options.videosFolder}",
+                  "{options.screenshotsFolder}",
+                ],
+              },
             },
           },
         },
       }
     `);
   });
-});
 
-function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
-  jest.mock(
-    'cypress.config.js',
-    () => ({
-      default: cypressConfig,
-    }),
-    {
-      virtual: true,
-    }
-  );
-}
+  function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
+    jest.mock(
+      join(tempFs.tempDir, 'cypress.config.js'),
+      () => ({
+        default: cypressConfig,
+      }),
+      {
+        virtual: true,
+      }
+    );
+  }
+});

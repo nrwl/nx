@@ -131,8 +131,11 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     // project level changelog
     const scopeGroups = groupBy(commits, 'scope');
 
+    // Treat unscoped commits as "global", and therefore also relevant to include in the project level changelog
+    const unscopedCommits = scopeGroups[''] || [];
+
     // Generating for a named project, but that project has no changes in the current set of commits, exit early
-    if (!scopeGroups[project]) {
+    if (!scopeGroups[project] && unscopedCommits.length === 0) {
       if (entryWhenNoChanges) {
         markdownLines.push(
           '',
@@ -145,7 +148,10 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
     markdownLines.push('', `## ${releaseVersion}`, '');
 
-    const typeGroups = groupBy(scopeGroups[project], 'type');
+    const typeGroups = groupBy(
+      [...(scopeGroups[project] || []), ...unscopedCommits],
+      'type'
+    );
     for (const type of Object.keys(commitTypes)) {
       const group = typeGroups[type];
       if (!group || group.length === 0) {

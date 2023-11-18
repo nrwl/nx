@@ -4,6 +4,10 @@ The permissions and membership define what developers can access on nx.app. They
 
 ## Types of Access Tokens
 
+{% callout type="warning" title="Use Caution With Read-Write Tokens" %}
+Read-write tokens allow full write access to your remote cache. They should only be used in trusted environments. For instance, open source projects should only use read-write tokens as secrets configured for protected branches (e.g, main). Read-only tokens should be used in all other cases.
+{% /callout %}
+
 There are currently two (2) types of Access Tokens for Nx Cloud's runner that you can use on your workspace. Both tokens support distributed task execution and allow Nx Cloud to store metadata about runs.
 
 - `read-only`

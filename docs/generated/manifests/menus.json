@@ -802,14 +802,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Improve Worst Case CI Times",
-            "path": "/concepts/dte",
-            "id": "dte",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "What is a Task Pipeline",
             "path": "/concepts/task-pipeline-configuration",
             "id": "task-pipeline-configuration",
@@ -1034,14 +1026,6 @@
         "name": "Types of Configuration",
         "path": "/concepts/types-of-configuration",
         "id": "types-of-configuration",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Improve Worst Case CI Times",
-        "path": "/concepts/dte",
-        "id": "dte",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5550,14 +5534,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx Cloud Workflows",
-            "path": "/nx-cloud/intro/nx-cloud-workflows",
-            "id": "nx-cloud-workflows",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Tutorials",
             "path": "/nx-cloud/intro/tutorials",
             "id": "tutorials",
@@ -5581,14 +5557,6 @@
         "name": "CI with Nx",
         "path": "/nx-cloud/intro/ci-with-nx",
         "id": "ci-with-nx",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Cloud Workflows",
-        "path": "/nx-cloud/intro/nx-cloud-workflows",
-        "id": "nx-cloud-workflows",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5655,6 +5623,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Nx Cloud Workflows",
+            "path": "/nx-cloud/features/nx-cloud-workflows",
+            "id": "nx-cloud-workflows",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -5687,6 +5663,71 @@
         "name": "Set up Nx Cloud On-Premise",
         "path": "/nx-cloud/features/on-premise",
         "id": "on-premise",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Cloud Workflows",
+        "path": "/nx-cloud/features/nx-cloud-workflows",
+        "id": "nx-cloud-workflows",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Concepts",
+        "path": "/nx-cloud/concepts",
+        "id": "concepts",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Improve Worst Case CI Times",
+            "path": "/nx-cloud/concepts/dte",
+            "id": "dte",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Security Scenarios",
+            "path": "/nx-cloud/concepts/scenarios",
+            "id": "scenarios",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "End to End Encryption",
+            "path": "/nx-cloud/concepts/encryption",
+            "id": "encryption",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Improve Worst Case CI Times",
+        "path": "/nx-cloud/concepts/dte",
+        "id": "dte",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Security Scenarios",
+        "path": "/nx-cloud/concepts/scenarios",
+        "id": "scenarios",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "End to End Encryption",
+        "path": "/nx-cloud/concepts/encryption",
+        "id": "encryption",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5755,6 +5796,31 @@
                 "name": "Setting up Bitbucket",
                 "path": "/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines",
                 "id": "monorepo-ci-bitbucket-pipelines",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Security",
+            "path": "/nx-cloud/recipes/security",
+            "id": "security",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Authenticate with Google Identity",
+                "path": "/nx-cloud/recipes/security/google-auth",
+                "id": "google-auth",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Access Tokens",
+                "path": "/nx-cloud/recipes/security/access-tokens",
+                "id": "access-tokens",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6018,6 +6084,47 @@
         "disableCollapsible": false
       },
       {
+        "name": "Security",
+        "path": "/nx-cloud/recipes/security",
+        "id": "security",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Authenticate with Google Identity",
+            "path": "/nx-cloud/recipes/security/google-auth",
+            "id": "google-auth",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Access Tokens",
+            "path": "/nx-cloud/recipes/security/access-tokens",
+            "id": "access-tokens",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Authenticate with Google Identity",
+        "path": "/nx-cloud/recipes/security/google-auth",
+        "id": "google-auth",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Access Tokens",
+        "path": "/nx-cloud/recipes/security/access-tokens",
+        "id": "access-tokens",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Source Control Integration",
         "path": "/nx-cloud/recipes/source-control-integration",
         "id": "source-control-integration",
@@ -6248,95 +6355,6 @@
         "name": "Prepare applications for deployment via CI",
         "path": "/nx-cloud/recipes/other/ci-deployment",
         "id": "ci-deployment",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Account Management",
-        "path": "/nx-cloud/account",
-        "id": "account",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Users",
-            "path": "/nx-cloud/account/users",
-            "id": "users",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Authenticate with Google Identity",
-            "path": "/nx-cloud/account/google-auth",
-            "id": "google-auth",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Access Tokens",
-            "path": "/nx-cloud/account/access-tokens",
-            "id": "access-tokens",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Security Scenarios",
-            "path": "/nx-cloud/account/scenarios",
-            "id": "scenarios",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "End to End Encryption",
-            "path": "/nx-cloud/account/encryption",
-            "id": "encryption",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Users",
-        "path": "/nx-cloud/account/users",
-        "id": "users",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Authenticate with Google Identity",
-        "path": "/nx-cloud/account/google-auth",
-        "id": "google-auth",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Access Tokens",
-        "path": "/nx-cloud/account/access-tokens",
-        "id": "access-tokens",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Security Scenarios",
-        "path": "/nx-cloud/account/scenarios",
-        "id": "scenarios",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "End to End Encryption",
-        "path": "/nx-cloud/account/encryption",
-        "id": "encryption",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
