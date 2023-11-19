@@ -43,27 +43,27 @@ export function readTargetOptions<T = any>(
   const [nodeModule, executorName] = targetConfiguration.executor.split(':');
   const { schema } = getExecutorInformation
     ? getExecutorInformation(
-      nodeModule,
-      executorName,
-      context.root,
-      context.projectsConfigurations?.projects ?? context.workspace.projects
-    )
+        nodeModule,
+        executorName,
+        context.root,
+        context.projectsConfigurations?.projects ?? context.workspace.projects
+      )
     : // TODO(v18): remove readExecutor. This is to be backwards compatible with Nx 16.5 and below.
-    (ws as any).readExecutor(nodeModule, executorName);
+      (ws as any).readExecutor(nodeModule, executorName);
 
   const defaultProject = calculateDefaultProjectName
     ? calculateDefaultProjectName(
-      context.cwd,
-      context.root,
-      { version: 2, projects: context.projectsConfigurations.projects },
-      context.nxJsonConfiguration
-    )
+        context.cwd,
+        context.root,
+        { version: 2, projects: context.projectsConfigurations.projects },
+        context.nxJsonConfiguration
+      )
     : // TODO(v18): remove calculateDefaultProjectName. This is to be backwards compatible with Nx 16.5 and below.
-    (ws as any).calculateDefaultProjectName(
-      context.cwd,
-      { version: 2, projects: context.projectsConfigurations.projects },
-      context.nxJsonConfiguration
-    );
+      (ws as any).calculateDefaultProjectName(
+        context.cwd,
+        { version: 2, projects: context.projectsConfigurations.projects },
+        context.nxJsonConfiguration
+      );
 
   return combineOptionsForExecutor(
     {},
