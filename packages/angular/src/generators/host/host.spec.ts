@@ -1,4 +1,4 @@
-import { stripIndents, updateJson } from '@nx/devkit';
+import { updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getProjects,
@@ -19,6 +19,7 @@ describe('Host App Generator', () => {
     await generateTestHostApplication(tree, {
       name: 'test',
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -32,6 +33,7 @@ describe('Host App Generator', () => {
     await generateTestHostApplication(tree, {
       name: 'test',
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -45,6 +47,7 @@ describe('Host App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'remote',
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ACT
@@ -52,6 +55,7 @@ describe('Host App Generator', () => {
       name: 'test',
       remotes: ['remote'],
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -65,6 +69,7 @@ describe('Host App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'remote',
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ACT
@@ -72,6 +77,7 @@ describe('Host App Generator', () => {
       name: 'test',
       remotes: ['remote'],
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -89,6 +95,7 @@ describe('Host App Generator', () => {
       name: 'host-app',
       remotes: ['remote1', 'remote2'],
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -119,6 +126,7 @@ describe('Host App Generator', () => {
       name: 'host-app',
       remotes: ['remote1', 'remote2'],
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -145,6 +153,7 @@ describe('Host App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'remote1',
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ACT
@@ -152,6 +161,7 @@ describe('Host App Generator', () => {
       name: 'host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -169,6 +179,7 @@ describe('Host App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'remote1',
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ACT
@@ -176,6 +187,7 @@ describe('Host App Generator', () => {
       name: 'host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -193,6 +205,7 @@ describe('Host App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'remote1',
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ACT
@@ -201,6 +214,7 @@ describe('Host App Generator', () => {
       directory: 'foo/host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -218,6 +232,7 @@ describe('Host App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'remote1',
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ACT
@@ -226,6 +241,7 @@ describe('Host App Generator', () => {
       directory: 'foo/host-app',
       remotes: ['remote1', 'remote2', 'remote3'],
       typescriptConfiguration: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -245,7 +261,6 @@ describe('Host App Generator', () => {
     await generateTestHostApplication(tree, {
       name: 'host',
       remotes: ['remote1'],
-      standalone: true,
     });
 
     // ASSERT
@@ -264,7 +279,6 @@ describe('Host App Generator', () => {
     await generateTestHostApplication(tree, {
       name: 'host',
       remotes: ['remote1'],
-      standalone: true,
     });
 
     // ASSERT
@@ -282,7 +296,6 @@ describe('Host App Generator', () => {
       name: 'dashboard',
       remotes: ['remote1'],
       directory: 'test/dashboard',
-      standalone: true,
     });
 
     // ASSERT
@@ -300,6 +313,7 @@ describe('Host App Generator', () => {
       name: 'dashboard',
       remotes: ['remote1'],
       e2eTestRunner: E2eTestRunner.None,
+      standalone: false,
     });
 
     // ASSERT
@@ -318,6 +332,7 @@ describe('Host App Generator', () => {
         name: 'test',
         ssr: true,
         typescriptConfiguration: false,
+        standalone: false,
       });
 
       // ASSERT
@@ -353,6 +368,7 @@ describe('Host App Generator', () => {
         name: 'test',
         ssr: true,
         typescriptConfiguration: true,
+        standalone: false,
       });
 
       // ASSERT
@@ -386,7 +402,6 @@ describe('Host App Generator', () => {
       // ACT
       await generateTestHostApplication(tree, {
         name: 'test',
-        standalone: true,
         ssr: true,
         typescriptConfiguration: false,
       });
@@ -426,7 +441,6 @@ describe('Host App Generator', () => {
       // ACT
       await generateTestHostApplication(tree, {
         name: 'test',
-        standalone: true,
         ssr: true,
         typescriptConfiguration: true,
       });
@@ -458,27 +472,22 @@ describe('Host App Generator', () => {
       expect(project.targets.server).toMatchSnapshot();
       expect(project.targets['serve-ssr']).toMatchSnapshot();
     });
-  });
 
-  it('should error correctly when Angular version does not support standalone', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: {
-        '@angular/core': '14.0.0',
-      },
-    }));
+    describe('compat', () => {
+      it('should generate the correct main.server.ts', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          dependencies: {
+            '@angular/core': '15.2.0',
+          },
+        }));
 
-    // ACT & ASSERT
-    await expect(
-      generateTestHostApplication(tree, {
-        name: 'test',
-        standalone: true,
-      })
-    ).rejects
-      .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using 14.0.0.
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
+        await generateTestHostApplication(tree, { name: 'test', ssr: true });
+
+        expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
+      });
+    });
   });
 
   describe('--project-name-and-root-format=derived', () => {
@@ -489,6 +498,7 @@ describe('Host App Generator', () => {
         name: 'remote1',
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
+        standalone: false,
       });
 
       // ACT
@@ -497,6 +507,7 @@ describe('Host App Generator', () => {
         remotes: ['remote1', 'remote2', 'remote3'],
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
+        standalone: false,
       });
 
       // ASSERT
@@ -515,6 +526,7 @@ describe('Host App Generator', () => {
         name: 'remote1',
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
+        standalone: false,
       });
 
       // ACT
@@ -524,6 +536,7 @@ describe('Host App Generator', () => {
         remotes: ['remote1', 'remote2', 'remote3'],
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
+        standalone: false,
       });
 
       // ASSERT
@@ -541,6 +554,7 @@ describe('Host App Generator', () => {
         name: 'remote1',
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: true,
+        standalone: false,
       });
 
       // ACT
@@ -550,6 +564,7 @@ describe('Host App Generator', () => {
         remotes: ['remote1', 'remote2', 'remote3'],
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: true,
+        standalone: false,
       });
 
       // ASSERT

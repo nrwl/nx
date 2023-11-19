@@ -52,6 +52,7 @@ export type {
   ProjectTargetConfigurator,
   CreateNodes,
   CreateNodesFunction,
+  CreateNodesResult,
   CreateNodesContext,
   CreateDependencies,
   CreateDependenciesContext,

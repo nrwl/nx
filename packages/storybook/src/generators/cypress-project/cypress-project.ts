@@ -1,15 +1,11 @@
+import { getE2eProjectName } from '@nx/cypress/src/utils/project-name';
 import {
-  cypressInitGenerator as _cypressInitGenerator,
-  cypressProjectGenerator as _cypressProjectGenerator,
-} from '@nx/cypress';
-import {
-  getE2eProjectName,
-  getUnscopedLibName,
-} from '@nx/cypress/src/utils/project-name';
-import {
+  addProjectConfiguration,
+  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  joinPathFragments,
   readJson,
   readProjectConfiguration,
   runTasksInSerial,
@@ -18,9 +14,11 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
-
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { join } from 'path';
+
 import { safeFileDelete } from '../../utils/utilities';
+import { nxVersion } from '../../utils/versions';
 
 export interface CypressConfigureSchema {
   name: string;
@@ -30,31 +28,61 @@ export interface CypressConfigureSchema {
   standaloneConfig?: boolean;
   ciTargetName?: string;
   skipFormat?: boolean;
+  projectNameAndRootFormat?: 'as-provided' | 'derived';
 }
 
 export async function cypressProjectGenerator(
   tree: Tree,
   schema: CypressConfigureSchema
 ) {
+  return await cypressProjectGeneratorInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function cypressProjectGeneratorInternal(
+  tree: Tree,
+  schema: CypressConfigureSchema
+) {
+  const { configurationGenerator, cypressInitGenerator } = ensurePackage<
+    typeof import('@nx/cypress')
+  >('@nx/cypress', nxVersion);
+
+  const e2eName = schema.name ? `${schema.name}-e2e` : undefined;
+  const { projectName, projectRoot } = await determineProjectNameAndRootOptions(
+    tree,
+    {
+      name: e2eName,
+      projectType: 'application',
+      directory: schema.directory,
+      projectNameAndRootFormat: schema.projectNameAndRootFormat,
+      callingGenerator: '@nx/storybook:cypress-project',
+    }
+  );
   const libConfig = readProjectConfiguration(tree, schema.name);
   const libRoot = libConfig.root;
-  const cypressProjectName = `${
-    schema.directory ? getUnscopedLibName(libRoot) : schema.name
-  }-e2e`;
 
   const tasks: GeneratorCallback[] = [];
 
   if (!projectAlreadyHasCypress(tree)) {
-    tasks.push(await _cypressInitGenerator(tree, {}));
+    tasks.push(await cypressInitGenerator(tree, {}));
   }
 
-  const installTask = await _cypressProjectGenerator(tree, {
-    name: cypressProjectName,
-    project: schema.name,
+  addProjectConfiguration(tree, projectName, {
+    root: projectRoot,
+    projectType: 'application',
+    sourceRoot: joinPathFragments(projectRoot, 'src'),
+    targets: {},
+    implicitDependencies: [projectName],
+  });
+
+  const installTask = await configurationGenerator(tree, {
+    project: projectName,
     js: schema.js,
     linter: schema.linter,
-    directory: schema.directory,
-    standaloneConfig: schema.standaloneConfig,
+    directory: projectRoot,
+    devServerTarget: `${schema.name}:storybook`,
     skipFormat: true,
   });
   tasks.push(installTask);

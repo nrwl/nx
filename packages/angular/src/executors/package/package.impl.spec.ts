@@ -1,14 +1,14 @@
 jest.mock('@nx/devkit');
 jest.mock('@nx/js/src/utils/buildable-libs-utils');
 jest.mock('ng-packagr');
-jest.mock('ng-packagr/lib/utils/ng-compiler-cli');
+jest.mock('../utilities/ng-compiler-cli');
 jest.mock('./ng-packagr-adjustments/ng-package/options.di');
 
 import type { ExecutorContext } from '@nx/devkit';
 import * as buildableLibsUtils from '@nx/js/src/utils/buildable-libs-utils';
 import * as ngPackagr from 'ng-packagr';
-import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
 import { BehaviorSubject } from 'rxjs';
+import { ngCompilerCli } from '../utilities/ng-compiler-cli';
 import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
 import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di';
 import {

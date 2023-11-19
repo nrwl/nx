@@ -4,15 +4,19 @@ The code for this example is available on GitHub:
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/vue" /%}
 
+{% callout title="Official Vue Plugin" %}
+This recipe does not use the official Vue plugin, so it doesn't use generators or automate updating framework dependencies. Use [`@nx/vue`](/nx-api/vue) to use those features.
+{% /callout %}
+
 **Supported Features**
 
-We'll be using an Nx plugin for Vue called [@nx/vite](/nx-api/vite). Although we are using `@nx/vite`, not all dependencies will be able to be automatically updated. So we'll have to update any framework dependencies as needed.
+We'll be using an Nx plugin called [@nx/vite](/nx-api/vite). Although we are using `@nx/vite`, not all dependencies will be able to be automatically updated. So we'll have to update any framework dependencies as needed.
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
 {% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/core-features/remote-cache" %}✅ Share Your Cache{% /pill %}
+{% pill url="/nx-cloud/features/remote-cache" %}✅ Share Your Cache{% /pill %}
 {% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
-{% pill url="/core-features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
+{% pill url="/nx-cloud/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
 {% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
@@ -236,7 +240,7 @@ nx serve acme
 Instead of having our Counter directly defined in the app we can instead create a library that exports the Counter component.
 
 {% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/deprecated/workspace-layout) for more details.
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
 Create a new library `nx generate @nx/js:library --name=Counter --directory=libs/counter --unitTestRunner=vitest --bundler=vite --importPath=@acme/counter`

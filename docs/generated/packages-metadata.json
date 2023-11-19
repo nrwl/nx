@@ -558,12 +558,12 @@
     "source": "/packages/detox/src"
   },
   {
-    "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.",
+    "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
     "documents": [
       {
         "id": "nx_devkit",
         "name": "Overview",
-        "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.",
+        "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
         "file": "generated/packages/devkit/documents/nx_devkit",
         "itemList": [],
         "isExternal": false,
@@ -574,7 +574,7 @@
       {
         "id": "ngcli_adapter",
         "name": "Ng CLI Adapter",
-        "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.",
+        "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
         "file": "generated/packages/devkit/documents/ngcli_adapter",
         "itemList": [],
         "isExternal": false,
@@ -1934,7 +1934,7 @@
         "type": "generator"
       },
       {
-        "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nrwl/nx-plugin`.",
+        "description": "Initializes a workspace with an nx-plugin inside of it. Use as: `create-nx-workspace --preset @nx/plugin`.",
         "file": "generated/packages/plugin/generators/preset.json",
         "hidden": true,
         "name": "preset",
@@ -2573,7 +2573,7 @@
     "source": "/packages/vite/src"
   },
   {
-    "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+    "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
     "documents": [
       {
         "id": "overview",

@@ -1,0 +1,148 @@
+import {
+  CreateNodes,
+  CreateNodesContext,
+  TargetConfiguration,
+} from '@nx/devkit';
+import { basename, dirname, extname, join, resolve } from "path";
+import { registerTsProject } from '@nx/js/src/internal';
+
+import { getRootTsConfigPath } from '@nx/js';
+
+import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
+import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { readdirSync } from 'fs';
+
+export interface <%= className %>PluginOptions {
+  targetName?: string;
+}
+
+export const createNodes: CreateNodes<<%= className %>PluginOptions> = [
+  '**/TODO',
+  (configFilePath, options, context) => {
+    const projectRoot = dirname(configFilePath);
+
+    // Do not create a project if package.json and project.json isn't there.
+    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+    if (
+      !siblingFiles.includes('package.json') &&
+      !siblingFiles.includes('project.json')
+    ) {
+      return {};
+    }
+
+    options = normalizeOptions(options);
+
+    return {
+      projects: {
+        [projectRoot]: {
+          root: projectRoot,
+          projectType: 'library',
+          targets: build<%= className %>Targets(
+            configFilePath,
+            projectRoot,
+            options,
+            context,
+          ),
+        },
+      },
+    };
+  },
+];
+
+function build<%= className %>Targets(
+  configFilePath: string,
+  projectRoot: string,
+  options: <%= className %>PluginOptions,
+  context: CreateNodesContext,
+) {
+  const <%= propertyName %>Config = get<%= className %>Config(
+    configFilePath,
+    context
+  );
+
+  const targetDefaults = readTargetDefaultsForTarget(
+    options.targetName,
+    context.nxJsonConfiguration.targetDefaults,
+    'executorName'
+  );
+
+  const namedInputs = getNamedInputs(projectRoot, context);
+
+  const targets: Record<
+    string,
+    TargetConfiguration<ExecutorOptions>
+  > = {};
+
+  const baseTargetConfig: TargetConfiguration<ExecutorOptions> = {
+    executor: 'executorName',
+    options: {
+      config: configFilePath,
+      ...targetDefaults?.options,
+    },
+  };
+
+  targets[options.targetName] = {
+    ...baseTargetConfig,
+    cache: targetDefaults?.cache ?? true,
+    inputs:
+      targetDefaults?.inputs ?? 'production' in namedInputs
+        ? ['default', '^production']
+        : ['default', '^default'],
+    outputs:
+      targetDefaults?.outputs ??
+      getOutputs(projectRoot),
+    options: {
+      ...baseTargetConfig.options,
+    },
+  };
+
+  return targets;
+}
+
+function get<%= className %>Config(
+  configFilePath: string,
+  context: CreateNodesContext
+): any {
+  const resolvedPath = join(context.workspaceRoot, configFilePath);
+
+  let module: any;
+  if (extname(configFilePath) === '.ts') {
+    const tsConfigPath = getRootTsConfigPath();
+
+    if (tsConfigPath) {
+      const unregisterTsProject = registerTsProject(tsConfigPath);
+      try {
+        module = require(resolvedPath);
+      } finally {
+        unregisterTsProject();
+      }
+    } else {
+      module = require(resolvedPath);
+    }
+  } else {
+    module = require(resolvedPath);
+  }
+  return module.default ?? module;
+}
+
+function getOutputs(
+  projectRoot: string,
+): string[] {
+  function getOutput(path: string): string {
+    if (path.startsWith('..')) {
+      return join('{workspaceRoot}', join(projectRoot, path));
+    } else {
+      return join('{projectRoot}', path);
+    }
+  }
+
+  const outputs = [];
+
+  return outputs;
+}
+
+function normalizeOptions(options: <%= className %>PluginOptions): <%= className %>PluginOptions {
+  options ??= {};
+  options.targetName ??= 'TODO';
+  return options;
+}

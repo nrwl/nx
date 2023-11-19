@@ -1,4 +1,4 @@
-export interface Schema {
+export interface ComponentGeneratorSchema {
   name: string;
   skipTests?: boolean;
   directory?: string;
@@ -28,7 +28,7 @@ export interface Schema {
   project?: string;
 }
 
-export interface NormalizedSchema extends Schema {
+export interface NormalizedSchema extends ComponentGeneratorSchema {
   projectName: string;
   projectSourceRoot: string;
   fileName: string;

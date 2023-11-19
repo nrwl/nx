@@ -50,6 +50,7 @@ export type NxReleaseConfig = DeepRequired<
 export interface CreateNxReleaseConfigError {
   code:
     | 'RELEASE_GROUP_MATCHES_NO_PROJECTS'
+    | 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE'
     | 'PROJECT_MATCHES_MULTIPLE_GROUPS'
     | 'PROJECTS_MISSING_TARGET';
   data: Record<string, string | string[]>;
@@ -65,12 +66,32 @@ export async function createNxReleaseConfig(
   error: null | CreateNxReleaseConfigError;
   nxReleaseConfig: NxReleaseConfig | null;
 }> {
+  const gitDefaults = {
+    commit: false,
+    commitMessage: '',
+    commitArgs: '',
+    tag: false,
+    tagMessage: '',
+    tagArgs: '',
+  };
+
+  const defaultFixedReleaseTagPattern = 'v{version}';
+  const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
+
+  const workspaceProjectsRelationship =
+    userConfig.projectsRelationship || 'fixed';
+
   const WORKSPACE_DEFAULTS: Omit<NxReleaseConfig, 'groups'> = {
+    // By default all projects in all groups are released together
+    projectsRelationship: workspaceProjectsRelationship,
+    git: gitDefaults,
     version: {
+      git: gitDefaults,
       generator: '@nx/js:release-version',
       generatorOptions: {},
     },
     changelog: {
+      git: gitDefaults,
       workspaceChangelog: {
         createRelease: false,
         entryWhenNoChanges:
@@ -95,9 +116,19 @@ export async function createNxReleaseConfig(
           }
         : false,
     },
-    releaseTagPattern: 'v{version}',
+    releaseTagPattern:
+      userConfig.releaseTagPattern ||
+      // The appropriate default releaseTagPattern is dependent upon the projectRelationships
+      (workspaceProjectsRelationship === 'independent'
+        ? defaultIndependentReleaseTagPattern
+        : defaultFixedReleaseTagPattern),
   };
+
+  const groupProjectsRelationship =
+    userConfig.projectsRelationship || WORKSPACE_DEFAULTS.projectsRelationship;
+
   const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
+    projectsRelationship: groupProjectsRelationship,
     version: {
       generator: '@nx/js:release-version',
       generatorOptions: {},
@@ -112,21 +143,41 @@ export async function createNxReleaseConfig(
         includeAuthors: true,
       },
     },
-    releaseTagPattern: '{projectName}@v{version}',
+    releaseTagPattern:
+      // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
+      groupProjectsRelationship === 'independent'
+        ? defaultIndependentReleaseTagPattern
+        : WORKSPACE_DEFAULTS.releaseTagPattern,
   };
 
   /**
    * We first process root level config and apply defaults, so that we know how to handle the group level
    * overrides, if applicable.
    */
+  const rootGitConfig: NxReleaseConfig['git'] = deepMergeDefaults(
+    [WORKSPACE_DEFAULTS.git],
+    userConfig.git as Partial<NxReleaseConfig['git']>
+  );
   const rootVersionConfig: NxReleaseConfig['version'] = deepMergeDefaults(
-    [WORKSPACE_DEFAULTS.version],
-    userConfig.version
+    [
+      WORKSPACE_DEFAULTS.version,
+      // Merge in the git defaults from the top level
+      { git: rootGitConfig } as NxReleaseConfig['version'],
+    ],
+    userConfig.version as Partial<NxReleaseConfig['version']>
   );
   const rootChangelogConfig: NxReleaseConfig['changelog'] = deepMergeDefaults(
-    [WORKSPACE_DEFAULTS.changelog],
+    [
+      WORKSPACE_DEFAULTS.changelog,
+      // Merge in the git defaults from the top level
+      { git: rootGitConfig } as NxReleaseConfig['changelog'],
+    ],
     userConfig.changelog as Partial<NxReleaseConfig['changelog']>
   );
+
+  // git configuration is not supported at the group level, only the root/command level
+  const rootVersionWithoutGit = { ...rootVersionConfig };
+  delete rootVersionWithoutGit.git;
 
   const allProjects = findMatchingProjects(['*'], projectGraph.nodes);
   const groups: NxReleaseConfig['groups'] =
@@ -138,6 +189,7 @@ export async function createNxReleaseConfig(
          */
         {
           [CATCH_ALL_RELEASE_GROUP]: {
+            projectsRelationship: GROUP_DEFAULTS.projectsRelationship,
             projects: allProjects,
             /**
              * For properties which are overriding config at the root, we use the root level config as the
@@ -146,9 +198,11 @@ export async function createNxReleaseConfig(
              */
             version: deepMergeDefaults(
               [GROUP_DEFAULTS.version],
-              rootVersionConfig
+              rootVersionWithoutGit
             ),
-            releaseTagPattern: GROUP_DEFAULTS.releaseTagPattern,
+            // If the user has set something custom for releaseTagPattern at the top level, respect it for the catch all default group
+            releaseTagPattern:
+              userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
           },
@@ -194,6 +248,20 @@ export async function createNxReleaseConfig(
       }
     }
 
+    // If provided, ensure release tag pattern is valid
+    if (releaseGroup.releaseTagPattern) {
+      const error = ensureReleaseGroupReleaseTagPatternIsValid(
+        releaseGroup.releaseTagPattern,
+        releaseGroupName
+      );
+      if (error) {
+        return {
+          error,
+          nxReleaseConfig: null,
+        };
+      }
+    }
+
     for (const project of matchingProjects) {
       if (alreadyMatchedProjects.has(project)) {
         return {
@@ -217,11 +285,15 @@ export async function createNxReleaseConfig(
       groupChangelogDefaults.push(rootChangelogConfig.projectChangelogs);
     }
 
+    const projectsRelationship =
+      releaseGroup.projectsRelationship || GROUP_DEFAULTS.projectsRelationship;
+
     const groupDefaults: NxReleaseConfig['groups']['string'] = {
+      projectsRelationship,
       projects: matchingProjects,
       version: deepMergeDefaults(
         // First apply any group level defaults, then apply actual root level config, then group level config
-        [GROUP_DEFAULTS.version, rootVersionConfig],
+        [GROUP_DEFAULTS.version, rootVersionWithoutGit],
         releaseGroup.version
       ),
       // If the user has set any changelog config at all, including at the root level, then use one set of defaults, otherwise default to false for the whole feature
@@ -232,7 +304,13 @@ export async function createNxReleaseConfig(
               releaseGroup.changelog || {}
             )
           : false,
-      releaseTagPattern: GROUP_DEFAULTS.releaseTagPattern,
+
+      releaseTagPattern:
+        releaseGroup.releaseTagPattern ||
+        // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
+        (projectsRelationship === 'independent'
+          ? defaultIndependentReleaseTagPattern
+          : defaultFixedReleaseTagPattern),
     };
 
     releaseGroups[releaseGroupName] = deepMergeDefaults([groupDefaults], {
@@ -245,11 +323,12 @@ export async function createNxReleaseConfig(
   return {
     error: null,
     nxReleaseConfig: {
+      projectsRelationship: WORKSPACE_DEFAULTS.projectsRelationship,
+      releaseTagPattern: WORKSPACE_DEFAULTS.releaseTagPattern,
+      git: rootGitConfig,
       version: rootVersionConfig,
       changelog: rootChangelogConfig,
       groups: releaseGroups,
-      releaseTagPattern:
-        userConfig.releaseTagPattern || WORKSPACE_DEFAULTS.releaseTagPattern,
     },
   };
 }
@@ -290,11 +369,40 @@ export async function handleNxReleaseConfigError(
         });
       }
       break;
+    case 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE':
+      {
+        const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+          'release',
+          'groups',
+          error.data.releaseGroupName as string,
+          'releaseTagPattern',
+        ]);
+        output.error({
+          title: `Release group "${error.data.releaseGroupName}" has an invalid releaseTagPattern. Please ensure the pattern contains exactly one instance of the "{version}" placeholder`,
+          bodyLines: [nxJsonMessage],
+        });
+      }
+      break;
     default:
       throw new Error(`Unhandled error code: ${error.code}`);
   }
 
   process.exit(1);
+}
+
+function ensureReleaseGroupReleaseTagPatternIsValid(
+  releaseTagPattern: string,
+  releaseGroupName: string
+): null | CreateNxReleaseConfigError {
+  // ensure that any provided releaseTagPattern contains exactly one instance of {version}
+  return releaseTagPattern.split('{version}').length === 2
+    ? null
+    : {
+        code: 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE',
+        data: {
+          releaseGroupName,
+        },
+      };
 }
 
 function ensureProjectsConfigIsArray(

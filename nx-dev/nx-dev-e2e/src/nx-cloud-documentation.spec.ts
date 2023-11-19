@@ -2,34 +2,33 @@ import { assertTextOnPage } from './helpers';
 import { test, expect } from '@playwright/test';
 
 const pages: Array<{ title: string; path: string }> = [
-  { title: 'What is Nx Cloud?', path: '/nx-cloud/intro/what-is-nx-cloud' },
+  {
+    title: 'Continuous Integration with Nx',
+    path: '/nx-cloud/intro/ci-with-nx',
+  },
   {
     title: 'Recording Non-Nx Commands',
-    path: '/nx-cloud/set-up/record-commands',
+    path: '/nx-cloud/recipes/other/record-commands',
   },
   {
     title: 'Enable GitHub PR Integration',
-    path: '/nx-cloud/set-up/github',
-  },
-  {
-    title: 'User Management',
-    path: '/nx-cloud/account/users',
+    path: '/nx-cloud/recipes/source-control-integration/github',
   },
   {
     title: 'Connecting Nx Cloud to your existing Google identity provider',
-    path: '/nx-cloud/account/google-auth',
+    path: '/nx-cloud/recipes/security/google-auth',
   },
   {
     title: 'Access Tokens',
-    path: '/nx-cloud/account/access-tokens',
+    path: '/nx-cloud/recipes/security/access-tokens',
   },
   {
     title: 'Security Scenarios',
-    path: '/nx-cloud/account/scenarios',
+    path: '/nx-cloud/concepts/scenarios',
   },
   {
     title: 'End to End Encryption',
-    path: '/nx-cloud/account/encryption',
+    path: '/nx-cloud/concepts/encryption',
   },
   {
     title: 'Running Nx Cloud Enterprise',

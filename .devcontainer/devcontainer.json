@@ -3,26 +3,28 @@
 {
   "name": "NxDevContainer",
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-  "image": "mcr.microsoft.com/devcontainers/typescript-node:0-18",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20-bullseye",
   "features": {
     "ghcr.io/devcontainers/features/rust:1": {}
   },
-
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
   // 4211 = nx graph port
   "forwardPorts": [4211],
-
   // Use 'postCreateCommand' to run commands after the container is created.
-  "postCreateCommand": "pnpm install",
+  "postCreateCommand": "./.devcontainer/postCreateCommand.sh",
+  // Configure tool-specific properties.
   "customizations": {
     "vscode": {
-      "extensions": ["nrwl.angular-console"]
+      "extensions": [
+        "nrwl.angular-console",
+        "firsttris.vscode-jest-runner",
+        "eamodio.gitlens"
+      ],
+      "settings": {
+        "debug.javascript.autoAttachFilter": "onlyWithFlag" // workaround for that issue: https://github.com/microsoft/vscode-js-debug/issues/374#issuecomment-622239998
+      }
     }
   }
-
-  // Configure tool-specific properties.
-  // "customizations": {},
-
   // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
   // "remoteUser": "root"
 }

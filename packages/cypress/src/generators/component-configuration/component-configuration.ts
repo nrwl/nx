@@ -31,13 +31,23 @@ export async function componentConfigurationGenerator(
 ) {
   const opts = normalizeOptions(options);
 
+  const nxJson = readNxJson(tree);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/cypress/plugin'
+      : p.plugin === '@nx/cypress/plugin'
+  );
+
   const projectConfig = readProjectConfiguration(tree, opts.project);
 
   const installDepsTask = updateDeps(tree, opts);
 
   addProjectFiles(tree, projectConfig, opts);
-  addTargetToProject(tree, projectConfig, opts);
-  updateNxJsonConfiguration(tree);
+  if (!hasPlugin) {
+    addTargetToProject(tree, projectConfig, opts);
+  }
+  updateNxJsonConfiguration(tree, hasPlugin);
+
   updateTsConfigForComponentTesting(tree, projectConfig);
 
   if (!opts.skipFormat) {
@@ -85,6 +95,7 @@ function addProjectFiles(
   addBaseCypressSetup(tree, {
     project: opts.project,
     directory: opts.directory,
+    jsx: opts.jsx,
   });
 
   generateFiles(
@@ -116,30 +127,33 @@ function addTargetToProject(
   updateProjectConfiguration(tree, opts.project, projectConfig);
 }
 
-function updateNxJsonConfiguration(tree: Tree) {
+function updateNxJsonConfiguration(tree: Tree, hasPlugin: boolean) {
   const nxJson = readNxJson(tree);
 
-  const cacheableOperations: string[] | null =
-    nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
-  if (cacheableOperations && !cacheableOperations.includes('component-test')) {
-    cacheableOperations.push('component-test');
+  const productionFileSet = nxJson.namedInputs?.production;
+  if (productionFileSet) {
+    nxJson.namedInputs.production = Array.from(
+      new Set([
+        ...productionFileSet,
+        '!{projectRoot}/cypress/**/*',
+        '!{projectRoot}/**/*.cy.[jt]s?(x)',
+        '!{projectRoot}/cypress.config.[jt]s',
+      ])
+    );
   }
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['component-test'] ??= {};
-  nxJson.targetDefaults['component-test'].cache ??= true;
-
-  if (nxJson.namedInputs) {
-    const productionFileSet = nxJson.namedInputs?.production;
-    if (productionFileSet) {
-      nxJson.namedInputs.production = Array.from(
-        new Set([
-          ...productionFileSet,
-          '!{projectRoot}/cypress/**/*',
-          '!{projectRoot}/**/*.cy.[jt]s?(x)',
-          '!{projectRoot}/cypress.config.[jt]s',
-        ])
-      );
+  if (!hasPlugin) {
+    const cacheableOperations: string[] | null =
+      nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
+    if (
+      cacheableOperations &&
+      !cacheableOperations.includes('component-test')
+    ) {
+      cacheableOperations.push('component-test');
     }
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults['component-test'] ??= {};
+    nxJson.targetDefaults['component-test'].cache ??= true;
+
     nxJson.targetDefaults['component-test'] ??= {};
     nxJson.targetDefaults['component-test'].inputs ??= [
       'default',

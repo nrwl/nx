@@ -33,13 +33,13 @@ export default async function runExecutor(
 
   const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
   const projectPackageJson = readJsonFile(packageJsonPath);
-  const name = projectPackageJson.name;
+  const packageName = projectPackageJson.name;
 
   // If package and project name match, we can make log messages terser
   let packageTxt =
-    name === context.projectName
-      ? `package "${name}"`
-      : `package "${name}" from project "${context.projectName}"`;
+    packageName === context.projectName
+      ? `package "${packageName}"`
+      : `package "${packageName}" from project "${context.projectName}"`;
 
   if (projectPackageJson.private === true) {
     console.warn(
@@ -58,6 +58,10 @@ export default async function runExecutor(
 
   if (options.tag) {
     npmPublishCommandSegments.push(`--tag=${options.tag}`);
+  }
+
+  if (options.otp) {
+    npmPublishCommandSegments.push(`--otp=${options.otp}`);
   }
 
   if (options.dryRun) {
@@ -80,7 +84,7 @@ export default async function runExecutor(
     const stdoutData = JSON.parse(output.toString());
 
     // If npm workspaces are in use, the publish output will nest the data under the package name, so we normalize it first
-    const normalizedStdoutData = stdoutData[context.projectName!] ?? stdoutData;
+    const normalizedStdoutData = stdoutData[packageName] ?? stdoutData;
     logTar(normalizedStdoutData);
 
     if (options.dryRun) {
@@ -102,10 +106,17 @@ export default async function runExecutor(
 
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
       if (
+        // handle npm conflict error
         stdoutData.error?.code === 'EPUBLISHCONFLICT' ||
+        // handle npm conflict error when the package has a scope
         (stdoutData.error?.code === 'E403' &&
-          stdoutData.error?.body?.error?.includes(
+          stdoutData.error?.summary?.includes(
             'You cannot publish over the previously published versions'
+          )) ||
+        // handle verdaccio conflict error
+        (stdoutData.error?.code === 'E409' &&
+          stdoutData.error?.summary?.includes(
+            'this package is already present'
           ))
       ) {
         console.warn(
@@ -122,6 +133,11 @@ export default async function runExecutor(
       }
       if (stdoutData.error.detail) {
         console.error(stdoutData.error.detail);
+      }
+
+      if (context.isVerbose) {
+        console.error('npm publish stdout:');
+        console.error(JSON.stringify(stdoutData, null, 2));
       }
       return {
         success: false,

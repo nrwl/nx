@@ -1,6 +1,6 @@
 # Type alias: CreateNodesFunction<T\>
 
-Ƭ **CreateNodesFunction**<`T`\>: (`projectConfigurationFile`: `string`, `options`: `T` \| `undefined`, `context`: [`CreateNodesContext`](../../devkit/documents/CreateNodesContext)) => { `externalNodes?`: `Record`<`string`, [`ProjectGraphExternalNode`](../../devkit/documents/ProjectGraphExternalNode)\> ; `projects?`: `Record`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\> }
+Ƭ **CreateNodesFunction**<`T`\>: (`projectConfigurationFile`: `string`, `options`: `T` \| `undefined`, `context`: [`CreateNodesContext`](../../devkit/documents/CreateNodesContext)) => [`CreateNodesResult`](../../devkit/documents/CreateNodesResult) \| `Promise`<[`CreateNodesResult`](../../devkit/documents/CreateNodesResult)\>
 
 #### Type parameters
 
@@ -10,7 +10,7 @@
 
 #### Type declaration
 
-▸ (`projectConfigurationFile`, `options`, `context`): `Object`
+▸ (`projectConfigurationFile`, `options`, `context`): [`CreateNodesResult`](../../devkit/documents/CreateNodesResult) \| `Promise`<[`CreateNodesResult`](../../devkit/documents/CreateNodesResult)\>
 
 A function which parses a configuration file into a set of nodes.
 Used for creating nodes for the [ProjectGraph](../../devkit/documents/ProjectGraph)
@@ -25,9 +25,4 @@ Used for creating nodes for the [ProjectGraph](../../devkit/documents/ProjectGra
 
 ##### Returns
 
-`Object`
-
-| Name             | Type                                                                                               |
-| :--------------- | :------------------------------------------------------------------------------------------------- |
-| `externalNodes?` | `Record`<`string`, [`ProjectGraphExternalNode`](../../devkit/documents/ProjectGraphExternalNode)\> |
-| `projects?`      | `Record`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>         |
+[`CreateNodesResult`](../../devkit/documents/CreateNodesResult) \| `Promise`<[`CreateNodesResult`](../../devkit/documents/CreateNodesResult)\>

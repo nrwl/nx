@@ -23,6 +23,12 @@
       "version": "16.8.2-beta.0",
       "description": "Remove invalid options (strict, noInterop) for ES6 type modules.",
       "factory": "./src/migrations/update-16-8-2/update-swcrc"
+    },
+    "update-17-0-0-remove-deprecated-build-options": {
+      "cli": "nx",
+      "version": "17.0.2",
+      "description": "Remove deprecated build options",
+      "implementation": "./src/migrations/update-17-0-0/remove-deprecated-build-options"
     }
   },
   "packageJsonUpdates": {
@@ -103,6 +109,18 @@
         "esbuild": {
           "version": "^0.19.2",
           "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.1.0": {
+      "version": "17.1.0-beta.4",
+      "x-prompt": "Do you want to update to TypeScript v5.2?",
+      "requires": {
+        "typescript": ">=5.1.0 <5.2.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~5.2.2"
         }
       }
     }

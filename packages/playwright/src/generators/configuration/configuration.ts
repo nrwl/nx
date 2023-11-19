@@ -46,7 +46,7 @@ export async function configurationGenerator(
       js: options.js,
       directory: options.directory,
       setParserOptionsProject: options.setParserOptionsProject,
-      rootProject: projectConfig.root === '.',
+      rootProject: options.rootProject ?? projectConfig.root === '.',
     })
   );
 
@@ -72,6 +72,7 @@ function setupE2ETargetDefaults(tree: Tree) {
 
   const productionFileSet = !!nxJson.namedInputs?.production;
   nxJson.targetDefaults.e2e ??= {};
+  nxJson.targetDefaults.e2e.cache ??= true;
   nxJson.targetDefaults.e2e.inputs ??= [
     'default',
     productionFileSet ? '^production' : '^default',

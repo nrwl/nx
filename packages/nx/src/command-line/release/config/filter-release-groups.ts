@@ -3,7 +3,7 @@ import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
 import { CATCH_ALL_RELEASE_GROUP, NxReleaseConfig } from './config';
 
-type ReleaseGroupWithName = NxReleaseConfig['groups'][string] & {
+export type ReleaseGroupWithName = NxReleaseConfig['groups'][string] & {
   name: string;
 };
 
@@ -62,6 +62,13 @@ export function filterReleaseGroups(
       };
     }
 
+    // Remove any non-matching projects from filteredProjectToReleaseGroup
+    for (const project of filteredProjectToReleaseGroup.keys()) {
+      if (!matchingProjectsForFilter.includes(project)) {
+        filteredProjectToReleaseGroup.delete(project);
+      }
+    }
+
     // Filter out any non-matching projects from the release group to filtered projects map
     for (const releaseGroup of releaseGroups) {
       releaseGroup.projects
@@ -89,6 +96,47 @@ export function filterReleaseGroups(
           releaseGroupToFilteredProjects,
         };
       }
+    }
+
+    /**
+     * If the user is filtering to a subset of projects, we need to make sure that they are all within release groups
+     * with "independent" configured for their projectsRelationship. If not, the filtering is invalid, and they should instead
+     * be targeting the release groups directly using the --group flag, or they should update their configuration to
+     * make the projects they were trying to filter be independently releasable.
+     */
+    const releaseGroupsForFilteredProjects = Array.from(
+      new Set(Array.from(filteredProjectToReleaseGroup.values()))
+    );
+    const releaseGroupsThatAreNotIndependent =
+      releaseGroupsForFilteredProjects.filter(
+        (rg) => rg.projectsRelationship !== 'independent'
+      );
+    if (releaseGroupsThatAreNotIndependent.length) {
+      // Special handling for CATCH_ALL_RELEASE_GROUP (which the user did not explicitly configure)
+      if (
+        releaseGroupsThatAreNotIndependent.length === 1 &&
+        releaseGroupsThatAreNotIndependent[0].name === CATCH_ALL_RELEASE_GROUP
+      ) {
+        return {
+          error: {
+            title: `In order to release specific projects independently with --projects those projects must be configured appropriately. For example, by setting \`"projectsRelationship": "independent"\` in your nx.json config.`,
+            bodyLines: [],
+          },
+          releaseGroups: [],
+          releaseGroupToFilteredProjects,
+        };
+      }
+
+      return {
+        error: {
+          title: `Your --projects filter "${projectsFilter}" matched projects in the following release groups which do not have "independent" configured for their "projectsRelationship":`,
+          bodyLines: releaseGroupsThatAreNotIndependent.map(
+            (rg) => `- ${rg.name}`
+          ),
+        },
+        releaseGroups: [],
+        releaseGroupToFilteredProjects,
+      };
     }
 
     output.note({

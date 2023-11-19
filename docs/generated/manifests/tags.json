@@ -16,13 +16,6 @@
     },
     {
       "description": "",
-      "file": "shared/using-nx/affected",
-      "id": "affected",
-      "name": "How Affected Works",
-      "path": "/concepts/affected"
-    },
-    {
-      "description": "",
       "file": "shared/recipes/running-tasks/customizing-inputs",
       "id": "customizing-inputs",
       "name": "Fine-tuning Caching with Inputs",
@@ -44,6 +37,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/running-tasks/run-tasks-in-parallel",
+      "id": "run-tasks-in-parallel",
+      "name": "Run Tasks in Parallel",
+      "path": "/recipes/running-tasks/run-tasks-in-parallel"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/running-tasks/root-level-scripts",
       "id": "root-level-scripts",
       "name": "Run Root-Level NPM Scripts with Nx",
@@ -55,6 +55,13 @@
       "id": "workspace-watching",
       "name": "Workspace Watching",
       "path": "/recipes/running-tasks/workspace-watching"
+    },
+    {
+      "description": "",
+      "file": "shared/using-nx/affected",
+      "id": "affected",
+      "name": "Run Only Tasks Affected by a PR",
+      "path": "/nx-cloud/features/affected"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -119,7 +126,7 @@
       "file": "",
       "id": "nx-cloud-documentation",
       "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/what-is-nx-cloud"
+      "path": "/nx-cloud/intro/ci-with-nx"
     },
     {
       "description": "",
@@ -162,59 +169,6 @@
       "id": "reset",
       "name": "reset",
       "path": "/nx-api/nx/documents/reset"
-    }
-  ],
-  "remote-cache": [
-    {
-      "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-      "file": "shared/core-features/remote-cache",
-      "id": "remote-cache",
-      "name": "Use Remote Caching",
-      "path": "/core-features/remote-cache"
-    }
-  ],
-  "distribute-task-execution": [
-    {
-      "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
-      "file": "shared/core-features/distribute-task-execution",
-      "id": "distribute-task-execution",
-      "name": "Distribute Task Execution",
-      "path": "/core-features/distribute-task-execution"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/improve-worst-case-ci-times",
-      "id": "dte",
-      "name": "Improve Worst Case CI Times",
-      "path": "/concepts/dte"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/illustrated-dte-guide",
-      "id": "illustrated-dte",
-      "name": "Illustrated Distributed Task Execution",
-      "path": "/concepts/more-concepts/illustrated-dte"
-    },
-    {
-      "description": "",
-      "file": "shared/ci-overview",
-      "id": "ci-setup",
-      "name": "CI Setup",
-      "path": "/recipes/ci/ci-setup"
-    },
-    {
-      "description": "",
-      "file": "",
-      "id": "nx-cloud-documentation",
-      "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/what-is-nx-cloud"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
-      "id": "connect-to-nx-cloud",
-      "name": "connect-to-nx-cloud",
-      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
     }
   ],
   "explore-graph": [
@@ -750,6 +704,50 @@
       "path": "/recipes/react/module-federation-with-ssr"
     }
   ],
+  "distribute-task-execution": [
+    {
+      "description": "",
+      "file": "shared/concepts/illustrated-dte-guide",
+      "id": "illustrated-dte",
+      "name": "Illustrated Distributed Task Execution",
+      "path": "/concepts/more-concepts/illustrated-dte"
+    },
+    {
+      "description": "",
+      "file": "",
+      "id": "nx-cloud-documentation",
+      "name": "Nx Cloud Documentation",
+      "path": "/nx-cloud/intro/ci-with-nx"
+    },
+    {
+      "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
+      "file": "shared/core-features/distribute-task-execution",
+      "id": "distribute-task-execution",
+      "name": "Distribute Task Execution",
+      "path": "/nx-cloud/features/distribute-task-execution"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/improve-worst-case-ci-times",
+      "id": "dte",
+      "name": "Improve Worst Case CI Times",
+      "path": "/nx-cloud/concepts/dte"
+    },
+    {
+      "description": "",
+      "file": "shared/ci-overview",
+      "id": "ci-setup",
+      "name": "CI Setup",
+      "path": "/nx-cloud/recipes/set-up/ci-setup"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/generated/packages/nx/documents/connect-to-nx-cloud",
+      "id": "connect-to-nx-cloud",
+      "name": "connect-to-nx-cloud",
+      "path": "/nx-api/nx/documents/connect-to-nx-cloud"
+    }
+  ],
   "create-your-own-plugin": [
     {
       "description": "",
@@ -1051,22 +1049,20 @@
       "path": "/recipes/deno/deno-netlify-functions"
     }
   ],
-  "docker": [
+  "installation": [
     {
       "description": "",
-      "file": "shared/recipes/ci-deployment",
-      "id": "ci-deployment",
-      "name": "Prepare applications for deployment via CI",
-      "path": "/recipes/ci/ci-deployment"
-    }
-  ],
-  "deploy": [
+      "file": "shared/recipes/installation/install-non-javascript",
+      "id": "install-non-javascript",
+      "name": "Install Nx in a Non-Javascript Repo",
+      "path": "/recipes/installation/install-non-javascript"
+    },
     {
       "description": "",
-      "file": "shared/recipes/ci-deployment",
-      "id": "ci-deployment",
-      "name": "Prepare applications for deployment via CI",
-      "path": "/recipes/ci/ci-deployment"
+      "file": "shared/recipes/installation/update-global-installation",
+      "id": "update-global-installation",
+      "name": "Update Your Global Nx Installation",
+      "path": "/recipes/installation/update-global-installation"
     }
   ],
   "yarn": [
@@ -1149,6 +1145,42 @@
       "id": "serverless-fastify-planetscale",
       "name": "Using PlanetScale with Serverless Fastify",
       "path": "/showcase/example-repos/serverless-fastify-planetscale"
+    }
+  ],
+  "remote-cache": [
+    {
+      "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+      "file": "shared/core-features/remote-cache",
+      "id": "remote-cache",
+      "name": "Use Remote Caching",
+      "path": "/nx-cloud/features/remote-cache"
+    }
+  ],
+  "on-premise": [
+    {
+      "description": "Set up Nx Cloud on machines that you control",
+      "file": "nx-cloud/private/get-started",
+      "id": "on-premise",
+      "name": "Set up Nx Cloud On-Premise",
+      "path": "/nx-cloud/features/on-premise"
+    }
+  ],
+  "docker": [
+    {
+      "description": "",
+      "file": "shared/recipes/ci-deployment",
+      "id": "ci-deployment",
+      "name": "Prepare applications for deployment via CI",
+      "path": "/nx-cloud/recipes/other/ci-deployment"
+    }
+  ],
+  "deploy": [
+    {
+      "description": "",
+      "file": "shared/recipes/ci-deployment",
+      "id": "ci-deployment",
+      "name": "Prepare applications for deployment via CI",
+      "path": "/nx-cloud/recipes/other/ci-deployment"
     }
   ]
 }

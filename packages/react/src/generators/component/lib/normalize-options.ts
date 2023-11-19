@@ -36,7 +36,11 @@ export async function normalizeOptions(
 
   const { className } = names(name);
 
-  const { sourceRoot: projectSourceRoot, projectType } = project;
+  const {
+    sourceRoot: projectSourceRoot,
+    root: projectRoot,
+    projectType,
+  } = project;
 
   const styledModule = /^(css|scss|less|none)$/.test(options.style)
     ? null
@@ -62,6 +66,6 @@ export async function normalizeOptions(
     className,
     fileName,
     filePath,
-    projectSourceRoot,
+    projectSourceRoot: projectSourceRoot ?? projectRoot,
   };
 }

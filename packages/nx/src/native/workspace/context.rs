@@ -1,24 +1,20 @@
 use crate::native::logger::enable_logger;
 use std::collections::HashMap;
 
+use crate::native::hasher::hash;
 use crate::native::types::FileData;
 use crate::native::utils::path::Normalize;
-use parking_lot::lock_api::MutexGuard;
-use parking_lot::{Condvar, Mutex, RawMutex};
+use napi::bindgen_prelude::*;
+use parking_lot::{Condvar, Mutex};
 use rayon::prelude::*;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
 use tracing::{trace, warn};
-use xxhash_rust::xxh3;
 
 use crate::native::walker::nx_walker;
-use crate::native::workspace::errors::WorkspaceErrors;
-use crate::native::workspace::workspace_files::NxWorkspaceFiles;
 use crate::native::workspace::{config_files, workspace_files};
-
-use crate::native::workspace::types::ConfigurationParserResult;
 
 #[napi]
 pub struct WorkspaceContext {
@@ -29,7 +25,6 @@ pub struct WorkspaceContext {
 
 type Files = Vec<(PathBuf, String)>;
 struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
-
 impl FilesWorker {
     fn gather_files(workspace_root: &Path) -> Self {
         if !workspace_root.exists() {
@@ -51,7 +46,7 @@ impl FilesWorker {
             let files = nx_walker(workspace_root, |rec| {
                 let mut file_hashes: Vec<(PathBuf, String)> = vec![];
                 for (path, content) in rec {
-                    file_hashes.push((path, xxh3::xxh3_64(&content).to_string()));
+                    file_hashes.push((path, hash(&content)));
                 }
                 file_hashes
             });
@@ -67,22 +62,25 @@ impl FilesWorker {
         FilesWorker(Some(files_lock))
     }
 
-    pub fn get_files(&self) -> Option<MutexGuard<'_, RawMutex, Files>> {
-        let Some(files_sync) = &self.0 else {
-            trace!("there were no files because the workspace root did not exist");
-            return None
-        };
+    pub fn get_files(&self) -> Vec<(PathBuf, String)> {
+        if let Some(files_sync) = &self.0 {
+            let (files_lock, cvar) = files_sync.deref();
+            trace!("locking files");
+            let mut files = files_lock.lock();
+            let files_len = files.len();
+            if files_len == 0 {
+                trace!("waiting for files");
+                cvar.wait(&mut files);
+            }
 
-        let (files_lock, cvar) = &files_sync.deref();
-        let mut files = files_lock.lock();
-        let files_len = files.len();
-        if files_len == 0 {
-            trace!("waiting for files");
-            cvar.wait(&mut files);
+            let cloned_files = files.clone();
+            drop(files);
+
+            trace!("files are available");
+            cloned_files
+        } else {
+            vec![]
         }
-
-        trace!("files are available");
-        Some(files)
     }
 
     pub fn update_files(
@@ -93,7 +91,7 @@ impl FilesWorker {
     ) -> HashMap<String, String> {
         let Some(files_sync) = &self.0 else {
             trace!("there were no files because the workspace root did not exist");
-           return HashMap::new();
+            return HashMap::new();
         };
 
         let (files_lock, _) = &files_sync.deref();
@@ -108,11 +106,11 @@ impl FilesWorker {
             .par_iter()
             .filter_map(|path| {
                 let full_path = workspace_root_path.join(path);
-                let Ok( content ) = std::fs::read(full_path) else {
-                    trace!( "could not read file: ?full_path");
+                let Ok(content) = std::fs::read(full_path) else {
+                    trace!("could not read file: ?full_path");
                     return None;
                 };
-                Some((path.to_string(), xxh3::xxh3_64(&content).to_string()))
+                Some((path.to_string(), hash(&content)))
             })
             .collect();
 
@@ -146,56 +144,70 @@ impl WorkspaceContext {
         }
     }
 
-    #[napi]
+    #[napi(ts_return_type = "Promise<NxWorkspaceFiles>")]
     pub fn get_workspace_files<ConfigurationParser>(
         &self,
+        env: Env,
         globs: Vec<String>,
         parse_configurations: ConfigurationParser,
-    ) -> napi::Result<NxWorkspaceFiles, WorkspaceErrors>
+    ) -> anyhow::Result<Option<Object>>
     where
-        ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
+        ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
     {
-        workspace_files::get_files(
-            globs,
-            parse_configurations,
-            self.files_worker
-                .get_files()
-                .as_deref()
-                .map(|files| files.as_slice()),
-        )
+        let files = self.files_worker.get_files();
+        workspace_files::get_files(env, globs, parse_configurations, &files)
+            .map_err(anyhow::Error::from)
     }
 
     #[napi]
     pub fn glob(
         &self,
         globs: Vec<String>,
-    ) -> napi::Result<Vec<String>, WorkspaceErrors> {
-        config_files::glob_files(
-            globs,
-            self.files_worker
-                .get_files()
-                .as_deref()
-                .map(|files| files.as_slice()),
-        )
+        exclude: Option<Vec<String>>,
+    ) -> napi::Result<Vec<String>> {
+        let files = self.files_worker.get_files();
+
+        let globbed_files = config_files::glob_files(&files, globs, exclude)?;
+        Ok(globbed_files
+            .map(|file| file.0.to_normalized_string())
+            .collect())
     }
 
     #[napi]
-    pub fn get_project_configurations<ConfigurationParser>(
+    pub fn hash_files_matching_glob(
         &self,
         globs: Vec<String>,
+        exclude: Option<Vec<String>>,
+    ) -> napi::Result<String> {
+        let files = self.files_worker.get_files();
+        let globbed_files = config_files::glob_files(&files, globs, exclude)?;
+        Ok(hash(
+            &globbed_files
+                .map(|file| file.1.as_bytes())
+                .collect::<Vec<_>>()
+                .concat(),
+        ))
+    }
+
+    #[napi(ts_return_type = "Promise<Record<string, string>>")]
+    pub fn get_project_configurations<ConfigurationParser>(
+        &self,
+        env: Env,
+        globs: Vec<String>,
         parse_configurations: ConfigurationParser,
-    ) -> napi::Result<ConfigurationParserResult>
+    ) -> napi::Result<Object>
     where
-        ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
+        ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
     {
-        config_files::get_project_configurations(
-            globs,
-            self.files_worker
-                .get_files()
-                .as_deref()
-                .map(|files| files.as_slice()),
-            parse_configurations,
-        )
+        let files = self.files_worker.get_files();
+
+        let promise =
+            config_files::get_project_configurations(globs, &files, parse_configurations)?;
+
+        env.spawn_future(async move {
+            let result = promise.await?;
+            Ok(result)
+        })
     }
 
     #[napi]
@@ -210,16 +222,14 @@ impl WorkspaceContext {
 
     #[napi]
     pub fn all_file_data(&self) -> Vec<FileData> {
-        self.files_worker
-            .get_files()
-            .map_or_else(Vec::new, |files| {
-                files
-                    .iter()
-                    .map(|(path, content)| FileData {
-                        file: path.to_normalized_string(),
-                        hash: content.clone(),
-                    })
-                    .collect()
+        let files = self.files_worker.get_files();
+
+        files
+            .iter()
+            .map(|(path, content)| FileData {
+                file: path.to_normalized_string(),
+                hash: content.clone(),
             })
+            .collect()
     }
 }

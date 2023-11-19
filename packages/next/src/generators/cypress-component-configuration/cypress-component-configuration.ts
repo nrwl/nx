@@ -29,6 +29,7 @@ export async function cypressComponentConfiguration(
     await baseCyCtConfig(tree, {
       project: options.project,
       skipFormat: true,
+      jsx: true,
     })
   );
 

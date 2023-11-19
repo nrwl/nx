@@ -1,3 +1,4 @@
+import { output } from '../../utils/output';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import {
   ProjectGraph,
@@ -78,6 +79,7 @@ export async function showProjectsHandler(
       console.log(project);
     }
   }
+  await output.drain();
   process.exit(0);
 }
 

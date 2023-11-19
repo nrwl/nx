@@ -10,6 +10,7 @@ import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-
 import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
 import { CustomHasher } from '../config/misc-interfaces';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
@@ -107,7 +108,7 @@ export function validateOutputs(outputs: string[]) {
   const invalidOutputs = new Set<string>();
 
   for (const output of outputs) {
-    if (!/^{[\s\S]+}/.test(output)) {
+    if (!/^!?{[\s\S]+}/.test(output)) {
       invalidOutputs.add(output);
     }
   }
@@ -125,14 +126,21 @@ export function transformLegacyOutputs(
       return output;
     }
 
-    const relativePath = isRelativePath(output)
+    let [isNegated, outputPath] = output.startsWith('!')
+      ? [true, output.substring(1)]
+      : [false, output];
+
+    const relativePath = isRelativePath(outputPath)
       ? output
-      : relative(projectRoot, output);
+      : relative(projectRoot, outputPath);
 
     const isWithinProject = !relativePath.startsWith('..');
-    return joinPathFragments(
-      isWithinProject ? '{projectRoot}' : '{workspaceRoot}',
-      isWithinProject ? relativePath : output
+    return (
+      (isNegated ? '!' : '') +
+      joinPathFragments(
+        isWithinProject ? '{projectRoot}' : '{workspaceRoot}',
+        isWithinProject ? relativePath : outputPath
+      )
     );
   });
 }
@@ -255,7 +263,12 @@ export async function getExecutorForTask(
   const executor = await getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
-  return getExecutorInformation(nodeModule, executorName, workspaceRoot);
+  return getExecutorInformation(
+    nodeModule,
+    executorName,
+    workspaceRoot,
+    readProjectsConfigurationFromProjectGraph(projectGraph).projects
+  );
 }
 
 export async function getCustomHasher(
@@ -270,19 +283,39 @@ export function removeTasksFromTaskGraph(
   graph: TaskGraph,
   ids: string[]
 ): TaskGraph {
-  const tasks = {};
+  const newGraph = removeIdsFromGraph<Task>(graph, ids, graph.tasks);
+  return {
+    dependencies: newGraph.dependencies,
+    roots: newGraph.roots,
+    tasks: newGraph.mapWithIds,
+  };
+}
+
+export function removeIdsFromGraph<T>(
+  graph: {
+    roots: string[];
+    dependencies: Record<string, string[]>;
+  },
+  ids: string[],
+  mapWithIds: Record<string, T>
+): {
+  mapWithIds: Record<string, T>;
+  roots: string[];
+  dependencies: Record<string, string[]>;
+} {
+  const filteredMapWithIds = {};
   const dependencies = {};
   const removedSet = new Set(ids);
-  for (let taskId of Object.keys(graph.tasks)) {
-    if (!removedSet.has(taskId)) {
-      tasks[taskId] = graph.tasks[taskId];
-      dependencies[taskId] = graph.dependencies[taskId].filter(
-        (depTaskId) => !removedSet.has(depTaskId)
+  for (let id of Object.keys(mapWithIds)) {
+    if (!removedSet.has(id)) {
+      filteredMapWithIds[id] = mapWithIds[id];
+      dependencies[id] = graph.dependencies[id].filter(
+        (depId) => !removedSet.has(depId)
       );
     }
   }
   return {
-    tasks,
+    mapWithIds: filteredMapWithIds,
     dependencies: dependencies,
     roots: Object.keys(dependencies).filter(
       (k) => dependencies[k].length === 0

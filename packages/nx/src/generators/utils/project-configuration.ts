@@ -5,6 +5,7 @@ import {
   getGlobPatternsFromPackageManagerWorkspaces,
 } from '../../../plugins/package-json-workspaces';
 import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
+import { getDefaultPluginsSync } from '../../utils/nx-plugin.deprecated';
 import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {
   ProjectConfiguration,
@@ -14,7 +15,7 @@ import {
   mergeProjectConfigurationIntoRootMap,
   readProjectConfigurationsFromRootMap,
 } from '../../project-graph/utils/project-configuration-utils';
-import { retrieveProjectConfigurationPathsWithoutPluginInference } from '../../project-graph/utils/retrieve-workspace-files';
+import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/retrieve-workspace-files';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
 import { joinPathFragments, normalizePath } from '../../utils/path';
@@ -191,9 +192,9 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
       readJson(tree, p)
     ),
   ];
-
-  const globbedFiles = retrieveProjectConfigurationPathsWithoutPluginInference(
-    tree.root
+  const globbedFiles = retrieveProjectConfigurationPaths(
+    tree.root,
+    getDefaultPluginsSync(tree.root)
   );
   const createdFiles = findCreatedProjectFiles(tree, patterns);
   const deletedFiles = findDeletedProjectFiles(tree, patterns);
@@ -207,22 +208,24 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
       const json = readJson(tree, projectFile);
       const config = buildProjectFromProjectJson(json, projectFile);
       mergeProjectConfigurationIntoRootMap(rootMap, config);
-    } else {
+    } else if (basename(projectFile) === 'package.json') {
       const packageJson = readJson<PackageJson>(tree, projectFile);
       const config = buildProjectConfigurationFromPackageJson(
         packageJson,
         projectFile,
         readNxJson(tree)
       );
-      mergeProjectConfigurationIntoRootMap(
-        rootMap,
-        // Inferred targets, tags, etc don't show up when running generators
-        // This is to help avoid running into issues when trying to update the workspace
-        {
-          name: config.name,
-          root: config.root,
-        }
-      );
+      if (!rootMap.has(config.root)) {
+        mergeProjectConfigurationIntoRootMap(
+          rootMap,
+          // Inferred targets, tags, etc don't show up when running generators
+          // This is to help avoid running into issues when trying to update the workspace
+          {
+            name: config.name,
+            root: config.root,
+          }
+        );
+      }
     }
   }
 

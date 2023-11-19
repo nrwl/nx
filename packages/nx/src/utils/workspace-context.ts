@@ -1,4 +1,4 @@
-import type { ConfigurationParserResult, WorkspaceContext } from '../native';
+import type { WorkspaceContext } from '../native';
 import { performance } from 'perf_hooks';
 
 let workspaceContext: WorkspaceContext | undefined;
@@ -19,7 +19,7 @@ export function setupWorkspaceContext(workspaceRoot: string) {
 export function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
   globs: string[],
-  parseConfigurations: (files: string[]) => ConfigurationParserResult
+  parseConfigurations: (files: string[]) => Promise<Record<string, string>>
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.getWorkspaceFiles(globs, parseConfigurations);
@@ -27,16 +27,26 @@ export function getNxWorkspaceFilesFromContext(
 
 export function globWithWorkspaceContext(
   workspaceRoot: string,
-  globs: string[]
+  globs: string[],
+  exclude?: string[]
 ) {
   ensureContextAvailable(workspaceRoot);
-  return workspaceContext.glob(globs);
+  return workspaceContext.glob(globs, exclude);
+}
+
+export function hashWithWorkspaceContext(
+  workspaceRoot: string,
+  globs: string[],
+  exclude?: string[]
+) {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext.hashFilesMatchingGlob(globs, exclude);
 }
 
 export function getProjectConfigurationsFromContext(
   workspaceRoot: string,
   globs: string[],
-  parseConfigurations: (files: string[]) => ConfigurationParserResult
+  parseConfigurations: (files: string[]) => Promise<Record<string, string>>
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.getProjectConfigurations(globs, parseConfigurations);

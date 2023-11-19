@@ -97,12 +97,12 @@ function createFileWatcher(
       includeGlobalWorkspaceFiles: true,
       includeDependentProjects: true,
     },
-    async (error, { changedFiles }) => {
+    async (error, val) => {
       if (error === 'closed') {
         throw new Error('Watch error: Daemon closed the connection');
       } else if (error) {
         throw new Error(`Watch error: ${error?.message ?? 'Unknown'}`);
-      } else if (changedFiles.length > 0) {
+      } else if (val?.changedFiles.length > 0) {
         changeHandler();
       }
     }
@@ -113,35 +113,47 @@ export default async function* fileServerExecutor(
   options: Schema,
   context: ExecutorContext
 ) {
-  let running = false;
-
-  const run = () => {
-    if (!running) {
-      running = true;
-      try {
-        const args = getBuildTargetCommand(options);
-        execFileSync(pmCmd, args, {
-          stdio: [0, 1, 2],
-        });
-      } catch {
-        throw new Error(
-          `Build target failed: ${chalk.bold(options.buildTarget)}`
-        );
-      } finally {
-        running = false;
-      }
-    }
-  };
-
-  let disposeWatch: () => void;
-  if (options.watch) {
-    const projectRoot =
-      context.projectsConfigurations.projects[context.projectName].root;
-    disposeWatch = await createFileWatcher(context.projectName, run);
+  if (!options.buildTarget && !options.staticFilePath) {
+    throw new Error("You must set either 'buildTarget' or 'staticFilePath'.");
   }
 
-  // perform initial run
-  run();
+  if (options.watch && !options.buildTarget) {
+    throw new Error(
+      "Watch error: You can only specify 'watch' when 'buildTarget' is set."
+    );
+  }
+
+  let running = false;
+  let disposeWatch: () => void;
+
+  if (options.buildTarget) {
+    const run = () => {
+      if (!running) {
+        running = true;
+        try {
+          const args = getBuildTargetCommand(options);
+          execFileSync(pmCmd, args, {
+            stdio: [0, 1, 2],
+          });
+        } catch {
+          throw new Error(
+            `Build target failed: ${chalk.bold(options.buildTarget)}`
+          );
+        } finally {
+          running = false;
+        }
+      }
+    };
+
+    if (options.watch) {
+      const projectRoot =
+        context.projectsConfigurations.projects[context.projectName].root;
+      disposeWatch = await createFileWatcher(context.projectName, run);
+    }
+
+    // perform initial run
+    run();
+  }
 
   const outputPath = getBuildTargetOutputPath(options, context);
 

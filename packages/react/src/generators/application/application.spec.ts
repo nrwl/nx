@@ -64,6 +64,8 @@ describe('app', () => {
         'vite/client',
         'node',
         'vitest',
+        '@nx/react/typings/cssmodule.d.ts',
+        '@nx/react/typings/image.d.ts',
       ]);
     });
 
@@ -143,6 +145,7 @@ describe('app', () => {
         {
           "compilerOptions": {
             "allowJs": true,
+            "module": "commonjs",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
             "types": [
@@ -152,9 +155,14 @@ describe('app', () => {
           },
           "extends": "../tsconfig.base.json",
           "include": [
-            "src/**/*.ts",
-            "src/**/*.js",
+            "**/*.ts",
+            "**/*.js",
             "cypress.config.ts",
+            "**/*.cy.ts",
+            "**/*.cy.tsx",
+            "**/*.cy.js",
+            "**/*.cy.jsx",
+            "**/*.d.ts",
           ],
         }
       `);

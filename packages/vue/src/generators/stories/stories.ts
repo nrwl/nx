@@ -33,7 +33,7 @@ export async function createAllStories(
   projectConfiguration: ProjectConfiguration,
   ignorePaths?: string[]
 ) {
-  const { sourceRoot, root } = projectConfiguration;
+  const { sourceRoot } = projectConfiguration;
   let componentPaths: string[] = [];
   const pathsToCheck = [
     joinPathFragments(sourceRoot, 'app'), // Default component folder for apps

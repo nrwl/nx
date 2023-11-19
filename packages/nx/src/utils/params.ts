@@ -33,7 +33,8 @@ type PropertyDescription = {
   $default?:
     | { $source: 'argv'; index: number }
     | { $source: 'projectName' }
-    | { $source: 'unparsed' };
+    | { $source: 'unparsed' }
+    | { $source: 'workingDirectory' };
   additionalProperties?: boolean;
   const?: any;
   'x-prompt'?:
@@ -701,6 +702,13 @@ export function convertSmartDefaultsIntoNamedParams(
       relativeCwd
     ) {
       opts[k] = relativeCwd.replace(/\\/g, '/');
+    } else if (
+      opts[k] === undefined &&
+      v.$default !== undefined &&
+      v.$default.$source === 'workingDirectory' &&
+      relativeCwd
+    ) {
+      opts[k] = relativeCwd.replace(/\\/g, '/');
     }
   });
   const leftOverPositionalArgs = [];
@@ -785,10 +793,23 @@ export function getPromptsForSchema(
       // Normalize x-prompt
       if (typeof v['x-prompt'] === 'string') {
         const message = v['x-prompt'];
-        v['x-prompt'] = {
-          type: v.type === 'boolean' ? 'confirm' : 'input',
-          message,
-        };
+        if (v.type === 'boolean') {
+          v['x-prompt'] = {
+            type: 'confirm',
+            message,
+          };
+        } else if (v.type === 'array' && v.items?.enum) {
+          v['x-prompt'] = {
+            type: 'multiselect',
+            items: v.items.enum,
+            message,
+          };
+        } else {
+          v['x-prompt'] = {
+            type: 'input',
+            message,
+          };
+        }
       }
 
       question.message = v['x-prompt'].message;

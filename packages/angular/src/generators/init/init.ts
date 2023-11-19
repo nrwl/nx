@@ -18,7 +18,10 @@ import {
   getInstalledPackageVersion,
   versions,
 } from '../utils/version-utils';
-import type { PackageVersions } from '../../utils/backward-compatible-versions';
+import type {
+  PackageCompatVersions,
+  PackageLatestVersions,
+} from '../../utils/backward-compatible-versions';
 import { Schema } from './schema';
 import { nxVersion } from '../../utils/versions';
 
@@ -124,7 +127,7 @@ function setDefaults(host: Tree, options: Schema) {
 
 function updateDependencies(
   tree: Tree,
-  versions: PackageVersions
+  versions: PackageLatestVersions | PackageCompatVersions
 ): GeneratorCallback {
   const angularVersion =
     getInstalledPackageVersion(tree, '@angular/core') ??

@@ -734,22 +734,22 @@
       {
         "id": "remote-cache",
         "name": "Use Remote Caching",
-        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-        "file": "shared/core-features/remote-cache",
+        "description": "",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/remote-cache",
-        "tags": ["remote-cache"]
+        "isExternal": true,
+        "path": "/nx-cloud/features/remote-cache",
+        "tags": []
       },
       {
         "id": "distribute-task-execution",
         "name": "Distribute Task Execution",
-        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
-        "file": "shared/core-features/distribute-task-execution",
+        "description": "",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/distribute-task-execution",
-        "tags": ["distribute-task-execution"]
+        "isExternal": true,
+        "path": "/nx-cloud/features/distribute-task-execution",
+        "tags": []
       },
       {
         "id": "explore-graph",
@@ -847,25 +847,25 @@
     "path": "/core-features/cache-task-results",
     "tags": ["cache-task-results"]
   },
-  "/core-features/remote-cache": {
+  "/nx-cloud/features/remote-cache": {
     "id": "remote-cache",
     "name": "Use Remote Caching",
-    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-    "file": "shared/core-features/remote-cache",
+    "description": "",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/remote-cache",
-    "tags": ["remote-cache"]
+    "isExternal": true,
+    "path": "/nx-cloud/features/remote-cache",
+    "tags": []
   },
-  "/core-features/distribute-task-execution": {
+  "/nx-cloud/features/distribute-task-execution": {
     "id": "distribute-task-execution",
     "name": "Distribute Task Execution",
-    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
-    "file": "shared/core-features/distribute-task-execution",
+    "description": "",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/distribute-task-execution",
-    "tags": ["distribute-task-execution"]
+    "isExternal": true,
+    "path": "/nx-cloud/features/distribute-task-execution",
+    "tags": []
   },
   "/core-features/explore-graph": {
     "id": "explore-graph",
@@ -995,16 +995,6 @@
         "tags": []
       },
       {
-        "id": "dte",
-        "name": "Improve Worst Case CI Times",
-        "description": "",
-        "file": "shared/concepts/improve-worst-case-ci-times",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/dte",
-        "tags": ["distribute-task-execution"]
-      },
-      {
         "id": "task-pipeline-configuration",
         "name": "What is a Task Pipeline",
         "description": "",
@@ -1013,16 +1003,6 @@
         "isExternal": false,
         "path": "/concepts/task-pipeline-configuration",
         "tags": ["run-tasks", "use-task-executors"]
-      },
-      {
-        "id": "affected",
-        "name": "How Affected Works",
-        "description": "",
-        "file": "shared/using-nx/affected",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/affected",
-        "tags": ["run-tasks"]
       },
       {
         "id": "integrated-vs-package-based",
@@ -1306,16 +1286,6 @@
     "path": "/concepts/types-of-configuration",
     "tags": []
   },
-  "/concepts/dte": {
-    "id": "dte",
-    "name": "Improve Worst Case CI Times",
-    "description": "",
-    "file": "shared/concepts/improve-worst-case-ci-times",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/dte",
-    "tags": ["distribute-task-execution"]
-  },
   "/concepts/task-pipeline-configuration": {
     "id": "task-pipeline-configuration",
     "name": "What is a Task Pipeline",
@@ -1325,16 +1295,6 @@
     "isExternal": false,
     "path": "/concepts/task-pipeline-configuration",
     "tags": ["run-tasks", "use-task-executors"]
-  },
-  "/concepts/affected": {
-    "id": "affected",
-    "name": "How Affected Works",
-    "description": "",
-    "file": "shared/using-nx/affected",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/affected",
-    "tags": ["run-tasks"]
   },
   "/concepts/integrated-vs-package-based": {
     "id": "integrated-vs-package-based",
@@ -1821,6 +1781,16 @@
             "tags": ["run-tasks"]
           },
           {
+            "id": "change-cache-location",
+            "name": "Change Cache Location",
+            "description": "",
+            "file": "shared/recipes/running-tasks/change-cache-location",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/change-cache-location",
+            "tags": []
+          },
+          {
             "id": "run-commands-executor",
             "name": "Running Custom Commands",
             "description": "",
@@ -1829,6 +1799,16 @@
             "isExternal": false,
             "path": "/recipes/running-tasks/run-commands-executor",
             "tags": ["run-tasks", "use-task-executors"]
+          },
+          {
+            "id": "run-tasks-in-parallel",
+            "name": "Run Tasks in Parallel",
+            "description": "",
+            "file": "shared/recipes/running-tasks/run-tasks-in-parallel",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/run-tasks-in-parallel",
+            "tags": ["run-tasks"]
           },
           {
             "id": "root-level-scripts",
@@ -2579,94 +2559,34 @@
         "tags": []
       },
       {
-        "id": "ci",
-        "name": "CI",
-        "description": "All recipes about how to use Nx to make your CI faster.",
+        "id": "installation",
+        "name": "Installation",
+        "description": "Installing Nx",
         "file": "",
         "itemList": [
           {
-            "id": "ci-setup",
-            "name": "CI Setup",
+            "id": "install-non-javascript",
+            "name": "Install Nx in a Non-Javascript Repo",
             "description": "",
-            "file": "shared/ci-overview",
+            "file": "shared/recipes/installation/install-non-javascript",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/ci/ci-setup",
-            "tags": ["distribute-task-execution"]
+            "path": "/recipes/installation/install-non-javascript",
+            "tags": ["installation"]
           },
           {
-            "id": "ci-deployment",
-            "name": "Prepare applications for deployment via CI",
+            "id": "update-global-installation",
+            "name": "Update Your Global Nx Installation",
             "description": "",
-            "file": "shared/recipes/ci-deployment",
+            "file": "shared/recipes/installation/update-global-installation",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/ci/ci-deployment",
-            "tags": ["docker", "deploy"]
-          },
-          {
-            "id": "monorepo-ci-azure",
-            "name": "Setting up Azure Pipelines",
-            "description": "",
-            "file": "shared/monorepo-ci-azure",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-azure",
-            "tags": []
-          },
-          {
-            "id": "monorepo-ci-circle-ci",
-            "name": "Setting up CircleCI",
-            "description": "",
-            "file": "shared/monorepo-ci-circle-ci",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-circle-ci",
-            "tags": []
-          },
-          {
-            "id": "monorepo-ci-github-actions",
-            "name": "Setting up GitHub Actions",
-            "description": "",
-            "file": "shared/monorepo-ci-github-actions",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-github-actions",
-            "tags": []
-          },
-          {
-            "id": "monorepo-ci-jenkins",
-            "name": "Setting up Jenkins",
-            "description": "",
-            "file": "shared/monorepo-ci-jenkins",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-jenkins",
-            "tags": []
-          },
-          {
-            "id": "monorepo-ci-gitlab",
-            "name": "Setting up GitLab",
-            "description": "",
-            "file": "shared/monorepo-ci-gitlab",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-gitlab",
-            "tags": []
-          },
-          {
-            "id": "monorepo-ci-bitbucket-pipelines",
-            "name": "Setting up Bitbucket",
-            "description": "",
-            "file": "shared/monorepo-ci-bitbucket-pipelines",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
-            "tags": []
+            "path": "/recipes/installation/update-global-installation",
+            "tags": ["installation"]
           }
         ],
         "isExternal": false,
-        "path": "/recipes/ci",
+        "path": "/recipes/installation",
         "tags": []
       },
       {
@@ -3055,6 +2975,16 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "change-cache-location",
+        "name": "Change Cache Location",
+        "description": "",
+        "file": "shared/recipes/running-tasks/change-cache-location",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/change-cache-location",
+        "tags": []
+      },
+      {
         "id": "run-commands-executor",
         "name": "Running Custom Commands",
         "description": "",
@@ -3063,6 +2993,16 @@
         "isExternal": false,
         "path": "/recipes/running-tasks/run-commands-executor",
         "tags": ["run-tasks", "use-task-executors"]
+      },
+      {
+        "id": "run-tasks-in-parallel",
+        "name": "Run Tasks in Parallel",
+        "description": "",
+        "file": "shared/recipes/running-tasks/run-tasks-in-parallel",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/run-tasks-in-parallel",
+        "tags": ["run-tasks"]
       },
       {
         "id": "root-level-scripts",
@@ -3119,6 +3059,16 @@
     "path": "/recipes/running-tasks/defining-task-pipeline",
     "tags": ["run-tasks"]
   },
+  "/recipes/running-tasks/change-cache-location": {
+    "id": "change-cache-location",
+    "name": "Change Cache Location",
+    "description": "",
+    "file": "shared/recipes/running-tasks/change-cache-location",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/change-cache-location",
+    "tags": []
+  },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",
     "name": "Running Custom Commands",
@@ -3128,6 +3078,16 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/run-commands-executor",
     "tags": ["run-tasks", "use-task-executors"]
+  },
+  "/recipes/running-tasks/run-tasks-in-parallel": {
+    "id": "run-tasks-in-parallel",
+    "name": "Run Tasks in Parallel",
+    "description": "",
+    "file": "shared/recipes/running-tasks/run-tasks-in-parallel",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/run-tasks-in-parallel",
+    "tags": ["run-tasks"]
   },
   "/recipes/running-tasks/root-level-scripts": {
     "id": "root-level-scripts",
@@ -4493,176 +4453,56 @@
     "path": "/recipes/enforce-module-boundaries/tags-allow-list",
     "tags": ["enforce-module-boundaries"]
   },
-  "/recipes/ci": {
-    "id": "ci",
-    "name": "CI",
-    "description": "All recipes about how to use Nx to make your CI faster.",
+  "/recipes/installation": {
+    "id": "installation",
+    "name": "Installation",
+    "description": "Installing Nx",
     "file": "",
     "itemList": [
       {
-        "id": "ci-setup",
-        "name": "CI Setup",
+        "id": "install-non-javascript",
+        "name": "Install Nx in a Non-Javascript Repo",
         "description": "",
-        "file": "shared/ci-overview",
+        "file": "shared/recipes/installation/install-non-javascript",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/ci/ci-setup",
-        "tags": ["distribute-task-execution"]
+        "path": "/recipes/installation/install-non-javascript",
+        "tags": ["installation"]
       },
       {
-        "id": "ci-deployment",
-        "name": "Prepare applications for deployment via CI",
+        "id": "update-global-installation",
+        "name": "Update Your Global Nx Installation",
         "description": "",
-        "file": "shared/recipes/ci-deployment",
+        "file": "shared/recipes/installation/update-global-installation",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/ci/ci-deployment",
-        "tags": ["docker", "deploy"]
-      },
-      {
-        "id": "monorepo-ci-azure",
-        "name": "Setting up Azure Pipelines",
-        "description": "",
-        "file": "shared/monorepo-ci-azure",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-azure",
-        "tags": []
-      },
-      {
-        "id": "monorepo-ci-circle-ci",
-        "name": "Setting up CircleCI",
-        "description": "",
-        "file": "shared/monorepo-ci-circle-ci",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-circle-ci",
-        "tags": []
-      },
-      {
-        "id": "monorepo-ci-github-actions",
-        "name": "Setting up GitHub Actions",
-        "description": "",
-        "file": "shared/monorepo-ci-github-actions",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-github-actions",
-        "tags": []
-      },
-      {
-        "id": "monorepo-ci-jenkins",
-        "name": "Setting up Jenkins",
-        "description": "",
-        "file": "shared/monorepo-ci-jenkins",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-jenkins",
-        "tags": []
-      },
-      {
-        "id": "monorepo-ci-gitlab",
-        "name": "Setting up GitLab",
-        "description": "",
-        "file": "shared/monorepo-ci-gitlab",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-gitlab",
-        "tags": []
-      },
-      {
-        "id": "monorepo-ci-bitbucket-pipelines",
-        "name": "Setting up Bitbucket",
-        "description": "",
-        "file": "shared/monorepo-ci-bitbucket-pipelines",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
-        "tags": []
+        "path": "/recipes/installation/update-global-installation",
+        "tags": ["installation"]
       }
     ],
     "isExternal": false,
-    "path": "/recipes/ci",
+    "path": "/recipes/installation",
     "tags": []
   },
-  "/recipes/ci/ci-setup": {
-    "id": "ci-setup",
-    "name": "CI Setup",
+  "/recipes/installation/install-non-javascript": {
+    "id": "install-non-javascript",
+    "name": "Install Nx in a Non-Javascript Repo",
     "description": "",
-    "file": "shared/ci-overview",
+    "file": "shared/recipes/installation/install-non-javascript",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/ci/ci-setup",
-    "tags": ["distribute-task-execution"]
+    "path": "/recipes/installation/install-non-javascript",
+    "tags": ["installation"]
   },
-  "/recipes/ci/ci-deployment": {
-    "id": "ci-deployment",
-    "name": "Prepare applications for deployment via CI",
+  "/recipes/installation/update-global-installation": {
+    "id": "update-global-installation",
+    "name": "Update Your Global Nx Installation",
     "description": "",
-    "file": "shared/recipes/ci-deployment",
+    "file": "shared/recipes/installation/update-global-installation",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/ci/ci-deployment",
-    "tags": ["docker", "deploy"]
-  },
-  "/recipes/ci/monorepo-ci-azure": {
-    "id": "monorepo-ci-azure",
-    "name": "Setting up Azure Pipelines",
-    "description": "",
-    "file": "shared/monorepo-ci-azure",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-azure",
-    "tags": []
-  },
-  "/recipes/ci/monorepo-ci-circle-ci": {
-    "id": "monorepo-ci-circle-ci",
-    "name": "Setting up CircleCI",
-    "description": "",
-    "file": "shared/monorepo-ci-circle-ci",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-circle-ci",
-    "tags": []
-  },
-  "/recipes/ci/monorepo-ci-github-actions": {
-    "id": "monorepo-ci-github-actions",
-    "name": "Setting up GitHub Actions",
-    "description": "",
-    "file": "shared/monorepo-ci-github-actions",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-github-actions",
-    "tags": []
-  },
-  "/recipes/ci/monorepo-ci-jenkins": {
-    "id": "monorepo-ci-jenkins",
-    "name": "Setting up Jenkins",
-    "description": "",
-    "file": "shared/monorepo-ci-jenkins",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-jenkins",
-    "tags": []
-  },
-  "/recipes/ci/monorepo-ci-gitlab": {
-    "id": "monorepo-ci-gitlab",
-    "name": "Setting up GitLab",
-    "description": "",
-    "file": "shared/monorepo-ci-gitlab",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-gitlab",
-    "tags": []
-  },
-  "/recipes/ci/monorepo-ci-bitbucket-pipelines": {
-    "id": "monorepo-ci-bitbucket-pipelines",
-    "name": "Setting up Bitbucket",
-    "description": "",
-    "file": "shared/monorepo-ci-bitbucket-pipelines",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/ci/monorepo-ci-bitbucket-pipelines",
-    "tags": []
+    "path": "/recipes/installation/update-global-installation",
+    "tags": ["installation"]
   },
   "/recipes/tips-n-tricks": {
     "id": "tips-n-tricks",
@@ -6171,13 +6011,13 @@
         "tags": []
       },
       {
-        "id": "workspace-layout",
-        "name": "workspace-layout",
+        "id": "as-provided-vs-derived",
+        "name": "As Provided vs. Derived",
         "description": "",
-        "file": "shared/deprecated/workspace-layout",
+        "file": "shared/deprecated/as-provided-vs-derived",
         "itemList": [],
         "isExternal": false,
-        "path": "/deprecated/workspace-layout",
+        "path": "/deprecated/as-provided-vs-derived",
         "tags": []
       },
       {
@@ -6228,6 +6068,16 @@
         "itemList": [],
         "isExternal": false,
         "path": "/deprecated/global-implicit-dependencies",
+        "tags": []
+      },
+      {
+        "id": "angular-schematics-builders",
+        "name": "Angular Schematics and Builders",
+        "description": "",
+        "file": "shared/deprecated/angular-schematics-builders",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/angular-schematics-builders",
         "tags": []
       },
       {
@@ -6336,14 +6186,14 @@
     "path": "/deprecated/workspace-lint",
     "tags": []
   },
-  "/deprecated/workspace-layout": {
-    "id": "workspace-layout",
-    "name": "workspace-layout",
+  "/deprecated/as-provided-vs-derived": {
+    "id": "as-provided-vs-derived",
+    "name": "As Provided vs. Derived",
     "description": "",
-    "file": "shared/deprecated/workspace-layout",
+    "file": "shared/deprecated/as-provided-vs-derived",
     "itemList": [],
     "isExternal": false,
-    "path": "/deprecated/workspace-layout",
+    "path": "/deprecated/as-provided-vs-derived",
     "tags": []
   },
   "/deprecated/workspace-generators": {
@@ -6394,6 +6244,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/global-implicit-dependencies",
+    "tags": []
+  },
+  "/deprecated/angular-schematics-builders": {
+    "id": "angular-schematics-builders",
+    "name": "Angular Schematics and Builders",
+    "description": "",
+    "file": "shared/deprecated/angular-schematics-builders",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/angular-schematics-builders",
     "tags": []
   },
   "/deprecated/storybook": {
@@ -6550,7 +6410,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/nx-cloud/intro/what-is-nx-cloud",
+        "path": "/nx-cloud/intro/ci-with-nx",
         "tags": ["cache-task-results", "distribute-task-execution"]
       },
       {
@@ -6628,14 +6488,14 @@
     "path": "/see-also",
     "tags": []
   },
-  "/nx-cloud/intro/what-is-nx-cloud": {
+  "/nx-cloud/intro/ci-with-nx": {
     "id": "nx-cloud-documentation",
     "name": "Nx Cloud Documentation",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/nx-cloud/intro/what-is-nx-cloud",
+    "path": "/nx-cloud/intro/ci-with-nx",
     "tags": ["cache-task-results", "distribute-task-execution"]
   },
   "/nx-api/nx/documents/affected#skip-nx-cache": {
