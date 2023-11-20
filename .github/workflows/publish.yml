@@ -240,12 +240,15 @@ jobs:
           npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
           pnpm nx-release --local=false $GITHUB_REF_NAME
       - name: Trigger Docs Release
-        # Publish docs only on a full release and when publishing the latest version
-        if: ${{ !github.event.release.prerelease && github.event.release.target_commitish == 'master' }}
+        # Publish docs only on a full release
+        if: ${{ !github.event.release.prerelease }}
         run: |
+          # Publish docs only when publishing the latest version
+          if [ "$(git describe --tags `git rev-list --tags --max-count=1`)" = "$GITHUB_REF_NAME" ]; then
           # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
           git branch -f website
           git push -f origin website
+          fi
     env:
       GH_TOKEN: ${{ github.token }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

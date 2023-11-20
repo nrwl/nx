@@ -6,6 +6,5 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html', 'json'],
   globals: {},
   displayName: 'expo',
-  testEnvironment: 'node',
   preset: '../../jest.preset.js',
 };

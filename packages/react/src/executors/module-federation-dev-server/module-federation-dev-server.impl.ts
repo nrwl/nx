@@ -59,7 +59,10 @@ function startStaticRemotesFileServer(
 
     if (!commonOutputDirectory) {
       commonOutputDirectory = directoryOfOutputPath;
-    } else if (commonOutputDirectory !== directoryOfOutputPath) {
+    } else if (
+      commonOutputDirectory !== directoryOfOutputPath ||
+      !outputPath.endsWith(app)
+    ) {
       shouldMoveToCommonLocation = true;
     }
   }
@@ -70,7 +73,7 @@ function startStaticRemotesFileServer(
       const outputPath =
         context.projectGraph.nodes[app].data.targets['build'].options
           .outputPath;
-      cpSync(outputPath, commonOutputDirectory, {
+      cpSync(outputPath, join(commonOutputDirectory, app), {
         force: true,
         recursive: true,
       });

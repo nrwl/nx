@@ -4,12 +4,13 @@ import { dirname } from 'path';
 import { readJson, writeJson } from '../../generators/utils/json';
 import { formatChangedFilesWithPrettierIfAvailable } from '../../generators/internal-utils/format-changed-files-with-prettier-if-available';
 import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/retrieve-workspace-files';
+import { loadNxPlugins } from '../../utils/nx-plugin';
 
 export default async function (tree: Tree) {
   const nxJson = readNxJson(tree);
   const projectFiles = await retrieveProjectConfigurationPaths(
     tree.root,
-    nxJson
+    await loadNxPlugins(nxJson?.plugins)
   );
   const projectJsons = projectFiles.filter((f) => f.endsWith('project.json'));
 
