@@ -356,6 +356,29 @@ You might also want to learn more about [how to fine-tune caching](/recipes/runn
 
 Merge your PR into the `main` branch when you're ready to move to the next section.
 
+## Enable PR Integration
+
+The [Nx Cloud GitHub App](https://github.com/marketplace/official-nx-cloud-app) automatically creates a comment on your PRs that provides a direct link to the relevant Nx Cloud logs and quickly shows which command failed.
+
+### Install the App
+
+Install the [Nx Cloud GitHub App](https://github.com/marketplace/official-nx-cloud-app) and give it permission to access your repo.
+
+### Connecting Your Workspace
+
+Once you have installed the Nx Cloud GitHub App, you must link your workspace to the installation. To do this, sign in to Nx Cloud and navigate to the VCS Integrations setup page. Once on the VCS Integrations setup page, choose GitHub as your version control system.
+
+![Access VCS Setup](/nx-cloud/set-up/access-vcs-setup.webp)
+
+### Authenticate Via the GitHub App
+
+To use the Nx Cloud GitHub App for authentication, select the radio button and then click "Connect".
+This will verify that Nx Cloud can connect to your repo. Upon a successful test, your configuration is saved.
+
+![Use GitHub App for Authentication](/nx-cloud/set-up/use-github-app-auth.webp)
+
+Now any new PRs in your repo should have a comment automatically added that links directly to Nx Cloud. For other ways of setting up PR integration, read the [Enable GitHub PR Integration recipe](/nx-cloud/recipes/source-control-integration/github).
+
 ## Parallelize Tasks across Multiple Machines
 
 The affected command and remote caching help speed up the average CI time, but there will be some PRs that affect everything in the repository. The only way to speed up that worst case scenario is through efficient parallelization. The best way to parallelize CI with Nx is to use [distributed task execution (DTE)](/nx-cloud/features/distribute-task-execution).
