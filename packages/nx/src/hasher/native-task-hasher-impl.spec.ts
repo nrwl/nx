@@ -152,7 +152,7 @@ describe('native task hasher', () => {
             "parent:ProjectConfiguration": "15828052557461792163",
             "parent:TsConfig": "2264969541778889434",
             "parent:{projectRoot}/**/*": "3244421341483603138",
-            "runtime:echo runtime123": "4574620953725957459",
+            "runtime:echo runtime123": "29846575039086708",
             "tagged:ProjectConfiguration": "1604492097835699503",
             "tagged:TsConfig": "2264969541778889434",
             "tagged:{projectRoot}/**/*": "112200405683630828",
@@ -163,7 +163,7 @@ describe('native task hasher', () => {
             "{workspaceRoot}/.nxignore": "3244421341483603138",
             "{workspaceRoot}/nx.json": "5219582320960288192",
           },
-          "value": "11987357436653983342",
+          "value": "2902224107680327789",
         },
       ]
     `);

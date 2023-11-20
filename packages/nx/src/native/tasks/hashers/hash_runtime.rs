@@ -44,7 +44,9 @@ pub fn hash_runtime(
         .map_err(|e| anyhow::anyhow!("Failed to execute: '{}'\n{}", command, e))?;
     trace!("{} output: {:?}", command, output);
 
-    let hash_result = hash(&[output.stdout.as_slice(), output.stderr.as_slice()].concat());
+    let std_out = std::str::from_utf8(&output.stdout)?.trim();
+    let std_err = std::str::from_utf8(&output.stderr)?.trim();
+    let hash_result = hash(&[std_out.as_bytes(), std_err.as_bytes()].concat());
 
     cache.insert(cache_key, hash_result.clone());
 
@@ -66,6 +68,6 @@ mod tests {
         let cache = Arc::new(DashMap::new());
 
         let result = hash_runtime(workspace_root, command, &env, Arc::clone(&cache)).unwrap();
-        assert_eq!(result, "1849324306034826762");
+        assert_eq!(result, "10571312846059850300");
     }
 }
