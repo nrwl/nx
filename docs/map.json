@@ -289,12 +289,6 @@
               "file": "shared/concepts/types-of-configuration"
             },
             {
-              "name": "Improve Worst Case CI Times",
-              "tags": ["distribute-task-execution"],
-              "id": "dte",
-              "file": "shared/concepts/improve-worst-case-ci-times"
-            },
-            {
               "name": "What is a Task Pipeline",
               "tags": ["run-tasks", "use-task-executors"],
               "id": "task-pipeline-configuration",
@@ -1645,11 +1639,6 @@
               "file": "nx-cloud/intro/ci-with-nx"
             },
             {
-              "name": "Nx Cloud Workflows",
-              "id": "nx-cloud-workflows",
-              "file": "nx-cloud/intro/nx-cloud-workflows"
-            },
-            {
               "name": "Tutorials",
               "id": "tutorials",
               "description": "Tutorials setting up CI with Nx",
@@ -1694,6 +1683,34 @@
               "id": "on-premise",
               "tags": ["on-premise"],
               "file": "nx-cloud/private/get-started"
+            },
+            {
+              "name": "Nx Cloud Workflows",
+              "id": "nx-cloud-workflows",
+              "file": "nx-cloud/intro/nx-cloud-workflows"
+            }
+          ]
+        },
+        {
+          "name": "Concepts",
+          "id": "concepts",
+          "description": "Learn how to manage Nx Cloud subscriptions and other options.",
+          "itemList": [
+            {
+              "name": "Improve Worst Case CI Times",
+              "tags": ["distribute-task-execution"],
+              "id": "dte",
+              "file": "shared/concepts/improve-worst-case-ci-times"
+            },
+            {
+              "name": "Security Scenarios",
+              "id": "scenarios",
+              "file": "nx-cloud/concepts/scenarios"
+            },
+            {
+              "name": "End to End Encryption",
+              "id": "encryption",
+              "file": "nx-cloud/concepts/encryption"
             }
           ]
         },
@@ -1742,6 +1759,23 @@
                   "name": "Setting up Bitbucket",
                   "id": "monorepo-ci-bitbucket-pipelines",
                   "file": "shared/monorepo-ci-bitbucket-pipelines"
+                }
+              ]
+            },
+            {
+              "name": "Security",
+              "id": "security",
+              "description": "Manage access to Nx Cloud",
+              "itemList": [
+                {
+                  "name": "Authenticate with Google Identity",
+                  "id": "google-auth",
+                  "file": "nx-cloud/recipes/google-auth"
+                },
+                {
+                  "name": "Access Tokens",
+                  "id": "access-tokens",
+                  "file": "nx-cloud/recipes/access-tokens"
                 }
               ]
             },
@@ -1831,38 +1865,6 @@
                   "file": "shared/recipes/ci-deployment"
                 }
               ]
-            }
-          ]
-        },
-        {
-          "name": "Account Management",
-          "id": "account",
-          "description": "Learn how to manage Nx Cloud subscriptions and other options.",
-          "itemList": [
-            {
-              "name": "Users",
-              "id": "users",
-              "file": "nx-cloud/account/users"
-            },
-            {
-              "name": "Authenticate with Google Identity",
-              "id": "google-auth",
-              "file": "nx-cloud/account/google-auth"
-            },
-            {
-              "name": "Access Tokens",
-              "id": "access-tokens",
-              "file": "nx-cloud/account/access-tokens"
-            },
-            {
-              "name": "Security Scenarios",
-              "id": "scenarios",
-              "file": "nx-cloud/account/scenarios"
-            },
-            {
-              "name": "End to End Encryption",
-              "id": "encryption",
-              "file": "nx-cloud/account/encryption"
             }
           ]
         },

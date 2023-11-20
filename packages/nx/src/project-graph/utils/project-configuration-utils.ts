@@ -8,7 +8,6 @@ import {
 import { NX_PREFIX } from '../../utils/logger';
 import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { output } from '../../utils/output';
 
 import minimatch = require('minimatch');
 
@@ -147,31 +146,12 @@ export function mergeProjectConfigurationIntoRootMap(
   );
 }
 
-type CreateNodesResultWithMetadata = {
-  result: CreateNodesResult | Promise<CreateNodesResult>;
-  pluginName: string;
-  file: string;
-};
-
-type ConfigurationResult = {
+export type ConfigurationResult = {
   projects: Record<string, ProjectConfiguration>;
   externalNodes: Record<string, ProjectGraphExternalNode>;
   rootMap: Record<string, string>;
   sourceMaps: ConfigurationSourceMaps;
 };
-
-/**
- * ** DO NOT USE ** - Please use without the `skipAsync` parameter.
- * @deprecated
- * @todo(@agentender): Remove in Nx 18 alongside the removal of its usage.
- */
-export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
-  nxJson: NxJsonConfiguration,
-  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  plugins: LoadedNxPlugin[],
-  root: string,
-  skipAsync: true
-): ConfigurationResult;
 
 /**
  * Transforms a list of project paths into a map of project configurations.
@@ -185,108 +165,144 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
   nxJson: NxJsonConfiguration,
   projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
   plugins: LoadedNxPlugin[],
-  root: string,
-  skipAsync?: false
-): Promise<ConfigurationResult>;
-export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
-  nxJson: NxJsonConfiguration,
-  projectFiles: string[], // making this parameter allows devkit to pick up newly created projects
-  plugins: LoadedNxPlugin[],
-  root: string = workspaceRoot,
-  skipAsync: boolean = false
-): ConfigurationResult | Promise<ConfigurationResult> {
-  const results: Array<CreateNodesResultWithMetadata> = [];
+  root: string = workspaceRoot
+): Promise<ConfigurationResult> {
+  type CreateNodesResultWithContext = CreateNodesResult & {
+    file: string;
+    pluginName: string;
+  };
+
+  const results: Array<Promise<Array<CreateNodesResultWithContext>>> = [];
 
   // We iterate over plugins first - this ensures that plugins specified first take precedence.
   for (const { plugin, options } of plugins) {
     const [pattern, createNodes] = plugin.createNodes ?? [];
+    const pluginResults: Array<
+      CreateNodesResultWithContext | Promise<CreateNodesResultWithContext>
+    > = [];
+
+    performance.mark(`${plugin.name}:createNodes - start`);
     if (!pattern) {
       continue;
     }
     for (const file of projectFiles) {
+      performance.mark(`${plugin.name}:createNodes:${file} - start`);
       if (minimatch(file, pattern, { dot: true })) {
-        results.push({
-          result: createNodes(file, options, {
+        try {
+          let r = createNodes(file, options, {
             nxJsonConfiguration: nxJson,
             workspaceRoot: root,
-          }),
-          pluginName: plugin.name,
-          file,
-        });
+          });
+
+          if (r instanceof Promise) {
+            pluginResults.push(
+              r
+                .catch((e) => {
+                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                  throw new CreateNodesError(
+                    `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
+                    e
+                  );
+                })
+                .then((r) => {
+                  performance.mark(`${plugin.name}:createNodes:${file} - end`);
+                  performance.measure(
+                    `${plugin.name}:createNodes:${file}`,
+                    `${plugin.name}:createNodes:${file} - start`,
+                    `${plugin.name}:createNodes:${file} - end`
+                  );
+                  return { ...r, file, pluginName: plugin.name };
+                })
+            );
+          } else {
+            performance.mark(`${plugin.name}:createNodes:${file} - end`);
+            performance.measure(
+              `${plugin.name}:createNodes:${file}`,
+              `${plugin.name}:createNodes:${file} - start`,
+              `${plugin.name}:createNodes:${file} - end`
+            );
+            pluginResults.push({
+              ...r,
+              file,
+              pluginName: plugin.name,
+            });
+          }
+        } catch (e) {
+          throw new CreateNodesError(
+            `Unable to create nodes for ${file} using plugin ${plugin.name}.`,
+            e
+          );
+        }
       }
     }
+    // If there are no promises (counter undefined) or all promises have resolved (counter === 0)
+    results.push(
+      Promise.all(pluginResults).then((results) => {
+        performance.mark(`${plugin.name}:createNodes - end`);
+        performance.measure(
+          `${plugin.name}:createNodes`,
+          `${plugin.name}:createNodes - start`,
+          `${plugin.name}:createNodes - end`
+        );
+        return results;
+      })
+    );
   }
 
-  return skipAsync
-    ? combineSyncConfigurationResults(results)
-    : combineAsyncConfigurationResults(results);
-}
+  return Promise.all(results).then((results) => {
+    performance.mark('createNodes:merge - start');
+    const projectRootMap: Map<string, ProjectConfiguration> = new Map();
+    const externalNodes: Record<string, ProjectGraphExternalNode> = {};
+    const configurationSourceMaps: Record<
+      string,
+      Record<string, SourceInformation>
+    > = {};
 
-function combineSyncConfigurationResults(
-  resultsWithMetadata: CreateNodesResultWithMetadata[]
-): ConfigurationResult {
-  const projectRootMap: Map<string, ProjectConfiguration> = new Map();
-  const externalNodes: Record<string, ProjectGraphExternalNode> = {};
-  const configurationSourceMaps: Record<
-    string,
-    Record<string, SourceInformation>
-  > = {};
-
-  let warned = false;
-  for (const { result, pluginName, file } of resultsWithMetadata) {
-    if (typeof result === 'object' && 'then' in result) {
-      if (!warned) {
-        output.warn({
-          title: 'One or more plugins in this workspace are async.',
-          bodyLines: [
-            'Configuration from these plugins will not be visible to readWorkspaceConfig or readWorkspaceConfiguration. If you are using these methods, consider reading project info from the graph with createProjectGraphAsync instead.',
-            'If you are not using one of these methods, please open an issue at http://github.com/nrwl/nx',
-          ],
-        });
-        warned = true;
-      }
-      continue;
-    }
-    const { projects: projectNodes, externalNodes: pluginExternalNodes } =
-      result;
-    for (const node in projectNodes) {
-      mergeProjectConfigurationIntoRootMap(
-        projectRootMap,
-        {
+    for (const result of results.flat()) {
+      const {
+        projects: projectNodes,
+        externalNodes: pluginExternalNodes,
+        file,
+        pluginName,
+      } = result;
+      for (const node in projectNodes) {
+        const project = {
           root: node,
           ...projectNodes[node],
-        },
-        configurationSourceMaps,
-        [pluginName, file]
-      );
+        };
+        try {
+          mergeProjectConfigurationIntoRootMap(
+            projectRootMap,
+            project,
+            configurationSourceMaps,
+            [file, pluginName]
+          );
+        } catch (e) {
+          throw new CreateNodesError(
+            `Unable to merge project information for "${project.root}" from ${result.file} using plugin ${result.pluginName}.`,
+            e
+          );
+        }
+      }
+      Object.assign(externalNodes, pluginExternalNodes);
     }
-    Object.assign(externalNodes, pluginExternalNodes);
-  }
 
-  const rootMap = createRootMap(projectRootMap);
+    const rootMap = createRootMap(projectRootMap);
 
-  return {
-    projects: readProjectConfigurationsFromRootMap(projectRootMap),
-    externalNodes,
-    rootMap,
-    sourceMaps: configurationSourceMaps,
-  };
-}
+    performance.mark('createNodes:merge - end');
+    performance.measure(
+      'createNodes:merge',
+      'createNodes:merge - start',
+      'createNodes:merge - end'
+    );
 
-function combineAsyncConfigurationResults(
-  results: Array<CreateNodesResultWithMetadata>
-): Promise<ConfigurationResult> {
-  return Promise.all(
-    results.map((resultWithMetadata) =>
-      typeof resultWithMetadata.result === 'object' &&
-      'then' in resultWithMetadata.result
-        ? resultWithMetadata.result.then((resolvedResult) => ({
-            ...resultWithMetadata,
-            result: resolvedResult,
-          }))
-        : resultWithMetadata
-    )
-  ).then((r) => combineSyncConfigurationResults(r));
+    return {
+      projects: readProjectConfigurationsFromRootMap(projectRootMap),
+      externalNodes,
+      rootMap,
+      sourceMaps: configurationSourceMaps,
+    };
+  });
 }
 
 export function readProjectConfigurationsFromRootMap(
@@ -325,6 +341,23 @@ export function readProjectConfigurationsFromRootMap(
     );
   }
   return projects;
+}
+
+class CreateNodesError extends Error {
+  constructor(msg, cause: Error | unknown) {
+    const message = `${msg} ${
+      !cause
+        ? ''
+        : cause instanceof Error
+        ? `\n\n\t Inner Error: ${cause.stack}`
+        : cause
+    }`;
+    // These errors are thrown during a JS callback which is invoked via rust.
+    // The errors messaging gets lost in the rust -> js -> rust transition, but
+    // logging the error here will ensure that it is visible in the console.
+    console.error(message);
+    super(message, { cause });
+  }
 }
 
 /**
@@ -417,8 +450,29 @@ export function mergeTargetConfigurations(
  * If the executors are both specified and don't match, the options aren't considered
  * "compatible" and shouldn't be merged.
  */
-function isCompatibleTarget(a: TargetConfiguration, b: TargetConfiguration) {
-  return !a.executor || !b.executor || a.executor === b.executor;
+export function isCompatibleTarget(
+  a: TargetConfiguration,
+  b: TargetConfiguration
+) {
+  if (a.command || b.command) {
+    const aCommand =
+      a.command ??
+      (a.executor === 'nx:run-commands' ? a.options?.command : null);
+    const bCommand =
+      b.command ??
+      (b.executor === 'nx:run-commands' ? b.options?.command : null);
+
+    const sameCommand = aCommand === bCommand;
+    const aHasNoExecutor = !a.command && !a.executor;
+    const bHasNoExecutor = !b.command && !b.executor;
+
+    return sameCommand || aHasNoExecutor || bHasNoExecutor;
+  }
+
+  const oneHasNoExecutor = !a.executor || !b.executor;
+  const bothHaveSameExecutor = a.executor === b.executor;
+
+  return oneHasNoExecutor || bothHaveSameExecutor;
 }
 
 function mergeConfigurations<T extends Object>(

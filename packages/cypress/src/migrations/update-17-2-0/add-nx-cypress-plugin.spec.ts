@@ -58,6 +58,7 @@ describe('add-nx-cypress-plugin migration', () => {
       })
     );
     updateProjectConfiguration(tree, 'e2e', {
+      name: 'e2e',
       root: 'e2e',
       targets: {
         e2e: {
