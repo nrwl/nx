@@ -60,6 +60,10 @@ export default async function runExecutor(
     npmPublishCommandSegments.push(`--tag=${options.tag}`);
   }
 
+  if (options.otp) {
+    npmPublishCommandSegments.push(`--otp=${options.otp}`);
+  }
+
   if (options.dryRun) {
     npmPublishCommandSegments.push(`--dry-run`);
   }

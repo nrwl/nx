@@ -16,13 +16,24 @@
         "tags": []
       },
       {
-        "id": "nx-cloud-workflows",
-        "name": "Nx Cloud Workflows",
-        "description": "",
-        "file": "nx-cloud/intro/nx-cloud-workflows",
-        "itemList": [],
+        "id": "tutorials",
+        "name": "Tutorials",
+        "description": "Tutorials setting up CI with Nx",
+        "file": "",
+        "itemList": [
+          {
+            "id": "circle",
+            "name": "Circle CI with Nx",
+            "description": "",
+            "file": "nx-cloud/tutorial/circle",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/intro/tutorials/circle",
+            "tags": []
+          }
+        ],
         "isExternal": false,
-        "path": "/nx-cloud/intro/nx-cloud-workflows",
+        "path": "/nx-cloud/intro/tutorials",
         "tags": []
       }
     ],
@@ -40,14 +51,35 @@
     "path": "/nx-cloud/intro/ci-with-nx",
     "tags": []
   },
-  "/nx-cloud/intro/nx-cloud-workflows": {
-    "id": "nx-cloud-workflows",
-    "name": "Nx Cloud Workflows",
+  "/nx-cloud/intro/tutorials": {
+    "id": "tutorials",
+    "name": "Tutorials",
+    "description": "Tutorials setting up CI with Nx",
+    "file": "",
+    "itemList": [
+      {
+        "id": "circle",
+        "name": "Circle CI with Nx",
+        "description": "",
+        "file": "nx-cloud/tutorial/circle",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/intro/tutorials/circle",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/intro/tutorials",
+    "tags": []
+  },
+  "/nx-cloud/intro/tutorials/circle": {
+    "id": "circle",
+    "name": "Circle CI with Nx",
     "description": "",
-    "file": "nx-cloud/intro/nx-cloud-workflows",
+    "file": "nx-cloud/tutorial/circle",
     "itemList": [],
     "isExternal": false,
-    "path": "/nx-cloud/intro/nx-cloud-workflows",
+    "path": "/nx-cloud/intro/tutorials/circle",
     "tags": []
   },
   "/nx-cloud/features": {
@@ -95,6 +127,16 @@
         "isExternal": false,
         "path": "/nx-cloud/features/on-premise",
         "tags": ["on-premise"]
+      },
+      {
+        "id": "nx-cloud-workflows",
+        "name": "Nx Cloud Workflows",
+        "description": "",
+        "file": "nx-cloud/intro/nx-cloud-workflows",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/features/nx-cloud-workflows",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -140,6 +182,87 @@
     "isExternal": false,
     "path": "/nx-cloud/features/on-premise",
     "tags": ["on-premise"]
+  },
+  "/nx-cloud/features/nx-cloud-workflows": {
+    "id": "nx-cloud-workflows",
+    "name": "Nx Cloud Workflows",
+    "description": "",
+    "file": "nx-cloud/intro/nx-cloud-workflows",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/features/nx-cloud-workflows",
+    "tags": []
+  },
+  "/nx-cloud/concepts": {
+    "id": "concepts",
+    "name": "Concepts",
+    "description": "Learn how to manage Nx Cloud subscriptions and other options.",
+    "file": "",
+    "itemList": [
+      {
+        "id": "dte",
+        "name": "Improve Worst Case CI Times",
+        "description": "",
+        "file": "shared/concepts/improve-worst-case-ci-times",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/concepts/dte",
+        "tags": ["distribute-task-execution"]
+      },
+      {
+        "id": "scenarios",
+        "name": "Security Scenarios",
+        "description": "",
+        "file": "nx-cloud/concepts/scenarios",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/concepts/scenarios",
+        "tags": []
+      },
+      {
+        "id": "encryption",
+        "name": "End to End Encryption",
+        "description": "",
+        "file": "nx-cloud/concepts/encryption",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/concepts/encryption",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/concepts",
+    "tags": []
+  },
+  "/nx-cloud/concepts/dte": {
+    "id": "dte",
+    "name": "Improve Worst Case CI Times",
+    "description": "",
+    "file": "shared/concepts/improve-worst-case-ci-times",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/concepts/dte",
+    "tags": ["distribute-task-execution"]
+  },
+  "/nx-cloud/concepts/scenarios": {
+    "id": "scenarios",
+    "name": "Security Scenarios",
+    "description": "",
+    "file": "nx-cloud/concepts/scenarios",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/concepts/scenarios",
+    "tags": []
+  },
+  "/nx-cloud/concepts/encryption": {
+    "id": "encryption",
+    "name": "End to End Encryption",
+    "description": "",
+    "file": "nx-cloud/concepts/encryption",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/concepts/encryption",
+    "tags": []
   },
   "/nx-cloud/recipes": {
     "id": "recipes",
@@ -226,6 +349,37 @@
         ],
         "isExternal": false,
         "path": "/nx-cloud/recipes/set-up",
+        "tags": []
+      },
+      {
+        "id": "security",
+        "name": "Security",
+        "description": "Manage access to Nx Cloud",
+        "file": "",
+        "itemList": [
+          {
+            "id": "google-auth",
+            "name": "Authenticate with Google Identity",
+            "description": "",
+            "file": "nx-cloud/recipes/google-auth",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/security/google-auth",
+            "tags": []
+          },
+          {
+            "id": "access-tokens",
+            "name": "Access Tokens",
+            "description": "",
+            "file": "nx-cloud/recipes/access-tokens",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/nx-cloud/recipes/security/access-tokens",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/security",
         "tags": []
       },
       {
@@ -547,6 +701,57 @@
     "path": "/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines",
     "tags": []
   },
+  "/nx-cloud/recipes/security": {
+    "id": "security",
+    "name": "Security",
+    "description": "Manage access to Nx Cloud",
+    "file": "",
+    "itemList": [
+      {
+        "id": "google-auth",
+        "name": "Authenticate with Google Identity",
+        "description": "",
+        "file": "nx-cloud/recipes/google-auth",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/security/google-auth",
+        "tags": []
+      },
+      {
+        "id": "access-tokens",
+        "name": "Access Tokens",
+        "description": "",
+        "file": "nx-cloud/recipes/access-tokens",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/recipes/security/access-tokens",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/security",
+    "tags": []
+  },
+  "/nx-cloud/recipes/security/google-auth": {
+    "id": "google-auth",
+    "name": "Authenticate with Google Identity",
+    "description": "",
+    "file": "nx-cloud/recipes/google-auth",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/security/google-auth",
+    "tags": []
+  },
+  "/nx-cloud/recipes/security/access-tokens": {
+    "id": "access-tokens",
+    "name": "Access Tokens",
+    "description": "",
+    "file": "nx-cloud/recipes/access-tokens",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/recipes/security/access-tokens",
+    "tags": []
+  },
   "/nx-cloud/recipes/source-control-integration": {
     "id": "source-control-integration",
     "name": "Source Control Integration",
@@ -839,117 +1044,6 @@
     "isExternal": false,
     "path": "/nx-cloud/recipes/other/ci-deployment",
     "tags": ["docker", "deploy"]
-  },
-  "/nx-cloud/account": {
-    "id": "account",
-    "name": "Account Management",
-    "description": "Learn how to manage Nx Cloud subscriptions and other options.",
-    "file": "",
-    "itemList": [
-      {
-        "id": "users",
-        "name": "Users",
-        "description": "",
-        "file": "nx-cloud/account/users",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/account/users",
-        "tags": []
-      },
-      {
-        "id": "google-auth",
-        "name": "Authenticate with Google Identity",
-        "description": "",
-        "file": "nx-cloud/account/google-auth",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/account/google-auth",
-        "tags": []
-      },
-      {
-        "id": "access-tokens",
-        "name": "Access Tokens",
-        "description": "",
-        "file": "nx-cloud/account/access-tokens",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/account/access-tokens",
-        "tags": []
-      },
-      {
-        "id": "scenarios",
-        "name": "Security Scenarios",
-        "description": "",
-        "file": "nx-cloud/account/scenarios",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/account/scenarios",
-        "tags": []
-      },
-      {
-        "id": "encryption",
-        "name": "End to End Encryption",
-        "description": "",
-        "file": "nx-cloud/account/encryption",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/account/encryption",
-        "tags": []
-      }
-    ],
-    "isExternal": false,
-    "path": "/nx-cloud/account",
-    "tags": []
-  },
-  "/nx-cloud/account/users": {
-    "id": "users",
-    "name": "Users",
-    "description": "",
-    "file": "nx-cloud/account/users",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/account/users",
-    "tags": []
-  },
-  "/nx-cloud/account/google-auth": {
-    "id": "google-auth",
-    "name": "Authenticate with Google Identity",
-    "description": "",
-    "file": "nx-cloud/account/google-auth",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/account/google-auth",
-    "tags": []
-  },
-  "/nx-cloud/account/access-tokens": {
-    "id": "access-tokens",
-    "name": "Access Tokens",
-    "description": "",
-    "file": "nx-cloud/account/access-tokens",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/account/access-tokens",
-    "tags": []
-  },
-  "/nx-cloud/account/scenarios": {
-    "id": "scenarios",
-    "name": "Security Scenarios",
-    "description": "",
-    "file": "nx-cloud/account/scenarios",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/account/scenarios",
-    "tags": []
-  },
-  "/nx-cloud/account/encryption": {
-    "id": "encryption",
-    "name": "End to End Encryption",
-    "description": "",
-    "file": "nx-cloud/account/encryption",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/account/encryption",
-    "tags": []
   },
   "/nx-cloud/reference": {
     "id": "reference",

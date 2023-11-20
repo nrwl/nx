@@ -5,6 +5,7 @@ import {
   getGlobPatternsFromPackageManagerWorkspaces,
 } from '../../../plugins/package-json-workspaces';
 import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
+import { getDefaultPluginsSync } from '../../utils/nx-plugin.deprecated';
 import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {
   ProjectConfiguration,
@@ -14,7 +15,7 @@ import {
   mergeProjectConfigurationIntoRootMap,
   readProjectConfigurationsFromRootMap,
 } from '../../project-graph/utils/project-configuration-utils';
-import { retrieveProjectConfigurationPathsWithoutPluginInference } from '../../project-graph/utils/retrieve-workspace-files';
+import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/retrieve-workspace-files';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
 import { joinPathFragments, normalizePath } from '../../utils/path';
@@ -191,9 +192,9 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
       readJson(tree, p)
     ),
   ];
-
-  const globbedFiles = retrieveProjectConfigurationPathsWithoutPluginInference(
-    tree.root
+  const globbedFiles = retrieveProjectConfigurationPaths(
+    tree.root,
+    getDefaultPluginsSync(tree.root)
   );
   const createdFiles = findCreatedProjectFiles(tree, patterns);
   const deletedFiles = findDeletedProjectFiles(tree, patterns);

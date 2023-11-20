@@ -109,6 +109,9 @@ async function runPublishOnProjects(
   if (args.tag) {
     overrides.tag = args.tag;
   }
+  if (args.otp) {
+    overrides.otp = args.otp;
+  }
   if (args.dryRun) {
     overrides.dryRun = args.dryRun;
   }

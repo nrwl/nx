@@ -15,13 +15,13 @@ const {
   updateProjectConfiguration,
 } = requireNx();
 
-export function replaceProjectConfigurationsWithPlugin<T = unknown>(
+export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,
   rootMappings: Map<string, string>,
   pluginPath: string,
   createNodes: CreateNodes<T>,
   pluginOptions: T
-): void {
+): Promise<void> {
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string' ? p === pluginPath : p.plugin === pluginPath
@@ -45,7 +45,7 @@ export function replaceProjectConfigurationsWithPlugin<T = unknown>(
     try {
       const projectName = findProjectForPath(configFile, rootMappings);
       const projectConfig = readProjectConfiguration(tree, projectName);
-      const nodes = createNodesFunction(configFile, pluginOptions, {
+      const nodes = await createNodesFunction(configFile, pluginOptions, {
         workspaceRoot: tree.root,
         nxJsonConfiguration: readNxJson(tree),
       });

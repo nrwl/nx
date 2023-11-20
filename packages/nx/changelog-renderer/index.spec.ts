@@ -222,6 +222,8 @@ describe('defaultChangelogRenderer()', () => {
 
         ### 🩹 Fixes
 
+        - all packages fixed
+
         - **pkg-a:** squashing bugs
 
 
@@ -250,6 +252,8 @@ describe('defaultChangelogRenderer()', () => {
 
         ### 🩹 Fixes
 
+        - all packages fixed
+
         - **pkg-a:** squashing bugs"
       `);
 
@@ -267,6 +271,11 @@ describe('defaultChangelogRenderer()', () => {
         - **pkg-b:** brand new thing
 
         - **pkg-b:** and another new capability
+
+
+        ### 🩹 Fixes
+
+        - all packages fixed
 
 
         ### ❤️  Thank You
