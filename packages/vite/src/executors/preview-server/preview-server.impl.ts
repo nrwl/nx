@@ -133,8 +133,13 @@ function closeServer(server?: PreviewServer): Promise<void> {
       resolve();
     } else {
       const { httpServer } = server;
-      // closeAllConnections was added in Node v18.2.0
-      httpServer.closeAllConnections && httpServer.closeAllConnections();
+      if (httpServer['closeAllConnections']) {
+        // https://github.com/vitejs/vite/pull/14834
+        // closeAllConnections was added in Node v18.2.0
+        // typically is "as http.Server" but no reason
+        // to import http just for this
+        (httpServer as any).closeAllConnections();
+      }
       httpServer.close(() => resolve());
     }
   });
