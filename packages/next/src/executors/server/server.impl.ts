@@ -29,7 +29,7 @@ export default async function* serveExecutor(
   );
   const projectRoot = context.workspace.projects[context.projectName].root;
 
-  const { port, keepAliveTimeout, hostname } = options;
+  const { keepAliveTimeout, hostname } = options;
 
   // This is required for the default custom server to work. See the @nx/next:app generator.
   process.env.NX_NEXT_DIR = projectRoot;
@@ -42,7 +42,14 @@ export default async function* serveExecutor(
     : 'production';
 
   // Setting port that the custom server should use.
-  process.env.PORT = `${options.port}`;
+  let { port } = options;
+  if(!port && process.env.PORT) {
+    port = parseInt(process.env.PORT, 10);
+  }
+
+  if(port) {
+    process.env.PORT = `${port}`;
+  }
 
   const args = createCliOptions({ port, hostname });
 
