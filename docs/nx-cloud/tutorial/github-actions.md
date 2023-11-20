@@ -406,7 +406,7 @@ If you open your Nx Cloud dashboard, you'll get a better view of the individual 
 
 ![Nx Cloud run details](/nx-cloud/tutorial/nx-cloud-run-details.png)
 
-With this pipeline configuration in place, no matter how large the repository scales, Nx Cloud will adjust and distribute tasks across agents in the optimal way. If CI pipelines start to slow down, just add some agents to the `ordinal: [1, 2, 3]` array. One of the main advantages is that such a pipeline definition is declarative. We just give instructions what commands to run, but not how to distribute them. As such even if our monorepo structure changes and evolves over time, the distribution will be taken care of by Nx Cloud.
+With this pipeline configuration in place, no matter how large the repository scales, Nx Cloud will adjust and distribute tasks across agents in the optimal way. If CI pipelines start to slow down, just add some agents to the `number-of-agents: 3` properties. One of the main advantages is that such a pipeline definition is declarative. We just give instructions what commands to run, but not how to distribute them. As such even if our monorepo structure changes and evolves over time, the distribution will be taken care of by Nx Cloud.
 
 ## Next Steps
 
