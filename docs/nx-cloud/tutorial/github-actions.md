@@ -138,7 +138,7 @@ jobs:
 
 Once `node_modules` are in place, you can run normal Nx commands. In this case, we run `pnpm nx build cart`. Push the changes to your repository by creating a new PR and verifying the new CI pipeline correctly builds our application.
 
-![Building a single app with nx](/nx-cloud/tutorial/gh-single-build-success.jpg)
+![Building a single app with nx](/nx-cloud/tutorial/gh-single-build-success.png)
 
 You might have noticed that there's also a build running for `shared-header`, `shared-product-types` and `shared-product-ui`. These are projects in our workspace that `cart` depends on. Thanks to the [Nx task pipeline](/concepts/task-pipeline-configuration), Nx knows that it needs to build these projects first before building `cart`. This already helps us simplify our pipeline as we
 
