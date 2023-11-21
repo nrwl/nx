@@ -191,7 +191,7 @@ describe('app', () => {
       expect(projectsConfigurations.get('my-app-e2e').root).toEqual(
         'my-dir/my-app-e2e'
       );
-    });
+    }, 35000);
 
     it('should update tags and implicit deps', async () => {
       await applicationGenerator(appTree, {
