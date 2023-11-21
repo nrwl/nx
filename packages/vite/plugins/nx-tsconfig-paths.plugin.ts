@@ -1,11 +1,11 @@
 import { stripIndents, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'node:fs';
-import { relative, join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import {
-  loadConfig,
-  createMatchPath,
-  MatchPath,
   ConfigLoaderSuccessResult,
+  createMatchPath,
+  loadConfig,
+  MatchPath,
 } from 'tsconfig-paths';
 
 export interface nxViteTsPathsOptions {
