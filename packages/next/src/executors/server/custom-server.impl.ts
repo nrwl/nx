@@ -14,8 +14,15 @@ export default async function* serveExecutor(
     ? 'development'
     : 'production';
 
+  let { port } = options;
+  if(!port && process.env.PORT) {
+    port = parseInt(process.env.PORT, 10);
+  }
+
   // Setting port that the custom server should use.
-  (process.env as any).PORT = options.port;
+  if(port) {
+    (process.env as any).PORT = `${options.port}`;
+  }
 
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
@@ -30,7 +37,12 @@ async function* runCustomServer(
   process.env.NX_NEXT_DIR = root;
   process.env.NX_NEXT_PUBLIC_DIR = join(root, 'public');
 
-  const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;
+  let { port } = options;
+  if(!port && process.env.PORT) {
+    port = parseInt(process.env.PORT, 10);
+  }
+
+  const baseUrl = `http://${options.hostname || 'localhost'}:${port}`;
 
   const customServerBuild = await runExecutor(
     parseTargetString(options.customServerTarget, context),
