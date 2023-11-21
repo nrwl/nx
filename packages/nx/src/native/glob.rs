@@ -65,7 +65,14 @@ pub struct NxGlobSet {
 }
 impl NxGlobSet {
     pub fn is_match<P: AsRef<Path>>(&self, path: P) -> bool {
-        self.included_globs.is_match(path.as_ref()) && !self.excluded_globs.is_match(path.as_ref())
+        if self.included_globs.is_empty() {
+            !self.excluded_globs.is_match(path.as_ref())
+        } else if self.excluded_globs.is_empty() {
+            self.included_globs.is_match(path.as_ref())
+        } else {
+            self.included_globs.is_match(path.as_ref())
+                && !self.excluded_globs.is_match(path.as_ref())
+        }
     }
 }
 
@@ -106,7 +113,15 @@ mod test {
     #[test]
     fn should_work_with_simple_globs() {
         let glob_set = build_glob_set(&["**/*"]).unwrap();
-        assert!(glob_set.is_match("packages/nx/package.json"))
+        assert!(glob_set.is_match("packages/nx/package.json"));
+
+        let glob_set = build_glob_set(&["!test/*.spec.ts"]).unwrap();
+        assert!(!glob_set.is_match("test/file.spec.ts"));
+        assert!(glob_set.is_match("test/file.ts"));
+
+        let glob_set = build_glob_set(&["test/*.spec.ts"]).unwrap();
+        assert!(glob_set.is_match("test/file.spec.ts"));
+        assert!(!glob_set.is_match("test/file.ts"));
     }
 
     #[test]

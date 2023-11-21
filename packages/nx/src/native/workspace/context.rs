@@ -1,19 +1,25 @@
-use crate::native::logger::enable_logger;
+use napi::bindgen_prelude::External;
 use std::collections::HashMap;
 
 use crate::native::hasher::hash;
-use crate::native::types::FileData;
-use crate::native::utils::path::Normalize;
+use crate::native::utils::Normalize;
 use napi::bindgen_prelude::*;
-use parking_lot::{Condvar, Mutex};
 use rayon::prelude::*;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::thread;
+
+use crate::native::logger::enable_logger;
+use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
+use crate::native::types::FileData;
+use parking_lot::{Condvar, Mutex};
 use tracing::{trace, warn};
 
 use crate::native::walker::nx_walker;
+use crate::native::workspace::types::{
+    FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
+};
 use crate::native::workspace::{config_files, workspace_files};
 
 #[napi]
@@ -62,7 +68,7 @@ impl FilesWorker {
         FilesWorker(Some(files_lock))
     }
 
-    pub fn get_files(&self) -> Vec<(PathBuf, String)> {
+    pub fn get_files(&self) -> Vec<FileData> {
         if let Some(files_sync) = &self.0 {
             let (files_lock, cvar) = files_sync.deref();
             trace!("locking files");
@@ -73,11 +79,18 @@ impl FilesWorker {
                 cvar.wait(&mut files);
             }
 
-            let cloned_files = files.clone();
+            let file_data = files
+                .iter()
+                .map(|(path, hash)| FileData {
+                    file: path.to_normalized_string(),
+                    hash: hash.clone(),
+                })
+                .collect();
+
             drop(files);
 
             trace!("files are available");
-            cloned_files
+            file_data
         } else {
             vec![]
         }
@@ -106,8 +119,8 @@ impl FilesWorker {
             .par_iter()
             .filter_map(|path| {
                 let full_path = workspace_root_path.join(path);
-                let Ok(content) = std::fs::read(full_path) else {
-                    trace!("could not read file: ?full_path");
+                let Ok(content) = std::fs::read(&full_path) else {
+                    trace!("could not read file: {full_path:?}");
                     return None;
                 };
                 Some((path.to_string(), hash(&content)))
@@ -154,8 +167,7 @@ impl WorkspaceContext {
     where
         ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
     {
-        let files = self.files_worker.get_files();
-        workspace_files::get_files(env, globs, parse_configurations, &files)
+        workspace_files::get_files(env, globs, parse_configurations, self.all_file_data())
             .map_err(anyhow::Error::from)
     }
 
@@ -165,12 +177,9 @@ impl WorkspaceContext {
         globs: Vec<String>,
         exclude: Option<Vec<String>>,
     ) -> napi::Result<Vec<String>> {
-        let files = self.files_worker.get_files();
-
-        let globbed_files = config_files::glob_files(&files, globs, exclude)?;
-        Ok(globbed_files
-            .map(|file| file.0.to_normalized_string())
-            .collect())
+        let file_data = self.all_file_data();
+        let globbed_files = config_files::glob_files(&file_data, globs, exclude)?;
+        Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
 
     #[napi]
@@ -179,11 +188,11 @@ impl WorkspaceContext {
         globs: Vec<String>,
         exclude: Option<Vec<String>>,
     ) -> napi::Result<String> {
-        let files = self.files_worker.get_files();
+        let files = &self.all_file_data();
         let globbed_files = config_files::glob_files(&files, globs, exclude)?;
         Ok(hash(
             &globbed_files
-                .map(|file| file.1.as_bytes())
+                .map(|file| file.hash.as_bytes())
                 .collect::<Vec<_>>()
                 .concat(),
         ))
@@ -199,11 +208,11 @@ impl WorkspaceContext {
     where
         ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
     {
-        let files = self.files_worker.get_files();
-
-        let promise =
-            config_files::get_project_configurations(globs, &files, parse_configurations)?;
-
+        let promise = config_files::get_project_configurations(
+            globs,
+            &self.all_file_data(),
+            parse_configurations,
+        )?;
         env.spawn_future(async move {
             let result = promise.await?;
             Ok(result)
@@ -221,15 +230,89 @@ impl WorkspaceContext {
     }
 
     #[napi]
-    pub fn all_file_data(&self) -> Vec<FileData> {
-        let files = self.files_worker.get_files();
-
-        files
+    pub fn update_project_files(
+        &self,
+        project_root_mappings: ProjectRootMappings,
+        project_files: External<ProjectFiles>,
+        global_files: External<Vec<FileData>>,
+        updated_files: HashMap<String, String>,
+        deleted_files: Vec<&str>,
+    ) -> UpdatedWorkspaceFiles {
+        trace!("updating project files");
+        trace!("{project_root_mappings:?}");
+        let mut project_files_map = project_files.clone();
+        let mut global_files = global_files
             .iter()
-            .map(|(path, content)| FileData {
-                file: path.to_normalized_string(),
-                hash: content.clone(),
-            })
-            .collect()
+            .map(|f| (f.file.clone(), f.hash.clone()))
+            .collect::<HashMap<_, _>>();
+
+        trace!(
+            "adding {} updated files to project files",
+            updated_files.len()
+        );
+        for updated_file in updated_files.into_iter() {
+            let file = updated_file.0;
+            let hash = updated_file.1;
+            if let Some(project_files) = find_project_for_path(&file, &project_root_mappings)
+                .and_then(|project| project_files_map.get_mut(project))
+            {
+                trace!("{file:?} was found in a project");
+                if let Some(file) = project_files.iter_mut().find(|f| f.file == file) {
+                    trace!("updating hash for file");
+                    file.hash = hash;
+                } else {
+                    trace!("{file:?} was not part of a project, adding to project files");
+                    project_files.push(FileData { file, hash });
+                }
+            } else {
+                trace!("{file:?} was not found in any project, updating global files");
+                global_files
+                    .entry(file)
+                    .and_modify(|e| *e = hash.clone())
+                    .or_insert(hash);
+            }
+        }
+
+        trace!(
+            "removing {} deleted files from project files",
+            deleted_files.len()
+        );
+        for deleted_file in deleted_files.into_iter() {
+            if let Some(project_files) = find_project_for_path(deleted_file, &project_root_mappings)
+                .and_then(|project| project_files_map.get_mut(project))
+            {
+                if let Some(pos) = project_files.iter().position(|f| f.file == deleted_file) {
+                    trace!("removing file: {deleted_file:?} from project");
+                    project_files.remove(pos);
+                }
+            }
+
+            if global_files.contains_key(deleted_file) {
+                trace!("removing {deleted_file:?} from global files");
+                global_files.remove(deleted_file);
+            }
+        }
+
+        let non_project_files = global_files
+            .into_iter()
+            .map(|(file, hash)| FileData { file, hash })
+            .collect::<Vec<_>>();
+
+        UpdatedWorkspaceFiles {
+            file_map: FileMap {
+                project_file_map: project_files_map.clone(),
+                non_project_files: non_project_files.clone(),
+            },
+            external_references: NxWorkspaceFilesExternals {
+                project_files: External::new(project_files_map),
+                global_files: External::new(non_project_files),
+                all_workspace_files: External::new(self.all_file_data()),
+            },
+        }
+    }
+
+    #[napi]
+    pub fn all_file_data(&self) -> Vec<FileData> {
+        self.files_worker.get_files()
     }
 }

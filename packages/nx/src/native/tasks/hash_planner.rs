@@ -7,6 +7,7 @@ use crate::native::{
     project_graph::types::ProjectGraph,
     tasks::{inputs::SplitInputs, types::Task},
 };
+use napi::bindgen_prelude::External;
 use napi::{Env, JsExternal};
 use rayon::prelude::*;
 use std::collections::HashMap;
@@ -20,18 +21,16 @@ use crate::native::utils::find_matching_projects;
 #[napi]
 pub struct HashPlanner {
     nx_json: NxJson,
-    project_graph: ProjectGraph,
-    workspace_root: String,
+    project_graph: External<ProjectGraph>,
 }
 
 #[napi]
 impl HashPlanner {
     #[napi(constructor)]
-    pub fn new(workspace_root: String, nx_json: NxJson, project_graph: ProjectGraph) -> Self {
+    pub fn new(nx_json: NxJson, project_graph: External<ProjectGraph>) -> Self {
         Self {
             nx_json,
             project_graph,
-            workspace_root,
         }
     }
 
@@ -74,7 +73,7 @@ impl HashPlanner {
                         HashInstruction::WorkspaceFileSet("{workspaceRoot}/.gitignore".to_string()),
                         HashInstruction::WorkspaceFileSet("{workspaceRoot}/.nxignore".to_string()),
                     ])
-                    .chain(self_inputs.into_iter())
+                    .chain(self_inputs)
                     .collect();
 
                 inputs.par_sort();
@@ -115,7 +114,7 @@ impl HashPlanner {
     ) -> anyhow::Result<Option<Vec<HashInstruction>>> {
         let project = &self.project_graph.nodes[project_name];
         let Some(target) = project.targets.get(target_name) else {
-            return Ok(None)
+            return Ok(None);
         };
 
         let external_nodes_keys: Vec<&str> = self
@@ -141,7 +140,7 @@ impl HashPlanner {
                 .expect("Executors should always have a ':'");
             let existing_package =
                 find_external_dependency_node_name(executor_package, &external_nodes_keys)
-                    .unwrap_or_else(|| executor_package);
+                    .unwrap_or(executor_package);
             Ok(Some(vec![HashInstruction::External(
                 existing_package.to_string(),
             )]))
@@ -206,9 +205,9 @@ impl HashPlanner {
 
         Ok(self_inputs
             .into_iter()
-            .chain(deps_inputs.into_iter())
-            .chain(deps_outputs.into_iter())
-            .chain(projects.into_iter())
+            .chain(deps_inputs)
+            .chain(deps_outputs)
+            .chain(projects)
             .collect())
     }
 
@@ -252,12 +251,13 @@ impl HashPlanner {
 
                 if self.project_graph.nodes.contains_key(*dep) {
                     let Some(dep_inputs) = get_inputs_for_dependency(
-                            &self.project_graph.nodes[*dep],
-                            &self.nx_json,
-                            input,
-                        )? else {
-                            continue;
-                        };
+                        &self.project_graph.nodes[*dep],
+                        &self.nx_json,
+                        input,
+                    )?
+                    else {
+                        continue;
+                    };
                     deps_inputs.extend(self.self_and_deps_inputs(
                         dep,
                         task,
@@ -326,14 +326,16 @@ impl HashPlanner {
         let mut result: Vec<HashInstruction> = vec![];
 
         for dep in deps_outputs {
-            let Input::DepsOutputs { dependent_tasks_output_files, transitive } = dep else {
+            let Input::DepsOutputs {
+                dependent_tasks_output_files,
+                transitive,
+            } = dep
+            else {
                 continue;
             };
             result.extend(get_dep_output(
-                &self.workspace_root,
                 task,
                 task_graph,
-                &self.project_graph,
                 dependent_tasks_output_files,
                 *transitive,
             )?);
@@ -348,7 +350,7 @@ impl HashPlanner {
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let mut result: Vec<HashInstruction> = vec![];
         for project in project_inputs {
-            let Input::Projects {input, projects} = project else {
+            let Input::Projects { input, projects } = project else {
                 continue;
             };
             let projects = find_matching_projects(projects, &self.project_graph)?;
