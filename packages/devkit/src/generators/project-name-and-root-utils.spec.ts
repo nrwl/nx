@@ -313,10 +313,110 @@ describe('determineProjectNameAndRootOptions', () => {
       ).rejects.toThrowError();
     });
 
+    it('should handle providing a path as the project name when format is "as-provided"', async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'shared/libName',
+        projectType: 'library',
+        projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
+      });
+
+      expect(result).toEqual({
+        projectName: 'libName',
+        names: {
+          projectSimpleName: 'libName',
+          projectFileName: 'libName',
+        },
+        importPath: '@proj/libName',
+        projectRoot: 'shared/libName',
+        projectNameAndRootFormat: 'as-provided',
+      });
+    });
+
+    it('should handle providing a path including "@" as the project name when format is "as-provided"', async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'shared/@scope/libName',
+        projectType: 'library',
+        projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
+      });
+
+      expect(result).toEqual({
+        projectName: '@scope/libName',
+        names: {
+          projectSimpleName: 'libName',
+          projectFileName: 'libName',
+        },
+        importPath: '@scope/libName',
+        projectRoot: 'shared/@scope/libName',
+        projectNameAndRootFormat: 'as-provided',
+      });
+    });
+
+    it('should handle providing a path including "@" with multiple segments as the project name when format is "as-provided"', async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'shared/@scope/libName/testing',
+        projectType: 'library',
+        projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
+      });
+
+      expect(result).toEqual({
+        projectName: '@scope/libName/testing',
+        names: {
+          projectSimpleName: 'testing',
+          projectFileName: 'libName-testing',
+        },
+        importPath: '@scope/libName/testing',
+        projectRoot: 'shared/@scope/libName/testing',
+        projectNameAndRootFormat: 'as-provided',
+      });
+    });
+
+    it('should handle providing a path including multiple "@" as the project name when format is "as-provided"', async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'shared/@foo/@scope/libName',
+        projectType: 'library',
+        projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
+      });
+
+      expect(result).toEqual({
+        projectName: '@scope/libName',
+        names: {
+          projectSimpleName: 'libName',
+          projectFileName: 'libName',
+        },
+        importPath: '@scope/libName',
+        projectRoot: 'shared/@foo/@scope/libName',
+        projectNameAndRootFormat: 'as-provided',
+      });
+    });
+
     it('should return the derived project name and directory', async () => {
       const result = await determineProjectNameAndRootOptions(tree, {
         name: 'libName',
         directory: 'shared',
+        projectType: 'library',
+        projectNameAndRootFormat: 'derived',
+        callingGenerator: '',
+      });
+
+      expect(result).toEqual({
+        projectName: 'shared-lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'shared-lib-name',
+        },
+        importPath: '@proj/shared/lib-name',
+        projectRoot: 'shared/lib-name',
+        projectNameAndRootFormat: 'derived',
+      });
+    });
+
+    it('should handle providing a path as the project name when format is "derived"', async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'shared/libName',
         projectType: 'library',
         projectNameAndRootFormat: 'derived',
         callingGenerator: '',
@@ -632,10 +732,110 @@ describe('determineProjectNameAndRootOptions', () => {
       ).rejects.toThrowError();
     });
 
+    it('should handle providing a path as the project name when format is "as-provided"', async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'shared/libName',
+        projectType: 'library',
+        projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
+      });
+
+      expect(result).toEqual({
+        projectName: 'libName',
+        names: {
+          projectSimpleName: 'libName',
+          projectFileName: 'libName',
+        },
+        importPath: '@proj/libName',
+        projectRoot: 'shared/libName',
+        projectNameAndRootFormat: 'as-provided',
+      });
+    });
+
+    it('should handle providing a path including "@" as the project name when format is "as-provided"', async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'shared/@scope/libName',
+        projectType: 'library',
+        projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
+      });
+
+      expect(result).toEqual({
+        projectName: '@scope/libName',
+        names: {
+          projectSimpleName: 'libName',
+          projectFileName: 'libName',
+        },
+        importPath: '@scope/libName',
+        projectRoot: 'shared/@scope/libName',
+        projectNameAndRootFormat: 'as-provided',
+      });
+    });
+
+    it('should handle providing a path including "@" with multiple segments as the project name when format is "as-provided"', async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'shared/@scope/libName/testing',
+        projectType: 'library',
+        projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
+      });
+
+      expect(result).toEqual({
+        projectName: '@scope/libName/testing',
+        names: {
+          projectSimpleName: 'testing',
+          projectFileName: 'libName-testing',
+        },
+        importPath: '@scope/libName/testing',
+        projectRoot: 'shared/@scope/libName/testing',
+        projectNameAndRootFormat: 'as-provided',
+      });
+    });
+
+    it('should handle providing a path including multiple "@" as the project name when format is "as-provided"', async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'shared/@foo/@scope/libName',
+        projectType: 'library',
+        projectNameAndRootFormat: 'as-provided',
+        callingGenerator: '',
+      });
+
+      expect(result).toEqual({
+        projectName: '@scope/libName',
+        names: {
+          projectSimpleName: 'libName',
+          projectFileName: 'libName',
+        },
+        importPath: '@scope/libName',
+        projectRoot: 'shared/@foo/@scope/libName',
+        projectNameAndRootFormat: 'as-provided',
+      });
+    });
+
     it('should return the derived project name and directory', async () => {
       const result = await determineProjectNameAndRootOptions(tree, {
         name: 'libName',
         directory: 'shared',
+        projectType: 'library',
+        projectNameAndRootFormat: 'derived',
+        callingGenerator: '',
+      });
+
+      expect(result).toEqual({
+        projectName: 'shared-lib-name',
+        names: {
+          projectSimpleName: 'lib-name',
+          projectFileName: 'shared-lib-name',
+        },
+        importPath: '@proj/shared/lib-name',
+        projectRoot: 'libs/shared/lib-name',
+        projectNameAndRootFormat: 'derived',
+      });
+    });
+
+    it('should handle providing a path as the project name when format is "derived"', async () => {
+      const result = await determineProjectNameAndRootOptions(tree, {
+        name: 'shared/libName',
         projectType: 'library',
         projectNameAndRootFormat: 'derived',
         callingGenerator: '',

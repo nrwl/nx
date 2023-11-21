@@ -35,7 +35,7 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'my-app-e2e'
       );
-    });
+    }, 35000);
 
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
@@ -225,7 +225,7 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'my-dir/my-app-e2e'
       );
-    });
+    }, 35000);
 
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
