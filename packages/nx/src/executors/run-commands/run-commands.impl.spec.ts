@@ -211,7 +211,7 @@ describe('Run Commands', () => {
 
   describe('--color', () => {
     it('should not set FORCE_COLOR=true', async () => {
-      const exec = jest.spyOn(require('child_process'), 'exec');
+      const spawn = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -221,25 +221,29 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(exec).toHaveBeenCalledTimes(2);
-      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawn).toHaveBeenCalledTimes(2);
+      expect(spawn).toHaveBeenNthCalledWith(1, 'echo', ['Hello World'], {
         env: {
           ...process.env,
           ...env(),
         },
+        stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+        shell: process.platform === 'win32',
+        windowsHide: true,
       });
-      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawn).toHaveBeenNthCalledWith(2, 'echo', ['Hello Universe'], {
         env: {
           ...process.env,
           ...env(),
         },
+        stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+        shell: process.platform === 'win32',
+        windowsHide: true,
       });
     });
 
     it('should set FORCE_COLOR=true when running with --color', async () => {
-      const exec = jest.spyOn(require('child_process'), 'exec');
+      const spawn = jest.spyOn(require('child_process'), 'spawn');
       await runCommands(
         {
           commands: [`echo 'Hello World'`, `echo 'Hello Universe'`],
@@ -250,14 +254,18 @@ describe('Run Commands', () => {
         context
       );
 
-      expect(exec).toHaveBeenCalledTimes(2);
-      expect(exec).toHaveBeenNthCalledWith(1, `echo 'Hello World'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawn).toHaveBeenCalledTimes(2);
+      expect(spawn).toHaveBeenNthCalledWith(1, 'echo', ['Hello World'], {
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
+        stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+        shell: process.platform === 'win32',
+        windowsHide: true,
       });
-      expect(exec).toHaveBeenNthCalledWith(2, `echo 'Hello Universe'`, {
-        maxBuffer: LARGE_BUFFER,
+      expect(spawn).toHaveBeenNthCalledWith(2, 'echo', ['Hello Universe'], {
         env: { ...process.env, FORCE_COLOR: `true`, ...env() },
+        stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+        shell: process.platform === 'win32',
+        windowsHide: true,
       });
     });
   });

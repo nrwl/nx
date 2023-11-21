@@ -1,9 +1,10 @@
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import * as chalk from 'chalk';
+import parseArgsStringToArgv from 'string-argv';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -203,11 +204,23 @@ function createProcess(
   cwd: string
 ): Promise<boolean> {
   return new Promise((res) => {
-    const childProcess = exec(commandConfig.command, {
-      maxBuffer: LARGE_BUFFER,
+    const [command, ...args] = parseArgsStringToArgv(commandConfig.command);
+
+    const childProcess = spawn(command, args, {
       env: processEnv(color, cwd),
       cwd,
+      stdio: ['pipe', 'pipe', 'pipe', 'ipc'],
+      // Shell is required for windows but cannot be true on linux because it interferes with terminating the process
+      shell: process.platform === 'win32',
+      windowsHide: true,
     });
+
+    // Re-emit any messages from the child process
+    childProcess.on(
+      'message',
+      (...args) => process.send && process.send(...args)
+    );
+
     /**
      * Ensure the child process is killed when the parent exits
      */

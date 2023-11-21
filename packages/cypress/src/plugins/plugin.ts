@@ -197,7 +197,7 @@ function buildCypressTargets(
         devServerTargets ?? {}
       )) {
         targets[options.targetName].configurations[configuration] = {
-          command: `cypress run --config-file ${relativeConfigPath} --e2e --env.devServerTarget ${devServerTarget}`,
+          command: `cypress run --config-file ${relativeConfigPath} --e2e --env.webServerCommand "nx run ${devServerTarget}"`,
         };
       }
     }
@@ -230,7 +230,7 @@ function buildCypressTargets(
           outputs,
           inputs,
           cache: true,
-          command: `cypress run --config-file ${relativeConfigPath} --e2e --env.devServerTarget ${ciDevServerTarget} --spec ${relativeSpecFilePath}`,
+          command: `cypress run --config-file ${relativeConfigPath} --e2e --env.webServerCommand "nx run ${ciDevServerTarget}" --spec ${relativeSpecFilePath}`,
         };
         dependsOn.push({
           target: targetName,

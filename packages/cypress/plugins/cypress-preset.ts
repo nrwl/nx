@@ -1,14 +1,10 @@
-import {
-  createProjectGraphAsync,
-  parseTargetString,
-  workspaceRoot,
-} from '@nx/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
-import { createExecutorContext } from '../src/utils/ct-helpers';
-import { startDevServer } from '../src/utils/start-dev-server';
+import parseArgsStringToArgv from 'string-argv';
+import { spawn } from 'child_process';
 
 interface BaseCypressPreset {
   videosFolder: string;
@@ -84,50 +80,50 @@ export function nxE2EPreset(
     specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
     fixturesFolder: `${basePath}/fixtures`,
     env: {
-      devServerTargets: options?.devServerTargets,
-      devServerTargetOptions: {},
-      ciDevServerTarget: options?.ciDevServerTarget,
+      webServerCommands: options?.webServerCommands,
+      ciWebServerCommand: options?.ciWebServerCommand,
     },
     async setupNodeEvents(on, config) {
       if (options?.bundler === 'vite') {
         on('file:preprocessor', vitePreprocessor());
       }
-      if (!config.env.devServerTargets) {
+      if (!config.env.webServerCommands) {
         return;
       }
-      const devServerTarget =
-        config.env.devServerTarget ?? config.env.devServerTargets['default'];
+      const webServerCommand =
+        config.env.webServerCommand ?? config.env.webServerCommands.default;
 
-      if (!devServerTarget) {
+      if (!webServerCommand) {
         return;
       }
-      if (!config.baseUrl && devServerTarget) {
-        const graph = await createProjectGraphAsync();
-        const target = parseTargetString(devServerTarget, graph);
-        const context = createExecutorContext(
-          graph,
-          graph.nodes[target.project].data?.targets,
-          target.project,
-          target.target,
-          target.configuration
-        );
+      if (!config.baseUrl && webServerCommand) {
+        return new Promise((resolve) => {
+          const [command, ...args] = parseArgsStringToArgv(webServerCommand);
+          const serverProcess = spawn(command, args, {
+            stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
+            cwd: workspaceRoot,
+            // Shell is required for windows but cannot be true on linux because it interferes with terminating the process
+            shell: process.platform === 'win32',
+            windowsHide: true,
+          });
 
-        const devServer = startDevServer(
-          {
-            devServerTarget,
-            ...config.env.devServerTargetOptions,
-          },
-          context
-        );
-        on('after:run', () => {
-          devServer.return();
+          serverProcess.on('message', (message) => {
+            if (
+              typeof message === 'object' &&
+              'type' in message &&
+              'baseUrl' in message &&
+              message.type === 'server'
+            ) {
+              config.baseUrl = message.baseUrl;
+              resolve(config);
+            }
+          });
+          on('after:run', () => {
+            serverProcess.kill('SIGTERM');
+          });
         });
-        const devServerValue = (await devServer.next()).value;
-        if (!devServerValue) {
-          return;
-        }
-        return { ...config, baseUrl: devServerValue.baseUrl };
       }
+      return config;
     },
   };
 
@@ -143,6 +139,6 @@ export type NxCypressE2EPresetOptions = {
    **/
   cypressDir?: string;
 
-  devServerTargets?: Record<string, string>;
-  ciDevServerTarget?: string;
+  webServerCommands?: Record<string, string>;
+  ciWebServerCommand?: string;
 };
