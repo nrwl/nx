@@ -285,7 +285,7 @@
     "url-loader": "^4.1.1",
     "use-sync-external-store": "^1.2.0",
     "verdaccio": "^5.0.4",
-    "vite": "^4.3.4",
+    "vite": "^5.0.0",
     "webpack": "5.88.0",
     "webpack-dev-server": "^4.9.3",
     "webpack-merge": "^5.8.0",
@@ -351,7 +351,7 @@
     "tailwind-merge": "^1.8.1",
     "tailwindcss": "3.2.4",
     "tslib": "^2.3.0",
-    "vitest": "^0.32.0",
+    "vitest": "^0.34.6",
     "weak-napi": "^2.0.2"
   },
   "resolutions": {
