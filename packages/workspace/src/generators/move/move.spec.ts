@@ -214,7 +214,10 @@ describe('move', () => {
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) },
+        e2e: {
+          ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+          baseUrl: 'http://localhost:4200',
+        },
       });
       "
     `);

@@ -42,6 +42,7 @@ export async function addE2e(
         bundler: options.bundler === 'rspack' ? 'webpack' : options.bundler,
         skipFormat: true,
         devServerTarget: `${options.projectName}:serve`,
+        baseUrl: 'http://localhost:4200',
         jsx: true,
         rootProject: options.rootProject,
       });
