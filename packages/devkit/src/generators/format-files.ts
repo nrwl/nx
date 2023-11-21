@@ -68,6 +68,9 @@ export async function formatFiles(tree: Tree): Promise<void> {
 }
 
 function sortTsConfig(tree: Tree) {
+  if (process.env.NX_FORMAT_SKIP_TSCONFIG === 'true') {
+    return;
+  }
   try {
     const tsConfigPath = getRootTsConfigPath(tree);
     if (!tsConfigPath) {
