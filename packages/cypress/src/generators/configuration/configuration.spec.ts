@@ -34,7 +34,7 @@ describe('Cypress e2e configuration', () => {
       mockedInstalledCypressVersion.mockReturnValue(10);
     });
 
-    it('should add dev server targets to the cypress config when the @nx/cypress/plugin is present', async () => {
+    it('should add web server commands to the cypress config when the @nx/cypress/plugin is present', async () => {
       process.env.NX_PCV3 = 'true';
       await cypressInitGenerator(tree, {});
 
@@ -42,6 +42,7 @@ describe('Cypress e2e configuration', () => {
 
       await cypressE2EConfigurationGenerator(tree, {
         project: 'my-app',
+        baseUrl: 'http://localhost:4200',
       });
       expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -53,12 +54,13 @@ describe('Cypress e2e configuration', () => {
           e2e: {
             ...nxE2EPreset(__filename, {
               cypressDir: 'src',
-              devServerTargets: {
-                default: 'my-app:serve',
-                production: 'my-app:serve:production',
+              webServerCommands: {
+                default: 'nx run my-app:serve',
+                production: 'nx run my-app:serve:production',
               },
-              ciDevServerTarget: 'my-app:serve-static',
+              ciWebServerCommand: 'nx run my-app:serve-static',
             }),
+            baseUrl: 'http://localhost:4200',
           },
         });
         "

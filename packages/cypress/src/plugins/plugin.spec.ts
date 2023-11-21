@@ -38,9 +38,9 @@ describe('@nx/cypress/plugin', () => {
       defineConfig({
         e2e: {
           env: {
-            devServerTargets: {
-              default: 'my-app:serve',
-              production: 'my-app:serve:production',
+            webServerCommands: {
+              default: 'nx run my-app:serve',
+              production: 'nx run my-app:serve:production',
             },
           },
           videosFolder: './dist/videos',
@@ -67,7 +67,7 @@ describe('@nx/cypress/plugin', () => {
                 "command": "cypress run --config-file cypress.config.js --e2e",
                 "configurations": {
                   "production": {
-                    "command": "cypress run --config-file cypress.config.js --e2e --env.devServerTarget my-app:serve:production",
+                    "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="nx run my-app:serve:production"",
                   },
                 },
                 "inputs": [
@@ -156,11 +156,11 @@ describe('@nx/cypress/plugin', () => {
           videosFolder: './dist/videos',
           screenshotsFolder: './dist/screenshots',
           env: {
-            devServerTargets: {
+            webServerCommands: {
               default: 'my-app:serve',
               production: 'my-app:serve:production',
             },
-            ciDevServerTarget: 'my-app:serve-static',
+            ciWebServerCommand: 'my-app:serve-static',
           },
         },
       })
@@ -184,7 +184,7 @@ describe('@nx/cypress/plugin', () => {
                 "command": "cypress run --config-file cypress.config.js --e2e",
                 "configurations": {
                   "production": {
-                    "command": "cypress run --config-file cypress.config.js --e2e --env.devServerTarget my-app:serve:production",
+                    "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="my-app:serve:production"",
                   },
                 },
                 "inputs": [
@@ -230,7 +230,7 @@ describe('@nx/cypress/plugin', () => {
               },
               "e2e-ci--test.cy.ts": {
                 "cache": true,
-                "command": "cypress run --config-file cypress.config.js --e2e --env.devServerTarget my-app:serve-static --spec test.cy.ts",
+                "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="my-app:serve-static" --spec test.cy.ts",
                 "inputs": [
                   "default",
                   "^production",
@@ -240,6 +240,9 @@ describe('@nx/cypress/plugin', () => {
                     ],
                   },
                 ],
+                "options": {
+                  "cwd": ".",
+                },
                 "outputs": [
                   "{projectRoot}/dist/videos",
                   "{projectRoot}/dist/screenshots",

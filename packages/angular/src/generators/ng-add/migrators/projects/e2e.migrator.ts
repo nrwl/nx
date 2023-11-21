@@ -349,6 +349,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       skipFormat: true,
       // any target would do, we replace it later with the target existing in the project being migrated
       devServerTarget: `${this.appName}:serve`,
+      baseUrl: 'http://localhost:4200',
     });
 
     const cypressConfigFilePath = this.updateOrCreateCypressConfigFile(

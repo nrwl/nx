@@ -1,14 +1,12 @@
-import {
-  createProjectGraphAsync,
-  parseTargetString,
-  workspaceRoot,
-} from '@nx/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
-import { createExecutorContext } from '../src/utils/ct-helpers';
-import { startDevServer } from '../src/utils/start-dev-server';
+import parseArgsStringToArgv from 'string-argv';
+import { exec, spawn } from 'child_process';
+import { request as httpRequest } from 'http';
+import { request as httpsRequest } from 'https';
 
 interface BaseCypressPreset {
   videosFolder: string;
@@ -57,6 +55,18 @@ export function nxBaseCypressPreset(
   };
 }
 
+function startWebServer(webServerCommand: string) {
+  const serverProcess = exec(webServerCommand, {
+    cwd: workspaceRoot,
+  });
+  serverProcess.stdout.pipe(process.stdout);
+  serverProcess.stderr.pipe(process.stderr);
+
+  return () => {
+    serverProcess.kill();
+  };
+}
+
 /**
  * nx E2E Preset for Cypress
  * @description
@@ -84,54 +94,117 @@ export function nxE2EPreset(
     specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
     fixturesFolder: `${basePath}/fixtures`,
     env: {
-      devServerTargets: options?.devServerTargets,
-      devServerTargetOptions: {},
-      ciDevServerTarget: options?.ciDevServerTarget,
+      webServerCommands: options?.webServerCommands,
+      ciWebServerCommand: options?.ciWebServerCommand,
     },
     async setupNodeEvents(on, config) {
       if (options?.bundler === 'vite') {
         on('file:preprocessor', vitePreprocessor());
       }
-      if (!config.env.devServerTargets) {
+      if (!config.env.webServerCommands) {
         return;
       }
-      const devServerTarget =
-        config.env.devServerTarget ?? config.env.devServerTargets['default'];
+      const webServerCommand = config.env.webServerCommand;
 
-      if (!devServerTarget) {
+      if (!webServerCommand) {
         return;
       }
-      if (!config.baseUrl && devServerTarget) {
-        const graph = await createProjectGraphAsync();
-        const target = parseTargetString(devServerTarget, graph);
-        const context = createExecutorContext(
-          graph,
-          graph.nodes[target.project].data?.targets,
-          target.project,
-          target.target,
-          target.configuration
-        );
-
-        const devServer = startDevServer(
-          {
-            devServerTarget,
-            ...config.env.devServerTargetOptions,
-          },
-          context
-        );
-        on('after:run', () => {
-          devServer.return();
-        });
-        const devServerValue = (await devServer.next()).value;
-        if (!devServerValue) {
-          return;
+      if (config.baseUrl && webServerCommand) {
+        if (await isServerUp(config.baseUrl)) {
+          if (
+            options?.webServerConfig?.reuseExistingServer === undefined
+              ? true
+              : options.webServerConfig.reuseExistingServer
+          ) {
+            console.log(
+              `Reusing the server already running on ${config.baseUrl}`
+            );
+            return;
+          } else {
+            throw new Error(
+              `Web server is already running at ${config.baseUrl}`
+            );
+          }
         }
-        return { ...config, baseUrl: devServerValue.baseUrl };
+        const killWebServer = startWebServer(webServerCommand);
+
+        on('after:run', () => {
+          killWebServer();
+        });
+        await waitForServer(config.baseUrl, options.webServerConfig);
       }
     },
   };
 
   return baseConfig;
+}
+
+function waitForServer(
+  url: string,
+  webServerConfig: WebServerConfig
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    let pollTimeout: NodeJS.Timeout | null;
+    const { protocol } = new URL(url);
+
+    const timeoutDuration = webServerConfig?.timeout ?? 5 * 1000;
+    const timeout = setTimeout(() => {
+      clearTimeout(pollTimeout);
+      reject(
+        new Error(
+          `Web server failed to start in ${timeoutDuration}ms. This can be configured in cypress.config.ts.`
+        )
+      );
+    }, timeoutDuration);
+
+    const makeRequest = protocol === 'https:' ? httpsRequest : httpRequest;
+
+    function pollForServer() {
+      const request = makeRequest(url, () => {
+        clearTimeout(timeout);
+        resolve();
+      });
+
+      request.on('error', () => {
+        pollTimeout = setTimeout(pollForServer, 100);
+      });
+
+      // Don't forget to end the request
+      request.end();
+    }
+
+    pollForServer();
+  });
+}
+
+function isServerUp(url: string) {
+  const { protocol } = new URL(url);
+  const makeRequest = protocol === 'https:' ? httpsRequest : httpRequest;
+
+  return new Promise((resolve) => {
+    const request = makeRequest(url, () => {
+      resolve(true);
+    });
+
+    request.on('error', () => {
+      resolve(false);
+    });
+
+    // Don't forget to end the request
+    request.end();
+  });
+}
+
+export interface WebServerConfig {
+  /**
+   * Timeout to wait for the webserver to start listening
+   */
+  timeout?: number;
+  /**
+   * Reuse an existing web server if it exists
+   * If this is false, an error will be thrown if the server is already running
+   */
+  reuseExistingServer?: boolean;
 }
 
 export type NxCypressE2EPresetOptions = {
@@ -143,6 +216,7 @@ export type NxCypressE2EPresetOptions = {
    **/
   cypressDir?: string;
 
-  devServerTargets?: Record<string, string>;
-  ciDevServerTarget?: string;
+  webServerCommands?: Record<string, string>;
+  ciWebServerCommand?: string;
+  webServerConfig?: WebServerConfig;
 };
