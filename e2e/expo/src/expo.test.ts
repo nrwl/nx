@@ -103,9 +103,7 @@ describe('expo', () => {
     expect(prebuildResult.combinedOutput).toContain('Config synced');
   });
 
-  // breaks Vite 5 PR, due to node dependency
-  // https://staging.nx.app/runs/pbuvs7xxxp/task/e2e-expo%3Ae2e-macos
-  xit('should install', async () => {
+  it('should install', async () => {
     // run install command
     const installResults = await runCLIAsync(
       `install ${appName} --no-interactive`
