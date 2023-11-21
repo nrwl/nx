@@ -2,6 +2,7 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  detectPackageManager,
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -10,7 +11,7 @@ import {
 import { dirname, extname, join, relative } from 'path';
 import { registerTsProject } from '@nx/js/src/internal';
 
-import { getRootTsConfigPath } from '@nx/js';
+import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 
 import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
@@ -70,7 +71,9 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context);
+    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
+      getLockFileName(detectPackageManager(context.workspaceRoot)),
+    ]);
 
     const targets = targetsCache[hash]
       ? targetsCache[hash]
@@ -149,7 +152,8 @@ function buildCypressTargets(
     ...cypressConfig.e2e?.env,
   };
 
-  const devServerTargets: Record<string, string> = cypressEnv?.devServerTargets;
+  const webServerCommands: Record<string, string> =
+    cypressEnv?.webServerCommands;
 
   const relativeConfigPath = relative(projectRoot, configFilePath);
 
@@ -187,23 +191,26 @@ function buildCypressTargets(
       );
     }
 
-    if (devServerTargets?.default) {
-      delete devServerTargets.default;
+    if (webServerCommands?.default) {
+      cypressConfig.e2e ??= {};
+      cypressConfig.e2e.webServerCommand ??= webServerCommands?.default;
+
+      delete webServerCommands.default;
     }
 
-    if (Object.keys(devServerTargets ?? {}).length > 0) {
+    if (Object.keys(webServerCommands ?? {}).length > 0) {
       targets[options.targetName].configurations ??= {};
-      for (const [configuration, devServerTarget] of Object.entries(
-        devServerTargets ?? {}
+      for (const [configuration, webServerCommand] of Object.entries(
+        webServerCommands ?? {}
       )) {
         targets[options.targetName].configurations[configuration] = {
-          command: `cypress run --config-file ${relativeConfigPath} --e2e --env.devServerTarget ${devServerTarget}`,
+          command: `cypress run --config-file ${relativeConfigPath} --e2e --env webServerCommand="${webServerCommand}"`,
         };
       }
     }
 
-    const ciDevServerTarget: string = cypressEnv?.ciDevServerTarget;
-    if (ciDevServerTarget) {
+    const ciWebServerCommand: string = cypressEnv?.ciWebServerCommand;
+    if (ciWebServerCommand) {
       const specPatterns = Array.isArray(cypressConfig.e2e.specPattern)
         ? cypressConfig.e2e.specPattern.map((p) => join(projectRoot, p))
         : [join(projectRoot, cypressConfig.e2e.specPattern)];
@@ -230,7 +237,10 @@ function buildCypressTargets(
           outputs,
           inputs,
           cache: true,
-          command: `cypress run --config-file ${relativeConfigPath} --e2e --env.devServerTarget ${ciDevServerTarget} --spec ${relativeSpecFilePath}`,
+          command: `cypress run --config-file ${relativeConfigPath} --e2e --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath}`,
+          options: {
+            cwd: projectRoot,
+          },
         };
         dependsOn.push({
           target: targetName,

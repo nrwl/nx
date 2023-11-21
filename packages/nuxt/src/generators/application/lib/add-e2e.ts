@@ -30,6 +30,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       bundler: 'vite',
       skipFormat: true,
       devServerTarget: `${options.projectName}:serve`,
+      baseUrl: 'https://localhost:4200',
       jsx: true,
     });
   } else if (options.e2eTestRunner === 'playwright') {

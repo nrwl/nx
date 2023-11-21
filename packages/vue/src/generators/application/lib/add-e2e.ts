@@ -39,6 +39,7 @@ export async function addE2e(
         bundler: 'vite',
         skipFormat: true,
         devServerTarget: `${options.projectName}:serve`,
+        baseUrl: 'https://localhost:4200',
         jsx: true,
       });
     }

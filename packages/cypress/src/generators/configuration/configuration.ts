@@ -164,14 +164,14 @@ async function addFiles(
     });
 
     const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
-    let devServerTargets: Record<string, string>;
+    let webServerCommands: Record<string, string>;
 
     let ciDevServerTarget: string;
 
-    if (hasPlugin && !options.baseUrl && options.devServerTarget) {
-      devServerTargets = {};
+    if (hasPlugin && options.devServerTarget) {
+      webServerCommands = {};
 
-      devServerTargets.default = options.devServerTarget;
+      webServerCommands.default = 'nx run ' + options.devServerTarget;
       const parsedTarget = parseTargetString(
         options.devServerTarget,
         projectGraph
@@ -188,11 +188,11 @@ async function addFiles(
           'production'
         ]
       ) {
-        devServerTargets.production = `${parsedTarget.project}:${parsedTarget.target}:production`;
+        webServerCommands.production = `nx run ${parsedTarget.project}:${parsedTarget.target}:production`;
       }
       // Add ci/static e2e target if serve target is found
       if (devServerProjectConfig.targets?.['serve-static']) {
-        ciDevServerTarget = `${parsedTarget.project}:serve-static`;
+        ciDevServerTarget = `nx run ${parsedTarget.project}:serve-static`;
       }
     }
     const updatedCyConfig = await addDefaultE2EConfig(
@@ -200,8 +200,8 @@ async function addFiles(
       {
         cypressDir: options.directory,
         bundler: options.bundler === 'vite' ? 'vite' : undefined,
-        devServerTargets,
-        ciDevServerTarget: ciDevServerTarget,
+        webServerCommands,
+        ciWebServerCommand: ciDevServerTarget,
       },
       options.baseUrl
     );

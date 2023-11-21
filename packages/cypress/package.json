@@ -39,6 +39,7 @@
     "@nx/js": "file:../js",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "detect-port": "^1.5.1",
+    "string-argv": "^0.3.2",
     "semver": "7.5.3",
     "tslib": "^2.3.0"
   },

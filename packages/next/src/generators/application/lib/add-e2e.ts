@@ -29,6 +29,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       directory: 'src',
       skipFormat: true,
       devServerTarget: `${options.projectName}:serve`,
+      baseUrl: 'http://localhost:4200',
       jsx: true,
     });
   } else if (options.e2eTestRunner === 'playwright') {
