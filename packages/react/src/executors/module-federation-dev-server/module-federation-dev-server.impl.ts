@@ -147,6 +147,9 @@ async function buildStaticRemotes(
   context: ExecutorContext,
   options: ModuleFederationDevServerOptions
 ) {
+  if (!remotes.staticRemotes.length) {
+    return;
+  }
   logger.info(`NX Building ${remotes.staticRemotes.length} static remotes...`);
   const mappedLocationOfRemotes: Record<string, string> = {};
 

@@ -2,35 +2,30 @@ use napi::bindgen_prelude::{Object, Promise};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use napi::bindgen_prelude::External;
 use napi::Env;
 use rayon::prelude::*;
 use tracing::trace;
 
 use crate::native::types::FileData;
-use crate::native::utils::path::Normalize;
 use crate::native::workspace::config_files;
-use crate::native::workspace::types::FileLocation;
-
-#[napi(object)]
-#[derive(Default)]
-pub struct NxWorkspaceFiles {
-    pub project_file_map: HashMap<String, Vec<FileData>>,
-    pub global_files: Vec<FileData>,
-}
+use crate::native::workspace::types::{FileLocation, NxWorkspaceFiles, NxWorkspaceFilesExternals};
 
 pub(super) fn get_files<ConfigurationParser>(
     env: Env,
     globs: Vec<String>,
     parse_configurations: ConfigurationParser,
-    file_data: &[(PathBuf, String)],
+    files: Vec<FileData>,
 ) -> napi::Result<Option<Object>>
 where
     ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
 {
+    if files.is_empty() {
+        return Ok(Default::default());
+    };
+
     trace!("{globs:?}");
-    let file_data = file_data.to_vec();
-    let promise =
-        config_files::get_project_configurations(globs, &file_data, parse_configurations)?;
+    let promise = config_files::get_project_configurations(globs, &files, parse_configurations)?;
 
     let result = env.spawn_future(async move {
         let parsed_graph_nodes = promise.await?;
@@ -39,19 +34,16 @@ where
 
         trace!(?root_map);
 
-        let file_locations = file_data
-            .into_par_iter()
-            .map(|(file_path, hash)| {
+        let file_locations = files
+            .par_iter()
+            .cloned()
+            .map(|file_data| {
+                let file_path = PathBuf::from(&file_data.file);
                 let mut parent = file_path.parent().unwrap_or_else(|| Path::new("."));
 
                 while root_map.get(parent).is_none() && parent != Path::new(".") {
                     parent = parent.parent().unwrap_or_else(|| Path::new("."));
                 }
-
-                let file_data = FileData {
-                    file: file_path.to_normalized_string(),
-                    hash: hash.clone(),
-                };
 
                 match root_map.get(parent) {
                     Some(project_name) => (FileLocation::Project(project_name.into()), file_data),
@@ -86,9 +78,17 @@ where
             }
         }
 
+        let project_files_external = External::new(project_file_map.clone());
+        let global_files_external = External::new(global_files.clone());
+        let all_workspace_files = External::new(files);
         Ok(NxWorkspaceFiles {
             project_file_map,
             global_files,
+            external_references: Some(NxWorkspaceFilesExternals {
+                project_files: project_files_external,
+                global_files: global_files_external,
+                all_workspace_files,
+            }),
         })
     })?;
     Ok(Some(result))
