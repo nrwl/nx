@@ -267,6 +267,7 @@
     - [CI with Nx](/nx-cloud/intro/ci-with-nx)
     - [Tutorials](/nx-cloud/intro/tutorials)
       - [Circle CI with Nx](/nx-cloud/intro/tutorials/circle)
+      - [GitHub Actions with Nx](/nx-cloud/intro/tutorials/github-actions)
   - [Features](/nx-cloud/features)
     - [Use Remote Caching](/nx-cloud/features/remote-cache)
     - [Run Only Tasks Affected by a PR](/nx-cloud/features/affected)

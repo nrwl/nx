@@ -1,4 +1,5 @@
 use colored::Colorize;
+use std::io::IsTerminal;
 use tracing::{Event, Level, Subscriber};
 use tracing_subscriber::fmt::{format, FmtContext, FormatEvent, FormatFields, FormattedFields};
 use tracing_subscriber::registry::LookupSpan;
@@ -21,7 +22,7 @@ where
         let level = *metadata.level();
 
         match level {
-            Level::TRACE | Level::DEBUG => {
+            Level::TRACE => {
                 write!(
                     &mut writer,
                     "{} {}: ",
@@ -29,6 +30,15 @@ where
                     metadata.target()
                 )?;
             }
+            Level::DEBUG => {
+                write!(
+                    &mut writer,
+                    "{} {}: ",
+                    format!("{}", metadata.level()).bold().bright_blue(),
+                    metadata.target()
+                )?;
+            }
+
             Level::WARN => {
                 write!(&mut writer, "\n{} {} ", ">".yellow(), "NX".bold().yellow())?;
             }
@@ -76,6 +86,7 @@ pub(crate) fn enable_logger() {
         EnvFilter::try_from_env("NX_NATIVE_LOGGING").unwrap_or_else(|_| EnvFilter::new("ERROR"));
     _ = tracing_subscriber::fmt()
         .with_env_filter(env_filter)
+        .with_ansi(std::io::stdout().is_terminal())
         .event_format(NxLogFormatter)
         .try_init()
         .ok();

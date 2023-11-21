@@ -31,7 +31,6 @@ import { Server } from 'net';
 import { FileData } from '../../config/project-graph';
 import { TaskGraph } from '../../config/task-graph';
 import { daemonClient } from '../../daemon/client/client';
-import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
 import { getRootTsConfigPath } from '../../plugins/js/utils/typescript';
 import { pruneExternalNodes } from '../../project-graph/operators';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -42,10 +41,12 @@ import {
 import { allFileData } from '../../utils/all-file-data';
 import { splitArgsIntoNxArgsAndOverrides } from '../../utils/command-line-utils';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { HashPlanner } from '../../native';
+import { HashPlanner, transferProjectGraph } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
+
+import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -682,9 +683,8 @@ async function createTaskGraphClientResponse(
   performance.mark('task graph generation:end');
 
   const planner = new HashPlanner(
-    workspaceRoot,
     nxJson,
-    transformProjectGraphForRust(graph)
+    transferProjectGraph(transformProjectGraphForRust(graph))
   );
   performance.mark('task hash plan generation:start');
   const plans: Record<string, string[]> = {};

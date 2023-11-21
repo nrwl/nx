@@ -37,6 +37,9 @@ function buildStaticRemotes(
   context: import('@angular-devkit/architect').BuilderContext,
   options: Schema
 ) {
+  if (!remotes.staticRemotes.length) {
+    return Promise.resolve();
+  }
   const mappedLocationOfRemotes: Record<string, string> = {};
   for (const app of remotes.staticRemotes) {
     mappedLocationOfRemotes[app] = `http${options.ssl ? 's' : ''}://${

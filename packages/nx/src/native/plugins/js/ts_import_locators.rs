@@ -666,7 +666,7 @@ fn find_imports(
 mod find_imports {
     use super::*;
     use crate::native::glob::build_glob_set;
-    use crate::native::utils::path::Normalize;
+    use crate::native::utils::Normalize;
     use crate::native::walker::nx_walker;
     use assert_fs::prelude::*;
     use assert_fs::TempDir;

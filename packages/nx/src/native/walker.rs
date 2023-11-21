@@ -98,7 +98,7 @@ mod test {
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
 
-    use crate::native::utils::path::Normalize;
+    use crate::native::utils::Normalize;
 
     use super::*;
 
