@@ -221,8 +221,8 @@ export function addOrChangeBuildTarget(
       project.targets[target].options?.fileReplacements;
 
     if (project.targets[target].executor === '@nxext/vite:build') {
-      buildOptions.base = project.targets[target].options?.baseHref;
-      buildOptions.sourcemap = project.targets[target].options?.sourcemaps;
+      buildOptions['base'] = project.targets[target].options?.baseHref;
+      buildOptions['sourcemap'] = project.targets[target].options?.sourcemaps;
     }
     project.targets[target].options = { ...buildOptions };
     project.targets[target].executor = '@nx/vite:build';
@@ -259,9 +259,6 @@ export function addOrChangeServeTarget(
     const serveTarget = project.targets[target];
     const serveOptions: ViteDevServerExecutorOptions = {
       buildTarget: `${options.project}:build`,
-      https: project.targets[target].options?.https,
-      hmr: project.targets[target].options?.hmr,
-      open: project.targets[target].options?.open,
     };
     if (serveTarget.executor === '@nxext/vite:dev') {
       serveOptions.proxyConfig = project.targets[target].options.proxyConfig;
@@ -523,11 +520,19 @@ export function createOrEditViteConfig(
         rollupOptions: {
           // External packages that should not be bundled into your library.
           external: [${options.rollupOptionsExternal ?? ''}]
-        }
+        },
+        reportCompressedSize: true,
+        commonjsOptions: {
+          transformMixedEsModules: true,
+        },
       },`
     : `
     build: {
-      outDir: '${offsetFromRoot(projectRoot)}dist/${projectRoot}'
+      outDir: '${offsetFromRoot(projectRoot)}dist/${projectRoot}',
+      reportCompressedSize: true,
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
     },
     `;
 
@@ -631,6 +636,7 @@ export function createOrEditViteConfig(
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       
       export default defineConfig({
+        root: __dirname,
         ${cacheDir}
         ${devServerOption}
         ${previewServerOption}

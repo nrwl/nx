@@ -6,18 +6,9 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { relative } from 'path';
-import {
-  BuildOptions,
-  InlineConfig,
-  PluginOption,
-  PreviewOptions,
-  ServerOptions,
-} from 'vite';
+import { InlineConfig, PreviewOptions, ServerOptions } from 'vite';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
-import replaceFiles from '../../plugins/rollup-replace-files.plugin';
-import { ViteBuildExecutorOptions } from '../executors/build/schema';
 
 /**
  * Returns the path to the vite config file or undefined when not found.
@@ -76,19 +67,12 @@ export function getViteServerProxyConfigPath(
 }
 
 export function getViteSharedConfig(
-  options: ViteBuildExecutorOptions,
+  options: Record<string, any>,
   context: ExecutorContext
 ): InlineConfig {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-
-  const root =
-    projectRoot === '.'
-      ? process.cwd()
-      : relative(context.cwd, joinPathFragments(context.root, projectRoot));
-
   return {
-    root,
     configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
   };
 }
@@ -107,12 +91,6 @@ export async function getViteServerOptions(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   const serverOptions: ServerOptions = {
-    host: options.host,
-    port: options.port,
-    https: options.https,
-    hmr: options.hmr,
-    open: options.open,
-    cors: options.cors,
     fs: {
       allow: [
         searchForWorkspaceRoot(joinPathFragments(projectRoot)),
@@ -131,39 +109,6 @@ export async function getViteServerOptions(
   }
 
   return serverOptions;
-}
-
-/**
- * Builds the build options for the vite.
- */
-export function getViteBuildOptions(
-  options: ViteBuildExecutorOptions,
-  context: ExecutorContext
-): BuildOptions {
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
-
-  const outputPath = joinPathFragments(
-    'dist',
-    projectRoot != '.' ? projectRoot : context.projectName
-  );
-
-  return {
-    outDir: relative(projectRoot, options.outputPath ?? outputPath),
-    emptyOutDir: options.emptyOutDir,
-    reportCompressedSize: true,
-    cssCodeSplit: options.cssCodeSplit,
-    target: options.target,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-    sourcemap: options.sourcemap,
-    minify: options.minify,
-    manifest: options.manifest,
-    ssrManifest: options.ssrManifest,
-    ssr: options.ssr,
-    watch: options.watch as BuildOptions['watch'],
-  };
 }
 
 /**

@@ -404,7 +404,6 @@ describe('app', () => {
   it('should setup the nrwl vite:build builder if bundler is vite', async () => {
     await applicationGenerator(tree, {
       name: 'my-app',
-
       bundler: 'vite',
       projectNameAndRootFormat: 'as-provided',
     });
@@ -412,7 +411,7 @@ describe('app', () => {
     expect(targets.build.executor).toEqual('@nx/vite:build');
     expect(targets.build.outputs).toEqual(['{options.outputPath}']);
     expect(targets.build.options).toEqual({
-      outputPath: 'dist/my-app',
+      outputPath: '../dist/my-app',
     });
   });
 

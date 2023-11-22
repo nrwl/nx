@@ -46,6 +46,7 @@ import vue from '@vitejs/plugin-vue';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
+  root: __dirname,
   cacheDir: '../node_modules/.vite/test',
 
   server: {
@@ -67,6 +68,10 @@ export default defineConfig({
 
   build: {
     outDir: '../dist/test',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
 
   test: {

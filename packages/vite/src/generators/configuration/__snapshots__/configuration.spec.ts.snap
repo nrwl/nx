@@ -9,6 +9,7 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
+  root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
 
   plugins: [
@@ -42,6 +43,10 @@ export default defineConfig({
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
+    },
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
   },
 });
@@ -57,6 +62,7 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
+  root: __dirname,
   cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
 
   plugins: [
@@ -90,6 +96,10 @@ export default defineConfig({
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
+    },
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
   },
 
@@ -164,6 +174,10 @@ export default defineConfig({
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
+    },
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
     },
   },
   plugins: [
@@ -279,6 +293,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
+  root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
 
   server: {
@@ -300,6 +315,10 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-react-app',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
 });
 "
@@ -421,6 +440,7 @@ import { defineConfig } from 'vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
+  root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-web-app',
 
   server: {
@@ -442,6 +462,10 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-web-app',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
 });
 "
@@ -550,6 +574,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
+  root: __dirname,
   cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
 
   server: {
@@ -571,6 +596,10 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-react-app',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
 
   test: {

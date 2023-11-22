@@ -1,11 +1,14 @@
 import { ExecutorContext } from '@nx/devkit';
-import type { InlineConfig, ViteDevServer } from 'vite';
+import {
+  loadConfigFromFile,
+  type InlineConfig,
+  type ViteDevServer,
+} from 'vite';
 
 import {
   getNxTargetOptions,
-  getViteBuildOptions,
   getViteServerOptions,
-  getViteSharedConfig,
+  normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
 
 import { ViteDevServerExecutorOptions } from './schema';
@@ -31,20 +34,22 @@ export async function* viteDevServerExecutor(
     options.buildTarget,
     context
   );
+  const viteConfigPath = normalizeViteConfigFilePath(
+    projectRoot,
+    buildTargetOptions.configFile
+  );
+  const extraArgs = await getExtraArgs(options);
 
-  // Merge the options from the build and dev-serve targets.
-  // The latter takes precedence.
-  const mergedOptions = {
-    ...buildTargetOptions,
-    ...options,
-  };
-
-  // Add the server specific configuration.
   const serverConfig: InlineConfig = mergeConfig(
-    getViteSharedConfig(mergedOptions, options.clearScreen, context),
     {
-      build: getViteBuildOptions(mergedOptions, context),
-      server: await getViteServerOptions(mergedOptions, context),
+      configFile: viteConfigPath,
+    },
+    {
+      server: {
+        ...(await getViteServerOptions(options, context)),
+        ...extraArgs,
+      },
+      ...extraArgs,
     }
   );
 
@@ -90,3 +95,18 @@ async function runViteDevServer(server: ViteDevServer): Promise<void> {
 }
 
 export default viteDevServerExecutor;
+
+async function getExtraArgs(
+  options: ViteDevServerExecutorOptions
+): Promise<InlineConfig> {
+  // support passing extra args to vite cli
+  const schema = await import('./schema.json');
+  const extraArgs = {};
+  for (const key of Object.keys(options)) {
+    if (!schema.properties[key]) {
+      extraArgs[key] = options[key];
+    }
+  }
+
+  return extraArgs as InlineConfig;
+}

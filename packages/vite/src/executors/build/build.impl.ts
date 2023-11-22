@@ -7,8 +7,7 @@ import {
 } from '@nx/devkit';
 import {
   getProjectTsConfigPath,
-  getViteBuildOptions,
-  getViteSharedConfig,
+  normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
 import {
@@ -31,21 +30,41 @@ export async function* viteBuildExecutor(
   context: ExecutorContext
 ) {
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, build } = await (Function(
+  const { mergeConfig, build, loadConfigFromFile } = await (Function(
     'return import("vite")'
   )() as Promise<typeof import('vite')>);
-
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
+  const viteConfigPath = normalizeViteConfigFilePath(
+    projectRoot,
+    options.configFile
+  );
+  const extraArgs = await getExtraArgs(options);
+
+  const resolved = await loadConfigFromFile(
+    {
+      mode: extraArgs?.mode ?? 'production',
+      command: 'build',
+    },
+    viteConfigPath
+  );
 
   createBuildableTsConfig(projectRoot, options, context);
 
-  const extraArgs = await getExtraArgs(options);
+  const outDir = options.outputPath ?? resolved?.config?.build?.outDir;
 
-  const buildConfig = mergeConfig(getViteSharedConfig(options, context), {
-    build: getViteBuildOptions(options, context),
-    ...extraArgs,
-  });
+  const buildConfig = mergeConfig(
+    {
+      configFile: viteConfigPath,
+    },
+    {
+      build: {
+        outDir,
+        ...extraArgs,
+      },
+      ...extraArgs,
+    }
+  );
 
   if (!options.skipTypeCheck) {
     await validateTypes({
@@ -59,7 +78,14 @@ export async function* viteBuildExecutor(
 
   const libraryPackageJson = resolve(projectRoot, 'package.json');
   const rootPackageJson = resolve(context.root, 'package.json');
-  const distPackageJson = resolve(options.outputPath, 'package.json');
+
+  // Here, we want the outdir relative to the workspace root.
+  // So, we calculate the relative path from the workspace root to the outdir.
+  const outDirRelativeToWorkspaceRoot = outDir.replaceAll('../', '');
+  const distPackageJson = resolve(
+    outDirRelativeToWorkspaceRoot,
+    'package.json'
+  );
 
   // Generate a package.json if option has been set.
   if (options.generatePackageJson) {
@@ -82,7 +108,10 @@ export async function* viteBuildExecutor(
 
     builtPackageJson.type = 'module';
 
-    writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
+    writeJsonFile(
+      `${outDirRelativeToWorkspaceRoot}/package.json`,
+      builtPackageJson
+    );
     const packageManager = detectPackageManager(context.root);
 
     const lockFile = createLockFile(
@@ -91,7 +120,7 @@ export async function* viteBuildExecutor(
       packageManager
     );
     writeFileSync(
-      `${options.outputPath}/${getLockFileName(packageManager)}`,
+      `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
       lockFile,
       {
         encoding: 'utf-8',
@@ -106,7 +135,7 @@ export async function* viteBuildExecutor(
   ) {
     await copyAssets(
       {
-        outputPath: options.outputPath,
+        outputPath: outDirRelativeToWorkspaceRoot,
         assets: [
           {
             input: projectRoot,
@@ -141,7 +170,7 @@ export async function* viteBuildExecutor(
   } else {
     const output = watcherOrOutput?.['output'] || watcherOrOutput?.[0]?.output;
     const fileName = output?.[0]?.fileName || 'main.cjs';
-    const outfile = resolve(options.outputPath, fileName);
+    const outfile = resolve(outDirRelativeToWorkspaceRoot, fileName);
     yield { success: true, outfile };
   }
 }

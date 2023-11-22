@@ -2,7 +2,6 @@ import { ExecutorContext, parseTargetString, runExecutor } from '@nx/devkit';
 import type { InlineConfig, PreviewServer } from 'vite';
 import {
   getNxTargetOptions,
-  getViteBuildOptions,
   getVitePreviewOptions,
   getViteSharedConfig,
 } from '../../utils/options-utils';
@@ -62,9 +61,8 @@ export async function* vitePreviewServerExecutor(
 
   // Retrieve the server configuration.
   const serverConfig: InlineConfig = mergeConfig(
-    getViteSharedConfig(mergedOptions, options.clearScreen, context),
+    getViteSharedConfig(mergedOptions, context),
     {
-      build: getViteBuildOptions(mergedOptions, context),
       preview: getVitePreviewOptions(mergedOptions, context),
     }
   );
