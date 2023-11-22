@@ -59,15 +59,13 @@ export interface CreateNxReleaseConfigError {
 // Apply default configuration to any optional user configuration and handle known errors
 export async function createNxReleaseConfig(
   projectGraph: ProjectGraph,
-  userConfig: NxJsonConfiguration['release'],
+  userConfig: NxJsonConfiguration['release'] = {},
   // Optionally ensure that all configured projects have implemented a certain target
   requiredTargetName?: 'nx-release-publish'
 ): Promise<{
   error: null | CreateNxReleaseConfigError;
   nxReleaseConfig: NxReleaseConfig | null;
 }> {
-  const userConfigIsDefined = !!userConfig;
-  userConfig = userConfig || {};
   const gitDefaults = {
     commit: false,
     commitMessage: '',
@@ -181,7 +179,12 @@ export async function createNxReleaseConfig(
   const rootVersionWithoutGit = { ...rootVersionConfig };
   delete rootVersionWithoutGit.git;
 
-  const allProjects = findMatchingProjects(['*'], projectGraph.nodes);
+  const allProjects = findMatchingProjects(['*'], projectGraph.nodes).filter(
+    // only include libs by default when the user has no groups config,
+    // because the default implementation assumes npm js packages
+    // and these will usually be libs
+    (project) => projectGraph.nodes[project].type === 'lib'
+  );
   const groups: NxReleaseConfig['groups'] =
     userConfig.groups && Object.keys(userConfig.groups).length
       ? ensureProjectsConfigIsArray(userConfig.groups)
@@ -219,18 +222,10 @@ export async function createNxReleaseConfig(
 
   for (const [releaseGroupName, releaseGroup] of Object.entries(groups)) {
     // Ensure that the config for the release group can resolve at least one project
-    let matchingProjects = findMatchingProjects(
+    const matchingProjects = findMatchingProjects(
       releaseGroup.projects,
       projectGraph.nodes
     );
-    if (!userConfigIsDefined) {
-      matchingProjects = matchingProjects.filter(
-        // only include libs by default when the user has no config,
-        // as the default implementation assumes npm js packages
-        // and these will usually be libs
-        (project) => projectGraph.nodes[project].type === 'lib'
-      );
-    }
     if (!matchingProjects.length) {
       return {
         error: {
