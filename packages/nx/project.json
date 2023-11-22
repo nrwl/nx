@@ -20,7 +20,7 @@
       }
     },
     "copy-native-package-directories": {
-      "command": "cp -R build/packages/nx/native-packages/* build/packages"
+      "command": "node scripts/copy.js build/packages/nx/native-packages/* build/packages"
     },
     "artifacts": {
       "dependsOn": ["copy-native-package-directories"],
