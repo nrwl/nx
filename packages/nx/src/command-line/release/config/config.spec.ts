@@ -251,6 +251,93 @@ describe('createNxReleaseConfig()', () => {
         }
       `);
     });
+
+    it('should filter out app and e2e projects', async () => {
+      projectGraph.nodes['app-1'] = {
+        name: 'app-1',
+        type: 'app',
+        data: {
+          root: 'apps/app-1',
+          targets: {},
+        } as any,
+      };
+
+      projectGraph.nodes['e2e-1'] = {
+        name: 'e2e-1',
+        type: 'e2e',
+        data: {
+          root: 'apps/e2e-1',
+          targets: {},
+        } as any,
+      };
+
+      expect(await createNxReleaseConfig(projectGraph, undefined))
+        .toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "includeAuthors": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
   });
 
   describe('user specified groups', () => {
