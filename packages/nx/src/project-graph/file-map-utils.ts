@@ -5,45 +5,56 @@ import {
   ProjectGraph,
 } from '../config/project-graph';
 import {
-  createProjectRootMappingsFromProjectConfigurations,
-  findProjectForPath,
-} from './utils/find-project-for-path';
-import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
-import { readProjectsConfigurationFromProjectGraph } from './project-graph';
+import { NxWorkspaceFilesExternals } from '../native';
 import {
   getAllFileDataInContext,
   updateProjectFiles,
 } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
-import { ExternalObject, NxWorkspaceFilesExternals } from '../native';
+import { readProjectsConfigurationFromProjectGraph } from './project-graph';
 import { buildAllWorkspaceFiles } from './utils/build-all-workspace-files';
+import {
+  createProjectRootMappingsFromProjectConfigurations,
+  findProjectForPath,
+} from './utils/find-project-for-path';
 
+export interface WorkspaceFileMap {
+  allWorkspaceFiles: FileData[];
+  fileMap: FileMap;
+}
+
+/**
+ * @deprecated Use createFileMapUsingProjectGraph(graph).fileMap.projectFileMap instead
+ */
 export async function createProjectFileMapUsingProjectGraph(
   graph: ProjectGraph
 ): Promise<ProjectFileMap> {
+  return (await createFileMapUsingProjectGraph(graph)).fileMap.projectFileMap;
+}
+
+export async function createFileMapUsingProjectGraph(
+  graph: ProjectGraph
+): Promise<WorkspaceFileMap> {
   const configs = readProjectsConfigurationFromProjectGraph(graph);
 
-  let files;
+  let files: FileData[];
   if (daemonClient.enabled()) {
     files = await daemonClient.getAllFileData();
   } else {
     files = getAllFileDataInContext(workspaceRoot);
   }
 
-  return createFileMap(configs, files).fileMap.projectFileMap;
+  return createFileMap(configs, files);
 }
 
 export function createFileMap(
   projectsConfigurations: ProjectsConfigurations,
   allWorkspaceFiles: FileData[]
-): {
-  allWorkspaceFiles: FileData[];
-  fileMap: FileMap;
-} {
+): WorkspaceFileMap {
   const projectFileMap: ProjectFileMap = {};
   const projectRootMappings =
     createProjectRootMappingsFromProjectConfigurations(

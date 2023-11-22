@@ -60,6 +60,7 @@ It only uses language primitives and immutable objects
 - [TaskHasher](../../devkit/documents/TaskHasher)
 - [Tree](../../devkit/documents/Tree)
 - [Workspace](../../devkit/documents/Workspace)
+- [WorkspaceFileMap](../../devkit/documents/WorkspaceFileMap)
 
 ### Type Aliases
 
@@ -105,6 +106,7 @@ It only uses language primitives and immutable objects
 - [applyChangesToString](../../devkit/documents/applyChangesToString)
 - [convertNxExecutor](../../devkit/documents/convertNxExecutor)
 - [convertNxGenerator](../../devkit/documents/convertNxGenerator)
+- [createFileMapUsingProjectGraph](../../devkit/documents/createFileMapUsingProjectGraph)
 - [createProjectFileMapUsingProjectGraph](../../devkit/documents/createProjectFileMapUsingProjectGraph)
 - [createProjectGraphAsync](../../devkit/documents/createProjectGraphAsync)
 - [defaultTasksRunner](../../devkit/documents/defaultTasksRunner)

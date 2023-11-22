@@ -56,17 +56,14 @@ import {
 
 type PostGitTask = (latestCommit: string) => Promise<void>;
 
-export async function changelogHandler(
+/**
+ * NOTE: This function is also exported for programmatic usage and forms part of the public API
+ * of Nx.
+ */
+export async function nxReleaseChangelog(
   args: ChangelogOptions
 ): Promise<number> {
   return handleErrors(args.verbose, async () => {
-    // Right now, the given version must be valid semver in order to proceed
-    if (!valid(args.version)) {
-      throw new Error(
-        `The given version "${args.version}" is not a valid semver version. Please provide your version in the format "1.0.0", "1.0.0-beta.1" etc`
-      );
-    }
-
     const projectGraph = await createProjectGraphAsync({ exitOnError: true });
     const nxJson = readNxJson();
 
@@ -83,21 +80,6 @@ export async function changelogHandler(
       return await handleNxReleaseConfigError(configError);
     }
 
-    const toSHA = await getCommitHash(args.to);
-    const headSHA = args.to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
-
-    /**
-     * Protect the user against attempting to create a new commit when recreating an old release changelog,
-     * this seems like it would always be unintentional.
-     */
-    const autoCommitEnabled =
-      args.gitCommit ?? nxReleaseConfig.changelog.git.commit;
-    if (autoCommitEnabled && headSHA !== toSHA) {
-      throw new Error(
-        `You are attempting to recreate the changelog for an old release, but you have enabled auto-commit mode. Please disable auto-commit mode by updating your nx.json, or passing --git-commit=false`
-      );
-    }
-
     const {
       error: filterError,
       releaseGroups,
@@ -111,6 +93,43 @@ export async function changelogHandler(
     if (filterError) {
       output.error(filterError);
       process.exit(1);
+    }
+
+    /**
+     * For determining the versions to use within changelog files, there are a few different possibilities:
+     * - the user is using the nx CLI, and therefore passes a single --version argument which represents the version for any and all changelog
+     * files which will be generated (i.e. both the workspace changelog, and all project changelogs, depending on which of those has been enabled)
+     * - the user is using the nxReleaseChangelog API programmatically, and:
+     *   - passes only a version property
+     *     - this works in the same way as described above for the CLI
+     *   - passes only a versionData object
+     *     - this is a special case where the user is providing a version for each project, and therefore the version argument is not needed
+     *     - NOTE: it is not possible to generate a workspace level changelog with only a versionData object, and this will produce an error
+     *   - passes both a version and a versionData object
+     *     - in this case, the version property will be used as the reference for the workspace changelog, and the versionData object will be used
+     *    to generate project changelogs
+     */
+    const { workspaceChangelogVersion, projectsVersionData } =
+      resolveChangelogVersions(
+        args,
+        releaseGroups,
+        releaseGroupToFilteredProjects
+      );
+
+    const to = args.to || 'HEAD';
+    const toSHA = await getCommitHash(to);
+    const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
+
+    /**
+     * Protect the user against attempting to create a new commit when recreating an old release changelog,
+     * this seems like it would always be unintentional.
+     */
+    const autoCommitEnabled =
+      args.gitCommit ?? nxReleaseConfig.changelog.git.commit;
+    if (autoCommitEnabled && headSHA !== toSHA) {
+      throw new Error(
+        `You are attempting to recreate the changelog for an old release, but you have enabled auto-commit mode. Please disable auto-commit mode by updating your nx.json, or passing --git-commit=false`
+      );
     }
 
     const fromRef =
@@ -140,31 +159,13 @@ export async function changelogHandler(
 
     const tree = new FsTree(workspaceRoot, args.verbose);
 
-    // Create a pseudo-versionData object using the version passed into the command so that we can share commit and tagging utils with version
-    const versionData: VersionData = releaseGroups.reduce(
-      (versionData, releaseGroup) => {
-        const releaseGroupProjectNames = Array.from(
-          releaseGroupToFilteredProjects.get(releaseGroup)
-        );
-        for (const projectName of releaseGroupProjectNames) {
-          versionData[projectName] = {
-            newVersion: args.version,
-            currentVersion: '', // not needed within changelog/commit generation
-            dependentProjects: [], // not needed within changelog/commit generation
-          };
-        }
-        return versionData;
-      },
-      {}
-    );
-
     const userCommitMessage: string | undefined =
       args.gitCommitMessage || nxReleaseConfig.changelog.git.commitMessage;
 
     const commitMessageValues: string[] = createCommitMessageValues(
       releaseGroups,
       releaseGroupToFilteredProjects,
-      versionData,
+      projectsVersionData,
       userCommitMessage
     );
 
@@ -174,7 +175,7 @@ export async function changelogHandler(
         ? createGitTagValues(
             releaseGroups,
             releaseGroupToFilteredProjects,
-            versionData
+            projectsVersionData
           )
         : [];
     handleDuplicateGitTags(gitTagValues);
@@ -185,6 +186,7 @@ export async function changelogHandler(
       tree,
       args,
       nxReleaseConfig,
+      workspaceChangelogVersion,
       commits,
       postGitTasks
     );
@@ -202,6 +204,7 @@ export async function changelogHandler(
           tree,
           args,
           commits,
+          projectsVersionData,
           postGitTasks,
           releaseGroup,
           projectNodes
@@ -231,6 +234,7 @@ export async function changelogHandler(
         tree,
         args,
         commits,
+        projectsVersionData,
         postGitTasks,
         releaseGroup,
         projectNodes
@@ -249,6 +253,67 @@ export async function changelogHandler(
   });
 }
 
+function resolveChangelogVersions(
+  args: ChangelogOptions,
+  releaseGroups: ReleaseGroupWithName[],
+  releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>
+): {
+  workspaceChangelogVersion: string | undefined;
+  projectsVersionData: VersionData;
+} {
+  if (!args.version && !args.versionData) {
+    throw new Error(
+      `You must provide a version string and/or a versionData object.`
+    );
+  }
+
+  /**
+   * TODO: revaluate this assumption holistically in a dedicated PR when we add support for calver
+   * (e.g. the Release class also uses semver utils to check if prerelease).
+   *
+   * Right now, the given version must be valid semver in order to proceed
+   */
+  if (args.version && !valid(args.version)) {
+    throw new Error(
+      `The given version "${args.version}" is not a valid semver version. Please provide your version in the format "1.0.0", "1.0.0-beta.1" etc`
+    );
+  }
+
+  const versionData: VersionData = releaseGroups.reduce(
+    (versionData, releaseGroup) => {
+      const releaseGroupProjectNames = Array.from(
+        releaseGroupToFilteredProjects.get(releaseGroup)
+      );
+      for (const projectName of releaseGroupProjectNames) {
+        if (!args.versionData) {
+          versionData[projectName] = {
+            newVersion: args.version,
+            currentVersion: '', // not relevant within changelog/commit generation
+            dependentProjects: [], // not relevant within changelog/commit generation
+          };
+          continue;
+        }
+        /**
+         * In the case where a versionData object was provided, we need to make sure all projects are present,
+         * otherwise it suggests a filtering mismatch between the version and changelog command invocations.
+         */
+        if (!args.versionData[projectName]) {
+          throw new Error(
+            `The provided versionData object does not contain a version for project "${projectName}". This suggests a filtering mismatch between the version and changelog command invocations.`
+          );
+        }
+      }
+      return versionData;
+    },
+    args.versionData || {}
+  );
+
+  return {
+    workspaceChangelogVersion: args.version,
+    projectsVersionData: versionData,
+  };
+}
+
 async function applyChangesAndExit(
   args: ChangelogOptions,
   nxReleaseConfig: NxReleaseConfig,
@@ -260,10 +325,22 @@ async function applyChangesAndExit(
 ) {
   let latestCommit = toSHA;
 
+  const changes = tree.listChanges();
+  // This could happen we using conventional commits, for example
+  if (!changes.length) {
+    output.warn({
+      title: `No changes detected for changelogs`,
+      bodyLines: [
+        `No changes were detected for any changelog files, so no changelog entries will be generated.`,
+      ],
+    });
+    return 0;
+  }
+
   // Generate a new commit for the changes, if configured to do so
   if (args.gitCommit ?? nxReleaseConfig.changelog.git.commit) {
     await commitChanges(
-      tree.listChanges().map((f) => f.path),
+      changes.map((f) => f.path),
       !!args.dryRun,
       !!args.verbose,
       commitMessageValues,
@@ -326,6 +403,7 @@ async function generateChangelogForWorkspace(
   tree: Tree,
   args: ChangelogOptions,
   nxReleaseConfig: NxReleaseConfig,
+  workspaceChangelogVersion: (string | null) | undefined,
   commits: GitCommit[],
   postGitTasks: PostGitTask[]
 ) {
@@ -335,11 +413,21 @@ async function generateChangelogForWorkspace(
     return;
   }
 
+  // If explicitly null it must mean that no changes were detected (e.g. when using conventional commits), so do nothing
+  if (workspaceChangelogVersion === null) {
+    return;
+  }
+
+  if (!workspaceChangelogVersion) {
+    throw new Error(
+      `Workspace changelog is enabled but no overall version was provided. Please provide an explicit version using --version`
+    );
+  }
+
   // Only trigger interactive mode for the workspace changelog if the user explicitly requested it via "all" or "workspace"
   const interactive =
     args.interactive === 'all' || args.interactive === 'workspace';
   const dryRun = !!args.dryRun;
-  const verbose = !!args.verbose;
   const gitRemote = args.gitRemote;
 
   const changelogRenderer = resolveChangelogRenderer(config.renderer);
@@ -354,7 +442,7 @@ async function generateChangelogForWorkspace(
   }
 
   const releaseVersion = new ReleaseVersion({
-    version: args.version,
+    version: workspaceChangelogVersion,
     releaseTagPattern: nxReleaseConfig.releaseTagPattern,
   });
 
@@ -551,6 +639,7 @@ async function generateChangelogForProjects(
   tree: Tree,
   args: ChangelogOptions,
   commits: GitCommit[],
+  projectsVersionData: VersionData,
   postGitTasks: PostGitTask[],
   releaseGroup: ReleaseGroupWithName,
   projects: ProjectGraphProjectNode[]
@@ -566,7 +655,6 @@ async function generateChangelogForProjects(
     args.interactive === 'all' || args.interactive === 'projects';
   const dryRun = !!args.dryRun;
   const gitRemote = args.gitRemote;
-  const rawVersion = args.version;
 
   const changelogRenderer = resolveChangelogRenderer(config.renderer);
 
@@ -580,8 +668,16 @@ async function generateChangelogForProjects(
       });
     }
 
+    /**
+     * newVersion will be null in the case that no changes were detected (e.g. in conventional commits mode),
+     * no changelog entry is relevant in that case.
+     */
+    if (projectsVersionData[project.name].newVersion === null) {
+      continue;
+    }
+
     const releaseVersion = new ReleaseVersion({
-      version: rawVersion,
+      version: projectsVersionData[project.name].newVersion,
       releaseTagPattern: releaseGroup.releaseTagPattern,
       projectName: project.name,
     });

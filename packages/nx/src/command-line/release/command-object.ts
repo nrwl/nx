@@ -1,12 +1,14 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
 import { readNxJson } from '../../project-graph/file-utils';
 import {
+  OutputStyle,
   RunManyOptions,
   parseCSV,
   withOutputStyleOption,
   withOverrides,
   withRunManyOptions,
 } from '../yargs-utils/shared-options';
+import { VersionData } from './utils/shared';
 
 export interface NxReleaseArgs {
   groups?: string[];
@@ -28,19 +30,22 @@ export type VersionOptions = NxReleaseArgs &
   GitCommitAndTagOptions & {
     specifier?: string;
     preid?: string;
+    stageChanges?: boolean;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
   GitCommitAndTagOptions & {
-    version: string;
-    to: string;
+    // version and/or versionData must be set
+    version?: string | null;
+    versionData?: VersionData;
+    to?: string;
     from?: string;
     interactive?: string;
     gitRemote?: string;
   };
 
 export type PublishOptions = NxReleaseArgs &
-  RunManyOptions & {
+  Partial<RunManyOptions> & { outputStyle?: OutputStyle } & {
     registry?: string;
     tag?: string;
     otp?: number;
@@ -130,8 +135,22 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
           default: '',
         })
+        .option('stageChanges', {
+          type: 'boolean',
+          describe:
+            'Whether or not to stage the changes made by this command, irrespective of the git config in nx.json related to automated commits. Useful when combining this command with changelog generation.',
+          default: false,
+        })
     ),
-  handler: (args) => import('./version').then((m) => m.versionHandler(args)),
+  handler: (args) =>
+    import('./version')
+      .then((m) => m.nxReleaseVersion(args))
+      .then((versionDataOrExitCode) => {
+        if (typeof versionDataOrExitCode === 'number') {
+          return process.exit(versionDataOrExitCode);
+        }
+        process.exit(0);
+      }),
 };
 
 const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
@@ -182,7 +201,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
         })
     ),
   handler: async (args) => {
-    const status = await (await import('./changelog')).changelogHandler(args);
+    const status = await (await import('./changelog')).nxReleaseChangelog(args);
     process.exit(status);
   },
 };
@@ -208,7 +227,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
       }),
   handler: (args) =>
     import('./publish').then((m) =>
-      m.publishHandler(coerceParallelOption(withOverrides(args, 2)))
+      m.nxReleasePublish(coerceParallelOption(withOverrides(args, 2)))
     ),
 };
 
