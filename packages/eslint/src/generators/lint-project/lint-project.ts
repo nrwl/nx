@@ -65,7 +65,7 @@ export async function lintProjectGenerator(
   };
 
   let lintFilePatterns = options.eslintFilePatterns;
-  if (!lintFilePatterns && options.rootProject) {
+  if (!lintFilePatterns && options.rootProject && projectConfig.root === '.') {
     lintFilePatterns = ['./src'];
   }
   if (lintFilePatterns && lintFilePatterns.length) {
