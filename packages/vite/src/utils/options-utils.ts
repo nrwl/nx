@@ -75,14 +75,8 @@ export function getViteServerProxyConfigPath(
   }
 }
 
-/**
- * Builds the shared options for vite.
- *
- * Most shared options are derived from the build target.
- */
 export function getViteSharedConfig(
   options: ViteBuildExecutorOptions,
-  clearScreen: boolean | undefined,
   context: ExecutorContext
 ): InlineConfig {
   const projectRoot =
@@ -94,14 +88,8 @@ export function getViteSharedConfig(
       : relative(context.cwd, joinPathFragments(context.root, projectRoot));
 
   return {
-    mode: options.mode,
     root,
-    base: options.base,
     configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
-    plugins: [replaceFiles(options.fileReplacements) as PluginOption],
-    optimizeDeps: { force: options.force },
-    clearScreen: clearScreen,
-    logLevel: options.logLevel,
   };
 }
 

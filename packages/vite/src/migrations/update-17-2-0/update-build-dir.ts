@@ -15,6 +15,10 @@ export default function updateBuildDir(tree: Tree) {
        * - add buildDir in vite.config
        * - remove buildDir from target options
        *
+       *
+       * if it has fileReplacements, add this to viteConfig plugins:
+       * replaceFiles(options.fileReplacements)
+       *
        */
 
       const projectConfig = projects.get(projectName);

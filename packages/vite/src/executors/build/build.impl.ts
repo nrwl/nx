@@ -24,6 +24,7 @@ import {
   createBuildableTsConfig,
   validateTypes,
 } from '../../utils/executor-utils';
+import { InlineConfig } from 'vite';
 
 export async function* viteBuildExecutor(
   options: ViteBuildExecutorOptions,
@@ -39,14 +40,12 @@ export async function* viteBuildExecutor(
 
   createBuildableTsConfig(projectRoot, options, context);
 
-  const normalizedOptions = normalizeOptions(options);
+  const extraArgs = await getExtraArgs(options);
 
-  const buildConfig = mergeConfig(
-    getViteSharedConfig(normalizedOptions, false, context),
-    {
-      build: getViteBuildOptions(normalizedOptions, context),
-    }
-  );
+  const buildConfig = mergeConfig(getViteSharedConfig(options, context), {
+    build: getViteBuildOptions(options, context),
+    ...extraArgs,
+  });
 
   if (!options.skipTypeCheck) {
     await validateTypes({
@@ -60,7 +59,7 @@ export async function* viteBuildExecutor(
 
   const libraryPackageJson = resolve(projectRoot, 'package.json');
   const rootPackageJson = resolve(context.root, 'package.json');
-  const distPackageJson = resolve(normalizedOptions.outputPath, 'package.json');
+  const distPackageJson = resolve(options.outputPath, 'package.json');
 
   // Generate a package.json if option has been set.
   if (options.generatePackageJson) {
@@ -107,7 +106,7 @@ export async function* viteBuildExecutor(
   ) {
     await copyAssets(
       {
-        outputPath: normalizedOptions.outputPath,
+        outputPath: options.outputPath,
         assets: [
           {
             input: projectRoot,
@@ -142,22 +141,24 @@ export async function* viteBuildExecutor(
   } else {
     const output = watcherOrOutput?.['output'] || watcherOrOutput?.[0]?.output;
     const fileName = output?.[0]?.fileName || 'main.cjs';
-    const outfile = resolve(normalizedOptions.outputPath, fileName);
+    const outfile = resolve(options.outputPath, fileName);
     yield { success: true, outfile };
   }
 }
 
-function normalizeOptions(options: ViteBuildExecutorOptions) {
-  const normalizedOptions = { ...options };
-
-  // coerce watch to null or {} to match with Vite's watch config
-  if (options.watch === false) {
-    normalizedOptions.watch = null;
-  } else if (options.watch === true) {
-    normalizedOptions.watch = {};
+async function getExtraArgs(
+  options: ViteBuildExecutorOptions
+): Promise<InlineConfig> {
+  // support passing extra args to vite cli
+  const schema = await import('./schema.json');
+  const extraArgs = {};
+  for (const key of Object.keys(options)) {
+    if (!schema.properties[key]) {
+      extraArgs[key] = options[key];
+    }
   }
 
-  return normalizedOptions;
+  return extraArgs as InlineConfig;
 }
 
 export default viteBuildExecutor;
