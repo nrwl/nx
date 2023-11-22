@@ -11,7 +11,7 @@ describe('simplify-eslint-patterns migration', () => {
     tree.write('.eslintrc.json', '{}');
   });
 
-  it('should remove pattern in matches default', async () => {
+  it('should remove pattern if matches default', async () => {
     addProjectConfiguration(tree, 'test-lib', {
       root: 'libs/test-lib',
       projectType: 'library',
