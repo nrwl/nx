@@ -66,7 +66,7 @@ export async function convertToFlatConfigGenerator(
 export default convertToFlatConfigGenerator;
 
 function convertRootToFlatConfig(tree: Tree, eslintFile: string) {
-  if (/\.base\.(js|json|yaml)$/.test(eslintFile)) {
+  if (/\.base\.(js|json|yml|yaml)$/.test(eslintFile)) {
     convertConfigToFlatConfig(tree, '', eslintFile, 'eslint.base.config.js');
   }
   convertConfigToFlatConfig(
@@ -171,7 +171,7 @@ function convertConfigToFlatConfig(
     );
     return processConvertedConfig(tree, root, source, target, conversionResult);
   }
-  if (source.endsWith('.yaml')) {
+  if (source.endsWith('.yaml') || source.endsWith('.yml')) {
     const originalContent = tree.read(`${root}/${source}`, 'utf-8');
     const config = load(originalContent, {
       json: true,
