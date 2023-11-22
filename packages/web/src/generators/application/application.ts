@@ -76,6 +76,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       typeof import('@nx/webpack')
     >('@nx/webpack', nxVersion);
     await configurationGenerator(tree, {
+      target: 'web',
       project: options.projectName,
       main,
       tsConfig,
