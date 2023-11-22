@@ -69,10 +69,12 @@ describe('convertEslintJsonToFlatConfig', () => {
       "const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
+
       const compat = new FlatCompat({
           baseDirectory: __dirname,
           recommendedConfig: js.configs.recommended,
       });
+
       module.exports = [
           { plugins: { "@nx": nxEslintPlugin } },
           {
@@ -179,10 +181,12 @@ describe('convertEslintJsonToFlatConfig', () => {
       const baseConfig = require("../../eslint.config.js");
       const globals = require("globals");
       const js = require("@eslint/js");
+
       const compat = new FlatCompat({
           baseDirectory: __dirname,
           recommendedConfig: js.configs.recommended,
       });
+
       module.exports = [
           ...baseConfig,
           ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),

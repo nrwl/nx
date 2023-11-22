@@ -7,7 +7,6 @@ import {
   generateFlatOverride,
   stringifyNodeList,
 } from '../utils/flat-config/ast-utils';
-import { addPluginsToLintConfig } from '../utils/eslint-file';
 
 /**
  * This configuration is intended to apply to all TypeScript source files.

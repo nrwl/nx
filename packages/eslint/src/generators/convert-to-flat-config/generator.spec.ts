@@ -146,10 +146,12 @@ describe('convert-to-flat-config generator', () => {
       "const { FlatCompat } = require('@eslint/eslintrc');
       const nxEslintPlugin = require('@nx/eslint-plugin');
       const js = require('@eslint/js');
+
       const compat = new FlatCompat({
         baseDirectory: __dirname,
         recommendedConfig: js.configs.recommended,
       });
+
       module.exports = [
         ...compat.extends('plugin:storybook/recommended'),
         { plugins: { '@nx': nxEslintPlugin } },
@@ -187,6 +189,7 @@ describe('convert-to-flat-config generator', () => {
     expect(tree.read('libs/test-lib/eslint.config.js', 'utf-8'))
       .toMatchInlineSnapshot(`
       "const baseConfig = require('../../eslint.config.js');
+
       module.exports = [
         ...baseConfig,
         {
@@ -397,10 +400,12 @@ describe('convert-to-flat-config generator', () => {
       "const { FlatCompat } = require('@eslint/eslintrc');
       const nxEslintPlugin = require('@nx/eslint-plugin');
       const js = require('@eslint/js');
+
       const compat = new FlatCompat({
         baseDirectory: __dirname,
         recommendedConfig: js.configs.recommended,
       });
+
       module.exports = [
         { plugins: { '@nx': nxEslintPlugin } },
         {
