@@ -1,6 +1,3 @@
-use crate::native::utils::Normalize;
-use crate::native::walker::nx_walker;
-use std::collections::HashMap;
 use xxhash_rust::xxh3;
 
 pub fn hash(content: &[u8]) -> String {
@@ -21,20 +18,6 @@ pub fn hash_file(file: String) -> Option<String> {
     };
 
     Some(hash(&content))
-}
-
-#[napi]
-pub fn hash_files(workspace_root: String) -> HashMap<String, String> {
-    nx_walker(workspace_root, |rec| {
-        let mut collection: HashMap<String, String> = HashMap::new();
-        for (path, content) in rec {
-            collection.insert(
-                path.to_normalized_string(),
-                xxh3::xxh3_64(&content).to_string(),
-            );
-        }
-        collection
-    })
 }
 
 #[cfg(test)]

@@ -49,16 +49,31 @@ impl FilesWorker {
             trace!("locking files");
             let (lock, cvar) = &*files_lock_clone;
             let mut workspace_files = lock.lock();
-            let files = nx_walker(workspace_root, |rec| {
-                let mut file_hashes: Vec<(PathBuf, String)> = vec![];
-                for (path, content) in rec {
-                    file_hashes.push((path, hash(&content)));
-                }
-                file_hashes
-            });
+            let mut files = nx_walker(workspace_root, |rec| {
+                use std::io::Read;
 
-            workspace_files.extend(files);
-            workspace_files.par_sort();
+                let mut files: Vec<(PathBuf, String)> = vec![];
+                let mut buffer: Vec<u8> = vec![];
+                let now = std::time::Instant::now();
+                for (full_path, path) in rec {
+                    if let Ok(mut file) = std::fs::File::open(&full_path) {
+                        buffer.clear();
+                        if file.read_to_end(&mut buffer).is_ok() {
+                            files.push((path, hash(&buffer)));
+                        } else {
+                            trace!("could not read file: {full_path:?}");
+                        }
+                    } else {
+                        trace!("could not read file: {full_path:?}");
+                    }
+                }
+                trace!("hashed workspace files in {:?}", now.elapsed());
+
+                files
+            });
+            files.par_sort();
+
+            *workspace_files = files;
             let files_len = workspace_files.len();
             trace!(?files_len, "files retrieved");
 

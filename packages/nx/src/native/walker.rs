@@ -4,6 +4,7 @@ use std::thread::available_parallelism;
 
 use crossbeam_channel::{unbounded, Receiver};
 use ignore::WalkBuilder;
+use tracing::trace;
 
 use crate::native::glob::build_glob_set;
 
@@ -38,7 +39,7 @@ where
 pub fn nx_walker<P, Fn, Re>(directory: P, f: Fn) -> Re
 where
     P: AsRef<Path>,
-    Fn: FnOnce(Receiver<(PathBuf, Vec<u8>)>) -> Re + Send + 'static,
+    Fn: FnOnce(Receiver<(PathBuf, PathBuf)>) -> Re + Send + 'static,
     Re: Send + 'static,
 {
     let directory = directory.as_ref();
@@ -59,10 +60,11 @@ where
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
 
-    let (sender, receiver) = unbounded::<(PathBuf, Vec<u8>)>();
+    let (sender, receiver) = unbounded();
 
-    let receiver_thread = thread::spawn(|| f(receiver));
+    trace!(?directory, "walking");
 
+    let now = std::time::Instant::now();
     walker.threads(cpus).build_parallel().run(|| {
         let tx = sender.clone();
         Box::new(move |entry| {
@@ -72,20 +74,23 @@ where
                 return Continue;
             };
 
-            let Ok(content) = std::fs::read(dir_entry.path()) else {
+            if dir_entry.file_type().is_some_and(|d| d.is_dir()) {
                 return Continue;
-            };
+            }
 
             let Ok(file_path) = dir_entry.path().strip_prefix(directory) else {
                 return Continue;
             };
 
-            tx.send((file_path.into(), content)).ok();
+            tx.send((dir_entry.path().to_owned(), file_path.to_owned()))
+                .ok();
 
             Continue
         })
     });
+    trace!("walked in {:?}", now.elapsed());
 
+    let receiver_thread = thread::spawn(|| f(receiver));
     drop(sender);
     receiver_thread.join().unwrap()
 }
@@ -126,7 +131,7 @@ mod test {
         // handle empty workspaces
         let content = nx_walker("/does/not/exist", |rec| {
             let mut paths = vec![];
-            for (path, _) in rec {
+            for (_, path) in rec {
                 paths.push(path);
             }
             paths
@@ -135,20 +140,20 @@ mod test {
 
         let temp_dir = setup_fs();
 
-        let content = nx_walker(temp_dir, |rec| {
+        let content = nx_walker(&temp_dir, |rec| {
             let mut paths = HashMap::new();
-            for (path, content) in rec {
-                paths.insert(path, content);
+            for (full_path, path) in rec {
+                paths.insert(full_path, path);
             }
             paths
         });
         assert_eq!(
             content,
             HashMap::from([
-                (PathBuf::from("baz/qux.txt"), "content@qux".into()),
-                (PathBuf::from("foo.txt"), "content1".into()),
-                (PathBuf::from("test.txt"), "content".into()),
-                (PathBuf::from("bar.txt"), "content2".into()),
+                (temp_dir.join("baz/qux.txt"), PathBuf::from("baz/qux.txt")),
+                (temp_dir.join("foo.txt"), PathBuf::from("foo.txt")),
+                (temp_dir.join("test.txt"), PathBuf::from("test.txt")),
+                (temp_dir.join("bar.txt"), PathBuf::from("bar.txt")),
             ])
         );
     }
@@ -182,7 +187,7 @@ nested/child-two/
 
         let mut file_names = nx_walker(temp_dir, |rec| {
             let mut file_names = vec![];
-            for (path, _) in rec {
+            for (_, path) in rec {
                 file_names.push(path.to_normalized_string());
             }
             file_names

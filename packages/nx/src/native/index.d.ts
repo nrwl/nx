@@ -23,7 +23,6 @@ export function remove(src: string): void
 export function copy(src: string, dest: string): void
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): string | null
-export function hashFiles(workspaceRoot: string): Record<string, string>
 export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 /**
  * Transfer the project graph from the JS world to the Rust world, so that we can pass the project graph via memory quicker
