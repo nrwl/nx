@@ -418,7 +418,7 @@ describe('app', () => {
     expect(targetConfig.build.executor).toEqual('@nx/vite:build');
     expect(targetConfig.build.outputs).toEqual(['{options.outputPath}']);
     expect(targetConfig.build.options).toEqual({
-      outputPath: 'dist/my-app',
+      outputPath: '../dist/my-app',
     });
     expect(appTree.exists(`my-app/environments/environment.ts`)).toBeFalsy();
     expect(

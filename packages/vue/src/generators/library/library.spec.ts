@@ -266,7 +266,7 @@ describe('lib', () => {
         executor: '@nx/vite:build',
         outputs: ['{options.outputPath}'],
         options: {
-          outputPath: 'dist/my-lib',
+          outputPath: '../dist/my-lib',
         },
       });
     });

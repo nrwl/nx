@@ -7,7 +7,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/my-test-react-app',
+  cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
 
   plugins: [react(), nxViteTsPaths()],
 
@@ -27,6 +27,9 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-test-react-app',
+    },
   },
 });
 "
@@ -39,7 +42,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/my-test-react-app',
+  cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
 
   plugins: [react(), nxViteTsPaths()],
 
@@ -55,6 +58,10 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-test-react-app',
+    },
   },
 });
 "
@@ -67,7 +74,7 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/react-lib-nonb-jest',
+  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
 
   plugins: [react(), nxViteTsPaths()],
 
@@ -83,6 +90,10 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    coverage: {
+      reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',
+    },
   },
 });
 "

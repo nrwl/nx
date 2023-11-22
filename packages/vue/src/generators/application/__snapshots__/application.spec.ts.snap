@@ -65,6 +65,10 @@ export default defineConfig({
   //  plugins: [ nxViteTsPaths() ],
   // },
 
+  build: {
+    outDir: '../dist/test',
+  },
+
   test: {
     globals: true,
     cache: {
@@ -72,6 +76,10 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    coverage: {
+      reportsDirectory: '../coverage/test',
+    },
   },
 });
 "
@@ -93,7 +101,7 @@ exports[`application generator should set up project correctly with given option
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/test",
+        "outputPath": "../dist/test",
         "skipTypeCheck": true
       },
       "configurations": {

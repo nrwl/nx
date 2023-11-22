@@ -205,8 +205,10 @@ export function addOrChangeBuildTarget(
   target: string
 ) {
   const project = readProjectConfiguration(tree, options.project);
+
   const buildOptions: ViteBuildExecutorOptions = {
     outputPath: joinPathFragments(
+      offsetFromRoot(project.root),
       'dist',
       project.root != '.' ? project.root : options.project
     ),
@@ -492,11 +494,14 @@ export function createOrEditViteConfig(
   tree: Tree,
   options: ViteConfigFileOptions,
   onlyVitest: boolean,
-  projectAlreadyHasViteTargets?: TargetFlags
+  projectAlreadyHasViteTargets?: TargetFlags,
+  vitestFileName?: boolean
 ) {
-  const projectConfig = readProjectConfiguration(tree, options.project);
+  const { root: projectRoot } = readProjectConfiguration(tree, options.project);
 
-  const viteConfigPath = `${projectConfig.root}/vite.config.ts`;
+  const viteConfigPath = vitestFileName
+    ? `${projectRoot}/vitest.config.ts`
+    : `${projectRoot}/vite.config.ts`;
 
   const buildOption = onlyVitest
     ? ''
@@ -505,6 +510,7 @@ export function createOrEditViteConfig(
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
       build: {
+        outDir: '${offsetFromRoot(projectRoot)}dist/${projectRoot}',
         lib: {
           // Could also be a dictionary or array of multiple entry points.
           entry: 'src/index.ts',
@@ -519,7 +525,11 @@ export function createOrEditViteConfig(
           external: [${options.rollupOptionsExternal ?? ''}]
         }
       },`
-    : ``;
+    : `
+    build: {
+      outDir: '${offsetFromRoot(projectRoot)}dist/${projectRoot}'
+    },
+    `;
 
   const imports: string[] = options.imports ? options.imports : [];
 
@@ -546,15 +556,18 @@ export function createOrEditViteConfig(
     ? `test: {
     globals: true,
     cache: {
-      dir: '${offsetFromRoot(projectConfig.root)}node_modules/.vitest'
+      dir: '${offsetFromRoot(projectRoot)}node_modules/.vitest'
     },
     environment: '${options.testEnvironment ?? 'jsdom'}',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     ${
       options.inSourceTests
-        ? `includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
+        ? `includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],`
         : ''
     }
+    coverage: {
+      reportsDirectory: '${offsetFromRoot(projectRoot)}coverage/${projectRoot}',
+    },
   },`
     : '';
 
@@ -591,8 +604,8 @@ export function createOrEditViteConfig(
     // },`;
 
   const cacheDir = `cacheDir: '${offsetFromRoot(
-    projectConfig.root
-  )}node_modules/.vite/${options.project}',`;
+    projectRoot
+  )}node_modules/.vite/${projectRoot}',`;
 
   if (tree.exists(viteConfigPath)) {
     handleViteConfigFileExists(
@@ -604,7 +617,8 @@ export function createOrEditViteConfig(
       plugins,
       testOption,
       cacheDir,
-      offsetFromRoot(projectConfig.root),
+      offsetFromRoot(projectRoot),
+      projectRoot,
       projectAlreadyHasViteTargets
     );
     return;
@@ -773,6 +787,7 @@ function handleViteConfigFileExists(
   testOption: string,
   cacheDir: string,
   offsetFromRoot: string,
+  projectRoot: string,
   projectAlreadyHasViteTargets?: TargetFlags
 ) {
   if (
@@ -788,17 +803,22 @@ function handleViteConfigFileExists(
     );
   }
 
-  const buildOptionObject = {
-    lib: {
-      entry: 'src/index.ts',
-      name: options.project,
-      fileName: 'index',
-      formats: ['es', 'cjs'],
-    },
-    rollupOptions: {
-      external: options.rollupOptionsExternal ?? [],
-    },
-  };
+  const buildOptionObject = options.includeLib
+    ? {
+        lib: {
+          entry: 'src/index.ts',
+          name: options.project,
+          fileName: 'index',
+          formats: ['es', 'cjs'],
+        },
+        rollupOptions: {
+          external: options.rollupOptionsExternal ?? [],
+        },
+        outDir: `${offsetFromRoot}dist/${projectRoot}`,
+      }
+    : {
+        outDir: `${offsetFromRoot}dist/${projectRoot}`,
+      };
 
   const testOptionObject = {
     globals: true,
@@ -807,6 +827,9 @@ function handleViteConfigFileExists(
     },
     environment: options.testEnvironment ?? 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    coverage: {
+      reportsDirectory: `${offsetFromRoot}coverage/${projectRoot}`,
+    },
   };
 
   const changed = ensureViteConfigIsCorrect(

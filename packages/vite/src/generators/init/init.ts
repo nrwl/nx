@@ -34,23 +34,8 @@ function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
   // base deps
   devDependencies['@nx/vite'] = nxVersion;
   devDependencies['vite'] = viteVersion;
-
-  // Do not install latest version if vitest already exists
-  // because version 0.32 and newer versions break nuxt-vitest
-  // https://github.com/vitest-dev/vitest/issues/3540
-  // https://github.com/danielroe/nuxt-vitest/issues/213#issuecomment-1588728111
-  if (
-    !packageJson.dependencies['vitest'] &&
-    !packageJson.devDependencies['vitest']
-  ) {
-    devDependencies['vitest'] = vitestVersion;
-  }
-  if (
-    !packageJson.dependencies['@vitest/ui'] &&
-    !packageJson.devDependencies['@vitest/ui']
-  ) {
-    devDependencies['@vitest/ui'] = vitestVersion;
-  }
+  devDependencies['vitest'] = vitestVersion;
+  devDependencies['@vitest/ui'] = vitestVersion;
 
   if (schema.testEnvironment === 'jsdom') {
     devDependencies['jsdom'] = jsdomVersion;

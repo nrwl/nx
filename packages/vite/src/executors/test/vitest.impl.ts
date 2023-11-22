@@ -197,6 +197,10 @@ function findViteConfig(projectRootFullPath: string): string {
       existsSync(joinPathFragments(projectRootFullPath, `vite.config.${ext}`))
     ) {
       return joinPathFragments(projectRootFullPath, `vite.config.${ext}`);
+    } else if (
+      existsSync(joinPathFragments(projectRootFullPath, `vitest.config.${ext}`))
+    ) {
+      return joinPathFragments(projectRootFullPath, `vitest.config.${ext}`);
     }
   }
 }

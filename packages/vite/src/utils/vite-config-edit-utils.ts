@@ -85,7 +85,11 @@ function handleBuildOrTestNode(
         let updatedPropsString = '';
         for (const prop of existingProperties) {
           const propName = prop.name.getText();
-          if (!configContentObject[propName] && propName !== 'dir') {
+          if (
+            !configContentObject[propName] &&
+            propName !== 'dir' &&
+            propName !== 'reportsDirectory'
+          ) {
             updatedPropsString += `'${propName}': ${prop.initializer.getText()},\n`;
           }
         }
