@@ -15,7 +15,6 @@ export default async function update(tree: Tree) {
     for (const [targetName, targetConfig] of Object.entries(
       projectConfiguration.targets ?? {}
     )) {
-      // this will be in a broken state after the package is globally renamed
       if (targetConfig.executor !== '@nx/eslint:lint') {
         continue;
       }
