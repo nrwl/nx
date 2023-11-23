@@ -340,7 +340,7 @@ export async function createNxReleaseConfig(
 
 export async function handleNxReleaseConfigError(
   error: CreateNxReleaseConfigError
-) {
+): Promise<never> {
   switch (error.code) {
     case 'RELEASE_GROUP_MATCHES_NO_PROJECTS':
       {
