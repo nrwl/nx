@@ -124,7 +124,10 @@ function getNxEnvVariablesForTask(
 
 function loadDotEnvFilesForTask(
   task: Task,
-  environmentVariables: NodeJS.ProcessEnv
+  environmentVariables: NodeJS.ProcessEnv,
+  envExpand = process.env.NX_ENV_EXPAND !== undefined
+    ? (JSON.parse(process.env.NX_ENV_EXPAND) as boolean) === true
+    : true
 ) {
   // Collect dot env files that may pertain to a task
   const dotEnvFiles = [
@@ -172,13 +175,20 @@ function loadDotEnvFilesForTask(
       // Do not override existing env variables as we load
       override: false,
     });
-    environmentVariables = {
-      ...expand({
-        ...myEnv,
-        ignoreProcessEnv: true, // Do not override existing env variables as we load
-      }).parsed,
-      ...environmentVariables,
-    };
+    if (envExpand) {
+      environmentVariables = {
+        ...expand({
+          ...myEnv,
+          ignoreProcessEnv: true, // Do not override existing env variables as we load
+        }).parsed,
+        ...environmentVariables,
+      };
+    } else {
+      environmentVariables = {
+        ...myEnv.parsed,
+        ...environmentVariables,
+      };
+    }
   }
 
   return environmentVariables;
