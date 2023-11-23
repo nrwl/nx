@@ -7,10 +7,10 @@ import {
   generateFlatOverride,
   generatePluginExtendsElement,
   generateSpreadElement,
-  mapFilePath,
   stringifyNodeList,
 } from '../../utils/flat-config/ast-utils';
 import { getPluginImport } from '../../utils/eslint-file';
+import { mapFilePath } from '../../utils/flat-config/path-utils';
 
 /**
  * Converts an ESLint JSON config to a flat config.
@@ -148,7 +148,7 @@ export function convertEslintJsonToFlatConfig(
       ) {
         isFlatCompatNeeded = true;
       }
-      exportElements.push(generateFlatOverride(override, root));
+      exportElements.push(generateFlatOverride(override));
     });
   }
 
@@ -161,7 +161,7 @@ export function convertEslintJsonToFlatConfig(
     if (patterns.length > 0) {
       exportElements.push(
         generateAst({
-          ignores: patterns.map((path) => mapFilePath(path, root)),
+          ignores: patterns.map((path) => mapFilePath(path)),
         })
       );
     }
@@ -173,7 +173,7 @@ export function convertEslintJsonToFlatConfig(
         .read(ignorePath, 'utf-8')
         .split('\n')
         .filter((line) => line.length > 0 && line !== 'node_modules')
-        .map((path) => mapFilePath(path, root));
+        .map((path) => mapFilePath(path));
       if (patterns.length > 0) {
         exportElements.push(generateAst({ ignores: patterns }));
       }
@@ -188,7 +188,7 @@ export function convertEslintJsonToFlatConfig(
   );
 
   return {
-    content: stringifyNodeList(nodeList, root),
+    content: stringifyNodeList(nodeList),
     addESLintRC: isFlatCompatNeeded,
     addESLintJS: isESLintJSNeeded,
   };
