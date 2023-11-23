@@ -16,6 +16,7 @@ import {
   readFileMapCache,
 } from '../../project-graph/nx-deps-cache';
 import {
+  RetrievedGraphNodes,
   retrieveProjectConfigurations,
   retrieveWorkspaceFiles,
 } from '../../project-graph/utils/retrieve-workspace-files';
@@ -143,10 +144,11 @@ function computeWorkspaceConfigHash(
   return hashArray(projectConfigurationStrings);
 }
 
-async function processCollectedUpdatedAndDeletedFiles(
-  projects: Record<string, ProjectConfiguration>,
-  nxJson: NxJsonConfiguration
-) {
+async function processCollectedUpdatedAndDeletedFiles({
+  projects,
+  externalNodes,
+  projectRootMap,
+}: RetrievedGraphNodes) {
   try {
     performance.mark('hash-watched-changes-start');
     const updatedFiles = [...collectedUpdatedFiles.values()];
@@ -170,8 +172,12 @@ async function processCollectedUpdatedAndDeletedFiles(
     if (workspaceConfigHash !== storedWorkspaceConfigHash) {
       storedWorkspaceConfigHash = workspaceConfigHash;
 
-      ({ externalNodes: knownExternalNodes, ...fileMapWithFiles } =
-        await retrieveWorkspaceFiles(workspaceRoot, nxJson));
+      ({ ...fileMapWithFiles } = await retrieveWorkspaceFiles(
+        workspaceRoot,
+        projectRootMap
+      ));
+
+      knownExternalNodes = externalNodes;
     } else {
       if (fileMapWithFiles) {
         fileMapWithFiles = updateFileMap(
@@ -181,7 +187,10 @@ async function processCollectedUpdatedAndDeletedFiles(
           deletedFiles
         );
       } else {
-        fileMapWithFiles = await retrieveWorkspaceFiles(workspaceRoot, nxJson);
+        fileMapWithFiles = await retrieveWorkspaceFiles(
+          workspaceRoot,
+          projectRootMap
+        );
       }
     }
 
@@ -210,12 +219,9 @@ async function processFilesAndCreateAndSerializeProjectGraph() {
       workspaceRoot,
       nxJson
     );
-    await processCollectedUpdatedAndDeletedFiles(
-      configResult.projectNodes,
-      nxJson
-    );
+    await processCollectedUpdatedAndDeletedFiles(configResult);
     writeSourceMaps(configResult.sourceMaps);
-    return createAndSerializeProjectGraph(configResult.projectNodes);
+    return createAndSerializeProjectGraph(configResult);
   } catch (err) {
     return Promise.resolve({
       error: err,
@@ -243,9 +249,9 @@ function copyFileMap(m: FileMap) {
   return c;
 }
 
-async function createAndSerializeProjectGraph(
-  projects: Record<string, ProjectConfiguration>
-): Promise<{
+async function createAndSerializeProjectGraph({
+  projects,
+}: RetrievedGraphNodes): Promise<{
   error: string | null;
   projectGraph: ProjectGraph | null;
   fileMap: FileMap | null;

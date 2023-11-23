@@ -17,11 +17,11 @@ import {
   generateFlatOverride,
   generatePluginExtendsElement,
   hasOverride,
-  mapFilePath,
   removeOverridesFromLintConfig,
   replaceOverride,
 } from './flat-config/ast-utils';
 import ts = require('typescript');
+import { mapFilePath } from './flat-config/path-utils';
 
 export const eslintConfigFileWhitelist = [
   '.eslintrc',
@@ -180,7 +180,7 @@ export function addOverrideToLintConfig(
       root,
       isBase ? baseEsLintFlatConfigFile : 'eslint.config.js'
     );
-    const flatOverride = generateFlatOverride(override, root);
+    const flatOverride = generateFlatOverride(override);
     let content = tree.read(fileName, 'utf8');
     // we will be using compat here so we need to make sure it's added
     if (overrideNeedsCompat(override)) {
@@ -282,7 +282,7 @@ export function replaceOverridesInLintConfig(
     }
     content = removeOverridesFromLintConfig(content);
     overrides.forEach((override) => {
-      const flatOverride = generateFlatOverride(override, root);
+      const flatOverride = generateFlatOverride(override);
       addBlockToFlatConfigExport(content, flatOverride);
     });
 
@@ -359,7 +359,7 @@ export function addIgnoresToLintConfig(
   if (useFlatConfig(tree)) {
     const fileName = joinPathFragments(root, 'eslint.config.js');
     const block = generateAst<ts.ObjectLiteralExpression>({
-      ignores: ignorePatterns.map((path) => mapFilePath(path, root)),
+      ignores: ignorePatterns.map((path) => mapFilePath(path)),
     });
     tree.write(
       fileName,
