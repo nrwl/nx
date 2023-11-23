@@ -11,7 +11,3 @@
 #### Returns
 
 `Promise`<[`ProjectFileMap`](../../devkit/documents/ProjectFileMap)\>
-
-**`Deprecated`**
-
-Use createFileMapUsingProjectGraph(graph).fileMap.projectFileMap instead
