@@ -255,7 +255,7 @@
     "isolatedConfig": {
       "type": "boolean",
       "description": "Do not apply Nx webpack plugins automatically. Plugins need to be applied in the project's webpack.config.js file (e.g. withNx, withReact, etc.).",
-      "default": false
+      "default": true
     },
     "extractLicenses": {
       "type": "boolean",

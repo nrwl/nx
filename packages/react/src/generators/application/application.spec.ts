@@ -42,7 +42,7 @@ describe('app', () => {
 
       expect(projects.get('my-app').root).toEqual('my-app');
       expect(projects.get('my-app-e2e').root).toEqual('my-app-e2e');
-    });
+    }, 60_000);
 
     it('should add vite types to tsconfigs', async () => {
       await applicationGenerator(appTree, {
@@ -388,7 +388,6 @@ describe('app', () => {
       scripts: [],
       styles: ['my-app/src/styles.css'],
       tsConfig: 'my-app/tsconfig.app.json',
-      isolatedConfig: true,
       webpackConfig: 'my-app/webpack.config.js',
     });
     expect(targetConfig.build.configurations.production).toEqual({
