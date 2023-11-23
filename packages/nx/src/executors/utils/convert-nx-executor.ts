@@ -24,7 +24,7 @@ export function convertNxExecutor(executor: Executor) {
             builderContext.workspaceRoot,
             nxJsonConfiguration
           )
-        ).projects,
+        ).projectNodes,
       };
       const context: ExecutorContext = {
         root: builderContext.workspaceRoot,
