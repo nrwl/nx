@@ -5,8 +5,6 @@ use crate::native::hasher::{hash, hash_file_path};
 use crate::native::utils::Normalize;
 use napi::bindgen_prelude::*;
 use rayon::prelude::*;
-use std::fs::File;
-use std::io::{BufRead, BufReader};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -54,7 +52,7 @@ impl FilesWorker {
             let (lock, cvar) = &*files_lock_clone;
             let mut workspace_files = lock.lock();
 
-            let files = nx_walker(workspace_root, |rec| rec.into_iter().collect::<Vec<_>>());
+            let files = nx_walker(workspace_root).collect::<Vec<_>>();
             let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
             let chunks = files.len() / num_parallelism;
 
