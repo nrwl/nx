@@ -191,20 +191,15 @@ describe('convert-to-flat-config generator', () => {
       module.exports = [
         ...baseConfig,
         {
-          files: [
-            'libs/test-lib/**/*.ts',
-            'libs/test-lib/**/*.tsx',
-            'libs/test-lib/**/*.js',
-            'libs/test-lib/**/*.jsx',
-          ],
+          files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
           rules: {},
         },
         {
-          files: ['libs/test-lib/**/*.ts', 'libs/test-lib/**/*.tsx'],
+          files: ['**/*.ts', '**/*.tsx'],
           rules: {},
         },
         {
-          files: ['libs/test-lib/**/*.js', 'libs/test-lib/**/*.jsx'],
+          files: ['**/*.js', '**/*.jsx'],
           rules: {},
         },
       ];

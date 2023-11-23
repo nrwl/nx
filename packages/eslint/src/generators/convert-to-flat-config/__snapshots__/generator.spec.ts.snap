@@ -381,20 +381,15 @@ exports[`convert-to-flat-config generator should convert json successfully 2`] =
 module.exports = [
   ...baseConfig,
   {
-    files: [
-      'libs/test-lib/**/*.ts',
-      'libs/test-lib/**/*.tsx',
-      'libs/test-lib/**/*.js',
-      'libs/test-lib/**/*.jsx',
-    ],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {},
   },
   {
-    files: ['libs/test-lib/**/*.ts', 'libs/test-lib/**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {},
   },
   {
-    files: ['libs/test-lib/**/*.js', 'libs/test-lib/**/*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     rules: {},
   },
 ];
@@ -451,20 +446,15 @@ exports[`convert-to-flat-config generator should convert yaml successfully 2`] =
 module.exports = [
   ...baseConfig,
   {
-    files: [
-      'libs/test-lib/**/*.ts',
-      'libs/test-lib/**/*.tsx',
-      'libs/test-lib/**/*.js',
-      'libs/test-lib/**/*.jsx',
-    ],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {},
   },
   {
-    files: ['libs/test-lib/**/*.ts', 'libs/test-lib/**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {},
   },
   {
-    files: ['libs/test-lib/**/*.js', 'libs/test-lib/**/*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     rules: {},
   },
 ];
@@ -521,20 +511,15 @@ exports[`convert-to-flat-config generator should convert yml successfully 2`] = 
 module.exports = [
   ...baseConfig,
   {
-    files: [
-      'libs/test-lib/**/*.ts',
-      'libs/test-lib/**/*.tsx',
-      'libs/test-lib/**/*.js',
-      'libs/test-lib/**/*.jsx',
-    ],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {},
   },
   {
-    files: ['libs/test-lib/**/*.ts', 'libs/test-lib/**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {},
   },
   {
-    files: ['libs/test-lib/**/*.js', 'libs/test-lib/**/*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     rules: {},
   },
 ];
@@ -547,24 +532,19 @@ exports[`convert-to-flat-config generator should handle custom eslintignores 1`]
 module.exports = [
   ...baseConfig,
   {
-    files: [
-      'libs/test-lib/**/*.ts',
-      'libs/test-lib/**/*.tsx',
-      'libs/test-lib/**/*.js',
-      'libs/test-lib/**/*.jsx',
-    ],
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {},
   },
   {
-    files: ['libs/test-lib/**/*.ts', 'libs/test-lib/**/*.tsx'],
+    files: ['**/*.ts', '**/*.tsx'],
     rules: {},
   },
   {
-    files: ['libs/test-lib/**/*.js', 'libs/test-lib/**/*.jsx'],
+    files: ['**/*.js', '**/*.jsx'],
     rules: {},
   },
-  { ignores: ['libs/test-lib/ignore/me'] },
-  { ignores: ['libs/test-lib/ignore/me/as/well'] },
+  { ignores: ['ignore/me'] },
+  { ignores: ['ignore/me/as/well'] },
 ];
 "
 `;

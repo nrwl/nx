@@ -207,10 +207,10 @@ function createEsLintConfiguration(
       nodes.push(generateSpreadElement('baseConfig'));
     }
     overrides.forEach((override) => {
-      nodes.push(generateFlatOverride(override, projectConfig.root));
+      nodes.push(generateFlatOverride(override));
     });
     const nodeList = createNodeList(importMap, nodes, isCompatNeeded);
-    const content = stringifyNodeList(nodeList, projectConfig.root);
+    const content = stringifyNodeList(nodeList);
     tree.write(join(projectConfig.root, 'eslint.config.js'), content);
   } else {
     writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
