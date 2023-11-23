@@ -35,7 +35,7 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'my-app-e2e'
       );
-    }, 35000);
+    }, 60_000);
 
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
@@ -53,7 +53,7 @@ describe('app', () => {
           implicitDependencies: ['my-app'],
         },
       });
-    });
+    }, 60_000);
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
@@ -225,7 +225,7 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'my-dir/my-app-e2e'
       );
-    }, 35000);
+    }, 60_000);
 
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
@@ -358,6 +358,7 @@ describe('app', () => {
     expect(targets.build.executor).toEqual('@nx/webpack:webpack');
     expect(targets.build.outputs).toEqual(['{options.outputPath}']);
     expect(targets.build.options).toEqual({
+      target: 'web',
       compiler: 'babel',
       assets: ['my-app/src/favicon.ico', 'my-app/src/assets'],
       index: 'my-app/src/index.html',

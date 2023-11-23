@@ -7,7 +7,6 @@ import {
   generateFlatOverride,
   stringifyNodeList,
 } from '../utils/flat-config/ast-utils';
-import { addPluginsToLintConfig } from '../utils/eslint-file';
 
 /**
  * This configuration is intended to apply to all TypeScript source files.
@@ -97,7 +96,7 @@ export const getGlobalFlatEslintConfiguration = (
   rootProject?: boolean
 ): string => {
   const nodeList = createNodeList(new Map(), [], true);
-  let content = stringifyNodeList(nodeList, '', 'eslint.config.js');
+  let content = stringifyNodeList(nodeList, '');
   content = addImportToFlatConfig(content, 'nxPlugin', '@nx/eslint-plugin');
   content = addPluginsToExportsBlock(content, [
     { name: '@nx', varName: 'nxPlugin', imp: '@nx/eslint-plugin' },

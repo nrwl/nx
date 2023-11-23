@@ -179,7 +179,12 @@ export async function createNxReleaseConfig(
   const rootVersionWithoutGit = { ...rootVersionConfig };
   delete rootVersionWithoutGit.git;
 
-  const allProjects = findMatchingProjects(['*'], projectGraph.nodes);
+  const allProjects = findMatchingProjects(['*'], projectGraph.nodes).filter(
+    // only include libs by default when the user has no groups config,
+    // because the default implementation assumes npm js packages
+    // and these will usually be libs
+    (project) => projectGraph.nodes[project].type === 'lib'
+  );
   const groups: NxReleaseConfig['groups'] =
     userConfig.groups && Object.keys(userConfig.groups).length
       ? ensureProjectsConfigIsArray(userConfig.groups)
