@@ -6,6 +6,7 @@ import {
 } from '@nx/devkit';
 import { Linter } from 'eslint';
 import * as ts from 'typescript';
+import { mapFilePath } from './path-utils';
 
 /**
  * Remove all overrides from the config file
@@ -166,7 +167,7 @@ export function replaceOverride(
           length: end - start,
         });
         const updatedData = update(data);
-        mapFilePaths(updatedData, root);
+        mapFilePaths(updatedData);
         changes.push({
           type: ChangeType.Insert,
           index: start,
@@ -694,12 +695,11 @@ export function stringifyNodeList(
     | ts.Identifier
     | ts.ExpressionStatement
     | ts.SourceFile
-  >,
-  root: string
+  >
 ): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const resultFile = ts.createSourceFile(
-    joinPathFragments(root, ''),
+    '',
     '',
     ts.ScriptTarget.Latest,
     true,
@@ -749,10 +749,9 @@ export function generateRequire(
  * Generates AST object or spread element based on JSON override object
  */
 export function generateFlatOverride(
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
-  root: string
+  override: Linter.ConfigOverride<Linter.RulesRecord>
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
-  mapFilePaths(override, root);
+  mapFilePaths(override);
   if (
     !override.env &&
     !override.extends &&
@@ -810,41 +809,22 @@ export function generateFlatOverride(
 }
 
 export function mapFilePaths(
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
-  root: string
+  override: Linter.ConfigOverride<Linter.RulesRecord>
 ) {
   if (override.files) {
     override.files = Array.isArray(override.files)
       ? override.files
       : [override.files];
-    override.files = override.files.map((file) => mapFilePath(file, root));
+    override.files = override.files.map((file) => mapFilePath(file));
   }
   if (override.excludedFiles) {
     override.excludedFiles = Array.isArray(override.excludedFiles)
       ? override.excludedFiles
       : [override.excludedFiles];
     override.excludedFiles = override.excludedFiles.map((file) =>
-      mapFilePath(file, root)
+      mapFilePath(file)
     );
   }
-}
-
-export function mapFilePath(filePath: string, root: string) {
-  if (filePath.startsWith('!')) {
-    const fileWithoutBang = filePath.slice(1);
-    if (fileWithoutBang.startsWith('*.')) {
-      return `!${joinPathFragments(root, '**', fileWithoutBang)}`;
-    } else if (!fileWithoutBang.startsWith(root)) {
-      return `!${joinPathFragments(root, fileWithoutBang)}`;
-    }
-    return filePath;
-  }
-  if (filePath.startsWith('*.')) {
-    return joinPathFragments(root, '**', filePath);
-  } else if (!filePath.startsWith(root)) {
-    return joinPathFragments(root, filePath);
-  }
-  return filePath;
 }
 
 function addTSObjectProperty(
