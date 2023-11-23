@@ -1,6 +1,6 @@
 import { exec } from 'child_process';
 import { tmpProjPath } from './paths';
-import { getPackageManagerCommand } from '@nx/devkit';
+import { detectPackageManager, getPackageManagerCommand } from '@nx/devkit';
 import { fileExists } from './utils';
 
 /**
@@ -43,8 +43,9 @@ export function runNxCommandAsync(
     silenceError: false,
   }
 ): Promise<{ stdout: string; stderr: string }> {
+  const cwd = opts.cwd ?? tmpProjPath();
   if (fileExists(tmpProjPath('package.json'))) {
-    const pmc = getPackageManagerCommand();
+    const pmc = getPackageManagerCommand(detectPackageManager(cwd));
     return runCommandAsync(`${pmc.exec} nx ${command}`, opts);
   } else if (process.platform === 'win32') {
     return runCommandAsync(`./nx.bat %${command}`, opts);

@@ -1,13 +1,13 @@
 {
-  "name": "webpack-dev-server",
-  "implementation": "/packages/angular/src/builders/webpack-dev-server/webpack-dev-server.impl.ts",
+  "name": "dev-server",
+  "implementation": "/packages/angular/src/builders/dev-server/dev-server.impl.ts",
   "schema": {
     "version": 2,
     "outputCapture": "direct-nodejs",
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Schema for Webpack Dev Server",
-    "description": "The webpack-dev-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
-    "examplesFile": "##### Seving an application with a custom webpack configuration\n\nThis executor should be used along with `@nx/angular:webpack-browser` to serve an application using a custom webpack configuration.\n\nYour `project.json` file should contain a `build` and `serve` target that matches the following:\n\n```json\n\"build\": {\n    \"executor\": \"@nx/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n},\n\"serve\": {\n    \"executor\": \"@nx/angular:webpack-dev-server\",\n    \"configurations\": {\n        \"production\": {\n            \"buildTarget\": \"appName:build:production\"\n        },\n        \"development\": {\n            \"buildTarget\": \"appName:build:development\"\n        }\n    },\n    \"defaultConfiguration\": \"development\",\n}\n```\n",
+    "description": "The dev-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+    "examplesFile": "##### Seving an application with a custom webpack configuration\n\nThis executor should be used along with `@nx/angular:webpack-browser` to serve an application using a custom webpack configuration.\n\nYour `project.json` file should contain a `build` and `serve` target that matches the following:\n\n```json\n\"build\": {\n    \"executor\": \"@nx/angular:webpack-browser\",\n    \"options\": {\n        ...\n        \"customWebpackConfig\": {\n          \"path\": \"apps/appName/webpack.config.js\"\n        }\n    }\n},\n\"serve\": {\n    \"executor\": \"@nx/angular:dev-server\",\n    \"configurations\": {\n        \"production\": {\n            \"buildTarget\": \"appName:build:production\"\n        },\n        \"development\": {\n            \"buildTarget\": \"appName:build:development\"\n        }\n    },\n    \"defaultConfiguration\": \"development\",\n}\n```\n",
     "type": "object",
     "presets": [
       { "name": "Using a Different Port", "keys": ["buildTarget", "port"] }
@@ -117,9 +117,9 @@
       { "required": ["browserTarget"] }
     ]
   },
-  "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+  "description": "The `dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
   "aliases": [],
   "hidden": false,
-  "path": "/packages/angular/src/builders/webpack-dev-server/schema.json",
+  "path": "/packages/angular/src/builders/dev-server/schema.json",
   "type": "executor"
 }
