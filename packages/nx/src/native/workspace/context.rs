@@ -1,7 +1,7 @@
 use napi::bindgen_prelude::External;
 use std::collections::HashMap;
 
-use crate::native::hasher::hash;
+use crate::native::hasher::{hash, hash_file_path};
 use crate::native::utils::Normalize;
 use napi::bindgen_prelude::*;
 use rayon::prelude::*;
@@ -34,22 +34,6 @@ pub struct WorkspaceContext {
 
 type Files = Vec<(PathBuf, String)>;
 
-#[inline]
-fn hash_file_buffer(path: &Path) -> String {
-    let Ok(file) = File::open(path) else {
-        trace!("could not open file: {path:?}");
-        return hash(&[]);
-    };
-
-    let mut buffer = BufReader::new(file);
-    let Ok(content) = buffer.fill_buf() else {
-        trace!("could not read file: {path:?}");
-        return hash(&[]);
-    };
-
-    hash(content)
-}
-
 struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
 impl FilesWorker {
     fn gather_files(workspace_root: &Path) -> Self {
@@ -79,15 +63,17 @@ impl FilesWorker {
             let mut files = if chunks < num_parallelism {
                 files
                     .iter()
-                    .map(|(full_path, path)| (path.to_owned(), hash_file_buffer(&full_path)))
+                    .filter_map(|(full_path, path)| {
+                        hash_file_path(full_path).map(|hash| (path.to_owned(), hash))
+                    })
                     .collect::<Vec<_>>()
             } else {
                 files
                     .par_chunks(chunks)
                     .flat_map_iter(|chunks| {
-                        chunks
-                            .iter()
-                            .map(|(full_path, path)| (path.to_owned(), hash_file_buffer(full_path)))
+                        chunks.iter().filter_map(|(full_path, path)| {
+                            hash_file_path(full_path).map(|hash| (path.to_owned(), hash))
+                        })
                     })
                     .collect::<Vec<_>>()
             };
