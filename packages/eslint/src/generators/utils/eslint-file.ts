@@ -28,13 +28,17 @@ import {
   ESLINT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 
-export function findEslintFile(tree: Tree, projectRoot = '.'): string | null {
-  if (projectRoot === '.' && tree.exists(baseEsLintConfigFile)) {
+export function findEslintFile(
+  tree: Tree,
+  projectRoot?: string
+): string | null {
+  if (projectRoot === undefined && tree.exists(baseEsLintConfigFile)) {
     return baseEsLintConfigFile;
   }
-  if (projectRoot === '.' && tree.exists(baseEsLintFlatConfigFile)) {
+  if (projectRoot === undefined && tree.exists(baseEsLintFlatConfigFile)) {
     return baseEsLintFlatConfigFile;
   }
+  projectRoot ??= '';
   for (const file of ESLINT_CONFIG_FILENAMES) {
     if (tree.exists(joinPathFragments(projectRoot, file))) {
       return file;
