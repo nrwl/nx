@@ -23,7 +23,7 @@ import { filterReleaseGroups } from './config/filter-release-groups';
  * NOTE: This function is also exported for programmatic usage and forms part of the public API
  * of Nx.
  */
-export async function nxReleasePublish(args: PublishOptions): Promise<void> {
+export async function releasePublish(args: PublishOptions): Promise<void> {
   /**
    * When used via the CLI, the args object will contain a __overrides_unparsed__ property that is
    * important for invoking the relevant executor behind the scenes.

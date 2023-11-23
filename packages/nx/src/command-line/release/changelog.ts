@@ -60,7 +60,7 @@ type PostGitTask = (latestCommit: string) => Promise<void>;
  * NOTE: This function is also exported for programmatic usage and forms part of the public API
  * of Nx.
  */
-export async function nxReleaseChangelog(
+export async function releaseChangelog(
   args: ChangelogOptions
 ): Promise<number> {
   return handleErrors(args.verbose, async () => {

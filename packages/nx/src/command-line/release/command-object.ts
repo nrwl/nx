@@ -144,7 +144,7 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
     ),
   handler: (args) =>
     import('./version')
-      .then((m) => m.nxReleaseVersion(args))
+      .then((m) => m.releaseVersion(args))
       .then((versionDataOrExitCode) => {
         if (typeof versionDataOrExitCode === 'number') {
           return process.exit(versionDataOrExitCode);
@@ -201,7 +201,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
         })
     ),
   handler: async (args) => {
-    const status = await (await import('./changelog')).nxReleaseChangelog(args);
+    const status = await (await import('./changelog')).releaseChangelog(args);
     process.exit(status);
   },
 };
@@ -227,7 +227,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
       }),
   handler: (args) =>
     import('./publish').then((m) =>
-      m.nxReleasePublish(coerceParallelOption(withOverrides(args, 2)))
+      m.releasePublish(coerceParallelOption(withOverrides(args, 2)))
     ),
 };
 

@@ -77,7 +77,7 @@ interface NxReleaseVersionResult {
  * NOTE: This function is also exported for programmatic usage and forms part of the public API
  * of Nx.
  */
-export async function nxReleaseVersion(
+export async function releaseVersion(
   args: VersionOptions
 ): Promise<NxReleaseVersionResult> {
   return handleErrors(args.verbose, async () => {

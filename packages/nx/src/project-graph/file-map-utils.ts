@@ -27,15 +27,13 @@ export interface WorkspaceFileMap {
   fileMap: FileMap;
 }
 
-/**
- * @deprecated Use createFileMapUsingProjectGraph(graph).fileMap.projectFileMap instead
- */
 export async function createProjectFileMapUsingProjectGraph(
   graph: ProjectGraph
 ): Promise<ProjectFileMap> {
   return (await createFileMapUsingProjectGraph(graph)).fileMap.projectFileMap;
 }
 
+// TODO: refactor this to pull straight from the rust context instead of creating the file map in JS
 export async function createFileMapUsingProjectGraph(
   graph: ProjectGraph
 ): Promise<WorkspaceFileMap> {
