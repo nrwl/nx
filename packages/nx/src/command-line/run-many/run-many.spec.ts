@@ -1,6 +1,6 @@
-import {projectsToRun} from './run-many';
-import {performance} from 'perf_hooks';
-import {ProjectGraph} from '../../config/project-graph';
+import { projectsToRun } from './run-many';
+import { performance } from 'perf_hooks';
+import { ProjectGraph } from '../../config/project-graph';
 
 describe('run-many', () => {
   describe('projectsToRun', () => {
@@ -44,7 +44,7 @@ describe('run-many', () => {
           projects: [],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).toContain('proj1');
       expect(projects).toContain('proj2');
     });
@@ -56,7 +56,7 @@ describe('run-many', () => {
           projects: ['proj1'],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).toContain('proj1');
       expect(projects).not.toContain('proj2');
     });
@@ -68,7 +68,7 @@ describe('run-many', () => {
           projects: ['proj*'],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).toContain('proj1');
       expect(projects).toContain('proj2');
     });
@@ -80,7 +80,7 @@ describe('run-many', () => {
           projects: ['tag:api'],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).toContain('proj1');
       expect(projects).not.toContain('proj2');
     });
@@ -92,7 +92,7 @@ describe('run-many', () => {
           projects: ['tag:theme*'],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).toContain('proj1');
       expect(projects).toContain('proj2');
     });
@@ -104,7 +104,7 @@ describe('run-many', () => {
           projects: ['proj1', 'tag:ui'],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).toContain('proj1');
       expect(projects).toContain('proj2');
       projects = projectsToRun(
@@ -113,7 +113,7 @@ describe('run-many', () => {
           projects: ['proj1', 'tag:a*'],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).toContain('proj1');
     });
 
@@ -126,7 +126,7 @@ describe('run-many', () => {
           exclude: ['proj1'],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).not.toContain('proj1');
       expect(projects).toContain('proj2');
     });
@@ -140,7 +140,7 @@ describe('run-many', () => {
           exclude: ['proj*'],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).not.toContain('proj1');
       expect(projects).not.toContain('proj2');
     });
@@ -154,7 +154,7 @@ describe('run-many', () => {
           exclude: ['tag:ui'],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).toContain('proj1');
       expect(projects).not.toContain('proj2');
     });
@@ -168,7 +168,7 @@ describe('run-many', () => {
           exclude: ['tag:theme*'],
         },
         projectGraph
-      ).map(({name}) => name);
+      ).map(({ name }) => name);
       expect(projects).not.toContain('proj1');
       expect(projects).not.toContain('proj2');
     });
