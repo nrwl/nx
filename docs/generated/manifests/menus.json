@@ -6553,9 +6553,9 @@
                 "disableCollapsible": false
               },
               {
-                "id": "webpack-dev-server",
-                "path": "/nx-api/angular/executors/webpack-dev-server",
-                "name": "webpack-dev-server",
+                "id": "dev-server",
+                "path": "/nx-api/angular/executors/dev-server",
+                "name": "dev-server",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

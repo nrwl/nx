@@ -695,18 +695,27 @@ export function stringifyNodeList(
     | ts.ExpressionStatement
     | ts.SourceFile
   >,
-  root: string,
-  fileName: string
+  root: string
 ): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const resultFile = ts.createSourceFile(
-    joinPathFragments(root, fileName),
+    joinPathFragments(root, ''),
     '',
     ts.ScriptTarget.Latest,
     true,
     ts.ScriptKind.JS
   );
-  return printer.printList(ts.ListFormat.MultiLine, nodes, resultFile);
+  return (
+    printer
+      .printList(ts.ListFormat.MultiLine, nodes, resultFile)
+      // add new line before compat initialization
+      .replace(
+        /const compat = new FlatCompat/,
+        '\nconst compat = new FlatCompat'
+      )
+      // add new line before module.exports = ...
+      .replace(/module\.exports/, '\nmodule.exports')
+  );
 }
 
 /**
