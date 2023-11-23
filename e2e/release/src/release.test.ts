@@ -540,15 +540,15 @@ describe('nx release', () => {
 
       > nx run {project-name}:nx-release-publish
 
-      Skipped package "@proj/{project-name}" from project "{project-name}", as v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
+      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
 
       > nx run {project-name}:nx-release-publish
 
-      Skipped package "@proj/{project-name}" from project "{project-name}", as v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
+      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
 
       > nx run {project-name}:nx-release-publish
 
-      Skipped package "@proj/{project-name}" from project "{project-name}", as v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
+      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
 
 
 

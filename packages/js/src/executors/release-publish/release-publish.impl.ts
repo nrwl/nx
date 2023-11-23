@@ -89,7 +89,7 @@ export default async function runExecutor(
     const distTags = resultJson['dist-tags'] || {};
     if (distTags[tag] === currentVersion) {
       console.warn(
-        `Skipped ${packageTxt}, as v${currentVersion} already exists in ${registry} with tag "${tag}"`
+        `Skipped ${packageTxt} because v${currentVersion} already exists in ${registry} with tag "${tag}"`
       );
       return {
         success: true,
@@ -140,8 +140,6 @@ export default async function runExecutor(
             success: false,
           };
         } catch (err) {
-          // npm v9 onwards seems to guarantee stdout will be well formed JSON when --json is used, so maybe we need to
-          // specify that as minimum supported version? (comes with node 18 and 20 by default)
           console.error(
             'Something unexpected went wrong when processing the npm dist-tag add output\n',
             err
@@ -154,7 +152,7 @@ export default async function runExecutor(
     }
   } catch (err) {
     const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
-    // If the error is that the package doesn't exist, then we can ignore it
+    // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
     if (
       !(
         stdoutData.error?.code?.includes('E404') &&
@@ -218,8 +216,6 @@ export default async function runExecutor(
         success: false,
       };
     } catch (err) {
-      // npm v9 onwards seems to guarantee stdout will be well formed JSON when --json is used, so maybe we need to
-      // specify that as minimum supported version? (comes with node 18 and 20 by default)
       console.error(
         'Something unexpected went wrong when processing the npm publish output\n',
         err
