@@ -5,10 +5,13 @@ use crate::native::hasher::hash;
 use crate::native::utils::Normalize;
 use napi::bindgen_prelude::*;
 use rayon::prelude::*;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::thread;
+use std::thread::available_parallelism;
+use std::{cmp, thread};
 
 use crate::native::logger::enable_logger;
 use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
@@ -30,6 +33,23 @@ pub struct WorkspaceContext {
 }
 
 type Files = Vec<(PathBuf, String)>;
+
+#[inline]
+fn hash_file_buffer(path: &Path) -> String {
+    let Ok(file) = File::open(path) else {
+        trace!("could not open file: {path:?}");
+        return hash(&[]);
+    };
+
+    let mut buffer = BufReader::new(file);
+    let Ok(content) = buffer.fill_buf() else {
+        trace!("could not read file: {path:?}");
+        return hash(&[]);
+    };
+
+    hash(content)
+}
+
 struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
 impl FilesWorker {
     fn gather_files(workspace_root: &Path) -> Self {
@@ -49,30 +69,31 @@ impl FilesWorker {
             trace!("locking files");
             let (lock, cvar) = &*files_lock_clone;
             let mut workspace_files = lock.lock();
-            let mut files = nx_walker(workspace_root, |rec| {
-                use std::io::Read;
 
-                let mut files: Vec<(PathBuf, String)> = vec![];
-                let mut buffer: Vec<u8> = vec![];
-                let now = std::time::Instant::now();
-                for (full_path, path) in rec {
-                    if let Ok(mut file) = std::fs::File::open(&full_path) {
-                        buffer.clear();
-                        if file.read_to_end(&mut buffer).is_ok() {
-                            files.push((path, hash(&buffer)));
-                        } else {
-                            trace!("could not read file: {full_path:?}");
-                        }
-                    } else {
-                        trace!("could not read file: {full_path:?}");
-                    }
-                }
-                trace!("hashed workspace files in {:?}", now.elapsed());
+            let files = nx_walker(workspace_root, |rec| rec.into_iter().collect::<Vec<_>>());
+            let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
+            let chunks = files.len() / num_parallelism;
 
+            let now = std::time::Instant::now();
+
+            let mut files = if chunks < num_parallelism {
                 files
-            });
-            files.par_sort();
+                    .iter()
+                    .map(|(full_path, path)| (path.to_owned(), hash_file_buffer(&full_path)))
+                    .collect::<Vec<_>>()
+            } else {
+                files
+                    .par_chunks(chunks)
+                    .flat_map_iter(|chunks| {
+                        chunks
+                            .iter()
+                            .map(|(full_path, path)| (path.to_owned(), hash_file_buffer(full_path)))
+                    })
+                    .collect::<Vec<_>>()
+            };
 
+            files.par_sort();
+            trace!("hashed and sorted workspace files in {:?}", now.elapsed());
             *workspace_files = files;
             let files_len = workspace_files.len();
             trace!(?files_len, "files retrieved");
