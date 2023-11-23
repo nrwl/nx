@@ -19,11 +19,10 @@ export function setupWorkspaceContext(workspaceRoot: string) {
 
 export function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
-  globs: string[],
-  parseConfigurations: (files: string[]) => Promise<Record<string, string>>
+  projectRootMap: Record<string, string>
 ) {
   ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getWorkspaceFiles(globs, parseConfigurations);
+  return workspaceContext.getWorkspaceFiles(projectRootMap);
 }
 
 export function globWithWorkspaceContext(
@@ -42,15 +41,6 @@ export function hashWithWorkspaceContext(
 ) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.hashFilesMatchingGlob(globs, exclude);
-}
-
-export function getProjectConfigurationsFromContext(
-  workspaceRoot: string,
-  globs: string[],
-  parseConfigurations: (files: string[]) => Promise<Record<string, string>>
-) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getProjectConfigurations(globs, parseConfigurations);
 }
 
 export function updateFilesInContext(
