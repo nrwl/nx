@@ -99,7 +99,14 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
   }
 
   compilerOptions.lib = ['es2021'];
-  compilerOptions.module = ts.ModuleKind.CommonJS;
+  // Don't override module if it's set to node16 or nodenext
+  // Otherwise custom workspace eslint rules will fail with typescript 5.2
+  const preserveModuleOption =
+    compilerOptions.module === ts.ModuleKind.Node16 ||
+    compilerOptions.module === ts.ModuleKind.NodeNext;
+  compilerOptions.module = preserveModuleOption
+    ? compilerOptions.module
+    : ts.ModuleKind.CommonJS;
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
