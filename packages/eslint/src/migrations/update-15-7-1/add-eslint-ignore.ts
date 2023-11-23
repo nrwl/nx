@@ -5,8 +5,8 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { ESLINT_CONFIG_FILENAMES } from '../../generators/utils/eslint-file';
 import { getEslintTargets } from '../../generators/utils/eslint-targets';
+import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
 
 export default async function addEslintIgnore(tree: Tree) {
   const nxJson = readJson(tree, 'nx.json');

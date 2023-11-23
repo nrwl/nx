@@ -14,11 +14,7 @@ import {
 } from '@nx/devkit';
 
 import { Linter as LinterEnum } from '../utils/linter';
-import {
-  baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
-  findEslintFile,
-} from '../utils/eslint-file';
+import { findEslintFile } from '../utils/eslint-file';
 import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
 import type { Linter } from 'eslint';
@@ -34,6 +30,10 @@ import {
   generateSpreadElement,
   stringifyNodeList,
 } from '../utils/flat-config/ast-utils';
+import {
+  baseEsLintConfigFile,
+  baseEsLintFlatConfigFile,
+} from '../../utils/config-file';
 
 interface LintProjectOptions {
   project: string;

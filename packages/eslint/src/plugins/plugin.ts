@@ -8,7 +8,11 @@ import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-
 import { readdirSync } from 'fs';
 import type { Schema } from '../executors/lint/schema';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { ESLINT_CONFIG_FILENAMES } from '../generators/utils/eslint-file';
+import {
+  ESLINT_CONFIG_FILENAMES,
+  findBaseEslintFile,
+  isFlatConfig,
+} from '../utils/config-file';
 
 export interface EslintPluginOptions {
   targetName?: string;
@@ -31,12 +35,14 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     options = normalizeOptions(options);
     const projectName = basename(projectRoot);
 
+    const rootEslintConfigFile = findBaseEslintFile(context.workspaceRoot);
+
     return {
       projects: {
         [projectName]: {
           root: projectRoot,
           targets: buildEslintTargets(
-            configFilePath,
+            rootEslintConfigFile,
             projectRoot,
             options,
             context
@@ -48,7 +54,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 ];
 
 function buildEslintTargets(
-  configFilePath: string,
+  rootEslintConfigFile: string,
   projectRoot: string,
   options: EslintPluginOptions,
   context: CreateNodesContext
@@ -59,14 +65,18 @@ function buildEslintTargets(
     '@nx/eslint:lint'
   );
 
-  const targets: Record<string, TargetConfiguration<Schema>> = {};
+  const isRootProject = projectRoot === '.';
 
-  const baseTargetConfig: TargetConfiguration<Schema> = {
-    executor: '@nx/eslint:lint',
+  const targets: Record<string, TargetConfiguration> = {};
+
+  const command = isFlatConfig(rootEslintConfigFile)
+    ? `ESLINT_USE_FLAT_CONFIG=true eslint`
+    : `eslint`;
+
+  const baseTargetConfig: TargetConfiguration = {
+    command: `${command} ${isRootProject ? './src' : '.'}`,
     options: {
-      config: configFilePath,
-      lintFilePatterns: [projectRoot],
-      ...targetDefaults?.options,
+      cwd: projectRoot,
     },
   };
 
@@ -75,7 +85,7 @@ function buildEslintTargets(
     cache: targetDefaults?.cache ?? true,
     inputs: targetDefaults?.inputs ?? [
       'default',
-      '{workspaceRoot}/.eslintrc.json', // TODO: detect which eslint config file is the base one
+      `{workspaceRoot}/${rootEslintConfigFile}`,
       '{workspaceRoot}/tools/eslint-rules/**/*',
     ],
     outputs: targetDefaults?.outputs ?? ['{options.outputFile}'],

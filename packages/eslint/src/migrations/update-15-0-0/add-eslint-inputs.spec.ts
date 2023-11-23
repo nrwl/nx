@@ -6,7 +6,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import addEslintInputs from './add-eslint-inputs';
-import { ESLINT_CONFIG_FILENAMES } from '../../generators/utils/eslint-file';
+import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
 
 describe('15.0.0 migration (add-eslint-inputs)', () => {
   let tree: Tree;

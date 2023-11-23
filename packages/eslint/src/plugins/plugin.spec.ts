@@ -24,13 +24,6 @@ describe('@nx/eslint/plugin', () => {
       },
       workspaceRoot: '',
     };
-    const fileSys = {
-      'apps/my-app/.eslintrc.json': `{}`,
-      'apps/my-app/project.json': `{}`,
-      '.eslintrc.json': `{}`,
-      'package.json': `{}`,
-    };
-    vol.fromJSON(fileSys, '');
   });
 
   afterEach(() => {
@@ -38,7 +31,14 @@ describe('@nx/eslint/plugin', () => {
     jest.resetModules();
   });
 
-  it('should create nodes with default configuration', () => {
+  it('should create nodes with default configuration for nested project', () => {
+    const fileSys = {
+      'apps/my-app/.eslintrc.json': `{}`,
+      'apps/my-app/project.json': `{}`,
+      '.eslintrc.json': `{}`,
+      'package.json': `{}`,
+    };
+    vol.fromJSON(fileSys, '');
     const nodes = createNodesFunction(
       'apps/my-app/.eslintrc.json',
       {
@@ -55,17 +55,58 @@ describe('@nx/eslint/plugin', () => {
             "targets": {
               "lint": {
                 "cache": true,
-                "executor": "@nx/eslint:lint",
+                "command": "eslint .",
                 "inputs": [
                   "default",
                   "{workspaceRoot}/.eslintrc.json",
                   "{workspaceRoot}/tools/eslint-rules/**/*",
                 ],
                 "options": {
-                  "config": "apps/my-app/.eslintrc.json",
-                  "lintFilePatterns": [
-                    "apps/my-app",
-                  ],
+                  "cwd": "apps/my-app",
+                },
+                "outputs": [
+                  "{options.outputFile}",
+                ],
+              },
+            },
+          },
+        },
+      }
+    `);
+  });
+
+  it('should create nodes with default configuration for standalone project', () => {
+    const fileSys = {
+      'apps/my-app/eslint.config.js': `module.exports = []`,
+      'apps/my-app/project.json': `{}`,
+      'eslint.config.js': `module.exports = []`,
+      'package.json': `{}`,
+    };
+    vol.fromJSON(fileSys, '');
+    const nodes = createNodesFunction(
+      'eslint.config.js',
+      {
+        targetName: 'lint',
+      },
+      context
+    );
+
+    expect(nodes).toMatchInlineSnapshot(`
+      {
+        "projects": {
+          ".": {
+            "root": ".",
+            "targets": {
+              "lint": {
+                "cache": true,
+                "command": "ESLINT_USE_FLAT_CONFIG=true eslint ./src",
+                "inputs": [
+                  "default",
+                  "{workspaceRoot}/eslint.config.js",
+                  "{workspaceRoot}/tools/eslint-rules/**/*",
+                ],
+                "options": {
+                  "cwd": ".",
                 },
                 "outputs": [
                   "{options.outputFile}",

@@ -1,13 +1,15 @@
 import {
   addExtendsToLintConfig,
-  baseEsLintConfigFile,
-  ESLINT_CONFIG_FILENAMES,
   findEslintFile,
   lintConfigHasOverride,
 } from './eslint-file';
 
 import { Tree, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import {
+  ESLINT_CONFIG_FILENAMES,
+  baseEsLintConfigFile,
+} from '../../utils/config-file';
 
 describe('@nx/eslint:lint-file', () => {
   let tree: Tree;
