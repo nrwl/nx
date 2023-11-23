@@ -5,14 +5,18 @@ import {
   generateFiles,
   GeneratorCallback,
   readJson,
+  readNxJson,
   stripIndents,
   Tree,
   updateJson,
+  updateNxJson,
   writeJson,
 } from '@nx/devkit';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
+import { join } from 'path';
 import { satisfies, valid } from 'semver';
+import type { JsPluginOptions } from '../../plugins/plugin';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
   nxVersion,
@@ -23,7 +27,6 @@ import {
   typescriptVersion,
 } from '../../utils/versions';
 import { InitSchema } from './schema';
-import { join } from 'path';
 
 async function getInstalledTypescriptVersion(
   tree: Tree
@@ -59,6 +62,30 @@ async function getInstalledTypescriptVersion(
   }
 }
 
+function addPlugin(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.plugins ??= [];
+
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/js/plugin'
+        : plugin.plugin === '@nx/js/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/js/plugin',
+    options: <JsPluginOptions>{
+      buildTargetName: 'build',
+    },
+  });
+
+  updateNxJson(tree, nxJson);
+}
+
 export async function initGenerator(
   tree: Tree,
   schema: InitSchema
@@ -70,6 +97,11 @@ export async function initGenerator(
       fileName: schema.tsConfigName ?? 'tsconfig.base.json',
     });
   }
+
+  if (process.env.NX_PCV3 === 'true') {
+    addPlugin(tree);
+  }
+
   const devDependencies = {
     '@nx/js': nxVersion,
     prettier: prettierVersion,

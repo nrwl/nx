@@ -1,7 +1,13 @@
-import { writeJson, readJson, Tree, updateJson } from '@nx/devkit';
+import {
+  readJson,
+  updateJson,
+  writeJson,
+  type NxJsonConfiguration,
+  type Tree,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import init from './init';
 import { typescriptVersion } from '../../utils/versions';
+import init from './init';
 
 describe('js init generator', () => {
   let tree: Tree;
@@ -116,5 +122,38 @@ describe('js init generator', () => {
     expect(packageJson.devDependencies['typescript']).not.toBe(
       typescriptVersion
     );
+  });
+
+  it('should setup @nx/js/plugin', async () => {
+    process.env.NX_PCV3 = 'true';
+
+    await init(tree, {});
+
+    expect(readJson<NxJsonConfiguration>(tree, 'nx.json'))
+      .toMatchInlineSnapshot(`
+      {
+        "affected": {
+          "defaultBase": "main",
+        },
+        "plugins": [
+          {
+            "options": {
+              "buildTargetName": "build",
+            },
+            "plugin": "@nx/js/plugin",
+          },
+        ],
+        "targetDefaults": {
+          "build": {
+            "cache": true,
+          },
+          "lint": {
+            "cache": true,
+          },
+        },
+      }
+    `);
+
+    delete process.env.NX_PCV3;
   });
 });

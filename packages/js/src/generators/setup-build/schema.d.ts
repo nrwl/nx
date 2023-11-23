@@ -4,4 +4,6 @@ export interface SetupBuildGeneratorSchema {
   main?: string;
   tsConfig?: string;
   buildTarget?: string;
+  publishable?: boolean;
+  importPath?: string;
 }

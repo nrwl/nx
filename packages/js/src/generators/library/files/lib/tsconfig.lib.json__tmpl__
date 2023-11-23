@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "<%= offsetFromRoot %>dist/out-tsc",
+    "outDir": "<%= offsetFromRoot %><%= outputPath %>",
     "declaration": true,
     "types": ["node"]
   },

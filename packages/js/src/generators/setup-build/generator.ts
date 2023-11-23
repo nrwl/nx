@@ -1,26 +1,61 @@
 import {
   ensurePackage,
   formatFiles,
-  type GeneratorCallback,
   joinPathFragments,
+  normalizePath,
+  readJson,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
-  type Tree,
+  updateJson,
   updateProjectConfiguration,
+  writeJson,
+  type GeneratorCallback,
+  type ProjectConfiguration,
+  type Tree,
 } from '@nx/devkit';
+import type { PackageJson } from 'nx/src/utils/package-json';
+import { relative } from 'path';
+import {
+  defaultBuildTargetName,
+  defaultEntryPointFiles,
+  defaultTsConfigFiles,
+  type JsPluginOptions,
+} from '../../plugins/plugin';
+import { getImportPath } from '../../utils/get-import-path';
+import {
+  determinePackageDependencies,
+  determinePackageEntryFields,
+} from '../../utils/package-json/package-json-metadata';
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { getRootTsConfigPathInTree } from '../../utils/typescript/ts-config';
 import { nxVersion } from '../../utils/versions';
-import { SetupBuildGeneratorSchema } from './schema';
+import type { SetupBuildGeneratorSchema } from './schema';
 
 export async function setupBuildGenerator(
   tree: Tree,
   options: SetupBuildGeneratorSchema
 ): Promise<GeneratorCallback> {
+  if (options.publishable && !options.importPath) {
+    throw new Error(
+      `To set up a publishable library, you must provide the "--importPath" option with the library name currently used to import it.`
+    );
+  } else if (options.importPath) {
+    const { compilerOptions } = readJson(tree, getRootTsConfigPathInTree(tree));
+
+    if (!compilerOptions.paths?.[options.importPath]) {
+      throw new Error(
+        `The provided import path "${options.importPath}" does not exist in the root tsconfig. Please provide the existing import path for "${options.project}".`
+      );
+    }
+  }
+
   const tasks: GeneratorCallback[] = [];
   const project = readProjectConfiguration(tree, options.project);
   const buildTarget = options.buildTarget ?? 'build';
   const prevBuildOptions = project.targets?.[buildTarget]?.options;
+  options.importPath ??= getImportPath(tree, options.project);
 
   project.targets ??= {};
 
@@ -122,18 +157,62 @@ export async function setupBuildGenerator(
       break;
     }
     case 'tsc': {
-      const outputPath = joinPathFragments('dist', project.root);
-      project.targets[buildTarget] = {
-        executor: `@nx/js:tsc`,
-        outputs: ['{options.outputPath}'],
-        options: {
-          outputPath,
-          main: mainFile,
-          tsConfig: tsConfigFile,
-          assets: [],
-        },
-      };
-      updateProjectConfiguration(tree, options.project, project);
+      const nxJson = readNxJson(tree);
+      const jsPlugin = nxJson.plugins?.find((p) =>
+        typeof p === 'string'
+          ? p === '@nx/js/plugin'
+          : p.plugin === '@nx/js/plugin'
+      );
+
+      if (jsPlugin && options.publishable) {
+        const pluginOptions: JsPluginOptions =
+          typeof jsPlugin === 'string' ? {} : jsPlugin.options ?? {};
+
+        if (
+          (pluginOptions.buildTargetName &&
+            buildTarget !== pluginOptions.buildTargetName) ||
+          buildTarget !== defaultBuildTargetName
+        ) {
+          // target is different, so it's not gonna be merged with the
+          // plugin-generated target, add the full target
+          addTscBuildTarget(tree, project, buildTarget, mainFile, tsConfigFile);
+        } else {
+          // target is the same, so it's gonna be merged with the
+          // plugin-generated target, override different options
+          const relativeMainPath = normalizePath(
+            relative(project.root, mainFile)
+          );
+          const isDifferentEntryPoint =
+            (pluginOptions.buildPossibleEntryPointFiles &&
+              !pluginOptions.buildPossibleEntryPointFiles.includes(
+                relativeMainPath
+              )) ||
+            !defaultEntryPointFiles.includes(relativeMainPath);
+
+          const relativeTsConfigPath = normalizePath(
+            relative(project.root, tsConfigFile)
+          );
+          const isDifferentTsConfig =
+            (pluginOptions.buildPossibleTsConfigFiles &&
+              !pluginOptions.buildPossibleTsConfigFiles.includes(
+                relativeTsConfigPath
+              )) ||
+            !defaultTsConfigFiles.includes(relativeTsConfigPath);
+
+          if (isDifferentEntryPoint || isDifferentTsConfig) {
+            project.targets[buildTarget] = {
+              options: {
+                main: isDifferentEntryPoint ? mainFile : undefined,
+                tsConfig: isDifferentTsConfig ? tsConfigFile : undefined,
+              },
+            };
+            updateProjectConfiguration(tree, options.project, project);
+          }
+        }
+      } else {
+        addTscBuildTarget(tree, project, buildTarget, mainFile, tsConfigFile);
+      }
+
       break;
     }
     case 'swc': {
@@ -154,9 +233,68 @@ export async function setupBuildGenerator(
     }
   }
 
+  setupPackageJson(tree, project, options);
+
   await formatFiles(tree);
 
   return runTasksInSerial(...tasks);
 }
 
 export default setupBuildGenerator;
+
+function setupPackageJson(
+  tree: Tree,
+  project: ProjectConfiguration,
+  options: SetupBuildGeneratorSchema
+) {
+  const packageJsonPath = joinPathFragments(project.root, 'package.json');
+  const shouldBePublic = options.publishable || project.root === '.';
+
+  if (tree.exists(packageJsonPath)) {
+    updateJson<PackageJson>(tree, packageJsonPath, (json) => {
+      json.name = options.importPath;
+      json.version = '0.0.1';
+      // If the package is publishable or root/standalone, we should remove the private field.
+      if (json.private && shouldBePublic) {
+        delete json.private;
+      }
+      return {
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          ...determinePackageDependencies(options.bundler),
+        },
+        ...determinePackageEntryFields(options.bundler),
+      };
+    });
+  } else {
+    writeJson<PackageJson>(tree, packageJsonPath, {
+      name: options.importPath,
+      version: '0.0.1',
+      private: !shouldBePublic ? true : undefined,
+      dependencies: determinePackageDependencies(options.bundler),
+      ...determinePackageEntryFields(options.bundler),
+    });
+  }
+}
+
+function addTscBuildTarget(
+  tree: Tree,
+  project: ProjectConfiguration,
+  buildTarget: string,
+  mainFile: string,
+  tsConfigFile: string
+) {
+  const outputPath = joinPathFragments('dist', project.root);
+  project.targets[buildTarget] = {
+    executor: `@nx/js:tsc`,
+    outputs: ['{options.outputPath}'],
+    options: {
+      outputPath,
+      main: mainFile,
+      tsConfig: tsConfigFile,
+      assets: [],
+    },
+  };
+  updateProjectConfiguration(tree, project.name, project);
+}

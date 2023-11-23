@@ -59,37 +59,26 @@ describe('init', () => {
 
     await cypressInitGenerator(tree, {});
 
-    expect(readJson<NxJsonConfiguration>(tree, 'nx.json'))
-      .toMatchInlineSnapshot(`
+    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+    expect(nxJson.plugins).toEqual(
+      expect.arrayContaining([
+        {
+          options: {
+            componentTestingTargetName: 'component-test',
+            targetName: 'e2e',
+          },
+          plugin: '@nx/cypress/plugin',
+        },
+      ])
+    );
+    expect(nxJson.namedInputs).toMatchInlineSnapshot(`
       {
-        "affected": {
-          "defaultBase": "main",
-        },
-        "namedInputs": {
-          "production": [
-            "default",
-            "!{projectRoot}/cypress/**/*",
-            "!{projectRoot}/**/*.cy.[jt]s?(x)",
-            "!{projectRoot}/cypress.config.[jt]s",
-          ],
-        },
-        "plugins": [
-          {
-            "options": {
-              "componentTestingTargetName": "component-test",
-              "targetName": "e2e",
-            },
-            "plugin": "@nx/cypress/plugin",
-          },
+        "production": [
+          "default",
+          "!{projectRoot}/cypress/**/*",
+          "!{projectRoot}/**/*.cy.[jt]s?(x)",
+          "!{projectRoot}/cypress.config.[jt]s",
         ],
-        "targetDefaults": {
-          "build": {
-            "cache": true,
-          },
-          "lint": {
-            "cache": true,
-          },
-        },
       }
     `);
 

@@ -36,6 +36,17 @@
       "description": "The build target to add.",
       "type": "string",
       "default": "build"
+    },
+    "publishable": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the project is publishable or not.",
+      "x-priority": "important"
+    },
+    "importPath": {
+      "type": "string",
+      "description": "The current library name used to import it, like `@myorg/my-awesome-lib`. Required for publishable library.",
+      "x-priority": "important"
     }
   },
   "required": ["project", "bundler"]
