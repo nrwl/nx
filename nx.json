@@ -1,8 +1,8 @@
 {
-  "$schema": "packages/nx/schemas/nx-schema.json",
   "affected": {
     "defaultBase": "master"
   },
+  "$schema": "packages/nx/schemas/nx-schema.json",
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
