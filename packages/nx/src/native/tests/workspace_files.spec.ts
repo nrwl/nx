@@ -48,16 +48,12 @@ describe('workspace files', () => {
       './libs/package-project/index.js': '',
       './nested/non-project/file.txt': '',
     });
+    let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
 
     const context = new WorkspaceContext(fs.tempDir);
     let { projectFileMap, globalFiles } = await context.getWorkspaceFiles(
-      {
-        'libs/project1': 'project1',
-        'libs/project2': 'project2',
-        'libs/project3': 'project3',
-        'libs/nested/project': 'nested-project',
-        'libs/package-project': 'package-project'
-      }
+      globs,
+      createParseConfigurationsFunction(fs.tempDir)
     );
 
     expect(projectFileMap).toMatchInlineSnapshot(`
@@ -151,10 +147,10 @@ describe('workspace files', () => {
 
     const context = new WorkspaceContext(fs.tempDir);
 
+    const globs = ['project.json', '**/project.json', '**/package.json'];
     const { globalFiles, projectFileMap } = await context.getWorkspaceFiles(
-      {
-        '.': 'repo-name'
-      }
+      globs,
+      createParseConfigurationsFunction(fs.tempDir)
     );
 
     expect(globalFiles).toEqual([]);
