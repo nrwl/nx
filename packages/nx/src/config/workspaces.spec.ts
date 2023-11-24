@@ -60,13 +60,13 @@ describe('Workspaces', () => {
         }),
       });
 
-      const { projects } = await withEnvironmentVariables(
+      const { projectNodes } = await withEnvironmentVariables(
         {
           NX_WORKSPACE_ROOT: fs.tempDir,
         },
         () => retrieveProjectConfigurations(fs.tempDir, readNxJson(fs.tempDir))
       );
-      expect(projects['my-package']).toEqual({
+      expect(projectNodes['my-package']).toEqual({
         name: 'my-package',
         root: 'packages/my-package',
         sourceRoot: 'packages/my-package',

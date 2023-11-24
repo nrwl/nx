@@ -158,9 +158,11 @@ jobs:
      timeout-minutes: 45
      steps:
        - uses: actions/checkout@v3
+         if: ${{ !contains(github.ref, '-') }}
        - name: Build
          id: build
-         uses: cross-platform-actions/action@v0.21.0
+         if: ${{ !contains(github.ref, '-') }}
+         uses: cross-platform-actions/action@v0.21.1
          env:
            DEBUG: napi:*
            RUSTUP_IO_THREADS: 1
@@ -197,9 +199,10 @@ jobs:
              rm -rf node_modules
              rm -rf dist
              echo "KILL ALL NODE PROCESSES"
-             killall node
+             killall node || true
              echo "COMPLETE"
        - name: Upload artifact
+         if: ${{ !contains(github.ref, '-') }}
          uses: actions/upload-artifact@v3
          with:
            name: bindings-freebsd
