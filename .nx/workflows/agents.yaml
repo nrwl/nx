@@ -16,6 +16,9 @@ launch-templates:
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
       NX_CLOUD_ACCESS_TOKEN: '{{secrets.NX_CLOUD_ACCESS_TOKEN}}'
     init-steps:
+      - name: LSCPU
+        script: |
+          lscpu
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
 

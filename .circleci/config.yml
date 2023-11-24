@@ -87,6 +87,7 @@ jobs:
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
     steps:
+      - run: lscpu
       - checkout
       - run: npx nx-cloud@next start-ci-run --distributes-on="8 linux-medium" --stop-agents-after="e2e"
       - run:
