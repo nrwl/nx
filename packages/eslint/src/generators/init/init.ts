@@ -26,21 +26,31 @@ export interface LinterInitOptions {
   rootProject?: boolean;
 }
 
-function addTargetDefaults(tree: Tree) {
+function updateProductionFileset(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
     // Remove .eslintrc.json
-    productionFileSet.push('!{projectRoot}/.eslintrc.json');
+    productionFileSet.push('!{projectRoot}/.eslintrc.(json|js|yaml|yml)');
     productionFileSet.push('!{projectRoot}/eslint.config.js');
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
+  }
+  updateNxJson(tree, nxJson);
+}
+
+function addTargetDefaults(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  if (!nxJson.namedInputs) {
+    return;
   }
 
   nxJson.targetDefaults ??= {};
 
   nxJson.targetDefaults.lint ??= {};
+  nxJson.targetDefaults.lint.cache ??= true;
   nxJson.targetDefaults.lint.inputs ??= [
     'default',
     `{workspaceRoot}/.eslintrc.json`,
@@ -73,6 +83,19 @@ function addPlugin(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
+function updateVSCodeExtensions(tree: Tree) {
+  if (tree.exists('.vscode/extensions.json')) {
+    updateJson(tree, '.vscode/extensions.json', (json) => {
+      json.recommendations ||= [];
+      const extension = 'dbaeumer.vscode-eslint';
+      if (!json.recommendations.includes(extension)) {
+        json.recommendations.push(extension);
+      }
+      return json;
+    });
+  }
+}
+
 /**
  * Initializes ESLint configuration in a workspace and adds necessary dependencies.
  */
@@ -91,16 +114,8 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
     getGlobalEsLintConfiguration(options.unitTestRunner, options.rootProject)
   );
   tree.write('.eslintignore', 'node_modules\n');
-  if (tree.exists('.vscode/extensions.json')) {
-    updateJson(tree, '.vscode/extensions.json', (json) => {
-      json.recommendations ||= [];
-      const extension = 'dbaeumer.vscode-eslint';
-      if (!json.recommendations.includes(extension)) {
-        json.recommendations.push(extension);
-      }
-      return json;
-    });
-  }
+
+  updateProductionFileset(tree);
 
   const addPlugins = process.env.NX_PCV3 === 'true';
   if (addPlugins) {
@@ -108,6 +123,8 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
   } else {
     addTargetDefaults(tree);
   }
+
+  updateVSCodeExtensions(tree);
 
   return !options.skipPackageJson
     ? addDependenciesToPackageJson(

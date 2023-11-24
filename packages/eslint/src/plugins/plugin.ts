@@ -6,7 +6,6 @@ import {
 import { basename, dirname, join } from 'path';
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { readdirSync } from 'fs';
-import type { Schema } from '../executors/lint/schema';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import {
   ESLINT_CONFIG_FILENAMES,
@@ -19,6 +18,7 @@ export interface EslintPluginOptions {
 }
 
 export const createNodes: CreateNodes<EslintPluginOptions> = [
+  // TODO(meeroslav): eslint can work even without config file in the nested project
   combineGlobPatterns(ESLINT_CONFIG_FILENAMES.map((file) => `**/${file}`)),
   (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
