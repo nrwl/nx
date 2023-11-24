@@ -51,6 +51,9 @@ describe('@nx/js/plugin', () => {
                     "^production",
                   ],
                   "options": {
+                    "assets": [
+                      "*.md",
+                    ],
                     "main": "src/index.ts",
                     "outputPath": ".",
                     "tsConfig": "tsconfig.json",
@@ -91,6 +94,9 @@ describe('@nx/js/plugin', () => {
                     "^production",
                   ],
                   "options": {
+                    "assets": [
+                      "*.md",
+                    ],
                     "main": "src/index.ts",
                     "outputPath": ".",
                     "tsConfig": "tsconfig.lib.json",
@@ -183,6 +189,9 @@ describe('@nx/js/plugin', () => {
                     "^production",
                   ],
                   "options": {
+                    "assets": [
+                      "libs/lib1/*.md",
+                    ],
                     "main": "libs/lib1/src/index.ts",
                     "outputPath": "dist/lib1",
                     "tsConfig": "libs/lib1/tsconfig.lib.json",

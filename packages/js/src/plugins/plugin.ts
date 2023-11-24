@@ -38,11 +38,14 @@ export interface JsPluginOptions {
   buildTargetName?: string;
   /**
    * The list of possible entry points files to use. Relative to project roots.
+   * These files are processed in the order they are specified.
    * @default ['index.ts', 'index.js', 'src/index.ts', 'src/index.js', 'main.ts', 'main.js', 'src/main.ts', 'src/main.js']
    */
   buildPossibleEntryPointFiles?: string[];
   /**
    * The list of possible tsconfig files to use. Relative to project roots.
+   * These files are processed in the order they are specified. The sole
+   * exception is the `tsconfig.json` file, which is always processed last.
    * @default ['tsconfig.lib.json', 'tsconfig.json']
    */
   buildPossibleTsConfigFiles?: string[];
@@ -178,6 +181,7 @@ function getBuildTscTarget(
       ),
       main: entryPoint,
       tsConfig: tsConfigPath,
+      assets: [joinPathFragments(projectRoot, '*.md')],
       ...tscTargetDefaults?.options,
     },
   };
@@ -207,7 +211,11 @@ function getBuildTsConfig(
   path: string;
   config: any;
 } {
-  for (const candidate of options.buildPossibleTsConfigFiles) {
+  const candidates = options.buildPossibleTsConfigFiles.filter(
+    // tsconfig.json is always processed last
+    (candidate) => candidate !== 'tsconfig.json'
+  );
+  for (const candidate of candidates) {
     const candidateTsConfigPath = join(workspaceRoot, projectRoot, candidate);
 
     if (existsSync(candidateTsConfigPath)) {
@@ -304,7 +312,9 @@ function getBuildEntryPointFilePath(
   return undefined;
 }
 
-function normalizeOptions(options: JsPluginOptions): NormalizedJsPluginOptions {
+function normalizeOptions(
+  options: JsPluginOptions = {}
+): NormalizedJsPluginOptions {
   return {
     buildTargetName: options.buildTargetName ?? defaultBuildTargetName,
     buildPossibleEntryPointFiles:

@@ -1,5 +1,6 @@
 import {
   addProjectConfiguration,
+  readNxJson,
   readProjectConfiguration,
   updateJson,
   writeJson,
@@ -99,7 +100,7 @@ describe('setup-build generator', () => {
     expect(config.targets).toBeUndefined();
   });
 
-  it('should add build target only with custom options when "@nx/js/plugin" is configured', async () => {
+  it('should configure "@nx/js/plugin" when is in use and a custom entry point is provided', async () => {
     tree.write(
       'packages/mypkg/src/custom-main.ts',
       'console.log("hello world");'
@@ -119,14 +120,61 @@ describe('setup-build generator', () => {
       main: 'packages/mypkg/src/custom-main.ts',
     });
 
-    const config = readProjectConfiguration(tree, 'mypkg');
-    expect(config.targets).toMatchObject({
-      build: {
-        options: {
-          main: 'packages/mypkg/src/custom-main.ts',
+    const nxJson = readNxJson(tree);
+    expect(nxJson.plugins).toMatchInlineSnapshot(`
+      [
+        {
+          "options": {
+            "buildPossibleEntryPointFiles": [
+              "index.ts",
+              "index.js",
+              "src/index.ts",
+              "src/index.js",
+              "main.ts",
+              "main.js",
+              "src/main.ts",
+              "src/main.js",
+              "src/custom-main.ts",
+            ],
+          },
+          "plugin": "@nx/js/plugin",
         },
-      },
+      ]
+    `);
+  });
+
+  it('should configure "@nx/js/plugin" when is in use and a custom tsConfig is provided', async () => {
+    tree.write('packages/mypkg/src/index.ts', 'console.log("hello world");');
+    writeJson(tree, 'packages/mypkg/tsconfig.build.json', {});
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.plugins ??= [];
+      json.plugins.push('@nx/js/plugin');
+      return json;
     });
+
+    await setupBuildGenerator(tree, {
+      project: 'mypkg',
+      bundler: 'tsc',
+      publishable: true,
+      importPath: '@proj/mypkg',
+      tsConfig: 'packages/mypkg/tsconfig.build.json',
+    });
+
+    const nxJson = readNxJson(tree);
+    expect(nxJson.plugins).toMatchInlineSnapshot(`
+      [
+        {
+          "options": {
+            "buildPossibleTsConfigFiles": [
+              "tsconfig.lib.json",
+              "tsconfig.build.json",
+              "tsconfig.json",
+            ],
+          },
+          "plugin": "@nx/js/plugin",
+        },
+      ]
+    `);
   });
 
   it('should add complete build target when custom build target name does not match the one configured for the "@nx/js/plugin"', async () => {

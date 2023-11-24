@@ -177,36 +177,60 @@ export async function setupBuildGenerator(
           // plugin-generated target, add the full target
           addTscBuildTarget(tree, project, buildTarget, mainFile, tsConfigFile);
         } else {
-          // target is the same, so it's gonna be merged with the
-          // plugin-generated target, override different options
+          // target is the same, check if the entrypoint or tsconfig are different
+          // from those configured in the plugin
           const relativeMainPath = normalizePath(
             relative(project.root, mainFile)
           );
-          const isDifferentEntryPoint =
-            (pluginOptions.buildPossibleEntryPointFiles &&
-              !pluginOptions.buildPossibleEntryPointFiles.includes(
-                relativeMainPath
-              )) ||
-            !defaultEntryPointFiles.includes(relativeMainPath);
+          const isDifferentEntryPoint = isEntryPointHandledByPlugin(
+            relativeMainPath,
+            pluginOptions
+          );
+          if (isDifferentEntryPoint) {
+            pluginOptions.buildPossibleEntryPointFiles = [
+              ...(pluginOptions.buildPossibleEntryPointFiles ??
+                defaultEntryPointFiles),
+              relativeMainPath,
+            ];
+          }
 
           const relativeTsConfigPath = normalizePath(
             relative(project.root, tsConfigFile)
           );
-          const isDifferentTsConfig =
-            (pluginOptions.buildPossibleTsConfigFiles &&
-              !pluginOptions.buildPossibleTsConfigFiles.includes(
-                relativeTsConfigPath
-              )) ||
-            !defaultTsConfigFiles.includes(relativeTsConfigPath);
+          const isDifferentTsConfig = isTsConfigHandledByPlugin(
+            relativeTsConfigPath,
+            pluginOptions
+          );
+          if (isDifferentTsConfig) {
+            const configuredTsConfigFiles =
+              pluginOptions.buildPossibleTsConfigFiles ?? defaultTsConfigFiles;
+            const hasTsConfigJson =
+              configuredTsConfigFiles.includes('tsconfig.json');
+            pluginOptions.buildPossibleTsConfigFiles = hasTsConfigJson
+              ? [
+                  ...configuredTsConfigFiles.filter(
+                    (f) => f !== 'tsconfig.json'
+                  ),
+                  relativeTsConfigPath,
+                  'tsconfig.json',
+                ]
+              : [...configuredTsConfigFiles, relativeTsConfigPath];
+          }
 
           if (isDifferentEntryPoint || isDifferentTsConfig) {
-            project.targets[buildTarget] = {
-              options: {
-                main: isDifferentEntryPoint ? mainFile : undefined,
-                tsConfig: isDifferentTsConfig ? tsConfigFile : undefined,
-              },
-            };
-            updateProjectConfiguration(tree, options.project, project);
+            if (typeof jsPlugin === 'string') {
+              nxJson.plugins = nxJson.plugins.filter(
+                (p) => p !== '@nx/js/plugin'
+              );
+              nxJson.plugins.push({
+                plugin: '@nx/js/plugin',
+                options: pluginOptions,
+              });
+            } else {
+              jsPlugin.options = pluginOptions;
+            }
+
+            writeJson(tree, 'nx.json', nxJson);
           }
         }
       } else {
@@ -276,6 +300,30 @@ function setupPackageJson(
       ...determinePackageEntryFields(options.bundler),
     });
   }
+}
+
+function isEntryPointHandledByPlugin(
+  entryPoint: string,
+  pluginOptions: JsPluginOptions
+): boolean {
+  return (
+    (pluginOptions.buildPossibleEntryPointFiles &&
+      !pluginOptions.buildPossibleEntryPointFiles.includes(entryPoint)) ||
+    (!pluginOptions.buildPossibleEntryPointFiles &&
+      !defaultEntryPointFiles.includes(entryPoint))
+  );
+}
+
+function isTsConfigHandledByPlugin(
+  tsConfig: string,
+  pluginOptions: JsPluginOptions
+): boolean {
+  return (
+    (pluginOptions.buildPossibleTsConfigFiles &&
+      !pluginOptions.buildPossibleTsConfigFiles.includes(tsConfig)) ||
+    (!pluginOptions.buildPossibleTsConfigFiles &&
+      !defaultTsConfigFiles.includes(tsConfig))
+  );
 }
 
 function addTscBuildTarget(
