@@ -4,7 +4,6 @@
   "sourceRoot": "packages/eslint-plugin",
   "projectType": "library",
   "targets": {
-    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "options": {
