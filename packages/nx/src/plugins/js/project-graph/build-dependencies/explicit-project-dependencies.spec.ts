@@ -3,11 +3,7 @@ const tempFs = new TempFs('explicit-project-deps');
 
 import { ProjectGraphBuilder } from '../../../../project-graph/project-graph-builder';
 import { buildExplicitTypeScriptDependencies } from './explicit-project-dependencies';
-import {
-  retrieveProjectConfigurationPaths,
-  retrieveProjectConfigurations,
-  retrieveWorkspaceFiles,
-} from '../../../../project-graph/utils/retrieve-workspace-files';
+import { retrieveWorkspaceFiles } from '../../../../project-graph/utils/retrieve-workspace-files';
 import { CreateDependenciesContext } from '../../../../utils/nx-plugin';
 import { setupWorkspaceContext } from '../../../../utils/workspace-context';
 
@@ -564,19 +560,14 @@ async function createContext(
 
   setupWorkspaceContext(tempFs.tempDir);
 
-  const { projects, projectRootMap } = await retrieveProjectConfigurations(
+  const { fileMap, projectConfigurations } = await retrieveWorkspaceFiles(
     tempFs.tempDir,
     nxJson
   );
 
-  const { fileMap } = await retrieveWorkspaceFiles(
-    tempFs.tempDir,
-    projectRootMap
-  );
-
   return {
     externalNodes: builder.getUpdatedProjectGraph().externalNodes,
-    projects: projects,
+    projects: projectConfigurations.projects,
     nxJsonConfiguration: nxJson,
     filesToProcess: fileMap,
     fileMap: fileMap,
