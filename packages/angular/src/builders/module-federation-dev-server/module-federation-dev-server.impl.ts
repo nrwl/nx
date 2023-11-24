@@ -13,7 +13,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
-import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
+import { executeDevServerBuilder } from '../dev-server/dev-server.impl';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
 import { validateDevRemotes } from '../utilities/module-federation';
@@ -241,7 +241,7 @@ function startDevRemotes(
 export function executeModuleFederationDevServerBuilder(
   schema: Schema,
   context: import('@angular-devkit/architect').BuilderContext
-): ReturnType<typeof executeWebpackDevServerBuilder | any> {
+): ReturnType<typeof executeDevServerBuilder | any> {
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
   const options = normalizeOptions(schema);
@@ -285,7 +285,7 @@ export function executeModuleFederationDevServerBuilder(
       )
     )
   );
-  const webpackDevServer = executeWebpackDevServerBuilder(options, context);
+  const webpackDevServer = executeDevServerBuilder(options, context);
 
   const currExecutor = options.static ? staticFileServer : webpackDevServer;
 

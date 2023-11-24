@@ -113,7 +113,8 @@ export async function lintProjectGenerator(
     createEsLintConfiguration(
       tree,
       projectConfig,
-      options.setParserOptionsProject
+      options.setParserOptionsProject,
+      options.rootProject
     );
   }
 
@@ -142,11 +143,13 @@ export async function lintProjectGenerator(
 function createEsLintConfiguration(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  setParserOptionsProject: boolean
+  setParserOptionsProject: boolean,
+  rootProject: boolean
 ) {
-  const eslintConfig = findEslintFile(tree);
-  const pathToRootConfig = eslintConfig
-    ? `${offsetFromRoot(projectConfig.root)}${eslintConfig}`
+  // we are only extending root for non-standalone projects or their complementary e2e apps
+  const extendedRootConfig = rootProject ? undefined : findEslintFile(tree);
+  const pathToRootConfig = extendedRootConfig
+    ? `${offsetFromRoot(projectConfig.root)}${extendedRootConfig}`
     : undefined;
   const addDependencyChecks = isBuildableLibraryProject(projectConfig);
 
@@ -201,19 +204,19 @@ function createEsLintConfiguration(
     const isCompatNeeded = addDependencyChecks;
     const nodes = [];
     const importMap = new Map();
-    if (eslintConfig) {
+    if (extendedRootConfig) {
       importMap.set(pathToRootConfig, 'baseConfig');
       nodes.push(generateSpreadElement('baseConfig'));
     }
     overrides.forEach((override) => {
-      nodes.push(generateFlatOverride(override, projectConfig.root));
+      nodes.push(generateFlatOverride(override));
     });
     const nodeList = createNodeList(importMap, nodes, isCompatNeeded);
-    const content = stringifyNodeList(nodeList, projectConfig.root);
+    const content = stringifyNodeList(nodeList);
     tree.write(join(projectConfig.root, 'eslint.config.js'), content);
   } else {
     writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
-      extends: eslintConfig ? [pathToRootConfig] : undefined,
+      extends: extendedRootConfig ? [pathToRootConfig] : undefined,
       // Include project files to be linted since the global one excludes all files.
       ignorePatterns: ['!**/*'],
       overrides,

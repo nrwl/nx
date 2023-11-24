@@ -6,7 +6,7 @@
     "outputCapture": "direct-nodejs",
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Schema for Webpack Server",
-    "description": "The webpack-dev-server executor is very similar to the standard server builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
+    "description": "The webpack-server executor is very similar to the standard server builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
     "type": "object",
     "properties": {
       "assets": {

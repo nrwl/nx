@@ -1,7 +1,10 @@
+import type { BuilderContext } from '@angular-devkit/architect';
+import type { DevServerBuilderOptions } from '@angular-devkit/build-angular';
 import {
   joinPathFragments,
   parseTargetString,
   readCachedProjectGraph,
+  type TargetConfiguration,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
@@ -11,6 +14,7 @@ import { isNpmProject } from 'nx/src/project-graph/operators';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
+import { gte } from 'semver';
 import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
@@ -31,7 +35,7 @@ type BuildTargetOptions = {
   indexFileTransformer?: string;
 };
 
-export function executeWebpackDevServerBuilder(
+export function executeDevServerBuilder(
   rawOptions: Schema,
   context: import('@angular-devkit/architect').BuilderContext
 ) {
@@ -123,43 +127,54 @@ export function executeWebpackDevServerBuilder(
     buildTargetOptions.tsConfig = tsConfigPath;
   }
 
-  const delegateBuilderOptions = getDelegateBuilderOptions(options);
+  const delegateBuilderOptions = getDelegateBuilderOptions(
+    options,
+    buildTarget,
+    context
+  );
+  const isUsingWebpackBuilder = ![
+    '@angular-devkit/build-angular:application',
+    '@angular-devkit/build-angular:browser-esbuild',
+    '@nx/angular:browser-esbuild',
+  ].includes(buildTarget.executor);
 
   return from(import('@angular-devkit/build-angular')).pipe(
     switchMap(({ executeDevServerBuilder }) =>
       executeDevServerBuilder(delegateBuilderOptions, context, {
-        webpackConfiguration: async (baseWebpackConfig) => {
-          if (!buildLibsFromSource) {
-            const workspaceDependencies = dependencies
-              .filter((dep) => !isNpmProject(dep.node))
-              .map((dep) => dep.node.name);
-            // default for `nx run-many` is --all projects
-            // by passing an empty string for --projects, run-many will default to
-            // run the target for all projects.
-            // This will occur when workspaceDependencies = []
-            if (workspaceDependencies.length > 0) {
-              baseWebpackConfig.plugins.push(
-                // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
-                new WebpackNxBuildCoordinationPlugin(
-                  `nx run-many --target=${
-                    parsedBuildTarget.target
-                  } --projects=${workspaceDependencies.join(',')}`
-                )
+        webpackConfiguration: isUsingWebpackBuilder
+          ? async (baseWebpackConfig) => {
+              if (!buildLibsFromSource) {
+                const workspaceDependencies = dependencies
+                  .filter((dep) => !isNpmProject(dep.node))
+                  .map((dep) => dep.node.name);
+                // default for `nx run-many` is --all projects
+                // by passing an empty string for --projects, run-many will default to
+                // run the target for all projects.
+                // This will occur when workspaceDependencies = []
+                if (workspaceDependencies.length > 0) {
+                  baseWebpackConfig.plugins.push(
+                    // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
+                    new WebpackNxBuildCoordinationPlugin(
+                      `nx run-many --target=${
+                        parsedBuildTarget.target
+                      } --projects=${workspaceDependencies.join(',')}`
+                    )
+                  );
+                }
+              }
+
+              if (!pathToWebpackConfig) {
+                return baseWebpackConfig;
+              }
+
+              return mergeCustomWebpackConfig(
+                baseWebpackConfig,
+                pathToWebpackConfig,
+                buildTargetOptions,
+                context.target
               );
             }
-          }
-
-          if (!pathToWebpackConfig) {
-            return baseWebpackConfig;
-          }
-
-          return mergeCustomWebpackConfig(
-            baseWebpackConfig,
-            pathToWebpackConfig,
-            buildTargetOptions,
-            context.target
-          );
-        },
+          : undefined,
 
         ...(pathToIndexFileTransformer
           ? {
@@ -176,13 +191,42 @@ export function executeWebpackDevServerBuilder(
 }
 
 export default require('@angular-devkit/architect').createBuilder(
-  executeWebpackDevServerBuilder
+  executeDevServerBuilder
 ) as any;
 
-function getDelegateBuilderOptions(options: NormalizedSchema) {
-  const delegatedBuilderOptions = { ...options };
-  const { major } = getInstalledAngularVersionInfo();
-  if (major <= 17) {
+function getDelegateBuilderOptions(
+  options: NormalizedSchema,
+  buildTarget: TargetConfiguration,
+  context: BuilderContext
+) {
+  const delegatedBuilderOptions: DevServerBuilderOptions = { ...options };
+  const { major: angularMajorVersion, version: angularVersion } =
+    getInstalledAngularVersionInfo();
+
+  // this option was introduced in angular 16.1.0
+  // https://github.com/angular/angular-cli/commit/3ede1a2cac5005f4dfbd2a62ef528a34c3793b78
+  if (
+    gte(angularVersion, '16.1.0') &&
+    buildTarget.executor === '@nx/angular:browser-esbuild'
+  ) {
+    delegatedBuilderOptions.forceEsbuild = true;
+
+    const originalLoggerWarn = context.logger.warn.bind(context.logger);
+    context.logger.warn = (...args) => {
+      // we silence the warning about forcing esbuild from third-party builders
+      if (
+        args[0].includes(
+          'Warning: Forcing the use of the esbuild-based build system with third-party builders may cause unexpected behavior and/or build failures.'
+        )
+      ) {
+        return;
+      }
+
+      originalLoggerWarn(...args);
+    };
+  }
+
+  if (angularMajorVersion <= 17) {
     (
       delegatedBuilderOptions as unknown as SchemaWithBrowserTarget
     ).browserTarget = delegatedBuilderOptions.buildTarget;

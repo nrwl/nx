@@ -194,10 +194,10 @@ describe('convertEslintJsonToFlatConfig', () => {
           { rules: { "@next/next/no-html-link-for-pages": "off" } },
           {
               files: [
-                  "mylib/**/*.ts",
-                  "mylib/**/*.tsx",
-                  "mylib/**/*.js",
-                  "mylib/**/*.jsx"
+                  "**/*.ts",
+                  "**/*.tsx",
+                  "**/*.js",
+                  "**/*.jsx"
               ],
               rules: { "@next/next/no-html-link-for-pages": [
                       "error",
@@ -206,25 +206,25 @@ describe('convertEslintJsonToFlatConfig', () => {
           },
           {
               files: [
-                  "mylib/**/*.ts",
-                  "mylib/**/*.tsx"
+                  "**/*.ts",
+                  "**/*.tsx"
               ],
               rules: {}
           },
           {
               files: [
-                  "mylib/**/*.js",
-                  "mylib/**/*.jsx"
+                  "**/*.js",
+                  "**/*.jsx"
               ],
               rules: {}
           },
           ...compat.config({ parser: "jsonc-eslint-parser" }).map(config => ({
               ...config,
-              files: ["mylib/**/*.json"],
+              files: ["**/*.json"],
               rules: { "@nx/dependency-checks": "error" }
           })),
-          { ignores: ["mylib/.next/**/*"] },
-          { ignores: ["mylib/something/else"] }
+          { ignores: [".next/**/*"] },
+          { ignores: ["something/else"] }
       ];
       "
     `);
