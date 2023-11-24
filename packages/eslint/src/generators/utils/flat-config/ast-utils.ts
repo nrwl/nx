@@ -98,6 +98,10 @@ export function hasOverride(
           // ensure property names have double quotes so that JSON.parse works
           .replace(/'/g, '"')
           .replace(/\s([a-zA-Z0-9_]+)\s*:/g, ' "$1": ')
+          // strip dangling commas from json
+          .replace(/(\}|\]),(\s*\n\s*(\}|\]))/gm, '$1$2')
+          // this line is intentionally repeated to handle cases where there are ajacent lines with dangling commas
+          .replace(/(\}|\]),(\s*\n\s*(\}|\]))/gm, '$1$2')
       );
       if (lookup(data)) {
         return true;
