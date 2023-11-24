@@ -15,6 +15,7 @@ launch-templates:
       NX_E2E_RUN_E2E: 'true'
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
       NX_CLOUD_ACCESS_TOKEN: '{{secrets.NX_CLOUD_ACCESS_TOKEN}}'
+      NODE_OPTIONS: '--max_old_space_size=4096'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'

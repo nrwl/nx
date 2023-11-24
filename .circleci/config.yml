@@ -136,6 +136,7 @@ jobs:
       NX_VERBOSE_LOGGING: 'false'
       NX_NATIVE_LOGGING: 'false'
       NX_PERF_LOGGING: 'false'
+      NODE_OPTIONS: '--max_old_space_size=4096'
     steps:
       - run:
           name: Configure git metadata (needed for lerna smoke tests)
@@ -183,18 +184,11 @@ jobs:
           no_output_timeout: 60m
           command: |
             pids=()
-
-            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-
+            
             pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
             pids+=($!)
 
-            pnpm nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-            pnpm nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
-            pids+=($!)
-            (pnpm nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
+            (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
             pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
             pids+=($!)
 
