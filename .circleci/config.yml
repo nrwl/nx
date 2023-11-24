@@ -101,6 +101,9 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'master'
       - run:
+          name: Benchmark
+          command: node tools/benchmark/benchmark.js
+      - run:
           name: Check Documentation
           command: pnpm nx documentation --no-dte
           no_output_timeout: 20m
@@ -161,6 +164,11 @@ jobs:
           name: Run E2E Tests for macOS
           command: |
             pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+          no_output_timeout: 45m
+      - run:
+          name: Close CI group
+          command: |
+            pnpm nx-cloud stop-all-agents
           no_output_timeout: 45m
 
 # -------------------------
