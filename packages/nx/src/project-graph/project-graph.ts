@@ -12,10 +12,7 @@ import { daemonClient } from '../daemon/client/client';
 import { fileExists } from '../utils/fileutils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
-import {
-  retrieveProjectConfigurations,
-  retrieveWorkspaceFiles,
-} from './utils/retrieve-workspace-files';
+import { retrieveWorkspaceFiles } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
 import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
 import { writeSourceMaps } from '../utils/source-maps';
@@ -81,16 +78,19 @@ export function readProjectsConfigurationFromProjectGraph(
 export async function buildProjectGraphWithoutDaemon() {
   const nxJson = readNxJson();
 
-  const { projects, externalNodes, sourceMaps, projectRootMap } =
-    await retrieveProjectConfigurations(workspaceRoot, nxJson);
-
-  const { allWorkspaceFiles, fileMap, rustReferences } =
-    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  const {
+    allWorkspaceFiles,
+    fileMap,
+    projectConfigurations,
+    externalNodes,
+    sourceMaps,
+    rustReferences,
+  } = await retrieveWorkspaceFiles(workspaceRoot, nxJson);
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   const projectGraph = (
     await buildProjectGraphUsingProjectFileMap(
-      projects,
+      projectConfigurations.projects,
       externalNodes,
       fileMap,
       allWorkspaceFiles,
