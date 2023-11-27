@@ -1,8 +1,9 @@
-import { updateJson, ProjectConfiguration, Tree } from '@nx/devkit';
+import type { ProjectConfiguration, Tree } from '@nx/devkit';
 import { workspaceRoot } from '@nx/devkit';
 import * as path from 'path';
 import { extname, join } from 'path';
-import { NormalizedSchema } from '../schema';
+import type { NormalizedSchema } from '../schema';
+
 const allowedExt = ['.ts', '.js', '.json'];
 
 /**
@@ -34,7 +35,12 @@ export function updateFilesForRootProjects(
   // Skip updating "path" and "extends" for tsconfig files since they are mostly
   // relative to the project root. The only exception is tsconfig.json that
   // should extend from ../../tsconfig.base.json. We'll handle this separately.
-  const regex = /(?<!"path".+)(?<!"extends".+)(?<=['"])\.\/(?=[a-zA-Z0-9])/g;
+  const oldRelativeRootRegex =
+    /(?<!"path".+)(?<!"extends".+)(?<=['"])\.\/(?=[a-zA-Z0-9])/g;
+  const outDirRegex = new RegExp(
+    `(?<="outDir": "([^"]+\\/)?)${project.name}(?=["\\/])`,
+    'g'
+  );
   const newRelativeRoot =
     // Normalize separators
     path
@@ -59,7 +65,9 @@ export function updateFilesForRootProjects(
       join(schema.relativeToRootDestination, file),
       'utf-8'
     );
-    let newContent = oldContent.replace(regex, newRelativeRoot);
+    let newContent = oldContent
+      .replace(oldRelativeRootRegex, newRelativeRoot)
+      .replace(outDirRegex, schema.relativeToRootDestination);
     if (file === 'tsconfig.json') {
       // Since we skipped updating "extends" earlier, need to point to the base config.
       newContent = newContent.replace(
@@ -95,8 +103,12 @@ export function updateFilesForNonRootProjects(
   }
 
   const dots = /\./g;
-  const regex = new RegExp(
+  const oldRelativeRootRegex = new RegExp(
     `(?<!\\.\\.\\/)${oldRelativeRoot.replace(dots, '\\.')}\/(?!\\.\\.\\/)`,
+    'g'
+  );
+  const outDirRegex = new RegExp(
+    `(?<="outDir": "([^"]+\\/)?)${project.root}(?=["\\/])`,
     'g'
   );
   for (const file of tree.children(schema.relativeToRootDestination)) {
@@ -112,7 +124,9 @@ export function updateFilesForNonRootProjects(
       join(schema.relativeToRootDestination, file),
       'utf-8'
     );
-    let newContent = oldContent.replace(regex, newRelativeRoot);
+    let newContent = oldContent
+      .replace(oldRelativeRootRegex, newRelativeRoot)
+      .replace(outDirRegex, schema.relativeToRootDestination);
     if (file == 'tsconfig.json') {
       newContent = newContent.replace('tsconfig.json', 'tsconfig.base.json');
     }

@@ -161,7 +161,7 @@ describe('Workspace Tests', () => {
       checkFilesExist(tsConfigLibPath);
       const tsConfigLib = readJson(tsConfigLibPath);
       expect(tsConfigLib.compilerOptions.outDir).toEqual(
-        '../../../dist/out-tsc'
+        `../../../dist/${newPath}`
       );
 
       const tsConfigSpecPath = `${newPath}/tsconfig.spec.json`;
@@ -300,7 +300,7 @@ describe('Workspace Tests', () => {
       checkFilesExist(tsConfigLibPath);
       const tsConfigLib = readJson(tsConfigLibPath);
       expect(tsConfigLib.compilerOptions.outDir).toEqual(
-        '../../../dist/out-tsc'
+        `../../../dist/${newPath}`
       );
 
       const tsConfigSpecPath = `${newPath}/tsconfig.spec.json`;
@@ -435,7 +435,7 @@ describe('Workspace Tests', () => {
       checkFilesExist(tsConfigLibPath);
       const tsConfigLib = readJson(tsConfigLibPath);
       expect(tsConfigLib.compilerOptions.outDir).toEqual(
-        '../../../../dist/out-tsc'
+        `../../../../dist/${newPath}`
       );
 
       const tsConfigSpecPath = `${newPath}/tsconfig.spec.json`;
@@ -563,7 +563,9 @@ describe('Workspace Tests', () => {
       expect(moveOutput).toContain(`CREATE ${tsConfigLibPath}`);
       checkFilesExist(tsConfigLibPath);
       const tsConfigLib = readJson(tsConfigLibPath);
-      expect(tsConfigLib.compilerOptions.outDir).toEqual('../../dist/out-tsc');
+      expect(tsConfigLib.compilerOptions.outDir).toEqual(
+        `../../dist/${newPath}`
+      );
 
       const tsConfigSpecPath = `${newPath}/tsconfig.spec.json`;
       expect(moveOutput).toContain(`CREATE ${tsConfigSpecPath}`);

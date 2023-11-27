@@ -81,4 +81,34 @@ export default defineConfig({
       `e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) }`
     );
   });
+
+  it('should update the "compilerOptions.outDir" option in tsconfig files', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-source',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    tree.write(
+      'subfolder/my-destination/tsconfig.lib.json',
+      tree.read('my-source/tsconfig.lib.json', 'utf-8')
+    );
+    const projectConfig = readProjectConfiguration(tree, 'my-source');
+    const schema: NormalizedSchema = {
+      projectName: 'my-source',
+      destination: 'subfolder/my-destination',
+      importPath: '@proj/subfolder-my-destination',
+      updateImportPath: true,
+      newProjectName: 'subfolder-my-destination',
+      relativeToRootDestination: 'subfolder/my-destination',
+    };
+
+    updateProjectRootFiles(tree, schema, projectConfig);
+
+    const tsConfig = tree.read(
+      'subfolder/my-destination/tsconfig.lib.json',
+      'utf-8'
+    );
+    expect(tsConfig).toContain(
+      `"outDir": "../../dist/subfolder/my-destination"`
+    );
+  });
 });
