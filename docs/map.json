@@ -1702,6 +1702,12 @@
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
             {
+              "name": "Faster CI with Nx",
+              "tags": [],
+              "id": "faster-ci",
+              "file": "nx-cloud/concepts/faster-ci"
+            },
+            {
               "name": "Improve Worst Case CI Times",
               "tags": ["distribute-task-execution"],
               "id": "dte",
