@@ -1,6 +1,6 @@
 # Parallelization and Distribution
 
-Nx speeds up your CI in several ways. One method is to reduce wasted calculations with the [affected command]() and [remote caching](). No matter how effective you are at eliminating wasted calculations in CI, there will always be some tasks that really do need to be executed and sometimes that list of tasks will be everything in the repository.
+Nx speeds up your CI in several ways. One method is to reduce wasted calculations with the [affected command](/nx-cloud/features/affected) and [remote caching](/nx-cloud/features/remote-cache). No matter how effective you are at eliminating wasted calculations in CI, there will always be some tasks that really do need to be executed and sometimes that list of tasks will be everything in the repository.
 
 To speed up the essential tasks, Nx [efficiently orchestrates](/concepts/task-pipeline-configuration) the tasks so that prerequisite tasks are executed first, but independent tasks can all be executed concurrently. Running tasks concurrently can be done with parallel processes on the same machine or distributed across multiple machines.
 
