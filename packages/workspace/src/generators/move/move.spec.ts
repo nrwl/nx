@@ -139,9 +139,6 @@ describe('move', () => {
         lint: {
           executor: '@nx/eslint:lint',
           outputs: ['{options.outputFile}'],
-          options: {
-            lintFilePatterns: ['my-lib/src/**/*.ts', 'my-lib/package.json'],
-          },
         },
         test: {
           executor: '@nx/jest:jest',

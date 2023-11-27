@@ -77,16 +77,21 @@ describe('native task hasher', () => {
   });
 
   it('should create a task hash', async () => {
-    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/unrelated': 'unrelated',
+      'libs/tagged': 'tagged',
+    });
     const builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
     );
+
     builder.addNode({
       name: 'parent',
       type: 'lib',
       data: {
-        root: 'parent',
+        root: 'libs/parent',
         targets: {
           build: {
             executor: 'nx:run-commands',
@@ -149,9 +154,9 @@ describe('native task hasher', () => {
             "AllExternalDependencies": "3244421341483603138",
             "env:NONEXISTENTENV": "3244421341483603138",
             "env:TESTENV": "11441948532827618368",
-            "parent:ProjectConfiguration": "15828052557461792163",
+            "parent:ProjectConfiguration": "4131510303084753861",
             "parent:TsConfig": "2264969541778889434",
-            "parent:{projectRoot}/**/*": "3244421341483603138",
+            "parent:{projectRoot}/**/*": "15295586939211629225",
             "runtime:echo runtime123": "29846575039086708",
             "tagged:ProjectConfiguration": "1604492097835699503",
             "tagged:TsConfig": "2264969541778889434",
@@ -163,17 +168,17 @@ describe('native task hasher', () => {
             "{workspaceRoot}/.nxignore": "3244421341483603138",
             "{workspaceRoot}/nx.json": "5219582320960288192",
           },
-          "value": "2902224107680327789",
+          "value": "6332317845632665670",
         },
       ]
     `);
   });
 
   it('should hash tasks where the project has dependencies', async () => {
-    console.log('read first', await tempFs.readFile('nx.json'));
-    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
-    console.dir(workspaceFiles.allWorkspaceFiles);
-    console.log('read second', await tempFs.readFile('nx.json'));
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
     const builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
@@ -243,10 +248,10 @@ describe('native task hasher', () => {
     } as any;
     tempFs.writeFile('nx.json', JSON.stringify(nxJsonModified));
 
-    const workspaceFiles = await retrieveWorkspaceFiles(
-      tempFs.tempDir,
-      nxJsonModified
-    );
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
 
     let builder = new ProjectGraphBuilder(
       undefined,
@@ -323,7 +328,9 @@ describe('native task hasher', () => {
       },
     };
     tempFs.writeFile('nx.json', JSON.stringify(nxJson));
-    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+    });
     let builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
@@ -403,7 +410,10 @@ describe('native task hasher', () => {
       },
     };
     tempFs.writeFile('nx.json', JSON.stringify(nxJson));
-    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
     const builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
@@ -486,7 +496,9 @@ describe('native task hasher', () => {
   });
 
   it('should be able to include only a part of the base tsconfig', async () => {
-    let workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+    let workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+    });
     const builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
@@ -539,7 +551,10 @@ describe('native task hasher', () => {
   });
 
   it('should hash tasks where the project graph has circular dependencies', async () => {
-    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
     const builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap

@@ -1361,16 +1361,11 @@ import('./dynamic-import.vue')
         ancestors.next();
         let root = PathBuf::from(ancestors.next().unwrap());
 
-        let files = nx_walker(root.clone(), move |receiver| {
-            let mut files = vec![];
-            let glob = build_glob_set(&["**/*.[jt]s"]).unwrap();
-            for (path, _) in receiver {
-                if glob.is_match(&path) {
-                    files.push(root.join(path).to_normalized_string());
-                }
-            }
-            files
-        });
+        let glob = build_glob_set(&["**/*.[jt]s"]).unwrap();
+        let files = nx_walker(root.clone())
+            .filter(|(full_path, _)| glob.is_match(full_path))
+            .map(|(full_path, _)| full_path.to_normalized_string())
+            .collect::<Vec<_>>();
 
         let results: HashMap<_, _> =
             find_imports(HashMap::from([(String::from("nx"), files.clone())]))
