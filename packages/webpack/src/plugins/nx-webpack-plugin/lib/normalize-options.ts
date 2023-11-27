@@ -142,7 +142,7 @@ export function normalizeAssets(
   });
 }
 
-function normalizeFileReplacements(
+export function normalizeFileReplacements(
   root: string,
   fileReplacements: FileReplacement[]
 ): FileReplacement[] {
