@@ -301,12 +301,14 @@ export function applyWebConfig(
     },
   ];
 
-  plugins.push(
-    // extract global css from js files into own css file
-    new MiniCssExtractPlugin({
-      filename: `[name]${hashFormat.extract}.css`,
-    })
-  );
+  if (options.extractCss) {
+    plugins.push(
+      // extract global css from js files into own css file
+      new MiniCssExtractPlugin({
+        filename: `[name]${hashFormat.extract}.css`,
+      })
+    );
+  }
 
   config.output = {
     ...config.output,
