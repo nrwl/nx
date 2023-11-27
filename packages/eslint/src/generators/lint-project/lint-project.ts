@@ -59,27 +59,34 @@ export async function lintProjectGenerator(
   });
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  projectConfig.targets['lint'] = {
-    executor: '@nx/eslint:lint',
-    outputs: ['{options.outputFile}'],
-  };
-
   let lintFilePatterns = options.eslintFilePatterns;
   if (!lintFilePatterns && options.rootProject && projectConfig.root === '.') {
     lintFilePatterns = ['./src'];
   }
-  if (lintFilePatterns && lintFilePatterns.length) {
-    if (
-      isBuildableLibraryProject(projectConfig) &&
-      !lintFilePatterns.includes('{projectRoot}')
-    ) {
-      lintFilePatterns.push(`{projectRoot}/package.json`);
-    }
+  if (
+    lintFilePatterns &&
+    lintFilePatterns.length &&
+    !lintFilePatterns.includes('{projectRoot}') &&
+    isBuildableLibraryProject(projectConfig)
+  ) {
+    lintFilePatterns.push(`{projectRoot}/package.json`);
+  }
 
-    // only add lintFilePatterns if they are explicitly defined
-    projectConfig.targets['lint'].options = {
-      lintFilePatterns,
+  const usePlugin = process.env.NX_PCV3 === 'true';
+  if (usePlugin) {
+    // TODO: Check for delta
+  } else {
+    projectConfig.targets['lint'] = {
+      executor: '@nx/eslint:lint',
+      outputs: ['{options.outputFile}'],
     };
+
+    if (lintFilePatterns && lintFilePatterns.length) {
+      // only add lintFilePatterns if they are explicitly defined
+      projectConfig.targets['lint'].options = {
+        lintFilePatterns,
+      };
+    }
   }
 
   // we are adding new project which is not the root project or

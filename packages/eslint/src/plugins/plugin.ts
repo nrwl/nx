@@ -32,6 +32,11 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       return {};
     }
 
+    // Do not create a project if root and no src folder is found
+    if (projectRoot === '.' && !siblingFiles.includes('src')) {
+      return {};
+    }
+
     options = normalizeOptions(options);
     const projectName = basename(projectRoot);
 
@@ -70,7 +75,7 @@ function buildEslintTargets(
   const targets: Record<string, TargetConfiguration> = {};
 
   const command = isFlatConfig(rootEslintConfigFile)
-    ? `ESLINT_USE_FLAT_CONFIG=true eslint`
+    ? `ESLINT_USE_FLAT_CONFIG=true eslint` // TODO this should be a flag on command options
     : `eslint`;
 
   const baseTargetConfig: TargetConfiguration = {

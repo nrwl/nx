@@ -766,29 +766,19 @@ describe('Linter', () => {
   });
 
   describe('Project Config v3', () => {
-    let env: string | undefined;
     const myapp = uniq('myapp');
 
     beforeAll(() => {
-      env = process.env.NX_PCV3;
       newProject({
         name: uniq('eslint'),
         unsetProjectNameAndRootFormat: false,
       });
-      process.env.NX_PCV3 = 'true';
-    });
-
-    afterAll(() => {
-      if (env) {
-        process.env.NX_PCV3 = env;
-      } else {
-        delete process.env.NX_PCV3;
-      }
     });
 
     it('should lint example app', () => {
       runCLI(
-        `generate @nx/react:app ${myapp}  --directory apps/${myapp} --unitTestRunner=none --bundler=vite --e2eTestRunner=cypress --style=css --no-interactive --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:app ${myapp}  --directory apps/${myapp} --unitTestRunner=none --bundler=vite --e2eTestRunner=cypress --style=css --no-interactive --projectNameAndRootFormat=as-provided`,
+        { env: { NX_PCV3: 'true' } }
       );
 
       const lintResults = runCLI(`lint ${myapp}`);
