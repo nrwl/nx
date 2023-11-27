@@ -1,14 +1,15 @@
 use napi::bindgen_prelude::External;
 use std::collections::HashMap;
 
-use crate::native::hasher::hash;
+use crate::native::hasher::{hash, hash_file_path};
 use crate::native::utils::Normalize;
 use napi::bindgen_prelude::*;
 use rayon::prelude::*;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::thread;
+use std::thread::available_parallelism;
+use std::{cmp, thread};
 
 use crate::native::logger::enable_logger;
 use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
@@ -30,6 +31,7 @@ pub struct WorkspaceContext {
 }
 
 type Files = Vec<(PathBuf, String)>;
+
 struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
 impl FilesWorker {
     fn gather_files(workspace_root: &Path) -> Self {
@@ -49,16 +51,34 @@ impl FilesWorker {
             trace!("locking files");
             let (lock, cvar) = &*files_lock_clone;
             let mut workspace_files = lock.lock();
-            let files = nx_walker(workspace_root, |rec| {
-                let mut file_hashes: Vec<(PathBuf, String)> = vec![];
-                for (path, content) in rec {
-                    file_hashes.push((path, hash(&content)));
-                }
-                file_hashes
-            });
 
-            workspace_files.extend(files);
-            workspace_files.par_sort();
+            let files = nx_walker(workspace_root).collect::<Vec<_>>();
+            let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
+            let chunks = files.len() / num_parallelism;
+
+            let now = std::time::Instant::now();
+
+            let mut files = if chunks < num_parallelism {
+                files
+                    .iter()
+                    .filter_map(|(full_path, path)| {
+                        hash_file_path(full_path).map(|hash| (path.to_owned(), hash))
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                files
+                    .par_chunks(chunks)
+                    .flat_map_iter(|chunks| {
+                        chunks.iter().filter_map(|(full_path, path)| {
+                            hash_file_path(full_path).map(|hash| (path.to_owned(), hash))
+                        })
+                    })
+                    .collect::<Vec<_>>()
+            };
+
+            files.par_sort();
+            trace!("hashed and sorted workspace files in {:?}", now.elapsed());
+            *workspace_files = files;
             let files_len = workspace_files.len();
             trace!(?files_len, "files retrieved");
 

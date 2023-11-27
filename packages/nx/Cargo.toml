@@ -7,7 +7,7 @@ edition = '2021'
 anyhow = "1.0.71"
 colored = "2"
 crossbeam-channel = '0.5'
-dashmap = { version = "5.5.3", features= ["rayon"] }
+dashmap = { version = "5.5.3", features = ["rayon"] }
 fs_extra = "1.3.0"
 globset = "0.4.10"
 hashbrown = { version = "0.14.0", features = ["rayon"] }
@@ -25,8 +25,6 @@ napi-derive = '2.9.3'
 nom = '7.1.3'
 regex = "1.9.1"
 rayon = "1.7.0"
-serde = "1"
-serde_json = "1"
 thiserror = "1.0.40"
 tokio = { version = "1.28.2", features = ["fs"] }
 tracing = "0.1.37"
