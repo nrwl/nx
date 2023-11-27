@@ -274,7 +274,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
       skipFormat: true,
       setParserOptionsProject: options.setParserOptionsProject,
     });

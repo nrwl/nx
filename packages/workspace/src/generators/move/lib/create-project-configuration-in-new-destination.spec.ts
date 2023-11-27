@@ -100,13 +100,6 @@ describe('moveProjectConfiguration', () => {
         },
         lint: {
           executor: '@nx/eslint:lint',
-          options: {
-            lintFilePatterns: [
-              '{projectRoot}/**/*.{ts,tsx,js,jsx}',
-              '{projectRoot}/**/*.{html,htm}',
-              '{projectRoot}/project.json',
-            ],
-          },
         },
         test: {
           executor: '@nx/jest:jest',
@@ -141,13 +134,6 @@ describe('moveProjectConfiguration', () => {
         },
         lint: {
           executor: '@nx/eslint:lint',
-          options: {
-            lintFilePatterns: [
-              '{projectRoot}/**/*.{ts,tsx,js,jsx}',
-              '{projectRoot}/**/*.{html,htm}',
-              '{projectRoot}/project.json',
-            ],
-          },
         },
       },
     });
