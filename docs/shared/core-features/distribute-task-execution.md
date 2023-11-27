@@ -150,7 +150,6 @@ CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly.
 
 Read the guides for more information on how to configure them in CI.
 
-- [Overview](/nx-cloud/recipes/set-up/ci-setup#distributed-ci-with-nx-cloud)
 - [Azure Pipelines](/nx-cloud/recipes/set-up/monorepo-ci-azure#distributed-ci-with-nx-cloud)
 - [Circle CI](/nx-cloud/recipes/set-up/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
 - [GitHub Actions](/nx-cloud/recipes/set-up/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
