@@ -5769,14 +5769,6 @@
             "isExternal": false,
             "children": [
               {
-                "name": "CI Setup",
-                "path": "/nx-cloud/recipes/set-up/ci-setup",
-                "id": "ci-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Setting up Azure Pipelines",
                 "path": "/nx-cloud/recipes/set-up/monorepo-ci-azure",
                 "id": "monorepo-ci-azure",
@@ -5993,14 +5985,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "CI Setup",
-            "path": "/nx-cloud/recipes/set-up/ci-setup",
-            "id": "ci-setup",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Setting up Azure Pipelines",
             "path": "/nx-cloud/recipes/set-up/monorepo-ci-azure",
             "id": "monorepo-ci-azure",
@@ -6049,14 +6033,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "CI Setup",
-        "path": "/nx-cloud/recipes/set-up/ci-setup",
-        "id": "ci-setup",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {

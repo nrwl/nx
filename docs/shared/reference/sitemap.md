@@ -280,7 +280,6 @@
     - [End to End Encryption](/nx-cloud/concepts/encryption)
   - [Recipes](/nx-cloud/recipes)
     - [Set Up CI](/nx-cloud/recipes/set-up)
-      - [CI Setup](/nx-cloud/recipes/set-up/ci-setup)
       - [Setting up Azure Pipelines](/nx-cloud/recipes/set-up/monorepo-ci-azure)
       - [Setting up CircleCI](/nx-cloud/recipes/set-up/monorepo-ci-circle-ci)
       - [Setting up GitHub Actions](/nx-cloud/recipes/set-up/monorepo-ci-github-actions)
