@@ -12,8 +12,6 @@ import { getRootTsConfigPath } from '@nx/js';
 import { registerTsProject } from '@nx/js/src/internal';
 import type { PlaywrightTestConfig } from '@playwright/test';
 
-import { PlaywrightExecutorSchema } from '../executors/playwright/playwright';
-
 export interface PlaywrightPluginOptions {
   targetName?: string;
 }
@@ -66,21 +64,17 @@ function buildPlaywrightTargets(
   const targetDefaults = readTargetDefaultsForTarget(
     options.targetName,
     context.nxJsonConfiguration.targetDefaults,
-    'executorName'
+    'nx:run-commands'
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const targets: Record<
-    string,
-    TargetConfiguration<PlaywrightExecutorSchema>
-  > = {};
+  const targets: Record<string, TargetConfiguration<unknown>> = {};
 
-  const baseTargetConfig: TargetConfiguration<PlaywrightExecutorSchema> = {
-    executor: '@nx/playwright:playwright',
+  const baseTargetConfig: TargetConfiguration = {
+    command: 'playwright test',
     options: {
-      config: configFilePath,
-      ...targetDefaults?.options,
+      cwd: '{projectRoot}',
     },
   };
 

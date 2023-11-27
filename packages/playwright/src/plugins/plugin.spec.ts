@@ -42,13 +42,13 @@ describe('@nx/playwright/plugin', () => {
             "targets": {
               "e2e": {
                 "cache": true,
-                "executor": "@nx/playwright:playwright",
+                "command": "playwright test",
                 "inputs": [
                   "default",
                   "^production",
                 ],
                 "options": {
-                  "config": "playwright.config.js",
+                  "cwd": "{projectRoot}",
                 },
                 "outputs": [
                   "{projectRoot}/test-results",
@@ -86,13 +86,13 @@ describe('@nx/playwright/plugin', () => {
             "targets": {
               "e2e": {
                 "cache": true,
-                "executor": "@nx/playwright:playwright",
+                "command": "playwright test",
                 "inputs": [
                   "default",
                   "^production",
                 ],
                 "options": {
-                  "config": "playwright.config.js",
+                  "cwd": "{projectRoot}",
                 },
                 "outputs": [
                   "{projectRoot}/playwright-report",

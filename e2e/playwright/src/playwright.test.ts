@@ -95,8 +95,13 @@ describe('Playwright E2E Test Runner - PCV3', () => {
     () => {
       ensurePlaywrightBrowsersInstallation();
 
+      const pmc = getPackageManagerCommand();
+
       runCLI(
-        `g @nx/web:app demo-e2e --directory apps/demo --unitTestRunner=none --bundler=vite --e2eTestRunner=playwright --style=css --no-interactive --projectNameAndRootFormat=as-provided`
+        `g @nx/web:app demo-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
+      );
+      runCLI(
+        `g @nx/playwright:configuration --project demo-e2e --webServerCommand="${pmc.runNx} serve demo-e2e" --webServerAddress="http://localhost:4200"`
       );
 
       const e2eResults = runCLI(`e2e demo-e2e`);
@@ -125,6 +130,8 @@ describe('Playwright E2E Test Runner - PCV3', () => {
     'should test and lint example app with js',
     () => {
       ensurePlaywrightBrowsersInstallation();
+
+      const pmc = getPackageManagerCommand();
 
       runCLI(
         `g @nx/web:app demo-js-e2e --directory apps/demo-js-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive --projectNameAndRootFormat=as-provided`

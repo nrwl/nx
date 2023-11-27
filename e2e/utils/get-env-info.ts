@@ -157,7 +157,9 @@ export function getStrippedEnvironmentVariables() {
         return true;
       }
 
-      if (key.startsWith('NX_')) {
+      const allowedKeys = ['NX_PCV3'];
+
+      if (key.startsWith('NX_') && !allowedKeys.includes(key)) {
         return false;
       }
 
