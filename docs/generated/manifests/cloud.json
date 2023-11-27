@@ -230,6 +230,16 @@
     "file": "",
     "itemList": [
       {
+        "id": "faster-ci",
+        "name": "Faster CI with Nx",
+        "description": "",
+        "file": "nx-cloud/concepts/faster-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-cloud/concepts/faster-ci",
+        "tags": []
+      },
+      {
         "id": "dte",
         "name": "Improve Worst Case CI Times",
         "description": "",
@@ -262,6 +272,16 @@
     ],
     "isExternal": false,
     "path": "/nx-cloud/concepts",
+    "tags": []
+  },
+  "/nx-cloud/concepts/faster-ci": {
+    "id": "faster-ci",
+    "name": "Faster CI with Nx",
+    "description": "",
+    "file": "nx-cloud/concepts/faster-ci",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/nx-cloud/concepts/faster-ci",
     "tags": []
   },
   "/nx-cloud/concepts/dte": {

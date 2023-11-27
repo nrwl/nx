@@ -5706,6 +5706,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Faster CI with Nx",
+            "path": "/nx-cloud/concepts/faster-ci",
+            "id": "faster-ci",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Improve Worst Case CI Times",
             "path": "/nx-cloud/concepts/dte",
             "id": "dte",
@@ -5730,6 +5738,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Faster CI with Nx",
+        "path": "/nx-cloud/concepts/faster-ci",
+        "id": "faster-ci",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {

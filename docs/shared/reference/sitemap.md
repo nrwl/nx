@@ -275,7 +275,7 @@
     - [Set up Nx Cloud On-Premise](/nx-cloud/features/on-premise)
     - [Nx Cloud Workflows](/nx-cloud/features/nx-cloud-workflows)
   - [Concepts](/nx-cloud/concepts)
-    - [Faster CI](/nx-cloud/concepts/faster-ci)
+    - [Faster CI with Nx](/nx-cloud/concepts/faster-ci)
     - [Improve Worst Case CI Times](/nx-cloud/concepts/dte)
     - [Security Scenarios](/nx-cloud/concepts/scenarios)
     - [End to End Encryption](/nx-cloud/concepts/encryption)
