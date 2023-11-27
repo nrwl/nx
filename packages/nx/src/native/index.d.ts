@@ -170,10 +170,9 @@ export class Watcher {
 export class WorkspaceContext {
   workspaceRoot: string
   constructor(workspaceRoot: string)
-  getWorkspaceFiles(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Promise<Record<string, string>>): Promise<NxWorkspaceFiles>
+  getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string
-  getProjectConfigurations(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Promise<Record<string, string>>): Promise<Record<string, string>>
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>

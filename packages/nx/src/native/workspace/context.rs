@@ -3,7 +3,6 @@ use std::collections::HashMap;
 
 use crate::native::hasher::{hash, hash_file_path};
 use crate::native::utils::Normalize;
-use napi::bindgen_prelude::*;
 use rayon::prelude::*;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
@@ -21,7 +20,7 @@ use crate::native::walker::nx_walker;
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
-use crate::native::workspace::{config_files, workspace_files};
+use crate::native::workspace::{config_files, workspace_files, types::NxWorkspaceFiles};
 
 #[napi]
 pub struct WorkspaceContext {
@@ -177,17 +176,13 @@ impl WorkspaceContext {
         }
     }
 
-    #[napi(ts_return_type = "Promise<NxWorkspaceFiles>")]
-    pub fn get_workspace_files<ConfigurationParser>(
+    #[napi]
+    pub fn get_workspace_files(
         &self,
-        env: Env,
-        globs: Vec<String>,
-        parse_configurations: ConfigurationParser,
-    ) -> anyhow::Result<Option<Object>>
-    where
-        ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
+        project_root_map: HashMap<String, String>,
+    ) -> anyhow::Result<NxWorkspaceFiles>
     {
-        workspace_files::get_files(env, globs, parse_configurations, self.all_file_data())
+        workspace_files::get_files(project_root_map, self.all_file_data())
             .map_err(anyhow::Error::from)
     }
 
@@ -216,27 +211,6 @@ impl WorkspaceContext {
                 .collect::<Vec<_>>()
                 .concat(),
         ))
-    }
-
-    #[napi(ts_return_type = "Promise<Record<string, string>>")]
-    pub fn get_project_configurations<ConfigurationParser>(
-        &self,
-        env: Env,
-        globs: Vec<String>,
-        parse_configurations: ConfigurationParser,
-    ) -> napi::Result<Object>
-    where
-        ConfigurationParser: Fn(Vec<String>) -> napi::Result<Promise<HashMap<String, String>>>,
-    {
-        let promise = config_files::get_project_configurations(
-            globs,
-            &self.all_file_data(),
-            parse_configurations,
-        )?;
-        env.spawn_future(async move {
-            let result = promise.await?;
-            Ok(result)
-        })
     }
 
     #[napi]
