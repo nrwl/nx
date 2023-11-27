@@ -100,7 +100,7 @@ If we look at these two trivial examples, you can see that the repository with m
 
 In the one project example, every PR will affect the entire repository. In the four project example, modifying one project only affects 25% of the repository. For the one project repository `nx affected -t build` is identical to `nx run-many -t build`, whereas for the four project repository, `nx affected -t build` cuts out the 75% of wasted work.
 
-With this principle in mind, you can add more applications to the repository to gain the [benefits of a monorepo](https://monorepo.tools) without suffering an exponential increase in CI execution time. You can also use this principle to split an existing project into multiple projects in order to have a faster CI pipeline for the existing applications.
+With this principle in mind, you can add more applications to the repository to gain the [benefits of a monorepo](https://monorepo.tools) without suffering an exponential increase in CI execution time. This principle also encourages splitting projects into multiple projects in order to have a faster CI pipeline for the existing applications.
 
 ### Flatter Repos Gain More Value From Affected
 
