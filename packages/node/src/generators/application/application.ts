@@ -24,7 +24,6 @@ import { configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nx/js';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
-import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 import { join } from 'path';
 import {
   expressTypingsVersion,
@@ -267,13 +266,6 @@ export async function addLintingToApplication(
     project: options.name,
     tsConfigPaths: [
       joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    ],
-    eslintFilePatterns: [
-      mapLintPattern(
-        options.appProjectRoot,
-        options.js ? 'js' : 'ts',
-        options.rootProject
-      ),
     ],
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,

@@ -307,16 +307,6 @@
         "file": "",
         "itemList": [
           {
-            "id": "ci-setup",
-            "name": "CI Setup",
-            "description": "",
-            "file": "shared/ci-overview",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/nx-cloud/recipes/set-up/ci-setup",
-            "tags": ["distribute-task-execution"]
-          },
-          {
             "id": "monorepo-ci-azure",
             "name": "Setting up Azure Pipelines",
             "description": "",
@@ -379,7 +369,7 @@
         ],
         "isExternal": false,
         "path": "/nx-cloud/recipes/set-up",
-        "tags": []
+        "tags": ["distribute-task-execution"]
       },
       {
         "id": "security",
@@ -587,16 +577,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "ci-setup",
-        "name": "CI Setup",
-        "description": "",
-        "file": "shared/ci-overview",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-cloud/recipes/set-up/ci-setup",
-        "tags": ["distribute-task-execution"]
-      },
-      {
         "id": "monorepo-ci-azure",
         "name": "Setting up Azure Pipelines",
         "description": "",
@@ -659,16 +639,6 @@
     ],
     "isExternal": false,
     "path": "/nx-cloud/recipes/set-up",
-    "tags": []
-  },
-  "/nx-cloud/recipes/set-up/ci-setup": {
-    "id": "ci-setup",
-    "name": "CI Setup",
-    "description": "",
-    "file": "shared/ci-overview",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/nx-cloud/recipes/set-up/ci-setup",
     "tags": ["distribute-task-execution"]
   },
   "/nx-cloud/recipes/set-up/monorepo-ci-azure": {

@@ -144,29 +144,13 @@ function computeWorkspaceConfigHash(
   return hashArray(projectConfigurationStrings);
 }
 
-async function processCollectedUpdatedAndDeletedFiles({
-  projects,
-  externalNodes,
-  projectRootMap,
-}: RetrievedGraphNodes) {
+async function processCollectedUpdatedAndDeletedFiles(
+  { projects, externalNodes, projectRootMap }: RetrievedGraphNodes,
+  updatedFileHashes: Record<string, string>,
+  deletedFiles: string[]
+) {
   try {
-    performance.mark('hash-watched-changes-start');
-    const updatedFiles = [...collectedUpdatedFiles.values()];
-    const deletedFiles = [...collectedDeletedFiles.values()];
-    let updatedFileHashes = updateFilesInContext(updatedFiles, deletedFiles);
-    performance.mark('hash-watched-changes-end');
-    performance.measure(
-      'hash changed files from watcher',
-      'hash-watched-changes-start',
-      'hash-watched-changes-end'
-    );
-
     const workspaceConfigHash = computeWorkspaceConfigHash(projects);
-    serverLogger.requestLog(
-      `Updated file-hasher based on watched changes, recomputing project graph...`
-    );
-    serverLogger.requestLog([...updatedFiles.values()]);
-    serverLogger.requestLog([...deletedFiles]);
 
     // when workspace config changes we cannot incrementally update project file map
     if (workspaceConfigHash !== storedWorkspaceConfigHash) {
@@ -214,12 +198,31 @@ async function processCollectedUpdatedAndDeletedFiles({
 
 async function processFilesAndCreateAndSerializeProjectGraph() {
   try {
+    performance.mark('hash-watched-changes-start');
+    const updatedFiles = [...collectedUpdatedFiles.values()];
+    const deletedFiles = [...collectedDeletedFiles.values()];
+    let updatedFileHashes = updateFilesInContext(updatedFiles, deletedFiles);
+    performance.mark('hash-watched-changes-end');
+    performance.measure(
+      'hash changed files from watcher',
+      'hash-watched-changes-start',
+      'hash-watched-changes-end'
+    );
+    serverLogger.requestLog(
+      `Updated workspace context based on watched changes, recomputing project graph...`
+    );
+    serverLogger.requestLog([...updatedFiles.values()]);
+    serverLogger.requestLog([...deletedFiles]);
     const nxJson = readNxJson(workspaceRoot);
     const configResult = await retrieveProjectConfigurations(
       workspaceRoot,
       nxJson
     );
-    await processCollectedUpdatedAndDeletedFiles(configResult);
+    await processCollectedUpdatedAndDeletedFiles(
+      configResult,
+      updatedFileHashes,
+      deletedFiles
+    );
     writeSourceMaps(configResult.sourceMaps);
     return createAndSerializeProjectGraph(configResult);
   } catch (err) {

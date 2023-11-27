@@ -84,10 +84,7 @@ exports[`app generated files content - as-provided general application should co
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["my-app/**/*.{ts,tsx,js,jsx,vue}"]
-      }
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@nx/vite:test",

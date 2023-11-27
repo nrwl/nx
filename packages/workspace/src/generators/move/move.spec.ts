@@ -139,9 +139,6 @@ describe('move', () => {
         lint: {
           executor: '@nx/eslint:lint',
           outputs: ['{options.outputFile}'],
-          options: {
-            lintFilePatterns: ['my-lib/src/**/*.ts', 'my-lib/package.json'],
-          },
         },
         test: {
           executor: '@nx/jest:jest',
@@ -217,7 +214,10 @@ describe('move', () => {
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        e2e: { ...nxE2EPreset(__filename, { cypressDir: 'src' }) },
+        e2e: {
+          ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+          baseUrl: 'http://localhost:4200',
+        },
       });
       "
     `);

@@ -274,7 +274,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
       skipFormat: true,
       setParserOptionsProject: options.setParserOptionsProject,
     });
@@ -297,6 +296,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       ...options,
       project: options.e2eProjectName,
       devServerTarget: `${options.projectName}:serve`,
+      baseUrl: 'http://localhost:4200',
       directory: 'src',
       skipFormat: true,
     });

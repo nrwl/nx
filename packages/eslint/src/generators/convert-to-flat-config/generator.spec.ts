@@ -46,7 +46,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -132,7 +131,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -216,7 +214,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -233,12 +230,12 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
     tree.write('another-folder/.myeslintignore', 'ignore/me');
     updateJson(tree, 'libs/test-lib/project.json', (json) => {
+      json.targets.lint.options = json.targets.lint.options || {};
       json.targets.lint.options.ignorePath = 'another-folder/.myeslintignore';
       return json;
     });
@@ -262,7 +259,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -281,7 +277,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -301,7 +296,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -320,7 +314,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -342,7 +335,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -364,7 +356,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -381,7 +372,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
