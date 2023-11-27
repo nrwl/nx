@@ -234,7 +234,7 @@ describe('@nx/js/plugin', () => {
 
       const nodes = createNodesFunction(
         'tsconfig.json',
-        { buildPossibleTsConfigFiles: ['tsconfig.custom.json'] },
+        { tsConfigFiles: ['tsconfig.custom.json'] },
         context
       ) as CreateNodesResult;
 
@@ -243,7 +243,7 @@ describe('@nx/js/plugin', () => {
       );
     });
 
-    it('should add a build target with custom entry point files', async () => {
+    it('should add a build target with custom main files', async () => {
       await tempFs.createFiles({
         'package.json': '{}',
         'tsconfig.json': '{}',
@@ -252,7 +252,7 @@ describe('@nx/js/plugin', () => {
 
       const nodes = createNodesFunction(
         'tsconfig.json',
-        { buildPossibleEntryPointFiles: ['src/public-api.ts'] },
+        { packageMainFiles: ['src/public-api.ts'] },
         context
       ) as CreateNodesResult;
 

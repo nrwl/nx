@@ -125,7 +125,7 @@ describe('setup-build generator', () => {
       [
         {
           "options": {
-            "buildPossibleEntryPointFiles": [
+            "packageMainFiles": [
               "index.ts",
               "index.js",
               "src/index.ts",
@@ -165,7 +165,7 @@ describe('setup-build generator', () => {
       [
         {
           "options": {
-            "buildPossibleTsConfigFiles": [
+            "tsConfigFiles": [
               "tsconfig.lib.json",
               "tsconfig.build.json",
               "tsconfig.json",

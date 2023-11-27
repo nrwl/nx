@@ -187,9 +187,8 @@ export async function setupBuildGenerator(
             pluginOptions
           );
           if (isDifferentEntryPoint) {
-            pluginOptions.buildPossibleEntryPointFiles = [
-              ...(pluginOptions.buildPossibleEntryPointFiles ??
-                defaultEntryPointFiles),
+            pluginOptions.packageMainFiles = [
+              ...(pluginOptions.packageMainFiles ?? defaultEntryPointFiles),
               relativeMainPath,
             ];
           }
@@ -203,10 +202,10 @@ export async function setupBuildGenerator(
           );
           if (isDifferentTsConfig) {
             const configuredTsConfigFiles =
-              pluginOptions.buildPossibleTsConfigFiles ?? defaultTsConfigFiles;
+              pluginOptions.tsConfigFiles ?? defaultTsConfigFiles;
             const hasTsConfigJson =
               configuredTsConfigFiles.includes('tsconfig.json');
-            pluginOptions.buildPossibleTsConfigFiles = hasTsConfigJson
+            pluginOptions.tsConfigFiles = hasTsConfigJson
               ? [
                   ...configuredTsConfigFiles.filter(
                     (f) => f !== 'tsconfig.json'
@@ -307,9 +306,9 @@ function isEntryPointHandledByPlugin(
   pluginOptions: JsPluginOptions
 ): boolean {
   return (
-    (pluginOptions.buildPossibleEntryPointFiles &&
-      !pluginOptions.buildPossibleEntryPointFiles.includes(entryPoint)) ||
-    (!pluginOptions.buildPossibleEntryPointFiles &&
+    (pluginOptions.packageMainFiles &&
+      !pluginOptions.packageMainFiles.includes(entryPoint)) ||
+    (!pluginOptions.packageMainFiles &&
       !defaultEntryPointFiles.includes(entryPoint))
   );
 }
@@ -319,10 +318,9 @@ function isTsConfigHandledByPlugin(
   pluginOptions: JsPluginOptions
 ): boolean {
   return (
-    (pluginOptions.buildPossibleTsConfigFiles &&
-      !pluginOptions.buildPossibleTsConfigFiles.includes(tsConfig)) ||
-    (!pluginOptions.buildPossibleTsConfigFiles &&
-      !defaultTsConfigFiles.includes(tsConfig))
+    (pluginOptions.tsConfigFiles &&
+      !pluginOptions.tsConfigFiles.includes(tsConfig)) ||
+    (!pluginOptions.tsConfigFiles && !defaultTsConfigFiles.includes(tsConfig))
   );
 }
 
