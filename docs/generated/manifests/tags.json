@@ -728,10 +728,10 @@
     },
     {
       "description": "",
-      "file": "shared/concepts/improve-worst-case-ci-times",
-      "id": "dte",
-      "name": "Improve Worst Case CI Times",
-      "path": "/ci/concepts/dte"
+      "file": "nx-cloud/concepts/parallelization-distribution",
+      "id": "parallelization-distribution",
+      "name": "Parallelization and Distribution",
+      "path": "/ci/concepts/parallelization-distribution"
     },
     {
       "description": "Learn how to set up Nx Cloud for your workspace.",

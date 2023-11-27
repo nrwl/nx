@@ -5714,9 +5714,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Improve Worst Case CI Times",
-            "path": "/ci/concepts/dte",
-            "id": "dte",
+            "name": "Parallelization and Distribution",
+            "path": "/ci/concepts/parallelization-distribution",
+            "id": "parallelization-distribution",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5741,9 +5741,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Improve Worst Case CI Times",
-        "path": "/ci/concepts/dte",
-        "id": "dte",
+        "name": "Parallelization and Distribution",
+        "path": "/ci/concepts/parallelization-distribution",
+        "id": "parallelization-distribution",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
