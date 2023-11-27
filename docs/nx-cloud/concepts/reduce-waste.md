@@ -1,10 +1,10 @@
-# Faster CI with Nx
+# Reduce Waste in CI
 
 This article explores two ways that Nx improves the average speed of your CI pipeline - `nx affected` and remote caching. Using the `nx affected` command speeds up the first CI run for a PR and remote caching speeds up every CI run after that. Both `nx affected` and remote caching provide more benefits to repositories with more projects and a flatter project structure.
 
 For this discussion, we'll assume you understand the Nx [mental model](/concepts/mental-model) and have an understanding of both [what the affected command is](/nx-cloud/features/affected) and [how caching works](/concepts/how-caching-works).
 
-## Faster CI With Affected
+## Reduce Waste With Affected
 
 The `nx affected` command allows you to only run tasks on projects that were affected by a particular PR. This effectively eliminates the wasted time and resources that would have been spent executing tasks on projects that were unrelated to a particular PR.
 
@@ -292,7 +292,7 @@ Note that the 50% chance of any project being modified is an arbitrary number. I
 
 {% /callout %}
 
-## Faster CI with Remote Caching
+## Reduce Waste with Remote Caching
 
 If you use a read/write token on developer machines, CI runs could be dramatically improved because they would be leveraging the work already done on the machine of the developer that pushed the PR. This set up requires you to have full trust in everyone who is capable of viewing the code base, which doesn't make sense for open source projects or for many organizations.
 

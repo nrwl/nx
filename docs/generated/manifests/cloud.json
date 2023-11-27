@@ -230,13 +230,13 @@
     "file": "",
     "itemList": [
       {
-        "id": "faster-ci",
-        "name": "Faster CI with Nx",
+        "id": "reduce-waste",
+        "name": "Reduce Waste in CI",
         "description": "",
-        "file": "nx-cloud/concepts/faster-ci",
+        "file": "nx-cloud/concepts/reduce-waste",
         "itemList": [],
         "isExternal": false,
-        "path": "/nx-cloud/concepts/faster-ci",
+        "path": "/nx-cloud/concepts/reduce-waste",
         "tags": []
       },
       {
@@ -274,14 +274,14 @@
     "path": "/nx-cloud/concepts",
     "tags": []
   },
-  "/nx-cloud/concepts/faster-ci": {
-    "id": "faster-ci",
-    "name": "Faster CI with Nx",
+  "/nx-cloud/concepts/reduce-waste": {
+    "id": "reduce-waste",
+    "name": "Reduce Waste in CI",
     "description": "",
-    "file": "nx-cloud/concepts/faster-ci",
+    "file": "nx-cloud/concepts/reduce-waste",
     "itemList": [],
     "isExternal": false,
-    "path": "/nx-cloud/concepts/faster-ci",
+    "path": "/nx-cloud/concepts/reduce-waste",
     "tags": []
   },
   "/nx-cloud/concepts/dte": {

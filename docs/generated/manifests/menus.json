@@ -5706,9 +5706,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Faster CI with Nx",
-            "path": "/nx-cloud/concepts/faster-ci",
-            "id": "faster-ci",
+            "name": "Reduce Waste in CI",
+            "path": "/nx-cloud/concepts/reduce-waste",
+            "id": "reduce-waste",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5741,9 +5741,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Faster CI with Nx",
-        "path": "/nx-cloud/concepts/faster-ci",
-        "id": "faster-ci",
+        "name": "Reduce Waste in CI",
+        "path": "/nx-cloud/concepts/reduce-waste",
+        "id": "reduce-waste",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
