@@ -401,6 +401,31 @@ describe('Run Commands', () => {
     });
   });
 
+  describe('env', () => {
+    it('should add the env to the command', async () => {
+      const root = dirSync().name;
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "$MY_ENV_VAR" >> ${f}`,
+            },
+          ],
+          env: {
+            MY_ENV_VAR: 'my-value',
+          },
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('my-value');
+    });
+  });
+
   describe('dotenv', () => {
     beforeAll(() => {
       writeFileSync('.env', 'NRWL_SITE=https://nrwl.io/');
