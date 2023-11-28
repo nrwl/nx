@@ -40,7 +40,7 @@ describe('@nx/eslint/plugin', () => {
     };
     vol.fromJSON(fileSys, '');
     const nodes = createNodesFunction(
-      'apps/my-app/.eslintrc.json',
+      'apps/my-app/project.json',
       {
         targetName: 'lint',
       },
@@ -80,11 +80,12 @@ describe('@nx/eslint/plugin', () => {
       'apps/my-app/eslint.config.js': `module.exports = []`,
       'apps/my-app/project.json': `{}`,
       'eslint.config.js': `module.exports = []`,
+      'src/index.ts': `console.log('hello world')`,
       'package.json': `{}`,
     };
     vol.fromJSON(fileSys, '');
     const nodes = createNodesFunction(
-      'eslint.config.js',
+      'package.json',
       {
         targetName: 'lint',
       },
@@ -117,5 +118,24 @@ describe('@nx/eslint/plugin', () => {
         },
       }
     `);
+  });
+
+  it('should not create nodes if no src folder for root', () => {
+    const fileSys = {
+      'apps/my-app/eslint.config.js': `module.exports = []`,
+      'apps/my-app/project.json': `{}`,
+      'eslint.config.js': `module.exports = []`,
+      'package.json': `{}`,
+    };
+    vol.fromJSON(fileSys, '');
+    const nodes = createNodesFunction(
+      'package.json',
+      {
+        targetName: 'lint',
+      },
+      context
+    );
+
+    expect(nodes).toMatchInlineSnapshot(`{}`);
   });
 });

@@ -15,25 +15,15 @@ import {
 
 export interface EslintPluginOptions {
   targetName?: string;
+  excludedProjects?: string[];
 }
 
 export const createNodes: CreateNodes<EslintPluginOptions> = [
-  // TODO(meeroslav): eslint can work even without config file in the nested project
-  combineGlobPatterns(ESLINT_CONFIG_FILENAMES.map((file) => `**/${file}`)),
+  combineGlobPatterns(['**/project.json', '**/package.json']),
   (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
 
-    // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-    if (
-      !siblingFiles.includes('package.json') &&
-      !siblingFiles.includes('project.json')
-    ) {
-      return {};
-    }
-
-    // Do not create a project if root and no src folder is found
-    if (projectRoot === '.' && !siblingFiles.includes('src')) {
+    if (!projectHasEslintConfig(projectRoot, context.workspaceRoot)) {
       return {};
     }
 
@@ -57,6 +47,33 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     };
   },
 ];
+
+function projectHasEslintConfig(
+  projectRoot: string,
+  workspaceRoot: string
+): boolean {
+  const siblingFiles = readdirSync(join(workspaceRoot, projectRoot));
+
+  if (projectRoot === '.') {
+    // If there's no src folder, it's not a standalone project
+    if (!siblingFiles.includes('src')) {
+      return false;
+    }
+    // If it's standalone but doesn't have eslint config, it's not a lintable
+    if (!siblingFiles.some((f) => ESLINT_CONFIG_FILENAMES.includes(f))) {
+      return false;
+    }
+    return true;
+  }
+  // if it has an eslint config it's lintable
+  if (siblingFiles.some((f) => ESLINT_CONFIG_FILENAMES.includes(f))) {
+    return true;
+  }
+  // check whether the root has an eslint config
+  return readdirSync(workspaceRoot).some((f) =>
+    ESLINT_CONFIG_FILENAMES.includes(f)
+  );
+}
 
 function buildEslintTargets(
   rootEslintConfigFile: string,
@@ -105,5 +122,6 @@ function buildEslintTargets(
 function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
   options ??= {};
   options.targetName ??= 'lint';
+  options.excludedProjects ??= [];
   return options;
 }
