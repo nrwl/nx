@@ -15,14 +15,13 @@ export function normalizeOptions(
   projectRoot: string,
   sourceRoot: string
 ): NormalizedWebpackExecutorOptions {
-  return {
+  const normalizedOptions = {
     ...options,
     root,
     projectRoot,
     sourceRoot,
     target: options.target ?? 'web',
     outputFileName: options.outputFileName ?? 'main.js',
-    assets: normalizeAssets(options.assets, root, sourceRoot),
     webpackConfig: normalizePluginPath(options.webpackConfig, root),
     fileReplacements: normalizeFileReplacements(root, options.fileReplacements),
     optimization:
@@ -33,6 +32,14 @@ export function normalizeOptions(
           }
         : options.optimization,
   };
+  if (options.assets) {
+    normalizedOptions.assets = normalizeAssets(
+      options.assets,
+      root,
+      sourceRoot
+    );
+  }
+  return normalizedOptions as NormalizedWebpackExecutorOptions;
 }
 
 export function normalizePluginPath(pluginPath: void | string, root: string) {

@@ -349,7 +349,7 @@ describe('app', () => {
     );
   });
 
-  it('should setup the nrwl web build builder', async () => {
+  it('should setup the web build builder', async () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
@@ -386,7 +386,7 @@ describe('app', () => {
     });
   });
 
-  it('should setup the nrwl web dev server builder', async () => {
+  it('should setup the web dev server builder', async () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
