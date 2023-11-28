@@ -138,9 +138,13 @@ impl HashPlanner {
                 .split(':')
                 .next()
                 .expect("Executors should always have a ':'");
-            let existing_package =
+            let Some(existing_package) =
                 find_external_dependency_node_name(executor_package, &external_nodes_keys)
-                    .unwrap_or(executor_package);
+            else {
+                // this usually happens because the executor was a local plugin.
+                // todo)) @Cammisuli: we need to gather the project's inputs and its dep inputs similar to how we do it in `self_and_deps_inputs`
+                return Ok(None);
+            };
             Ok(Some(vec![HashInstruction::External(
                 existing_package.to_string(),
             )]))
