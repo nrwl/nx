@@ -63,6 +63,7 @@ export function toJsLibraryGeneratorOptions(
     publishable: options.publishable,
     skipFormat: true,
     skipTsConfig: options.skipTsConfig,
+    skipPackageJson: options.skipPackageJson,
     strict: options.strict,
     tags: options.tags,
     testEnvironment: options.testEnvironment,
