@@ -43,7 +43,7 @@ export async function setupSsrForRemote(
   const serverOutputPath =
     serverOptions?.outputPath ??
     joinPathFragments(originalOutputPath, 'server');
-  const serverOutputName = serverOptions?.outputName ?? 'main.js';
+  const serverOutputName = serverOptions?.outputFileName ?? 'main.js';
   project.targets['serve-static'] = {
     dependsOn: ['build', 'server'],
     executor: 'nx:run-commands',
