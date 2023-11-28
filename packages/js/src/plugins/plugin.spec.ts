@@ -143,7 +143,7 @@ describe('@nx/js/plugin', () => {
 
     it('should identify entry point from "package.json" "main" field', async () => {
       await tempFs.createFiles({
-        'package.json': '{ "main": "src/public-api.ts" }',
+        'package.json': '{ "main": "./src/public-api.js" }',
         'tsconfig.json': '{}',
         'src/public-api.ts': '',
       });
@@ -161,7 +161,8 @@ describe('@nx/js/plugin', () => {
 
     it('should identify entry point from "package.json" "module" field when "type: module"', async () => {
       await tempFs.createFiles({
-        'package.json': '{ "type": "module", "module": "src/public-api.ts" }',
+        'package.json':
+          '{ "type": "module", "module": "./src/public-api.mjs" }',
         'tsconfig.json': '{}',
         'src/public-api.ts': '',
       });
@@ -179,7 +180,7 @@ describe('@nx/js/plugin', () => {
 
     it('should identify entry point from "package.json" "exports" field when no "main" or "module"', async () => {
       await tempFs.createFiles({
-        'package.json': '{ "exports": { ".": "src/public-api.ts" } }',
+        'package.json': '{ "exports": { ".": "./src/public-api.js" } }',
         'tsconfig.json': '{}',
         'src/public-api.ts': '',
       });

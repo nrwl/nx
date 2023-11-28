@@ -14,7 +14,7 @@ import { existsSync, readdirSync } from 'fs';
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { dirname, join } from 'path';
+import { dirname, extname, join } from 'path';
 import type { ExecutorOptions as TscExecutorOptions } from '../utils/schema';
 
 export const defaultBuildTargetName = 'build';
@@ -300,18 +300,12 @@ function getBuildEntryPointFilePath(
   workspaceRoot: string
 ): string | undefined {
   // try getting it from package.json
-  const packageJson = readProjectPackageJson(workspaceRoot, projectRoot);
-  if (packageJson.main) {
-    return joinPathFragments(projectRoot, packageJson.main);
-  }
-  if (packageJson.type === 'module' && packageJson.module) {
-    return joinPathFragments(projectRoot, packageJson.module);
-  }
-  if (packageJson.exports) {
-    const mainField = packageJson.exports['.'] ?? packageJson.exports['./'];
-    if (mainField) {
-      return joinPathFragments(projectRoot, mainField);
-    }
+  const packageJsonEntryPoint = extractEntryPointFromPackageJson(
+    workspaceRoot,
+    projectRoot
+  );
+  if (packageJsonEntryPoint) {
+    return packageJsonEntryPoint;
   }
 
   // if there's only one file in tsconfig "files" field, use it
@@ -324,6 +318,54 @@ function getBuildEntryPointFilePath(
     const filePath = join(projectRoot, file);
     if (existsSync(join(workspaceRoot, filePath))) {
       return normalizePath(filePath);
+    }
+  }
+
+  return undefined;
+}
+
+function extractEntryPointFromPackageJson(
+  workspaceRoot: string,
+  projectRoot: string
+): string | undefined {
+  const packageJson = readProjectPackageJson(workspaceRoot, projectRoot);
+  let mainFile: string;
+  if (packageJson.main) {
+    mainFile = joinPathFragments(projectRoot, packageJson.main);
+  } else if (packageJson.type === 'module' && packageJson.module) {
+    mainFile = joinPathFragments(projectRoot, packageJson.module);
+  } else if (packageJson.exports) {
+    const mainField = packageJson.exports['.'] ?? packageJson.exports['./'];
+    if (mainField) {
+      mainFile = joinPathFragments(projectRoot, mainField);
+    }
+  }
+
+  if (!mainFile) {
+    return undefined;
+  }
+
+  if (existsSync(join(workspaceRoot, mainFile))) {
+    return mainFile;
+  }
+
+  // mainFile points to the compiled file, try to find the corresponding source file
+  const mainFileExtension = extname(mainFile);
+  const possibleExtensions = [
+    '.ts',
+    '.tsx',
+    '.mts',
+    '.cts',
+    '.js',
+    '.jsx',
+    '.mjs',
+    '.cjs',
+  ].filter((extension) => extension !== mainFileExtension);
+
+  for (const extension of possibleExtensions) {
+    const mainSourceFilePath = mainFile.replace(mainFileExtension, extension);
+    if (existsSync(join(workspaceRoot, mainSourceFilePath))) {
+      return mainSourceFilePath;
     }
   }
 
