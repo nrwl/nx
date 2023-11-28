@@ -10,6 +10,7 @@ import {
 import { webpackInitGenerator } from '../init/init';
 import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
+import { hasPlugin } from '../../utils/has-plugin';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -20,10 +21,15 @@ export async function configurationGenerator(
     skipFormat: true,
   });
   checkForTargetConflicts(tree, options);
-  addBuildTarget(tree, options);
-  if (options.devServer) {
-    addServeTarget(tree, options);
+
+  if (!hasPlugin(tree)) {
+    addBuildTarget(tree, options);
+    if (options.devServer) {
+      addServeTarget(tree, options);
+    }
   }
+
+  createWebpackConfig(tree, options);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -53,6 +59,88 @@ function checkForTargetConflicts(
   }
 }
 
+function createWebpackConfig(
+  tree: Tree,
+  options: ConfigurationGeneratorSchema
+) {
+  const project = readProjectConfiguration(tree, options.project);
+  const buildOptions: WebpackExecutorOptions = {
+    target: options.target,
+    outputPath: joinPathFragments('dist', project.root),
+    compiler: options.compiler ?? 'swc',
+    main: options.main ?? joinPathFragments(project.root, 'src/main.ts'),
+    tsConfig:
+      options.tsConfig ?? joinPathFragments(project.root, 'tsconfig.app.json'),
+    webpackConfig: joinPathFragments(project.root, 'webpack.config.js'),
+  };
+
+  if (options.target === 'web') {
+    tree.write(
+      joinPathFragments(project.root, 'webpack.config.js'),
+      hasPlugin(tree)
+        ? `
+const { NxWebpackPlugin } = require('@nx/webpack');
+
+module.exports = {
+  output: {
+    path: '${buildOptions.outputPath}',
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      target: '${buildOptions.target}',
+      tsConfig: '${buildOptions.tsConfig}',
+      compiler: '${buildOptions.compiler}',
+      main: '${buildOptions.main}',
+    })
+  ],
+}
+`
+        : `
+const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+
+// Nx plugins for webpack.
+module.exports = composePlugins(withNx(), withWeb(), (config) => {
+  // Update the webpack config as needed here.
+  // e.g. \`config.plugins.push(new MyPlugin())\`
+  return config;
+});
+`
+    );
+  } else {
+    tree.write(
+      joinPathFragments(project.root, 'webpack.config.js'),
+      hasPlugin(tree)
+        ? `
+const { NxWebpackPlugin } = require('@nx/webpack');
+
+module.exports = {
+  output: {
+    path: '${buildOptions.outputPath}',
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      target: '${buildOptions.target}',
+      tsConfig: '${buildOptions.tsConfig}',
+      compiler: '${buildOptions.compiler}',
+      main: '${buildOptions.main}',
+    })
+  ],
+}
+`
+        : `
+const { composePlugins, withNx } = require('@nx/webpack');
+
+// Nx plugins for webpack.
+module.exports = composePlugins(withNx(), (config) => {
+  // Update the webpack config as needed here.
+  // e.g. \`config.plugins.push(new MyPlugin())\`
+  return config;
+});
+`
+    );
+  }
+}
+
 function addBuildTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
   const project = readProjectConfiguration(tree, options.project);
   const buildOptions: WebpackExecutorOptions = {
@@ -78,35 +166,6 @@ function addBuildTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
     });
   }
 
-  if (options.target === 'web') {
-    tree.write(
-      joinPathFragments(project.root, 'webpack.config.js'),
-      `
-const { composePlugins, withNx, withWeb } = require('@nx/webpack');
-
-// Nx plugins for webpack.
-module.exports = composePlugins(withNx(), withWeb(), (config) => {
-  // Update the webpack config as needed here.
-  // e.g. \`config.plugins.push(new MyPlugin())\`
-  return config;
-});
-`
-    );
-  } else {
-    tree.write(
-      joinPathFragments(project.root, 'webpack.config.js'),
-      `
-const { composePlugins, withNx } = require('@nx/webpack');
-
-// Nx plugins for webpack.
-module.exports = composePlugins(withNx(), (config) => {
-  // Update the webpack config as needed here.
-  // e.g. \`config.plugins.push(new MyPlugin())\`
-  return config;
-});
-`
-    );
-  }
   updateProjectConfiguration(tree, options.project, {
     ...project,
     targets: {

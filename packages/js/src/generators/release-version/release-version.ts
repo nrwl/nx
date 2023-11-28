@@ -304,14 +304,7 @@ To fix this you will either need to add a package.json file at that location, or
         }
       }
 
-      if (!specifier) {
-        log(
-          `🚫 Skipping versioning "${projectPackageJson.name}" as no changes were detected.`
-        );
-        continue;
-      }
-
-      // Resolve any local package dependencies for this project (before applying the new version)
+      // Resolve any local package dependencies for this project (before applying the new version or updating the versionData)
       const localPackageDependencies = resolveLocalPackageDependencies(
         tree,
         options.projectGraph,
@@ -322,11 +315,31 @@ To fix this you will either need to add a package.json file at that location, or
         options.releaseGroup.projectsRelationship === 'independent'
       );
 
+      const dependentProjects = Object.values(localPackageDependencies)
+        .flat()
+        .filter((localPackageDependency) => {
+          return localPackageDependency.target === project.name;
+        });
+
+      versionData[projectName] = {
+        currentVersion,
+        dependentProjects,
+        newVersion: null, // will stay as null in the final result the case that no changes are detected
+      };
+
+      if (!specifier) {
+        log(
+          `🚫 Skipping versioning "${projectPackageJson.name}" as no changes were detected.`
+        );
+        continue;
+      }
+
       const newVersion = deriveNewSemverVersion(
         currentVersion,
         specifier,
         options.preid
       );
+      versionData[projectName].newVersion = newVersion;
 
       writeJson(tree, packageJsonPath, {
         ...projectPackageJson,
@@ -336,12 +349,6 @@ To fix this you will either need to add a package.json file at that location, or
       log(
         `✍️  New version ${newVersion} written to ${workspaceRelativePackageJsonPath}`
       );
-
-      const dependentProjects = Object.values(localPackageDependencies)
-        .flat()
-        .filter((localPackageDependency) => {
-          return localPackageDependency.target === project.name;
-        });
 
       if (dependentProjects.length > 0) {
         log(
@@ -369,12 +376,6 @@ To fix this you will either need to add a package.json file at that location, or
           }
         );
       }
-
-      versionData[projectName] = {
-        currentVersion,
-        newVersion,
-        dependentProjects,
-      };
     }
 
     /**

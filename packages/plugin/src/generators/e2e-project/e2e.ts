@@ -168,7 +168,6 @@ async function addLintingToApplication(
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
-    eslintFilePatterns: [`${options.projectRoot}/**/*.ts`],
     unitTestRunner: 'jest',
     skipFormat: true,
     setParserOptionsProject: false,

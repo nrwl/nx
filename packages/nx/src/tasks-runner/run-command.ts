@@ -237,12 +237,13 @@ export async function invokeTasksRunner({
   if (daemonClient.enabled()) {
     hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
   } else {
-    const { fileMap, allWorkspaceFiles } = getFileMap();
+    const { fileMap, allWorkspaceFiles, rustReferences } = getFileMap();
     hasher = new InProcessTaskHasher(
       fileMap?.projectFileMap,
       allWorkspaceFiles,
       projectGraph,
       nxJson,
+      rustReferences,
       runnerOptions
     );
   }
@@ -250,15 +251,13 @@ export async function invokeTasksRunner({
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
-  performance.mark('hashing:start');
+
   await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     hasher,
     projectGraph,
     taskGraph,
     nxJson
   );
-  performance.mark('hashing:end');
-  performance.measure('hashing', 'hashing:start', 'hashing:end');
 
   const promiseOrObservable = tasksRunner(
     tasks,

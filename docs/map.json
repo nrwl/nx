@@ -1647,6 +1647,11 @@
                   "name": "Circle CI with Nx",
                   "id": "circle",
                   "file": "nx-cloud/tutorial/circle"
+                },
+                {
+                  "name": "GitHub Actions with Nx",
+                  "id": "github-actions",
+                  "file": "nx-cloud/tutorial/github-actions"
                 }
               ]
             }
@@ -1723,13 +1728,8 @@
               "name": "Set Up CI",
               "id": "set-up",
               "description": "Learn how to set up Nx Cloud for your workspace.",
+              "tags": ["distribute-task-execution"],
               "itemList": [
-                {
-                  "name": "CI Setup",
-                  "id": "ci-setup",
-                  "tags": ["distribute-task-execution"],
-                  "file": "shared/ci-overview"
-                },
                 {
                   "name": "Setting up Azure Pipelines",
                   "id": "monorepo-ci-azure",

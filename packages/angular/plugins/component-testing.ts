@@ -322,7 +322,7 @@ function withSchemaDefaults(options: any): BrowserBuilderSchema {
   options.outputHashing ??= 'none';
   options.progress ??= true;
   options.scripts ??= [];
-  options.main = options.main ??= options.browser;
+  options.main ??= options.browser;
 
   return options;
 }

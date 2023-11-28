@@ -115,12 +115,7 @@ exports[`@nx/vite:configuration library mode should set up non buildable library
       "targets": {
         "lint": {
           "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": [
-              "libs/react-lib-nonb-jest/**/*.{ts,tsx,js,jsx}"
-            ]
-          }
+          "outputs": ["{options.outputFile}"]
         },
         "test": {
           "executor": "@nx/jest:jest",
@@ -196,12 +191,7 @@ exports[`@nx/vite:configuration library mode should set up non buildable library
       "targets": {
         "lint": {
           "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": [
-              "libs/react-lib-nonb-vitest/**/*.{ts,tsx,js,jsx}"
-            ]
-          }
+          "outputs": ["{options.outputFile}"]
         },
         "test": {
           "executor": "@nx/vite:test",
@@ -256,12 +246,7 @@ exports[`@nx/vite:configuration transform React app to use Vite by providing cus
         },
         "lint": {
           "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": [
-              "apps/my-test-mixed-react-app/**/*.{ts,tsx,js,jsx}"
-            ]
-          }
+          "outputs": ["{options.outputFile}"]
         },
         "test": {
           "executor": "@nx/jest:jest",
@@ -399,10 +384,7 @@ exports[`@nx/vite:configuration transform React app to use Vite should transform
         },
         "lint": {
           "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": ["apps/my-test-react-app/**/*.{ts,tsx,js,jsx}"]
-          }
+          "outputs": ["{options.outputFile}"]
         },
         "test": {
           "executor": "@nx/jest:jest",
@@ -528,10 +510,7 @@ exports[`@nx/vite:configuration transform Web app to use Vite should transform w
         },
         "lint": {
           "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": ["apps/my-test-web-app/**/*.ts"]
-          }
+          "outputs": ["{options.outputFile}"]
         },
         "test": {
           "executor": "@nx/jest:jest",

@@ -1,4 +1,14 @@
 {
   "generators": {},
-  "packageJsonUpdates": {}
+  "packageJsonUpdates": {
+    "17.2.0": {
+      "version": "17.2.0-beta.2",
+      "packages": {
+        "@vitejs/plugin-vue": {
+          "version": "^4.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
 }

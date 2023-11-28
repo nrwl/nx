@@ -94,33 +94,37 @@ export function addMigrationJsonChecks(
     relativeMigrationsJsonPath
   );
 
+  if (!eslintTarget) {
+    return;
+  }
+
+  // Add path to lintFilePatterns if different than default "{projectRoot}"
   if (
-    eslintTarget &&
-    !eslintTargetConfiguration.options?.lintFilePatterns?.includes(
+    eslintTargetConfiguration.options?.lintFilePatterns &&
+    !eslintTargetConfiguration.options.lintFilePatterns.includes(
       migrationsJsonPath
     )
   ) {
-    // Add to lintFilePatterns
     eslintTargetConfiguration.options.lintFilePatterns.push(migrationsJsonPath);
     updateProjectConfiguration(host, options.projectName, projectConfiguration);
-
-    // Update project level eslintrc
-    updateOverrideInLintConfig(
-      host,
-      projectConfiguration.root,
-      (o) =>
-        Object.keys(o.rules ?? {})?.includes('@nx/nx-plugin-checks') ||
-        Object.keys(o.rules ?? {})?.includes('@nrwl/nx/nx-plugin-checks'),
-      (o) => {
-        const fileSet = new Set(Array.isArray(o.files) ? o.files : [o.files]);
-        fileSet.add(relativeMigrationsJsonPath);
-        return {
-          ...o,
-          files: Array.from(fileSet),
-        };
-      }
-    );
   }
+
+  // Update project level eslintrc
+  updateOverrideInLintConfig(
+    host,
+    projectConfiguration.root,
+    (o) =>
+      Object.keys(o.rules ?? {})?.includes('@nx/nx-plugin-checks') ||
+      Object.keys(o.rules ?? {})?.includes('@nrwl/nx/nx-plugin-checks'),
+    (o) => {
+      const fileSet = new Set(Array.isArray(o.files) ? o.files : [o.files]);
+      fileSet.add(relativeMigrationsJsonPath);
+      return {
+        ...o,
+        files: Array.from(fileSet),
+      };
+    }
+  );
 }
 
 function updateProjectTarget(
@@ -135,9 +139,9 @@ function updateProjectTarget(
 
   for (const [target, configuration] of Object.entries(project.targets)) {
     if (
-      configuration.executor === '@nx/eslint:lint' ||
-      configuration.executor === '@nx/linter:eslint' ||
-      configuration.executor === '@nrwl/linter:eslint'
+      configuration.executor === '@nx/eslint:lint' &&
+      // only add patterns if there are already hardcoded ones
+      configuration.options?.lintFilePatterns
     ) {
       const opts: EsLintExecutorOptions = configuration.options ?? {};
       opts.lintFilePatterns ??= [];

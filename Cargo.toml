@@ -1,7 +1,8 @@
 
 [workspace]
+resolver = '2'
 members = [
-	'packages/nx'
+	'packages/nx',
 ]
 
 [profile.release]

@@ -44,9 +44,6 @@ describe('lib', () => {
     expect(project.targets.lint).toEqual({
       executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
-      options: {
-        lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx,vue}'],
-      },
     });
   });
 
@@ -205,13 +202,6 @@ describe('lib', () => {
       const config = readProjectConfiguration(tree, 'my-dir-my-lib');
 
       expect(config.root).toEqual('my-dir/my-lib');
-      expect(config.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-dir/my-lib/**/*.{ts,tsx,js,jsx,vue}'],
-        },
-      });
     });
 
     it('should update root tsconfig.base.json', async () => {
@@ -254,11 +244,6 @@ describe('lib', () => {
       expect(config.targets.lint).toMatchInlineSnapshot(`
         {
           "executor": "@nx/eslint:lint",
-          "options": {
-            "lintFilePatterns": [
-              "my-lib/**/*.{ts,tsx,js,jsx,vue}",
-            ],
-          },
           "outputs": [
             "{options.outputFile}",
           ],

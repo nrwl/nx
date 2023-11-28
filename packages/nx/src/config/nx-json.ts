@@ -162,11 +162,17 @@ interface NxReleaseConfiguration {
        */
       version?: NxReleaseVersionConfiguration;
       /**
-       * Optionally override project changelog configuration for this group.
+       * Project changelogs are disabled by default.
+       *
+       * Here you can optionally override project changelog configuration for this group.
+       * Notes about boolean values:
+       *
+       * - true = enable project level changelogs using default configuration
+       * - false = explicitly disable project level changelogs
        *
        * NOTE: git configuration is not supported at the group level, only the root/command level
        */
-      changelog?: NxReleaseChangelogConfiguration | false;
+      changelog?: NxReleaseChangelogConfiguration | boolean;
       /**
        * Optionally override the git/release tag pattern to use for this group.
        */
@@ -185,8 +191,20 @@ interface NxReleaseConfiguration {
      * Enable or override configuration for git operations as part of the changelog subcommand
      */
     git?: NxReleaseGitConfiguration;
-    workspaceChangelog?: NxReleaseChangelogConfiguration | false;
-    projectChangelogs?: NxReleaseChangelogConfiguration | false;
+    /**
+     * Workspace changelog is enabled by default. Notes about boolean values:
+     *
+     * - true = explicitly enable workspace changelog using default configuration
+     * - false = disable workspace changelog
+     */
+    workspaceChangelog?: NxReleaseChangelogConfiguration | boolean;
+    /**
+     * Project changelogs are disabled by default. Notes about boolean values:
+     *
+     * - true = enable project level changelogs using default configuration
+     * - false = explicitly disable project level changelogs
+     */
+    projectChangelogs?: NxReleaseChangelogConfiguration | boolean;
   };
   /**
    * If no version config is provided, we will assume that @nx/js:release-version

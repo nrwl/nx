@@ -35,6 +35,15 @@ export function applyWebConfig(
     useNormalizedEntry?: boolean;
   } = {}
 ): void {
+  if (!process.env['NX_TASK_TARGET_PROJECT']) return;
+
+  // Defaults that was applied from executor schema previously.
+  options.runtimeChunk ??= true; // need this for HMR and other things to work
+  options.extractCss ??= true;
+  options.generateIndexHtml ??= true;
+  options.styles ??= [];
+  options.scripts ??= [];
+
   const plugins: WebpackPluginInstance[] = [];
 
   const stylesOptimization =
@@ -301,12 +310,14 @@ export function applyWebConfig(
     },
   ];
 
-  plugins.push(
-    // extract global css from js files into own css file
-    new MiniCssExtractPlugin({
-      filename: `[name]${hashFormat.extract}.css`,
-    })
-  );
+  if (options.extractCss) {
+    plugins.push(
+      // extract global css from js files into own css file
+      new MiniCssExtractPlugin({
+        filename: `[name]${hashFormat.extract}.css`,
+      })
+    );
+  }
 
   config.output = {
     ...config.output,

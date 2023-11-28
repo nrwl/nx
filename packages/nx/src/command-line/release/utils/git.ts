@@ -174,7 +174,7 @@ export async function gitCommit({
   if (verbose) {
     logFn(
       dryRun
-        ? `Would commit files in git with the following command, but --dry-run was set:`
+        ? `Would commit all previously staged files in git with the following command, but --dry-run was set:`
         : `Committing files in git with the following command:`
     );
     logFn(`git ${commandArgs.join(' ')}`);

@@ -1,7 +1,7 @@
 import { prompt } from 'enquirer';
 import { RELEASE_TYPES, valid } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
-import { createProjectFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
+import { createFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 import { getGitDiff, parseCommits } from './git';
 import { ConventionalCommitsConfig, determineSemverChange } from './semver';
 
@@ -24,18 +24,28 @@ export async function resolveSemverSpecifierFromConventionalCommits(
 ): Promise<string | null> {
   const commits = await getGitDiff(from);
   const parsedCommits = parseCommits(commits);
-  const projectFileMap = await createProjectFileMapUsingProjectGraph(
-    projectGraph
-  );
+  const { fileMap } = await createFileMapUsingProjectGraph(projectGraph);
   const filesInReleaseGroup = new Set<string>(
     projectNames.reduce(
-      (files, p) => [...files, ...projectFileMap[p].map((f) => f.file)],
+      (files, p) => [...files, ...fileMap.projectFileMap[p].map((f) => f.file)],
       [] as string[]
     )
   );
 
+  /**
+   * The relevant commits are those that either:
+   * - touch project files which are contained within the release group directly
+   * - touch non-project files and the commit is not scoped
+   */
   const relevantCommits = parsedCommits.filter((c) =>
-    c.affectedFiles.some((f) => filesInReleaseGroup.has(f))
+    c.affectedFiles.some(
+      (f) =>
+        filesInReleaseGroup.has(f) ||
+        (!c.scope &&
+          fileMap.nonProjectFiles.some(
+            (nonProjectFile) => nonProjectFile.file === f
+          ))
+    )
   );
 
   return determineSemverChange(relevantCommits, CONVENTIONAL_COMMITS_CONFIG);

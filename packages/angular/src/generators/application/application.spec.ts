@@ -506,12 +506,6 @@ describe('app', () => {
           .toMatchInlineSnapshot(`
           {
             "executor": "@nx/eslint:lint",
-            "options": {
-              "lintFilePatterns": [
-                "my-app/**/*.ts",
-                "my-app/**/*.html",
-              ],
-            },
             "outputs": [
               "{options.outputFile}",
             ],
@@ -521,11 +515,6 @@ describe('app', () => {
           .toMatchInlineSnapshot(`
           {
             "executor": "@nx/eslint:lint",
-            "options": {
-              "lintFilePatterns": [
-                "my-app-e2e/**/*.{js,ts}",
-              ],
-            },
             "outputs": [
               "{options.outputFile}",
             ],

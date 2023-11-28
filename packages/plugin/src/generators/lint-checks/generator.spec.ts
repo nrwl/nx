@@ -10,7 +10,6 @@ import {
 
 import type { Linter as ESLint } from 'eslint';
 import { Linter } from '@nx/eslint';
-import { Schema as EsLintExecutorOptions } from '@nx/eslint/src/executors/lint/schema';
 
 import generator from './generator';
 import pluginGenerator from '../plugin/plugin';
@@ -53,21 +52,11 @@ describe('lint-checks generator', () => {
     await generator(tree, { projectName: 'plugin' });
 
     const projectConfig = readProjectConfiguration(tree, 'plugin');
-    const targetConfig = projectConfig.targets?.['lint'];
     const eslintConfig: ESLint.Config = readJson(
       tree,
       `${projectConfig.root}/.eslintrc.json`
     );
 
-    expect(targetConfig.options.lintFilePatterns).toContain(
-      `${projectConfig.root}/generators.json`
-    );
-    expect(targetConfig.options.lintFilePatterns).toContain(
-      `${projectConfig.root}/executors.json`
-    );
-    expect(targetConfig.options.lintFilePatterns).toContain(
-      `${projectConfig.root}/package.json`
-    );
     expect(eslintConfig.overrides).toContainEqual(
       expect.objectContaining({
         files: expect.arrayContaining([
@@ -86,17 +75,9 @@ describe('lint-checks generator', () => {
     await generator(tree, { projectName: 'plugin' });
     await generator(tree, { projectName: 'plugin' });
     const projectConfig = readProjectConfiguration(tree, 'plugin');
-    const targetConfig = projectConfig.targets?.['lint']
-      .options as EsLintExecutorOptions;
     const eslintConfig: ESLint.Config = readJson(
       tree,
       `${projectConfig.root}/.eslintrc.json`
-    );
-
-    const uniqueLintFilePatterns = new Set(targetConfig.lintFilePatterns);
-
-    expect(targetConfig.lintFilePatterns).toHaveLength(
-      uniqueLintFilePatterns.size
     );
 
     expect(
@@ -125,27 +106,11 @@ describe('lint-checks generator', () => {
     );
     await generator(tree, { projectName: 'plugin' });
     const projectConfig = readProjectConfiguration(tree, 'plugin');
-    const targetConfig = projectConfig.targets?.['lint'];
     const eslintConfig: ESLint.Config = readJson(
       tree,
       `${projectConfig.root}/.eslintrc.json`
     );
 
-    expect(targetConfig.options.lintFilePatterns).not.toContain(
-      `${projectConfig.root}/generators.json`
-    );
-    expect(targetConfig.options.lintFilePatterns).toContain(
-      `${projectConfig.root}/collection.json`
-    );
-    expect(targetConfig.options.lintFilePatterns).not.toContain(
-      `${projectConfig.root}/executors.json`
-    );
-    expect(targetConfig.options.lintFilePatterns).toContain(
-      `${projectConfig.root}/builders.json`
-    );
-    expect(targetConfig.options.lintFilePatterns).toContain(
-      `${projectConfig.root}/migrations.json`
-    );
     expect(eslintConfig.overrides).toContainEqual(
       expect.objectContaining({
         files: expect.arrayContaining([

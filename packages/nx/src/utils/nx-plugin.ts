@@ -254,11 +254,21 @@ export async function loadNxPlugins(
     { plugin: CreatePackageJsonProjectsNextToProjectJson },
   ];
 
-  // When loading plugins for `createNodes`, we don't know what projects exist yet.
-  projects ??= await retrieveProjectConfigurationsWithoutPluginInference(root);
-
   plugins ??= [];
 
+  // When loading plugins for `createNodes`, we don't know what projects exist yet.
+  // Try resolving plugins
+  for (const plugin of plugins) {
+    try {
+      require.resolve(typeof plugin === 'string' ? plugin : plugin.plugin);
+    } catch {
+      // If a plugin cannot be resolved, we will need projects to resolve it
+      projects ??= await retrieveProjectConfigurationsWithoutPluginInference(
+        root
+      );
+      break;
+    }
+  }
   for (const plugin of plugins) {
     result.push(await loadNxPluginAsync(plugin, paths, projects, root));
   }

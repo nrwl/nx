@@ -146,41 +146,6 @@ describe('librarySecondaryEntryPoint generator', () => {
     ).toStrictEqual(['libs/lib1/testing/src/index.ts']);
   });
 
-  it('should add the entry point file patterns to the lint target', async () => {
-    addProjectConfiguration(tree, 'lib1', {
-      root: 'libs/lib1',
-      projectType: 'library',
-      targets: {
-        lint: {
-          executor: '',
-          options: {
-            lintFilePatterns: [
-              'libs/lib1/src/**/*.ts',
-              'libs/lib1/src/**/*.html',
-            ],
-          },
-        },
-      },
-    });
-    tree.write(
-      'libs/lib1/package.json',
-      JSON.stringify({ name: '@my-org/lib1' })
-    );
-
-    await librarySecondaryEntryPointGenerator(tree, {
-      name: 'testing',
-      library: 'lib1',
-    });
-
-    const project = readProjectConfiguration(tree, 'lib1');
-    expect(project.targets!.lint.options.lintFilePatterns).toEqual(
-      expect.arrayContaining([
-        'libs/lib1/testing/**/*.ts',
-        'libs/lib1/testing/**/*.html',
-      ])
-    );
-  });
-
   it('should update the tsconfig "include" and "exclude" options', async () => {
     await generateTestLibrary(tree, {
       name: 'lib1',

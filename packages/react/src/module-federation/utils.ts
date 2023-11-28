@@ -17,7 +17,7 @@ import {
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 
 export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
-  const target = isServer ? 'serve-server' : 'serve';
+  const target = 'serve';
   const remoteEntry = isServer ? 'server/remoteEntry.js' : 'remoteEntry.js';
 
   return function (remote: string) {

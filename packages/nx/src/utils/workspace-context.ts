@@ -1,5 +1,6 @@
-import type { WorkspaceContext } from '../native';
+import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
 import { performance } from 'perf_hooks';
+import { ProjectRootMappings } from '../project-graph/utils/find-project-for-path';
 
 let workspaceContext: WorkspaceContext | undefined;
 
@@ -18,11 +19,10 @@ export function setupWorkspaceContext(workspaceRoot: string) {
 
 export function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
-  globs: string[],
-  parseConfigurations: (files: string[]) => Promise<Record<string, string>>
+  projectRootMap: Record<string, string>
 ) {
   ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getWorkspaceFiles(globs, parseConfigurations);
+  return workspaceContext.getWorkspaceFiles(projectRootMap);
 }
 
 export function globWithWorkspaceContext(
@@ -43,15 +43,6 @@ export function hashWithWorkspaceContext(
   return workspaceContext.hashFilesMatchingGlob(globs, exclude);
 }
 
-export function getProjectConfigurationsFromContext(
-  workspaceRoot: string,
-  globs: string[],
-  parseConfigurations: (files: string[]) => Promise<Record<string, string>>
-) {
-  ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getProjectConfigurations(globs, parseConfigurations);
-}
-
 export function updateFilesInContext(
   updatedFiles: string[],
   deletedFiles: string[]
@@ -62,6 +53,21 @@ export function updateFilesInContext(
 export function getAllFileDataInContext(workspaceRoot: string) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.allFileData();
+}
+
+export function updateProjectFiles(
+  projectRootMappings: Record<string, string>,
+  rustReferences: NxWorkspaceFilesExternals,
+  updatedFiles: Record<string, string>,
+  deletedFiles: string[]
+) {
+  return workspaceContext?.updateProjectFiles(
+    projectRootMappings,
+    rustReferences.projectFiles,
+    rustReferences.globalFiles,
+    updatedFiles,
+    deletedFiles
+  );
 }
 
 function ensureContextAvailable(workspaceRoot: string) {

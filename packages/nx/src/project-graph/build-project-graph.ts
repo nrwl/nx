@@ -34,18 +34,22 @@ import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
 import { getNxRequirePaths } from '../utils/installation-directory';
 import { output } from '../utils/output';
+import { ExternalObject, NxWorkspaceFilesExternals } from '../native';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
+let storedRustReferences: NxWorkspaceFilesExternals | null = null;
 
 export function getFileMap(): {
   fileMap: FileMap;
   allWorkspaceFiles: FileData[];
+  rustReferences: NxWorkspaceFilesExternals | null;
 } {
   if (!!storedFileMap) {
     return {
       fileMap: storedFileMap,
       allWorkspaceFiles: storedAllWorkspaceFiles,
+      rustReferences: storedRustReferences,
     };
   } else {
     return {
@@ -54,6 +58,7 @@ export function getFileMap(): {
         projectFileMap: {},
       },
       allWorkspaceFiles: [],
+      rustReferences: null,
     };
   }
 }
@@ -63,6 +68,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   externalNodes: Record<string, ProjectGraphExternalNode>,
   fileMap: FileMap,
   allWorkspaceFiles: FileData[],
+  rustReferences: NxWorkspaceFilesExternals,
   fileMapCache: FileMapCache | null,
   shouldWriteCache: boolean
 ): Promise<{
@@ -71,6 +77,7 @@ export async function buildProjectGraphUsingProjectFileMap(
 }> {
   storedFileMap = fileMap;
   storedAllWorkspaceFiles = allWorkspaceFiles;
+  storedRustReferences = rustReferences;
 
   const nxJson = readNxJson();
   const projectGraphVersion = '6.0';

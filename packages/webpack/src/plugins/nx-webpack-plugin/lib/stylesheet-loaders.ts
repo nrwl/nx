@@ -77,7 +77,9 @@ export function getCommonLoadersForGlobalStyle(
 ) {
   return [
     {
-      loader: MiniCssExtractPlugin.loader,
+      loader: options.extractCss
+        ? MiniCssExtractPlugin.loader
+        : require.resolve('style-loader'),
       options: { esModule: true },
     },
     { loader: require.resolve('css-loader'), options: { url: false } },

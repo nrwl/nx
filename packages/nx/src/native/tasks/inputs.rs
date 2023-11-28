@@ -25,15 +25,10 @@ pub(super) fn get_inputs<'a>(
         .targets
         .get(&task.target.target)
         .expect("Task target should always have a target");
-    let target_defaults = nx_json
-        .target_defaults
-        .as_ref()
-        .and_then(|td| td.get(&task.target.target));
 
     let inputs: Option<Vec<Input>> = target_data
         .inputs
         .as_ref()
-        .or_else(|| target_defaults.and_then(|td| td.inputs.as_ref()))
         .map(|i| i.iter().map(|v| v.into()).collect());
 
     split_inputs_into_self_and_deps(inputs, named_inputs)
@@ -44,8 +39,8 @@ pub(super) fn get_inputs_for_dependency<'a>(
     nx_json: &'a NxJson,
     named_input: &'a Input,
 ) -> anyhow::Result<Option<SplitInputs<'a>>> {
-    let Input::Inputs { input, ..} = named_input else {
-       return Ok(None);
+    let Input::Inputs { input, .. } = named_input else {
+        return Ok(None);
     };
 
     let inputs = get_named_inputs(nx_json, project);
@@ -151,7 +146,7 @@ pub(super) fn expand_single_project_inputs<'a>(
             Input::Inputs {
                 input,
                 dependencies: false,
-            } => expanded.extend(expand_named_input(&input, named_inputs)?),
+            } => expanded.extend(expand_named_input(input, named_inputs)?),
             Input::FileSet(fileset) => {
                 validate_file_set(fileset)?;
                 expanded.push(Input::FileSet(fileset));

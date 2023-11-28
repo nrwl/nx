@@ -734,11 +734,11 @@
       "path": "/nx-cloud/concepts/dte"
     },
     {
-      "description": "",
-      "file": "shared/ci-overview",
-      "id": "ci-setup",
-      "name": "CI Setup",
-      "path": "/nx-cloud/recipes/set-up/ci-setup"
+      "description": "Learn how to set up Nx Cloud for your workspace.",
+      "file": "",
+      "id": "set-up",
+      "name": "Set Up CI",
+      "path": "/nx-cloud/recipes/set-up"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",

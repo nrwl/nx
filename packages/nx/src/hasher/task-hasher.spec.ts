@@ -1,5 +1,6 @@
 // This must come before the Hasher import
 import { TempFs } from '../internal-testing-utils/temp-fs';
+
 let tempFs = new TempFs('TaskHasher');
 
 import { DependencyType } from '../config/project-graph';
@@ -10,6 +11,7 @@ import {
 } from './task-hasher';
 
 describe('TaskHasher', () => {
+  process.env.NX_NATIVE_TASK_HASHER = 'false';
   const packageJson = {
     name: 'nrwl',
   };
@@ -107,6 +109,7 @@ describe('TaskHasher', () => {
       },
 
       {} as any,
+      null,
       {
         runtimeCacheInputs: ['echo runtime456'],
       }
@@ -175,6 +178,7 @@ describe('TaskHasher', () => {
         },
       },
       {} as any,
+      null,
       {}
     );
 
@@ -261,6 +265,7 @@ describe('TaskHasher', () => {
           prod: ['!{projectRoot}/**/*.spec.ts'],
         },
       } as any,
+      null,
       {}
     );
 
@@ -337,6 +342,7 @@ describe('TaskHasher', () => {
           prod: ['!{projectRoot}/**/*.spec.ts'],
         },
       } as any,
+      null,
       {}
     );
 
@@ -441,6 +447,7 @@ describe('TaskHasher', () => {
           prod: ['!{projectRoot}/**/*.spec.ts'],
         },
       } as any,
+      null,
       {}
     );
 
@@ -542,6 +549,7 @@ describe('TaskHasher', () => {
           },
         },
       } as any,
+      null,
       {}
     );
 
@@ -601,6 +609,7 @@ describe('TaskHasher', () => {
       },
 
       { npmScope: 'nrwl' } as any,
+      null,
       {
         runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
         selectivelyHashTsConfig: true,
@@ -666,6 +675,7 @@ describe('TaskHasher', () => {
       },
 
       {} as any,
+      null,
       {}
     );
 
@@ -740,6 +750,7 @@ describe('TaskHasher', () => {
         },
       },
       {} as any,
+      null,
       {
         runtimeCacheInputs: ['boom'],
       }
@@ -813,6 +824,7 @@ describe('TaskHasher', () => {
       },
 
       {} as any,
+      null,
       {}
     );
 
@@ -880,6 +892,7 @@ describe('TaskHasher', () => {
       },
 
       {} as any,
+      null,
       {}
     );
 
@@ -938,6 +951,7 @@ describe('TaskHasher', () => {
           dependencies: {},
         },
         {} as any,
+        null,
         {}
       );
 
@@ -1024,6 +1038,7 @@ describe('TaskHasher', () => {
           },
 
           {} as any,
+          null,
           {}
         );
       }
@@ -1176,6 +1191,7 @@ describe('TaskHasher', () => {
           },
         },
         {} as any,
+        null,
         {}
       );
 
@@ -1321,6 +1337,7 @@ describe('TaskHasher', () => {
           },
 
           {} as any,
+          null,
           {}
         );
 
@@ -1391,6 +1408,7 @@ describe('TaskHasher', () => {
         },
 
         {} as any,
+        null,
         {}
       );
 
@@ -1474,6 +1492,7 @@ describe('TaskHasher', () => {
         },
 
         {} as any,
+        null,
         {}
       );
 
@@ -1555,6 +1574,7 @@ describe('TaskHasher', () => {
         },
 
         {} as any,
+        null,
         {}
       );
 
@@ -1675,6 +1695,7 @@ describe('TaskHasher', () => {
             },
           },
         } as any,
+        null,
         {}
       );
 
@@ -1814,6 +1835,7 @@ describe('TaskHasher', () => {
             },
           },
         } as any,
+        null,
         {}
       );
 

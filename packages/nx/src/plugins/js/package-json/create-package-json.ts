@@ -9,13 +9,13 @@ import {
 import { PackageJson } from '../../../utils/package-json';
 import { existsSync } from 'fs';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { readNxJson } from '../../../config/configuration';
+import { readFileMapCache } from '../../../project-graph/nx-deps-cache';
+import { join } from 'path';
 import {
   filterUsingGlobPatterns,
   getTargetInputs,
 } from '../../../hasher/task-hasher';
-import { readNxJson } from '../../../config/configuration';
-import { readFileMapCache } from '../../../project-graph/nx-deps-cache';
-import { join } from 'path';
 
 interface NpmDeps {
   readonly dependencies: Record<string, string>;
