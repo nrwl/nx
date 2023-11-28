@@ -977,6 +977,98 @@ describe('createNxReleaseConfig()', () => {
         }
       `);
     });
+
+    it('should respect top level releaseTagPatterns for fixed groups without explicit settings of their own', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        releaseTagPattern: '{version}',
+        groups: {
+          npm: {
+            projects: ['nx'],
+            version: {
+              generatorOptions: {
+                currentVersionResolver: 'git-tag',
+                specifierSource: 'conventional-commits',
+              },
+            },
+            changelog: true,
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "includeAuthors": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "npm": {
+                "changelog": {
+                  "createRelease": false,
+                  "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
+                  "file": "{projectRoot}/CHANGELOG.md",
+                  "renderOptions": {
+                    "includeAuthors": true,
+                  },
+                  "renderer": "nx/changelog-renderer",
+                },
+                "projects": [
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "{version}",
+                "version": {
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {
+                    "currentVersionResolver": "git-tag",
+                    "specifierSource": "conventional-commits",
+                  },
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "{version}",
+            "version": {
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
   });
 
   describe('user config -> top level changelog', () => {
