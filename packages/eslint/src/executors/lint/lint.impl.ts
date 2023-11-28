@@ -92,6 +92,7 @@ export default async function run(
         'You must therefore provide a value for the "parserOptions.project" property for @typescript-eslint/parser'
       )
     ) {
+      const ruleName = err.message.match(/rule '([^']+)':/)?.[1];
       let eslintConfigPathForError = `for ${projectName}`;
       if (context.projectsConfigurations?.projects?.[projectName]?.root) {
         const { root } = context.projectsConfigurations.projects[projectName];
@@ -99,7 +100,9 @@ export default async function run(
       }
 
       console.error(`
-Error: You have attempted to use a lint rule which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config ${
+Error: You have attempted to use ${
+        ruleName ? `the lint rule ${ruleName}` : 'a lint rule'
+      } which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config ${
         eslintConfigPath || eslintConfigPathForError
       }
 
