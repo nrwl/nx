@@ -1,13 +1,20 @@
-import type { CreateNodesContext, CreateNodesResult } from '@nx/devkit';
+import type {
+  CreateNodesContext,
+  CreateNodesFunction,
+  CreateNodesResult,
+} from '@nx/devkit';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { createNodes } from './plugin';
+import type { JsPluginOptions } from './plugin';
 
 describe('@nx/js/plugin', () => {
-  let createNodesFunction = createNodes[1];
+  let createNodesFunction: CreateNodesFunction<JsPluginOptions>;
   let context: CreateNodesContext;
   let tempFs: TempFs;
 
   beforeEach(async () => {
+    jest.resetModules();
+    createNodesFunction = (await import('./plugin')).createNodes[1];
+
     tempFs = new TempFs('js-plugin');
 
     context = {
@@ -22,7 +29,6 @@ describe('@nx/js/plugin', () => {
   });
 
   afterEach(() => {
-    jest.resetModules();
     tempFs.cleanup();
   });
 
@@ -135,7 +141,61 @@ describe('@nx/js/plugin', () => {
       );
     });
 
-    it('should identify entry point from tsconfig "files" option', async () => {
+    it('should identify entry point from "package.json" "main" field', async () => {
+      await tempFs.createFiles({
+        'package.json': '{ "main": "src/public-api.ts" }',
+        'tsconfig.json': '{}',
+        'src/public-api.ts': '',
+      });
+
+      const nodes = createNodesFunction(
+        'tsconfig.json',
+        {},
+        context
+      ) as CreateNodesResult;
+
+      expect(nodes.projects['.'].targets.build.options.main).toBe(
+        'src/public-api.ts'
+      );
+    });
+
+    it('should identify entry point from "package.json" "module" field when "type: module"', async () => {
+      await tempFs.createFiles({
+        'package.json': '{ "type": "module", "module": "src/public-api.ts" }',
+        'tsconfig.json': '{}',
+        'src/public-api.ts': '',
+      });
+
+      const nodes = createNodesFunction(
+        'tsconfig.json',
+        {},
+        context
+      ) as CreateNodesResult;
+
+      expect(nodes.projects['.'].targets.build.options.main).toBe(
+        'src/public-api.ts'
+      );
+    });
+
+    it('should identify entry point from "package.json" "exports" field when no "main" or "module"', async () => {
+      await tempFs.createFiles({
+        'package.json': '{ "exports": { ".": "src/public-api.ts" } }',
+        'tsconfig.json': '{}',
+        'src/public-api.ts': '',
+      });
+
+      const nodes = createNodesFunction(
+        'tsconfig.json',
+        {},
+        context
+      ) as CreateNodesResult;
+
+      expect(nodes.projects['.'].targets.build.options.main).toBe(
+        'src/public-api.ts'
+      );
+    });
+
+    it('should identify entry point from tsconfig "files" option when there is only one and could not be found in "package.json"', async () => {
       await tempFs.createFiles({
         'package.json': '{}',
         'tsconfig.json': '{}',

@@ -37,7 +37,8 @@ export interface JsPluginOptions {
    */
   buildTargetName?: string;
   /**
-   * The list of possible entry points files to use. Relative to project roots.
+   * The list of possible entry points files to use if it can't be found from
+   * the `package.json` fields or tsConfig `files`. Relative to project roots.
    * These files are processed in the order they are specified.
    * @default ['index.ts', 'index.js', 'src/index.ts', 'src/index.js', 'main.ts', 'main.js', 'src/main.ts', 'src/main.js']
    */
@@ -238,7 +239,7 @@ function shouldSetUpTscTarget(
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   if (
     !existsSync(packageJsonPath) ||
-    readJsonFile<PackageJson>(packageJsonPath).private
+    readProjectPackageJson(workspaceRoot, projectRoot).private
   ) {
     return false;
   }
@@ -298,10 +299,27 @@ function getBuildEntryPointFilePath(
   projectRoot: string,
   workspaceRoot: string
 ): string | undefined {
+  // try getting it from package.json
+  const packageJson = readProjectPackageJson(workspaceRoot, projectRoot);
+  if (packageJson.main) {
+    return joinPathFragments(projectRoot, packageJson.main);
+  }
+  if (packageJson.type === 'module' && packageJson.module) {
+    return joinPathFragments(projectRoot, packageJson.module);
+  }
+  if (packageJson.exports) {
+    const mainField = packageJson.exports['.'] ?? packageJson.exports['./'];
+    if (mainField) {
+      return joinPathFragments(projectRoot, mainField);
+    }
+  }
+
+  // if there's only one file in tsconfig "files" field, use it
   if (tsConfig.files?.length === 1) {
     return joinPathFragments(projectRoot, tsConfig.files[0]);
   }
 
+  // fallback to user-defined or default entry points
   for (const file of options.packageMainFiles) {
     const filePath = join(projectRoot, file);
     if (existsSync(join(workspaceRoot, filePath))) {
@@ -320,4 +338,15 @@ function normalizeOptions(
     packageMainFiles: options.packageMainFiles ?? defaultEntryPointFiles,
     tsConfigFiles: options.tsConfigFiles ?? defaultTsConfigFiles,
   };
+}
+
+let packageJsonCache: Record<string, PackageJson> = {};
+function readProjectPackageJson(
+  workspaceRoot: string,
+  projectRoot: string
+): PackageJson {
+  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
+  packageJsonCache[packageJsonPath] ??= readJsonFile(packageJsonPath);
+
+  return packageJsonCache[packageJsonPath];
 }
