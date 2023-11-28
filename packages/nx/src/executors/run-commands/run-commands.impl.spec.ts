@@ -402,6 +402,11 @@ describe('Run Commands', () => {
   });
 
   describe('env', () => {
+    afterAll(() => {
+      delete process.env.MY_ENV_VAR;
+      unlinkSync('.env');
+    });
+
     it('should add the env to the command', async () => {
       const root = dirSync().name;
       const f = fileSync().name;
@@ -423,6 +428,29 @@ describe('Run Commands', () => {
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(readFile(f)).toEqual('my-value');
+    });
+    it('should prioritize env setting over local dotenv files', async () => {
+      writeFileSync('.env', 'MY_ENV_VAR=from-dotenv');
+      const root = dirSync().name;
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "$MY_ENV_VAR" >> ${f}`,
+            },
+          ],
+          env: {
+            MY_ENV_VAR: 'from-options',
+          },
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('from-options');
     });
   });
 

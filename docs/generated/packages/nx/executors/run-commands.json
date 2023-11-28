@@ -109,7 +109,7 @@
       },
       "env": {
         "type": "object",
-        "description": "Environment variables that will be made available to the commands.",
+        "description": "Environment variables that will be made available to the commands. This property has priority over the `.env` files.",
         "additionalProperties": { "type": "string" }
       },
       "__unparsed__": {
