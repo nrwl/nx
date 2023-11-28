@@ -60,6 +60,11 @@ describe('@nx/eslint/plugin', () => {
                   "default",
                   "{workspaceRoot}/.eslintrc.json",
                   "{workspaceRoot}/tools/eslint-rules/**/*",
+                  {
+                    "externalDependencies": [
+                      "eslint",
+                    ],
+                  },
                 ],
                 "options": {
                   "cwd": "apps/my-app",
@@ -105,6 +110,11 @@ describe('@nx/eslint/plugin', () => {
                   "default",
                   "{workspaceRoot}/eslint.config.js",
                   "{workspaceRoot}/tools/eslint-rules/**/*",
+                  {
+                    "externalDependencies": [
+                      "eslint",
+                    ],
+                  },
                 ],
                 "options": {
                   "cwd": ".",

@@ -31,8 +31,7 @@ function updateProductionFileset(tree: Tree) {
 
   const productionFileSet = nxJson.namedInputs?.production;
   if (productionFileSet) {
-    // Remove .eslintrc.json
-    productionFileSet.push('!{projectRoot}/.eslintrc.(json|js|yaml|yml)');
+    productionFileSet.push('!{projectRoot}/.eslintrc.json');
     productionFileSet.push('!{projectRoot}/eslint.config.js');
     // Dedupe and set
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
@@ -43,12 +42,7 @@ function updateProductionFileset(tree: Tree) {
 function addTargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
 
-  if (!nxJson.namedInputs) {
-    return;
-  }
-
   nxJson.targetDefaults ??= {};
-
   nxJson.targetDefaults.lint ??= {};
   nxJson.targetDefaults.lint.cache ??= true;
   nxJson.targetDefaults.lint.inputs ??= [

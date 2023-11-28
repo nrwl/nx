@@ -109,6 +109,7 @@ function buildEslintTargets(
       'default',
       `{workspaceRoot}/${rootEslintConfigFile}`,
       '{workspaceRoot}/tools/eslint-rules/**/*',
+      { externalDependencies: ['eslint'] },
     ],
     outputs: targetDefaults?.outputs ?? ['{options.outputFile}'],
     options: {
