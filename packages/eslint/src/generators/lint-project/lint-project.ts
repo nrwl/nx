@@ -74,7 +74,19 @@ export async function lintProjectGenerator(
 
   const usePlugin = process.env.NX_PCV3 === 'true';
   if (usePlugin) {
-    // TODO: Check for delta
+    if (
+      lintFilePatterns &&
+      lintFilePatterns.length &&
+      lintFilePatterns.some(
+        (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p)
+      )
+    ) {
+      projectConfig.targets['lint'] = {
+        command: `eslint ${lintFilePatterns
+          .join(' ')
+          .replace('{projectRoot}', projectConfig.root)}`,
+      };
+    }
   } else {
     projectConfig.targets['lint'] = {
       executor: '@nx/eslint:lint',
