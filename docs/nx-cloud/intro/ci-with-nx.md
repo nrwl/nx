@@ -29,15 +29,23 @@ npx nx connect
 
 {% /cards %}
 
+{% cards cols="2" lgCols="2" mdCols="2" smCols="2" %}
+
+{% link-card title="Circle CI with Nx" type="tutorial" url="/nx-cloud/intro/tutorials/circle" icon="circleci" /%}
+
+{% link-card title="GitHub Actions with Nx" type="tutorial" url="/nx-cloud/intro/tutorials/github-actions" icon="github" /%}
+
+{% /cards %}
+
 ## Ready? Get Started With Your Provider
 
-Run the following command
+Not interested in a tutorial but you want to jump right in? Run the following command
 
 ```shell
 npx nx g ci-workflow
 ```
 
-...or choose from our guides below:
+...or choose from our CI recipes with copy & pasteable code:
 
 {% cards cols="3" lgCols="8" mdCols="6" smCols="5"  %}
 
