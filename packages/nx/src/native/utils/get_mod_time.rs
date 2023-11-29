@@ -9,11 +9,11 @@ pub fn get_mod_time(metadata: &Metadata) -> i64 {
 #[cfg(target_os = "windows")]
 pub fn get_mod_time(metadata: &Metadata) -> i64 {
     use std::os::windows::fs::MetadataExt;
-    metadata.last_write_time()
+    metadata.last_write_time() as i64
 }
 
 #[cfg(target_os = "linux")]
 pub fn get_mod_time(metadata: &Metadata) -> i64 {
-    use std::os::linux::fs::MetadataExt;
+    use std::os::unix::fs::MetadataExt;
     metadata.mtime()
 }
