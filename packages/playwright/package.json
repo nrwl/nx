@@ -35,7 +35,8 @@
     "@nx/devkit": "file:../devkit",
     "@nx/eslint": "file:../eslint",
     "tslib": "^2.3.0",
-    "@nx/js": "17.1.0-beta.4"
+    "@nx/js": "17.1.0-beta.4",
+    "minimatch": "3.0.5"
   },
   "peerDependencies": {
     "@playwright/test": "^1.36.0"

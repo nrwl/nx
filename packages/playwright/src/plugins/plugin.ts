@@ -1,19 +1,29 @@
 import { readdirSync } from 'fs';
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
-import { basename, dirname, extname, join, resolve } from 'path';
+import { basename, dirname, extname, join, relative, resolve } from 'path';
 
 import {
   CreateNodes,
   CreateNodesContext,
+  joinPathFragments,
   TargetConfiguration,
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getRootTsConfigPath } from '@nx/js';
 import { registerTsProject } from '@nx/js/src/internal';
+
 import type { PlaywrightTestConfig } from '@playwright/test';
+import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
+import minimatch = require('minimatch');
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
+  ciTargetName?: string;
+}
+
+interface NormalizedOptions {
+  targetName: string;
+  ciTargetName?: string;
 }
 
 export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
@@ -30,7 +40,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
       return {};
     }
 
-    options = normalizeOptions(options);
+    const normalizedOptions = normalizeOptions(options);
     const projectName = basename(projectRoot);
 
     return {
@@ -41,7 +51,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
           targets: buildPlaywrightTargets(
             configFilePath,
             projectRoot,
-            options,
+            normalizedOptions,
             context
           ),
         },
@@ -53,7 +63,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
 function buildPlaywrightTargets(
   configFilePath: string,
   projectRoot: string,
-  options: PlaywrightPluginOptions,
+  options: NormalizedOptions,
   context: CreateNodesContext
 ) {
   const playwrightConfig: PlaywrightTestConfig = getPlaywrightConfig(
@@ -89,8 +99,69 @@ function buildPlaywrightTargets(
       targetDefaults?.outputs ?? getOutputs(projectRoot, playwrightConfig),
     options: {
       ...baseTargetConfig.options,
+      ...targetDefaults?.options,
     },
   };
+
+  if (options.ciTargetName) {
+    const ciTargetDefaults = readTargetDefaultsForTarget(
+      options.ciTargetName,
+      context.nxJsonConfiguration.targetDefaults,
+      'nx:run-commands'
+    );
+
+    const ciBaseTargetConfig: TargetConfiguration = {
+      ...baseTargetConfig,
+      cache: ciTargetDefaults?.cache ?? true,
+      inputs:
+        ciTargetDefaults?.inputs ?? 'production' in namedInputs
+          ? ['default', '^production']
+          : ['default', '^default'],
+      outputs:
+        ciTargetDefaults?.outputs ?? getOutputs(projectRoot, playwrightConfig),
+      options: {
+        ...baseTargetConfig.options,
+        ...ciTargetDefaults?.options,
+      },
+    };
+
+    const testDir =
+      joinPathFragments(projectRoot, playwrightConfig.testDir) ?? projectRoot;
+    // Playwright defaults to the following pattern.
+    playwrightConfig.testMatch ??= '**/*.@(spec|test).?(c|m)[jt]s?(x)';
+
+    const dependsOn: TargetConfiguration['dependsOn'] = [];
+    forEachTestFile(
+      (testFile) => {
+        const relativeToProjectRoot = relative(projectRoot, testFile);
+        const targetName = `${options.ciTargetName}--${relativeToProjectRoot}`;
+        targets[targetName] = {
+          ...ciBaseTargetConfig,
+          command: `${baseTargetConfig.command} ${relativeToProjectRoot}`,
+        };
+        dependsOn.push({
+          target: targetName,
+          projects: 'self',
+          params: 'forward',
+        });
+      },
+      {
+        context,
+        path: testDir,
+        config: playwrightConfig,
+      }
+    );
+
+    targets[options.ciTargetName] ??= {};
+
+    targets[options.ciTargetName] = {
+      executor: 'nx:noop',
+      cache: ciBaseTargetConfig.cache,
+      inputs: ciBaseTargetConfig.inputs,
+      outputs: ciBaseTargetConfig.outputs,
+      dependsOn,
+    };
+  }
 
   return targets;
 }
@@ -119,6 +190,38 @@ function getPlaywrightConfig(
     module = require(resolvedPath);
   }
   return module.default ?? module;
+}
+
+async function forEachTestFile(
+  cb: (path: string) => void,
+  opts: {
+    context: CreateNodesContext;
+    path: string;
+    config: PlaywrightTestConfig;
+  }
+) {
+  const files = getFilesInDirectoryUsingContext(
+    opts.context.workspaceRoot,
+    opts.path
+  );
+  const matcher = createMatcher(opts.config.testMatch);
+  const ignoredMatcher = createMatcher(opts.config.testIgnore);
+  for (const file of files) {
+    if (matcher(file) && !ignoredMatcher(file)) {
+      cb(file);
+    }
+  }
+}
+
+function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
+  if (Array.isArray(pattern)) {
+    const matchers = pattern.map((p) => createMatcher(p));
+    return (path: string) => matchers.some((m) => m(path));
+  } else if (pattern instanceof RegExp) {
+    return (path: string) => pattern.test(path);
+  } else {
+    return (path: string) => minimatch(path, pattern);
+  }
 }
 
 function getOutputs(
@@ -171,10 +274,9 @@ function getOutputs(
   return outputs;
 }
 
-function normalizeOptions(
-  options: PlaywrightPluginOptions
-): PlaywrightPluginOptions {
-  options ??= {};
-  options.targetName ??= 'e2e';
-  return options;
+function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
+  return {
+    ...options,
+    targetName: options.targetName ?? 'e2e',
+  };
 }
