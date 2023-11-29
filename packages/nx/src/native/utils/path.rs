@@ -1,5 +1,5 @@
 use crate::native::utils::normalize_trait::Normalize;
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 
 impl Normalize for Path {
     fn to_normalized_string(&self) -> String {
