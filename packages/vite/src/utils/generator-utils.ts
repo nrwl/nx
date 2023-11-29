@@ -170,17 +170,13 @@ export function addOrChangeTestTarget(
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
-  const coveragePath = joinPathFragments(
+  const reportsDirectory = joinPathFragments(
+    offsetFromRoot(project.root),
     'coverage',
     project.root === '.' ? options.project : project.root
   );
   const testOptions: VitestExecutorOptions = {
-    passWithNoTests: true,
-    // vitest runs in the project root so we have to offset to the workspaceRoot
-    reportsDirectory: joinPathFragments(
-      offsetFromRoot(project.root),
-      coveragePath
-    ),
+    reportsDirectory,
   };
 
   project.targets ??= {};
@@ -315,8 +311,8 @@ export function addPreviewTarget(
     if (target.executor === '@nxext/vite:dev') {
       previewOptions.proxyConfig = target.options.proxyConfig;
     }
-    previewOptions.https = target.options?.https;
-    previewOptions.open = target.options?.open;
+    previewOptions['https'] = target.options?.https;
+    previewOptions['open'] = target.options?.open;
   }
 
   // Adds a preview target.
@@ -485,6 +481,7 @@ export interface ViteConfigFileOptions {
   rollupOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
+  coverageProvider?: 'v8' | 'istanbul' | 'custom';
 }
 
 export function createOrEditViteConfig(
@@ -521,18 +518,10 @@ export function createOrEditViteConfig(
           // External packages that should not be bundled into your library.
           external: [${options.rollupOptionsExternal ?? ''}]
         },
-        reportCompressedSize: true,
-        commonjsOptions: {
-          transformMixedEsModules: true,
-        },
       },`
     : `
     build: {
       outDir: '${offsetFromRoot(projectRoot)}dist/${projectRoot}',
-      reportCompressedSize: true,
-      commonjsOptions: {
-        transformMixedEsModules: true,
-      },
     },
     `;
 
@@ -572,7 +561,10 @@ export function createOrEditViteConfig(
     }
     coverage: {
       reportsDirectory: '${offsetFromRoot(projectRoot)}coverage/${projectRoot}',
-    },
+      provider: ${
+        options.coverageProvider ? `'${options.coverageProvider}'` : `'v8'`
+      },
+    }
   },`
     : '';
 
@@ -835,6 +827,7 @@ function handleViteConfigFileExists(
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     coverage: {
       reportsDirectory: `${offsetFromRoot}coverage/${projectRoot}`,
+      provider: `${options.coverageProvider ?? 'v8'}`,
     },
   };
 

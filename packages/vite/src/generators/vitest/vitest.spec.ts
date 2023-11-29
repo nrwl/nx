@@ -55,7 +55,6 @@ describe('vitest generator', () => {
       {
         "executor": "@nx/vite:test",
         "options": {
-          "passWithNoTests": true,
           "reportsDirectory": "../../coverage/apps/my-test-react-app",
         },
         "outputs": [

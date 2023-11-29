@@ -21,7 +21,7 @@ export default defineConfig({
     cache: { dir: '../node_modules/.vitest' },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    coverage: { reportsDirectory: '../coverage/my-lib' },
+    coverage: { reportsDirectory: '../coverage/my-lib', provider: 'v8' },
   },
 });
 "
@@ -71,10 +71,6 @@ export default defineConfig({
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
   },
 
   test: {
@@ -87,6 +83,7 @@ export default defineConfig({
 
     coverage: {
       reportsDirectory: '../coverage/my-lib',
+      provider: 'v8',
     },
   },
 });

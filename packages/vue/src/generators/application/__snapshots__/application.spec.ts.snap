@@ -68,10 +68,6 @@ export default defineConfig({
 
   build: {
     outDir: '../dist/test',
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
   },
 
   test: {
@@ -84,6 +80,7 @@ export default defineConfig({
 
     coverage: {
       reportsDirectory: '../coverage/test',
+      provider: 'v8',
     },
   },
 });
@@ -154,7 +151,6 @@ exports[`application generator should set up project correctly with given option
       "executor": "@nx/vite:test",
       "outputs": ["{options.reportsDirectory}"],
       "options": {
-        "passWithNoTests": true,
         "reportsDirectory": "../coverage/test"
       }
     },

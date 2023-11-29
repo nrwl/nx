@@ -44,10 +44,6 @@ export default defineConfig({
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
   },
 });
 "
@@ -97,10 +93,6 @@ export default defineConfig({
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
   },
 
   test: {
@@ -113,6 +105,7 @@ export default defineConfig({
 
     coverage: {
       reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',
+      provider: 'v8',
     },
   },
 });
@@ -175,10 +168,6 @@ export default defineConfig({
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
   },
   plugins: [
     nxViteTsPaths(),
@@ -195,7 +184,10 @@ export default defineConfig({
     cache: { dir: '../../node_modules/.vitest' },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    coverage: { reportsDirectory: '../../coverage/libs/react-lib-nonb-vitest' },
+    coverage: {
+      reportsDirectory: '../../coverage/libs/react-lib-nonb-vitest',
+      provider: 'v8',
+    },
   },
 });
 "
@@ -315,10 +307,6 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-react-app',
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
   },
 });
 "
@@ -462,10 +450,6 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-web-app',
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
   },
 });
 "
@@ -596,10 +580,6 @@ export default defineConfig({
 
   build: {
     outDir: '../../dist/apps/my-test-react-app',
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
   },
 
   test: {
@@ -612,6 +592,7 @@ export default defineConfig({
 
     coverage: {
       reportsDirectory: '../../coverage/apps/my-test-react-app',
+      provider: 'v8',
     },
   },
 });

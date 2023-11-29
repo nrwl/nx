@@ -6,14 +6,14 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { InlineConfig, PreviewOptions, ServerOptions } from 'vite';
+import { PreviewOptions, ServerOptions } from 'vite';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
-import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 
 /**
  * Returns the path to the vite config file or undefined when not found.
  */
 export function normalizeViteConfigFilePath(
+  contextRoot: string,
   projectRoot: string,
   configFile?: string
 ): string | undefined {
@@ -26,11 +26,28 @@ export function normalizeViteConfigFilePath(
     }
     return normalized;
   }
-  return existsSync(joinPathFragments(projectRoot, 'vite.config.ts'))
-    ? joinPathFragments(projectRoot, 'vite.config.ts')
-    : existsSync(joinPathFragments(projectRoot, 'vite.config.js'))
-    ? joinPathFragments(projectRoot, 'vite.config.js')
-    : undefined;
+
+  const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
+
+  for (const ext of allowsExt) {
+    if (
+      existsSync(
+        joinPathFragments(contextRoot, projectRoot, `vite.config.${ext}`)
+      )
+    ) {
+      return joinPathFragments(contextRoot, projectRoot, `vite.config.${ext}`);
+    } else if (
+      existsSync(
+        joinPathFragments(contextRoot, projectRoot, `vitest.config.${ext}`)
+      )
+    ) {
+      return joinPathFragments(
+        contextRoot,
+        projectRoot,
+        `vitest.config.${ext}`
+      );
+    }
+  }
 }
 
 export function getProjectTsConfigPath(
@@ -64,17 +81,6 @@ export function getViteServerProxyConfigPath(
       return proxyConfigPath;
     }
   }
-}
-
-export function getViteSharedConfig(
-  options: Record<string, any>,
-  context: ExecutorContext
-): InlineConfig {
-  const projectRoot =
-    context.projectsConfigurations.projects[context.projectName].root;
-  return {
-    configFile: normalizeViteConfigFilePath(projectRoot, options.configFile),
-  };
 }
 
 /**
@@ -115,16 +121,10 @@ export async function getViteServerOptions(
  * Builds the options for the vite preview server.
  */
 export function getVitePreviewOptions(
-  options: VitePreviewServerExecutorOptions,
+  options: Record<string, any>,
   context: ExecutorContext
 ): PreviewOptions {
-  const serverOptions: ServerOptions = {
-    host: options.host,
-    port: options.port,
-    https: options.https,
-    open: options.open,
-  };
-
+  const serverOptions: ServerOptions = {};
   const proxyConfigPath = getViteServerProxyConfigPath(
     options.proxyConfig,
     context

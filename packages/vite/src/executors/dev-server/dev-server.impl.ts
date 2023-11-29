@@ -1,4 +1,4 @@
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, joinPathFragments } from '@nx/devkit';
 import {
   loadConfigFromFile,
   type InlineConfig,
@@ -14,6 +14,7 @@ import {
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
 import { createBuildableTsConfig } from '../../utils/executor-utils';
+import { relative } from 'path';
 
 export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
@@ -26,7 +27,10 @@ export async function* viteDevServerExecutor(
 
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-
+  const root =
+    projectRoot === '.'
+      ? process.cwd()
+      : relative(context.cwd, joinPathFragments(context.root, projectRoot));
   createBuildableTsConfig(projectRoot, options, context);
 
   // Retrieve the option for the configured buildTarget.
@@ -35,13 +39,24 @@ export async function* viteDevServerExecutor(
     context
   );
   const viteConfigPath = normalizeViteConfigFilePath(
+    context.root,
     projectRoot,
     buildTargetOptions.configFile
   );
   const extraArgs = await getExtraArgs(options);
+  const resolved = await loadConfigFromFile(
+    {
+      mode: extraArgs?.mode ?? 'production',
+      command: 'build',
+    },
+    viteConfigPath
+  );
 
   const serverConfig: InlineConfig = mergeConfig(
     {
+      // This should not be needed as it's going to be set in vite.config.ts
+      // but leaving it here in case someone did not migrate correctly
+      root: resolved.config.root ?? root,
       configFile: viteConfigPath,
     },
     {

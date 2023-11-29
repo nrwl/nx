@@ -88,7 +88,8 @@ function handleBuildOrTestNode(
           if (
             !configContentObject[propName] &&
             propName !== 'dir' &&
-            propName !== 'reportsDirectory'
+            propName !== 'reportsDirectory' &&
+            propName !== 'provider'
           ) {
             updatedPropsString += `'${propName}': ${prop.initializer.getText()},\n`;
           }

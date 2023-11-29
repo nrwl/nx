@@ -32,87 +32,11 @@ describe('Vite Plugin', () => {
   let proj: string;
 
   describe('Vite on React apps', () => {
-    describe('convert React webpack app to vite using the vite:configuration generator', () => {
-      beforeEach(() => {
-        proj = newProject();
-        runCLI(`generate @nx/react:app ${myApp} --bundler=webpack`);
-        runCLI(`generate @nx/vite:configuration ${myApp}`);
-      });
-      afterEach(() => cleanupProject());
-
-      it('should serve application in dev mode with custom options', async () => {
-        const port = 4212;
-        const p = await runCommandUntil(
-          `run ${myApp}:serve --port=${port} --https=true`,
-          (output) => {
-            return (
-              output.includes('Local:') &&
-              output.includes(`:${port}`) &&
-              output.includes('https')
-            );
-          }
-        );
-        try {
-          await promisifiedTreeKill(p.pid, 'SIGKILL');
-          await killPorts(port);
-        } catch (e) {
-          // ignore
-        }
-      }, 200_000);
-
-      it('should test application', async () => {
-        const result = await runCLIAsync(`test ${myApp}`);
-        expect(result.combinedOutput).toContain(
-          `Successfully ran target test for project ${myApp}`
-        );
-      });
-    });
-
     describe('set up new React app with --bundler=vite option', () => {
       beforeEach(async () => {
         proj = newProject();
         runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
         createFile(`apps/${myApp}/public/hello.md`, `# Hello World`);
-        updateFile(
-          `apps/${myApp}/src/environments/environment.prod.ts`,
-          `export const environment = {
-            production: true,
-            myTestVar: 'MyProductionValue',
-          };`
-        );
-        updateFile(
-          `apps/${myApp}/src/environments/environment.ts`,
-          `export const environment = {
-            production: false,
-            myTestVar: 'MyDevelopmentValue',
-          };`
-        );
-
-        updateFile(
-          `apps/${myApp}/src/app/app.tsx`,
-          `
-            import { environment } from './../environments/environment';
-            export function App() {
-              return (
-                <>
-                  <h1>{environment.myTestVar}</h1>
-                  <p>Welcome ${myApp}!</p>
-                </>
-              );
-            }
-            export default App;
-          `
-        );
-
-        updateJson(join('apps', myApp, 'project.json'), (config) => {
-          config.targets.build.options.fileReplacements = [
-            {
-              replace: `apps/${myApp}/src/environments/environment.ts`,
-              with: `apps/${myApp}/src/environments/environment.prod.ts`,
-            },
-          ];
-          return config;
-        });
       });
       afterEach(() => cleanupProject());
       it('should build application', async () => {
@@ -120,14 +44,6 @@ describe('Vite Plugin', () => {
         expect(readFile(`dist/apps/${myApp}/favicon.ico`)).toBeDefined();
         expect(readFile(`dist/apps/${myApp}/hello.md`)).toBeDefined();
         expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
-        const mainBundle = fileArray.find((file) => file.endsWith('.js'));
-        expect(readFile(`dist/apps/${myApp}/assets/${mainBundle}`)).toContain(
-          'MyProductionValue'
-        );
-        expect(
-          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
-        ).not.toContain('MyDevelopmentValue');
         rmDist();
       }, 200_000);
     });
@@ -202,48 +118,7 @@ describe('Vite Plugin', () => {
       }, 200_000);
     });
 
-    describe('convert @nx/web webpack app to vite using the vite:configuration generator', () => {
-      beforeEach(() => {
-        proj = newProject();
-        runCLI(`generate @nx/web:app ${myApp} --bundler=webpack`);
-        runCLI(`generate @nx/vite:configuration ${myApp}`);
-      });
-      afterEach(() => cleanupProject());
-      it('should build application', async () => {
-        runCLI(`build ${myApp}`);
-        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
-        const mainBundle = fileArray.find((file) => file.endsWith('.js'));
-        expect(
-          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
-        ).toBeDefined();
-        rmDist();
-      }, 200_000);
-
-      it('should serve application in dev mode with custom port', async () => {
-        const port = 4212;
-        const p = await runCommandUntil(
-          `run ${myApp}:serve --port=${port}`,
-          (output) => {
-            return output.includes('Local:') && output.includes(`:${port}`);
-          }
-        );
-        try {
-          await promisifiedTreeKill(p.pid, 'SIGKILL');
-          await killPorts(port);
-        } catch {
-          // ignore
-        }
-      }, 200_000);
-
-      it('should test application', async () => {
-        const result = await runCLIAsync(`test ${myApp}`);
-        expect(result.combinedOutput).toContain(
-          `Successfully ran target test for project ${myApp}`
-        );
-      });
-    }),
-      100_000;
+    100_000;
   });
 
   describe('incremental building', () => {
@@ -363,6 +238,8 @@ export default App;
         import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
         export default defineConfig({
+          root: __dirname,
+          cacheDir: '../../node_modules/.vite/libs/${lib}',
           server: {
             port: 4200,
             host: 'localhost',
@@ -371,14 +248,18 @@ export default App;
             react(),
             nxViteTsPaths()
           ],
+          build: {
+            outDir: '../../dist/libs/${lib}',
+          },
           test: {
             globals: true,
             cache: {
-              dir: './node_modules/.vitest',
+              dir: '../../node_modules/.vitest',
             },
             environment: 'jsdom',
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
             coverage: {
+              reportsDirectory: '../../coverage/libs/${lib}',
               provider: "v8",
               enabled: true,
               lines: 100,
@@ -531,7 +412,7 @@ export default defineConfig({
         import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
         
         export default defineConfig({
-          cacheDir: './node_modules/.vite/root-app',
+          cacheDir: '../../node_modules/.vite/root-app',
           server: {
             port: 4200,
             host: 'localhost',

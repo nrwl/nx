@@ -1,6 +1,7 @@
 import {
   detectPackageManager,
   ExecutorContext,
+  joinPathFragments,
   logger,
   stripIndents,
   writeJsonFile,
@@ -17,16 +18,16 @@ import {
   getLockFileName,
 } from '@nx/js';
 import { existsSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { relative, resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   createBuildableTsConfig,
   validateTypes,
 } from '../../utils/executor-utils';
-import { InlineConfig } from 'vite';
+import { BuildOptions } from 'vite';
 
 export async function* viteBuildExecutor(
-  options: ViteBuildExecutorOptions,
+  options: Record<string, any> & ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
@@ -35,34 +36,43 @@ export async function* viteBuildExecutor(
   )() as Promise<typeof import('vite')>);
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
+  createBuildableTsConfig(projectRoot, options, context);
+
   const viteConfigPath = normalizeViteConfigFilePath(
+    context.root,
     projectRoot,
     options.configFile
   );
-  const extraArgs = await getExtraArgs(options);
+  const root =
+    projectRoot === '.'
+      ? process.cwd()
+      : relative(context.cwd, joinPathFragments(context.root, projectRoot));
+
+  const { buildOptions, otherOptions } = await getExtraArgs(options);
 
   const resolved = await loadConfigFromFile(
     {
-      mode: extraArgs?.mode ?? 'production',
+      mode: otherOptions?.mode ?? 'production',
       command: 'build',
     },
     viteConfigPath
   );
 
-  createBuildableTsConfig(projectRoot, options, context);
-
   const outDir = options.outputPath ?? resolved?.config?.build?.outDir;
 
   const buildConfig = mergeConfig(
     {
+      // This should not be needed as it's going to be set in vite.config.ts
+      // but leaving it here in case someone did not migrate correctly
+      root: resolved.config.root ?? root,
       configFile: viteConfigPath,
     },
     {
       build: {
         outDir,
-        ...extraArgs,
+        ...buildOptions,
       },
-      ...extraArgs,
+      ...otherOptions,
     }
   );
 
@@ -175,9 +185,10 @@ export async function* viteBuildExecutor(
   }
 }
 
-async function getExtraArgs(
-  options: ViteBuildExecutorOptions
-): Promise<InlineConfig> {
+async function getExtraArgs(options: ViteBuildExecutorOptions): Promise<{
+  buildOptions: BuildOptions;
+  otherOptions: Record<string, any>;
+}> {
   // support passing extra args to vite cli
   const schema = await import('./schema.json');
   const extraArgs = {};
@@ -187,7 +198,48 @@ async function getExtraArgs(
     }
   }
 
-  return extraArgs as InlineConfig;
+  const buildOptions = {} as BuildOptions;
+  const buildSchemaKeys = [
+    'target',
+    'polyfillModulePreload',
+    'modulePreload',
+    'outDir',
+    'assetsDir',
+    'assetsInlineLimit',
+    'cssCodeSplit',
+    'cssTarget',
+    'cssMinify',
+    'sourcemap',
+    'minify',
+    'terserOptions',
+    'rollupOptions',
+    'commonjsOptions',
+    'dynamicImportVarsOptions',
+    'write',
+    'emptyOutDir',
+    'copyPublicDir',
+    'manifest',
+    'lib',
+    'ssr',
+    'ssrManifest',
+    'ssrEmitAssets',
+    'reportCompressedSize',
+    'chunkSizeWarningLimit',
+    'watch',
+  ];
+  const otherOptions = {};
+  for (const key of Object.keys(extraArgs)) {
+    if (buildSchemaKeys.includes(key)) {
+      buildOptions[key] = extraArgs[key];
+    } else {
+      otherOptions[key] = extraArgs[key];
+    }
+  }
+
+  return {
+    buildOptions,
+    otherOptions,
+  };
 }
 
 export default viteBuildExecutor;

@@ -78,7 +78,7 @@ function moveToDevDependencies(tree: Tree) {
   });
 }
 
-export function createVitestConfig(tree: Tree) {
+export function updateNxJsonSettings(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
@@ -98,13 +98,26 @@ export function createVitestConfig(tree: Tree) {
     'default',
     productionFileSet ? '^production' : '^default',
   ];
+  nxJson.targetDefaults['@nx/vite:test'].options ??= {
+    passWithNoTests: true,
+    reporters: ['default'],
+  };
+
+  nxJson.targetDefaults['@nx/vite:build'] ??= {};
+
+  nxJson.targetDefaults['@nx/vite:build'].options ??= {
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  };
 
   updateNxJson(tree, nxJson);
 }
 
 export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   moveToDevDependencies(tree);
-  createVitestConfig(tree);
+  updateNxJsonSettings(tree);
   const tasks = [];
 
   tasks.push(

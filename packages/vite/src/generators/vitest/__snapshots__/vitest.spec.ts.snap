@@ -30,6 +30,7 @@ export default defineConfig({
     includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     coverage: {
       reportsDirectory: '../../coverage/apps/my-test-react-app',
+      provider: 'v8',
     },
   },
 });
@@ -63,6 +64,7 @@ export default defineConfig({
 
     coverage: {
       reportsDirectory: '../../coverage/apps/my-test-react-app',
+      provider: 'v8',
     },
   },
 });
@@ -96,6 +98,7 @@ export default defineConfig({
 
     coverage: {
       reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',
+      provider: 'v8',
     },
   },
 });
