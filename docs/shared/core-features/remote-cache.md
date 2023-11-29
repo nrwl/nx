@@ -11,7 +11,7 @@ In this diagram, Teika runs the build once on his machine, then CI, Kimiko and J
 You can connect your workspace to Nx Cloud by running:
 
 ```shell
-npx nx connect-to-nx-cloud
+npx nx connect
 ```
 
 To see the remote cache in action, run:
