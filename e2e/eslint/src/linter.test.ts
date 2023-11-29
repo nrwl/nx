@@ -781,23 +781,25 @@ describe('Linter', () => {
         { env: { NX_PCV3: 'true' } }
       );
 
-      const lintResults = runCLI(`lint ${myapp}`);
+      let lintResults = runCLI(`lint ${myapp}`);
       expect(lintResults).toContain(
         `Successfully ran target lint for project ${myapp}`
+      );
+      lintResults = runCLI(`lint ${myapp}-e2e`);
+      expect(lintResults).toContain(
+        `Successfully ran target lint for project ${myapp}-e2e`
       );
 
       const { targets } = readJson(`apps/${myapp}/project.json`);
       expect(targets.lint).not.toBeDefined();
 
       const { plugins } = readJson('nx.json');
-      expect(plugins).toEqual([
-        {
-          plugin: '@nx/eslint/plugin',
-          options: {
-            targetName: 'lint',
-          },
+      expect(plugins).toContainEqual({
+        plugin: '@nx/eslint/plugin',
+        options: {
+          targetName: 'lint',
         },
-      ]);
+      });
     });
   });
 });

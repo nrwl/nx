@@ -50,8 +50,7 @@ describe('@nx/eslint/plugin', () => {
     expect(nodes).toMatchInlineSnapshot(`
       {
         "projects": {
-          "my-app": {
-            "root": "apps/my-app",
+          "apps/my-app": {
             "targets": {
               "lint": {
                 "cache": true,
@@ -99,7 +98,6 @@ describe('@nx/eslint/plugin', () => {
       {
         "projects": {
           ".": {
-            "root": ".",
             "targets": {
               "lint": {
                 "cache": true,

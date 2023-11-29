@@ -40,8 +40,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
 
     return {
       projects: {
-        [projectName]: {
-          root: projectRoot,
+        [projectRoot]: {
           targets: buildEslintTargets(
             eslintConfigs,
             projectRoot,
