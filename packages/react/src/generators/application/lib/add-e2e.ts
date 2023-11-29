@@ -4,6 +4,7 @@ import {
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
+  readNxJson,
 } from '@nx/devkit';
 import { webStaticServeGenerator } from '@nx/web';
 

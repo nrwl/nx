@@ -54,9 +54,6 @@ describe('vitest generator', () => {
     expect(config.targets['test']).toMatchInlineSnapshot(`
       {
         "executor": "@nx/vite:test",
-        "options": {
-          "reportsDirectory": "../../coverage/apps/my-test-react-app",
-        },
         "outputs": [
           "{options.reportsDirectory}",
         ],

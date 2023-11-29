@@ -626,6 +626,7 @@
   - [vite](/nx-api/vite)
     - [documents](/nx-api/vite/documents)
       - [Overview of the Nx Vite Plugin](/nx-api/vite/documents/overview)
+      - [Overview of the @nx/vite/plugin](/nx-api/vite/documents/vite-nodes-plugin)
     - [executors](/nx-api/vite/executors)
       - [dev-server](/nx-api/vite/executors/dev-server)
       - [build](/nx-api/vite/executors/build)

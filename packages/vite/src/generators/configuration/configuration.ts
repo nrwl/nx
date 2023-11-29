@@ -2,6 +2,7 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -164,19 +165,27 @@ export async function viteConfigurationGenerator(
   });
   tasks.push(initTask);
 
-  if (!projectAlreadyHasViteTargets.build) {
-    addOrChangeBuildTarget(tree, schema, buildTargetName);
-  }
+  const nxJson = readNxJson(tree);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/vite/plugin'
+      : p.plugin === '@nx/vite/plugin'
+  );
 
-  if (!schema.includeLib) {
-    if (!projectAlreadyHasViteTargets.serve) {
-      addOrChangeServeTarget(tree, schema, serveTargetName);
+  if (!hasPlugin) {
+    if (!projectAlreadyHasViteTargets.build) {
+      addOrChangeBuildTarget(tree, schema, buildTargetName);
     }
-    if (!projectAlreadyHasViteTargets.preview) {
-      addPreviewTarget(tree, schema, serveTargetName);
+
+    if (!schema.includeLib) {
+      if (!projectAlreadyHasViteTargets.serve) {
+        addOrChangeServeTarget(tree, schema, serveTargetName);
+      }
+      if (!projectAlreadyHasViteTargets.preview) {
+        addPreviewTarget(tree, schema, serveTargetName);
+      }
     }
   }
-
   if (projectType === 'library') {
     // update tsconfig.lib.json to include vite/client
     updateJson(
@@ -225,7 +234,8 @@ export async function viteConfigurationGenerator(
           ],
           plugins: ['react()'],
         },
-        false
+        false,
+        undefined
       );
     } else {
       createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);

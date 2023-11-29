@@ -1,0 +1,117 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/vite/plugin not root project should create nodes 1`] = `
+{
+  "projects": {
+    "my-app": {
+      "root": "my-app",
+      "targets": {
+        "build-something": {
+          "cache": true,
+          "command": "pnpm exec vite build",
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "{options.outputPath}",
+          ],
+        },
+        "my-serve": {
+          "command": "pnpm exec vite serve",
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "preview-site": {
+          "command": "pnpm exec vite preview",
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "build-something",
+          },
+        },
+        "vitest": {
+          "cache": true,
+          "command": "pnpm exec vitest run",
+          "inputs": [
+            "default",
+            "^production",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "{options.reportsDirectory}",
+          ],
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/vite/plugin root project should create nodes 1`] = `
+{
+  "projects": {
+    ".": {
+      "root": ".",
+      "targets": {
+        "build": {
+          "cache": true,
+          "command": "pnpm exec vite build",
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "{options.outputPath}",
+          ],
+        },
+        "preview": {
+          "command": "pnpm exec vite preview",
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "serve": {
+          "command": "pnpm exec vite serve",
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "build",
+          },
+        },
+        "test": {
+          "cache": true,
+          "command": "pnpm exec vitest run",
+          "inputs": [
+            "default",
+            "^production",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "{options.reportsDirectory}",
+          ],
+        },
+      },
+    },
+  },
+}
+`;

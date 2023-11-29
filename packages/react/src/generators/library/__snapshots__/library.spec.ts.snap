@@ -17,6 +17,7 @@ export default defineConfig({
   // },
 
   test: {
+    reportsDirectory: '../coverage/my-lib',
     globals: true,
     cache: { dir: '../node_modules/.vitest' },
     environment: 'jsdom',
@@ -71,6 +72,7 @@ export default defineConfig({
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
+    outDir: 'dist/my-lib',
   },
 
   test: {
