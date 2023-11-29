@@ -46,7 +46,8 @@ describe('Nx Watch', () => {
   afterEach(() => {
     let daemonLog = readFile(join(cacheDirectory, 'd/daemon.log'));
     const testName = expect.getState().currentTestName;
-    console.log(`${testName} daemon log: \n${daemonLog}`);
+    // disable these logs for now because this test seems stable now, and the logs are blocking other logs
+    // console.log(`${testName} daemon log: \n${daemonLog}`);
     runCLI('reset');
   });
 
