@@ -23,10 +23,6 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
   (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
 
-    if (!projectHasEslintConfig(projectRoot, context.workspaceRoot)) {
-      return {};
-    }
-
     options = normalizeOptions(options);
     const projectName = basename(projectRoot);
 
@@ -34,14 +30,20 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
       return {};
     }
 
-    const rootEslintConfigFile = findBaseEslintFile(context.workspaceRoot);
+    const eslintConfigs = getEslintConfigsForProject(
+      projectRoot,
+      context.workspaceRoot
+    );
+    if (!eslintConfigs.length) {
+      return {};
+    }
 
     return {
       projects: {
         [projectName]: {
           root: projectRoot,
           targets: buildEslintTargets(
-            rootEslintConfigFile,
+            eslintConfigs,
             projectRoot,
             options,
             context
@@ -52,35 +54,58 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
   },
 ];
 
-function projectHasEslintConfig(
+function getEslintConfigsForProject(
   projectRoot: string,
   workspaceRoot: string
-): boolean {
-  const siblingFiles = readdirSync(join(workspaceRoot, projectRoot));
+): string[] {
+  const detectedConfigs = new Set<string>();
+  const baseConfig = findBaseEslintFile(workspaceRoot);
+  if (baseConfig) {
+    detectedConfigs.add(baseConfig);
+  }
+
+  let siblingFiles = readdirSync(join(workspaceRoot, projectRoot));
 
   if (projectRoot === '.') {
     // If there's no src folder, it's not a standalone project
     if (!siblingFiles.includes('src')) {
-      return false;
+      return [];
     }
     // If it's standalone but doesn't have eslint config, it's not a lintable
-    if (!siblingFiles.some((f) => ESLINT_CONFIG_FILENAMES.includes(f))) {
-      return false;
+    const config = siblingFiles.find((f) =>
+      ESLINT_CONFIG_FILENAMES.includes(f)
+    );
+    if (!config) {
+      return [];
     }
-    return true;
+    detectedConfigs.add(config);
+    return Array.from(detectedConfigs);
   }
-  // if it has an eslint config it's lintable
-  if (siblingFiles.some((f) => ESLINT_CONFIG_FILENAMES.includes(f))) {
-    return true;
+  while (projectRoot !== '.') {
+    // if it has an eslint config it's lintable
+    const config = siblingFiles.find((f) =>
+      ESLINT_CONFIG_FILENAMES.includes(f)
+    );
+    if (config) {
+      detectedConfigs.add(`${projectRoot}/${config}`);
+      return Array.from(detectedConfigs);
+    }
+    projectRoot = dirname(projectRoot);
+    siblingFiles = readdirSync(join(workspaceRoot, projectRoot));
   }
   // check whether the root has an eslint config
-  return readdirSync(workspaceRoot).some((f) =>
+  const config = readdirSync(workspaceRoot).find((f) =>
     ESLINT_CONFIG_FILENAMES.includes(f)
   );
+  if (config) {
+    detectedConfigs.add(config);
+    return Array.from(detectedConfigs);
+  }
+  return [];
 }
 
 function buildEslintTargets(
-  rootEslintConfigFile: string,
+  eslintConfigs: string[],
   projectRoot: string,
   options: EslintPluginOptions,
   context: CreateNodesContext
@@ -101,7 +126,7 @@ function buildEslintTargets(
       cwd: projectRoot,
     },
   };
-  if (isFlatConfig(rootEslintConfigFile)) {
+  if (eslintConfigs.some((config) => isFlatConfig(config))) {
     baseTargetConfig.options.env = {
       ESLINT_USE_FLAT_CONFIG: 'true',
     };
@@ -112,7 +137,7 @@ function buildEslintTargets(
     cache: targetDefaults?.cache ?? true,
     inputs: targetDefaults?.inputs ?? [
       'default',
-      `{workspaceRoot}/${rootEslintConfigFile}`,
+      ...eslintConfigs.map((config) => `{workspaceRoot}/${config}`),
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },
     ],

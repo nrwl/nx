@@ -782,7 +782,9 @@ describe('Linter', () => {
       );
 
       const lintResults = runCLI(`lint ${myapp}`);
-      expect(lintResults).toContain('All files pass linting');
+      expect(lintResults).toContain(
+        `Successfully ran target lint for project ${myapp}`
+      );
 
       const { targets } = readJson(`apps/${myapp}/project.json`);
       expect(targets.lint).not.toBeDefined();

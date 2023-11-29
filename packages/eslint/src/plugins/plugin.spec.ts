@@ -59,6 +59,7 @@ describe('@nx/eslint/plugin', () => {
                 "inputs": [
                   "default",
                   "{workspaceRoot}/.eslintrc.json",
+                  "{workspaceRoot}/apps/my-app/.eslintrc.json",
                   "{workspaceRoot}/tools/eslint-rules/**/*",
                   {
                     "externalDependencies": [
@@ -69,9 +70,6 @@ describe('@nx/eslint/plugin', () => {
                 "options": {
                   "cwd": "apps/my-app",
                 },
-                "outputs": [
-                  "{options.outputFile}",
-                ],
               },
             },
           },
@@ -105,7 +103,7 @@ describe('@nx/eslint/plugin', () => {
             "targets": {
               "lint": {
                 "cache": true,
-                "command": "ESLINT_USE_FLAT_CONFIG=true eslint ./src",
+                "command": "eslint ./src",
                 "inputs": [
                   "default",
                   "{workspaceRoot}/eslint.config.js",
@@ -118,10 +116,10 @@ describe('@nx/eslint/plugin', () => {
                 ],
                 "options": {
                   "cwd": ".",
+                  "env": {
+                    "ESLINT_USE_FLAT_CONFIG": "true",
+                  },
                 },
-                "outputs": [
-                  "{options.outputFile}",
-                ],
               },
             },
           },
