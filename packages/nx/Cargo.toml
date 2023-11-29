@@ -41,9 +41,6 @@ swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"
 swc_ecma_ast = "0.107.0"
 
-[target.'cfg(not(target_env = "msvc"))'.dependencies]
-tikv-jemallocator = "0.5"
-
 [lib]
 crate-type = ['cdylib']
 
