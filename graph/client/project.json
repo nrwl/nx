@@ -119,6 +119,11 @@
               "glob": "e2e.json"
             },
             {
+              "input": "graph/client/src/assets/source-maps",
+              "output": "/assets/source-maps",
+              "glob": "e2e.json"
+            },
+            {
               "input": "graph/client/src/assets/release",
               "output": "/",
               "glob": "environment.js"

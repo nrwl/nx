@@ -24,7 +24,12 @@ export function ProjectDetails() {
   return (
     <div className="m-4 overflow-auto">
       <h1 className="text-2xl">{name}</h1>
-      <h2 className="text-lg pl-6 mb-3">{root}</h2>
+      <h2 className="text-lg pl-6 mb-3 flex flex-row gap-2">
+        {root}{' '}
+        {projectData.tags?.map((tag) => (
+          <p className="bg-slate-300">{tag}</p>
+        ))}
+      </h2>
       <div>
         <div className="mb-2">
           <h2 className="text-xl">Targets</h2>
@@ -32,7 +37,6 @@ export function ProjectDetails() {
             Target({
               targetName: targetName,
               targetConfiguration: target,
-              projectRoot: root,
               sourceMap,
             })
           )}
@@ -42,13 +46,15 @@ export function ProjectDetails() {
             key === 'targets' ||
             key === 'root' ||
             key === 'name' ||
-            key === '$schema'
+            key === '$schema' ||
+            key === 'tags' ||
+            key === 'files'
           )
             return undefined;
+
           return PropertyRenderer({
             propertyKey: key,
             propertyValue: value,
-            projectRoot: root,
             sourceMap,
           });
         })}
