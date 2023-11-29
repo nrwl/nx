@@ -766,9 +766,10 @@ describe('Linter', () => {
   });
 
   describe('Project Config v3', () => {
-    const myapp = uniq('myapp');
+    let myapp;
 
-    beforeAll(() => {
+    beforeEach(() => {
+      myapp = uniq('myapp');
       newProject({
         name: uniq('eslint'),
         unsetProjectNameAndRootFormat: false,

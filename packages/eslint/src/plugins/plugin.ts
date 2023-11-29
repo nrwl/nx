@@ -3,7 +3,7 @@ import {
   CreateNodesContext,
   TargetConfiguration,
 } from '@nx/devkit';
-import { basename, dirname, join } from 'path';
+import { dirname, join } from 'path';
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { readdirSync } from 'fs';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
@@ -15,7 +15,6 @@ import {
 
 export interface EslintPluginOptions {
   targetName?: string;
-  excludedProjects?: string[];
 }
 
 export const createNodes: CreateNodes<EslintPluginOptions> = [
@@ -24,11 +23,6 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     const projectRoot = dirname(configFilePath);
 
     options = normalizeOptions(options);
-    const projectName = basename(projectRoot);
-
-    if (options.excludedProjects.includes(projectName)) {
-      return {};
-    }
 
     const eslintConfigs = getEslintConfigsForProject(
       projectRoot,
@@ -151,6 +145,5 @@ function buildEslintTargets(
 function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
   options ??= {};
   options.targetName ??= 'lint';
-  options.excludedProjects ??= [];
   return options;
 }
