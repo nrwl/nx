@@ -58,9 +58,11 @@ pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFilesArchive
             .map_err(anyhow::Error::from)
         });
 
-    trace!("read archive in {:?}", now.elapsed());
     match bytes {
-        Ok(archive) => Some(archive),
+        Ok(archive) => {
+            trace!("read archive in {:?}", now.elapsed());
+            Some(archive)
+        }
         Err(e) => {
             trace!("could not read files archive: {:?}", e);
             None
@@ -77,9 +79,11 @@ pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFilesArchive) 
             std::fs::write(archive_path, encoded)?;
             Ok(())
         });
-    trace!("write archive in {:?}", now.elapsed());
+
     match result {
-        Ok(_) => (),
+        Ok(_) => {
+            trace!("write archive in {:?}", now.elapsed());
+        }
         Err(e) => {
             trace!("could not write files archive: {:?}", e);
         }
