@@ -261,7 +261,7 @@ export function withDepGraphOptions(yargs: Argv) {
       describe: 'Choose whether to view the projects or task graph',
       type: 'string',
       default: 'projects',
-      choices: ['projects', 'tasks', 'project-details'],
+      choices: ['projects', 'tasks'],
     })
     .option('targets', {
       describe: 'The target to show tasks for in the task graph',

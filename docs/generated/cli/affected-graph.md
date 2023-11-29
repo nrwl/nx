@@ -153,7 +153,7 @@ Show version number
 
 Type: `string`
 
-Choices: [projects, tasks, project-details]
+Choices: [projects, tasks]
 
 Default: `projects`
 
