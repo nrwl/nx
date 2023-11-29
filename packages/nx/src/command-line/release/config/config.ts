@@ -11,7 +11,10 @@
  * defaults and user overrides, as well as handling common errors, up front to produce a single, consistent,
  * and easy to consume config object for all the `nx release` command implementations.
  */
-import { NxJsonConfiguration } from '../../../config/nx-json';
+import {
+  NxJsonConfiguration,
+  NxReleaseChangelogConfiguration,
+} from '../../../config/nx-json';
 import { output, type ProjectGraph } from '../../../devkit-exports';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { projectHasTarget } from '../../../utils/project-graph-utils';
@@ -25,6 +28,14 @@ type EnsureProjectsArray<T> = {
   [K in keyof T]: T[K] extends { projects: any }
     ? Omit<T[K], 'projects'> & { projects: string[] }
     : T[K];
+};
+
+type RemoveTrueFromType<T> = T extends true ? never : T;
+type RemoveTrueFromProperties<T, K extends keyof T> = {
+  [P in keyof T]: P extends K ? RemoveTrueFromType<T[P]> : T[P];
+};
+type RemoveTrueFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
+  [U in keyof T]: RemoveTrueFromProperties<T[U], K>;
 };
 
 export const CATCH_ALL_RELEASE_GROUP = '__default__';
@@ -41,7 +52,15 @@ export const CATCH_ALL_RELEASE_GROUP = '__default__';
 export type NxReleaseConfig = DeepRequired<
   NxJsonConfiguration['release'] & {
     groups: DeepRequired<
-      EnsureProjectsArray<NxJsonConfiguration['release']['groups']>
+      RemoveTrueFromPropertiesOnEach<
+        EnsureProjectsArray<NxJsonConfiguration['release']['groups']>,
+        'changelog'
+      >
+    >;
+    // Remove the true shorthand from the changelog config types, it will be normalized to a default object
+    changelog: RemoveTrueFromProperties<
+      DeepRequired<NxJsonConfiguration['release']['changelog']>,
+      'workspaceChangelog' | 'projectChangelogs'
     >;
   }
 >;
@@ -66,12 +85,32 @@ export async function createNxReleaseConfig(
   error: null | CreateNxReleaseConfigError;
   nxReleaseConfig: NxReleaseConfig | null;
 }> {
+  const gitDefaults = {
+    commit: false,
+    commitMessage: '',
+    commitArgs: '',
+    tag: false,
+    tagMessage: '',
+    tagArgs: '',
+  };
+
+  const defaultFixedReleaseTagPattern = 'v{version}';
+  const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
+
+  const workspaceProjectsRelationship =
+    userConfig.projectsRelationship || 'fixed';
+
   const WORKSPACE_DEFAULTS: Omit<NxReleaseConfig, 'groups'> = {
+    // By default all projects in all groups are released together
+    projectsRelationship: workspaceProjectsRelationship,
+    git: gitDefaults,
     version: {
+      git: gitDefaults,
       generator: '@nx/js:release-version',
       generatorOptions: {},
     },
     changelog: {
+      git: gitDefaults,
       workspaceChangelog: {
         createRelease: false,
         entryWhenNoChanges:
@@ -96,9 +135,19 @@ export async function createNxReleaseConfig(
           }
         : false,
     },
-    releaseTagPattern: 'v{version}',
+    releaseTagPattern:
+      userConfig.releaseTagPattern ||
+      // The appropriate default releaseTagPattern is dependent upon the projectRelationships
+      (workspaceProjectsRelationship === 'independent'
+        ? defaultIndependentReleaseTagPattern
+        : defaultFixedReleaseTagPattern),
   };
+
+  const groupProjectsRelationship =
+    userConfig.projectsRelationship || WORKSPACE_DEFAULTS.projectsRelationship;
+
   const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
+    projectsRelationship: groupProjectsRelationship,
     version: {
       generator: '@nx/js:release-version',
       generatorOptions: {},
@@ -113,23 +162,62 @@ export async function createNxReleaseConfig(
         includeAuthors: true,
       },
     },
-    releaseTagPattern: '{projectName}@v{version}',
+    releaseTagPattern:
+      // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
+      groupProjectsRelationship === 'independent'
+        ? defaultIndependentReleaseTagPattern
+        : WORKSPACE_DEFAULTS.releaseTagPattern,
   };
 
   /**
    * We first process root level config and apply defaults, so that we know how to handle the group level
    * overrides, if applicable.
    */
-  const rootVersionConfig: NxReleaseConfig['version'] = deepMergeDefaults(
-    [WORKSPACE_DEFAULTS.version],
-    userConfig.version
+  const rootGitConfig: NxReleaseConfig['git'] = deepMergeDefaults(
+    [WORKSPACE_DEFAULTS.git],
+    userConfig.git as Partial<NxReleaseConfig['git']>
   );
-  const rootChangelogConfig: NxReleaseConfig['changelog'] = deepMergeDefaults(
-    [WORKSPACE_DEFAULTS.changelog],
-    userConfig.changelog as Partial<NxReleaseConfig['changelog']>
+  const rootVersionConfig: NxReleaseConfig['version'] = deepMergeDefaults(
+    [
+      WORKSPACE_DEFAULTS.version,
+      // Merge in the git defaults from the top level
+      { git: rootGitConfig } as NxReleaseConfig['version'],
+    ],
+    userConfig.version as Partial<NxReleaseConfig['version']>
   );
 
-  const allProjects = findMatchingProjects(['*'], projectGraph.nodes);
+  if (userConfig.changelog?.workspaceChangelog) {
+    userConfig.changelog.workspaceChangelog = normalizeTrueToEmptyObject(
+      userConfig.changelog.workspaceChangelog
+    );
+  }
+  if (userConfig.changelog?.projectChangelogs) {
+    userConfig.changelog.projectChangelogs = normalizeTrueToEmptyObject(
+      userConfig.changelog.projectChangelogs
+    );
+  }
+
+  const rootChangelogConfig: NxReleaseConfig['changelog'] = deepMergeDefaults(
+    [
+      WORKSPACE_DEFAULTS.changelog,
+      // Merge in the git defaults from the top level
+      { git: rootGitConfig } as NxReleaseConfig['changelog'],
+    ],
+    normalizeTrueToEmptyObject(userConfig.changelog) as Partial<
+      NxReleaseConfig['changelog']
+    >
+  );
+
+  // git configuration is not supported at the group level, only the root/command level
+  const rootVersionWithoutGit = { ...rootVersionConfig };
+  delete rootVersionWithoutGit.git;
+
+  const allProjects = findMatchingProjects(['*'], projectGraph.nodes).filter(
+    // only include libs by default when the user has no groups config,
+    // because the default implementation assumes npm js packages
+    // and these will usually be libs
+    (project) => projectGraph.nodes[project].type === 'lib'
+  );
   const groups: NxReleaseConfig['groups'] =
     userConfig.groups && Object.keys(userConfig.groups).length
       ? ensureProjectsConfigIsArray(userConfig.groups)
@@ -139,6 +227,7 @@ export async function createNxReleaseConfig(
          */
         {
           [CATCH_ALL_RELEASE_GROUP]: {
+            projectsRelationship: GROUP_DEFAULTS.projectsRelationship,
             projects: allProjects,
             /**
              * For properties which are overriding config at the root, we use the root level config as the
@@ -147,9 +236,11 @@ export async function createNxReleaseConfig(
              */
             version: deepMergeDefaults(
               [GROUP_DEFAULTS.version],
-              rootVersionConfig
+              rootVersionWithoutGit
             ),
-            releaseTagPattern: GROUP_DEFAULTS.releaseTagPattern,
+            // If the user has set something custom for releaseTagPattern at the top level, respect it for the catch all default group
+            releaseTagPattern:
+              userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
             // Directly inherit the root level config for projectChangelogs, if set
             changelog: rootChangelogConfig.projectChangelogs || false,
           },
@@ -197,7 +288,7 @@ export async function createNxReleaseConfig(
 
     // If provided, ensure release tag pattern is valid
     if (releaseGroup.releaseTagPattern) {
-      const error = ensureReleaseTagPatternIsValid(
+      const error = ensureReleaseGroupReleaseTagPatternIsValid(
         releaseGroup.releaseTagPattern,
         releaseGroupName
       );
@@ -232,11 +323,21 @@ export async function createNxReleaseConfig(
       groupChangelogDefaults.push(rootChangelogConfig.projectChangelogs);
     }
 
+    const projectsRelationship =
+      releaseGroup.projectsRelationship || GROUP_DEFAULTS.projectsRelationship;
+
+    if (releaseGroup.changelog) {
+      releaseGroup.changelog = normalizeTrueToEmptyObject(
+        releaseGroup.changelog
+      ) as NxReleaseConfig['groups']['string']['changelog'];
+    }
+
     const groupDefaults: NxReleaseConfig['groups']['string'] = {
+      projectsRelationship,
       projects: matchingProjects,
       version: deepMergeDefaults(
         // First apply any group level defaults, then apply actual root level config, then group level config
-        [GROUP_DEFAULTS.version, rootVersionConfig],
+        [GROUP_DEFAULTS.version, rootVersionWithoutGit],
         releaseGroup.version
       ),
       // If the user has set any changelog config at all, including at the root level, then use one set of defaults, otherwise default to false for the whole feature
@@ -247,7 +348,13 @@ export async function createNxReleaseConfig(
               releaseGroup.changelog || {}
             )
           : false,
-      releaseTagPattern: GROUP_DEFAULTS.releaseTagPattern,
+
+      releaseTagPattern:
+        releaseGroup.releaseTagPattern ||
+        // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
+        (projectsRelationship === 'independent'
+          ? defaultIndependentReleaseTagPattern
+          : userConfig.releaseTagPattern || defaultFixedReleaseTagPattern),
     };
 
     releaseGroups[releaseGroupName] = deepMergeDefaults([groupDefaults], {
@@ -260,18 +367,28 @@ export async function createNxReleaseConfig(
   return {
     error: null,
     nxReleaseConfig: {
+      projectsRelationship: WORKSPACE_DEFAULTS.projectsRelationship,
+      releaseTagPattern: WORKSPACE_DEFAULTS.releaseTagPattern,
+      git: rootGitConfig,
       version: rootVersionConfig,
       changelog: rootChangelogConfig,
       groups: releaseGroups,
-      releaseTagPattern:
-        userConfig.releaseTagPattern || WORKSPACE_DEFAULTS.releaseTagPattern,
     },
   };
 }
 
+/**
+ * In some cases it is much cleaner and more intuitive for the user to be able to
+ * specify `true` in their config when they want to use the default config for a
+ * particular property, rather than having to specify an empty object.
+ */
+function normalizeTrueToEmptyObject<T>(value: T | boolean): T | {} {
+  return value === true ? {} : value;
+}
+
 export async function handleNxReleaseConfigError(
   error: CreateNxReleaseConfigError
-) {
+): Promise<never> {
   switch (error.code) {
     case 'RELEASE_GROUP_MATCHES_NO_PROJECTS':
       {
@@ -326,7 +443,7 @@ export async function handleNxReleaseConfigError(
   process.exit(1);
 }
 
-function ensureReleaseTagPatternIsValid(
+function ensureReleaseGroupReleaseTagPatternIsValid(
   releaseTagPattern: string,
   releaseGroupName: string
 ): null | CreateNxReleaseConfigError {

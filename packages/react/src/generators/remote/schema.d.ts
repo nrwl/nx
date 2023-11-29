@@ -26,6 +26,7 @@ export interface Schema {
   tags?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';
   typescriptConfiguration?: boolean;
+  dynamic?: boolean;
 }
 
 export interface NormalizedSchema extends ApplicationNormalizedSchema {

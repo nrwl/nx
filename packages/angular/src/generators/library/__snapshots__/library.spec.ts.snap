@@ -14,7 +14,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
-  styleUrls: ['./my-lib.component.css'],
+  styleUrl: './my-lib.component.css',
 })
 export class MyLibComponent {}
 "
@@ -61,7 +61,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
-  styleUrls: ['./my-lib.component.css'],
+  styleUrl: './my-lib.component.css',
 })
 export class MyLibComponent {}
 "
@@ -114,7 +114,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
-  styleUrls: ['./my-lib.component.css'],
+  styleUrl: './my-lib.component.css',
 })
 export class MyLibComponent {}
 "
@@ -163,7 +163,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: \`<p>my-lib works!</p>\`,
-  styles: [],
+  styles: \`\`,
   encapsulation: ViewEncapsulation.ShadowDom,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -185,7 +185,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: \`<p>my-lib works!</p>\`,
-  styles: [],
+  styles: \`\`,
 })
 export class MyLibComponent {}
 "
@@ -205,7 +205,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   template: \`<p>my-lib works!</p>\`,
-  styles: [],
+  styles: \`\`,
 })
 export class MyLibComponent {}
 "
@@ -260,7 +260,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
-  styleUrls: ['./my-lib.component.css'],
+  styleUrl: './my-lib.component.css',
 })
 export class MyLibComponent {}
 "
@@ -381,7 +381,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
-  styleUrls: ['./my-lib.component.css'],
+  styleUrl: './my-lib.component.css',
 })
 export class MyLibComponent {}
 "
@@ -426,7 +426,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './my-lib.component.html',
-  styleUrls: ['./my-lib.component.css'],
+  styleUrl: './my-lib.component.css',
 })
 export class MyLibComponent {}
 "

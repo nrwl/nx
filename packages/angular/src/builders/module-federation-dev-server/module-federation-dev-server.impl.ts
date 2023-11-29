@@ -13,7 +13,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
-import { executeWebpackDevServerBuilder } from '../webpack-dev-server/webpack-dev-server.impl';
+import { executeDevServerBuilder } from '../dev-server/dev-server.impl';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
 import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
 import { validateDevRemotes } from '../utilities/module-federation';
@@ -37,6 +37,9 @@ function buildStaticRemotes(
   context: import('@angular-devkit/architect').BuilderContext,
   options: Schema
 ) {
+  if (!remotes.staticRemotes.length) {
+    return Promise.resolve();
+  }
   const mappedLocationOfRemotes: Record<string, string> = {};
   for (const app of remotes.staticRemotes) {
     mappedLocationOfRemotes[app] = `http${options.ssl ? 's' : ''}://${
@@ -109,7 +112,10 @@ function startStaticRemotesFileServer(
 
     if (!commonOutputDirectory) {
       commonOutputDirectory = directoryOfOutputPath;
-    } else if (commonOutputDirectory !== directoryOfOutputPath) {
+    } else if (
+      commonOutputDirectory !== directoryOfOutputPath ||
+      !outputPath.endsWith(app)
+    ) {
       shouldMoveToCommonLocation = true;
     }
   }
@@ -119,18 +125,10 @@ function startStaticRemotesFileServer(
     for (const app of remotes.staticRemotes) {
       const outputPath =
         projectGraph.nodes[app].data.targets['build'].options.outputPath;
-      const outputPathParts = outputPath.split('/');
-      cpSync(
-        outputPath,
-        join(
-          commonOutputDirectory,
-          outputPathParts[outputPathParts.length - 1]
-        ),
-        {
-          force: true,
-          recursive: true,
-        }
-      );
+      cpSync(outputPath, join(commonOutputDirectory, app), {
+        force: true,
+        recursive: true,
+      });
     }
   }
 
@@ -203,7 +201,8 @@ function startDevRemotes(
     const { schema } = getExecutorInformation(
       collection,
       executor,
-      workspaceRoot
+      workspaceRoot,
+      workspaceProjects
     );
     if (
       (options.verbose && schema.additionalProperties) ||
@@ -223,6 +222,7 @@ function startDevRemotes(
         target: 'serve',
         configuration: context.target.configuration,
         runOptions,
+        projects: workspaceProjects,
       },
       options.verbose
     ).then((obs) => {
@@ -241,7 +241,7 @@ function startDevRemotes(
 export function executeModuleFederationDevServerBuilder(
   schema: Schema,
   context: import('@angular-devkit/architect').BuilderContext
-): ReturnType<typeof executeWebpackDevServerBuilder | any> {
+): ReturnType<typeof executeDevServerBuilder | any> {
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
   const options = normalizeOptions(schema);
@@ -279,14 +279,13 @@ export function executeModuleFederationDevServerBuilder(
           configurationName: context.target.configuration,
           cwd: context.currentDirectory,
           isVerbose: options.verbose,
-          projectsConfigurations:
-            readProjectsConfigurationFromProjectGraph(projectGraph),
+          projectsConfigurations: { projects: workspaceProjects, version: 2 },
           nxJsonConfiguration: readNxJson(),
         }
       )
     )
   );
-  const webpackDevServer = executeWebpackDevServerBuilder(options, context);
+  const webpackDevServer = executeDevServerBuilder(options, context);
 
   const currExecutor = options.static ? staticFileServer : webpackDevServer;
 

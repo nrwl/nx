@@ -985,4 +985,41 @@ describe('component Generator', () => {
       expect(indexSource).toBe('');
     });
   });
+
+  describe('compat', () => {
+    it('should inline styles when --inline-style=true', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      addProjectConfiguration(tree, 'lib1', {
+        projectType: 'library',
+        sourceRoot: 'libs/lib1/src',
+        root: 'libs/lib1',
+      });
+      tree.write(
+        'libs/lib1/src/lib/lib.module.ts',
+        `
+      import { NgModule } from '@angular/core';
+      
+      @NgModule({
+        declarations: [],
+        exports: []
+      })
+      export class LibModule {}`
+      );
+      tree.write('libs/lib1/src/index.ts', '');
+
+      await componentGenerator(tree, {
+        name: 'example',
+        project: 'lib1',
+        inlineStyle: true,
+        standalone: false,
+      });
+
+      expect(
+        tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.exists('libs/lib1/src/lib/example/example.component.css')
+      ).toBe(false);
+    });
+  });
 });

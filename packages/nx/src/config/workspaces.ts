@@ -1,9 +1,12 @@
 import { dirname } from 'path';
+import {
+  readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
+} from '../project-graph/project-graph';
 
 import type { NxJsonConfiguration } from './nx-json';
 import { readNxJson } from './nx-json';
 import { ProjectsConfigurations } from './workspace-json-project-json';
-import { retrieveProjectConfigurationsSync } from '../project-graph/utils/retrieve-workspace-files';
 
 // TODO(v18): remove this class
 /**
@@ -19,9 +22,7 @@ export class Workspaces {
     const nxJson = readNxJson(this.root);
 
     return {
-      version: 2,
-      projects: retrieveProjectConfigurationsSync(this.root, nxJson)
-        .projectNodes,
+      ...readProjectsConfigurationFromProjectGraph(readCachedProjectGraph()),
       ...nxJson,
     };
   }

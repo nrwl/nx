@@ -4,6 +4,7 @@ import {
   GeneratorsJson,
   GeneratorsJsonEntry,
 } from '../../config/misc-interfaces';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import {
   getImplementationFactory,
   resolveSchema,
@@ -14,7 +15,8 @@ import { readPluginPackageJson } from '../../utils/nx-plugin';
 export function getGeneratorInformation(
   collectionName: string,
   generatorName: string,
-  root: string | null
+  root: string | null,
+  projects: Record<string, ProjectConfiguration>
 ): {
   resolvedCollectionName: string;
   normalizedGeneratorName: string;
@@ -30,7 +32,7 @@ export function getGeneratorInformation(
       generatorsJson,
       resolvedCollectionName,
       normalizedGeneratorName,
-    } = readGeneratorsJson(collectionName, generatorName, root);
+    } = readGeneratorsJson(collectionName, generatorName, root, projects);
     const generatorsDir = dirname(generatorsFilePath);
     const generatorConfig =
       generatorsJson.generators?.[normalizedGeneratorName] ||
@@ -71,7 +73,8 @@ export function getGeneratorInformation(
 export function readGeneratorsJson(
   collectionName: string,
   generator: string,
-  root: string | null
+  root: string | null,
+  projects: Record<string, ProjectConfiguration>
 ): {
   generatorsFilePath: string;
   generatorsJson: GeneratorsJson;
@@ -86,6 +89,7 @@ export function readGeneratorsJson(
   } else {
     const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
       collectionName,
+      projects,
       root ? [root, __dirname] : [__dirname]
     );
     const generatorsFile = packageJson.generators ?? packageJson.schematics;
@@ -109,7 +113,7 @@ export function readGeneratorsJson(
   if (!normalizedGeneratorName) {
     for (let parent of generatorsJson.extends || []) {
       try {
-        return readGeneratorsJson(parent, generator, root);
+        return readGeneratorsJson(parent, generator, root, projects);
       } catch (e) {}
     }
 

@@ -120,7 +120,6 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
         compiler: 'babel',
         externalDependencies: 'all',
         outputHashing: 'none',
-        isolatedConfig: true,
         webpackConfig: joinPathFragments(projectRoot, 'webpack.config.js'),
       },
       configurations: {

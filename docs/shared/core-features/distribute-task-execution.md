@@ -25,7 +25,7 @@ When you set up Nx's distributed task execution, your task graph will look more 
 And not only will CI finish faster, but the debugging experience is the same as if you ran all of your CI on a single
 job. That's because Nx uses distributed caching to recreate all of the logs and build artifacts on the main job.
 
-Find more information in this [detailed guide to improve your worst case CI times](/concepts/dte).
+Find more information in this [detailed guide to improve your worst case CI times](/nx-cloud/concepts/dte).
 
 ## Set up
 
@@ -54,7 +54,7 @@ For existing workspaces you would probably want to adjust your configuration by 
 
 Distributed task execution can work on any CI provider. You are responsible for launching jobs in your CI system. Nx
 Cloud then coordinates the way those jobs work together. There are two different kinds of jobs that you'll need to
-create in your CI system. If you would like Nx Cloud to dynamically provision agents for you, check out [Nx Cloud Workflows](/nx-cloud/intro/nx-cloud-workflows)
+create in your CI system. If you would like Nx Cloud to dynamically provision agents for you, check out [Nx Cloud Workflows](/nx-cloud/features/nx-cloud-workflows)
 
 1. Main job that controls what is going to be executed
 2. Multiple agent jobs that actually execute the tasks
@@ -150,7 +150,6 @@ CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly.
 
 Read the guides for more information on how to configure them in CI.
 
-- [Overview](/nx-cloud/recipes/set-up/ci-setup#distributed-ci-with-nx-cloud)
 - [Azure Pipelines](/nx-cloud/recipes/set-up/monorepo-ci-azure#distributed-ci-with-nx-cloud)
 - [Circle CI](/nx-cloud/recipes/set-up/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
 - [GitHub Actions](/nx-cloud/recipes/set-up/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)

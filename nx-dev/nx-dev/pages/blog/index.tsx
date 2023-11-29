@@ -106,7 +106,7 @@ export default function Blog(): JSX.Element {
                     We're on Dev.to, too!
                   </h4>
                   <a
-                    href="https://blog.nrwl.io"
+                    href="https://dev.to/nx"
                     rel="noreferrer"
                     target="_blank"
                     title="Nrwl Blog"

@@ -46,7 +46,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css',
       })
       export class ExampleComponent {}
 
@@ -152,7 +152,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css',
       })
       export class ExampleComponent {}
 
@@ -262,7 +262,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.random.html',
-        styleUrls: ['./example.random.css'],
+        styleUrl: './example.random.css',
       })
       export class ExampleRandom {}
 
@@ -373,7 +373,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css',
       })
       export class ExampleComponent {}
 
@@ -431,7 +431,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css',
       })
       export class ExampleComponent {}
 

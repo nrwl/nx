@@ -34,7 +34,7 @@ describe('scam-to-standalone', () => {
         imports: [CommonModule],
         selector: 'proj-bar',
         templateUrl: './bar.component.html',
-        styleUrls: ['./bar.component.css'],
+        styleUrl: './bar.component.css',
       })
       export class BarComponent {}
       "

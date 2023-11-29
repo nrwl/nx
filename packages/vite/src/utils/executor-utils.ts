@@ -32,9 +32,9 @@ export function createBuildableTsConfig(
   context: ExecutorContext
 ) {
   const tsConfig = resolve(projectRoot, 'tsconfig.json');
-  options.buildLibsFromSource ??= true;
+  options['buildLibsFromSource'] ??= true;
 
-  if (!options.buildLibsFromSource) {
+  if (!options['buildLibsFromSource']) {
     const { dependencies } = calculateProjectBuildableDependencies(
       context.taskGraph,
       context.projectGraph,

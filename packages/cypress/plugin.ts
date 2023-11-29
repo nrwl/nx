@@ -1,1 +1,1 @@
-export { createNodes } from './src/plugins/plugin';
+export { createNodes, createDependencies } from './src/plugins/plugin';

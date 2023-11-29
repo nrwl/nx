@@ -54,12 +54,16 @@ export function addVitest(
     export default defineVitestConfig({
     plugins: [nxViteTsPaths()],
     test: {
-        globals: true,
-        cache: {
+      globals: true,
+      cache: {
         dir: '${projectOffsetFromRoot}node_modules/.vitest',
-        },
-        include: ['${projectRoot}/src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-        environment: 'nuxt',
+      },
+      environment: 'nuxt',
+      include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      coverage: {
+        reportsDirectory: '${projectOffsetFromRoot}coverage/app5176218',
+        provider: 'v8',
+      },
     },
     });
     `

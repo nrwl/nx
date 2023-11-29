@@ -27,6 +27,10 @@ const UNIVERSAL_PACKAGES = [
  **/
 const NGUNIVERSAL_PACKAGE_REGEXP =
   /@nguniversal\/(common(\/engine)?|express-engine)/g;
+const serverExecutors = [
+  '@angular-devkit/build-angular:server',
+  '@nx/angular:webpack-server',
+];
 
 export default async function (tree: Tree) {
   const packageJson = readJson(tree, 'package.json');
@@ -40,7 +44,8 @@ export default async function (tree: Tree) {
   }
 
   const projects = await getProjectsFilteredByDependencies(tree, [
-    'npm:@angular/core',
+    'npm:@nguniversal/common',
+    'npm:@nguniversal/express-engine',
   ]);
   for (const { project } of projects) {
     if (project.projectType !== 'application') {
@@ -52,7 +57,7 @@ export default async function (tree: Tree) {
       string /** Output Path */
     >();
     for (const target of Object.values(project.targets ?? {})) {
-      if (target.executor !== '@angular-devkit/build-angular:server') {
+      if (!serverExecutors.includes(target.executor)) {
         continue;
       }
 
@@ -74,33 +79,36 @@ export default async function (tree: Tree) {
     const tokensFilePath = `${root}/express.tokens.ts`;
 
     visitNotIgnoredFiles(tree, root, (path) => {
-      const content = tree.read(path, 'utf8');
-      let updatedContent = content;
+      if (!path.endsWith('.ts') || path.endsWith('.d.ts')) {
+        return;
+      }
+
+      let content = tree.read(path, 'utf8');
+      if (!content.includes('@nguniversal/')) {
+        return;
+      }
 
       // Check if file is importing tokens
       if (content.includes('@nguniversal/express-engine/tokens')) {
         hasExpressTokens ||= true;
 
-        let tokensFileRelativePath: string = relative(
-          dirname(normalizePath(path)),
-          normalizePath(tokensFilePath)
+        let tokensFileRelativePath: string = normalizePath(
+          relative(dirname(path), tokensFilePath)
         );
 
         if (tokensFileRelativePath.charAt(0) !== '.') {
           tokensFileRelativePath = './' + tokensFileRelativePath;
         }
 
-        updatedContent = updatedContent.replaceAll(
+        content = content.replaceAll(
           '@nguniversal/express-engine/tokens',
           tokensFileRelativePath.slice(0, -3)
         );
       }
 
-      updatedContent = updatedContent.replaceAll(
-        NGUNIVERSAL_PACKAGE_REGEXP,
-        '@angular/ssr'
-      );
-      tree.write(path, updatedContent);
+      content = content.replaceAll(NGUNIVERSAL_PACKAGE_REGEXP, '@angular/ssr');
+
+      tree.write(path, content);
     });
 
     // Replace server file and add tokens file if needed

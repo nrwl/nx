@@ -59,7 +59,7 @@ export class TempFs {
   }
 
   async readFile(filePath: string): Promise<string> {
-    return await readFile(filePath, 'utf-8');
+    return await readFile(joinPathFragments(this.tempDir, filePath), 'utf-8');
   }
 
   removeFileSync(filePath: string): void {

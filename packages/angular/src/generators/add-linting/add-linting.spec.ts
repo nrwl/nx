@@ -72,12 +72,6 @@ describe('addLinting generator', () => {
     const project = readProjectConfiguration(tree, appProjectName);
     expect(project.targets.lint).toEqual({
       executor: '@nx/eslint:lint',
-      options: {
-        lintFilePatterns: [
-          `${appProjectRoot}/**/*.ts`,
-          `${appProjectRoot}/**/*.html`,
-        ],
-      },
       outputs: ['{options.outputFile}'],
     });
   });

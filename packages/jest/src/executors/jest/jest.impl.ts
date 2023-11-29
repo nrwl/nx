@@ -15,6 +15,8 @@ import {
 import { getSummary } from './summary';
 import { readFileSync } from 'fs';
 import type { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
+import { getRootTsConfigPath } from '@nx/js';
+
 process.env.NODE_ENV ??= 'test';
 
 export async function jestExecutor(
@@ -22,6 +24,7 @@ export async function jestExecutor(
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
   const config = await jestConfigParser(options, context);
+  process.env['TS_NODE_PROJECT'] ??= getRootTsConfigPath();
 
   const { results } = await runCLI(config, [options.jestConfig]);
 

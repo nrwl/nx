@@ -170,10 +170,6 @@ async function runCypress(
     options.browser = opts.browser;
   }
 
-  options.env = {
-    devServerTarget: opts.devServerTarget,
-  };
-
   if (opts.env) {
     options.env = {
       ...options.env,

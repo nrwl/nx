@@ -87,7 +87,9 @@ describe('resolveLocalPackageDependencies()', () => {
         tree,
         projectGraph,
         allProjects,
-        projectNameToPackageRootMap
+        projectNameToPackageRootMap,
+        (p) => p.data.root,
+        false
       );
 
       expect(result).toMatchInlineSnapshot(`
@@ -208,7 +210,9 @@ describe('resolveLocalPackageDependencies()', () => {
         tree,
         projectGraph,
         allProjects,
-        projectNameToPackageRootMap
+        projectNameToPackageRootMap,
+        (p) => p.data.root,
+        false
       );
 
       expect(result).toMatchInlineSnapshot(`
@@ -291,7 +295,9 @@ describe('resolveLocalPackageDependencies()', () => {
         tree,
         projectGraph,
         allProjects,
-        projectNameToPackageRootMap
+        projectNameToPackageRootMap,
+        (p) => p.data.root,
+        false
       );
 
       expect(result).toMatchInlineSnapshot(`
@@ -378,7 +384,9 @@ describe('resolveLocalPackageDependencies()', () => {
         tree,
         projectGraph,
         allProjects,
-        projectNameToPackageRootMap
+        projectNameToPackageRootMap,
+        (p) => p.data.root,
+        false
       );
 
       expect(result).toMatchInlineSnapshot(`

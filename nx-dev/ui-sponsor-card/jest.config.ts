@@ -8,4 +8,5 @@ export default {
   coverageDirectory: '../../coverage/nx-dev/ui-sponsor-card',
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   preset: '../../jest.preset.js',
+  testEnvironment: 'jsdom',
 };

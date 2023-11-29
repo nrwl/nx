@@ -26,6 +26,7 @@ export async function getLocalWorkspacePlugins(
       const capabilities = await getPluginCapabilities(
         workspaceRoot,
         packageJson.name,
+        projectsConfiguration.projects,
         includeRuntimeCapabilities
       );
       if (

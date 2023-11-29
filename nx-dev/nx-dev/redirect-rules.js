@@ -58,9 +58,12 @@ const schemaUrls = {
   '/angular/ng-packagr-lite': '/packages/angular/executors/ng-packagr-lite',
   '/angular/package': '/packages/angular/executors/package',
   '/angular/webpack-browser': '/packages/angular/executors/webpack-browser',
-  '/angular/webpack-server': '/packages/angular/executors/webpack-dev-server',
+  '/angular/webpack-server': '/packages/angular/executors/dev-server',
   '/packages/angular/executors/webpack-server':
-    '/packages/angular/executors/webpack-dev-server',
+    '/packages/angular/executors/dev-server',
+  '/angular/webpack-dev-server': '/packages/angular/executors/dev-server',
+  '/packages/angular/executors/webpack-dev-server':
+    '/packages/angular/executors/dev-server',
   '/react/application': '/packages/react/generators/application',
   '/react/component': '/packages/react/generators/component',
   '/react/component-cypress-spec':
@@ -395,7 +398,8 @@ const nxCloudUrls = {
   '/nx-cloud/private-cloud/kubernetes-setup':
     '/nx-cloud/private-cloud/get-started',
   '/recipes/ci': '/nx-cloud/recipes',
-  '/recipes/ci/ci-setup': '/nx-cloud/recipes/set-up/ci-setup',
+  '/recipes/ci/ci-setup': '/nx-cloud/recipes/set-up',
+  '/nx-cloud/recipes/set-up/ci-setup': '/nx-cloud/recipes/set-up',
   '/recipes/ci/monorepo-ci-azure': '/nx-cloud/recipes/set-up/monorepo-ci-azure',
   '/recipes/ci/monorepo-ci-circle-ci':
     '/nx-cloud/recipes/set-up/monorepo-ci-circle-ci',
@@ -437,6 +441,13 @@ const nxCloudUrls = {
     '/nx-cloud/recipes/on-premise/auth-saml-managed',
   '/nx-cloud/private-cloud/advanced-config':
     '/nx-cloud/recipes/on-premise/advanced-config',
+  '/concepts/dte': '/nx-cloud/concepts/dte',
+  '/nx-cloud/intro/nx-cloud-workflows': '/nx-cloud/features/nx-cloud-workflows',
+  '/nx-cloud/account': '/nx-cloud/recipes/security',
+  '/nx-cloud/account/google-auth': '/nx-cloud/recipes/security/google-auth',
+  '/nx-cloud/account/access-tokens': '/nx-cloud/recipes/security/access-tokens',
+  '/nx-cloud/account/scenarios': '/nx-cloud/concepts/scenarios',
+  '/nx-cloud/account/encryption': '/nx-cloud/concepts/encryption',
 };
 
 /**

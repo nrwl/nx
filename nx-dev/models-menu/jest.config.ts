@@ -2,7 +2,6 @@
 export default {
   displayName: 'nx-dev-models-menu',
   globals: {},
-  testEnvironment: 'node',
   transform: {
     '^.+\\.[tj]sx?$': [
       'ts-jest',

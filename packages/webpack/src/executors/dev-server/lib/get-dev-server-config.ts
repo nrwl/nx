@@ -1,36 +1,14 @@
-import { ExecutorContext, logger } from '@nx/devkit';
-import type { Configuration as WebpackConfiguration } from 'webpack';
+import { logger } from '@nx/devkit';
 import type { Configuration as WebpackDevServerConfiguration } from 'webpack-dev-server';
 import * as path from 'path';
 import { readFileSync } from 'fs';
-
-import { getWebpackConfig } from '../../webpack/lib/get-webpack-config';
 import { WebDevServerOptions } from '../schema';
 import { buildServePath } from './serve-path';
 import { NormalizedWebpackExecutorOptions } from '../../webpack/schema';
 
-export function getDevServerConfig(
-  context: ExecutorContext,
-  buildOptions: NormalizedWebpackExecutorOptions,
-  serveOptions: WebDevServerOptions
-): Partial<WebpackConfiguration> {
-  const workspaceRoot = context.root;
-  const webpackConfig = buildOptions.isolatedConfig
-    ? {}
-    : getWebpackConfig(context, buildOptions);
-
-  (webpackConfig as any).devServer = getDevServerPartial(
-    workspaceRoot,
-    serveOptions,
-    buildOptions
-  );
-
-  return webpackConfig as WebpackConfiguration;
-}
-
-function getDevServerPartial(
+export function getDevServerOptions(
   root: string,
-  options: WebDevServerOptions,
+  serveOptions: WebDevServerOptions,
   buildOptions: NormalizedWebpackExecutorOptions
 ): WebpackDevServerConfiguration {
   const servePath = buildServePath(buildOptions);
@@ -47,11 +25,13 @@ function getDevServerPartial(
   }
 
   const config: WebpackDevServerConfiguration = {
-    host: options.host,
-    port: options.port,
+    host: serveOptions.host,
+    port: serveOptions.port,
     headers: { 'Access-Control-Allow-Origin': '*' },
     historyApiFallback: {
-      index: `${servePath}${path.basename(buildOptions.index)}`,
+      index:
+        buildOptions.index &&
+        `${servePath}${path.basename(buildOptions.index)}`,
       disableDotRule: true,
       htmlAcceptHeaders: ['text/html', 'application/xhtml+xml'],
     },
@@ -66,7 +46,7 @@ function getDevServerPartial(
         )}`
       );
     },
-    open: options.open,
+    open: serveOptions.open,
     static: false,
     compress: scriptsOptimization || stylesOptimization,
     devMiddleware: {
@@ -74,31 +54,31 @@ function getDevServerPartial(
       stats: false,
     },
     client: {
-      webSocketURL: options.publicHost,
+      webSocketURL: serveOptions.publicHost,
       overlay: {
         errors: !(scriptsOptimization || stylesOptimization),
         warnings: false,
       },
     },
-    liveReload: options.hmr ? false : options.liveReload, // disable liveReload if hmr is enabled
-    hot: options.hmr,
+    liveReload: serveOptions.hmr ? false : serveOptions.liveReload, // disable liveReload if hmr is enabled
+    hot: serveOptions.hmr,
   };
 
-  if (options.ssl) {
+  if (serveOptions.ssl) {
     config.server = {
       type: 'https',
     };
-    if (options.sslKey && options.sslCert) {
-      config.server.options = getSslConfig(root, options);
+    if (serveOptions.sslKey && serveOptions.sslCert) {
+      config.server.options = getSslConfig(root, serveOptions);
     }
   }
 
-  if (options.proxyConfig) {
-    config.proxy = getProxyConfig(root, options);
+  if (serveOptions.proxyConfig) {
+    config.proxy = getProxyConfig(root, serveOptions);
   }
 
-  if (options.allowedHosts) {
-    config.allowedHosts = options.allowedHosts.split(',');
+  if (serveOptions.allowedHosts) {
+    config.allowedHosts = serveOptions.allowedHosts.split(',');
   }
 
   return config;

@@ -710,6 +710,28 @@ describe('params', () => {
       expect(params).toEqual({ a: './somepath' });
     });
 
+    it('should use relativeCwd to set workingDirectory', () => {
+      const params = {};
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            a: {
+              type: 'string',
+              $default: {
+                $source: 'workingDirectory',
+              },
+              visible: false,
+            },
+          },
+        },
+        null,
+        './somepath'
+      );
+
+      expect(params).toEqual({ a: './somepath' });
+    });
+
     it('should set unparsed overrides', () => {
       const params = { __overrides_unparsed__: ['one'] };
       convertSmartDefaultsIntoNamedParams(

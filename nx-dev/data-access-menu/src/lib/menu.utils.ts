@@ -82,8 +82,8 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
         (m) =>
           m.id === 'intro' ||
           m.id === 'features' ||
+          m.id === 'concepts' ||
           m.id === 'recipes' ||
-          m.id === 'account' ||
           m.id === 'reference'
       )
       .map((m) => {

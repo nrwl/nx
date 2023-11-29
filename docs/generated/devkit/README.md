@@ -25,6 +25,7 @@ It only uses language primitives and immutable objects
 
 - [CreateDependenciesContext](../../devkit/documents/CreateDependenciesContext)
 - [CreateNodesContext](../../devkit/documents/CreateNodesContext)
+- [CreateNodesResult](../../devkit/documents/CreateNodesResult)
 - [DefaultTasksRunnerOptions](../../devkit/documents/DefaultTasksRunnerOptions)
 - [ExecutorContext](../../devkit/documents/ExecutorContext)
 - [ExecutorsJson](../../devkit/documents/ExecutorsJson)

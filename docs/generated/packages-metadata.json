@@ -72,12 +72,12 @@
         "type": "executor"
       },
       {
-        "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
-        "file": "generated/packages/angular/executors/webpack-dev-server.json",
+        "description": "The `dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+        "file": "generated/packages/angular/executors/dev-server.json",
         "hidden": false,
-        "name": "webpack-dev-server",
-        "originalFilePath": "/packages/angular/src/builders/webpack-dev-server/schema.json",
-        "path": "angular/executors/webpack-dev-server",
+        "name": "dev-server",
+        "originalFilePath": "/packages/angular/src/builders/dev-server/schema.json",
+        "path": "angular/executors/dev-server",
         "type": "executor"
       },
       {

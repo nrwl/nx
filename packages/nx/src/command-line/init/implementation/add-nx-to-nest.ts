@@ -240,7 +240,7 @@ function createProjectJson(
       executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
       options: {
-        lintFilePatterns: ['src/**/*.ts', 'test/**/*.ts'],
+        lintFilePatterns: ['./src', './test'],
       },
     };
 

@@ -465,14 +465,6 @@ describe('Linter', () => {
           ];
           return json;
         });
-        updateJson(`libs/${mylib}/project.json`, (json) => {
-          json.targets.lint.options.lintFilePatterns = [
-            `libs/${mylib}/**/*.ts`,
-            `libs/${mylib}/project.json`,
-            `libs/${mylib}/package.json`,
-          ];
-          return json;
-        });
       });
 
       it('should report dependency check issues', () => {

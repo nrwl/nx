@@ -30,7 +30,8 @@
   "executors": "./executors.json",
   "generators": "./generators.json",
   "peerDependencies": {
-    "eslint": "^8.0.0"
+    "eslint": "^8.0.0",
+    "js-yaml": "4.1.0"
   },
   "dependencies": {
     "tslib": "^2.3.0",
@@ -40,6 +41,9 @@
   },
   "peerDependenciesMeta": {
     "eslint": {
+      "optional": true
+    },
+    "js-yaml": {
       "optional": true
     }
   },

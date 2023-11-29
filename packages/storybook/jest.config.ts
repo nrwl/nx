@@ -6,6 +6,5 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html', 'json'],
   globals: {},
   displayName: 'storybook',
-  testEnvironment: 'node',
   preset: '../../jest.preset.js',
 };

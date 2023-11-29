@@ -1,14 +1,9 @@
 use crate::native::tasks::types::HashInstruction;
-use crate::native::{
-    project_graph::types::ProjectGraph,
-    tasks::types::{Task, TaskGraph},
-};
+use crate::native::tasks::types::{Task, TaskGraph};
 
 pub(super) fn get_dep_output(
-    workspace_root: &str,
     task: &Task,
     task_graph: &TaskGraph,
-    project_graph: &ProjectGraph,
     dependent_tasks_output_files: &str,
     transitive: bool,
 ) -> anyhow::Result<Vec<HashInstruction>> {
@@ -29,10 +24,8 @@ pub(super) fn get_dep_output(
 
         if transitive {
             inputs.extend(get_dep_output(
-                workspace_root,
                 child_task,
                 task_graph,
-                project_graph,
                 dependent_tasks_output_files,
                 transitive,
             )?);

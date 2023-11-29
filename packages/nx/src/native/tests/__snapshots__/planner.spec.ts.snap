@@ -136,20 +136,3 @@ exports[`task planner should plan the task where the project has dependencies 1`
   ],
 }
 `;
-
-exports[`task planner should use targetDefaults from nx.json 1`] = `
-{
-  "parent:build": [
-    "AllExternalDependencies",
-    "child:!{projectRoot}/**/*.spec.ts",
-    "child:ProjectConfiguration",
-    "child:TsConfig",
-    "parent:!{projectRoot}/**/*.spec.ts",
-    "parent:ProjectConfiguration",
-    "parent:TsConfig",
-    "{workspaceRoot}/.gitignore",
-    "{workspaceRoot}/.nxignore",
-    "{workspaceRoot}/nx.json",
-  ],
-}
-`;

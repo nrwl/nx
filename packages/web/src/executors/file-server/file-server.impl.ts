@@ -97,12 +97,12 @@ function createFileWatcher(
       includeGlobalWorkspaceFiles: true,
       includeDependentProjects: true,
     },
-    async (error, { changedFiles }) => {
+    async (error, val) => {
       if (error === 'closed') {
         throw new Error('Watch error: Daemon closed the connection');
       } else if (error) {
         throw new Error(`Watch error: ${error?.message ?? 'Unknown'}`);
-      } else if (changedFiles.length > 0) {
+      } else if (val?.changedFiles.length > 0) {
         changeHandler();
       }
     }

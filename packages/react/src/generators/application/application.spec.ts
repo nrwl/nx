@@ -42,7 +42,7 @@ describe('app', () => {
 
       expect(projects.get('my-app').root).toEqual('my-app');
       expect(projects.get('my-app-e2e').root).toEqual('my-app-e2e');
-    });
+    }, 60_000);
 
     it('should add vite types to tsconfigs', async () => {
       await applicationGenerator(appTree, {
@@ -64,6 +64,8 @@ describe('app', () => {
         'vite/client',
         'node',
         'vitest',
+        '@nx/react/typings/cssmodule.d.ts',
+        '@nx/react/typings/image.d.ts',
       ]);
     });
 
@@ -189,7 +191,7 @@ describe('app', () => {
       expect(projectsConfigurations.get('my-app-e2e').root).toEqual(
         'my-dir/my-app-e2e'
       );
-    });
+    }, 35000);
 
     it('should update tags and implicit deps', async () => {
       await applicationGenerator(appTree, {
@@ -386,7 +388,6 @@ describe('app', () => {
       scripts: [],
       styles: ['my-app/src/styles.css'],
       tsConfig: 'my-app/tsconfig.app.json',
-      isolatedConfig: true,
       webpackConfig: 'my-app/webpack.config.js',
     });
     expect(targetConfig.build.configurations.production).toEqual({
@@ -471,9 +472,6 @@ describe('app', () => {
     expect(projectsConfigurations.get('my-app').targets.lint).toEqual({
       executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
-      options: {
-        lintFilePatterns: ['my-app/**/*.{ts,tsx,js,jsx}'],
-      },
     });
   });
 
@@ -494,11 +492,6 @@ describe('app', () => {
         .toMatchInlineSnapshot(`
         {
           "executor": "@nx/eslint:lint",
-          "options": {
-            "lintFilePatterns": [
-              "my-app/**/*.{ts,tsx,js,jsx}",
-            ],
-          },
           "outputs": [
             "{options.outputFile}",
           ],

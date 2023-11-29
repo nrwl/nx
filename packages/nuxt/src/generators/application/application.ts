@@ -54,6 +54,11 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       dot: '.',
       tmpl: '',
       style: options.style,
+      projectRoot: options.appProjectRoot,
+      buildDirectory: joinPathFragments(`dist/${options.appProjectRoot}/.nuxt`),
+      nitroOutputDir: joinPathFragments(
+        `dist/${options.appProjectRoot}/.output`
+      ),
     }
   );
 

@@ -76,6 +76,18 @@ describe('nx release - private JS packages', () => {
       json.dependencies[`@proj/${privatePkg}`] = '0.0.0';
       return json;
     });
+
+    /**
+     * Configure independent releases in the most minimal way possible so that we can publish
+     * the projects independently.
+     */
+    updateJson('nx.json', () => {
+      return {
+        release: {
+          projectsRelationship: 'independent',
+        },
+      };
+    });
   });
   afterAll(() => cleanupProject());
 
@@ -148,7 +160,7 @@ describe('nx release - private JS packages', () => {
 
       > nx run {private-project-name}:nx-release-publish
 
-      Skipping package "@proj/{private-project-name}" from project "{private-project-name}", because it has \`"private": true\` in {private-project-name}/package.json
+      Skipped package "@proj/{private-project-name}" from project "{private-project-name}", because it has \`"private": true\` in {private-project-name}/package.json
 
       > nx run {public-project-name}:nx-release-publish
 

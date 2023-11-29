@@ -7,7 +7,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
-import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
 import type { AddLintingGeneratorSchema } from './schema';
 import {
@@ -30,10 +29,6 @@ export async function addLintingGenerator(
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    eslintFilePatterns: [
-      mapLintPattern(options.projectRoot, 'ts', rootProject),
-      mapLintPattern(options.projectRoot, 'html', rootProject),
-    ],
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
     rootProject: rootProject,

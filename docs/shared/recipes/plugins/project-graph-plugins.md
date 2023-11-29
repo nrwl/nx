@@ -59,7 +59,7 @@ A simplified version of Nx's built-in `project.json` plugin is shown below, whic
 export const createNodes: CreateNodes = [
   '**/project.json',
   (projectConfigurationFile: string, opts, context: CreateNodesContext) => {
-    const projectConfiguration = readJson(projectConfigurationFile);
+    const projectConfiguration = readJsonFile(projectConfigurationFile);
     const root = dirname(projectConfigurationFile);
 
     return {

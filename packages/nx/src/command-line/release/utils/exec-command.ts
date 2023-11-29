@@ -13,8 +13,12 @@ export async function execCommand(
     });
 
     let stdout = '';
+    let stderr = '';
     child.stdout.on('data', (chunk) => {
       stdout += chunk;
+    });
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
     });
 
     child.on('error', (error) => {
@@ -23,7 +27,10 @@ export async function execCommand(
 
     child.on('close', (code) => {
       if (code !== 0) {
-        reject(new Error(`Command failed with exit code ${code}`));
+        reject(
+          stderr ||
+            `Unknown error occurred while running "${cmd} ${args.join(' ')}"`
+        );
       } else {
         resolve(stdout);
       }

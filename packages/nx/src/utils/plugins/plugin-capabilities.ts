@@ -13,6 +13,7 @@ import {
 } from '../nx-plugin';
 import { getNxRequirePaths } from '../installation-directory';
 import { PackageJson } from '../package-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -34,15 +35,18 @@ function tryGetCollection<T extends object>(
 export async function getPluginCapabilities(
   workspaceRoot: string,
   pluginName: string,
+  projects: Record<string, ProjectConfiguration>,
   includeRuntimeCapabilities = false
 ): Promise<PluginCapabilities | null> {
   try {
-    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
-      pluginName,
-      getNxRequirePaths(workspaceRoot)
-    );
+    const { json: packageJson, path: packageJsonPath } =
+      await readPluginPackageJson(
+        pluginName,
+        projects,
+        getNxRequirePaths(workspaceRoot)
+      );
     const pluginModule = includeRuntimeCapabilities
-      ? await tryGetModule(packageJson, workspaceRoot)
+      ? await tryGetModule(packageJson, workspaceRoot, projects)
       : ({} as Record<string, unknown>);
     return {
       name: pluginName,
@@ -95,7 +99,8 @@ export async function getPluginCapabilities(
 
 async function tryGetModule(
   packageJson: PackageJson,
-  workspaceRoot: string
+  workspaceRoot: string,
+  projects: Record<string, ProjectConfiguration>
 ): Promise<NxPlugin | null> {
   try {
     return packageJson.generators ??
@@ -107,6 +112,7 @@ async function tryGetModule(
           await loadNxPluginAsync(
             packageJson.name,
             getNxRequirePaths(workspaceRoot),
+            projects,
             workspaceRoot
           )
         ).plugin
@@ -118,8 +124,15 @@ async function tryGetModule(
   }
 }
 
-export async function listPluginCapabilities(pluginName: string) {
-  const plugin = await getPluginCapabilities(workspaceRoot, pluginName);
+export async function listPluginCapabilities(
+  pluginName: string,
+  projects: Record<string, ProjectConfiguration>
+) {
+  const plugin = await getPluginCapabilities(
+    workspaceRoot,
+    pluginName,
+    projects
+  );
 
   if (!plugin) {
     const pmc = getPackageManagerCommand();

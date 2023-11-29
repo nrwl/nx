@@ -1,11 +1,12 @@
 import { ExecutorContext, joinPathFragments } from '@nx/devkit';
 import { NuxtServeExecutorOptions } from './schema';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-
-// Required because nuxi is ESM package.
-export function loadNuxiDynamicImport() {
-  return Function('return import("nuxi")')() as Promise<typeof import('nuxi')>;
-}
+import {
+  getCommonNuxtConfigOverrides,
+  loadNuxiDynamicImport,
+  loadNuxtKitDynamicImport,
+} from '../../utils/executor-utils';
+import { NuxtOptions } from '@nuxt/schema';
 
 export async function* nuxtServeExecutor(
   options: NuxtServeExecutorOptions,
@@ -13,18 +14,29 @@ export async function* nuxtServeExecutor(
 ) {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
+
+  const { loadNuxtConfig } = await loadNuxtKitDynamicImport();
+  const config = await loadNuxtConfig({
+    cwd: joinPathFragments(context.root, projectRoot),
+  });
+
   yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
     async ({ next, error }) => {
       try {
         const { runCommand } = await loadNuxiDynamicImport();
+
         await runCommand('dev', [projectRoot], {
-          overrides: getConfigOverrides(options, context.root, projectRoot),
+          // Options passed through CLI or project.json get precedence over nuxt.config.ts
+          overrides: getConfigOverrides(options, config, projectRoot, context),
         });
         next({
           success: true,
-          baseUrl: `${options.https ? 'https' : 'http'}://${
-            options.host ?? 'localhost'
-          }:${options.port ?? '4200'}`,
+          // Options passed through CLI or project.json get precedence over nuxt.config.ts
+          baseUrl: `${
+            options.https ? 'https' : config.devServer.https ? 'https' : 'http'
+          }://${options.host ?? config.devServer.host ?? 'localhost'}:${
+            options.port ?? config.devServer.port ?? '4200'
+          }`,
         });
       } catch (err) {
         console.error(err);
@@ -36,22 +48,24 @@ export async function* nuxtServeExecutor(
 
 function getConfigOverrides(
   options: NuxtServeExecutorOptions,
-  workspaceRoot: string,
-  projectRoot: string
+  config: NuxtOptions,
+  projectRoot: string,
+  context: ExecutorContext
 ): { [key: string]: any } {
-  const json: { [key: string]: any } = {
-    workspaceDir: workspaceRoot,
-    typescript: {
-      typeCheck: true,
-      tsConfig: {
-        extends: joinPathFragments(
-          workspaceRoot,
-          projectRoot,
-          'tsconfig.app.json'
-        ),
-      },
-    },
-  };
+  let outputPath = '';
+  for (const [_targetName, targetConfig] of Object.entries(
+    context.projectsConfigurations.projects[context.projectName].targets
+  )) {
+    if (targetConfig.executor === '@nx/nuxt:build') {
+      outputPath = targetConfig.options.outputPath;
+    }
+  }
+  const json = getCommonNuxtConfigOverrides(
+    config,
+    context.root,
+    projectRoot,
+    outputPath
+  );
 
   if (options.debug !== undefined) {
     json.debug = options.debug;

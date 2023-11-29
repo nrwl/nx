@@ -5,40 +5,54 @@ import {
   ProjectGraph,
 } from '../config/project-graph';
 import {
-  createProjectRootMappingsFromProjectConfigurations,
-  findProjectForPath,
-} from './utils/find-project-for-path';
-import {
   ProjectConfiguration,
   ProjectsConfigurations,
 } from '../config/workspace-json-project-json';
 import { daemonClient } from '../daemon/client/client';
-import { readProjectsConfigurationFromProjectGraph } from './project-graph';
-import { getAllFileDataInContext } from '../utils/workspace-context';
+import { NxWorkspaceFilesExternals } from '../native';
+import {
+  getAllFileDataInContext,
+  updateProjectFiles,
+} from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
+import { readProjectsConfigurationFromProjectGraph } from './project-graph';
+import { buildAllWorkspaceFiles } from './utils/build-all-workspace-files';
+import {
+  createProjectRootMappingsFromProjectConfigurations,
+  findProjectForPath,
+} from './utils/find-project-for-path';
+
+export interface WorkspaceFileMap {
+  allWorkspaceFiles: FileData[];
+  fileMap: FileMap;
+}
 
 export async function createProjectFileMapUsingProjectGraph(
   graph: ProjectGraph
 ): Promise<ProjectFileMap> {
+  return (await createFileMapUsingProjectGraph(graph)).fileMap.projectFileMap;
+}
+
+// TODO: refactor this to pull straight from the rust context instead of creating the file map in JS
+export async function createFileMapUsingProjectGraph(
+  graph: ProjectGraph
+): Promise<WorkspaceFileMap> {
   const configs = readProjectsConfigurationFromProjectGraph(graph);
 
-  let files;
+  let files: FileData[];
   if (daemonClient.enabled()) {
     files = await daemonClient.getAllFileData();
   } else {
     files = getAllFileDataInContext(workspaceRoot);
   }
 
-  return createFileMap(configs, files).fileMap.projectFileMap;
+  return createFileMap(configs, files);
 }
 
 export function createFileMap(
   projectsConfigurations: ProjectsConfigurations,
   allWorkspaceFiles: FileData[]
-): {
-  allWorkspaceFiles: FileData[];
-  fileMap: FileMap;
-} {
+): WorkspaceFileMap {
   const projectFileMap: ProjectFileMap = {};
   const projectRootMappings =
     createProjectRootMappingsFromProjectConfigurations(
@@ -71,72 +85,24 @@ export function createFileMap(
 
 export function updateFileMap(
   projectsConfigurations: Record<string, ProjectConfiguration>,
-  { projectFileMap, nonProjectFiles }: FileMap,
-  allWorkspaceFiles: FileData[],
-  updatedFiles: Map<string, string>,
+  rustReferences: NxWorkspaceFilesExternals,
+  updatedFiles: Record<string, string>,
   deletedFiles: string[]
-): { fileMap: FileMap; allWorkspaceFiles: FileData[] } {
-  const projectRootMappings =
-    createProjectRootMappingsFromProjectConfigurations(projectsConfigurations);
-  let nonProjectFilesMap = new Map(nonProjectFiles.map((f) => [f.file, f]));
-
-  for (const f of updatedFiles.keys()) {
-    const project = findProjectForPath(f, projectRootMappings);
-    if (project) {
-      const matchingProjectFiles = projectFileMap[project] ?? [];
-      if (matchingProjectFiles) {
-        const fileData: FileData = matchingProjectFiles.find(
-          (t) => t.file === f
-        );
-        if (fileData) {
-          fileData.hash = updatedFiles.get(f);
-        } else {
-          matchingProjectFiles.push({
-            file: f,
-            hash: updatedFiles.get(f),
-          });
-        }
-      }
-    } else {
-      const hash = updatedFiles.get(f);
-      const entry = nonProjectFilesMap.get(f) ?? { file: f, hash };
-      entry.hash = hash;
-      nonProjectFilesMap.set(f, entry);
-    }
-
-    const fileData: FileData = allWorkspaceFiles.find((t) => t.file === f);
-    if (fileData) {
-      fileData.hash = updatedFiles.get(f);
-    } else {
-      allWorkspaceFiles.push({
-        file: f,
-        hash: updatedFiles.get(f),
-      });
-    }
-  }
-
-  for (const f of deletedFiles) {
-    const matchingProjectFiles =
-      projectFileMap[findProjectForPath(f, projectRootMappings)] ?? [];
-    if (matchingProjectFiles) {
-      const index = matchingProjectFiles.findIndex((t) => t.file === f);
-      if (index > -1) {
-        matchingProjectFiles.splice(index, 1);
-      }
-    }
-    if (nonProjectFilesMap.has(f)) {
-      nonProjectFilesMap.delete(f);
-    }
-    const index = allWorkspaceFiles.findIndex((t) => t.file === f);
-    if (index > -1) {
-      allWorkspaceFiles.splice(index, 1);
-    }
-  }
+) {
+  const updates = updateProjectFiles(
+    Object.fromEntries(
+      createProjectRootMappingsFromProjectConfigurations(projectsConfigurations)
+    ),
+    rustReferences,
+    updatedFiles,
+    deletedFiles
+  );
   return {
-    fileMap: {
-      projectFileMap,
-      nonProjectFiles: Array.from(nonProjectFilesMap.values()),
-    },
-    allWorkspaceFiles,
+    fileMap: updates.fileMap,
+    allWorkspaceFiles: buildAllWorkspaceFiles(
+      updates.fileMap.projectFileMap,
+      updates.fileMap.nonProjectFiles
+    ),
+    rustReferences: updates.externalReferences,
   };
 }

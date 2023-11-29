@@ -91,6 +91,15 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "17.2.0": {
+      "version": "17.2.0-beta.2",
+      "packages": {
+        "@types/node": {
+          "version": "18.16.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

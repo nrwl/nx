@@ -74,6 +74,7 @@ export async function hostInternal(tree: Tree, schema: Schema) {
     prefix: options.prefix,
     typescriptConfiguration,
     standalone: options.standalone,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 
   let installTasks = [appInstallTask];

@@ -496,9 +496,6 @@ describe('lib', () => {
         expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
           executor: '@nx/eslint:lint',
           outputs: ['{options.outputFile}'],
-          options: {
-            lintFilePatterns: ['my-lib/**/*.ts', 'my-lib/package.json'],
-          },
         });
       });
 
@@ -569,12 +566,6 @@ describe('lib', () => {
         expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
           executor: '@nx/eslint:lint',
           outputs: ['{options.outputFile}'],
-          options: {
-            lintFilePatterns: [
-              'my-dir/my-lib/**/*.ts',
-              'my-dir/my-lib/package.json',
-            ],
-          },
         });
       });
 
@@ -711,10 +702,6 @@ describe('lib', () => {
           js: true,
           projectNameAndRootFormat: 'as-provided',
         });
-        expect(
-          readProjectConfiguration(tree, 'my-lib').targets.lint.options
-            .lintFilePatterns
-        ).toEqual(['my-dir/my-lib/**/*.js', 'my-dir/my-lib/package.json']);
         expect(readJson(tree, 'my-dir/my-lib/.eslintrc.json'))
           .toMatchInlineSnapshot(`
           {

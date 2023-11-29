@@ -65,6 +65,7 @@ export async function vitestGenerator(
           ],
           imports: [`import react from '@vitejs/plugin-react'`],
           plugins: ['react()'],
+          coverageProvider: schema.coverageProvider,
         },
         true
       );

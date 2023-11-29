@@ -149,6 +149,8 @@ You can also statically highlight a set of lines (the user won't be able to chan
 ‎```
 ````
 
+You can also specify ranges like `highlightLines=[2,3,"8-10"]`.
+
 #### Terminal command
 
 To display a terminal command, use:

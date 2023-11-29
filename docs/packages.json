@@ -10,7 +10,7 @@
         "ng-packagr-lite",
         "package",
         "webpack-browser",
-        "webpack-dev-server",
+        "dev-server",
         "webpack-server",
         "module-federation-dev-server",
         "module-federation-dev-ssr"
