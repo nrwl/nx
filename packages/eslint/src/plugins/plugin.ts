@@ -30,6 +30,10 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     options = normalizeOptions(options);
     const projectName = basename(projectRoot);
 
+    if (options.excludedProjects.includes(projectName)) {
+      return {};
+    }
+
     const rootEslintConfigFile = findBaseEslintFile(context.workspaceRoot);
 
     return {
