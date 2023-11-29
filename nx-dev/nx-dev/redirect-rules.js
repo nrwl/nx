@@ -398,7 +398,8 @@ const nxCloudUrls = {
   '/nx-cloud/private-cloud/kubernetes-setup':
     '/nx-cloud/private-cloud/get-started',
   '/recipes/ci': '/nx-cloud/recipes',
-  '/recipes/ci/ci-setup': '/nx-cloud/recipes/set-up/ci-setup',
+  '/recipes/ci/ci-setup': '/nx-cloud/recipes/set-up',
+  '/nx-cloud/recipes/set-up/ci-setup': '/nx-cloud/recipes/set-up',
   '/recipes/ci/monorepo-ci-azure': '/nx-cloud/recipes/set-up/monorepo-ci-azure',
   '/recipes/ci/monorepo-ci-circle-ci':
     '/nx-cloud/recipes/set-up/monorepo-ci-circle-ci',

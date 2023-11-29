@@ -261,7 +261,7 @@ function buildCypressTargets(
     const componentTestingTargetDefaults = readTargetDefaultsForTarget(
       options.componentTestingTargetName,
       context.nxJsonConfiguration.targetDefaults,
-      '@nx/cypress:cypress'
+      'nx:run-commands'
     );
 
     // This will not override the e2e target if it is the same

@@ -1,4 +1,4 @@
-import { Tree, readJson, NxJsonConfiguration, updateJson } from '@nx/devkit';
+import { readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { webpackInitGenerator } from './init';

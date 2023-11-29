@@ -5706,6 +5706,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Reduce Waste in CI",
+            "path": "/nx-cloud/concepts/reduce-waste",
+            "id": "reduce-waste",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Improve Worst Case CI Times",
             "path": "/nx-cloud/concepts/dte",
             "id": "dte",
@@ -5730,6 +5738,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reduce Waste in CI",
+        "path": "/nx-cloud/concepts/reduce-waste",
+        "id": "reduce-waste",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -5768,14 +5784,6 @@
             "id": "set-up",
             "isExternal": false,
             "children": [
-              {
-                "name": "CI Setup",
-                "path": "/nx-cloud/recipes/set-up/ci-setup",
-                "id": "ci-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
               {
                 "name": "Setting up Azure Pipelines",
                 "path": "/nx-cloud/recipes/set-up/monorepo-ci-azure",
@@ -5993,14 +6001,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "CI Setup",
-            "path": "/nx-cloud/recipes/set-up/ci-setup",
-            "id": "ci-setup",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Setting up Azure Pipelines",
             "path": "/nx-cloud/recipes/set-up/monorepo-ci-azure",
             "id": "monorepo-ci-azure",
@@ -6049,14 +6049,6 @@
             "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "CI Setup",
-        "path": "/nx-cloud/recipes/set-up/ci-setup",
-        "id": "ci-setup",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {

@@ -1702,6 +1702,12 @@
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
             {
+              "name": "Reduce Waste in CI",
+              "tags": [],
+              "id": "reduce-waste",
+              "file": "nx-cloud/concepts/reduce-waste"
+            },
+            {
               "name": "Improve Worst Case CI Times",
               "tags": ["distribute-task-execution"],
               "id": "dte",
@@ -1728,13 +1734,8 @@
               "name": "Set Up CI",
               "id": "set-up",
               "description": "Learn how to set up Nx Cloud for your workspace.",
+              "tags": ["distribute-task-execution"],
               "itemList": [
-                {
-                  "name": "CI Setup",
-                  "id": "ci-setup",
-                  "tags": ["distribute-task-execution"],
-                  "file": "shared/ci-overview"
-                },
                 {
                   "name": "Setting up Azure Pipelines",
                   "id": "monorepo-ci-azure",
