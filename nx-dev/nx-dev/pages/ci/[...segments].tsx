@@ -6,7 +6,7 @@ import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
-import { nxCloudApi } from '../../lib/cloud.api';
+import { ciApi } from '../../lib/ci.api';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { tagsApi } from '../../lib/tags.api';
@@ -85,7 +85,7 @@ export default function Pages({
 
 export const getStaticPaths: GetStaticPaths = () => {
   return {
-    paths: nxCloudApi.getSlugsStaticDocumentPaths(),
+    paths: ciApi.getSlugsStaticDocumentPaths(),
     fallback: 'blocking',
   };
 };
@@ -95,8 +95,8 @@ export const getStaticProps: GetStaticProps = async ({
   params: { segments: string[] };
 }) => {
   try {
-    const segments = ['nx-cloud', ...params.segments];
-    const document = nxCloudApi.getDocument(segments);
+    const segments = ['ci', ...params.segments];
+    const document = ciApi.getDocument(segments);
     return {
       props: {
         document,
@@ -106,7 +106,7 @@ export const getStaticProps: GetStaticProps = async ({
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + segments.join('/')), // Remove currently displayed item
-        menu: menusApi.getMenu('cloud', ''),
+        menu: menusApi.getMenu('ci', ''),
       },
     };
   } catch (e) {

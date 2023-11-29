@@ -206,14 +206,14 @@
               "name": "Use Remote Caching",
               "id": "remote-cache",
               "file": "",
-              "path": "/nx-cloud/features/remote-cache",
+              "path": "/ci/features/remote-cache",
               "isExternal": true
             },
             {
               "name": "Distribute Task Execution",
               "id": "distribute-task-execution",
               "file": "",
-              "path": "/nx-cloud/features/distribute-task-execution",
+              "path": "/ci/features/distribute-task-execution",
               "isExternal": true
             },
             {
@@ -1448,11 +1448,11 @@
           "description": "Links to other pieces of documentation",
           "itemList": [
             {
-              "name": "Nx Cloud Documentation",
-              "id": "nx-cloud-documentation",
+              "name": "CI Documentation",
+              "id": "ci",
               "file": "",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "path": "/nx-cloud/intro/ci-with-nx",
+              "path": "/ci/intro/ci-with-nx",
               "isExternal": true
             },
             {
@@ -1624,8 +1624,8 @@
       ]
     },
     {
-      "name": "Nx Cloud",
-      "id": "nx-cloud-documentation",
+      "name": "CI",
+      "id": "ci",
       "description": "Learn how to enable Distributed Tasks Executions, remote caching and more.",
       "itemList": [
         {

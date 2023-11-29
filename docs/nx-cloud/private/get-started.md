@@ -47,7 +47,7 @@ Once you let us know you'd like this option, depending on the agreed requirement
 
 If you would like to host NxCloud yourself, within your organization's infrastructure, the easiest way to set it up is as a self-contained VM.
 
-Refer to our ["Self-contained VM" guide](/nx-cloud/recipes/on-premise/ami-setup) for instructions on running NxCloud on Amazon EC2.
+Refer to our ["Self-contained VM" guide](/ci/recipes/on-premise/ami-setup) for instructions on running NxCloud on Amazon EC2.
 
 #### Multi-node setup with Kubernetes
 
@@ -57,11 +57,11 @@ We do offer, however, a multi-node Kubernetes setup, that is deployed via Helm. 
 
 ## Resources
 
-- [GitHub PR Integration](/nx-cloud/recipes/source-control-integration/github)
-- [Auth (Basic)](/nx-cloud/recipes/on-premise/auth-single-admin)
-- [GitHub Auth](/nx-cloud/recipes/on-premise/auth-github)
-- [GitLab Auth](/nx-cloud/recipes/on-premise/auth-gitlab)
-- [BitBucket Auth](/nx-cloud/recipes/on-premise/auth-bitbucket)
-- [SAML Auth](/nx-cloud/recipes/on-premise/auth-saml)
-- [SAML Auth Managed Cloud](/nx-cloud/recipes/on-premise/auth-saml-managed)
-- [Advanced Configuration](/nx-cloud/recipes/on-premise/advanced-config)
+- [GitHub PR Integration](/ci/recipes/source-control-integration/github)
+- [Auth (Basic)](/ci/recipes/on-premise/auth-single-admin)
+- [GitHub Auth](/ci/recipes/on-premise/auth-github)
+- [GitLab Auth](/ci/recipes/on-premise/auth-gitlab)
+- [BitBucket Auth](/ci/recipes/on-premise/auth-bitbucket)
+- [SAML Auth](/ci/recipes/on-premise/auth-saml)
+- [SAML Auth Managed Cloud](/ci/recipes/on-premise/auth-saml-managed)
+- [Advanced Configuration](/ci/recipes/on-premise/advanced-config)
