@@ -53,6 +53,7 @@
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
     "./src/executors/*.impl": "./src/executors/*.impl.js",
     "./src/executors/*/compat": "./src/executors/*/compat.js",
-    "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js"
+    "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js",
+    "./plugins/rollup-replace-files.plugin": "./plugins/rollup-replace-files.plugin.js"
   }
 }
