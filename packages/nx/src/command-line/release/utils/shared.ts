@@ -1,8 +1,10 @@
 import { prerelease } from 'semver';
+import { ProjectGraph } from '../../../config/project-graph';
+import { createFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 import { interpolate } from '../../../tasks-runner/utils';
 import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { gitAdd, gitCommit } from './git';
+import { GitCommit, gitAdd, gitCommit } from './git';
 
 export type VersionData = Record<
   string,
@@ -214,4 +216,34 @@ export function handleDuplicateGitTags(gitTagValues: string[]): void {
     });
     process.exit(1);
   }
+}
+
+export async function getCommitsRelevantToProjects(
+  projectGraph: ProjectGraph,
+  commits: GitCommit[],
+  projects: string[]
+): Promise<GitCommit[]> {
+  const { fileMap } = await createFileMapUsingProjectGraph(projectGraph);
+  const filesInReleaseGroup = new Set<string>(
+    projects.reduce(
+      (files, p) => [...files, ...fileMap.projectFileMap[p].map((f) => f.file)],
+      [] as string[]
+    )
+  );
+
+  /**
+   * The relevant commits are those that either:
+   * - touch project files which are contained within the list of projects directly
+   * - touch non-project files and the commit is not scoped
+   */
+  return commits.filter((c) =>
+    c.affectedFiles.some(
+      (f) =>
+        filesInReleaseGroup.has(f) ||
+        (!c.scope &&
+          fileMap.nonProjectFiles.some(
+            (nonProjectFile) => nonProjectFile.file === f
+          ))
+    )
+  );
 }

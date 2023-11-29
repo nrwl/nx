@@ -3,6 +3,8 @@ import {
   RepoSlug,
   formatReferences,
 } from '../src/command-line/release/utils/github';
+import { getCommitsRelevantToProjects } from '../src/command-line/release/utils/shared';
+import type { ProjectGraph } from '../src/config/project-graph';
 
 // axios types and values don't seem to match
 import _axios = require('axios');
@@ -19,6 +21,7 @@ export type ChangelogRenderOptions = Record<string, unknown>;
  * and returns a string, or a Promise of a string of changelog contents (usually markdown).
  *
  * @param {Object} config The configuration object for the ChangelogRenderer
+ * @param {ProjectGraph} config.projectGraph The project graph for the workspace
  * @param {GitCommit[]} config.commits The collection of extracted commits to generate a changelog for
  * @param {string} config.releaseVersion The version that is being released
  * @param {string | null} config.project The name of specific project to generate a changelog for, or `null` if the overall workspace changelog
@@ -26,6 +29,7 @@ export type ChangelogRenderOptions = Record<string, unknown>;
  * @param {ChangelogRenderOptions} config.changelogRenderOptions The options specific to the ChangelogRenderer implementation
  */
 export type ChangelogRenderer = (config: {
+  projectGraph: ProjectGraph;
   commits: GitCommit[];
   releaseVersion: string;
   project: string | null;
@@ -51,6 +55,7 @@ export interface DefaultChangelogRenderOptions extends ChangelogRenderOptions {
  * from the given commits and other metadata.
  */
 const defaultChangelogRenderer: ChangelogRenderer = async ({
+  projectGraph,
   commits,
   releaseVersion,
   project,
@@ -129,13 +134,14 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     }
   } else {
     // project level changelog
-    const scopeGroups = groupBy(commits, 'scope');
+    const relevantCommits = await getCommitsRelevantToProjects(
+      projectGraph,
+      commits,
+      [project]
+    );
 
-    // Treat unscoped commits as "global", and therefore also relevant to include in the project level changelog
-    const unscopedCommits = scopeGroups[''] || [];
-
-    // Generating for a named project, but that project has no changes in the current set of commits, exit early
-    if (!scopeGroups[project] && unscopedCommits.length === 0) {
+    // Generating for a named project, but that project has no relevant changes in the current set of commits, exit early
+    if (relevantCommits.length === 0) {
       if (entryWhenNoChanges) {
         markdownLines.push(
           '',
@@ -149,7 +155,8 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     markdownLines.push('', `## ${releaseVersion}`, '');
 
     const typeGroups = groupBy(
-      [...(scopeGroups[project] || []), ...unscopedCommits],
+      // Sort the relevant commits to have the unscoped commits first, before grouping by type
+      relevantCommits.sort((a, b) => (b.scope ? 1 : 0) - (a.scope ? 1 : 0)),
       'type'
     );
     for (const type of Object.keys(commitTypes)) {
