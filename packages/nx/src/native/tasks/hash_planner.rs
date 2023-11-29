@@ -2,7 +2,7 @@ use crate::native::tasks::{
     dep_outputs::get_dep_output,
     types::{HashInstruction, TaskGraph},
 };
-use crate::native::types::{Input, NxJson};
+use crate::native::types::{Input, NxJsonNapi};
 use crate::native::{
     project_graph::types::ProjectGraph,
     tasks::{inputs::SplitInputs, types::Task},
@@ -20,14 +20,14 @@ use crate::native::utils::find_matching_projects;
 
 #[napi]
 pub struct HashPlanner {
-    nx_json: NxJson,
+    nx_json: NxJsonNapi,
     project_graph: External<ProjectGraph>,
 }
 
 #[napi]
 impl HashPlanner {
     #[napi(constructor)]
-    pub fn new(nx_json: NxJson, project_graph: External<ProjectGraph>) -> Self {
+    pub fn new(nx_json: NxJsonNapi, project_graph: External<ProjectGraph>) -> Self {
         Self {
             nx_json,
             project_graph,

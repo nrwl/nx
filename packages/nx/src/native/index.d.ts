@@ -104,7 +104,7 @@ export interface DepsOutputsInput {
   transitive?: boolean
 }
 /** Stripped version of the NxJson interface for use in rust */
-export interface NxJson {
+export interface NxJsonNapi {
   namedInputs?: Record<string, Array<JsInputs>>
 }
 export const enum EventType {
@@ -146,7 +146,7 @@ export class ImportResult {
   staticImportExpressions: Array<string>
 }
 export class HashPlanner {
-  constructor(nxJson: NxJson, projectGraph: ExternalObject<ProjectGraph>)
+  constructor(nxJson: NxJsonNapi, projectGraph: ExternalObject<ProjectGraph>)
   getPlans(taskIds: Array<string>, taskGraph: TaskGraph): Record<string, string[]>
   getPlansReference(taskIds: Array<string>, taskGraph: TaskGraph): JsExternal
 }

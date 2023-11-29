@@ -8,7 +8,15 @@ use tracing::trace;
 
 use crate::native::glob::build_glob_set;
 
+use crate::native::utils::{get_mod_time, Normalize};
 use walkdir::WalkDir;
+
+#[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
+pub struct NxFile {
+    pub full_path: String,
+    pub normalized_path: String,
+    pub mod_time: i64,
+}
 
 /// Walks the directory in a single thread and does not ignore any files
 /// Should only be used for small directories, and not traversing the whole workspace
@@ -36,7 +44,7 @@ where
 }
 
 /// Walk the directory and ignore files from .gitignore and .nxignore
-pub fn nx_walker<P>(directory: P) -> impl Iterator<Item = (PathBuf, PathBuf)>
+pub fn nx_walker<P>(directory: P) -> impl Iterator<Item = NxFile>
 where
     P: AsRef<Path>,
 {
@@ -80,8 +88,16 @@ where
                 return Continue;
             };
 
-            tx.send((dir_entry.path().to_owned(), file_path.to_owned()))
-                .ok();
+            let Ok(metadata) = dir_entry.metadata() else {
+                return Continue;
+            };
+
+            tx.send(NxFile {
+                full_path: String::from(dir_entry.path().to_string_lossy()),
+                normalized_path: file_path.to_normalized_string(),
+                mod_time: get_mod_time(&metadata),
+            })
+            .ok();
 
             Continue
         })
@@ -99,8 +115,6 @@ mod test {
 
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
-
-    use crate::native::utils::Normalize;
 
     use super::*;
 
@@ -133,6 +147,10 @@ mod test {
 
         let mut content = nx_walker(&temp_dir).collect::<Vec<_>>();
         content.sort();
+        let content = content
+            .into_iter()
+            .map(|f| (f.full_path.into(), f.normalized_path.into()))
+            .collect::<Vec<_>>();
         assert_eq!(
             content,
             vec![
@@ -173,7 +191,12 @@ nested/child-two/
 
         let mut file_names = nx_walker(temp_dir)
             .into_iter()
-            .map(|(_, p)| p.to_normalized_string())
+            .map(
+                |NxFile {
+                     normalized_path: relative_path,
+                     ..
+                 }| relative_path,
+            )
             .collect::<Vec<_>>();
 
         file_names.sort();

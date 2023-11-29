@@ -1,14 +1,13 @@
 use napi::bindgen_prelude::External;
 use std::collections::HashMap;
 
-use crate::native::hasher::{hash, hash_file_path};
+use crate::native::hasher::hash;
 use crate::native::utils::Normalize;
 use rayon::prelude::*;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::thread::available_parallelism;
-use std::{cmp, thread};
+use std::thread;
 
 use crate::native::logger::enable_logger;
 use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
@@ -16,11 +15,12 @@ use crate::native::types::FileData;
 use parking_lot::{Condvar, Mutex};
 use tracing::{trace, warn};
 
-use crate::native::walker::nx_walker;
+use crate::native::workspace::files_archive::{read_files_archive, write_files_archive};
+use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
-use crate::native::workspace::{config_files, workspace_files, types::NxWorkspaceFiles};
+use crate::native::workspace::{config_files, types::NxWorkspaceFiles, workspace_files};
 
 #[napi]
 pub struct WorkspaceContext {
@@ -42,6 +42,8 @@ impl FilesWorker {
             return FilesWorker(None);
         }
 
+        let archived_files = read_files_archive(workspace_root);
+
         let files_lock = Arc::new((Mutex::new(Vec::new()), Condvar::new()));
         let files_lock_clone = Arc::clone(&files_lock);
         let workspace_root = workspace_root.to_owned();
@@ -50,38 +52,27 @@ impl FilesWorker {
             trace!("locking files");
             let (lock, cvar) = &*files_lock_clone;
             let mut workspace_files = lock.lock();
-
-            let files = nx_walker(workspace_root).collect::<Vec<_>>();
-            let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
-            let chunks = files.len() / num_parallelism;
-
             let now = std::time::Instant::now();
-
-            let mut files = if chunks < num_parallelism {
-                files
-                    .iter()
-                    .filter_map(|(full_path, path)| {
-                        hash_file_path(full_path).map(|hash| (path.to_owned(), hash))
-                    })
-                    .collect::<Vec<_>>()
+            let new_archived_files = if let Some(archived_files) = archived_files {
+                selective_files_hash(&workspace_root, archived_files)
             } else {
-                files
-                    .par_chunks(chunks)
-                    .flat_map_iter(|chunks| {
-                        chunks.iter().filter_map(|(full_path, path)| {
-                            hash_file_path(full_path).map(|hash| (path.to_owned(), hash))
-                        })
-                    })
-                    .collect::<Vec<_>>()
+                full_files_hash(&workspace_root)
             };
 
+            let mut files = new_archived_files
+                .iter()
+                .map(|(path, file_hashed)| (PathBuf::from(path), file_hashed.0.to_owned()))
+                .collect::<Vec<_>>();
             files.par_sort();
-            trace!("hashed and sorted workspace files in {:?}", now.elapsed());
+            trace!("hashed and sorted files in {:?}", now.elapsed());
+
             *workspace_files = files;
             let files_len = workspace_files.len();
             trace!(?files_len, "files retrieved");
 
             cvar.notify_all();
+
+            write_files_archive(&workspace_root, new_archived_files);
         });
 
         FilesWorker(Some(files_lock))
@@ -180,8 +171,7 @@ impl WorkspaceContext {
     pub fn get_workspace_files(
         &self,
         project_root_map: HashMap<String, String>,
-    ) -> anyhow::Result<NxWorkspaceFiles>
-    {
+    ) -> anyhow::Result<NxWorkspaceFiles> {
         workspace_files::get_files(project_root_map, self.all_file_data())
             .map_err(anyhow::Error::from)
     }
