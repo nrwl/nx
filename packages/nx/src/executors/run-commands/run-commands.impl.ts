@@ -43,6 +43,7 @@ export interface RunCommandsOptions extends Json {
   parallel?: boolean;
   readyWhen?: string;
   cwd?: string;
+  env?: Record<string, string>;
   args?: string;
   envFile?: string;
   __unparsed__: string[];
@@ -113,7 +114,8 @@ async function runInParallel(
       c,
       options.readyWhen,
       options.color,
-      calculateCwd(options.cwd, context)
+      calculateCwd(options.cwd, context),
+      options.env ?? {}
     ).then((result) => ({
       result,
       command: c.command,
@@ -178,7 +180,8 @@ async function runSerially(
       c,
       undefined,
       options.color,
-      calculateCwd(options.cwd, context)
+      calculateCwd(options.cwd, context),
+      options.env ?? {}
     );
     if (!success) {
       process.stderr.write(
@@ -200,12 +203,13 @@ function createProcess(
   },
   readyWhen: string,
   color: boolean,
-  cwd: string
+  cwd: string,
+  env: Record<string, string>
 ): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(commandConfig.command, {
       maxBuffer: LARGE_BUFFER,
-      env: processEnv(color, cwd),
+      env: processEnv(color, cwd, env),
       cwd,
     });
     /**
@@ -277,16 +281,17 @@ function calculateCwd(
   return path.join(context.root, cwd);
 }
 
-function processEnv(color: boolean, cwd: string) {
-  const env = {
+function processEnv(color: boolean, cwd: string, env: Record<string, string>) {
+  const res = {
     ...process.env,
     ...appendLocalEnv({ cwd: cwd ?? process.cwd() }),
+    ...env,
   };
 
   if (color) {
-    env.FORCE_COLOR = `${color}`;
+    res.FORCE_COLOR = `${color}`;
   }
-  return env;
+  return res;
 }
 
 export function interpolateArgsIntoCommand(

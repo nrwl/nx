@@ -354,7 +354,7 @@ export async function createNxReleaseConfig(
         // The appropriate group default releaseTagPattern is dependent upon the projectRelationships
         (projectsRelationship === 'independent'
           ? defaultIndependentReleaseTagPattern
-          : defaultFixedReleaseTagPattern),
+          : userConfig.releaseTagPattern || defaultFixedReleaseTagPattern),
     };
 
     releaseGroups[releaseGroupName] = deepMergeDefaults([groupDefaults], {

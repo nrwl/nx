@@ -56,179 +56,152 @@ import {
 
 type PostGitTask = (latestCommit: string) => Promise<void>;
 
+export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
+  handleErrors(args.verbose, () => releaseChangelog(args));
+
 /**
  * NOTE: This function is also exported for programmatic usage and forms part of the public API
- * of Nx.
+ * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
+ * to have control over their own error handling when using the API.
  */
 export async function releaseChangelog(
   args: ChangelogOptions
 ): Promise<number> {
-  return handleErrors(args.verbose, async () => {
-    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    const nxJson = readNxJson();
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const nxJson = readNxJson();
 
-    if (args.verbose) {
-      process.env.NX_VERBOSE_LOGGING = 'true';
-    }
+  if (args.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
 
-    // Apply default configuration to any optional user configuration
-    const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
-      projectGraph,
-      nxJson.release
-    );
-    if (configError) {
-      return await handleNxReleaseConfigError(configError);
-    }
+  // Apply default configuration to any optional user configuration
+  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
+    projectGraph,
+    nxJson.release
+  );
+  if (configError) {
+    return await handleNxReleaseConfigError(configError);
+  }
 
-    const {
-      error: filterError,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-    } = filterReleaseGroups(
-      projectGraph,
-      nxReleaseConfig,
-      args.projects,
-      args.groups
-    );
-    if (filterError) {
-      output.error(filterError);
-      process.exit(1);
-    }
+  const {
+    error: filterError,
+    releaseGroups,
+    releaseGroupToFilteredProjects,
+  } = filterReleaseGroups(
+    projectGraph,
+    nxReleaseConfig,
+    args.projects,
+    args.groups
+  );
+  if (filterError) {
+    output.error(filterError);
+    process.exit(1);
+  }
 
-    /**
-     * For determining the versions to use within changelog files, there are a few different possibilities:
-     * - the user is using the nx CLI, and therefore passes a single --version argument which represents the version for any and all changelog
-     * files which will be generated (i.e. both the workspace changelog, and all project changelogs, depending on which of those has been enabled)
-     * - the user is using the nxReleaseChangelog API programmatically, and:
-     *   - passes only a version property
-     *     - this works in the same way as described above for the CLI
-     *   - passes only a versionData object
-     *     - this is a special case where the user is providing a version for each project, and therefore the version argument is not needed
-     *     - NOTE: it is not possible to generate a workspace level changelog with only a versionData object, and this will produce an error
-     *   - passes both a version and a versionData object
-     *     - in this case, the version property will be used as the reference for the workspace changelog, and the versionData object will be used
-     *    to generate project changelogs
-     */
-    const { workspaceChangelogVersion, projectsVersionData } =
-      resolveChangelogVersions(
-        args,
-        releaseGroups,
-        releaseGroupToFilteredProjects
-      );
-
-    const to = args.to || 'HEAD';
-    const toSHA = await getCommitHash(to);
-    const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
-
-    /**
-     * Protect the user against attempting to create a new commit when recreating an old release changelog,
-     * this seems like it would always be unintentional.
-     */
-    const autoCommitEnabled =
-      args.gitCommit ?? nxReleaseConfig.changelog.git.commit;
-    if (autoCommitEnabled && headSHA !== toSHA) {
-      throw new Error(
-        `You are attempting to recreate the changelog for an old release, but you have enabled auto-commit mode. Please disable auto-commit mode by updating your nx.json, or passing --git-commit=false`
-      );
-    }
-
-    const fromRef =
-      args.from ||
-      (await getLatestGitTagForPattern(nxReleaseConfig.releaseTagPattern))?.tag;
-    if (!fromRef) {
-      throw new Error(
-        `Unable to determine the previous git tag, please provide an explicit git reference using --from`
-      );
-    }
-
-    // Make sure that the fromRef is actually resolvable
-    const fromSHA = await getCommitHash(fromRef);
-
-    const rawCommits = await getGitDiff(fromSHA, toSHA);
-
-    // Parse as conventional commits
-    const commits = parseCommits(rawCommits).filter((c) => {
-      const type = c.type;
-      // Always ignore non user-facing commits for now
-      // TODO: allow this filter to be configurable via config in a future release
-      if (type === 'feat' || type === 'fix' || type === 'perf') {
-        return true;
-      }
-      return false;
-    });
-
-    const tree = new FsTree(workspaceRoot, args.verbose);
-
-    const userCommitMessage: string | undefined =
-      args.gitCommitMessage || nxReleaseConfig.changelog.git.commitMessage;
-
-    const commitMessageValues: string[] = createCommitMessageValues(
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      projectsVersionData,
-      userCommitMessage
-    );
-
-    // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
-    const gitTagValues: string[] =
-      args.gitTag ?? nxReleaseConfig.changelog.git.tag
-        ? createGitTagValues(
-            releaseGroups,
-            releaseGroupToFilteredProjects,
-            projectsVersionData
-          )
-        : [];
-    handleDuplicateGitTags(gitTagValues);
-
-    const postGitTasks: PostGitTask[] = [];
-
-    await generateChangelogForWorkspace(
-      tree,
+  /**
+   * For determining the versions to use within changelog files, there are a few different possibilities:
+   * - the user is using the nx CLI, and therefore passes a single --version argument which represents the version for any and all changelog
+   * files which will be generated (i.e. both the workspace changelog, and all project changelogs, depending on which of those has been enabled)
+   * - the user is using the nxReleaseChangelog API programmatically, and:
+   *   - passes only a version property
+   *     - this works in the same way as described above for the CLI
+   *   - passes only a versionData object
+   *     - this is a special case where the user is providing a version for each project, and therefore the version argument is not needed
+   *     - NOTE: it is not possible to generate a workspace level changelog with only a versionData object, and this will produce an error
+   *   - passes both a version and a versionData object
+   *     - in this case, the version property will be used as the reference for the workspace changelog, and the versionData object will be used
+   *    to generate project changelogs
+   */
+  const { workspaceChangelogVersion, projectsVersionData } =
+    resolveChangelogVersions(
       args,
-      nxReleaseConfig,
-      workspaceChangelogVersion,
-      commits,
-      postGitTasks
+      releaseGroups,
+      releaseGroupToFilteredProjects
     );
 
-    if (args.projects?.length) {
-      /**
-       * Run changelog generation for all remaining release groups and filtered projects within them
-       */
-      for (const releaseGroup of releaseGroups) {
-        const projectNodes = Array.from(
-          releaseGroupToFilteredProjects.get(releaseGroup)
-        ).map((name) => projectGraph.nodes[name]);
+  const to = args.to || 'HEAD';
+  const toSHA = await getCommitHash(to);
+  const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
 
-        await generateChangelogForProjects(
-          tree,
-          args,
-          commits,
-          projectsVersionData,
-          postGitTasks,
-          releaseGroup,
-          projectNodes
-        );
-      }
+  /**
+   * Protect the user against attempting to create a new commit when recreating an old release changelog,
+   * this seems like it would always be unintentional.
+   */
+  const autoCommitEnabled =
+    args.gitCommit ?? nxReleaseConfig.changelog.git.commit;
+  if (autoCommitEnabled && headSHA !== toSHA) {
+    throw new Error(
+      `You are attempting to recreate the changelog for an old release, but you have enabled auto-commit mode. Please disable auto-commit mode by updating your nx.json, or passing --git-commit=false`
+    );
+  }
 
-      return await applyChangesAndExit(
-        args,
-        nxReleaseConfig,
-        tree,
-        toSHA,
-        postGitTasks,
-        commitMessageValues,
-        gitTagValues
-      );
+  const fromRef =
+    args.from ||
+    (await getLatestGitTagForPattern(nxReleaseConfig.releaseTagPattern))?.tag;
+  if (!fromRef) {
+    throw new Error(
+      `Unable to determine the previous git tag, please provide an explicit git reference using --from`
+    );
+  }
+
+  // Make sure that the fromRef is actually resolvable
+  const fromSHA = await getCommitHash(fromRef);
+
+  const rawCommits = await getGitDiff(fromSHA, toSHA);
+
+  // Parse as conventional commits
+  const commits = parseCommits(rawCommits).filter((c) => {
+    const type = c.type;
+    // Always ignore non user-facing commits for now
+    // TODO: allow this filter to be configurable via config in a future release
+    if (type === 'feat' || type === 'fix' || type === 'perf') {
+      return true;
     }
+    return false;
+  });
 
+  const tree = new FsTree(workspaceRoot, args.verbose);
+
+  const userCommitMessage: string | undefined =
+    args.gitCommitMessage || nxReleaseConfig.changelog.git.commitMessage;
+
+  const commitMessageValues: string[] = createCommitMessageValues(
+    releaseGroups,
+    releaseGroupToFilteredProjects,
+    projectsVersionData,
+    userCommitMessage
+  );
+
+  // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
+  const gitTagValues: string[] =
+    args.gitTag ?? nxReleaseConfig.changelog.git.tag
+      ? createGitTagValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          projectsVersionData
+        )
+      : [];
+  handleDuplicateGitTags(gitTagValues);
+
+  const postGitTasks: PostGitTask[] = [];
+
+  await generateChangelogForWorkspace(
+    tree,
+    args,
+    nxReleaseConfig,
+    workspaceChangelogVersion,
+    commits,
+    postGitTasks
+  );
+
+  if (args.projects?.length) {
     /**
-     * Run changelog generation for all remaining release groups
+     * Run changelog generation for all remaining release groups and filtered projects within them
      */
     for (const releaseGroup of releaseGroups) {
-      const projectNodes = releaseGroup.projects.map(
-        (name) => projectGraph.nodes[name]
-      );
+      const projectNodes = Array.from(
+        releaseGroupToFilteredProjects.get(releaseGroup)
+      ).map((name) => projectGraph.nodes[name]);
 
       await generateChangelogForProjects(
         tree,
@@ -250,7 +223,36 @@ export async function releaseChangelog(
       commitMessageValues,
       gitTagValues
     );
-  });
+  }
+
+  /**
+   * Run changelog generation for all remaining release groups
+   */
+  for (const releaseGroup of releaseGroups) {
+    const projectNodes = releaseGroup.projects.map(
+      (name) => projectGraph.nodes[name]
+    );
+
+    await generateChangelogForProjects(
+      tree,
+      args,
+      commits,
+      projectsVersionData,
+      postGitTasks,
+      releaseGroup,
+      projectNodes
+    );
+  }
+
+  return await applyChangesAndExit(
+    args,
+    nxReleaseConfig,
+    tree,
+    toSHA,
+    postGitTasks,
+    commitMessageValues,
+    gitTagValues
+  );
 }
 
 function resolveChangelogVersions(
