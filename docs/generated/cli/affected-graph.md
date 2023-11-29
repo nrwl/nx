@@ -157,7 +157,7 @@ Choices: [projects, tasks, project-details]
 
 Default: `projects`
 
-Choose whether to view the projects or task graph or project details view.
+Choose whether to view the projects or task graph
 
 ### watch
 

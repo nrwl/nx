@@ -198,9 +198,3 @@ Which project should be viewed?
 Type: `boolean`
 
 Show version number
-
-##### web
-
-Type: `boolean`
-
-Show project details in the browser

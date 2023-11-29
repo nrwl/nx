@@ -258,8 +258,7 @@ export function withDepGraphOptions(yargs: Argv) {
       type: 'string',
     })
     .option('view', {
-      describe:
-        'Choose whether to view the projects or task graph or project details view.',
+      describe: 'Choose whether to view the projects or task graph',
       type: 'string',
       default: 'projects',
       choices: ['projects', 'tasks', 'project-details'],
