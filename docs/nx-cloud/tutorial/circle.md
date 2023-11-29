@@ -350,7 +350,7 @@ When Circle CI now processes our tasks they'll only take a fraction of the usual
 
 ![Circle CI after enabling remote caching](/nx-cloud/tutorial/circle-ci-remote-cache.png)
 
-The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on various scenarios](/ci/concepts/scenarios) and how to configure them.
+The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on security settings for your remote cache](/ci/concepts/cache-security).
 
 You might also want to learn more about [how to fine-tune caching](/recipes/running-tasks/customizing-inputs) to get even better results.
 
@@ -510,5 +510,5 @@ With this pipeline configuration in place, no matter how large the repository sc
 You now have a highly optimized CI configuration that will scale as your repository scales. See what else you can do with Nx Cloud.
 
 - Set up [GitHub PR integration](/ci/recipes/source-control-integration/github) to view Nx Cloud results directly in your PR
-- Choose the [security scenario](/ci/concepts/scenarios) that makes sense for your organization
+- Choose the [security settings](/ci/concepts/cache-security) that make sense for your organization
 - [Record non-Nx commands](/ci/recipes/other/record-commands) and view the results in the Nx Cloud interface

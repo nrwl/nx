@@ -446,8 +446,10 @@ const nxCloudUrls = {
   '/nx-cloud/account': '/ci/recipes/security',
   '/nx-cloud/account/google-auth': '/ci/recipes/security/google-auth',
   '/nx-cloud/account/access-tokens': '/ci/recipes/security/access-tokens',
-  '/nx-cloud/account/scenarios': '/ci/concepts/scenarios',
-  '/nx-cloud/account/encryption': '/ci/concepts/encryption',
+  '/nx-cloud/account/scenarios': '/ci/concepts/cache-security',
+  '/nx-cloud/concepts/scenarios': '/ci/concepts/cache-security',
+  '/nx-cloud/account/encryption': '/ci/recipes/security/encryption',
+  '/nx-cloud/concepts/encryption': '/ci/recipes/security/encryption',
   '/nx-cloud/:path*': '/ci/:path*',
 };
 

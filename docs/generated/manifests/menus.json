@@ -5722,17 +5722,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Security Scenarios",
-            "path": "/ci/concepts/scenarios",
-            "id": "scenarios",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "End to End Encryption",
-            "path": "/ci/concepts/encryption",
-            "id": "encryption",
+            "name": "Cache Security",
+            "path": "/ci/concepts/cache-security",
+            "id": "cache-security",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5757,17 +5749,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Security Scenarios",
-        "path": "/ci/concepts/scenarios",
-        "id": "scenarios",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "End to End Encryption",
-        "path": "/ci/concepts/encryption",
-        "id": "encryption",
+        "name": "Cache Security",
+        "path": "/ci/concepts/cache-security",
+        "id": "cache-security",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5853,6 +5837,14 @@
                 "name": "Access Tokens",
                 "path": "/ci/recipes/security/access-tokens",
                 "id": "access-tokens",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Enable End to End Encryption",
+                "path": "/ci/recipes/security/encryption",
+                "id": "encryption",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -6120,6 +6112,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Enable End to End Encryption",
+            "path": "/ci/recipes/security/encryption",
+            "id": "encryption",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -6136,6 +6136,14 @@
         "name": "Access Tokens",
         "path": "/ci/recipes/security/access-tokens",
         "id": "access-tokens",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Enable End to End Encryption",
+        "path": "/ci/recipes/security/encryption",
+        "id": "encryption",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

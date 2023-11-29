@@ -23,12 +23,12 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/ci/recipes/security/access-tokens',
   },
   {
-    title: 'Security Scenarios',
-    path: '/ci/concepts/scenarios',
+    title: 'Cache Security',
+    path: '/ci/concepts/cache-security',
   },
   {
-    title: 'End to End Encryption',
-    path: '/ci/concepts/encryption',
+    title: 'Enable End to End Encryption',
+    path: '/ci/recipes/security/encryption',
   },
   {
     title: 'Running Nx Cloud Enterprise',
