@@ -573,7 +573,7 @@ async function generateChangelogForWorkspace(
         releaseVersion.gitTag
       );
     } catch (err) {
-      if (err.response?.status === 401 || !token) {
+      if (err.response?.status === 401) {
         output.error({
           title: `Unable to resolve data via the GitHub API. You can use any of the following options to resolve this:`,
           bodyLines: [
