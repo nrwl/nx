@@ -1,6 +1,6 @@
 import { readdirSync } from 'fs';
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
-import { basename, dirname, extname, join, relative, resolve } from 'path';
+import { basename, dirname, join, relative } from 'path';
 
 import {
   CreateNodes,
@@ -9,12 +9,11 @@ import {
   TargetConfiguration,
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { getRootTsConfigPath } from '@nx/js';
-import { registerTsProject } from '@nx/js/src/internal';
 
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import minimatch = require('minimatch');
+import { loadPlaywrightConfig } from '../utils/load-config-file';
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -28,7 +27,7 @@ interface NormalizedOptions {
 
 export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
   '**/playwright.config.{js,ts}',
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
 
     // Do not create a project if package.json and project.json isn't there.
@@ -48,7 +47,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
         [projectName]: {
           root: projectRoot,
           projectType: 'library',
-          targets: buildPlaywrightTargets(
+          targets: await buildPlaywrightTargets(
             configFilePath,
             projectRoot,
             normalizedOptions,
@@ -60,15 +59,14 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
   },
 ];
 
-function buildPlaywrightTargets(
+async function buildPlaywrightTargets(
   configFilePath: string,
   projectRoot: string,
   options: NormalizedOptions,
   context: CreateNodesContext
 ) {
-  const playwrightConfig: PlaywrightTestConfig = getPlaywrightConfig(
-    configFilePath,
-    context
+  const playwrightConfig: PlaywrightTestConfig = await loadPlaywrightConfig(
+    join(context.workspaceRoot, configFilePath)
   );
 
   const targetDefaults = readTargetDefaultsForTarget(
@@ -164,32 +162,6 @@ function buildPlaywrightTargets(
   }
 
   return targets;
-}
-
-function getPlaywrightConfig(
-  configFilePath: string,
-  context: CreateNodesContext
-): any {
-  const resolvedPath = join(context.workspaceRoot, configFilePath);
-
-  let module: any;
-  if (extname(configFilePath) === '.ts') {
-    const tsConfigPath = getRootTsConfigPath();
-
-    if (tsConfigPath) {
-      const unregisterTsProject = registerTsProject(tsConfigPath);
-      try {
-        module = require(resolvedPath);
-      } finally {
-        unregisterTsProject();
-      }
-    } else {
-      module = require(resolvedPath);
-    }
-  } else {
-    module = require(resolvedPath);
-  }
-  return module.default ?? module;
 }
 
 async function forEachTestFile(

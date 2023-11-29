@@ -1,8 +1,14 @@
-import { CreateNodesContext, CreateNodesResult } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 
 import { createNodes } from './plugin';
 import { PlaywrightTestConfig } from '@playwright/test';
+
+// Jest can't handle the dynamic import, and mocking it doesn't work either.
+// we overwrite the dynamic import function to use the regular syntax, which
+// jest does handle.
+import * as lcf from '../utils/load-config-file';
+(lcf as any).dynamicImport = (m) => import(m);
 
 describe('@nx/playwright/plugin', () => {
   let createNodesFunction = createNodes[1];
@@ -34,7 +40,7 @@ describe('@nx/playwright/plugin', () => {
 
   it('should create nodes with default playwright configuration', async () => {
     await mockPlaywrightConfig(tempFs, {});
-    const nodes = createNodesFunction(
+    const { projects } = await createNodesFunction(
       'playwright.config.js',
       {
         targetName: 'e2e',
@@ -42,27 +48,25 @@ describe('@nx/playwright/plugin', () => {
       context
     );
 
-    expect(nodes).toMatchInlineSnapshot(`
+    expect(projects).toMatchInlineSnapshot(`
       {
-        "projects": {
-          ".": {
-            "projectType": "library",
-            "root": ".",
-            "targets": {
-              "e2e": {
-                "cache": true,
-                "command": "playwright test",
-                "inputs": [
-                  "default",
-                  "^production",
-                ],
-                "options": {
-                  "cwd": "{projectRoot}",
-                },
-                "outputs": [
-                  "{projectRoot}/test-results",
-                ],
+        ".": {
+          "projectType": "library",
+          "root": ".",
+          "targets": {
+            "e2e": {
+              "cache": true,
+              "command": "playwright test",
+              "inputs": [
+                "default",
+                "^production",
+              ],
+              "options": {
+                "cwd": "{projectRoot}",
               },
+              "outputs": [
+                "{projectRoot}/test-results",
+              ],
             },
           },
         },
@@ -78,7 +82,7 @@ describe('@nx/playwright/plugin', () => {
         ['html', { outputFolder: 'test-results/html' }],
       ],
     });
-    const nodes = createNodesFunction(
+    const { projects } = await createNodesFunction(
       'playwright.config.js',
       {
         targetName: 'e2e',
@@ -86,30 +90,28 @@ describe('@nx/playwright/plugin', () => {
       context
     );
 
-    expect(nodes).toMatchInlineSnapshot(`
+    expect(projects).toMatchInlineSnapshot(`
       {
-        "projects": {
-          ".": {
-            "projectType": "library",
-            "root": ".",
-            "targets": {
-              "e2e": {
-                "cache": true,
-                "command": "playwright test",
-                "inputs": [
-                  "default",
-                  "^production",
-                ],
-                "options": {
-                  "cwd": "{projectRoot}",
-                },
-                "outputs": [
-                  "{projectRoot}/playwright-report",
-                  "{projectRoot}/test-results/report.json",
-                  "{projectRoot}/test-results/html",
-                  "{projectRoot}/test-results",
-                ],
+        ".": {
+          "projectType": "library",
+          "root": ".",
+          "targets": {
+            "e2e": {
+              "cache": true,
+              "command": "playwright test",
+              "inputs": [
+                "default",
+                "^production",
+              ],
+              "options": {
+                "cwd": "{projectRoot}",
               },
+              "outputs": [
+                "{projectRoot}/playwright-report",
+                "{projectRoot}/test-results/report.json",
+                "{projectRoot}/test-results/html",
+                "{projectRoot}/test-results",
+              ],
             },
           },
         },

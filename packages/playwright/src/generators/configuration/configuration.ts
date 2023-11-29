@@ -61,7 +61,7 @@ export async function configurationGenerator(
   );
 
   if (options.js) {
-    toJS(tree);
+    toJS(tree, { extension: '.mjs' });
   }
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -103,7 +103,7 @@ Rename or remove the existing e2e target.`);
     outputs: [`{workspaceRoot}/dist/.playwright/${projectConfig.root}`],
     options: {
       config: `${projectConfig.root}/playwright.config.${
-        options.js ? 'js' : 'ts'
+        options.js ? 'mjs' : 'ts'
       }`,
     },
   };

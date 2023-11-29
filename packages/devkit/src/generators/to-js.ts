@@ -1,11 +1,17 @@
 import type { Tree } from 'nx/src/generators/tree';
+import type { ScriptTarget } from 'typescript';
 import { typescriptVersion } from '../utils/versions';
 import { ensurePackage } from '../utils/package-json';
+
+export type ToJSOptions = {
+  target?: ScriptTarget;
+  extension: '.js' | '.mjs' | '.cjs';
+};
 
 /**
  * Rename and transpile any new typescript files created to javascript files
  */
-export function toJS(tree: Tree): void {
+export function toJS(tree: Tree, options?: ToJSOptions): void {
   const { JsxEmit, ScriptTarget, transpile } = ensurePackage(
     'typescript',
     typescriptVersion
@@ -21,10 +27,13 @@ export function toJS(tree: Tree): void {
         transpile(c.content.toString('utf-8'), {
           allowJs: true,
           jsx: JsxEmit.Preserve,
-          target: ScriptTarget.ESNext,
+          target: options?.target ?? ScriptTarget.ESNext,
         })
       );
-      tree.rename(c.path, c.path.replace(/\.tsx?$/, '.js'));
+      tree.rename(
+        c.path,
+        c.path.replace(/\.tsx?$/, options?.extension ?? '.js')
+      );
     }
   }
 }
