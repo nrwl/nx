@@ -107,7 +107,7 @@ As your repository grows and CI runs start to slow down, add another agent machi
 
 As you scale your usage of Nx Cloud, you may run into concurrency limits. Nx Cloud puts a [limit on the number of CI machines](https://nx.app/pricing) in your workspace that are simultaneously connecting to Nx Cloud. This includes any machine running in CI - both the main CI pipeline machine and any agent machines.
 
-The Free plan offers 30 concurrent connections, the Startup plan offers 50 concurrent connections, the Pro plan offers 70 concurrent connections and the enterprise plan has no limit on concurrent connections. If each pipeline uses 9 agents in addition to the main job, that makes 10 concurrent connections for each PR. This would mean that on a Pro plan, you can have a maximum of 7 PRs running in CI simultaneously. If an eighth PR was submitted while those 7 were still running, that CI run would fall back to using the single machine approach. Once your organization's usage goes below the limit, Nx Cloud will resume functioning as normal.
+The Free plan offers 30 concurrent connections, the Startup plan offers 50 concurrent connections, the Pro plan offers 70 concurrent connections and the enterprise plan has no limit on concurrent connections. If each pipeline uses 9 agents in addition to the main job, that makes 10 concurrent connections for each PR. This would mean that on a Pro plan, you can have a maximum of 7 PRs running in CI simultaneously. If an eighth PR was submitted while those 7 were still running, your CI pipeline would experience some degradation and eventually failed CI runs. Once your organization's usage goes below the limit, Nx Cloud will resume functioning as normal.
 
 ## Conclusion
 
