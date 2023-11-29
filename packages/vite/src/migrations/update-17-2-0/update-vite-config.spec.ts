@@ -20,7 +20,7 @@ describe('change-vite-ts-paths-plugin migration', () => {
     expect(tree.read('apps/demo/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(
       readProjectConfiguration(tree, 'demo').targets.build.options.outputPath
-    ).toBe('../../dist/apps/demo');
+    ).toBe('dist/apps/demo');
   });
 
   it('should add build outDir to vite.config.ts if build exists', async () => {
@@ -29,7 +29,7 @@ describe('change-vite-ts-paths-plugin migration', () => {
     expect(tree.read('demo2/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(
       readProjectConfiguration(tree, 'demo2').targets.build.options.outputPath
-    ).toBe('../dist/demo2');
+    ).toBe('dist/demo2');
   });
 
   it('should add file replacements to vite.config.ts', async () => {
@@ -38,7 +38,7 @@ describe('change-vite-ts-paths-plugin migration', () => {
     expect(tree.read('demo3/vite.config.ts', 'utf-8')).toMatchSnapshot();
     expect(
       readProjectConfiguration(tree, 'demo3').targets.build.options.outputPath
-    ).toBe('../dist/demo3');
+    ).toBe('dist/demo3');
   });
 });
 

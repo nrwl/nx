@@ -57,6 +57,7 @@ function fixBuild(
 ) {
   let outputPath = '';
 
+  // In vite.config.ts, we want to keep the path relative to workspace root
   if (options.outputPath) {
     outputPath = joinPathFragments(
       offsetFromRoot(projectConfig.root),
@@ -70,13 +71,10 @@ function fixBuild(
     );
   }
 
+  // In project.json, we want to keep the path starting from workspace root
   projectConfig.targets[targetName].options.outputPath = options.outputPath
-    ? joinPathFragments(offsetFromRoot(projectConfig.root), options.outputPath)
-    : joinPathFragments(
-        offsetFromRoot(projectConfig.root),
-        'dist',
-        projectConfig.root
-      );
+    ? options.outputPath
+    : joinPathFragments('dist', projectConfig.root);
   updateProjectConfiguration(tree, projectName, projectConfig);
 
   const buildObject = tsquery.query(

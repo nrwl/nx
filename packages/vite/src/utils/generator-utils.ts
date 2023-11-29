@@ -204,7 +204,6 @@ export function addOrChangeBuildTarget(
 
   const buildOptions: ViteBuildExecutorOptions = {
     outputPath: joinPathFragments(
-      offsetFromRoot(project.root),
       'dist',
       project.root != '.' ? project.root : options.project
     ),

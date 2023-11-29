@@ -14,7 +14,7 @@
   "properties": {
     "outputPath": {
       "type": "string",
-      "description": "The output path of the generated files, relative to the project root.",
+      "description": "The output path of the generated files.",
       "x-completion-type": "directory",
       "x-priority": "important"
     },

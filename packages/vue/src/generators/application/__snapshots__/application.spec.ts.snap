@@ -103,7 +103,7 @@ exports[`application generator should set up project correctly with given option
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "../dist/test",
+        "outputPath": "dist/test",
         "skipTypeCheck": true
       },
       "configurations": {

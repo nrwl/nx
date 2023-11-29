@@ -1,6 +1,7 @@
 import {
   ExecutorContext,
   joinPathFragments,
+  offsetFromRoot,
   parseTargetString,
   runExecutor,
 } from '@nx/devkit';
@@ -58,12 +59,15 @@ export async function* vitePreviewServerExecutor(
 
   const outDir =
     options.staticFilePath ??
-    buildTargetOptions.outputPath ??
+    joinPathFragments(
+      offsetFromRoot(projectRoot),
+      buildTargetOptions.outputPath
+    ) ??
     resolved?.config?.build?.outDir;
 
   if (!outDir) {
     throw new Error(
-      `Could not infer the "outputPath". It should either be a property of the "${options.buildTarget}" buildTarget or provided explicitly as a "staticFilePath" option.`
+      `Could not infer the "outputPath" or "outDir". It should be set in your vite.config.ts, or as a property of the "${options.buildTarget}" buildTarget or provided explicitly as a "staticFilePath" option.`
     );
   }
   const root =

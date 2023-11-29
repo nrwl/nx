@@ -3,6 +3,7 @@ import {
   ExecutorContext,
   joinPathFragments,
   logger,
+  offsetFromRoot,
   stripIndents,
   writeJsonFile,
 } from '@nx/devkit';
@@ -58,7 +59,9 @@ export async function* viteBuildExecutor(
     viteConfigPath
   );
 
-  const outDir = options.outputPath ?? resolved?.config?.build?.outDir;
+  const outDir =
+    joinPathFragments(offsetFromRoot(projectRoot), options.outputPath) ??
+    resolved?.config?.build?.outDir;
 
   const buildConfig = mergeConfig(
     {

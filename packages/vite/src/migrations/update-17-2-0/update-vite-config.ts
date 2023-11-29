@@ -1,11 +1,4 @@
-import {
-  Tree,
-  formatFiles,
-  getProjects,
-  joinPathFragments,
-  offsetFromRoot,
-  updateProjectConfiguration,
-} from '@nx/devkit';
+import { Tree, formatFiles, getProjects, joinPathFragments } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { ViteBuildExecutorOptions } from '../../executors/build/schema';
 import { updateBuildOutDirAndRoot } from './lib/edit-build-config';
