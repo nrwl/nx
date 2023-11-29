@@ -33,7 +33,7 @@ type Files = Vec<(PathBuf, String)>;
 
 struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
 impl FilesWorker {
-    fn gather_files(workspace_root: &Path) -> Self {
+    fn gather_files(workspace_root: &Path, cache_dir: String) -> Self {
         if !workspace_root.exists() {
             warn!(
                 "workspace root does not exist: {}",
@@ -42,7 +42,7 @@ impl FilesWorker {
             return FilesWorker(None);
         }
 
-        let archived_files = read_files_archive(workspace_root);
+        let archived_files = read_files_archive(&cache_dir);
 
         let files_lock = Arc::new((Mutex::new(Vec::new()), Condvar::new()));
         let files_lock_clone = Arc::clone(&files_lock);
@@ -72,7 +72,7 @@ impl FilesWorker {
 
             cvar.notify_all();
 
-            write_files_archive(&workspace_root, new_archived_files);
+            write_files_archive(&cache_dir, new_archived_files);
         });
 
         FilesWorker(Some(files_lock))
@@ -153,7 +153,7 @@ impl FilesWorker {
 #[napi]
 impl WorkspaceContext {
     #[napi(constructor)]
-    pub fn new(workspace_root: String) -> Self {
+    pub fn new(workspace_root: String, cache_dir: String) -> Self {
         enable_logger();
 
         trace!(?workspace_root);
@@ -161,7 +161,7 @@ impl WorkspaceContext {
         let workspace_root_path = PathBuf::from(&workspace_root);
 
         WorkspaceContext {
-            files_worker: FilesWorker::gather_files(&workspace_root_path),
+            files_worker: FilesWorker::gather_files(&workspace_root_path, cache_dir),
             workspace_root,
             workspace_root_path,
         }

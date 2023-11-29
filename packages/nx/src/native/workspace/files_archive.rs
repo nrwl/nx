@@ -1,3 +1,4 @@
+use anyhow::anyhow;
 use hashbrown::HashMap;
 use rkyv::{Archive, Deserialize, Infallible, Serialize};
 use std::ops::{Deref, DerefMut};
@@ -5,14 +6,14 @@ use std::path::Path;
 
 use tracing::trace;
 
-use crate::native::utils::cache_directory;
-
 const NX_FILES_ARCHIVE: &str = "nx_files.nxt";
 
 #[derive(Archive, Serialize, Deserialize, PartialEq, Debug)]
+#[archive(check_bytes)]
 pub struct NxFileHashed(pub String, pub i64);
 
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq)]
+#[archive(check_bytes)]
 pub struct NxFilesArchive(HashMap<String, NxFileHashed>);
 
 impl Deref for NxFilesArchive {
@@ -37,8 +38,9 @@ impl FromIterator<(String, NxFileHashed)> for NxFilesArchive {
     }
 }
 
-pub fn read_files_archive(workspace_root: &Path) -> Option<NxFilesArchive> {
-    let archive_path = cache_directory(workspace_root).join(NX_FILES_ARCHIVE);
+pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFilesArchive> {
+    let now = std::time::Instant::now();
+    let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
     if !archive_path.exists() {
         return None;
     }
@@ -46,16 +48,17 @@ pub fn read_files_archive(workspace_root: &Path) -> Option<NxFilesArchive> {
     let bytes = std::fs::read(archive_path)
         .map_err(anyhow::Error::from)
         .and_then(|bytes| {
-            // Or you can use the unsafe API for maximum performance
-            let archived = unsafe { rkyv::archived_root::<NxFilesArchive>(&bytes) };
+            // let archived = unsafe { rkyv::archived_root::<NxFilesArchive>(&bytes) };
+            let archived = rkyv::check_archived_root::<NxFilesArchive>(&bytes)
+                .map_err(|_| anyhow!("invalid archive file"))?;
             <ArchivedNxFilesArchive as Deserialize<NxFilesArchive, Infallible>>::deserialize(
                 archived,
                 &mut rkyv::Infallible,
             )
             .map_err(anyhow::Error::from)
-            // Ok(deserialized)
         });
 
+    trace!("read archive in {:?}", now.elapsed());
     match bytes {
         Ok(archive) => Some(archive),
         Err(e) => {
@@ -65,15 +68,16 @@ pub fn read_files_archive(workspace_root: &Path) -> Option<NxFilesArchive> {
     }
 }
 
-pub fn write_files_archive(workspace_root: &Path, files: NxFilesArchive) {
-    let archive_path = cache_directory(workspace_root).join(NX_FILES_ARCHIVE);
+pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFilesArchive) {
+    let now = std::time::Instant::now();
+    let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
     let result = rkyv::to_bytes::<_, 2048>(&files)
         .map_err(anyhow::Error::from)
         .and_then(|encoded| {
             std::fs::write(archive_path, encoded)?;
             Ok(())
         });
-
+    trace!("write archive in {:?}", now.elapsed());
     match result {
         Ok(_) => (),
         Err(e) => {

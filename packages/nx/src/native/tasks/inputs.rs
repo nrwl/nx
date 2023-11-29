@@ -1,6 +1,6 @@
 use crate::native::project_graph::types::{Project, ProjectGraph};
 use crate::native::tasks::types::Task;
-use crate::native::types::{Input, NxJsonNapi};
+use crate::native::types::{Input, NxJson};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -14,7 +14,7 @@ pub(super) struct SplitInputs<'a> {
 pub(super) fn get_inputs<'a>(
     task: &'a Task,
     project_graph: &'a ProjectGraph,
-    nx_json: &'a NxJsonNapi,
+    nx_json: &'a NxJson,
 ) -> anyhow::Result<SplitInputs<'a>> {
     let project_node = project_graph
         .nodes
@@ -36,7 +36,7 @@ pub(super) fn get_inputs<'a>(
 
 pub(super) fn get_inputs_for_dependency<'a>(
     project: &'a Project,
-    nx_json: &'a NxJsonNapi,
+    nx_json: &'a NxJson,
     named_input: &'a Input,
 ) -> anyhow::Result<Option<SplitInputs<'a>>> {
     let Input::Inputs { input, .. } = named_input else {
@@ -210,7 +210,7 @@ pub(super) fn expand_named_input<'a>(
 }
 
 pub(super) fn get_named_inputs<'a>(
-    nx_json: &'a NxJsonNapi,
+    nx_json: &'a NxJson,
     project: &'a Project,
 ) -> HashMap<&'a str, Vec<Input<'a>>> {
     let mut collected_named_inputs: HashMap<&str, Vec<Input>> = HashMap::new();
