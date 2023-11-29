@@ -223,7 +223,7 @@ export async function generateGraph(
     groupByFolder?: boolean;
     watch?: boolean;
     open?: boolean;
-    view: 'projects' | 'tasks';
+    view: 'projects' | 'tasks' | 'project-details';
     projects?: string[];
     all?: boolean;
     targets?: string[];
@@ -245,6 +245,24 @@ export async function generateGraph(
         `Only the task graph for "${args.targets[0]}" tasks will be shown`,
       ],
     });
+  }
+
+  if (args.view === 'project-details' && !args.focus) {
+    output.error({
+      title: `The project details view requires the --focus option.`,
+    });
+    process.exit(1);
+  }
+  if (args.view === 'project-details' && (args.targets || args.affected)) {
+    output.error({
+      title: `The project details view can only be used with the --focus option.`,
+      bodyLines: [
+        `You passed ${args.targets ? '--targets ' : ''}${
+          args.affected ? '--affected ' : ''
+        }`,
+      ],
+    });
+    process.exit(1);
   }
 
   // TODO: Graph Client should support multiple targets

@@ -169,11 +169,11 @@ Show version number
 
 Type: `string`
 
-Choices: [projects, tasks]
+Choices: [projects, tasks, project-details]
 
 Default: `projects`
 
-Choose whether to view the projects or task graph
+Choose whether to view the projects or task graph or project details view.
 
 ### watch
 
