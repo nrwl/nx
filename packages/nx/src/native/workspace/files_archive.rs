@@ -14,9 +14,9 @@ pub struct NxFileHashed(pub String, pub i64);
 
 #[derive(Archive, Deserialize, Serialize, Debug, PartialEq)]
 #[archive(check_bytes)]
-pub struct NxFilesArchive(HashMap<String, NxFileHashed>);
+pub struct NxFileHashes(HashMap<String, NxFileHashed>);
 
-impl Deref for NxFilesArchive {
+impl Deref for NxFileHashes {
     type Target = HashMap<String, NxFileHashed>;
 
     fn deref(&self) -> &Self::Target {
@@ -24,21 +24,21 @@ impl Deref for NxFilesArchive {
     }
 }
 
-impl DerefMut for NxFilesArchive {
+impl DerefMut for NxFileHashes {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
 }
 
-impl FromIterator<(String, NxFileHashed)> for NxFilesArchive {
-    fn from_iter<T: IntoIterator<Item = (String, NxFileHashed)>>(iter: T) -> NxFilesArchive {
+impl FromIterator<(String, NxFileHashed)> for NxFileHashes {
+    fn from_iter<T: IntoIterator<Item = (String, NxFileHashed)>>(iter: T) -> NxFileHashes {
         let mut map = HashMap::with_hasher(Default::default());
         map.extend(iter);
-        NxFilesArchive(map)
+        NxFileHashes(map)
     }
 }
 
-pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFilesArchive> {
+pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFileHashes> {
     let now = std::time::Instant::now();
     let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
     if !archive_path.exists() {
@@ -49,9 +49,9 @@ pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFilesArchive
         .map_err(anyhow::Error::from)
         .and_then(|bytes| {
             // let archived = unsafe { rkyv::archived_root::<NxFilesArchive>(&bytes) };
-            let archived = rkyv::check_archived_root::<NxFilesArchive>(&bytes)
+            let archived = rkyv::check_archived_root::<NxFileHashes>(&bytes)
                 .map_err(|_| anyhow!("invalid archive file"))?;
-            <ArchivedNxFilesArchive as Deserialize<NxFilesArchive, Infallible>>::deserialize(
+            <ArchivedNxFileHashes as Deserialize<NxFileHashes, Infallible>>::deserialize(
                 archived,
                 &mut rkyv::Infallible,
             )
@@ -70,7 +70,7 @@ pub fn read_files_archive<P: AsRef<Path>>(cache_dir: P) -> Option<NxFilesArchive
     }
 }
 
-pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFilesArchive) {
+pub fn write_files_archive<P: AsRef<Path>>(cache_dir: P, files: NxFileHashes) {
     let now = std::time::Instant::now();
     let archive_path = cache_dir.as_ref().join(NX_FILES_ARCHIVE);
     let result = rkyv::to_bytes::<_, 2048>(&files)

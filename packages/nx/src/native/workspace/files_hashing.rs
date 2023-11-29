@@ -7,17 +7,17 @@ use tracing::trace;
 
 use crate::native::hasher::hash_file_path;
 use crate::native::walker::{nx_walker, NxFile};
-use crate::native::workspace::files_archive::{NxFileHashed, NxFilesArchive};
+use crate::native::workspace::files_archive::{NxFileHashed, NxFileHashes};
 
-pub fn full_files_hash(workspace_root: &Path) -> NxFilesArchive {
+pub fn full_files_hash(workspace_root: &Path) -> NxFileHashes {
     let files = nx_walker(workspace_root).collect::<Vec<_>>();
     hash_files(files).into_iter().collect()
 }
 
 pub fn selective_files_hash(
     workspace_root: &Path,
-    mut archived_files: NxFilesArchive,
-) -> NxFilesArchive {
+    mut archived_files: NxFileHashes,
+) -> NxFileHashes {
     let files = nx_walker(workspace_root).collect::<Vec<_>>();
     let mut archived = vec![];
     let mut not_archived = vec![];
@@ -84,7 +84,7 @@ mod tests {
     use assert_fs::TempDir;
 
     use crate::native::utils::get_mod_time;
-    use crate::native::workspace::files_archive::{NxFileHashed, NxFilesArchive};
+    use crate::native::workspace::files_archive::{NxFileHashed, NxFileHashes};
 
     fn setup_fs() -> TempDir {
         let temp = TempDir::new().unwrap();
@@ -140,7 +140,7 @@ mod tests {
             ),
         ]
         .into_iter()
-        .collect::<NxFilesArchive>();
+        .collect::<NxFileHashes>();
 
         let hashed_files = super::selective_files_hash(temp.path(), archived_files);
         let mut hashed_files = hashed_files

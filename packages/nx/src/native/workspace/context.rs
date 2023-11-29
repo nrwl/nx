@@ -53,13 +53,13 @@ impl FilesWorker {
             let (lock, cvar) = &*files_lock_clone;
             let mut workspace_files = lock.lock();
             let now = std::time::Instant::now();
-            let new_archived_files = if let Some(archived_files) = archived_files {
+            let file_hashes = if let Some(archived_files) = archived_files {
                 selective_files_hash(&workspace_root, archived_files)
             } else {
                 full_files_hash(&workspace_root)
             };
 
-            let mut files = new_archived_files
+            let mut files = file_hashes
                 .iter()
                 .map(|(path, file_hashed)| (PathBuf::from(path), file_hashed.0.to_owned()))
                 .collect::<Vec<_>>();
@@ -72,7 +72,7 @@ impl FilesWorker {
 
             cvar.notify_all();
 
-            write_files_archive(&cache_dir, new_archived_files);
+            write_files_archive(&cache_dir, file_hashes);
         });
 
         FilesWorker(Some(files_lock))
