@@ -91,16 +91,17 @@ function buildEslintTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
-  const command = isFlatConfig(rootEslintConfigFile)
-    ? `ESLINT_USE_FLAT_CONFIG=true eslint` // TODO this should be a flag on command options
-    : `eslint`;
-
   const baseTargetConfig: TargetConfiguration = {
-    command: `${command} ${isRootProject ? './src' : '.'}`,
+    command: `eslint ${isRootProject ? './src' : '.'}`,
     options: {
       cwd: projectRoot,
     },
   };
+  if (isFlatConfig(rootEslintConfigFile)) {
+    baseTargetConfig.options.env = {
+      ESLINT_USE_FLAT_CONFIG: 'true',
+    };
+  }
 
   targets[options.targetName] = {
     ...baseTargetConfig,
@@ -111,7 +112,6 @@ function buildEslintTargets(
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },
     ],
-    outputs: targetDefaults?.outputs ?? ['{options.outputFile}'],
     options: {
       ...baseTargetConfig.options,
     },
