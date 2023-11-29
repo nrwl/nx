@@ -4,7 +4,10 @@ import { valid } from 'semver';
 import { dirSync } from 'tmp';
 import type { ChangelogRenderer } from '../../../changelog-renderer';
 import { readNxJson } from '../../config/nx-json';
-import { ProjectGraphProjectNode } from '../../config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
 import { FsTree, Tree } from '../../generators/tree';
 import { registerTsProject } from '../../plugins/js/utils/register';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -188,6 +191,7 @@ export async function releaseChangelog(
   await generateChangelogForWorkspace(
     tree,
     args,
+    projectGraph,
     nxReleaseConfig,
     workspaceChangelogVersion,
     commits,
@@ -206,6 +210,7 @@ export async function releaseChangelog(
       await generateChangelogForProjects(
         tree,
         args,
+        projectGraph,
         commits,
         projectsVersionData,
         postGitTasks,
@@ -236,6 +241,7 @@ export async function releaseChangelog(
     await generateChangelogForProjects(
       tree,
       args,
+      projectGraph,
       commits,
       projectsVersionData,
       postGitTasks,
@@ -404,6 +410,7 @@ function resolveChangelogRenderer(
 async function generateChangelogForWorkspace(
   tree: Tree,
   args: ChangelogOptions,
+  projectGraph: ProjectGraph,
   nxReleaseConfig: NxReleaseConfig,
   workspaceChangelogVersion: (string | null) | undefined,
   commits: GitCommit[],
@@ -448,11 +455,11 @@ async function generateChangelogForWorkspace(
     releaseTagPattern: nxReleaseConfig.releaseTagPattern,
   });
 
-  // We are either creating/previewing a changelog file, a Github release, or both
+  // We are either creating/previewing a changelog file, a GitHub release, or both
   let logTitle = dryRun ? 'Previewing a' : 'Generating a';
   switch (true) {
     case interpolatedTreePath && config.createRelease === 'github':
-      logTitle += ` Github release and an entry in ${interpolatedTreePath} for ${chalk.white(
+      logTitle += ` GitHub release and an entry in ${interpolatedTreePath} for ${chalk.white(
         releaseVersion.gitTag
       )}`;
       break;
@@ -462,7 +469,7 @@ async function generateChangelogForWorkspace(
       )}`;
       break;
     case config.createRelease === 'github':
-      logTitle += ` Github release for ${chalk.white(releaseVersion.gitTag)}`;
+      logTitle += ` GitHub release for ${chalk.white(releaseVersion.gitTag)}`;
   }
 
   output.log({
@@ -475,6 +482,7 @@ async function generateChangelogForWorkspace(
       : undefined;
 
   let contents = await changelogRenderer({
+    projectGraph,
     commits,
     releaseVersion: releaseVersion.rawVersion,
     project: null,
@@ -501,7 +509,7 @@ async function generateChangelogForWorkspace(
 
   /**
    * The exact logic we use for printing the summary/diff to the user is dependent upon whether they are creating
-   * a changelog file, a Github release, or both.
+   * a changelog file, a GitHub release, or both.
    */
   let printSummary = () => {};
   const noDiffInChangelogMessage = chalk.yellow(
@@ -544,9 +552,9 @@ async function generateChangelogForWorkspace(
   if (config.createRelease === 'github') {
     if (!githubRepoSlug) {
       output.error({
-        title: `Unable to create a Github release because the Github repo slug could not be determined.`,
+        title: `Unable to create a GitHub release because the GitHub repo slug could not be determined.`,
         bodyLines: [
-          `Please ensure you have a valid Github remote configured. You can run \`git remote -v\` to list your current remotes.`,
+          `Please ensure you have a valid GitHub remote configured. You can run \`git remote -v\` to list your current remotes.`,
         ],
       });
       process.exit(1);
@@ -565,11 +573,11 @@ async function generateChangelogForWorkspace(
         releaseVersion.gitTag
       );
     } catch (err) {
-      if (err.response?.status === 401) {
+      if (err.response?.status === 401 || !token) {
         output.error({
-          title: `Unable to resolve data via the Github API. You can use any of the following options to resolve this:`,
+          title: `Unable to resolve data via the GitHub API. You can use any of the following options to resolve this:`,
           bodyLines: [
-            '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid Github token with `repo` scope',
+            '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid GitHub token with `repo` scope',
             '- Have an active session via the official gh CLI tool (https://cli.github.com) in your current terminal',
           ],
         });
@@ -640,6 +648,7 @@ async function generateChangelogForWorkspace(
 async function generateChangelogForProjects(
   tree: Tree,
   args: ChangelogOptions,
+  projectGraph: ProjectGraph,
   commits: GitCommit[],
   projectsVersionData: VersionData,
   postGitTasks: PostGitTask[],
@@ -684,11 +693,11 @@ async function generateChangelogForProjects(
       projectName: project.name,
     });
 
-    // We are either creating/previewing a changelog file, a Github release, or both
+    // We are either creating/previewing a changelog file, a GitHub release, or both
     let logTitle = dryRun ? 'Previewing a' : 'Generating a';
     switch (true) {
       case interpolatedTreePath && config.createRelease === 'github':
-        logTitle += ` Github release and an entry in ${interpolatedTreePath} for ${chalk.white(
+        logTitle += ` GitHub release and an entry in ${interpolatedTreePath} for ${chalk.white(
           releaseVersion.gitTag
         )}`;
         break;
@@ -698,7 +707,7 @@ async function generateChangelogForProjects(
         )}`;
         break;
       case config.createRelease === 'github':
-        logTitle += ` Github release for ${chalk.white(releaseVersion.gitTag)}`;
+        logTitle += ` GitHub release for ${chalk.white(releaseVersion.gitTag)}`;
     }
 
     output.log({
@@ -711,6 +720,7 @@ async function generateChangelogForProjects(
         : undefined;
 
     let contents = await changelogRenderer({
+      projectGraph,
       commits,
       releaseVersion: releaseVersion.rawVersion,
       project: project.name,
@@ -744,7 +754,7 @@ async function generateChangelogForProjects(
 
     /**
      * The exact logic we use for printing the summary/diff to the user is dependent upon whether they are creating
-     * a changelog file, a Github release, or both.
+     * a changelog file, a GitHub release, or both.
      */
     let printSummary = () => {};
     const noDiffInChangelogMessage = chalk.yellow(
@@ -794,9 +804,9 @@ async function generateChangelogForProjects(
     if (config.createRelease === 'github') {
       if (!githubRepoSlug) {
         output.error({
-          title: `Unable to create a Github release because the Github repo slug could not be determined.`,
+          title: `Unable to create a GitHub release because the GitHub repo slug could not be determined.`,
           bodyLines: [
-            `Please ensure you have a valid Github remote configured. You can run \`git remote -v\` to list your current remotes.`,
+            `Please ensure you have a valid GitHub remote configured. You can run \`git remote -v\` to list your current remotes.`,
           ],
         });
         process.exit(1);
@@ -817,9 +827,9 @@ async function generateChangelogForProjects(
       } catch (err) {
         if (err.response?.status === 401) {
           output.error({
-            title: `Unable to resolve data via the Github API. You can use any of the following options to resolve this:`,
+            title: `Unable to resolve data via the GitHub API. You can use any of the following options to resolve this:`,
             bodyLines: [
-              '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid Github token with `repo` scope',
+              '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid GitHub token with `repo` scope',
               '- Have an active session via the official gh CLI tool (https://cli.github.com) in your current terminal',
             ],
           });
