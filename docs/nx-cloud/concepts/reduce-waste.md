@@ -251,19 +251,19 @@ If we don't use the `nx affected` command in CI, no matter how our repo is struc
 
 Note that the 50% chance of any project being modified is an arbitrary number. If we had picked a lower chance of being modified all the expected values would decrease as well. Every repository is different, but this illustrates that a flatter structure will help speed up your CI pipeline.
 
-{% callout title="The Math Behind the Expected Number of Affected Projects" type="note" %}
+{% disclosure title="The Math Behind the Expected Number of Affected Projects" %}
 
-#### Definitions:
+**Definitions:**
 
 ℙm(1) means the probability project 1 was modified  
 ℙm'(1) means the probability project 1 was not modified  
 ℙa(1) means the probability project 1 was affected
 
-#### Given:
+**Given:**
 
 ℙm(1) = ℙm(2) = ℙm(3) = 0.5
 
-#### Stacked:
+**Stacked:**
 
 ℙa(1) = ℙm(1) + ℙm'(1) _ ℙm(2) + ℙm'(1) _ ℙm'(2) _ ℙm(3) = 0.5 + 0.25 + 0.125 = 0.875  
 ℙa(2) = ℙm(2) + ℙm'(2) _ ℙm(3) = 0.5 + 0.25 = 0.75  
@@ -272,7 +272,7 @@ Note that the 50% chance of any project being modified is an arbitrary number. I
 **Expected Number of Affected Projects:**  
 ℙa(1) + ℙa(2) + ℙa(3) = 0.875 + 0.75 + 0.5 = 2.125
 
-#### Grouped:
+**Grouped:**
 
 ℙa(1) = ℙm(1) + ℙm'(1) _ ℙm(3) = 0.5 + 0.25 = 0.75  
 ℙa(2) = ℙm(2) + ℙm'(2) _ ℙm(3) = 0.5 + 0.25 = 0.75  
@@ -281,7 +281,7 @@ Note that the 50% chance of any project being modified is an arbitrary number. I
 **Expected Number of Affected Projects:**  
 ℙa(1) + ℙa(2) + ℙa(3) = 0.75 + 0.75 + 0.5 = 2
 
-#### Flat:
+**Flat:**
 
 ℙa(1) = ℙm(1) = 0.5 = 0.5  
 ℙa(2) = ℙm(2) = 0.5 = 0.5  
@@ -290,7 +290,7 @@ Note that the 50% chance of any project being modified is an arbitrary number. I
 **Expected Number of Affected Projects:**  
 ℙa(1) + ℙa(2) + ℙa(3) = 0.5 + 0.5 + 0.5 = 1.5
 
-{% /callout %}
+{% /disclosure %}
 
 ## Reduce Waste with Remote Caching
 
@@ -298,7 +298,7 @@ If you use a read/write token on developer machines, CI runs could be dramatical
 
 Remote caching is still valuable when only the CI pipelines have a read/write token.
 
-### Remote Caching Helps Starting from the Second CI Run for a Pipeline
+### Remote Caching Begins Helping on the Second CI Run for a Pipeline
 
 The first time CI runs for a particular PR, affected is doing most of the work to speed up your CI run. It is rare for a task to be cached on the first run. However, if the PR doesn't pass in CI, or if you need to make a change for some reason, subsequent runs of that same PR will be able to reuse cached tasks for you.
 
