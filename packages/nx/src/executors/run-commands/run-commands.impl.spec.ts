@@ -170,13 +170,9 @@ describe('Run Commands', () => {
   });
 
   describe('interpolateArgsIntoCommand', () => {
-    it('should add all unparsed args when forwardAllArgs is true', () => {
+    it('should add all args when forwardAllArgs is true', () => {
       expect(
-        interpolateArgsIntoCommand(
-          'echo',
-          { __unparsed__: ['one', '-a=b'] } as any,
-          true
-        )
+        interpolateArgsIntoCommand('echo', { args: 'one -a=b' } as any, true)
       ).toEqual('echo one -a=b');
     });
 
@@ -186,7 +182,7 @@ describe('Run Commands', () => {
           'echo {args.someValue}',
           {
             parsedArgs: {},
-            __unparsed__: [],
+            args: '',
           },
           false
         )
@@ -201,7 +197,7 @@ describe('Run Commands', () => {
             parsedArgs: {
               someValue: '"hello world"',
             },
-            __unparsed__: [],
+            args: '',
           },
           false
         )
