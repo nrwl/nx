@@ -1,4 +1,5 @@
 import { getSourceInformation } from './get-source-information';
+import { useState } from 'react';
 
 /* eslint-disable-next-line */
 export interface PropertyRendererProps {
@@ -11,11 +12,27 @@ export interface PropertyRendererProps {
 export function PropertyRenderer(props: PropertyRendererProps) {
   const { propertyValue, propertyKey, sourceMap, keyPrefix } = props;
   const sourceMapKey = `${keyPrefix ? `${keyPrefix}.` : ''}${propertyKey}`;
+  const isCollapsible = propertyValue && typeof propertyValue === 'object';
+  const [isCollapsed, setIsCollapsed] = useState(true);
+
+  const toggleCollapse = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   return (
     <div title={getSourceInformation(sourceMap, sourceMapKey)}>
+      {isCollapsible && (
+        <button className="text-xs" onClick={toggleCollapse}>
+          {isCollapsed ? '\u25B6' : '\u25BC'}
+        </button>
+      )}
       <span className="font-medium">{propertyKey}</span>:{' '}
       {renderOpening(propertyValue)}
-      <PropertyValueRenderer {...props} />
+      {!isCollapsed || !isCollapsible ? (
+        <PropertyValueRenderer {...props} />
+      ) : (
+        '...'
+      )}
       {renderClosing(propertyValue)}
     </div>
   );
