@@ -4,7 +4,6 @@ import {
   joinPathFragments,
   parseTargetString,
   readCachedProjectGraph,
-  type TargetConfiguration,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
@@ -14,7 +13,6 @@ import { isNpmProject } from 'nx/src/project-graph/operators';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { gte } from 'semver';
 import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
@@ -127,16 +125,20 @@ export function executeDevServerBuilder(
     buildTargetOptions.tsConfig = tsConfigPath;
   }
 
-  const delegateBuilderOptions = getDelegateBuilderOptions(
-    options,
-    buildTarget,
-    context
-  );
+  const delegateBuilderOptions = getDelegateBuilderOptions(options);
   const isUsingWebpackBuilder = ![
     '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser-esbuild',
     '@nx/angular:browser-esbuild',
   ].includes(buildTarget.executor);
+
+  /**
+   * The Angular CLI dev-server builder make some decisions based on the build
+   * target builder but it only considers `@angular-devkit/build-angular:*`
+   * builders. Since we are using a custom builder, we patch the context to
+   * handle `@nx/angular:*` executors.
+   */
+  patchBuilderContext(context);
 
   return from(import('@angular-devkit/build-angular')).pipe(
     switchMap(({ executeDevServerBuilder }) =>
@@ -195,43 +197,41 @@ export default require('@angular-devkit/architect').createBuilder(
 ) as any;
 
 function getDelegateBuilderOptions(
-  options: NormalizedSchema,
-  buildTarget: TargetConfiguration,
-  context: BuilderContext
-) {
-  const delegatedBuilderOptions: DevServerBuilderOptions = { ...options };
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo();
+  options: NormalizedSchema
+): DevServerBuilderOptions {
+  const delegateBuilderOptions: NormalizedSchema & DevServerBuilderOptions = {
+    ...options,
+  };
 
-  // this option was introduced in angular 16.1.0
-  // https://github.com/angular/angular-cli/commit/3ede1a2cac5005f4dfbd2a62ef528a34c3793b78
-  if (
-    gte(angularVersion, '16.1.0') &&
-    buildTarget.executor === '@nx/angular:browser-esbuild'
-  ) {
-    delegatedBuilderOptions.forceEsbuild = true;
-
-    const originalLoggerWarn = context.logger.warn.bind(context.logger);
-    context.logger.warn = (...args) => {
-      // we silence the warning about forcing esbuild from third-party builders
-      if (
-        args[0].includes(
-          'Warning: Forcing the use of the esbuild-based build system with third-party builders may cause unexpected behavior and/or build failures.'
-        )
-      ) {
-        return;
-      }
-
-      originalLoggerWarn(...args);
-    };
-  }
-
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
   if (angularMajorVersion <= 17) {
     (
-      delegatedBuilderOptions as unknown as SchemaWithBrowserTarget
-    ).browserTarget = delegatedBuilderOptions.buildTarget;
-    delete delegatedBuilderOptions.buildTarget;
+      delegateBuilderOptions as unknown as SchemaWithBrowserTarget
+    ).browserTarget = delegateBuilderOptions.buildTarget;
+    delete delegateBuilderOptions.buildTarget;
   }
 
-  return delegatedBuilderOptions;
+  // delete extra option not supported by the delegate builder
+  delete delegateBuilderOptions.buildLibsFromSource;
+
+  return delegateBuilderOptions;
+}
+
+const executorToBuilderMap = new Map<string, string>([
+  [
+    '@nx/angular:browser-esbuild',
+    '@angular-devkit/build-angular:browser-esbuild',
+  ],
+]);
+function patchBuilderContext(context: BuilderContext): void {
+  const originalGetBuilderNameForTarget = context.getBuilderNameForTarget;
+  context.getBuilderNameForTarget = async (target) => {
+    const builderName = await originalGetBuilderNameForTarget(target);
+
+    if (executorToBuilderMap.has(builderName)) {
+      return executorToBuilderMap.get(builderName)!;
+    }
+
+    return builderName;
+  };
 }
