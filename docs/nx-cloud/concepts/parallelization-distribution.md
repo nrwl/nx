@@ -1,6 +1,6 @@
 # Parallelization and Distribution
 
-Nx speeds up your CI in several ways. One method is to reduce wasted calculations with the [affected command](/nx-cloud/features/affected) and [remote caching](/nx-cloud/features/remote-cache). No matter how effective you are at eliminating wasted calculations in CI, there will always be some tasks that really do need to be executed and sometimes that list of tasks will be everything in the repository.
+Nx speeds up your CI in several ways. One method is to reduce wasted calculations with the [affected command](/ci/features/affected) and [remote caching](/ci/features/remote-cache). No matter how effective you are at eliminating wasted calculations in CI, there will always be some tasks that really do need to be executed and sometimes that list of tasks will be everything in the repository.
 
 To speed up the essential tasks, Nx [efficiently orchestrates](/concepts/task-pipeline-configuration) the tasks so that prerequisite tasks are executed first, but independent tasks can all be executed concurrently. Running tasks concurrently can be done with parallel processes on the same machine or distributed across multiple machines.
 
@@ -112,7 +112,5 @@ The Free plan offers 30 concurrent connections, the Startup plan offers 50 concu
 ## Conclusion
 
 If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Cloud with Distributed Task Execution](/ci/features/distribute-task-execution). You can [generate a simple workflow](/nx-api/workspace/generators/ci-workflow) for common CI providers with a `nx g ci-workflow` or follow one of the [CI setup recipes](/ci/recipes/set-up).
-
-Nx Cloud is [free for up to 300 CI Pipeline Executions](https://nx.app/pricing/) per month. If you're working on an open source repo, we'll give you a coupon for unlimited free use of Nx Cloud.
 
 Organizations that want extra help setting up Nx Cloud or getting the most out of Nx can [sign up for Nx Enterprise](https://nx.app/enterprise/). This package comes with extra support from the Nx team and the option to host Nx Cloud on your own servers.
