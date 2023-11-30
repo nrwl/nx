@@ -11,6 +11,7 @@ import {
   updateJson,
   updateProjectConfiguration,
   writeJson,
+  readNxJson,
 } from '@nx/devkit';
 
 import { Linter as LinterEnum } from '../utils/linter';
@@ -72,8 +73,13 @@ export async function lintProjectGenerator(
     lintFilePatterns.push(`{projectRoot}/package.json`);
   }
 
-  const usePlugin = process.env.NX_PCV3 === 'true';
-  if (usePlugin) {
+  const nxJson = readNxJson(tree);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/eslint/plugin'
+      : p.plugin === '@nx/eslint/plugin'
+  );
+  if (hasPlugin) {
     if (
       lintFilePatterns &&
       lintFilePatterns.length &&
