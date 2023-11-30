@@ -125,6 +125,8 @@ export default async function* moduleFederationDevServerExecutor(
         context.projectGraph.nodes[r].data.targets['serve'].options.port;
       if (remotePort >= portToUse) {
         return remotePort + 1;
+      } else {
+        return portToUse;
       }
     }, options.staticRemotesPort);
   }
