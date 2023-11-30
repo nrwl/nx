@@ -52,8 +52,16 @@ function getHttpServerArgs(options: Schema) {
   return args;
 }
 
-function getBuildTargetCommand(options: Schema) {
-  const cmd = ['nx', 'run', options.buildTarget];
+function getBuildTargetCommand(options: Schema, context: ExecutorContext) {
+  const target = parseTargetString(options.buildTarget, context);
+  const cmd = ['nx', 'run'];
+
+  if (target.configuration) {
+    cmd.push(`${target.project}:${target.target}:${target.configuration}`);
+  } else {
+    cmd.push(`${target.project}:${target.target}`);
+  }
+
   if (options.parallel) {
     cmd.push(`--parallel`);
   }
@@ -131,7 +139,7 @@ export default async function* fileServerExecutor(
       if (!running) {
         running = true;
         try {
-          const args = getBuildTargetCommand(options);
+          const args = getBuildTargetCommand(options, context);
           execFileSync(pmCmd, args, {
             stdio: [0, 1, 2],
           });

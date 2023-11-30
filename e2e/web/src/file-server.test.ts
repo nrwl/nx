@@ -25,6 +25,8 @@ describe('file-server', () => {
     setMaxWorkers(join('apps', appName, 'project.json'));
     updateJson(join('apps', appName, 'project.json'), (config) => {
       config.targets['serve'].executor = '@nx/web:file-server';
+      // Check that buildTarget can exclude project name (e.g. build vs proj:build).
+      config.targets['serve'].options.buildTarget = 'build';
       return config;
     });
 
