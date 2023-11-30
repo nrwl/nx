@@ -16,11 +16,11 @@ export default function Blog(): JSX.Element {
   return (
     <>
       <NextSeo
-        title="ts-aoc-starter"
+        title="The ULTIMATE Typescript Starter Repo for Advent of Code 2023"
         description="Our ULTIMATE Typescript Starter Repo for Advent of Code 2023"
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'ts-aoc-starter',
+          title: 'The ULTIMATE Typescript Starter Repo for Advent of Code 2023',
           description:
             'Our ULTIMATE Typescript Starter Repo for Advent of Code 2023',
           images: [
