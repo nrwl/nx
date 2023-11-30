@@ -146,8 +146,7 @@
                     "$ref": "#/definitions/NxReleaseChangelogConfiguration"
                   },
                   {
-                    "type": "boolean",
-                    "enum": [false]
+                    "type": "boolean"
                   }
                 ]
               },
@@ -167,8 +166,7 @@
                   "$ref": "#/definitions/NxReleaseChangelogConfiguration"
                 },
                 {
-                  "type": "boolean",
-                  "enum": [false]
+                  "type": "boolean"
                 }
               ]
             },
@@ -178,8 +176,7 @@
                   "$ref": "#/definitions/NxReleaseChangelogConfiguration"
                 },
                 {
-                  "type": "boolean",
-                  "enum": [false]
+                  "type": "boolean"
                 }
               ]
             }

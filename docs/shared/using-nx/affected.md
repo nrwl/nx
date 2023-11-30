@@ -231,11 +231,11 @@ NX_HEAD=origin/main
 
 Typically, you want to set the base SHA not the most recent commit on the `main` branch, but rather that latest commit that successfully passed in CI. In other words, in order to be certain that the repo is in a good state, we need to check all the changes that have happened since the last time the repo was in a good state. Depending on your CI provider this might differ:
 
-- [Get last successful commit for Azure Pipelines](/nx-cloud/recipes/set-up/monorepo-ci-azure#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for GitHub Actions](/nx-cloud/recipes/set-up/monorepo-ci-github-actions#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for CircleCI](/nx-cloud/recipes/set-up/monorepo-ci-circle-ci#get-the-commit-of-the-last-successful-build)
-- [Get last successful commit for GitLab](/nx-cloud/recipes/set-up/monorepo-ci-gitlab#process-only-affected-projects-with-one-job-on-gitlab)
-- [Get last successful commit for Jenkins](/nx-cloud/recipes/set-up/monorepo-ci-jenkins#get-the-commit-of-the-last-successful-build)
+- [Get last successful commit for Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#get-the-commit-of-the-last-successful-build)
+- [Get last successful commit for GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#get-the-commit-of-the-last-successful-build)
+- [Get last successful commit for CircleCI](/ci/recipes/set-up/monorepo-ci-circle-ci#get-the-commit-of-the-last-successful-build)
+- [Get last successful commit for GitLab](/ci/recipes/set-up/monorepo-ci-gitlab#process-only-affected-projects-with-one-job-on-gitlab)
+- [Get last successful commit for Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins#get-the-commit-of-the-last-successful-build)
 
 ## Ignoring Files from Affected Commands
 

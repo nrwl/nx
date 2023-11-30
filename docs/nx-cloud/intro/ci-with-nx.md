@@ -31,9 +31,9 @@ npx nx connect
 
 {% cards cols="2" lgCols="2" mdCols="2" smCols="2" %}
 
-{% link-card title="Circle CI with Nx" type="tutorial" url="/nx-cloud/intro/tutorials/circle" icon="circleci" /%}
+{% link-card title="Circle CI with Nx" type="tutorial" url="/ci/intro/tutorials/circle" icon="circleci" /%}
 
-{% link-card title="GitHub Actions with Nx" type="tutorial" url="/nx-cloud/intro/tutorials/github-actions" icon="github" /%}
+{% link-card title="GitHub Actions with Nx" type="tutorial" url="/ci/intro/tutorials/github-actions" icon="github" /%}
 
 {% /cards %}
 
