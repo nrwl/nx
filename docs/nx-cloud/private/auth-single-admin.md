@@ -33,10 +33,10 @@ than 1 admin to your workspace, to reduce the chance of losing access to it.
 
 For instructions on how to set up third-party auth providers, please refer to these guides:
 
-- [GitHub Auth](/nx-cloud/recipes/on-premise/auth-github)
-- [GitLab Auth](/nx-cloud/recipes/on-premise/auth-gitlab)
-- [BitBucket Auth](/nx-cloud/recipes/on-premise/auth-bitbucket)
-- [SAML Auth](/nx-cloud/recipes/on-premise/auth-saml)
+- [GitHub Auth](/ci/recipes/on-premise/auth-github)
+- [GitLab Auth](/ci/recipes/on-premise/auth-gitlab)
+- [BitBucket Auth](/ci/recipes/on-premise/auth-bitbucket)
+- [SAML Auth](/ci/recipes/on-premise/auth-saml)
 
 ## Inviting users
 

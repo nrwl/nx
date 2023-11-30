@@ -738,7 +738,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/nx-cloud/features/remote-cache",
+        "path": "/ci/features/remote-cache",
         "tags": []
       },
       {
@@ -748,7 +748,7 @@
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/nx-cloud/features/distribute-task-execution",
+        "path": "/ci/features/distribute-task-execution",
         "tags": []
       },
       {
@@ -847,24 +847,24 @@
     "path": "/core-features/cache-task-results",
     "tags": ["cache-task-results"]
   },
-  "/nx-cloud/features/remote-cache": {
+  "/ci/features/remote-cache": {
     "id": "remote-cache",
     "name": "Use Remote Caching",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/nx-cloud/features/remote-cache",
+    "path": "/ci/features/remote-cache",
     "tags": []
   },
-  "/nx-cloud/features/distribute-task-execution": {
+  "/ci/features/distribute-task-execution": {
     "id": "distribute-task-execution",
     "name": "Distribute Task Execution",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/nx-cloud/features/distribute-task-execution",
+    "path": "/ci/features/distribute-task-execution",
     "tags": []
   },
   "/core-features/explore-graph": {
@@ -6404,13 +6404,13 @@
     "file": "",
     "itemList": [
       {
-        "id": "nx-cloud-documentation",
-        "name": "Nx Cloud Documentation",
+        "id": "ci",
+        "name": "CI Documentation",
         "description": "",
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/nx-cloud/intro/ci-with-nx",
+        "path": "/ci/intro/ci-with-nx",
         "tags": ["cache-task-results", "distribute-task-execution"]
       },
       {
@@ -6488,14 +6488,14 @@
     "path": "/see-also",
     "tags": []
   },
-  "/nx-cloud/intro/ci-with-nx": {
-    "id": "nx-cloud-documentation",
-    "name": "Nx Cloud Documentation",
+  "/ci/intro/ci-with-nx": {
+    "id": "ci",
+    "name": "CI Documentation",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/nx-cloud/intro/ci-with-nx",
+    "path": "/ci/intro/ci-with-nx",
     "tags": ["cache-task-results", "distribute-task-execution"]
   },
   "/nx-api/nx/documents/affected#skip-nx-cache": {

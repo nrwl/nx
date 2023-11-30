@@ -6,7 +6,7 @@ import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticProps } from 'next';
 import { useRouter } from 'next/router';
 import { useEffect, useRef } from 'react';
-import { nxCloudApi } from '../../lib/cloud.api';
+import { ciApi } from '../../lib/ci.api';
 import { menusApi } from '../../lib/menus.api';
 import { useNavToggle } from '../../lib/navigation-toggle.effect';
 import { tagsApi } from '../../lib/tags.api';
@@ -84,9 +84,9 @@ export default function CloudRoot({
 }
 
 export const getStaticProps: GetStaticProps = async () => {
-  const document = nxCloudApi.generateRootDocumentIndex({
-    name: 'cloud',
-    description: 'Learn about Nx Cloud.',
+  const document = ciApi.generateRootDocumentIndex({
+    name: 'ci',
+    description: 'Learn about using Nx in CI',
   });
   return {
     props: {
@@ -94,7 +94,7 @@ export const getStaticProps: GetStaticProps = async () => {
       widgetData: {
         githubStarsCount: await fetchGithubStarCount(),
       },
-      menu: menusApi.getMenu('cloud', ''),
+      menu: menusApi.getMenu('ci', ''),
       relatedDocuments: document.tags
         .map((t) => tagsApi.getAssociatedItems(t))
         .flat(),

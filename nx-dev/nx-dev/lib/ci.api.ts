@@ -5,11 +5,11 @@ import {
 
 // Imports JSON directly, so they can be bundled into the app and functions.
 // Also provides some test safety.
-import documents from '../public/documentation/generated/manifests/cloud.json';
+import documents from '../public/documentation/generated/manifests/ci.json';
 import tags from '../public/documentation/generated/manifests/tags.json';
 
-export const nxCloudApi = new DocumentsApi({
-  id: 'cloud',
+export const ciApi = new DocumentsApi({
+  id: 'ci',
   manifest: documents,
   prefix: '',
   publicDocsRoot: 'public/documentation',

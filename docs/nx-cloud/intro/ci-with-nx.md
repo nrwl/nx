@@ -4,9 +4,9 @@ When implemented well, continuous integration (CI) allows a team of developers t
 
 ## Core Features
 
-- Test only the code that might have been [affected](/nx-cloud/features/affected) by a PR
-- Improve the average CI time with [remote caching](/nx-cloud/features/remote-cache)
-- Improve the worst case CI time with [distributed task execution](/nx-cloud/features/distribute-task-execution)
+- Test only the code that might have been [affected](/ci/features/affected) by a PR
+- Improve the average CI time with [remote caching](/ci/features/remote-cache)
+- Improve the worst case CI time with [distributed task execution](/ci/features/distribute-task-execution)
 - Quickly troubleshoot errors that occur in CI
 - Create a simple but powerful pipeline configuration that easily scales with your codebase
 
@@ -49,12 +49,12 @@ npx nx g ci-workflow
 
 {% cards cols="3" lgCols="8" mdCols="6" smCols="5"  %}
 
-{% link-card title="GitHub Actions" url="/nx-cloud/recipes/set-up/monorepo-ci-github-actions" icon="github" appearance="small" /%}
-{% link-card title="Circle CI" url="/nx-cloud/recipes/set-up/monorepo-ci-circle-ci" icon="circleci" appearance="small" /%}
-{% link-card title="GitLab" url="/nx-cloud/recipes/set-up/monorepo-ci-gitlab" icon="gitlab" appearance="small" /%}
-{% link-card title="Azure Pipelines" url="/nx-cloud/recipes/set-up/monorepo-ci-azure" icon="azure" appearance="small" /%}
-{% link-card title="Bitbucket Pipelines" url="/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines" icon="bitbucket" appearance="small" /%}
-{% link-card title="Jenkins" url="/nx-cloud/recipes/set-up/monorepo-ci-jenkins" icon="jenkins" appearance="small" /%}
+{% link-card title="GitHub Actions" url="/ci/recipes/set-up/monorepo-ci-github-actions" icon="github" appearance="small" /%}
+{% link-card title="Circle CI" url="/ci/recipes/set-up/monorepo-ci-circle-ci" icon="circleci" appearance="small" /%}
+{% link-card title="GitLab" url="/ci/recipes/set-up/monorepo-ci-gitlab" icon="gitlab" appearance="small" /%}
+{% link-card title="Azure Pipelines" url="/ci/recipes/set-up/monorepo-ci-azure" icon="azure" appearance="small" /%}
+{% link-card title="Bitbucket Pipelines" url="/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines" icon="bitbucket" appearance="small" /%}
+{% link-card title="Jenkins" url="/ci/recipes/set-up/monorepo-ci-jenkins" icon="jenkins" appearance="small" /%}
 
 {% /cards %}
 

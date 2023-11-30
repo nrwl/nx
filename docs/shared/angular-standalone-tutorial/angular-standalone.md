@@ -46,7 +46,7 @@ Create a new Angular application with the following command:
 You get asked a few questions that help Nx preconfigure your new Angular application. These include
 
 - Angular specific questions, such as which bundler to use, whether to enable server-side rendering and which stylesheet format to use
-- General Nx questions, such as whether to enable distributed caching with Nx Cloud. Nx comes with built-in [local caching](/core-features/cache-task-results). If you want to benefit from this cache in CI, you can enable [distributed caching](/nx-cloud/features/remote-cache) which will set up [Nx Cloud](https://nx.app). This is also a prerequisite for enabling [distributed task execution](/nx-cloud/features/distribute-task-execution).
+- General Nx questions, such as whether to enable distributed caching with Nx Cloud. Nx comes with built-in [local caching](/core-features/cache-task-results). If you want to benefit from this cache in CI, you can enable [distributed caching](/ci/features/remote-cache) which will set up [Nx Cloud](https://nx.app). This is also a prerequisite for enabling [distributed task execution](/ci/features/distribute-task-execution).
 
 For the sake of this tutorial, let's respond to all the questions with the default response.
 
@@ -830,8 +830,8 @@ Here's some more things you can dive into next:
 - Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects) or [add Storybook to your UI library](/recipes/storybook/overview-angular)
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/nx-cloud/features/remote-cache)
-- [Speed up CI: Distribute your tasks across machines](/nx-cloud/features/distribute-task-execution)
+- [Speed up CI: Share your cache](/ci/features/remote-cache)
+- [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you
 
