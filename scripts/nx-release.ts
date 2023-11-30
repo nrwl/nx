@@ -4,8 +4,13 @@ import { execSync } from 'node:child_process';
 import { rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL } from 'node:url';
+import {
+  releaseChangelog,
+  releasePublish,
+  releaseVersion,
+} from 'nx/src/command-line/release';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
-import { ReleaseType, parse } from 'semver';
+import { ReleaseType, inc, major, parse } from 'semver';
 import * as yargs from 'yargs';
 
 const LARGE_BUFFER = 1024 * 1000000;
@@ -50,20 +55,6 @@ const LARGE_BUFFER = 1024 * 1000000;
     });
   }
 
-  const runNxReleaseVersion = () => {
-    let versionCommand = `pnpm nx release version${
-      options.version ? ` --specifier ${options.version}` : ''
-    }`;
-    if (options.dryRun) {
-      versionCommand += ' --dry-run';
-    }
-    console.log(`> ${versionCommand}`);
-    execSync(versionCommand, {
-      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
-      maxBuffer: LARGE_BUFFER,
-    });
-  };
-
   // Intended for creating a github release which triggers the publishing workflow
   if (!options.local && !process.env.NPM_TOKEN) {
     // For this important use-case it makes sense to always have full logs
@@ -77,27 +68,24 @@ const LARGE_BUFFER = 1024 * 1000000;
       );
     }
 
-    runNxReleaseVersion();
+    await releaseVersion({
+      specifier: options.version,
+      dryRun: options.dryRun,
+      verbose: isVerboseLogging,
+    });
 
     execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
       maxBuffer: LARGE_BUFFER,
     });
 
-    let changelogCommand = `pnpm nx release changelog ${options.version} --interactive workspace`;
-    if (options.from) {
-      changelogCommand += ` --from ${options.from}`;
-    }
-    if (options.gitRemote) {
-      changelogCommand += ` --git-remote ${options.gitRemote}`;
-    }
-    if (options.dryRun) {
-      changelogCommand += ' --dry-run';
-    }
-    console.log(`> ${changelogCommand}`);
-    execSync(changelogCommand, {
-      stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
-      maxBuffer: LARGE_BUFFER,
+    await releaseChangelog({
+      version: options.version,
+      from: options.from,
+      gitRemote: options.gitRemote,
+      interactive: 'workspace',
+      dryRun: options.dryRun,
+      verbose: isVerboseLogging,
     });
 
     console.log(
@@ -106,7 +94,11 @@ const LARGE_BUFFER = 1024 * 1000000;
     process.exit(0);
   }
 
-  runNxReleaseVersion();
+  await releaseVersion({
+    specifier: options.version,
+    dryRun: options.dryRun,
+    verbose: isVerboseLogging,
+  });
 
   execSync(`pnpm nx run-many -t add-extra-dependencies --parallel 8`, {
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
@@ -148,15 +140,15 @@ const LARGE_BUFFER = 1024 * 1000000;
 
     const distTag = determineDistTag(options.version);
 
-    // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
-    let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
-    if (options.dryRun) {
-      publishCommand += ' --dry-run';
-    }
-    console.log(`\n> ${publishCommand}`);
-    execSync(publishCommand, {
-      stdio: [0, 1, 2],
-      maxBuffer: LARGE_BUFFER,
+    await releasePublish({
+      registry: getRegistry().toString(),
+      tag: distTag,
+      // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
+      outputStyle: 'dynamic',
+      // due to our coercion handling for parallel, the types incorrectly show as string (but would break if we passed a string)
+      parallel: 8 as any,
+      dryRun: options.dryRun,
+      verbose: isVerboseLogging,
     });
   }
 
@@ -204,6 +196,60 @@ function parseArgs() {
       description:
         'The version to publish. This does not need to be passed and can be inferred.',
       default: 'minor',
+      coerce: (version) => {
+        if (version !== 'canary') {
+          return version;
+        }
+        /**
+         * Handle the special case of `canary`
+         */
+
+        const currentLatestVersion = execSync('npm view nx@latest version')
+          .toString()
+          .trim();
+        const currentNextVersion = execSync('npm view nx@next version')
+          .toString()
+          .trim();
+
+        let canaryBaseVersion: string | null = null;
+
+        // If the latest and next are not on the same major version, then we need to publish a canary version of the next major
+        if (major(currentLatestVersion) !== major(currentNextVersion)) {
+          canaryBaseVersion = `${major(currentNextVersion)}.0.0`;
+        } else {
+          // Determine next minor version above the currentLatestVersion
+          const nextMinorRelease = inc(
+            currentLatestVersion,
+            'minor',
+            undefined
+          );
+          canaryBaseVersion = nextMinorRelease;
+        }
+
+        if (!canaryBaseVersion) {
+          throw new Error(`Unable to determine a base for the canary version.`);
+        }
+
+        // Create YYYYMMDD string
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const day = String(date.getDate()).padStart(2, '0');
+        const YYYYMMDD = `${year}${month}${day}`;
+
+        // Get the current short git sha
+        const gitSha = execSync('git rev-parse --short HEAD').toString().trim();
+
+        const canaryVersion = `${canaryBaseVersion}-canary.${YYYYMMDD}-${gitSha}`;
+
+        console.log(`\nDerived canary version dynamically`, {
+          currentLatestVersion,
+          currentNextVersion,
+          canaryVersion,
+        });
+
+        return canaryVersion;
+      },
     })
     .option('gitRemote', {
       type: 'string',
@@ -265,7 +311,14 @@ function getRegistry() {
   return new URL(execSync('npm config get registry').toString().trim());
 }
 
-function determineDistTag(newVersion: string): 'latest' | 'next' | 'previous' {
+function determineDistTag(
+  newVersion: string
+): 'latest' | 'next' | 'previous' | 'canary' {
+  // Special case of canary
+  if (newVersion.includes('canary')) {
+    return 'canary';
+  }
+
   // For a relative version keyword, it cannot be previous
   if (isRelativeVersionKeyword(newVersion)) {
     const prereleaseKeywords: ReleaseType[] = [
