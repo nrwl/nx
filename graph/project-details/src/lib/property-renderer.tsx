@@ -9,34 +9,39 @@ export interface PropertyRendererProps {
 }
 
 export function PropertyRenderer(props: PropertyRendererProps) {
-  const { propertyKey, sourceMap, keyPrefix } = props;
+  const { propertyValue, propertyKey, sourceMap, keyPrefix } = props;
   const sourceMapKey = `${keyPrefix ? `${keyPrefix}.` : ''}${propertyKey}`;
   return (
     <div title={getSourceInformation(sourceMap, sourceMapKey)}>
       <span className="font-medium">{propertyKey}</span>:{' '}
+      {renderOpening(propertyValue)}
       <PropertyValueRenderer {...props} />
+      {renderClosing(propertyValue)}
     </div>
   );
 }
 
-function PropertyValueRenderer(props: PropertyRendererProps) {
-  const { propertyKey, propertyValue, sourceMap, keyPrefix } = props;
+type PropertValueRendererProps = PropertyRendererProps & {
+  nested?: boolean;
+};
 
-  if (typeof propertyValue === 'string') {
-    return <code>{propertyValue}</code>;
-  } else if (Array.isArray(propertyValue) && propertyValue.length) {
+function PropertyValueRenderer(props: PropertValueRendererProps) {
+  const { propertyKey, propertyValue, sourceMap, keyPrefix, nested } = props;
+
+  if (Array.isArray(propertyValue) && propertyValue.length) {
     return (
       <div className="ml-3">
-        [
+        {nested && renderOpening(propertyValue)}
         {propertyValue.map((v) =>
           PropertyValueRenderer({
             propertyKey,
             propertyValue: v,
             sourceMap,
             keyPrefix: `${keyPrefix ? `${keyPrefix}.` : ''}${v}`,
+            nested: true,
           })
         )}
-        ]
+        {nested && renderClosing(propertyValue)}
       </div>
     );
   } else if (propertyValue && typeof propertyValue === 'object') {
@@ -47,11 +52,11 @@ function PropertyValueRenderer(props: PropertyRendererProps) {
           `${keyPrefix ? `${keyPrefix}.` : ''}${propertyKey}`
         )}
       >
+        {nested && renderOpening(propertyValue)}
         <div className="ml-3">
-          {'{'}
           {Object.entries(propertyValue)
             .filter(
-              ([key, value]) =>
+              ([, value]) =>
                 value && (Array.isArray(value) ? value.length : true)
             )
             .map(([key, value]) =>
@@ -62,9 +67,15 @@ function PropertyValueRenderer(props: PropertyRendererProps) {
                 sourceMap,
               })
             )}
-          {'}'}
         </div>
+        {nested && renderClosing(propertyValue)}
       </div>
+    );
+  } else {
+    return (
+      <>
+        <code>{`${propertyValue}`}</code>,
+      </>
     );
   }
 }
@@ -79,9 +90,9 @@ function renderOpening(value: any): string {
 
 function renderClosing(value: any): string {
   return Array.isArray(value) && value.length
-    ? ']'
+    ? '],'
     : value && typeof value === 'object'
-    ? '}'
+    ? '},'
     : '';
 }
 
