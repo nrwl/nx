@@ -8,19 +8,7 @@ A cache allows you to reuse work that has already been done, but it also introdu
 
 Nx takes security seriously and has put in place many precautions (we're [SOC 2 compliant](https://security.nx.app)). Listed below are some precautions that you need to take in your own codebase.
 
-## Recommended Precautions
-
-In order to keep your cache secure, there are a few steps we recommend you take:
-
-- Specify a [read-only token](/nx-cloud/recipes/security/access-tokens) in the `nx.json` file
-- Use a [read-write token](/nx-cloud/recipes/security/access-tokens) only in the `main` branch in CI, not on pull request branches.
-- When building the actual deployment artifact, [skip the cache](/core-features/cache-task-results#turn-off-or-skip-the-cache)
-- Do not [manually share your local cache](/recipes/troubleshooting/unknown-local-cache) folder. Use Nx Cloud [remote caching](/nx-cloud/features/remote-cache) instead.
-- Configure [end to end encryption](/nx-cloud/recipes/security/encryption)
-
-If you need to have all cache artifacts on servers that you control, there is an on-premise version of Nx Cloud that you can use as part of the [Enterprise plan](https://nx.app/enterprise).
-
-## Consequences of a Security Incident
+## What Data is Sent to the Cache?
 
 Nx does not send your actual code to the remote cache. There are 3 kinds of data that are sent to the Nx Cloud remote cache for each task:
 
@@ -30,30 +18,38 @@ Nx does not send your actual code to the remote cache. There are 3 kinds of data
 
 If a malicious actor were able to modify the cache and those output files were then executed, that malicious actor could run arbitrary code on developer machines or in CI.
 
-## Potential Malicious Actors
+## Recommended Precautions
 
-The following section describes different personas that might be malicious actors and how the precautions taken above would counter their nefarious intent.
+In order to keep your cache secure, there are a few steps we recommend you take:
 
-### A Contractor with Read-Only Access to the Codebase
+### Specify a Read-Only Token in `nx.json`
 
-Because you specified a [read-only token](/nx-cloud/recipes/security/access-tokens) in the `nx.json` file, the contractor would not be able to upload anything to the remote cache. They could use the cache to run tasks quickly, but their actions couldn't affect anyone else's cache.
+The [token you specify](/nx-cloud/recipes/security/access-tokens) for the `nxCloudAccessToken` property in `nx.json` is visible to anyone who can view your codebase. If this token was a read-write token someone who doesn't even have permission to create a PR could still add entries to the remote cache, which would then be used on other developer's machines and in CI.
 
-### A Former Employee that Had Access to a Read-Write Access Token
+### Use a Read-Write Token in CI
 
-It is possible to revoke a token and issue a new one, but in practice this is unnecessary. In order to poison the cache, the former employee would need to have both the read-write token and the current code on the latest commit on the `main` branch. The odds of the employee being able to guess the hash value that will be created for the current commit on the `main` branch are infinitesimally small even after a single commit.
+If you're in an environment (like an open source project) where you can't trust the contents of a pull request, we recommend restricting the use of a [read-write token](/nx-cloud/recipes/security/access-tokens) in CI to just be used on the `main` branch. If you know that everyone who can make a PR is a trusted developer, you can extend that [read-write token](/nx-cloud/recipes/security/access-tokens) to also include pull request branches.
 
-### A Developer that Is Able to Create Pull Requests
+### No Need to Revoke Tokens After Employees Leave
 
-In an open source environment, anyone in the world can create pull requests so you can't trust the pull request to be safe. This is why we recommend using a [read-write token](/nx-cloud/recipes/security/access-tokens) only for the `main` branch. If you are in a closed source environment where you trust all the developers that have access to create a PR, you could extend that [read-write token](/nx-cloud/recipes/security/access-tokens) to also include PR branches.
+When an employee leaves a company, it is standard practice to change all the passwords that they had access to. That is not necessary for Nx Cloud tokens. In order to poison the cache, the former employee would need to have both the read-write token and the current code on the latest commit on the `main` branch. The odds of the employee being able to guess the hash value that will be created for the current commit on the `main` branch are infinitesimally small even after a single commit.
 
-### An IT Staffer with Access to a Manually Shared Cache Folder
+### Skip the Cache When Creating a Deployment Artifact
 
-Nx implicitly trusts the local cache which is stored by default in the `.nx/cache` folder. You can change the location of that folder in the `nx.json` file, so it could be tempting to place it on a network drive and easily share your cache with everyone on the company network. However, by doing this you've voided the guarantee of immutability from your cache. If someone has direct access to the cached files, they could directly poison the cache. Nx will automatically detect if a cache entry has been created in your local cache using a different machine and warn you with an [Unknown Local Cache Error](/recipes/troubleshooting/unknown-local-cache).
+In order to guarantee that cache poisoning will never affect your end users, [skip the cache](/core-features/cache-task-results#turn-off-or-skip-the-cache) when creating build artifacts that will actually be deployed. Skipping the cache for this one CI run is a very small performance cost, but it gives you 100% confidence that cache poisoning will not be an issue for the end users.
 
-### A Hacker that Gained Access to the Nx Cloud Servers
+### Do Not Manually Share Your Local Cache
 
-Nx Cloud guarantees your cache entries will remain immutable - once they've been registered they can't be changed. This is guaranteed because the only way to access the cache is through the Nx Cloud API. But what if a hacker were somehow able make their way into the server holding the cache artifacts? Since you set up [end to end encryption](/nx-cloud/recipes/security/encryption), the files they see on disk will be fully encrypted with a key that only exists in your workspace. The worst they could do is mangle the file, making your cached results come back as nonsense.
+Nx implicitly trusts the local cache which is stored by default in the `.nx/cache` folder. You can change the location of that folder in the `nx.json` file, so it could be tempting to place it on a network drive and easily share your cache with everyone on the company network. However, by doing this you've voided the guarantee of immutability from your cache. If someone has direct access to the cached files, they could directly poison the cache. Nx will automatically detect if a cache entry has been created in your local cache using a different machine and warn you with an [Unknown Local Cache Error](/recipes/troubleshooting/unknown-local-cache). Instead, use Nx Cloud [remote caching](/nx-cloud/features/remote-cache).
+
+### Configure End to End Encryption
+
+Nx Cloud guarantees your cache entries will remain immutable - once they've been registered they can't be changed. This is guaranteed because the only way to access the cache is through the Nx Cloud API and we have policies enabled in our cloud storage that specifically disables overwrites and deletions of cached artifacts. But what if a hacker were somehow able make their way into the server holding the cache artifacts? Since you set up [end to end encryption](/nx-cloud/recipes/security/encryption), the files they see on disk will be fully encrypted with a key that only exists in your workspace.
+
+### Use An On-Premise Version of Nx Cloud If Needed
+
+If you need to have all cache artifacts on servers that you control, there is an on-premise version of Nx Cloud that you can use as part of the [Enterprise plan](https://nx.app/enterprise).
 
 ## Security Decisions
 
-In any security discussion, there is a trade off between convenience and security. It could be that some of these potential malicious actors are not actually threats in your organization. If that is the case you could relax some of the security precautions and gain the performance benefits of more task results being stored in the remote cache. Every organization is different and Nx can be adapted to best meet your needs without opening up vulnerabilities. If you would Nx team members to help your organization fine tune your set up, [talk to us about Nx Enterprise](https://nx.app/enterprise).
+In any security discussion, there is a trade off between convenience and security. It could be that some of these threats do not apply to your organization. If that is the case you could relax some of the security precautions and gain the performance benefits of more task results being stored in the remote cache. Every organization is different and Nx can be adapted to best meet your needs without opening up vulnerabilities. If you would Nx team members to help your organization fine tune your set up, [talk to us about Nx Enterprise](https://nx.app/enterprise).
