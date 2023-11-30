@@ -87,7 +87,7 @@ Claiming your workspace allows you to
 
 - see stats about your CI runs, cache hits number of agents used for distributing tasks
 - enable [source control integrations](/ci/recipes/source-control-integration) to get information embedded in your GitHub, Bitbucket or GitLab PRs
-- manage and create access tokens and [adjust access and permission](/ci/concepts/scenarios)
+- manage and create access tokens and [adjust access and permission](/ci/concepts/cache-security)
 - manage your organization & user permissions for your Nx Cloud workspace
 
 **If you lose this link, you can still connect your workspace to Nx Cloud**. Go to [nx.app](https://nx.app), create an account, and connect your workspace using the access token from `nx.json`.
