@@ -44,7 +44,6 @@ export default defineConfig({
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
-    outDir: 'dist/react-lib-nonb-jest',
   },
 });
 "
@@ -94,7 +93,6 @@ export default defineConfig({
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
-    outDir: 'dist/react-lib-nonb-jest',
   },
 
   test: {
@@ -170,7 +168,6 @@ export default defineConfig({
       // External packages that should not be bundled into your library.
       external: ['react', 'react-dom', 'react/jsx-runtime'],
     },
-    outDir: 'dist/react-lib-nonb-vitest',
   },
   plugins: [
     nxViteTsPaths(),

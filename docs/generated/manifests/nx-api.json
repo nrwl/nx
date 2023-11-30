@@ -2524,17 +2524,6 @@
         "path": "/nx-api/vite/documents/overview",
         "tags": [],
         "originalFilePath": "shared/packages/vite/vite-plugin"
-      },
-      "/nx-api/vite/documents/vite-nodes-plugin": {
-        "id": "vite-nodes-plugin",
-        "name": "Overview of the @nx/vite/plugin",
-        "description": "The @nx/vite/plugin adds Vite targets/projects to the Nx project graph. This allows you to run Vite for projects that have a vite.config.ts file without creating a project.json file.",
-        "file": "generated/packages/vite/documents/vite-nodes-plugin",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/nx-api/vite/documents/vite-nodes-plugin",
-        "tags": [],
-        "originalFilePath": "shared/packages/vite/vite-nodes-plugin"
       }
     },
     "root": "/packages/vite",

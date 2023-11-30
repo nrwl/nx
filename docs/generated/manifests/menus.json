@@ -9034,14 +9034,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Overview of the @nx/vite/plugin",
-                "path": "/nx-api/vite/documents/vite-nodes-plugin",
-                "id": "vite-nodes-plugin",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "isExternal": false,

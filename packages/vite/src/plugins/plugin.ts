@@ -4,12 +4,12 @@ import {
   CreateNodesContext,
   TargetConfiguration,
   detectPackageManager,
-  getPackageManagerCommand,
   joinPathFragments,
   readJsonFile,
+  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, join } from 'path';
+import { dirname, isAbsolute, join, relative, resolve } from 'path';
 
 import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
@@ -17,6 +17,7 @@ import { UserConfig, loadConfigFromFile } from 'vite';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { getLockFileName } from '@nx/js';
 export interface VitePluginOptions {
   buildTargetName?: string;
   testTargetName?: string;
@@ -66,7 +67,9 @@ export const createNodes: CreateNodes<VitePluginOptions> = [
 
     options = normalizeOptions(options);
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context);
+    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
+      getLockFileName(detectPackageManager(context.workspaceRoot)),
+    ]);
     const targets = targetsCache[hash]
       ? targetsCache[hash]
       : await buildViteTargets(configFilePath, projectRoot, options, context);
@@ -143,14 +146,11 @@ async function buildTarget(
 ) {
   const targetDefaults = readTargetDefaultsForTarget(
     options.buildTargetName,
-    context.nxJsonConfiguration.targetDefaults,
-    '@nx/vite:build'
+    context.nxJsonConfiguration.targetDefaults
   );
 
   const targetConfig: TargetConfiguration = {
-    command: `${
-      getPackageManagerCommand(detectPackageManager()).exec
-    } vite build`,
+    command: `vite build`,
     options: {
       cwd: joinPathFragments(projectRoot),
     },
@@ -165,10 +165,14 @@ async function buildTarget(
   }
 
   if (targetDefaults?.inputs === undefined) {
-    targetConfig.inputs =
-      'production' in namedInputs
+    targetConfig.inputs = [
+      ...('production' in namedInputs
         ? ['production', '^production']
-        : ['default', '^default'];
+        : ['default', '^default']),
+      {
+        externalDependencies: ['vite'],
+      },
+    ];
   }
 
   return targetConfig;
@@ -176,9 +180,7 @@ async function buildTarget(
 
 function serveTarget(projectRoot: string) {
   const targetConfig: TargetConfiguration = {
-    command: `${
-      getPackageManagerCommand(detectPackageManager()).exec
-    } vite serve`,
+    command: `vite serve`,
     options: {
       cwd: joinPathFragments(projectRoot),
     },
@@ -189,9 +191,7 @@ function serveTarget(projectRoot: string) {
 
 function previewTarget(projectRoot: string) {
   const targetConfig: TargetConfiguration = {
-    command: `${
-      getPackageManagerCommand(detectPackageManager()).exec
-    } vite preview`,
+    command: `vite preview`,
     options: {
       cwd: joinPathFragments(projectRoot),
     },
@@ -211,14 +211,11 @@ async function testTarget(
 ) {
   const targetDefaults = readTargetDefaultsForTarget(
     options.testTargetName,
-    context.nxJsonConfiguration.targetDefaults,
-    '@nx/vite:test'
+    context.nxJsonConfiguration.targetDefaults
   );
 
   const targetConfig: TargetConfiguration = {
-    command: `${
-      getPackageManagerCommand(detectPackageManager()).exec
-    } vitest run`,
+    command: `vitest run`,
     options: {
       cwd: joinPathFragments(projectRoot),
     },
@@ -233,10 +230,14 @@ async function testTarget(
   }
 
   if (targetDefaults?.inputs === undefined) {
-    targetConfig.inputs =
-      'production' in namedInputs
-        ? ['default', '^production']
-        : ['default', '^default'];
+    targetConfig.inputs = [
+      ...('production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default']),
+      {
+        externalDependencies: ['vitest'],
+      },
+    ];
   }
   return targetConfig;
 }
@@ -266,6 +267,8 @@ function getOutputs(
   function getOutput(path: string, projectRoot: string): string {
     if (path.startsWith('..')) {
       return join('{workspaceRoot}', join(projectRoot, path));
+    } else if (isAbsolute(resolve(path))) {
+      return `{workspaceRoot}/${relative(workspaceRoot, path)}`;
     } else {
       return join('{projectRoot}', path);
     }

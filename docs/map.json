@@ -2151,13 +2151,6 @@
               "name": "Overview of the Nx Vite Plugin",
               "description": "The Nx Plugin for Vite contains executors and generators that support building applications using Vite. This page also explains how to configure Vite on your Nx workspace.",
               "file": "shared/packages/vite/vite-plugin"
-            },
-            {
-              "id": "vite-nodes-plugin",
-              "path": "/nx-api/vite-nodes-plugin",
-              "name": "Overview of the @nx/vite/plugin",
-              "description": "The @nx/vite/plugin adds Vite targets/projects to the Nx project graph. This allows you to run Vite for projects that have a vite.config.ts file without creating a project.json file.",
-              "file": "shared/packages/vite/vite-nodes-plugin"
             }
           ]
         },

@@ -8,10 +8,15 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
       "targets": {
         "build-something": {
           "cache": true,
-          "command": "pnpm exec vite build",
+          "command": "vite build",
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "vite",
+              ],
+            },
           ],
           "options": {
             "cwd": "my-app",
@@ -21,13 +26,13 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
           ],
         },
         "my-serve": {
-          "command": "pnpm exec vite serve",
+          "command": "vite serve",
           "options": {
             "cwd": "my-app",
           },
         },
         "preview-site": {
-          "command": "pnpm exec vite preview",
+          "command": "vite preview",
           "options": {
             "cwd": "my-app",
           },
@@ -40,10 +45,15 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
         },
         "vitest": {
           "cache": true,
-          "command": "pnpm exec vitest run",
+          "command": "vitest run",
           "inputs": [
-            "default",
+            "production",
             "^production",
+            {
+              "externalDependencies": [
+                "vitest",
+              ],
+            },
           ],
           "options": {
             "cwd": "my-app",
@@ -66,10 +76,15 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
       "targets": {
         "build": {
           "cache": true,
-          "command": "pnpm exec vite build",
+          "command": "vite build",
           "inputs": [
             "production",
             "^production",
+            {
+              "externalDependencies": [
+                "vite",
+              ],
+            },
           ],
           "options": {
             "cwd": ".",
@@ -79,13 +94,13 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
           ],
         },
         "preview": {
-          "command": "pnpm exec vite preview",
+          "command": "vite preview",
           "options": {
             "cwd": ".",
           },
         },
         "serve": {
-          "command": "pnpm exec vite serve",
+          "command": "vite serve",
           "options": {
             "cwd": ".",
           },
@@ -98,10 +113,15 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
         },
         "test": {
           "cache": true,
-          "command": "pnpm exec vitest run",
+          "command": "vitest run",
           "inputs": [
-            "default",
+            "production",
             "^production",
+            {
+              "externalDependencies": [
+                "vitest",
+              ],
+            },
           ],
           "options": {
             "cwd": ".",

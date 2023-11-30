@@ -45,11 +45,6 @@
       "version": "17.2.0-beta.10",
       "description": "Update vite config.",
       "implementation": "./src/migrations/update-17-2-0/update-vite-config"
-    },
-    "add-vite-plugin": {
-      "version": "17.3.0-beta.0",
-      "description": "Add @nx/vite/plugin",
-      "implementation": "./src/migrations/update-17-2-0/add-vite-plugin"
     }
   },
   "packageJsonUpdates": {
