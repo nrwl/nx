@@ -7,7 +7,6 @@ export function createTsConfig(
     projectRoot: string;
     rootProject?: boolean;
     unitTestRunner?: string;
-    outputPath: string;
   },
   relativePathToRootTsConfig: string
 ) {
