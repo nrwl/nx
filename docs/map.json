@@ -1687,7 +1687,7 @@
               "description": "Set up Nx Cloud on machines that you control",
               "id": "on-premise",
               "tags": ["on-premise"],
-              "file": "nx-cloud/private/get-started"
+              "file": "nx-cloud/private/nx-enterprise-on-prem"
             },
             {
               "name": "Nx Cloud Workflows",
