@@ -28,7 +28,8 @@ import { join } from 'path';
 
 export async function vitestGenerator(
   tree: Tree,
-  schema: VitestGeneratorSchema
+  schema: VitestGeneratorSchema,
+  hasPlugin = false
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -41,7 +42,9 @@ export async function vitestGenerator(
     findExistingTargetsInProject(targets).validFoundTargetName.test ??
     'test';
 
-  addOrChangeTestTarget(tree, schema, testTarget);
+  if (!hasPlugin) {
+    addOrChangeTestTarget(tree, schema, testTarget);
+  }
 
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
