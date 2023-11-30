@@ -2,6 +2,7 @@ import type { BuilderContext } from '@angular-devkit/architect';
 import type { DevServerBuilderOptions } from '@angular-devkit/build-angular';
 import {
   joinPathFragments,
+  normalizePath,
   parseTargetString,
   readCachedProjectGraph,
 } from '@nx/devkit';
@@ -11,6 +12,7 @@ import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpac
 import { existsSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { relative } from 'path';
 import { from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
@@ -104,6 +106,9 @@ export function executeDevServerBuilder(
         target: parsedBuildTarget.target,
       });
     dependencies = foundDependencies;
+    const relativeTsConfigPath = normalizePath(
+      relative(context.workspaceRoot, tsConfigPath)
+    );
 
     // We can't just pass the tsconfig path in memory to the angular builder
     // function because we can't pass the build target options to it, the build
@@ -114,7 +119,7 @@ export function executeDevServerBuilder(
     const originalGetTargetOptions = context.getTargetOptions;
     context.getTargetOptions = async (target) => {
       const options = await originalGetTargetOptions(target);
-      options.tsConfig = tsConfigPath;
+      options.tsConfig = relativeTsConfigPath;
       return options;
     };
 
@@ -122,7 +127,7 @@ export function executeDevServerBuilder(
     // otherwise the build will fail if customWebpack function/file is referencing
     // local libs. This synchronize the behavior with webpack-browser and
     // webpack-server implementation.
-    buildTargetOptions.tsConfig = tsConfigPath;
+    buildTargetOptions.tsConfig = relativeTsConfigPath;
   }
 
   const delegateBuilderOptions = getDelegateBuilderOptions(options);

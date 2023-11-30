@@ -1,5 +1,6 @@
 import {
   joinPathFragments,
+  normalizePath,
   ProjectGraph,
   readCachedProjectGraph,
 } from '@nx/devkit';
@@ -9,7 +10,7 @@ import { existsSync } from 'fs';
 import { readNxJson } from 'nx/src/config/configuration';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
-import { join } from 'path';
+import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
@@ -85,7 +86,9 @@ export function executeWebpackBrowserBuilder(
         { projectGraph }
       );
     dependencies = foundDependencies;
-    delegateBuilderOptions.tsConfig = tsConfigPath;
+    delegateBuilderOptions.tsConfig = normalizePath(
+      relative(context.workspaceRoot, tsConfigPath)
+    );
   }
 
   return from(import('@angular-devkit/build-angular')).pipe(
