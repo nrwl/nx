@@ -125,7 +125,8 @@ module.exports = async (phase, context) => {
 
   // If you have plugins that has to be added after Nx you can do that here.
   // For example, Sentry needs to be added last.
-  updatedConfig = require('@sentry/nextjs')(updatedConfig, { silent: true });
+  const { withSentryConfig } = require('@sentry/nextjs');
+  updatedConfig = withSentryConfig(updatedConfig);
 
   return updatedConfig;
 };

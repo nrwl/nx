@@ -5,6 +5,7 @@ import { dirname, resolve } from 'path';
 
 import type { Schema } from './schema';
 import { resolveAndInstantiateESLint } from './utility/eslint-utils';
+import { interpolate } from 'nx/src/tasks-runner/utils';
 
 export default async function run(
   options: Schema,
@@ -84,8 +85,18 @@ export default async function run(
 
   let lintResults: ESLint.LintResult[] = [];
 
+  const normalizedLintFilePatterns = normalizedOptions.lintFilePatterns.map(
+    (pattern) => {
+      return interpolate(pattern, {
+        workspaceRoot: '',
+        projectRoot:
+          context.projectsConfigurations.projects[context.projectName].root,
+        projectName: context.projectName,
+      });
+    }
+  );
   try {
-    lintResults = await eslint.lintFiles(normalizedOptions.lintFilePatterns);
+    lintResults = await eslint.lintFiles(normalizedLintFilePatterns);
   } catch (err) {
     if (
       err.message.includes(
@@ -117,7 +128,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
   if (lintResults.length === 0 && errorOnUnmatchedPattern) {
     const ignoredPatterns = (
       await Promise.all(
-        normalizedOptions.lintFilePatterns.map(async (pattern) =>
+        normalizedLintFilePatterns.map(async (pattern) =>
           (await eslint.isPathIgnored(pattern)) ? pattern : null
         )
       )

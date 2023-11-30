@@ -55,7 +55,7 @@ export function migrateConfigToMonorepoStyle(
     const lintTarget = findLintTarget(project);
     if (lintTarget) {
       const eslintFile =
-        lintTarget.options.eslintConfig || findEslintFile(tree, project.root);
+        lintTarget.options?.eslintConfig || findEslintFile(tree, project.root);
       if (eslintFile) {
         const projectEslintPath = joinPathFragments(project.root, eslintFile);
         migrateEslintFile(projectEslintPath, tree);

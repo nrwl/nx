@@ -19,9 +19,13 @@ import {
 } from './config/config';
 import { filterReleaseGroups } from './config/filter-release-groups';
 
+export const releasePublishCLIHandler = (args: PublishOptions) =>
+  releasePublish(args);
+
 /**
  * NOTE: This function is also exported for programmatic usage and forms part of the public API
- * of Nx.
+ * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
+ * to have control over their own error handling when using the API.
  */
 export async function releasePublish(args: PublishOptions): Promise<void> {
   /**

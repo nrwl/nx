@@ -112,12 +112,13 @@ Able to find CT project, ${!!ctProjectConfig}.`);
     ),
   };
   const configure = composePluginsSync(
-    withNx(),
-    withReact({
+    withNx({
+      target: 'web',
       styles: [],
       scripts: [],
       postcssConfig: ctProjectConfig.root,
-    })
+    }),
+    withReact({})
   );
   const webpackConfig = configure(
     {},

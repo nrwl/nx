@@ -196,7 +196,7 @@ export function addOverrideToLintConfig(
       isBase ? baseEsLintConfigFile : '.eslintrc.json'
     );
     updateJson(tree, fileName, (json) => {
-      json.overrides ?? [];
+      json.overrides ??= [];
       if (options.insertAtTheEnd) {
         json.overrides.push(override);
       } else {

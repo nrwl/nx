@@ -4,7 +4,7 @@ There are two general approaches to setting up CI with Nx - using a single job o
 
 ## Process Only Affected Projects With One Job on Jenkins
 
-Below is an example of an Jenkins setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/nx-cloud/features/affected) to run the tasks only for the projects that were affected by that PR.
+Below is an example of an Jenkins setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/ci/features/affected) to run the tasks only for the projects that were affected by that PR.
 
 ```groovy
 pipeline {
@@ -55,7 +55,7 @@ We also have to set `NX_BRANCH` explicitly.
 
 ## Distribute Tasks Across Agents on Jenkins
 
-To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can copy and paste the workflow below:
+To set up [Distributed Task Execution (DTE)](/ci/features/distribute-task-execution), you can copy and paste the workflow below:
 
 ```groovy
 pipeline {

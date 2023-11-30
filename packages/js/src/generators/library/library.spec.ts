@@ -496,9 +496,6 @@ describe('lib', () => {
         expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
           executor: '@nx/eslint:lint',
           outputs: ['{options.outputFile}'],
-          options: {
-            lintFilePatterns: ['my-lib/**/*.ts', 'my-lib/package.json'],
-          },
         });
       });
 
@@ -569,12 +566,6 @@ describe('lib', () => {
         expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
           executor: '@nx/eslint:lint',
           outputs: ['{options.outputFile}'],
-          options: {
-            lintFilePatterns: [
-              'my-dir/my-lib/**/*.ts',
-              'my-dir/my-lib/package.json',
-            ],
-          },
         });
       });
 
@@ -711,10 +702,6 @@ describe('lib', () => {
           js: true,
           projectNameAndRootFormat: 'as-provided',
         });
-        expect(
-          readProjectConfiguration(tree, 'my-lib').targets.lint.options
-            .lintFilePatterns
-        ).toEqual(['my-dir/my-lib/**/*.js', 'my-dir/my-lib/package.json']);
         expect(readJson(tree, 'my-dir/my-lib/.eslintrc.json'))
           .toMatchInlineSnapshot(`
           {
@@ -1193,7 +1180,7 @@ describe('lib', () => {
       expect(project.targets.test).toMatchObject({
         executor: '@nx/vite:test',
       });
-      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',

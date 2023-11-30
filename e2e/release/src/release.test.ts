@@ -679,7 +679,7 @@ describe('nx release', () => {
 
 
 
-      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -690,7 +690,7 @@ describe('nx release', () => {
       + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
 
 
-      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -701,7 +701,7 @@ describe('nx release', () => {
       + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
 
 
-      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0

@@ -206,14 +206,14 @@
               "name": "Use Remote Caching",
               "id": "remote-cache",
               "file": "",
-              "path": "/nx-cloud/features/remote-cache",
+              "path": "/ci/features/remote-cache",
               "isExternal": true
             },
             {
               "name": "Distribute Task Execution",
               "id": "distribute-task-execution",
               "file": "",
-              "path": "/nx-cloud/features/distribute-task-execution",
+              "path": "/ci/features/distribute-task-execution",
               "isExternal": true
             },
             {
@@ -1448,11 +1448,11 @@
           "description": "Links to other pieces of documentation",
           "itemList": [
             {
-              "name": "Nx Cloud Documentation",
-              "id": "nx-cloud-documentation",
+              "name": "CI Documentation",
+              "id": "ci",
               "file": "",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "path": "/nx-cloud/intro/ci-with-nx",
+              "path": "/ci/intro/ci-with-nx",
               "isExternal": true
             },
             {
@@ -1624,8 +1624,8 @@
       ]
     },
     {
-      "name": "Nx Cloud",
-      "id": "nx-cloud-documentation",
+      "name": "CI",
+      "id": "ci",
       "description": "Learn how to enable Distributed Tasks Executions, remote caching and more.",
       "itemList": [
         {
@@ -1702,6 +1702,12 @@
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
             {
+              "name": "Reduce Waste in CI",
+              "tags": [],
+              "id": "reduce-waste",
+              "file": "nx-cloud/concepts/reduce-waste"
+            },
+            {
               "name": "Improve Worst Case CI Times",
               "tags": ["distribute-task-execution"],
               "id": "dte",
@@ -1728,13 +1734,8 @@
               "name": "Set Up CI",
               "id": "set-up",
               "description": "Learn how to set up Nx Cloud for your workspace.",
+              "tags": ["distribute-task-execution"],
               "itemList": [
-                {
-                  "name": "CI Setup",
-                  "id": "ci-setup",
-                  "tags": ["distribute-task-execution"],
-                  "file": "shared/ci-overview"
-                },
                 {
                   "name": "Setting up Azure Pipelines",
                   "id": "monorepo-ci-azure",

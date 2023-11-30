@@ -55,10 +55,7 @@
     },
     "lint": {
       "executor": "@random/something:test",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["apps/my-test-random-app/**/*.ts"]
-      }
+      "outputs": ["{options.outputFile}"]
     },
     "test": {
       "executor": "@random/something:test",
