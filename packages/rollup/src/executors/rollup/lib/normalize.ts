@@ -1,5 +1,4 @@
 import { basename, dirname, join, relative, resolve } from 'path';
-import { sync as globSync } from 'fast-glob';
 import { statSync } from 'fs';
 import { ExecutorContext, normalizePath } from '@nx/devkit';
 
