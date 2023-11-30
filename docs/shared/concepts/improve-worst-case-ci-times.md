@@ -107,7 +107,7 @@ This approach fully optimizes the binning strategy so that tasks are optimally d
 
 ### 🎉 Pro: Easy to Scale
 
-If CI is taking too long, simply increase the number of agent jobs being started in your CI system and Nx will recognize the new agent jobs are available and distribute tasks accordingly. With this approach, your worst case CI time is only limited by your longest running individual task. If you want Nx to automatically provision the agents for you, check out [Nx Cloud Workflows](/ci/features/nx-cloud-workflows).
+If CI is taking too long, simply increase the number of agent jobs being started in your CI system and Nx will recognize the new agent jobs are available and distribute tasks accordingly. With this approach, your worst case CI time is only limited by your longest running individual task. If you want Nx to automatically provision the agents for you, check out [Nx Agents](/ci/features/nx-agents).
 
 ### 🎉 Pro: Build Artifacts
 

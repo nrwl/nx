@@ -273,7 +273,7 @@
     - [Run Only Tasks Affected by a PR](/ci/features/affected)
     - [Distribute Task Execution](/ci/features/distribute-task-execution)
     - [Set up Nx Cloud On-Premise](/ci/features/on-premise)
-    - [Nx Cloud Workflows](/ci/features/nx-cloud-workflows)
+    - [Nx Agents](/ci/features/nx-agents)
   - [Concepts](/ci/concepts)
     - [Reduce Waste in CI](/ci/concepts/reduce-waste)
     - [Improve Worst Case CI Times](/ci/concepts/dte)
