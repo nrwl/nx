@@ -14,11 +14,7 @@ import {
 } from '@nx/devkit';
 
 import { Linter as LinterEnum } from '../utils/linter';
-import {
-  baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
-  findEslintFile,
-} from '../utils/eslint-file';
+import { findEslintFile } from '../utils/eslint-file';
 import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
 import type { Linter } from 'eslint';
@@ -34,6 +30,10 @@ import {
   generateSpreadElement,
   stringifyNodeList,
 } from '../utils/flat-config/ast-utils';
+import {
+  baseEsLintConfigFile,
+  baseEsLintFlatConfigFile,
+} from '../../utils/config-file';
 
 interface LintProjectOptions {
   project: string;
@@ -59,27 +59,46 @@ export async function lintProjectGenerator(
   });
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  projectConfig.targets['lint'] = {
-    executor: '@nx/eslint:lint',
-    outputs: ['{options.outputFile}'],
-  };
-
   let lintFilePatterns = options.eslintFilePatterns;
   if (!lintFilePatterns && options.rootProject && projectConfig.root === '.') {
     lintFilePatterns = ['./src'];
   }
-  if (lintFilePatterns && lintFilePatterns.length) {
-    if (
-      isBuildableLibraryProject(projectConfig) &&
-      !lintFilePatterns.includes('{projectRoot}')
-    ) {
-      lintFilePatterns.push(`{projectRoot}/package.json`);
-    }
+  if (
+    lintFilePatterns &&
+    lintFilePatterns.length &&
+    !lintFilePatterns.includes('{projectRoot}') &&
+    isBuildableLibraryProject(projectConfig)
+  ) {
+    lintFilePatterns.push(`{projectRoot}/package.json`);
+  }
 
-    // only add lintFilePatterns if they are explicitly defined
-    projectConfig.targets['lint'].options = {
-      lintFilePatterns,
+  const usePlugin = process.env.NX_PCV3 === 'true';
+  if (usePlugin) {
+    if (
+      lintFilePatterns &&
+      lintFilePatterns.length &&
+      lintFilePatterns.some(
+        (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p)
+      )
+    ) {
+      projectConfig.targets['lint'] = {
+        command: `eslint ${lintFilePatterns
+          .join(' ')
+          .replace('{projectRoot}', projectConfig.root)}`,
+      };
+    }
+  } else {
+    projectConfig.targets['lint'] = {
+      executor: '@nx/eslint:lint',
+      outputs: ['{options.outputFile}'],
     };
+
+    if (lintFilePatterns && lintFilePatterns.length) {
+      // only add lintFilePatterns if they are explicitly defined
+      projectConfig.targets['lint'].options = {
+        lintFilePatterns,
+      };
+    }
   }
 
   // we are adding new project which is not the root project or
