@@ -3,7 +3,6 @@
  * https://github.com/unjs/changelogen
  */
 import { interpolate } from '../../../tasks-runner/utils';
-import { output } from '../../../utils/output';
 import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {

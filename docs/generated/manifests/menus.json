@@ -5706,6 +5706,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Reduce Waste in CI",
+            "path": "/nx-cloud/concepts/reduce-waste",
+            "id": "reduce-waste",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Improve Worst Case CI Times",
             "path": "/nx-cloud/concepts/dte",
             "id": "dte",
@@ -5730,6 +5738,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reduce Waste in CI",
+        "path": "/nx-cloud/concepts/reduce-waste",
+        "id": "reduce-waste",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {

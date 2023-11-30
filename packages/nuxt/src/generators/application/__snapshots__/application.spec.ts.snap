@@ -129,8 +129,12 @@ export default defineVitestConfig({
     cache: {
       dir: '../node_modules/.vitest',
     },
-    include: ['my-app/src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     environment: 'nuxt',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    coverage: {
+      reportsDirectory: '../coverage/app5176218',
+      provider: 'v8',
+    },
   },
 });
 "

@@ -79,7 +79,6 @@
     "@nx/storybook": "17.1.1",
     "@nx/web": "17.1.1",
     "@nx/webpack": "17.1.1",
-    "@parcel/watcher": "2.0.4",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@playwright/test": "^1.36.1",
     "@pmmmwh/react-refresh-webpack-plugin": "^0.5.7",
