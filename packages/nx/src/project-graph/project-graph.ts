@@ -81,13 +81,18 @@ export function readProjectsConfigurationFromProjectGraph(
 export async function buildProjectGraphWithoutDaemon() {
   const nxJson = readNxJson();
 
+  performance.mark('retrieve-project-configurations:start');
   const { projects, externalNodes, sourceMaps, projectRootMap } =
     await retrieveProjectConfigurations(workspaceRoot, nxJson);
+  performance.mark('retrieve-project-configurations:end');
 
+  performance.mark('retrieve-workspace-files:start');
   const { allWorkspaceFiles, fileMap, rustReferences } =
     await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  performance.mark('retrieve-workspace-files:end');
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
+  performance.mark('build-project-graph-using-project-file-map:start');
   const projectGraph = (
     await buildProjectGraphUsingProjectFileMap(
       projects,
@@ -99,6 +104,7 @@ export async function buildProjectGraphWithoutDaemon() {
       cacheEnabled
     )
   ).projectGraph;
+  performance.mark('build-project-graph-using-project-file-map:end');
 
   writeSourceMaps(sourceMaps);
 
@@ -155,6 +161,21 @@ export async function createProjectGraphAsync(
   if (!daemonClient.enabled()) {
     try {
       const res = await buildProjectGraphWithoutDaemon();
+      performance.measure(
+        'create-project-graph-async >> retrieve-project-configurations',
+        'retrieve-project-configurations:start',
+        'retrieve-project-configurations:end'
+      );
+      performance.measure(
+        'create-project-graph-async >> retrieve-workspace-files',
+        'retrieve-workspace-files:start',
+        'retrieve-workspace-files:end'
+      );
+      performance.measure(
+        'create-project-graph-async >> build-project-graph-using-project-file-map',
+        'build-project-graph-using-project-file-map:start',
+        'build-project-graph-using-project-file-map:end'
+      );
       performance.mark('create-project-graph-async:end');
       performance.measure(
         'create-project-graph-async',
