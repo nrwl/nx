@@ -450,6 +450,7 @@ const nxCloudUrls = {
   '/nx-cloud/concepts/scenarios': '/ci/concepts/cache-security',
   '/nx-cloud/account/encryption': '/ci/recipes/security/encryption',
   '/nx-cloud/concepts/encryption': '/ci/recipes/security/encryption',
+  '/nx-cloud/features/nx-cloud-workflows': '/ci/concepts/nx-agents',
   '/nx-cloud/:path*': '/ci/:path*',
 };
 

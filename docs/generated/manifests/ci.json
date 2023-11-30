@@ -159,13 +159,13 @@
         "tags": ["on-premise"]
       },
       {
-        "id": "nx-cloud-workflows",
-        "name": "Nx Cloud Workflows",
+        "id": "nx-agents",
+        "name": "Nx Agents",
         "description": "",
-        "file": "nx-cloud/intro/nx-cloud-workflows",
+        "file": "nx-cloud/intro/nx-agents",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/features/nx-cloud-workflows",
+        "path": "/ci/features/nx-agents",
         "tags": []
       }
     ],
@@ -213,14 +213,14 @@
     "path": "/ci/features/on-premise",
     "tags": ["on-premise"]
   },
-  "/ci/features/nx-cloud-workflows": {
-    "id": "nx-cloud-workflows",
-    "name": "Nx Cloud Workflows",
+  "/ci/features/nx-agents": {
+    "id": "nx-agents",
+    "name": "Nx Agents",
     "description": "",
-    "file": "nx-cloud/intro/nx-cloud-workflows",
+    "file": "nx-cloud/intro/nx-agents",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/features/nx-cloud-workflows",
+    "path": "/ci/features/nx-agents",
     "tags": []
   },
   "/ci/concepts": {

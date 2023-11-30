@@ -1690,9 +1690,9 @@
               "file": "nx-cloud/private/nx-enterprise-on-prem"
             },
             {
-              "name": "Nx Cloud Workflows",
-              "id": "nx-cloud-workflows",
-              "file": "nx-cloud/intro/nx-cloud-workflows"
+              "name": "Nx Agents",
+              "id": "nx-agents",
+              "file": "nx-cloud/intro/nx-agents"
             }
           ]
         },
