@@ -1,15 +1,18 @@
 name: publish
-env:
-  DEBUG: napi:*
-  NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
-  NPM_CONFIG_PROVENANCE: true
+
 on:
+  schedule:
+    - cron: "0 3 * * *" # Once per day, at 3am UTC
   workflow_dispatch:
   release:
     types: [published]
+
+env:
+  DEBUG: napi:*
+  NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
+
 jobs:
   build:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
     strategy:
       fail-fast: false
       matrix:
@@ -82,14 +85,14 @@ jobs:
     name: stable - ${{ matrix.settings.target }} - node@18
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v2
         with:
           version: 8.2
 
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
         with:
           node-version: 18
@@ -128,7 +131,7 @@ jobs:
         run: pnpm install --frozen-lockfile
         timeout-minutes: 30
       - name: Setup node x86
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         with:
           node-version: 18
@@ -152,12 +155,13 @@ jobs:
           name: bindings-${{ matrix.settings.target }}
           path: packages/**/*.node
           if-no-files-found: error
+
   build-freebsd:
      runs-on: macos-12
      name: Build FreeBSD
      timeout-minutes: 45
      steps:
-       - uses: actions/checkout@v3
+       - uses: actions/checkout@v4
          if: ${{ !contains(github.ref, '-') }}
        - name: Build
          id: build
@@ -208,6 +212,7 @@ jobs:
            name: bindings-freebsd
            path: packages/**/*.node
            if-no-files-found: error
+
   publish:
     if: ${{ github.event_name == 'release' && github.repository_owner == 'nrwl' }}
     name: Publish
@@ -218,14 +223,15 @@ jobs:
       - build-freebsd
       - build
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
           version: 8.2
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
+          registry-url: 'https://registry.npmjs.org'
           check-latest: true
           cache: 'pnpm'
       - name: Install dependencies
@@ -240,8 +246,14 @@ jobs:
       - name: Publish
         run: |
           git checkout -b publish/$GITHUB_REF_NAME
-          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-          pnpm nx-release --local=false $GITHUB_REF_NAME
+          # If triggered by the cron, create a canary release
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            VERSION="canary"
+          else
+            # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
+            VERSION="${GITHUB_REF_NAME}"
+          fi
+          pnpm nx-release --local=false $VERSION
       - name: Trigger Docs Release
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease }}
@@ -254,4 +266,5 @@ jobs:
           fi
     env:
       GH_TOKEN: ${{ github.token }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NPM_CONFIG_PROVENANCE: true
