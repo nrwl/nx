@@ -74,8 +74,11 @@ export async function createBuilderContext(
   },
   context: ExecutorContext
 ) {
-  require('nx/src/adapter/compat');
+  require('./compat');
   const fsHost = new NxScopedHost(context.root);
+  // the top level import is not patched because it is imported before the
+  // patching happens so we require it here to use the patched version below
+  const { workspaces } = require('@angular-devkit/core');
   const { workspace } = await workspaces.readWorkspace(
     'angular.json',
     workspaces.createWorkspaceHost(fsHost)
