@@ -417,8 +417,9 @@ async function generateChangelogForWorkspace(
   postGitTasks: PostGitTask[]
 ) {
   const config = nxReleaseConfig.changelog.workspaceChangelog;
+  const isEnabled = args.workspaceChangelog ?? config;
   // The entire feature is disabled at the workspace level, exit early
-  if (config === false) {
+  if (isEnabled === false) {
     return;
   }
 
@@ -427,7 +428,14 @@ async function generateChangelogForWorkspace(
     return;
   }
 
-  if (!workspaceChangelogVersion) {
+  // The user explicitly passed workspaceChangelog=true but does not have a workspace changelog config in nx.json
+  if (!config) {
+    throw new Error(
+      `Workspace changelog is enabled but no configuration was provided. Please provide a workspaceChangelog object in your nx.json`
+    );
+  }
+
+  if (!workspaceChangelogVersion && args.workspaceChangelog) {
     throw new Error(
       `Workspace changelog is enabled but no overall version was provided. Please provide an explicit version using --version`
     );

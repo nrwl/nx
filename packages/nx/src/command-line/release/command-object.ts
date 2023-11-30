@@ -42,6 +42,7 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     gitRemote?: string;
+    workspaceChangelog?: boolean;
   };
 
 export type PublishOptions = NxReleaseArgs &
@@ -60,6 +61,7 @@ export const yargsReleaseCommand: CommandModule<
     '**ALPHA**: Orchestrate versioning and publishing of applications and libraries',
   builder: (yargs) =>
     yargs
+      .command(metaCommand)
       .command(versionCommand)
       .command(changelogCommand)
       .command(publishCommand)
@@ -116,32 +118,34 @@ export const yargsReleaseCommand: CommandModule<
   },
 };
 
+const metaCommand: CommandModule<
+  NxReleaseArgs,
+  VersionOptions & ChangelogOptions
+> = {
+  command: '$0 [specifier]',
+  describe:
+    'Create a version and release for the workspace, then generate a changelog',
+  builder: (yargs) =>
+    withGitCommitAndGitTagOptions(
+      withVersionOptions(withChangelogOptions(yargs))
+    ),
+  handler: (args) =>
+    import('./meta')
+      .then((m) => m.releaseMeta(args))
+      .then((versionDataOrExitCode) => {
+        if (typeof versionDataOrExitCode === 'number') {
+          return process.exit(versionDataOrExitCode);
+        }
+        process.exit(0);
+      }),
+};
+
 const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
   command: 'version [specifier]',
   aliases: ['v'],
   describe:
     'Create a version and release for one or more applications and libraries',
-  builder: (yargs) =>
-    withGitCommitAndGitTagOptions(
-      yargs
-        .positional('specifier', {
-          type: 'string',
-          describe:
-            'Exact version or semver keyword to apply to the selected release group.',
-        })
-        .option('preid', {
-          type: 'string',
-          describe:
-            'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
-          default: '',
-        })
-        .option('stageChanges', {
-          type: 'boolean',
-          describe:
-            'Whether or not to stage the changes made by this command, irrespective of the git config in nx.json related to automated commits. Useful when combining this command with changelog generation.',
-          default: false,
-        })
-    ),
+  builder: (yargs) => withGitCommitAndGitTagOptions(withVersionOptions(yargs)),
   handler: (args) =>
     import('./version')
       .then((m) => m.releaseVersionCLIHandler(args))
@@ -160,45 +164,14 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
     'Generate a changelog for one or more projects, and optionally push to Github',
   builder: (yargs) =>
     withGitCommitAndGitTagOptions(
-      yargs
-        // Disable default meaning of yargs version for this command
-        .version(false)
-        .positional('version', {
-          type: 'string',
-          description:
-            'The version to create a Github release and changelog for',
-        })
-        .option('from', {
-          type: 'string',
-          description:
-            'The git reference to use as the start of the changelog. If not set it will attempt to resolve the latest tag and use that',
-        })
-        .option('to', {
-          type: 'string',
-          description: 'The git reference to use as the end of the changelog',
-          default: 'HEAD',
-        })
-        .option('interactive', {
-          alias: 'i',
-          type: 'string',
-          description:
-            'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level',
-          choices: ['all', 'workspace', 'projects'],
-        })
-        .option('gitRemote', {
-          type: 'string',
-          description:
-            'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)',
-          default: 'origin',
-        })
-        .check((argv) => {
-          if (!argv.version) {
-            throw new Error(
-              'An explicit target version must be specified when using the changelog command directly'
-            );
-          }
-          return true;
-        })
+      withChangelogOptions(yargs).check((argv) => {
+        if (!argv.version) {
+          throw new Error(
+            'An explicit target version must be specified when using the changelog command directly'
+          );
+        }
+        return true;
+      })
     ),
   handler: async (args) => {
     const status = await (
@@ -255,6 +228,62 @@ function coerceParallelOption(args: any) {
     };
   }
   return args;
+}
+
+function withVersionOptions<T>(yargs: Argv<T>): Argv<T & VersionOptions> {
+  return yargs
+    .positional('specifier', {
+      type: 'string',
+      describe:
+        'Exact version or semver keyword to apply to the selected release group.',
+    })
+    .option('preid', {
+      type: 'string',
+      describe:
+        'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
+      default: '',
+    })
+    .option('stageChanges', {
+      type: 'boolean',
+      describe:
+        'Whether or not to stage the changes made by this command, irrespective of the git config in nx.json related to automated commits. Useful when combining this command with changelog generation.',
+      default: false,
+    });
+}
+
+function withChangelogOptions<T>(yargs: Argv<T>): Argv<T & ChangelogOptions> {
+  return (
+    yargs
+      // Disable default meaning of yargs version for this command
+      .version(false)
+      .positional('version', {
+        type: 'string',
+        description: 'The version to create a Github release and changelog for',
+      })
+      .option('from', {
+        type: 'string',
+        description:
+          'The git reference to use as the start of the changelog. If not set it will attempt to resolve the latest tag and use that',
+      })
+      .option('to', {
+        type: 'string',
+        description: 'The git reference to use as the end of the changelog',
+        default: 'HEAD',
+      })
+      .option('interactive', {
+        alias: 'i',
+        type: 'string',
+        description:
+          'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level',
+        choices: ['all', 'workspace', 'projects'],
+      })
+      .option('gitRemote', {
+        type: 'string',
+        description:
+          'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)',
+        default: 'origin',
+      })
+  );
 }
 
 function withGitCommitAndGitTagOptions<T>(
