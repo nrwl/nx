@@ -296,7 +296,10 @@ function processEnv(color: boolean, cwd: string, env: Record<string, string>) {
 
 export function interpolateArgsIntoCommand(
   command: string,
-  opts: Pick<NormalizedRunCommandsOptions, 'parsedArgs' | '__unparsed__'>,
+  opts: Pick<
+    NormalizedRunCommandsOptions,
+    'args' | 'parsedArgs' | '__unparsed__'
+  >,
   forwardAllArgs: boolean
 ) {
   if (command.indexOf('{args.') > -1) {
@@ -305,7 +308,7 @@ export function interpolateArgsIntoCommand(
       opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
     );
   } else if (forwardAllArgs) {
-    return `${command}${
+    return `${command}${opts.args ? ' ' + opts.args : ''}${
       opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
     }`;
   } else {
