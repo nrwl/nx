@@ -49,14 +49,13 @@ where
     P: AsRef<Path>,
 {
     let directory = directory.as_ref();
-    let nx_ignore = directory.join(".nxignore");
 
     let ignore_glob_set =
         build_glob_set(&["**/node_modules", "**/.git"]).expect("These static ignores always build");
 
     let mut walker = WalkBuilder::new(directory);
     walker.hidden(false);
-    walker.add_custom_ignore_filename(&nx_ignore);
+    walker.add_custom_ignore_filename(".nxignore");
 
     // We should make sure to always ignore node_modules and the .git folder
     walker.filter_entry(move |entry| {
@@ -177,6 +176,26 @@ mod test {
             .child("grand_child.txt")
             .write_str("data")
             .unwrap();
+        temp_dir
+            .child("v1")
+            .child("packages")
+            .child("pkg-a")
+            .child("pkg-a.txt")
+            .write_str("data")
+            .unwrap();
+        temp_dir
+            .child("v1")
+            .child("packages")
+            .child("pkg-b")
+            .child("pkg-b.txt")
+            .write_str("data")
+            .unwrap();
+        temp_dir
+            .child("packages")
+            .child("pkg-c")
+            .child("pkg-c.txt")
+            .write_str("data")
+            .unwrap();
 
         // add nxignore file
         temp_dir
@@ -185,12 +204,14 @@ mod test {
                 r"baz/
 nested/child.txt
 nested/child-two/
+
+# this should only ignore root level packages, not nested
+/packages
     ",
             )
             .unwrap();
 
         let mut file_names = nx_walker(temp_dir)
-            .into_iter()
             .map(
                 |NxFile {
                      normalized_path: relative_path,
@@ -203,7 +224,14 @@ nested/child-two/
 
         assert_eq!(
             file_names,
-            vec!(".nxignore", "bar.txt", "foo.txt", "test.txt")
+            vec!(
+                ".nxignore",
+                "bar.txt",
+                "foo.txt",
+                "test.txt",
+                "v1/packages/pkg-a/pkg-a.txt",
+                "v1/packages/pkg-b/pkg-b.txt"
+            )
         );
     }
 }
