@@ -1714,14 +1714,9 @@
               "file": "shared/concepts/improve-worst-case-ci-times"
             },
             {
-              "name": "Security Scenarios",
-              "id": "scenarios",
-              "file": "nx-cloud/concepts/scenarios"
-            },
-            {
-              "name": "End to End Encryption",
-              "id": "encryption",
-              "file": "nx-cloud/concepts/encryption"
+              "name": "Cache Security",
+              "id": "cache-security",
+              "file": "nx-cloud/concepts/cache-security"
             }
           ]
         },
@@ -1782,6 +1777,11 @@
                   "name": "Access Tokens",
                   "id": "access-tokens",
                   "file": "nx-cloud/recipes/access-tokens"
+                },
+                {
+                  "name": "Enable End to End Encryption",
+                  "id": "encryption",
+                  "file": "nx-cloud/recipes/encryption"
                 }
               ]
             },

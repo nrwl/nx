@@ -250,23 +250,13 @@
         "tags": ["distribute-task-execution"]
       },
       {
-        "id": "scenarios",
-        "name": "Security Scenarios",
+        "id": "cache-security",
+        "name": "Cache Security",
         "description": "",
-        "file": "nx-cloud/concepts/scenarios",
+        "file": "nx-cloud/concepts/cache-security",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/concepts/scenarios",
-        "tags": []
-      },
-      {
-        "id": "encryption",
-        "name": "End to End Encryption",
-        "description": "",
-        "file": "nx-cloud/concepts/encryption",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/concepts/encryption",
+        "path": "/ci/concepts/cache-security",
         "tags": []
       }
     ],
@@ -294,24 +284,14 @@
     "path": "/ci/concepts/dte",
     "tags": ["distribute-task-execution"]
   },
-  "/ci/concepts/scenarios": {
-    "id": "scenarios",
-    "name": "Security Scenarios",
+  "/ci/concepts/cache-security": {
+    "id": "cache-security",
+    "name": "Cache Security",
     "description": "",
-    "file": "nx-cloud/concepts/scenarios",
+    "file": "nx-cloud/concepts/cache-security",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/concepts/scenarios",
-    "tags": []
-  },
-  "/ci/concepts/encryption": {
-    "id": "encryption",
-    "name": "End to End Encryption",
-    "description": "",
-    "file": "nx-cloud/concepts/encryption",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/concepts/encryption",
+    "path": "/ci/concepts/cache-security",
     "tags": []
   },
   "/ci/recipes": {
@@ -415,6 +395,16 @@
             "itemList": [],
             "isExternal": false,
             "path": "/ci/recipes/security/access-tokens",
+            "tags": []
+          },
+          {
+            "id": "encryption",
+            "name": "Enable End to End Encryption",
+            "description": "",
+            "file": "nx-cloud/recipes/encryption",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/security/encryption",
             "tags": []
           }
         ],
@@ -746,6 +736,16 @@
         "isExternal": false,
         "path": "/ci/recipes/security/access-tokens",
         "tags": []
+      },
+      {
+        "id": "encryption",
+        "name": "Enable End to End Encryption",
+        "description": "",
+        "file": "nx-cloud/recipes/encryption",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/security/encryption",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -770,6 +770,16 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/security/access-tokens",
+    "tags": []
+  },
+  "/ci/recipes/security/encryption": {
+    "id": "encryption",
+    "name": "Enable End to End Encryption",
+    "description": "",
+    "file": "nx-cloud/recipes/encryption",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/security/encryption",
     "tags": []
   },
   "/ci/recipes/source-control-integration": {
