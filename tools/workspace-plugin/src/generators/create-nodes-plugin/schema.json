@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "Generator",
   "title": "",
+  "description": "Create nodes plugin generator.",
   "type": "object",
   "properties": {},
   "required": []
