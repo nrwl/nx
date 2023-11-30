@@ -113,6 +113,35 @@ export async function createBuilderContext(
       architect['_scheduler'].schedule('..getProjectMetadata', target).output
     );
 
+  const getBuilderNameForTarget = (target: Target | string) => {
+    if (typeof target === 'string') {
+      return Promise.resolve(
+        context.projectGraph.nodes[context.projectName].data.targets[target]
+          .executor
+      );
+    }
+    return Promise.resolve(
+      context.projectGraph.nodes[target.project].data.targets[target.target]
+        .executor
+    );
+  };
+
+  const getTargetOptions = (target: Target | string) => {
+    if (typeof target === 'string') {
+      return Promise.resolve({
+        ...context.projectGraph.nodes[context.projectName].data.targets[target]
+          .options,
+      });
+    }
+
+    return Promise.resolve({
+      ...context.projectGraph.nodes[target.project].data.targets[target.target]
+        .options,
+      ...context.projectGraph.nodes[target.project].data.targets[target.target]
+        .configurations[target.configuration],
+    });
+  };
+
   const builderContext: import('@angular-devkit/architect').BuilderContext = {
     workspaceRoot: context.root,
     target: {
@@ -127,9 +156,7 @@ export async function createBuilderContext(
     id: 1,
     currentDirectory: process.cwd(),
     scheduleTarget: architect.scheduleTarget,
-    getBuilderNameForTarget: architectHost.getBuilderNameForTarget,
     scheduleBuilder: architect.scheduleBuilder,
-    getTargetOptions: architectHost.getOptionsForTarget,
     addTeardown(teardown: () => Promise<void> | void) {
       // No-op as Nx doesn't require an implementation of this function
       return;
@@ -146,8 +173,10 @@ export async function createBuilderContext(
       // No-op as Nx doesn't require an implementation of this function
       return;
     },
+    getBuilderNameForTarget,
     getProjectMetadata,
     validateOptions,
+    getTargetOptions,
   };
 
   return builderContext;

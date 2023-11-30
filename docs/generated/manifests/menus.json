@@ -6537,6 +6537,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "module-federation-dev-server",
+                "path": "/nx-api/angular/executors/module-federation-dev-server",
+                "name": "module-federation-dev-server",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "webpack-browser",
                 "path": "/nx-api/angular/executors/webpack-browser",
                 "name": "webpack-browser",
@@ -6556,14 +6564,6 @@
                 "id": "webpack-server",
                 "path": "/nx-api/angular/executors/webpack-server",
                 "name": "webpack-server",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "module-federation-dev-server",
-                "path": "/nx-api/angular/executors/module-federation-dev-server",
-                "name": "module-federation-dev-server",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

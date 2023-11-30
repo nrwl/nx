@@ -1,8 +1,7 @@
 {
-  "version": 2,
-  "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for Module Federation Dev Server",
+  "outputCapture": "direct-nodejs",
   "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
   "type": "object",
   "presets": [
@@ -149,6 +148,13 @@
     }
   },
   "additionalProperties": false,
-  "anyOf": [{ "required": ["buildTarget"] }, { "required": ["browserTarget"] }],
+  "anyOf": [
+    {
+      "required": ["buildTarget"]
+    },
+    {
+      "required": ["browserTarget"]
+    }
+  ],
   "examplesFile": "../../../docs/module-federation-dev-server-examples.md"
 }
