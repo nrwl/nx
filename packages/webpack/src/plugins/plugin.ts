@@ -23,7 +23,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 export interface WebpackPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
-  staticServeTargetName?: string;
+  serveStaticTargetName?: string;
   previewTargetName?: string;
 }
 
@@ -59,7 +59,7 @@ export const createNodes: CreateNodes<WebpackPluginOptions> = [
     options ??= {};
     options.buildTargetName ??= 'build';
     options.serveTargetName ??= 'serve';
-    options.staticServeTargetName ??= 'static-serve';
+    options.serveStaticTargetName ??= 'serve-static';
     options.previewTargetName ??= 'preview';
 
     const projectRoot = dirname(configFilePath);
@@ -175,10 +175,10 @@ async function createWebpackTargets(
     },
   };
 
-  targets[options.staticServeTargetName] = {
+  targets[options.serveStaticTargetName] = {
     executor: '@nx/web:file-server',
     options: {
-      buildTarget: `${projectRoot}:${options.buildTargetName}`,
+      buildTarget: options.buildTargetName,
     },
   };
 
