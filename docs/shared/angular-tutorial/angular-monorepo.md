@@ -25,7 +25,7 @@ Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI
 Advantages of Nx over the Angular CLI:
 
 - [Cache any target](/core-features/cache-task-results)
-- [Run only tasks affected by a code change](/concepts/affected)
+- [Run only tasks affected by a code change](/ci/features/affected)
 - [Split a large angular.json into multiple project.json files](/concepts/more-concepts/nx-and-angular#projectjson-vs-angularjson)
 - [Integrate with modern tools](/concepts/more-concepts/nx-and-angular#integrating-with-modern-tools)
 - [Controllable update process](/concepts/more-concepts/nx-and-angular#ng-update-vs-nx-migrate)
@@ -55,10 +55,10 @@ Create a new Angular monorepo with the following command:
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · angular-store
+✔ Which bundler would you like to use? · esbuild
 ✔ Default stylesheet format · css
+✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
 ✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Would you like to use Standalone Components in your application? · Yes
-✔ Would you like to add routing? · Yes
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
@@ -132,11 +132,11 @@ All targets, such as `serve`, `build`, `test` or your custom ones, are defined i
   "name": "angular-store",
   ...
   "targets": {
-    "serve": { ... },
     "build": { ... },
-    "preview": { ... },
-    "test": { ... },
+    "serve": { ... },
+    "extract-i18n": { ... },
     "lint": { ... },
+    "test": { ... },
     "serve-static": { ... },
   },
 }
@@ -981,7 +981,7 @@ Learn more about how to [enforce module boundaries](/core-features/enforce-modul
 
 ## Setting Up CI
 
-Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps decrease the average CI time with the [`affected` command](/concepts/affected) and Nx Cloud's [distributed caching](/core-features/remote-cache). Nx also [decreases the worst case CI time](/concepts/dte) with Nx Cloud's distributed task execution.
+Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps decrease the average CI time with the [`affected` command](/ci/features/affected) and Nx Cloud's [distributed caching](/ci/features/remote-cache). Nx also [decreases the worst case CI time](/ci/concepts/dte) with Nx Cloud's distributed task execution.
 
 To set up Nx Cloud run:
 
@@ -1001,7 +1001,7 @@ nx generate ci-workflow --ci=github
 You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
 {% /callout %}
 
-This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/core-features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
+This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
 
 ## Next Steps
 
@@ -1013,8 +1013,8 @@ Here's some more things you can dive into next:
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-angular)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/core-features/remote-cache)
-- [Speed up CI: Distribute your tasks across machines](/core-features/distribute-task-execution)
+- [Speed up CI: Share your cache](/ci/features/remote-cache)
+- [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you
 

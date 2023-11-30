@@ -60,30 +60,25 @@ describe('Workspaces', () => {
         }),
       });
 
-      withEnvironmentVariables(
+      const { projects } = await withEnvironmentVariables(
         {
           NX_WORKSPACE_ROOT: fs.tempDir,
         },
-        async () => {
-          const resolved = await retrieveProjectConfigurations(
-            fs.tempDir,
-            readNxJson(fs.tempDir)
-          );
-          expect(resolved.projectNodes['my-package']).toEqual({
-            name: 'my-package',
-            root: 'packages/my-package',
-            sourceRoot: 'packages/my-package',
-            projectType: 'library',
-            targets: {
-              'nx-release-publish': {
-                dependsOn: ['^nx-release-publish'],
-                executor: '@nx/js:release-publish',
-                options: {},
-              },
-            },
-          });
-        }
+        () => retrieveProjectConfigurations(fs.tempDir, readNxJson(fs.tempDir))
       );
+      expect(projects['my-package']).toEqual({
+        name: 'my-package',
+        root: 'packages/my-package',
+        sourceRoot: 'packages/my-package',
+        projectType: 'library',
+        targets: {
+          'nx-release-publish': {
+            dependsOn: ['^nx-release-publish'],
+            executor: '@nx/js:release-publish',
+            options: {},
+          },
+        },
+      });
     });
   });
 });

@@ -109,7 +109,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
   addProjectConfiguration(host, options.projectName, {
     root: options.projectRoot,
     projectType: 'application',
-    sourceRoot: `${options.projectRoot}/tests`,
+    sourceRoot: `${options.projectRoot}/src`,
     targets: {},
     implicitDependencies: [options.pluginName],
   });
@@ -148,7 +148,6 @@ async function addJest(host: Tree, options: NormalizedSchema) {
       ...testTarget.options,
       runInBand: true,
     },
-    configurations: testTarget.configurations,
   };
 
   // remove the jest build target
@@ -169,7 +168,6 @@ async function addLintingToApplication(
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
-    eslintFilePatterns: [`${options.projectRoot}/**/*.ts`],
     unitTestRunner: 'jest',
     skipFormat: true,
     setParserOptionsProject: false,

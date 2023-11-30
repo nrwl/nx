@@ -82,6 +82,16 @@ Your content goes here.
 {% /callout %}
 ```
 
+#### Disclosure
+
+A disclosure can be used for less important information that is initially collapsed.
+
+```markdown
+{% disclosure title="string" %}
+Your content goes here.
+{% /disclosure %}
+```
+
 #### Cards
 
 Cards allow showing content in a grid system with a title, a description, a type and an url (internal/external).
@@ -148,6 +158,8 @@ You can also statically highlight a set of lines (the user won't be able to chan
 ‎ Neither is this
 ‎```
 ````
+
+You can also specify ranges like `highlightLines=[2,3,"8-10"]`.
 
 #### Terminal command
 

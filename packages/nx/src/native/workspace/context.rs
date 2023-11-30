@@ -1,24 +1,26 @@
-use crate::native::logger::enable_logger;
+use napi::bindgen_prelude::External;
 use std::collections::HashMap;
 
-use crate::native::types::FileData;
-use crate::native::utils::path::Normalize;
-use parking_lot::lock_api::MutexGuard;
-use parking_lot::{Condvar, Mutex, RawMutex};
+use crate::native::hasher::{hash, hash_file_path};
+use crate::native::utils::Normalize;
 use rayon::prelude::*;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::thread;
+use std::thread::available_parallelism;
+use std::{cmp, thread};
+
+use crate::native::logger::enable_logger;
+use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
+use crate::native::types::FileData;
+use parking_lot::{Condvar, Mutex};
 use tracing::{trace, warn};
-use xxhash_rust::xxh3;
 
 use crate::native::walker::nx_walker;
-use crate::native::workspace::errors::WorkspaceErrors;
-use crate::native::workspace::workspace_files::NxWorkspaceFiles;
-use crate::native::workspace::{config_files, workspace_files};
-
-use crate::native::workspace::types::ConfigurationParserResult;
+use crate::native::workspace::types::{
+    FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
+};
+use crate::native::workspace::{config_files, workspace_files, types::NxWorkspaceFiles};
 
 #[napi]
 pub struct WorkspaceContext {
@@ -28,8 +30,8 @@ pub struct WorkspaceContext {
 }
 
 type Files = Vec<(PathBuf, String)>;
-struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
 
+struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
 impl FilesWorker {
     fn gather_files(workspace_root: &Path) -> Self {
         if !workspace_root.exists() {
@@ -48,16 +50,34 @@ impl FilesWorker {
             trace!("locking files");
             let (lock, cvar) = &*files_lock_clone;
             let mut workspace_files = lock.lock();
-            let files = nx_walker(workspace_root, |rec| {
-                let mut file_hashes: Vec<(PathBuf, String)> = vec![];
-                for (path, content) in rec {
-                    file_hashes.push((path, xxh3::xxh3_64(&content).to_string()));
-                }
-                file_hashes
-            });
 
-            workspace_files.extend(files);
-            workspace_files.par_sort();
+            let files = nx_walker(workspace_root).collect::<Vec<_>>();
+            let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
+            let chunks = files.len() / num_parallelism;
+
+            let now = std::time::Instant::now();
+
+            let mut files = if chunks < num_parallelism {
+                files
+                    .iter()
+                    .filter_map(|(full_path, path)| {
+                        hash_file_path(full_path).map(|hash| (path.to_owned(), hash))
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                files
+                    .par_chunks(chunks)
+                    .flat_map_iter(|chunks| {
+                        chunks.iter().filter_map(|(full_path, path)| {
+                            hash_file_path(full_path).map(|hash| (path.to_owned(), hash))
+                        })
+                    })
+                    .collect::<Vec<_>>()
+            };
+
+            files.par_sort();
+            trace!("hashed and sorted workspace files in {:?}", now.elapsed());
+            *workspace_files = files;
             let files_len = workspace_files.len();
             trace!(?files_len, "files retrieved");
 
@@ -67,22 +87,32 @@ impl FilesWorker {
         FilesWorker(Some(files_lock))
     }
 
-    pub fn get_files(&self) -> Option<MutexGuard<'_, RawMutex, Files>> {
-        let Some(files_sync) = &self.0 else {
-            trace!("there were no files because the workspace root did not exist");
-            return None
-        };
+    pub fn get_files(&self) -> Vec<FileData> {
+        if let Some(files_sync) = &self.0 {
+            let (files_lock, cvar) = files_sync.deref();
+            trace!("locking files");
+            let mut files = files_lock.lock();
+            let files_len = files.len();
+            if files_len == 0 {
+                trace!("waiting for files");
+                cvar.wait(&mut files);
+            }
 
-        let (files_lock, cvar) = &files_sync.deref();
-        let mut files = files_lock.lock();
-        let files_len = files.len();
-        if files_len == 0 {
-            trace!("waiting for files");
-            cvar.wait(&mut files);
+            let file_data = files
+                .iter()
+                .map(|(path, hash)| FileData {
+                    file: path.to_normalized_string(),
+                    hash: hash.clone(),
+                })
+                .collect();
+
+            drop(files);
+
+            trace!("files are available");
+            file_data
+        } else {
+            vec![]
         }
-
-        trace!("files are available");
-        Some(files)
     }
 
     pub fn update_files(
@@ -93,7 +123,7 @@ impl FilesWorker {
     ) -> HashMap<String, String> {
         let Some(files_sync) = &self.0 else {
             trace!("there were no files because the workspace root did not exist");
-           return HashMap::new();
+            return HashMap::new();
         };
 
         let (files_lock, _) = &files_sync.deref();
@@ -108,11 +138,11 @@ impl FilesWorker {
             .par_iter()
             .filter_map(|path| {
                 let full_path = workspace_root_path.join(path);
-                let Ok( content ) = std::fs::read(full_path) else {
-                    trace!( "could not read file: ?full_path");
+                let Ok(content) = std::fs::read(&full_path) else {
+                    trace!("could not read file: {full_path:?}");
                     return None;
                 };
-                Some((path.to_string(), xxh3::xxh3_64(&content).to_string()))
+                Some((path.to_string(), hash(&content)))
             })
             .collect();
 
@@ -147,55 +177,40 @@ impl WorkspaceContext {
     }
 
     #[napi]
-    pub fn get_workspace_files<ConfigurationParser>(
+    pub fn get_workspace_files(
         &self,
-        globs: Vec<String>,
-        parse_configurations: ConfigurationParser,
-    ) -> napi::Result<NxWorkspaceFiles, WorkspaceErrors>
-    where
-        ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
+        project_root_map: HashMap<String, String>,
+    ) -> anyhow::Result<NxWorkspaceFiles>
     {
-        workspace_files::get_files(
-            globs,
-            parse_configurations,
-            self.files_worker
-                .get_files()
-                .as_deref()
-                .map(|files| files.as_slice()),
-        )
+        workspace_files::get_files(project_root_map, self.all_file_data())
+            .map_err(anyhow::Error::from)
     }
 
     #[napi]
     pub fn glob(
         &self,
         globs: Vec<String>,
-    ) -> napi::Result<Vec<String>, WorkspaceErrors> {
-        config_files::glob_files(
-            globs,
-            self.files_worker
-                .get_files()
-                .as_deref()
-                .map(|files| files.as_slice()),
-        )
+        exclude: Option<Vec<String>>,
+    ) -> napi::Result<Vec<String>> {
+        let file_data = self.all_file_data();
+        let globbed_files = config_files::glob_files(&file_data, globs, exclude)?;
+        Ok(globbed_files.map(|file| file.file.to_owned()).collect())
     }
 
     #[napi]
-    pub fn get_project_configurations<ConfigurationParser>(
+    pub fn hash_files_matching_glob(
         &self,
         globs: Vec<String>,
-        parse_configurations: ConfigurationParser,
-    ) -> napi::Result<ConfigurationParserResult>
-    where
-        ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
-    {
-        config_files::get_project_configurations(
-            globs,
-            self.files_worker
-                .get_files()
-                .as_deref()
-                .map(|files| files.as_slice()),
-            parse_configurations,
-        )
+        exclude: Option<Vec<String>>,
+    ) -> napi::Result<String> {
+        let files = &self.all_file_data();
+        let globbed_files = config_files::glob_files(&files, globs, exclude)?;
+        Ok(hash(
+            &globbed_files
+                .map(|file| file.hash.as_bytes())
+                .collect::<Vec<_>>()
+                .concat(),
+        ))
     }
 
     #[napi]
@@ -209,17 +224,89 @@ impl WorkspaceContext {
     }
 
     #[napi]
+    pub fn update_project_files(
+        &self,
+        project_root_mappings: ProjectRootMappings,
+        project_files: External<ProjectFiles>,
+        global_files: External<Vec<FileData>>,
+        updated_files: HashMap<String, String>,
+        deleted_files: Vec<&str>,
+    ) -> UpdatedWorkspaceFiles {
+        trace!("updating project files");
+        trace!("{project_root_mappings:?}");
+        let mut project_files_map = project_files.clone();
+        let mut global_files = global_files
+            .iter()
+            .map(|f| (f.file.clone(), f.hash.clone()))
+            .collect::<HashMap<_, _>>();
+
+        trace!(
+            "adding {} updated files to project files",
+            updated_files.len()
+        );
+        for updated_file in updated_files.into_iter() {
+            let file = updated_file.0;
+            let hash = updated_file.1;
+            if let Some(project_files) = find_project_for_path(&file, &project_root_mappings)
+                .and_then(|project| project_files_map.get_mut(project))
+            {
+                trace!("{file:?} was found in a project");
+                if let Some(file) = project_files.iter_mut().find(|f| f.file == file) {
+                    trace!("updating hash for file");
+                    file.hash = hash;
+                } else {
+                    trace!("{file:?} was not part of a project, adding to project files");
+                    project_files.push(FileData { file, hash });
+                }
+            } else {
+                trace!("{file:?} was not found in any project, updating global files");
+                global_files
+                    .entry(file)
+                    .and_modify(|e| *e = hash.clone())
+                    .or_insert(hash);
+            }
+        }
+
+        trace!(
+            "removing {} deleted files from project files",
+            deleted_files.len()
+        );
+        for deleted_file in deleted_files.into_iter() {
+            if let Some(project_files) = find_project_for_path(deleted_file, &project_root_mappings)
+                .and_then(|project| project_files_map.get_mut(project))
+            {
+                if let Some(pos) = project_files.iter().position(|f| f.file == deleted_file) {
+                    trace!("removing file: {deleted_file:?} from project");
+                    project_files.remove(pos);
+                }
+            }
+
+            if global_files.contains_key(deleted_file) {
+                trace!("removing {deleted_file:?} from global files");
+                global_files.remove(deleted_file);
+            }
+        }
+
+        let non_project_files = global_files
+            .into_iter()
+            .map(|(file, hash)| FileData { file, hash })
+            .collect::<Vec<_>>();
+
+        UpdatedWorkspaceFiles {
+            file_map: FileMap {
+                project_file_map: project_files_map.clone(),
+                non_project_files: non_project_files.clone(),
+            },
+            external_references: NxWorkspaceFilesExternals {
+                project_files: External::new(project_files_map),
+                global_files: External::new(non_project_files),
+                all_workspace_files: External::new(self.all_file_data()),
+            },
+        }
+    }
+
+    #[napi]
     pub fn all_file_data(&self) -> Vec<FileData> {
-        self.files_worker
-            .get_files()
-            .map_or_else(Vec::new, |files| {
-                files
-                    .iter()
-                    .map(|(path, content)| FileData {
-                        file: path.to_normalized_string(),
-                        hash: content.clone(),
-                    })
-                    .collect()
-            })
+        self.files_worker.get_files()
     }
 }

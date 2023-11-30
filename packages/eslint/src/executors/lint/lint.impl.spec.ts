@@ -683,7 +683,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     await lintExecutor(createValidRunBuilderOptions(), mockContext);
     expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
-      'apps/proj/eslint.config.js',
+      undefined,
       {
         lintFilePatterns: [],
         eslintConfig: null,

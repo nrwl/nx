@@ -9,6 +9,7 @@ import {
 import { Linter } from '../utils/linter';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { lintProjectGenerator } from './lint-project';
+import { eslintVersion } from '../../utils/versions';
 
 describe('@nx/eslint:lint-project', () => {
   let tree: Tree;
@@ -43,7 +44,6 @@ describe('@nx/eslint:lint-project', () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['libs/test-lib/**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -75,9 +75,29 @@ describe('@nx/eslint:lint-project', () => {
     expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
       {
         "executor": "@nx/eslint:lint",
+        "outputs": [
+          "{options.outputFile}",
+        ],
+      }
+    `);
+  });
+
+  it('should generate a project config with lintFilePatterns if provided', async () => {
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      project: 'test-lib',
+      eslintFilePatterns: ['libs/test-lib/src/**/*.ts'],
+      setParserOptionsProject: false,
+    });
+
+    const projectConfig = readProjectConfiguration(tree, 'test-lib');
+    expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
+      {
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
-            "libs/test-lib/**/*.ts",
+            "libs/test-lib/src/**/*.ts",
           ],
         },
         "outputs": [
@@ -91,7 +111,6 @@ describe('@nx/eslint:lint-project', () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['libs/buildable-lib/**/*.ts'],
       project: 'buildable-lib',
       setParserOptionsProject: false,
     });
@@ -130,10 +149,30 @@ describe('@nx/eslint:lint-project', () => {
     expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
       {
         "executor": "@nx/eslint:lint",
+        "outputs": [
+          "{options.outputFile}",
+        ],
+      }
+    `);
+  });
+
+  it('should generate a project config for buildable lib with lintFilePatterns if provided', async () => {
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      project: 'buildable-lib',
+      setParserOptionsProject: false,
+      eslintFilePatterns: ['libs/test-lib/src/**/*.ts'],
+    });
+
+    const projectConfig = readProjectConfiguration(tree, 'buildable-lib');
+    expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
+      {
+        "executor": "@nx/eslint:lint",
         "options": {
           "lintFilePatterns": [
-            "libs/buildable-lib/**/*.ts",
-            "libs/buildable-lib/package.json",
+            "libs/test-lib/src/**/*.ts",
+            "{projectRoot}/package.json",
           ],
         },
         "outputs": [
@@ -149,7 +188,6 @@ describe('@nx/eslint:lint-project', () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['libs/test-lib/**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -188,7 +226,6 @@ describe('@nx/eslint:lint-project', () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['libs/buildable-lib/**/*.ts'],
       project: 'buildable-lib',
       setParserOptionsProject: false,
     });
@@ -212,7 +249,6 @@ describe('@nx/eslint:lint-project', () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['libs/buildable-lib/**/*.ts'],
       project: 'buildable-lib',
       setParserOptionsProject: false,
     });
@@ -220,5 +256,32 @@ describe('@nx/eslint:lint-project', () => {
     expect(readJson(tree, 'nx.json').pluginsConfig['@nx/js']).toEqual({
       analyzeSourceFiles: true,
     });
+  });
+
+  it('should extend root config', async () => {
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['libs/test-lib/**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+
+    const eslintConfig = readJson(tree, 'libs/test-lib/.eslintrc.json');
+    expect(eslintConfig.extends).toBeDefined();
+  });
+
+  it('should not extend root config if rootProject is set', async () => {
+    await lintProjectGenerator(tree, {
+      ...defaultOptions,
+      linter: Linter.EsLint,
+      eslintFilePatterns: ['libs/test-lib/**/*.ts'],
+      project: 'test-lib',
+      setParserOptionsProject: false,
+      rootProject: true,
+    });
+
+    const eslintConfig = readJson(tree, 'libs/test-lib/.eslintrc.json');
+    expect(eslintConfig.extends).toBeUndefined();
   });
 });

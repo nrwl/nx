@@ -1,16 +1,13 @@
-use std::path::Path;
+use crate::native::utils::normalize_trait::Normalize;
+use std::path::{Path, PathBuf};
 
-pub trait Normalize {
-    fn to_normalized_string(&self) -> String;
-}
-
-impl Normalize for std::path::Path {
+impl Normalize for Path {
     fn to_normalized_string(&self) -> String {
         normalize_path(self)
     }
 }
 
-impl Normalize for std::path::PathBuf {
+impl Normalize for PathBuf {
     fn to_normalized_string(&self) -> String {
         normalize_path(self)
     }

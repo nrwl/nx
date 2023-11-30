@@ -1,59 +1,35 @@
-use napi::JsObject;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
+use napi::bindgen_prelude::External;
 use rayon::prelude::*;
 use tracing::trace;
 
 use crate::native::types::FileData;
-use crate::native::utils::path::Normalize;
-use crate::native::workspace::config_files;
-use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors};
-use crate::native::workspace::types::{ConfigurationParserResult, FileLocation};
+use crate::native::workspace::types::{FileLocation, NxWorkspaceFiles, NxWorkspaceFilesExternals};
 
-#[napi(object)]
-#[derive(Default)]
-pub struct NxWorkspaceFiles {
-    pub project_file_map: HashMap<String, Vec<FileData>>,
-    pub global_files: Vec<FileData>,
-    pub project_configurations: HashMap<String, JsObject>,
-    pub external_nodes: HashMap<String, JsObject>,
-}
-
-pub(super) fn get_files<ConfigurationParser>(
-    globs: Vec<String>,
-    parse_configurations: ConfigurationParser,
-    file_data: Option<&[(PathBuf, String)]>,
-) -> napi::Result<NxWorkspaceFiles, WorkspaceErrors>
-where
-    ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
-{
-    let Some(file_data) = file_data else {
-        return Ok(Default::default())
+pub(super) fn get_files(
+    project_root_map: HashMap<String, String>,
+    files: Vec<FileData>,
+) -> napi::Result<NxWorkspaceFiles> {
+    if files.is_empty() {
+        return Ok(Default::default());
     };
 
-    trace!("{globs:?}");
-    let parsed_graph_nodes =
-        config_files::get_project_configurations(globs, Some(file_data), parse_configurations)
-            .map_err(|e| InternalWorkspaceErrors::ParseError(e.to_string()))?;
-
-    let root_map = create_root_map(&parsed_graph_nodes.project_nodes);
+    let root_map = transform_root_map(project_root_map);
 
     trace!(?root_map);
 
-    let file_locations = file_data
-        .into_par_iter()
-        .map(|(file_path, hash)| {
+    let file_locations = files
+        .par_iter()
+        .cloned()
+        .map(|file_data| {
+            let file_path = PathBuf::from(&file_data.file);
             let mut parent = file_path.parent().unwrap_or_else(|| Path::new("."));
 
             while root_map.get(parent).is_none() && parent != Path::new(".") {
                 parent = parent.parent().unwrap_or_else(|| Path::new("."));
             }
-
-            let file_data = FileData {
-                file: file_path.to_normalized_string(),
-                hash: hash.clone(),
-            };
 
             match root_map.get(parent) {
                 Some(project_name) => (FileLocation::Project(project_name.into()), file_data),
@@ -86,22 +62,23 @@ where
         }
     }
 
+    let project_files_external = External::new(project_file_map.clone());
+    let global_files_external = External::new(global_files.clone());
+    let all_workspace_files = External::new(files);
     Ok(NxWorkspaceFiles {
         project_file_map,
         global_files,
-        external_nodes: parsed_graph_nodes.external_nodes,
-        project_configurations: parsed_graph_nodes.project_nodes,
+        external_references: Some(NxWorkspaceFilesExternals {
+            project_files: project_files_external,
+            global_files: global_files_external,
+            all_workspace_files,
+        }),
     })
 }
 
-fn create_root_map(
-    project_configurations: &HashMap<String, JsObject>,
-) -> hashbrown::HashMap<PathBuf, String> {
-    project_configurations
-        .iter()
-        .map(|(project_name, project_configuration)| {
-            let root: String = project_configuration.get("root").unwrap().unwrap();
-            (PathBuf::from(root), project_name.clone())
-        })
+fn transform_root_map(root_map: HashMap<String, String>) -> hashbrown::HashMap<PathBuf, String> {
+    root_map
+        .into_iter()
+        .map(|(project_root, project_name)| (PathBuf::from(project_root), project_name))
         .collect()
 }

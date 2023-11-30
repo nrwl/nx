@@ -7,7 +7,7 @@ import * as chalk from 'chalk';
 import { execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
-import { joinPathFragments, output } from '../../../devkit-exports';
+import { joinPathFragments } from '../../../utils/path';
 import { Reference } from './git';
 
 // axios types and values don't seem to match
@@ -24,6 +24,7 @@ export interface GithubRequestConfig {
 export interface GithubRelease {
   id?: string;
   tag_name: string;
+  target_commitish?: string;
   name?: string;
   body?: string;
   draft?: boolean;
@@ -38,7 +39,7 @@ export function getGitHubRepoSlug(remoteName = 'origin'): RepoSlug {
     }).trim();
 
     // Extract the 'user/repo' part from the URL
-    const regex = /github\.com[/:]([\w-]+\/[\w-]+)\.git/;
+    const regex = /github\.com[/:]([\w-]+\/[\w-]+)/;
     const match = remoteUrl.match(regex);
 
     if (match && match[1]) {
@@ -53,9 +54,16 @@ export function getGitHubRepoSlug(remoteName = 'origin'): RepoSlug {
   }
 }
 
+interface GithubReleaseOptions {
+  version: string;
+  body: string;
+  prerelease: boolean;
+  commit: string;
+}
+
 export async function createOrUpdateGithubRelease(
   githubRequestConfig: GithubRequestConfig,
-  release: { version: string; body: string; prerelease: boolean },
+  release: GithubReleaseOptions,
   existingGithubReleaseForVersion?: GithubRelease
 ) {
   const result = await syncGithubRelease(
@@ -91,7 +99,7 @@ export async function createOrUpdateGithubRelease(
 
 async function syncGithubRelease(
   githubRequestConfig: GithubRequestConfig,
-  release: { version: string; body: string; prerelease: boolean },
+  release: GithubReleaseOptions,
   existingGithubReleaseForVersion?: GithubRelease
 ) {
   const ghRelease: GithubRelease = {
@@ -108,7 +116,10 @@ async function syncGithubRelease(
           existingGithubReleaseForVersion.id,
           ghRelease
         )
-      : createGithubRelease(githubRequestConfig, ghRelease));
+      : createGithubRelease(githubRequestConfig, {
+          ...ghRelease,
+          target_commitish: release.commit,
+        }));
     return {
       status: existingGithubReleaseForVersion ? 'updated' : 'created',
       id: newGhRelease.id,
@@ -139,7 +150,22 @@ export async function resolveGithubToken(): Promise<string | null> {
     const yamlContents = await fsp.readFile(ghCLIPath, 'utf8');
     const { load } = require('@zkochan/js-yaml');
     const ghCLIConfig = load(yamlContents);
-    return ghCLIConfig['github.com'].oauth_token;
+    if (ghCLIConfig['github.com']) {
+      // Web based session (the token is already embedded in the config)
+      if (ghCLIConfig['github.com'].oauth_token) {
+        return ghCLIConfig['github.com'].oauth_token;
+      }
+      // SSH based session (we need to dynamically resolve a token using the CLI)
+      if (
+        ghCLIConfig['github.com'].user &&
+        ghCLIConfig['github.com'].git_protocol === 'ssh'
+      ) {
+        return execSync(`gh auth token`, {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }).trim();
+      }
+    }
   }
   return null;
 }

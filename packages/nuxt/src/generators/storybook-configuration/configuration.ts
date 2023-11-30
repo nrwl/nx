@@ -3,6 +3,7 @@ import {
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
+  updateJson,
 } from '@nx/devkit';
 import { storybookConfigurationGenerator as vueStorybookConfigurationGenerator } from '@nx/vue';
 import { Schema } from './schema';
@@ -20,7 +21,7 @@ export async function storybookConfigurationGenerator(
       ...options,
     });
 
-  const projectConfiguration = readProjectConfiguration(host, options.name);
+  const projectConfiguration = readProjectConfiguration(host, options.project);
 
   const storybookConfigFolder =
     projectConfiguration.targets?.storybook?.options?.configDir;
@@ -28,6 +29,18 @@ export async function storybookConfigurationGenerator(
   host.write(
     `${storybookConfigFolder}/preview.${options.tsConfiguration ? 'ts' : 'js'}`,
     `import '../src/assets/css/styles.css';`
+  );
+
+  updateJson(
+    host,
+    `${projectConfiguration.root}/tsconfig.storybook.json`,
+    (json) => {
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        composite: true,
+      };
+      return json;
+    }
   );
 
   await formatFiles(host);

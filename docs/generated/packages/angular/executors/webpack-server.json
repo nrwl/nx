@@ -6,7 +6,7 @@
     "outputCapture": "direct-nodejs",
     "$schema": "http://json-schema.org/draft-07/schema",
     "title": "Schema for Webpack Server",
-    "description": "The webpack-dev-server executor is very similar to the standard server builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
+    "description": "The webpack-server executor is very similar to the standard server builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR.",
     "type": "object",
     "properties": {
       "assets": {
@@ -187,7 +187,7 @@
       },
       "vendorChunk": {
         "type": "boolean",
-        "description": "Generate a seperate bundle containing only vendor libraries. This option should only be used for development to reduce the incremental compilation time. _Note: supported in Angular versions >= 15.1.0_",
+        "description": "Generate a separate bundle containing only vendor libraries. This option should only be used for development to reduce the incremental compilation time. _Note: supported in Angular versions >= 15.1.0_",
         "default": false
       },
       "verbose": {
@@ -262,13 +262,6 @@
         "type": "array",
         "items": { "type": "string" },
         "default": []
-      },
-      "bundleDependencies": {
-        "description": "Which external dependencies to bundle into the bundle. By default, all of node_modules will be bundled. _Note: This is only supported in Angular versions >= 14.0.0, < 15.0.0. It was removed in Angular 15._",
-        "oneOf": [
-          { "type": "boolean" },
-          { "type": "string", "enum": ["none", "all"] }
-        ]
       },
       "statsJson": {
         "type": "boolean",

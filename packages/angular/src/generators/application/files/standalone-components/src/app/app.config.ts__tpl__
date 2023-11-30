@@ -1,7 +1,7 @@
-import { ApplicationConfig } from <% if (installedAngularInfo.major >= 16) { %>'@angular/core';<% } else { %>'@angular/platform-browser';<% } %><% if (routing) { %>
-import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
+import { ApplicationConfig } from <% if (angularMajorVersion >= 16) { %>'@angular/core';<% } else { %>'@angular/platform-browser';<% } %><% if (routing) { %>
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';<% } %>
 
 export const appConfig: ApplicationConfig = {
-  providers: [<% if (routing) { %>provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) <% } %>]
+  providers: [<% if (routing) { %>provideRouter(appRoutes) <% } %>]
 };

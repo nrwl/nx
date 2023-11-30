@@ -18,4 +18,4 @@ You created a workspace from scratch in this tutorial, but if you would like to 
 **Dive Deep:**
 
 - [Computation Caching](/concepts/how-caching-works)
-- [Rebuilding What is Affected](/concepts/affected)
+- [Rebuilding What is Affected](/ci/features/affected)

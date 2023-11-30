@@ -1,7 +1,33 @@
 import type { GitCommit } from '../src/command-line/release/utils/git';
 import defaultChangelogRenderer from './index';
 
+jest.mock('../src/project-graph/file-map-utils', () => ({
+  createFileMapUsingProjectGraph: jest.fn().mockImplementation(() => {
+    return Promise.resolve({
+      allWorkspaceFiles: [],
+      fileMap: {
+        nonProjectFiles: [],
+        projectFileMap: {
+          'pkg-a': [
+            {
+              file: 'packages/pkg-a/src/index.ts',
+            },
+          ],
+          'pkg-b': [
+            {
+              file: 'packages/pkg-b/src/index.ts',
+            },
+          ],
+        },
+      },
+    });
+  }),
+}));
+
 describe('defaultChangelogRenderer()', () => {
+  const projectGraph = {
+    nodes: {},
+  } as any;
   const commits: GitCommit[] = [
     {
       message: 'fix: all packages fixed',
@@ -27,7 +53,10 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
-      affectedFiles: [],
+      affectedFiles: [
+        'packages/pkg-a/src/index.ts',
+        'packages/pkg-b/src/index.ts',
+      ],
     },
     {
       message: 'feat(pkg-b): and another new capability',
@@ -53,7 +82,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
-      affectedFiles: [],
+      affectedFiles: ['packages/pkg-b/src/index.ts'],
     },
     {
       message: 'feat(pkg-a): new hotness',
@@ -79,7 +108,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
-      affectedFiles: [],
+      affectedFiles: ['packages/pkg-a/src/index.ts'],
     },
     {
       message: 'feat(pkg-b): brand new thing',
@@ -105,7 +134,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
-      affectedFiles: [],
+      affectedFiles: ['packages/pkg-b/src/index.ts'],
     },
     {
       message: 'fix(pkg-a): squashing bugs',
@@ -131,13 +160,14 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
-      affectedFiles: [],
+      affectedFiles: ['packages/pkg-a/src/index.ts'],
     },
   ];
 
   describe('workspaceChangelog', () => {
     it('should generate markdown for all projects by organizing commits by type, then grouped by scope within the type (sorted alphabetically), then chronologically within the scope group', async () => {
       const markdown = await defaultChangelogRenderer({
+        projectGraph,
         commits,
         releaseVersion: 'v1.1.0',
         project: null,
@@ -169,6 +199,7 @@ describe('defaultChangelogRenderer()', () => {
 
     it('should not generate a Thank You section when changelogRenderOptions.includeAuthors is false', async () => {
       const markdown = await defaultChangelogRenderer({
+        projectGraph,
         commits,
         releaseVersion: 'v1.1.0',
         project: null,
@@ -198,6 +229,7 @@ describe('defaultChangelogRenderer()', () => {
   describe('project level configs', () => {
     it('should generate markdown for the given project by organizing commits by type, then chronologically', async () => {
       const otherOpts = {
+        projectGraph,
         commits,
         releaseVersion: 'v1.1.0',
         entryWhenNoChanges: false as const,
@@ -221,6 +253,8 @@ describe('defaultChangelogRenderer()', () => {
 
 
         ### 🩹 Fixes
+
+        - all packages fixed
 
         - **pkg-a:** squashing bugs
 
@@ -250,6 +284,8 @@ describe('defaultChangelogRenderer()', () => {
 
         ### 🩹 Fixes
 
+        - all packages fixed
+
         - **pkg-a:** squashing bugs"
       `);
 
@@ -269,6 +305,11 @@ describe('defaultChangelogRenderer()', () => {
         - **pkg-b:** and another new capability
 
 
+        ### 🩹 Fixes
+
+        - all packages fixed
+
+
         ### ❤️  Thank You
 
         - James Henry"
@@ -279,6 +320,7 @@ describe('defaultChangelogRenderer()', () => {
   describe('entryWhenNoChanges', () => {
     it('should respect the entryWhenNoChanges option for the workspace changelog', async () => {
       const otherOpts = {
+        projectGraph,
         commits: [],
         releaseVersion: 'v1.1.0',
         project: null, // workspace changelog
@@ -308,6 +350,7 @@ describe('defaultChangelogRenderer()', () => {
 
     it('should respect the entryWhenNoChanges option for project changelogs', async () => {
       const otherOpts = {
+        projectGraph,
         commits: [],
         releaseVersion: 'v1.1.0',
         project: 'pkg-a',

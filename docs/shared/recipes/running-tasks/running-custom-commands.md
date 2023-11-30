@@ -1,6 +1,6 @@
 # Running Custom Commands
 
-You can easily run any command with the Nx toolchain. The main benefit is to make the [operation cacheable](/concepts/how-caching-works), [distributable](/core-features/distribute-task-execution) as well as being able to use it [with Nx's affected commands](/concepts/affected).
+You can easily run any command with the Nx toolchain. The main benefit is to make the [operation cacheable](/concepts/how-caching-works), [distributable](/ci/features/distribute-task-execution) as well as being able to use it [with Nx's affected commands](/ci/features/affected).
 
 ## 1. Define the terminal command to be run
 
@@ -53,7 +53,7 @@ You can also run the `make` command for all projects it has been defined on:
 nx run-many -t make
 ```
 
-Or just on a subset of projects that are [affected by a given change](/concepts/affected):
+Or just on a subset of projects that are [affected by a given change](/ci/features/affected):
 
 ```shell
 nx affected -t make

@@ -47,18 +47,6 @@ interface LintProjectOptions {
   rootProject?: boolean;
 }
 
-export function mapLintPattern(
-  projectRoot: string,
-  extension: string,
-  rootProject?: boolean
-) {
-  if (rootProject && (projectRoot === '.' || projectRoot === '')) {
-    return `${projectRoot}/src/**/*.${extension}`;
-  } else {
-    return `${projectRoot}/**/*.${extension}`;
-  }
-}
-
 export async function lintProjectGenerator(
   tree: Tree,
   options: LintProjectOptions
@@ -71,18 +59,28 @@ export async function lintProjectGenerator(
   });
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  const lintFilePatterns = options.eslintFilePatterns ?? [];
-  if (isBuildableLibraryProject(projectConfig)) {
-    lintFilePatterns.push(`${projectConfig.root}/package.json`);
-  }
-
   projectConfig.targets['lint'] = {
     executor: '@nx/eslint:lint',
     outputs: ['{options.outputFile}'],
-    options: {
-      lintFilePatterns: lintFilePatterns,
-    },
   };
+
+  let lintFilePatterns = options.eslintFilePatterns;
+  if (!lintFilePatterns && options.rootProject && projectConfig.root === '.') {
+    lintFilePatterns = ['./src'];
+  }
+  if (lintFilePatterns && lintFilePatterns.length) {
+    if (
+      isBuildableLibraryProject(projectConfig) &&
+      !lintFilePatterns.includes('{projectRoot}')
+    ) {
+      lintFilePatterns.push(`{projectRoot}/package.json`);
+    }
+
+    // only add lintFilePatterns if they are explicitly defined
+    projectConfig.targets['lint'].options = {
+      lintFilePatterns,
+    };
+  }
 
   // we are adding new project which is not the root project or
   // companion e2e app so we should check if migration to
@@ -113,7 +111,8 @@ export async function lintProjectGenerator(
     createEsLintConfiguration(
       tree,
       projectConfig,
-      options.setParserOptionsProject
+      options.setParserOptionsProject,
+      options.rootProject
     );
   }
 
@@ -142,11 +141,13 @@ export async function lintProjectGenerator(
 function createEsLintConfiguration(
   tree: Tree,
   projectConfig: ProjectConfiguration,
-  setParserOptionsProject: boolean
+  setParserOptionsProject: boolean,
+  rootProject: boolean
 ) {
-  const eslintConfig = findEslintFile(tree);
-  const pathToRootConfig = eslintConfig
-    ? `${offsetFromRoot(projectConfig.root)}${eslintConfig}`
+  // we are only extending root for non-standalone projects or their complementary e2e apps
+  const extendedRootConfig = rootProject ? undefined : findEslintFile(tree);
+  const pathToRootConfig = extendedRootConfig
+    ? `${offsetFromRoot(projectConfig.root)}${extendedRootConfig}`
     : undefined;
   const addDependencyChecks = isBuildableLibraryProject(projectConfig);
 
@@ -201,23 +202,19 @@ function createEsLintConfiguration(
     const isCompatNeeded = addDependencyChecks;
     const nodes = [];
     const importMap = new Map();
-    if (eslintConfig) {
+    if (extendedRootConfig) {
       importMap.set(pathToRootConfig, 'baseConfig');
       nodes.push(generateSpreadElement('baseConfig'));
     }
     overrides.forEach((override) => {
-      nodes.push(generateFlatOverride(override, projectConfig.root));
+      nodes.push(generateFlatOverride(override));
     });
     const nodeList = createNodeList(importMap, nodes, isCompatNeeded);
-    const content = stringifyNodeList(
-      nodeList,
-      projectConfig.root,
-      'eslint.config.js'
-    );
+    const content = stringifyNodeList(nodeList);
     tree.write(join(projectConfig.root, 'eslint.config.js'), content);
   } else {
     writeJson(tree, join(projectConfig.root, `.eslintrc.json`), {
-      extends: eslintConfig ? [pathToRootConfig] : undefined,
+      extends: extendedRootConfig ? [pathToRootConfig] : undefined,
       // Include project files to be linted since the global one excludes all files.
       ignorePatterns: ['!**/*'],
       overrides,

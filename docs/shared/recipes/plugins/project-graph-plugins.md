@@ -59,16 +59,12 @@ A simplified version of Nx's built-in `project.json` plugin is shown below, whic
 export const createNodes: CreateNodes = [
   '**/project.json',
   (projectConfigurationFile: string, opts, context: CreateNodesContext) => {
-    const projectConfiguration = readJson(projectConfigurationFile);
-    const projectRoot = dirname(projectConfigurationFile);
-    const projectName = projectConfiguration.name;
+    const projectConfiguration = readJsonFile(projectConfigurationFile);
+    const root = dirname(projectConfigurationFile);
 
     return {
       projects: {
-        [projectName]: {
-          ...projectConfiguration,
-          root: projectRoot,
-        },
+        [root]: projectConfiguration,
       },
     };
   },
@@ -244,12 +240,10 @@ export const createNodes: CreateNodes<MyPluginOptions> = [
   '**/project.json',
   (fileName, opts, ctx) => {
     const root = dirname(fileName);
-    const name = basename(fileName);
 
     return {
       projects: {
-        [name]: {
-          root,
+        [root]: {
           tags: opts.tagName ? [opts.tagName] : [],
         },
       },

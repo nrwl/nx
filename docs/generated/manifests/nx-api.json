@@ -67,6 +67,15 @@
         "path": "/nx-api/angular/executors/browser-esbuild",
         "type": "executor"
       },
+      "/nx-api/angular/executors/module-federation-dev-server": {
+        "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
+        "file": "generated/packages/angular/executors/module-federation-dev-server.json",
+        "hidden": false,
+        "name": "module-federation-dev-server",
+        "originalFilePath": "/packages/angular/src/executors/module-federation-dev-server/schema.json",
+        "path": "/nx-api/angular/executors/module-federation-dev-server",
+        "type": "executor"
+      },
       "/nx-api/angular/executors/webpack-browser": {
         "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
         "file": "generated/packages/angular/executors/webpack-browser.json",
@@ -76,13 +85,13 @@
         "path": "/nx-api/angular/executors/webpack-browser",
         "type": "executor"
       },
-      "/nx-api/angular/executors/webpack-dev-server": {
-        "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
-        "file": "generated/packages/angular/executors/webpack-dev-server.json",
+      "/nx-api/angular/executors/dev-server": {
+        "description": "The `dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+        "file": "generated/packages/angular/executors/dev-server.json",
         "hidden": false,
-        "name": "webpack-dev-server",
-        "originalFilePath": "/packages/angular/src/builders/webpack-dev-server/schema.json",
-        "path": "/nx-api/angular/executors/webpack-dev-server",
+        "name": "dev-server",
+        "originalFilePath": "/packages/angular/src/builders/dev-server/schema.json",
+        "path": "/nx-api/angular/executors/dev-server",
         "type": "executor"
       },
       "/nx-api/angular/executors/webpack-server": {
@@ -92,15 +101,6 @@
         "name": "webpack-server",
         "originalFilePath": "/packages/angular/src/builders/webpack-server/schema.json",
         "path": "/nx-api/angular/executors/webpack-server",
-        "type": "executor"
-      },
-      "/nx-api/angular/executors/module-federation-dev-server": {
-        "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
-        "file": "generated/packages/angular/executors/module-federation-dev-server.json",
-        "hidden": false,
-        "name": "module-federation-dev-server",
-        "originalFilePath": "/packages/angular/src/builders/module-federation-dev-server/schema.json",
-        "path": "/nx-api/angular/executors/module-federation-dev-server",
         "type": "executor"
       },
       "/nx-api/angular/executors/module-federation-dev-ssr": {
@@ -2601,7 +2601,7 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "vue",
     "packageName": "@nx/vue",
-    "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+    "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
     "documents": {
       "/nx-api/vue/documents/overview": {
         "id": "overview",

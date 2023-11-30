@@ -128,7 +128,7 @@ export async function libraryGeneratorInternal(
     const vitestTask = await vitestGenerator(tree, {
       project: options.name,
       uiFramework: 'none',
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       skipFormat: true,
       testEnvironment: options.testEnvironment,
     });
@@ -270,9 +270,6 @@ export async function addLint(
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
   const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
-  const { mapLintPattern } =
-    // nx-ignore-next-line
-    require('@nx/eslint/src/generators/lint-project/lint-project');
   const projectConfiguration = readProjectConfiguration(tree, options.name);
   const task = lintProjectGenerator(tree, {
     project: options.name,
@@ -282,13 +279,6 @@ export async function addLint(
       joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    eslintFilePatterns: [
-      mapLintPattern(
-        options.projectRoot,
-        options.js ? 'js' : 'ts',
-        options.rootProject
-      ),
-    ],
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
   });

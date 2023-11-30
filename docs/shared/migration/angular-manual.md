@@ -193,4 +193,4 @@ Learn more about the advantages of Nx in the following guides:
 
 [Using Cypress for e2e tests](/nx-api/cypress) \
 [Using Jest for unit tests](/nx-api/jest) \
-[Rebuilding and Retesting What is Affected](/concepts/affected)
+[Rebuilding and Retesting What is Affected](/ci/features/affected)

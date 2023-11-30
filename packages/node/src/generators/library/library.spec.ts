@@ -31,22 +31,12 @@ describe('lib', () => {
       expect(configuration.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-lib/**/*.ts'],
-        },
       });
       expect(configuration.targets.test).toEqual({
         executor: '@nx/jest:jest',
         outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
         options: {
           jestConfig: 'my-lib/jest.config.ts',
-          passWithNoTests: true,
-        },
-        configurations: {
-          ci: {
-            ci: true,
-            codeCoverage: true,
-          },
         },
       });
       expect(
@@ -231,9 +221,6 @@ describe('lib', () => {
       expect(project.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-dir/my-lib/**/*.ts'],
-        },
       });
     });
 

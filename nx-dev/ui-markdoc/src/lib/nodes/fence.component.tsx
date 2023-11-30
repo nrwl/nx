@@ -83,6 +83,32 @@ const useUrlHash = (initialValue: string) => {
   return hash;
 };
 
+// pre-process the highlightLines to expand ranges like
+// ["8-10", 19, 22] => [8,9,10,19,22]
+function processHighlightLines(highlightLines: any): number[] {
+  const expandRange = (range: any) => {
+    const [start, end] = range.split('-').map(Number);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  };
+
+  // Process each item in the array
+  return (
+    highlightLines
+      .map((item: any) => {
+        if (typeof item === 'string' && item.includes('-')) {
+          return expandRange(item);
+        }
+        return Number(item);
+      })
+      .flat()
+      // remove duplicates
+      .filter(
+        (value: any, index: number, self: number[]) =>
+          self.indexOf(value) === index
+      )
+  );
+}
+
 export function Fence({
   children,
   command,
@@ -104,6 +130,10 @@ export function Fence({
 }) {
   const { push, asPath } = useRouter();
   const hash = decodeURIComponent(useUrlHash(''));
+
+  if (highlightLines) {
+    highlightLines = processHighlightLines(highlightLines);
+  }
 
   function lineNumberStyle(lineNumber: number) {
     if (

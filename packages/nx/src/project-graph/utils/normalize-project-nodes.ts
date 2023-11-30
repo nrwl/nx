@@ -23,7 +23,10 @@ export async function normalizeProjectNodes(
   nxJson: NxJsonConfiguration
 ) {
   const toAdd = [];
-  const projects = Object.keys(ctx.projects);
+  // Sorting projects by name to make sure that the order of projects in the graph is deterministic.
+  // This is important to ensure that expanded properties referencing projects (e.g. implicit dependencies)
+  // are also deterministic, and thus don't cause the calculated project configuration hash to shift.
+  const projects = Object.keys(ctx.projects).sort();
 
   // Used for expanding implicit dependencies (e.g. `@proj/*` or `tag:foo`)
   const partialProjectGraphNodes = projects.reduce((graph, project) => {

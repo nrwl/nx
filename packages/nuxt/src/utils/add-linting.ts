@@ -16,7 +16,7 @@ export async function addLinting(
     linter: Linter;
     projectName: string;
     projectRoot: string;
-    unitTestRunner?: 'jest' | 'vitest' | 'none';
+    unitTestRunner?: 'vitest' | 'none';
     rootProject?: boolean;
   }
 ) {
@@ -27,7 +27,6 @@ export async function addLinting(
       project: options.projectName,
       tsConfigPaths: [joinPathFragments(options.projectRoot, 'tsconfig.json')],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx,vue}`],
       skipFormat: true,
       rootProject: options.rootProject,
     });

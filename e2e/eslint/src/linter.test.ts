@@ -8,6 +8,7 @@ import {
   newProject,
   readFile,
   readJson,
+  renameFile,
   runCLI,
   runCreateWorkspace,
   setMaxWorkers,
@@ -16,13 +17,6 @@ import {
   updateJson,
 } from '@nx/e2e/utils';
 import * as ts from 'typescript';
-
-/**
- * Importing this helper from @typescript-eslint/type-utils to ensure
- * compatibility with TS < 4.8 due to the API change in TS4.8.
- * This helper allows for support of TS <= 4.8.
- */
-import { getModifiers } from '@typescript-eslint/type-utils';
 
 describe('Linter', () => {
   describe('Integrated', () => {
@@ -471,14 +465,6 @@ describe('Linter', () => {
           ];
           return json;
         });
-        updateJson(`libs/${mylib}/project.json`, (json) => {
-          json.targets.lint.options.lintFilePatterns = [
-            `libs/${mylib}/**/*.ts`,
-            `libs/${mylib}/project.json`,
-            `libs/${mylib}/package.json`,
-          ];
-          return json;
-        });
       });
 
       it('should report dependency check issues', () => {
@@ -494,7 +480,7 @@ describe('Linter', () => {
           `libs/${mylib}/src/lib/${mylib}.ts`,
           (content) =>
             `import { names } from '@nx/devkit';\n\n` +
-            content.replace(/return .*;/, `return names(${mylib}).className;`)
+            content.replace(/=> .*;/, `=> names(${mylib}).className;`)
         );
 
         // output should now report missing dependency
@@ -549,6 +535,7 @@ describe('Linter', () => {
     it('should convert integrated to flat config', () => {
       const myapp = uniq('myapp');
       const mylib = uniq('mylib');
+      const mylib2 = uniq('mylib2');
 
       runCreateWorkspace(myapp, {
         preset: 'react-monorepo',
@@ -561,18 +548,34 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/js:lib ${mylib} --directory libs/${mylib} --projectNameAndRootFormat as-provided`
       );
+      runCLI(
+        `generate @nx/js:lib ${mylib2} --directory libs/${mylib2} --projectNameAndRootFormat as-provided`
+      );
 
       // migrate to flat structure
       runCLI(`generate @nx/eslint:convert-to-flat-config`);
       checkFilesExist(
         'eslint.config.js',
         `apps/${myapp}/eslint.config.js`,
-        `libs/${mylib}/eslint.config.js`
+        `libs/${mylib}/eslint.config.js`,
+        `libs/${mylib2}/eslint.config.js`
       );
       checkFilesDoNotExist(
         '.eslintrc.json',
         `apps/${myapp}/.eslintrc.json`,
-        `libs/${mylib}/.eslintrc.json`
+        `libs/${mylib}/.eslintrc.json`,
+        `libs/${mylib2}/.eslintrc.json`
+      );
+
+      // move eslint.config one step up
+      // to test the absence of the flat eslint config in the project root folder
+      renameFile(`libs/${mylib2}/eslint.config.js`, `libs/eslint.config.js`);
+      updateFile(
+        `libs/eslint.config.js`,
+        readFile(`libs/eslint.config.js`).replace(
+          `../../eslint.config.js`,
+          `../eslint.config.js`
+        )
       );
 
       const outFlat = runCLI(`affected -t lint`, {
@@ -847,7 +850,7 @@ function updateGeneratedRuleImplementation(
         ) {
           return ts.factory.updateMethodDeclaration(
             node,
-            getModifiers(node),
+            node.modifiers,
             node.asteriskToken,
             node.name,
             node.questionToken,

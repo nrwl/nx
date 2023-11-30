@@ -1,22 +1,23 @@
-import type { Schema } from './schema';
-import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
 import {
   getPackageManagerCommand,
   readCachedProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
+import { execSync, fork } from 'child_process';
+import { existsSync } from 'fs';
+import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
+import { getExecutorInformation } from 'nx/src/command-line/run/executor-utils';
+import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { extname, join } from 'path';
+import { from } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
+import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import {
   getDynamicRemotes,
   getStaticRemotes,
   validateDevRemotes,
 } from '../utilities/module-federation';
-import { switchMap, tap } from 'rxjs/operators';
-import { from } from 'rxjs';
-import { extname, join } from 'path';
-import { execSync, fork } from 'child_process';
-import { scheduleTarget } from 'nx/src/adapter/ngcli-adapter';
-import { existsSync } from 'fs';
+import type { Schema } from './schema';
 
 export function executeModuleFederationDevSSRBuilder(
   schema: Schema,
@@ -97,7 +98,8 @@ export function executeModuleFederationDevSSRBuilder(
       const { schema } = getExecutorInformation(
         collection,
         executor,
-        workspaceRoot
+        workspaceRoot,
+        workspaceProjects
       );
 
       if (schema.additionalProperties || 'verbose' in schema.properties) {
@@ -140,6 +142,7 @@ export function executeModuleFederationDevSSRBuilder(
             target,
             configuration: context.target.configuration,
             runOptions,
+            projects: workspaceProjects,
           },
           options.verbose
         ).then((obs) =>
@@ -157,11 +160,14 @@ export function executeModuleFederationDevSSRBuilder(
     remoteProcessPromises.push(remotePromise);
   }
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
+  const { executeSSRDevServerBuilder } =
+    angularMajorVersion >= 17
+      ? require('@angular-devkit/build-angular')
+      : require('@nguniversal/builders');
+
   return from(Promise.all(remoteProcessPromises)).pipe(
-    switchMap(() => from(import('@nguniversal/builders'))),
-    switchMap(({ executeSSRDevServerBuilder }) =>
-      executeSSRDevServerBuilder(options, context)
-    )
+    switchMap(() => executeSSRDevServerBuilder(options, context))
   );
 }
 

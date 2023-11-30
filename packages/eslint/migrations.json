@@ -27,6 +27,16 @@
       "version": "17.0.0-beta.7",
       "description": "update-17-0-0-rename-to-eslint",
       "implementation": "./src/migrations/update-17-0-0-rename-to-eslint/update-17-0-0-rename-to-eslint"
+    },
+    "update-typescript-eslint": {
+      "version": "17.1.0-beta.1",
+      "description": "Updates for @typescript-utils/utils v6.9.1+",
+      "implementation": "./src/migrations/update-17-1-0/update-typescript-eslint"
+    },
+    "simplify-eslint-patterns": {
+      "version": "17.2.0-beta.0",
+      "description": "Simplify eslintFilePatterns",
+      "implementation": "./src/migrations/update-17-2-0/simplify-eslint-patterns"
     }
   },
   "packageJsonUpdates": {
@@ -80,6 +90,28 @@
       "packages": {
         "eslint-config-prettier": {
           "version": "^9.0.0"
+        }
+      }
+    },
+    "17.1.0": {
+      "version": "17.1.0-beta.1",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "^6.9.1"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^6.9.1"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^6.9.1"
+        }
+      }
+    },
+    "17.2.0": {
+      "version": "17.2.0-beta.2",
+      "packages": {
+        "eslint": {
+          "version": "~8.48.0"
         }
       }
     }

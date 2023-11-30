@@ -2,10 +2,11 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::thread::available_parallelism;
 
-use crossbeam_channel::{unbounded, Receiver};
+use crossbeam_channel::unbounded;
 use ignore::WalkBuilder;
+use tracing::trace;
 
-use crate::native::utils::glob::build_glob_set;
+use crate::native::glob::build_glob_set;
 
 use walkdir::WalkDir;
 
@@ -35,11 +36,9 @@ where
 }
 
 /// Walk the directory and ignore files from .gitignore and .nxignore
-pub fn nx_walker<P, Fn, Re>(directory: P, f: Fn) -> Re
+pub fn nx_walker<P>(directory: P) -> impl Iterator<Item = (PathBuf, PathBuf)>
 where
     P: AsRef<Path>,
-    Fn: FnOnce(Receiver<(PathBuf, Vec<u8>)>) -> Re + Send + 'static,
-    Re: Send + 'static,
 {
     let directory = directory.as_ref();
     let nx_ignore = directory.join(".nxignore");
@@ -59,10 +58,11 @@ where
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
 
-    let (sender, receiver) = unbounded::<(PathBuf, Vec<u8>)>();
+    let (sender, receiver) = unbounded();
 
-    let receiver_thread = thread::spawn(|| f(receiver));
+    trace!(?directory, "walking");
 
+    let now = std::time::Instant::now();
     walker.threads(cpus).build_parallel().run(|| {
         let tx = sender.clone();
         Box::new(move |entry| {
@@ -72,33 +72,35 @@ where
                 return Continue;
             };
 
-            let Ok(content) = std::fs::read(dir_entry.path()) else {
+            if dir_entry.file_type().is_some_and(|d| d.is_dir()) {
                 return Continue;
-            };
+            }
 
             let Ok(file_path) = dir_entry.path().strip_prefix(directory) else {
                 return Continue;
             };
 
-            tx.send((file_path.into(), content)).ok();
+            tx.send((dir_entry.path().to_owned(), file_path.to_owned()))
+                .ok();
 
             Continue
         })
     });
+    trace!("walked in {:?}", now.elapsed());
 
+    let receiver_thread = thread::spawn(move || receiver.into_iter());
     drop(sender);
     receiver_thread.join().unwrap()
 }
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
     use std::{assert_eq, vec};
 
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
 
-    use crate::native::utils::path::Normalize;
+    use crate::native::utils::Normalize;
 
     use super::*;
 
@@ -124,32 +126,21 @@ mod test {
     #[test]
     fn it_walks_a_directory() {
         // handle empty workspaces
-        let content = nx_walker("/does/not/exist", |rec| {
-            let mut paths = vec![];
-            for (path, _) in rec {
-                paths.push(path);
-            }
-            paths
-        });
+        let content = nx_walker("/does/not/exist").collect::<Vec<_>>();
         assert!(content.is_empty());
 
         let temp_dir = setup_fs();
 
-        let content = nx_walker(temp_dir, |rec| {
-            let mut paths = HashMap::new();
-            for (path, content) in rec {
-                paths.insert(path, content);
-            }
-            paths
-        });
+        let mut content = nx_walker(&temp_dir).collect::<Vec<_>>();
+        content.sort();
         assert_eq!(
             content,
-            HashMap::from([
-                (PathBuf::from("baz/qux.txt"), "content@qux".into()),
-                (PathBuf::from("foo.txt"), "content1".into()),
-                (PathBuf::from("test.txt"), "content".into()),
-                (PathBuf::from("bar.txt"), "content2".into()),
-            ])
+            vec![
+                (temp_dir.join("bar.txt"), PathBuf::from("bar.txt")),
+                (temp_dir.join("baz/qux.txt"), PathBuf::from("baz/qux.txt")),
+                (temp_dir.join("foo.txt"), PathBuf::from("foo.txt")),
+                (temp_dir.join("test.txt"), PathBuf::from("test.txt")),
+            ]
         );
     }
 
@@ -180,13 +171,10 @@ nested/child-two/
             )
             .unwrap();
 
-        let mut file_names = nx_walker(temp_dir, |rec| {
-            let mut file_names = vec![];
-            for (path, _) in rec {
-                file_names.push(path.to_normalized_string());
-            }
-            file_names
-        });
+        let mut file_names = nx_walker(temp_dir)
+            .into_iter()
+            .map(|(_, p)| p.to_normalized_string())
+            .collect::<Vec<_>>();
 
         file_names.sort();
 

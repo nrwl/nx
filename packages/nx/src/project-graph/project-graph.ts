@@ -12,9 +12,13 @@ import { daemonClient } from '../daemon/client/client';
 import { fileExists } from '../utils/fileutils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
-import { retrieveWorkspaceFiles } from './utils/retrieve-workspace-files';
+import {
+  retrieveProjectConfigurations,
+  retrieveWorkspaceFiles,
+} from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
 import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
+import { writeSourceMaps } from '../utils/source-maps';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -77,20 +81,26 @@ export function readProjectsConfigurationFromProjectGraph(
 export async function buildProjectGraphWithoutDaemon() {
   const nxJson = readNxJson();
 
-  const { allWorkspaceFiles, fileMap, projectConfigurations, externalNodes } =
-    await retrieveWorkspaceFiles(workspaceRoot, nxJson);
+  const { projects, externalNodes, sourceMaps, projectRootMap } =
+    await retrieveProjectConfigurations(workspaceRoot, nxJson);
+
+  const { allWorkspaceFiles, fileMap, rustReferences } =
+    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
   const projectGraph = (
     await buildProjectGraphUsingProjectFileMap(
-      projectConfigurations.projects,
+      projects,
       externalNodes,
       fileMap,
       allWorkspaceFiles,
+      rustReferences,
       cacheEnabled ? readFileMapCache() : null,
       cacheEnabled
     )
   ).projectGraph;
+
+  writeSourceMaps(sourceMaps);
 
   unregisterPluginTSTranspiler();
 

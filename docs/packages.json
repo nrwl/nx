@@ -10,7 +10,7 @@
         "ng-packagr-lite",
         "package",
         "webpack-browser",
-        "webpack-dev-server",
+        "dev-server",
         "webpack-server",
         "module-federation-dev-server",
         "module-federation-dev-ssr"
@@ -362,7 +362,7 @@
   {
     "name": "vue",
     "packageName": "vue",
-    "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+    "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
     "path": "generated/packages/vite.json",
     "schemas": {
       "executors": [],

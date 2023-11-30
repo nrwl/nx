@@ -835,8 +835,8 @@ Here's some more things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/core-features/remote-cache)
-- [Speed up CI: Distribute your tasks across machines](/core-features/distribute-task-execution)
+- [Speed up CI: Share your cache](/ci/features/remote-cache)
+- [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you
 

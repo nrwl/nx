@@ -19,7 +19,6 @@ import { VitestGeneratorSchema } from './schema';
 
 import initGenerator from '../init/init';
 import {
-  vitestCoverageC8Version,
   vitestCoverageIstanbulVersion,
   vitestCoverageV8Version,
 } from '../../utils/versions';
@@ -66,6 +65,7 @@ export async function vitestGenerator(
           ],
           imports: [`import react from '@vitejs/plugin-react'`],
           plugins: ['react()'],
+          coverageProvider: schema.coverageProvider,
         },
         true
       );
@@ -202,9 +202,9 @@ function getCoverageProviderDependency(
   coverageProvider: VitestGeneratorSchema['coverageProvider']
 ) {
   switch (coverageProvider) {
-    case 'c8':
+    case 'v8':
       return {
-        '@vitest/coverage-c8': vitestCoverageC8Version,
+        '@vitest/coverage-v8': vitestCoverageV8Version,
       };
     case 'istanbul':
       return {

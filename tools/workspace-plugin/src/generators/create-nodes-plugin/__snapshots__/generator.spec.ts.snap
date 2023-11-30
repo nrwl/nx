@@ -1,5 +1,59 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`create-nodes-plugin/generator generator should add the plugin path to package.json exports 1`] = `
+"{
+  "name": "@nx/eslint",
+  "version": "0.0.1",
+  "private": false,
+  "description": "Some description",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/eslint"
+  },
+  "keywords": [
+    "Monorepo",
+    "eslint",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nx/devkit": "file:../devkit"
+  },
+  "peerDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./executors": "./executors.js",
+    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
+    "./src/executors/*.impl": "./src/executors/*.impl.js",
+    "./src/executors/*/compat": "./src/executors/*/compat.js",
+    "./plugin": "./plugin.js"
+  }
+}
+"
+`;
+
 exports[`create-nodes-plugin/generator generator should run successfully 1`] = `
 "import {
   CreateNodes,
@@ -25,7 +79,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     const projectRoot = dirname(configFilePath);
 
     // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(projectRoot);
+    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
     if (
       !siblingFiles.includes('package.json') &&
       !siblingFiles.includes('project.json')
@@ -34,11 +88,10 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     }
 
     options = normalizeOptions(options);
-    const projectName = basename(projectRoot);
 
     return {
       projects: {
-        [projectName]: {
+        [projectRoot]: {
           root: projectRoot,
           projectType: 'library',
           targets: buildEslintTargets(
@@ -208,7 +261,7 @@ export default async function update(tree: Tree) {
 
   const rootMappings = createProjectRootMappingsFromProjectConfigurations(proj);
 
-  replaceProjectConfigurationsWithPlugin(
+  await replaceProjectConfigurationsWithPlugin(
     tree,
     rootMappings,
     '@nx/eslint/plugin',

@@ -116,14 +116,13 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     component: true,
     skipFormat: true,
     skipTsConfig: false,
-    unitTestRunner: 'jest',
+    unitTestRunner: 'vitest',
     projectNameAndRootFormat: 'as-provided',
   });
 
   const currentWorkspaceJson = getProjects(appTree);
 
   const projectConfig = currentWorkspaceJson.get(libName);
-  projectConfig.targets.lint.options.linter = 'eslint';
 
   updateProjectConfiguration(appTree, libName, projectConfig);
 

@@ -1,40 +1,31 @@
-use crate::native::utils::glob::build_glob_set;
-use crate::native::utils::path::Normalize;
-use crate::native::workspace::types::ConfigurationParserResult;
-
-use crate::native::workspace::errors::{InternalWorkspaceErrors, WorkspaceErrors};
 use rayon::prelude::*;
-use std::path::PathBuf;
+
+use crate::native::glob::build_glob_set;
+use crate::native::types::FileData;
 
 /// Get workspace config files based on provided globs
 pub(super) fn glob_files(
+    files: &[FileData],
     globs: Vec<String>,
-    files: Option<&[(PathBuf, String)]>,
-) -> napi::Result<Vec<String>, WorkspaceErrors> {
-    let Some(files) = files else {
-        return Ok(Default::default())
-    };
+    exclude: Option<Vec<String>>,
+) -> napi::Result<impl ParallelIterator<Item = &FileData>> {
+    let globs = build_glob_set(&globs)?;
 
-    let globs =
-        build_glob_set(&globs).map_err(|err| InternalWorkspaceErrors::Generic(err.to_string()))?;
-    Ok(files
-        .par_iter()
-        .map(|file| file.0.to_normalized_string())
-        .filter(|path| globs.is_match(path))
-        .collect())
-}
+    let exclude_glob_set = exclude
+        .map(|exclude| build_glob_set(&exclude))
+        .transpose()?;
 
-/// Get workspace config files based on provided globs
-pub(super) fn get_project_configurations<ConfigurationParser>(
-    globs: Vec<String>,
-    files: Option<&[(PathBuf, String)]>,
-    parse_configurations: ConfigurationParser,
-) -> napi::Result<ConfigurationParserResult>
-where
-    ConfigurationParser: Fn(Vec<String>) -> napi::Result<ConfigurationParserResult>,
-{
-    let config_paths =
-        glob_files(globs, files).map_err(anyhow::Error::from)?;
+    Ok(files.par_iter().filter(move |file_data| {
+        let path = &file_data.file;
+        let is_match = globs.is_match(path);
 
-    parse_configurations(config_paths)
+        if !is_match {
+            return is_match;
+        }
+
+        exclude_glob_set
+            .as_ref()
+            .map(|exclude_glob_set| exclude_glob_set.is_match(path))
+            .unwrap_or(is_match)
+    }))
 }

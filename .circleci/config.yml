@@ -87,8 +87,9 @@ jobs:
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
     steps:
+      - run: lscpu
       - checkout
-      - run: npx nx-cloud@next start-ci-run --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distributes-on="8 linux-medium" --stop-agents-after="e2e"
       - run:
           command: |
             sudo apt-get update
@@ -99,6 +100,9 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
+      - run:
+          name: Benchmark
+          command: node tools/benchmark/benchmark.js
       - run:
           name: Check Documentation
           command: pnpm nx documentation --no-dte

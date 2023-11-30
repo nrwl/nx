@@ -37,8 +37,9 @@ export const createNodes: CreateNodes<PluginOptions> = [
 
         return {
             projects: {
-                [name]: {
+                [root]: {
                     root,
+                    name,
                     targets: {
                         build: {
                             executor: "nx:run-commands",

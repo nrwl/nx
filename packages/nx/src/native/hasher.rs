@@ -1,36 +1,40 @@
-use crate::native::utils::path::Normalize;
-use crate::native::walker::nx_walker;
-use std::collections::HashMap;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
+use tracing::trace;
 use xxhash_rust::xxh3;
+
+pub fn hash(content: &[u8]) -> String {
+    xxh3::xxh3_64(content).to_string()
+}
 
 #[napi]
 pub fn hash_array(input: Vec<String>) -> String {
     let joined = input.join(",");
     let content = joined.as_bytes();
-    xxh3::xxh3_64(content).to_string()
+    hash(content)
 }
 
 #[napi]
 pub fn hash_file(file: String) -> Option<String> {
-    let Ok(content) = std::fs::read(file) else {
+    hash_file_path(file)
+}
+
+#[inline]
+pub fn hash_file_path<P: AsRef<Path>>(path: P) -> Option<String> {
+    let path = path.as_ref();
+    let Ok(file) = File::open(path) else {
+        trace!("could not open file: {path:?}");
         return None;
     };
 
-    Some(xxh3::xxh3_64(&content).to_string())
-}
+    let mut buffer = BufReader::new(file);
+    let Ok(content) = buffer.fill_buf() else {
+        trace!("could not read file: {path:?}");
+        return None;
+    };
 
-#[napi]
-pub fn hash_files(workspace_root: String) -> HashMap<String, String> {
-    nx_walker(workspace_root, |rec| {
-        let mut collection: HashMap<String, String> = HashMap::new();
-        for (path, content) in rec {
-            collection.insert(
-                path.to_normalized_string(),
-                xxh3::xxh3_64(&content).to_string(),
-            );
-        }
-        collection
-    })
+    Some(hash(content))
 }
 
 #[cfg(test)]

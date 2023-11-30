@@ -734,22 +734,22 @@
       {
         "id": "remote-cache",
         "name": "Use Remote Caching",
-        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-        "file": "shared/core-features/remote-cache",
+        "description": "",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/remote-cache",
-        "tags": ["remote-cache"]
+        "isExternal": true,
+        "path": "/ci/features/remote-cache",
+        "tags": []
       },
       {
         "id": "distribute-task-execution",
         "name": "Distribute Task Execution",
-        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
-        "file": "shared/core-features/distribute-task-execution",
+        "description": "",
+        "file": "",
         "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/distribute-task-execution",
-        "tags": ["distribute-task-execution"]
+        "isExternal": true,
+        "path": "/ci/features/distribute-task-execution",
+        "tags": []
       },
       {
         "id": "explore-graph",
@@ -847,25 +847,25 @@
     "path": "/core-features/cache-task-results",
     "tags": ["cache-task-results"]
   },
-  "/core-features/remote-cache": {
+  "/ci/features/remote-cache": {
     "id": "remote-cache",
     "name": "Use Remote Caching",
-    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-    "file": "shared/core-features/remote-cache",
+    "description": "",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/remote-cache",
-    "tags": ["remote-cache"]
+    "isExternal": true,
+    "path": "/ci/features/remote-cache",
+    "tags": []
   },
-  "/core-features/distribute-task-execution": {
+  "/ci/features/distribute-task-execution": {
     "id": "distribute-task-execution",
     "name": "Distribute Task Execution",
-    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
-    "file": "shared/core-features/distribute-task-execution",
+    "description": "",
+    "file": "",
     "itemList": [],
-    "isExternal": false,
-    "path": "/core-features/distribute-task-execution",
-    "tags": ["distribute-task-execution"]
+    "isExternal": true,
+    "path": "/ci/features/distribute-task-execution",
+    "tags": []
   },
   "/core-features/explore-graph": {
     "id": "explore-graph",
@@ -995,16 +995,6 @@
         "tags": []
       },
       {
-        "id": "dte",
-        "name": "Improve Worst Case CI Times",
-        "description": "",
-        "file": "shared/concepts/improve-worst-case-ci-times",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/dte",
-        "tags": ["distribute-task-execution"]
-      },
-      {
         "id": "task-pipeline-configuration",
         "name": "What is a Task Pipeline",
         "description": "",
@@ -1013,16 +1003,6 @@
         "isExternal": false,
         "path": "/concepts/task-pipeline-configuration",
         "tags": ["run-tasks", "use-task-executors"]
-      },
-      {
-        "id": "affected",
-        "name": "How Affected Works",
-        "description": "",
-        "file": "shared/using-nx/affected",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/affected",
-        "tags": ["run-tasks"]
       },
       {
         "id": "integrated-vs-package-based",
@@ -1306,16 +1286,6 @@
     "path": "/concepts/types-of-configuration",
     "tags": []
   },
-  "/concepts/dte": {
-    "id": "dte",
-    "name": "Improve Worst Case CI Times",
-    "description": "",
-    "file": "shared/concepts/improve-worst-case-ci-times",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/dte",
-    "tags": ["distribute-task-execution"]
-  },
   "/concepts/task-pipeline-configuration": {
     "id": "task-pipeline-configuration",
     "name": "What is a Task Pipeline",
@@ -1325,16 +1295,6 @@
     "isExternal": false,
     "path": "/concepts/task-pipeline-configuration",
     "tags": ["run-tasks", "use-task-executors"]
-  },
-  "/concepts/affected": {
-    "id": "affected",
-    "name": "How Affected Works",
-    "description": "",
-    "file": "shared/using-nx/affected",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/affected",
-    "tags": ["run-tasks"]
   },
   "/concepts/integrated-vs-package-based": {
     "id": "integrated-vs-package-based",
@@ -6444,13 +6404,13 @@
     "file": "",
     "itemList": [
       {
-        "id": "nx-cloud-documentation",
-        "name": "Nx Cloud Documentation",
+        "id": "ci",
+        "name": "CI Documentation",
         "description": "",
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/nx-cloud/intro/ci-with-nx",
+        "path": "/ci/intro/ci-with-nx",
         "tags": ["cache-task-results", "distribute-task-execution"]
       },
       {
@@ -6528,14 +6488,14 @@
     "path": "/see-also",
     "tags": []
   },
-  "/nx-cloud/intro/ci-with-nx": {
-    "id": "nx-cloud-documentation",
-    "name": "Nx Cloud Documentation",
+  "/ci/intro/ci-with-nx": {
+    "id": "ci",
+    "name": "CI Documentation",
     "description": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/nx-cloud/intro/ci-with-nx",
+    "path": "/ci/intro/ci-with-nx",
     "tags": ["cache-task-results", "distribute-task-execution"]
   },
   "/nx-api/nx/documents/affected#skip-nx-cache": {

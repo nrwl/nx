@@ -149,3 +149,15 @@ Learn more about [Nx Inputs](/recipes/running-tasks/customizing-inputs).
 {% card title="Adding Nx to NPM/Yarn/PNPM Workspace" description="Learn more about how to add Nx to an existing monorepo" type="documentation" url="/recipes/adopting-nx/adding-to-monorepo" /%}
 
 {% /cards %}
+
+{% short-embeds %}
+{% short-video
+title="Nx Tips: Nx Init"
+embedUrl="https://www.youtube.com/embed/Wpj3KSpN0Xw" /%}
+{% short-video
+title="How Long Does It Take To Add Nx?"
+embedUrl="https://www.youtube.com/embed/fPt_pFP6hn8" /%}
+{% short-video
+title="Nx is Complicated?"
+embedUrl="https://www.youtube.com/embed/AQbSwPtPBiw" /%}
+{% /short-embeds %}

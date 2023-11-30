@@ -539,7 +539,6 @@ export async function createTestUILib(libName: string): Promise<Tree> {
   const currentWorkspaceJson = getProjects(appTree);
 
   const projectConfig = currentWorkspaceJson.get(libName);
-  projectConfig.targets.lint.options.linter = 'eslint';
 
   updateProjectConfiguration(appTree, libName, projectConfig);
 

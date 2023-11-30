@@ -1,26 +1,15 @@
 import {
   Tree,
-  joinPathFragments,
   readProjectConfiguration,
   updateProjectConfiguration,
 } from '@nx/devkit';
 
-export function addServeTarget(
-  tree: Tree,
-  projectName: string,
-  projectRoot: string
-) {
+export function addServeTarget(tree: Tree, projectName: string) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['serve'] = {
-    executor: 'nx:run-commands',
-    outputs: [
-      '{workspaceRoot}/{projectRoot}/.output',
-      '{workspaceRoot}/{projectRoot}/.nuxt',
-    ],
-    options: {
-      command: 'npx nuxi dev --port=4200',
-      cwd: joinPathFragments(projectRoot),
-    },
+    executor: '@nx/nuxt:serve',
+    outputs: ['{options.outputPath}'],
+    options: {},
   };
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
@@ -28,18 +17,14 @@ export function addServeTarget(
 export function addBuildTarget(
   tree: Tree,
   projectName: string,
-  projectRoot: string
+  outputPath: string
 ) {
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['build'] = {
-    executor: 'nx:run-commands',
-    outputs: [
-      '{workspaceRoot}/{projectRoot}/.output',
-      '{workspaceRoot}/{projectRoot}/.nuxt',
-    ],
+    executor: '@nx/nuxt:build',
+    outputs: ['{options.outputPath}'],
     options: {
-      command: 'npx nuxi build',
-      cwd: joinPathFragments(projectRoot),
+      outputPath: outputPath,
     },
   };
   updateProjectConfiguration(tree, projectName, projectConfig);

@@ -87,12 +87,10 @@ Nx Cloud's Distributed Task Execution removes the burden of the complex setup of
 The setup looks like this:
 
 ```yaml {% fileName="main-job.yml" %}
-# Coordinate the agents to run the tasks
-- npx nx-cloud start-ci-run
+# Coordinate the agents to run the tasks and stop agents when the build tasks are done
+- npx nx-cloud start-ci-run --stop-agents-after=build
 # Run any commands you want here
-- nx affected -t lint test build
-# Stop any run away agents
-- npx nx-cloud stop-all-agents
+- nx affected -t lint,test,build
 ```
 
 ```yaml {% fileName="agent.yml" %}
@@ -109,7 +107,7 @@ This approach fully optimizes the binning strategy so that tasks are optimally d
 
 ### 🎉 Pro: Easy to Scale
 
-If CI is taking too long, simply increase the number of agent jobs being started in your CI system and Nx will recognize the new agent jobs are available and distribute tasks accordingly. With this approach, your worst case CI time is only limited by your longest running individual task. If you want Nx to automatically provision the agents for you, check out [Nx Cloud Workflows](/nx-cloud/intro/nx-cloud-workflows).
+If CI is taking too long, simply increase the number of agent jobs being started in your CI system and Nx will recognize the new agent jobs are available and distribute tasks accordingly. With this approach, your worst case CI time is only limited by your longest running individual task. If you want Nx to automatically provision the agents for you, check out [Nx Cloud Workflows](/ci/features/nx-cloud-workflows).
 
 ### 🎉 Pro: Build Artifacts
 
@@ -121,7 +119,7 @@ Because Nx uses distributed computation caching to replay all the tasks back on 
 
 ## Conclusion
 
-If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Cloud with Distributed Task Execution](/core-features/distribute-task-execution). You can generate a simple workflow for common CI providers with a single command and then customize from there.
+If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Cloud with Distributed Task Execution](/ci/features/distribute-task-execution). You can generate a simple workflow for common CI providers with a single command and then customize from there.
 
 Nx Cloud is [free for up to 300 CI Pipeline Executions](https://nx.app/pricing/) per month. Most organizations do not exceed the free tier. If you're working on an open source repo, we'll give you a coupon for unlimited free use of Nx Cloud.
 

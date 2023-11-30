@@ -30,6 +30,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       bundler: 'vite',
       skipFormat: true,
       devServerTarget: `${options.projectName}:serve`,
+      baseUrl: 'http://localhost:4200',
       jsx: true,
     });
   } else if (options.e2eTestRunner === 'playwright') {
@@ -50,7 +51,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       js: false,
       linter: options.linter,
       setParserOptionsProject: options.setParserOptionsProject,
-      webServerAddress: 'http://127.0.0.1:4200',
+      webServerAddress: 'http://localhost:4200',
       webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
         options.projectName
       }`,

@@ -19,7 +19,6 @@ import {
   vitePluginDtsVersion,
   vitePluginReactSwcVersion,
   vitePluginReactVersion,
-  vitestUiVersion,
   vitestVersion,
   viteVersion,
 } from '../../utils/versions';
@@ -36,7 +35,7 @@ function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
   devDependencies['@nx/vite'] = nxVersion;
   devDependencies['vite'] = viteVersion;
   devDependencies['vitest'] = vitestVersion;
-  devDependencies['@vitest/ui'] = vitestUiVersion;
+  devDependencies['@vitest/ui'] = vitestVersion;
 
   if (schema.testEnvironment === 'jsdom') {
     devDependencies['jsdom'] = jsdomVersion;
@@ -79,7 +78,7 @@ function moveToDevDependencies(tree: Tree) {
   });
 }
 
-export function createVitestConfig(tree: Tree) {
+export function updateNxJsonSettings(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
@@ -93,18 +92,32 @@ export function createVitestConfig(tree: Tree) {
   }
 
   nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults.test ??= {};
-  nxJson.targetDefaults.test.inputs ??= [
+  nxJson.targetDefaults['@nx/vite:test'] ??= {};
+  nxJson.targetDefaults['@nx/vite:test'].cache ??= true;
+  nxJson.targetDefaults['@nx/vite:test'].inputs ??= [
     'default',
     productionFileSet ? '^production' : '^default',
   ];
+  nxJson.targetDefaults['@nx/vite:test'].options ??= {
+    passWithNoTests: true,
+    reporters: ['default'],
+  };
+
+  nxJson.targetDefaults['@nx/vite:build'] ??= {};
+
+  nxJson.targetDefaults['@nx/vite:build'].options ??= {
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  };
 
   updateNxJson(tree, nxJson);
 }
 
 export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   moveToDevDependencies(tree);
-  createVitestConfig(tree);
+  updateNxJsonSettings(tree);
   const tasks = [];
 
   tasks.push(

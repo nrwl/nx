@@ -1,8 +1,10 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   getProjects,
   NxJsonConfiguration,
   ProjectConfiguration,
+  readJson,
   readNxJson,
   Tree,
   updateJson,
@@ -10,7 +12,11 @@ import {
 } from '@nx/devkit';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
+import { join } from 'path';
+import { eslintrcVersion, eslintVersion } from '../../utils/versions';
+import { ESLint } from 'eslint';
 import { convertEslintJsonToFlatConfig } from './converters/json-converter';
+import { load } from 'js-yaml';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
@@ -20,19 +26,34 @@ export async function convertToFlatConfigGenerator(
   if (!eslintFile) {
     throw new Error('Could not find root eslint file');
   }
-  if (!eslintFile.endsWith('.json')) {
+  if (eslintFile.endsWith('.js')) {
     throw new Error(
-      'Only json eslint config files are supported for conversion'
+      'Only json and yaml eslint config files are supported for conversion'
     );
   }
 
-  // rename root eslint config to eslint.config.js
+  const eslintIgnoreFiles = new Set<string>(['.eslintignore']);
+
+  // convert root eslint config to eslint.config.js
   convertRootToFlatConfig(tree, eslintFile);
-  // rename and map files
+
+  // convert project eslint files to eslint.config.js
   const projects = getProjects(tree);
   for (const [project, projectConfig] of projects) {
-    convertProjectToFlatConfig(tree, project, projectConfig, readNxJson(tree));
+    convertProjectToFlatConfig(
+      tree,
+      project,
+      projectConfig,
+      readNxJson(tree),
+      eslintIgnoreFiles
+    );
   }
+
+  // delete all .eslintignore files
+  for (const ignoreFile of eslintIgnoreFiles) {
+    tree.delete(ignoreFile);
+  }
+
   // replace references in nx.json
   updateNxJsonConfig(tree);
   // install missing packages
@@ -45,32 +66,39 @@ export async function convertToFlatConfigGenerator(
 export default convertToFlatConfigGenerator;
 
 function convertRootToFlatConfig(tree: Tree, eslintFile: string) {
-  if (eslintFile.endsWith('.base.json')) {
-    convertConfigToFlatConfig(
-      tree,
-      '',
-      '.eslintrc.base.json',
-      'eslint.base.config.js'
-    );
+  if (/\.base\.(js|json|yml|yaml)$/.test(eslintFile)) {
+    convertConfigToFlatConfig(tree, '', eslintFile, 'eslint.base.config.js');
   }
-  convertConfigToFlatConfig(tree, '', '.eslintrc.json', 'eslint.config.js');
+  convertConfigToFlatConfig(
+    tree,
+    '',
+    eslintFile.replace('.base.', '.'),
+    'eslint.config.js'
+  );
 }
 
 function convertProjectToFlatConfig(
   tree: Tree,
   project: string,
   projectConfig: ProjectConfiguration,
-  nxJson: NxJsonConfiguration
+  nxJson: NxJsonConfiguration,
+  eslintIgnoreFiles: Set<string>
 ) {
-  if (tree.exists(`${projectConfig.root}/.eslintrc.json`)) {
+  const eslintFile = findEslintFile(tree, projectConfig.root);
+  if (eslintFile && !eslintFile.endsWith('.js')) {
     if (projectConfig.targets) {
       const eslintTargets = Object.keys(projectConfig.targets || {}).filter(
         (t) => projectConfig.targets[t].executor === '@nx/eslint:lint'
       );
+      let ignorePath: string | undefined;
       for (const target of eslintTargets) {
         // remove any obsolete `eslintConfig` options pointing to the old config file
         if (projectConfig.targets[target].options?.eslintConfig) {
           delete projectConfig.targets[target].options.eslintConfig;
+        }
+        if (projectConfig.targets[target].options?.ignorePath) {
+          ignorePath = projectConfig.targets[target].options.ignorePath;
+          delete projectConfig.targets[target].options.ignorePath;
         }
         updateProjectConfiguration(tree, project, projectConfig);
       }
@@ -84,9 +112,14 @@ function convertProjectToFlatConfig(
         convertConfigToFlatConfig(
           tree,
           projectConfig.root,
-          '.eslintrc.json',
-          'eslint.config.js'
+          eslintFile,
+          'eslint.config.js',
+          ignorePath
         );
+        eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
+        if (ignorePath) {
+          eslintIgnoreFiles.add(ignorePath);
+        }
       }
     }
   }
@@ -121,7 +154,73 @@ function convertConfigToFlatConfig(
   tree: Tree,
   root: string,
   source: string,
-  target: string
+  target: string,
+  ignorePath?: string
 ) {
-  convertEslintJsonToFlatConfig(tree, root, source, target);
+  const ignorePaths = ignorePath
+    ? [ignorePath, `${root}/.eslintignore`]
+    : [`${root}/.eslintignore`];
+
+  if (source.endsWith('.json')) {
+    const config: ESLint.ConfigData = readJson(tree, `${root}/${source}`);
+    const conversionResult = convertEslintJsonToFlatConfig(
+      tree,
+      root,
+      config,
+      ignorePaths
+    );
+    return processConvertedConfig(tree, root, source, target, conversionResult);
+  }
+  if (source.endsWith('.yaml') || source.endsWith('.yml')) {
+    const originalContent = tree.read(`${root}/${source}`, 'utf-8');
+    const config = load(originalContent, {
+      json: true,
+      filename: source,
+    }) as ESLint.ConfigData;
+    const conversionResult = convertEslintJsonToFlatConfig(
+      tree,
+      root,
+      config,
+      ignorePaths
+    );
+    return processConvertedConfig(tree, root, source, target, conversionResult);
+  }
+}
+
+function processConvertedConfig(
+  tree: Tree,
+  root: string,
+  source: string,
+  target: string,
+  {
+    content,
+    addESLintRC,
+    addESLintJS,
+  }: { content: string; addESLintRC: boolean; addESLintJS: boolean }
+) {
+  // remove original config file
+  tree.delete(join(root, source));
+
+  // save new
+  tree.write(join(root, target), content);
+
+  // add missing packages
+  if (addESLintRC) {
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@eslint/eslintrc': eslintrcVersion,
+      }
+    );
+  }
+  if (addESLintJS) {
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@eslint/js': eslintVersion,
+      }
+    );
+  }
 }

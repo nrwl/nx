@@ -40,13 +40,7 @@ exports[`new should generate an empty nx.json 1`] = `
         "^production",
       ],
     },
-    "e2e": {
-      "cache": true,
-    },
     "lint": {
-      "cache": true,
-    },
-    "test": {
       "cache": true,
     },
   },

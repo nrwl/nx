@@ -155,11 +155,14 @@ jobs:
   build-freebsd:
      runs-on: macos-12
      name: Build FreeBSD
+     timeout-minutes: 45
      steps:
        - uses: actions/checkout@v3
+         if: ${{ !contains(github.ref, '-') }}
        - name: Build
          id: build
-         uses: cross-platform-actions/action@v0.15.0
+         if: ${{ !contains(github.ref, '-') }}
+         uses: cross-platform-actions/action@v0.21.1
          env:
            DEBUG: napi:*
            RUSTUP_IO_THREADS: 1
@@ -167,7 +170,7 @@ jobs:
            operating_system: freebsd
            version: '13.2'
            architecture: x86-64
-           environment_variables: DEBUG RUSTUP_IO_THREADS
+           environment_variables: DEBUG RUSTUP_IO_THREADS CI
            shell: bash
            run: |
              env
@@ -191,10 +194,15 @@ jobs:
              mkdir -p /Users/runner/work/_temp/_github_workflow
              echo "{}" > /Users/runner/work/_temp/_github_workflow/event.json
              pnpm install --frozen-lockfile --ignore-scripts
-             pnpm nx run-many --target=build-native -- --target=x86_64-unknown-freebsd
+             pnpm nx run-many --outputStyle stream --target=build-native -- --target=x86_64-unknown-freebsd
+             pnpm nx reset
              rm -rf node_modules
              rm -rf dist
+             echo "KILL ALL NODE PROCESSES"
+             killall node || true
+             echo "COMPLETE"
        - name: Upload artifact
+         if: ${{ !contains(github.ref, '-') }}
          uses: actions/upload-artifact@v3
          with:
            name: bindings-freebsd
@@ -234,6 +242,16 @@ jobs:
           git checkout -b publish/$GITHUB_REF_NAME
           npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
           pnpm nx-release --local=false $GITHUB_REF_NAME
+      - name: Trigger Docs Release
+        # Publish docs only on a full release
+        if: ${{ !github.event.release.prerelease }}
+        run: |
+          # Publish docs only when publishing the latest version
+          if [ "$(git describe --tags `git rev-list --tags --max-count=1`)" = "$GITHUB_REF_NAME" ]; then
+          # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
+          git branch -f website
+          git push -f origin website
+          fi
     env:
       GH_TOKEN: ${{ github.token }}
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
