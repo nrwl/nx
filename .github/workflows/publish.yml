@@ -2,7 +2,7 @@ name: publish
 
 on:
   schedule:
-    - cron: "0 3 * * *" # Once per day, at 3am UTC
+    - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
   workflow_dispatch:
   release:
     types: [published]
