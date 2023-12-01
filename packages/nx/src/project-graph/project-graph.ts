@@ -18,7 +18,6 @@ import {
 } from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
 import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
-import { writeSourceMapsToDisk } from '../utils/source-maps';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -78,7 +77,7 @@ export function readProjectsConfigurationFromProjectGraph(
   };
 }
 
-export async function buildProjectGraphWithoutDaemon() {
+export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   const nxJson = readNxJson();
 
   performance.mark('retrieve-project-configurations:start');
@@ -106,11 +105,9 @@ export async function buildProjectGraphWithoutDaemon() {
   ).projectGraph;
   performance.mark('build-project-graph-using-project-file-map:end');
 
-  writeSourceMapsToDisk(sourceMaps);
-
   unregisterPluginTSTranspiler();
 
-  return projectGraph;
+  return { projectGraph, sourceMaps };
 }
 
 function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
@@ -156,11 +153,23 @@ export async function createProjectGraphAsync(
     resetDaemonClient: false,
   }
 ): Promise<ProjectGraph> {
+  const projectGraphAndSourceMaps = await createProjectGraphAndSourceMapsAsync(
+    opts
+  );
+  return projectGraphAndSourceMaps.projectGraph;
+}
+
+export async function createProjectGraphAndSourceMapsAsync(
+  opts: { exitOnError: boolean; resetDaemonClient?: boolean } = {
+    exitOnError: false,
+    resetDaemonClient: false,
+  }
+) {
   performance.mark('create-project-graph-async:start');
 
   if (!daemonClient.enabled()) {
     try {
-      const res = await buildProjectGraphWithoutDaemon();
+      const res = await buildProjectGraphAndSourceMapsWithoutDaemon();
       performance.measure(
         'create-project-graph-async >> retrieve-project-configurations',
         'retrieve-project-configurations:start',
@@ -188,7 +197,8 @@ export async function createProjectGraphAsync(
     }
   } else {
     try {
-      const projectGraph = await daemonClient.getProjectGraph();
+      const projectGraphAndSourceMaps =
+        await daemonClient.getProjectGraphAndSourceMaps();
       if (opts.resetDaemonClient) {
         daemonClient.reset();
       }
@@ -198,7 +208,7 @@ export async function createProjectGraphAsync(
         'create-project-graph-async:start',
         'create-project-graph-async:end'
       );
-      return projectGraph;
+      return projectGraphAndSourceMaps;
     } catch (e) {
       if (e.message.indexOf('inotify_add_watch') > -1) {
         // common errors with the daemon due to OS settings (cannot watch all the files available)
@@ -210,7 +220,7 @@ export async function createProjectGraphAsync(
           ],
         });
         markDaemonAsDisabled();
-        return buildProjectGraphWithoutDaemon();
+        return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
       if (e.internalDaemonError) {
@@ -224,7 +234,7 @@ export async function createProjectGraphAsync(
           ],
         });
         markDaemonAsDisabled();
-        return buildProjectGraphWithoutDaemon();
+        return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
       handleProjectGraphError(opts, e);
