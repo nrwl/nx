@@ -7,7 +7,6 @@ function updateAngularVersionUtils(packageVersionMap: Map<string, string>) {
   const angularVersion = packageVersionMap.get('@angular/core')!;
   const angularDevkitVersion = packageVersionMap.get('@angular/cli')!;
   const ngPackagrVersion = packageVersionMap.get('ng-packagr')!;
-  const ngUniversalVersion = packageVersionMap.get('@nguniversal/common')!;
 
   versionUtilContents = versionUtilContents.replace(
     /export const angularVersion = '~.+';/,
@@ -20,10 +19,6 @@ function updateAngularVersionUtils(packageVersionMap: Map<string, string>) {
   versionUtilContents = versionUtilContents.replace(
     /export const ngPackagrVersion = '~.+';/,
     `export const ngPackagrVersion = '~${ngPackagrVersion}';`
-  );
-  versionUtilContents = versionUtilContents.replace(
-    /export const ngUniversalVersion = '~.+';/,
-    `export const ngUniversalVersion = '~${ngUniversalVersion}';`
   );
 
   writeFileSync(pathToFile, versionUtilContents);
