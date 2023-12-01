@@ -30,6 +30,7 @@ launch-templates:
             node_modules
             ~/.cache/Cypress
             ~/.pnpm-store
+            ~/.sdkman
           BASE_BRANCH: 'master'
 
       - name: Install Pnpm
@@ -56,3 +57,15 @@ launch-templates:
 
       - name: Load Cargo Env
         script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
+
+      - name: Install zip and unzip
+        script: apt-get -yqq install zip unzip
+
+      - name: Install SDKMAN and gradle
+        script: |
+          curl -s "https://get.sdkman.io" | bash
+          source "$HOME/.sdkman/bin/sdkman-init.sh"
+          sdk version
+          sdk install gradle 8.5
+          gradle --version
+          echo "PATH=$HOME/.sdkman/candidates/gradle/8.5/bin:$PATH" >> $NX_CLOUD_ENV
