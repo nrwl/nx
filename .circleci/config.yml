@@ -140,6 +140,10 @@ jobs:
           keys:
             - nrwl-nx-homebrew-packages
       - run:
+          name: install gradle
+          command: HOMEBREW_NO_AUTO_UPDATE=1 brew install gradle >/dev/null
+          no_output_timeout: 20m
+      - run:
           name: Configure Detox Environment, Install applesimutils
           command: |
             HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null

@@ -383,11 +383,13 @@ export class ProjectGraphBuilder {
     for (let f of files) {
       if (f.deps) {
         for (let d of f.deps) {
-          const target = fileDataDepTarget(d);
-          if (!fileDeps.has(target)) {
-            fileDeps.set(target, new Set([fileDataDepType(d)]));
-          } else {
-            fileDeps.get(target).add(fileDataDepType(d));
+          if (d) {
+            const target = fileDataDepTarget(d);
+            if (!fileDeps.has(target)) {
+              fileDeps.set(target, new Set([fileDataDepType(d)]));
+            } else {
+              fileDeps.get(target).add(fileDataDepType(d));
+            }
           }
         }
       }

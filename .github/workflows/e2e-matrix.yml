@@ -115,6 +115,7 @@ jobs:
           - e2e-detox
           - e2e-esbuild
           - e2e-expo
+          - e2e-gradle
           - e2e-jest
           - e2e-js
           - e2e-lerna-smoke-tests
@@ -161,6 +162,8 @@ jobs:
           - project: e2e-esbuild
             codeowners: 'S04SJ6HHP0X'
           - project: e2e-expo
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-gradle
             codeowners: 'S04TNCNJG5N'
           - project: e2e-jest
             codeowners: 'S04T16BTJJY'
@@ -212,6 +215,8 @@ jobs:
             project: e2e-detox
           - os: ubuntu-latest
             project: e2e-expo
+          - os: ubuntu-latest
+            project: e2e-gradle
           # exclude non-CNW/Lerna tests from non-LTS node versions
           - node_version: 16
             project: e2e-angular-core
@@ -227,6 +232,8 @@ jobs:
             project: e2e-esbuild
           - node_version: 16
             project: e2e-expo
+           - node_version: 16
+            project: e2e-gradle
           - node_version: 16
             project: e2e-jest
           - node_version: 16
@@ -277,6 +284,8 @@ jobs:
             project: e2e-esbuild
           - node_version: 20
             project: e2e-expo
+          - node_version: 20
+            project: e2e-gradle
           - node_version: 20
             project: e2e-jest
           - node_version: 20
@@ -536,7 +545,7 @@ jobs:
               yarn: 0,
               pnpm: 0
             };
-            const macosProjects = ['e2e-detox', 'e2e-expo', 'e2e-react-native'];
+            const macosProjects = ['e2e-detox', 'e2e-expo', 'e2e-react-native', 'e2e-gradle'];
             combined.forEach((matrix) => {
               if (matrix.os_name === 'Linux' && matrix.node_version === 18) {
                 pmReport[matrix.package_manager] += matrix.duration;
