@@ -19,7 +19,7 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
-import { combineOptionsForGenerator } from '../../utils/params';
+import { combineOptionsForGenerator, handleErrors } from '../../utils/params';
 import { parseGeneratorString } from '../generate/generate';
 import { getGeneratorInformation } from '../generate/generator-utils';
 import { VersionOptions } from './command-object';
@@ -31,7 +31,7 @@ import {
   ReleaseGroupWithName,
   filterReleaseGroups,
 } from './config/filter-release-groups';
-import { gitTag } from './utils/git';
+import { gitAdd, gitTag } from './utils/git';
 import { printDiff } from './utils/print-changes';
 import {
   VersionData,
@@ -58,7 +58,32 @@ export interface ReleaseVersionGeneratorSchema {
   currentVersionResolverMetadata?: Record<string, unknown>;
 }
 
-export async function versionHandler(args: VersionOptions): Promise<void> {
+interface NxReleaseVersionResult {
+  /**
+   * In one specific (and very common) case, an overall workspace version is relevant, for example when there is
+   * only a single release group in which all projects have a fixed relationship to each other. In this case, the
+   * overall workspace version is the same as the version of the release group (and every project within it). This
+   * version could be a `string`, or it could be `null` if using conventional commits and no changes were detected.
+   *
+   * In all other cases (independent versioning, multiple release groups etc), the overall workspace version is
+   * not applicable and will be `undefined` here. If a user attempts to use this value later when it is `undefined`
+   * (for example in the changelog command), we will throw an appropriate error.
+   */
+  workspaceVersion: (string | null) | undefined;
+  projectsVersionData: VersionData;
+}
+
+export const releaseVersionCLIHandler = (args: VersionOptions) =>
+  handleErrors(args.verbose, () => releaseVersion(args));
+
+/**
+ * NOTE: This function is also exported for programmatic usage and forms part of the public API
+ * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
+ * to have control over their own error handling when using the API.
+ */
+export async function releaseVersion(
+  args: VersionOptions
+): Promise<NxReleaseVersionResult> {
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const { projects } = readProjectsConfigurationFromProjectGraph(projectGraph);
   const nxJson = readNxJson();
@@ -177,7 +202,11 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
       logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
     }
 
-    return process.exit(0);
+    return {
+      // An overall workspace version cannot be relevant when filtering to independent projects
+      workspaceVersion: undefined,
+      projectsVersionData: versionData,
+    };
   }
 
   /**
@@ -221,9 +250,42 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
 
   printAndFlushChanges(tree, !!args.dryRun);
 
+  // Only applicable when there is a single release group with a fixed relationship
+  let workspaceVersion: string | null | undefined = undefined;
+  if (releaseGroups.length === 1) {
+    const releaseGroup = releaseGroups[0];
+    if (releaseGroup.projectsRelationship === 'fixed') {
+      const releaseGroupProjectNames = Array.from(
+        releaseGroupToFilteredProjects.get(releaseGroup)
+      );
+      workspaceVersion = versionData[releaseGroupProjectNames[0]].newVersion; // all projects have the same version so we can just grab the first
+    }
+  }
+
+  const changedFiles = tree.listChanges().map((f) => f.path);
+
+  // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
+  if (!changedFiles.length) {
+    return {
+      workspaceVersion,
+      projectsVersionData: versionData,
+    };
+  }
+
+  if (args.stageChanges) {
+    output.logSingleLine(
+      `Staging changed files with git because --stage-changes was set`
+    );
+    await gitAdd({
+      changedFiles,
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
+  }
+
   if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
     await commitChanges(
-      tree.listChanges().map((f) => f.path),
+      changedFiles,
       !!args.dryRun,
       !!args.verbose,
       createCommitMessageValues(
@@ -253,7 +315,10 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
     logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
   }
 
-  process.exit(0);
+  return {
+    workspaceVersion,
+    projectsVersionData: versionData,
+  };
 }
 
 function appendVersionData(
@@ -285,7 +350,7 @@ async function runVersionOnProjects(
   const generatorOptions: ReleaseVersionGeneratorSchema = {
     // Always ensure a string to avoid generator schema validation errors
     specifier: args.specifier ?? '',
-    preid: args.preid,
+    preid: args.preid ?? '',
     ...generatorData.configGeneratorOptions,
     // The following are not overridable by user config
     projects: projectNames.map((p) => projectGraph.nodes[p]),

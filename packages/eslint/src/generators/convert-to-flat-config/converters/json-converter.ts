@@ -1,23 +1,16 @@
-import {
-  Tree,
-  addDependenciesToPackageJson,
-  names,
-  readJson,
-} from '@nx/devkit';
-import { join } from 'path';
+import { Tree, names } from '@nx/devkit';
 import { ESLint } from 'eslint';
 import * as ts from 'typescript';
-import { eslintVersion, eslintrcVersion } from '../../../utils/versions';
 import {
   createNodeList,
   generateAst,
   generateFlatOverride,
   generatePluginExtendsElement,
   generateSpreadElement,
-  mapFilePath,
   stringifyNodeList,
 } from '../../utils/flat-config/ast-utils';
 import { getPluginImport } from '../../utils/eslint-file';
+import { mapFilePath } from '../../utils/flat-config/path-utils';
 
 /**
  * Converts an ESLint JSON config to a flat config.
@@ -26,21 +19,20 @@ import { getPluginImport } from '../../utils/eslint-file';
 export function convertEslintJsonToFlatConfig(
   tree: Tree,
   root: string,
-  sourceFile: string,
-  destinationFile: string,
+  config: ESLint.ConfigData,
   ignorePaths: string[]
-) {
+): { content: string; addESLintRC: boolean; addESLintJS: boolean } {
   const importsMap = new Map<string, string>();
   const exportElements: ts.Expression[] = [];
   let isFlatCompatNeeded = false;
+  let isESLintJSNeeded = false;
   let combinedConfig: ts.PropertyAssignment[] = [];
   let languageOptions: ts.PropertyAssignment[] = [];
 
-  // read original config
-  const config: ESLint.ConfigData = readJson(tree, `${root}/${sourceFile}`);
-
   if (config.extends) {
-    isFlatCompatNeeded = addExtends(importsMap, exportElements, config, tree);
+    const extendsResult = addExtends(importsMap, exportElements, config);
+    isFlatCompatNeeded = extendsResult.isFlatCompatNeeded;
+    isESLintJSNeeded = extendsResult.isESLintJSNeeded;
   }
 
   if (config.plugins) {
@@ -156,7 +148,7 @@ export function convertEslintJsonToFlatConfig(
       ) {
         isFlatCompatNeeded = true;
       }
-      exportElements.push(generateFlatOverride(override, root));
+      exportElements.push(generateFlatOverride(override));
     });
   }
 
@@ -169,7 +161,7 @@ export function convertEslintJsonToFlatConfig(
     if (patterns.length > 0) {
       exportElements.push(
         generateAst({
-          ignores: patterns.map((path) => mapFilePath(path, root)),
+          ignores: patterns.map((path) => mapFilePath(path)),
         })
       );
     }
@@ -181,14 +173,12 @@ export function convertEslintJsonToFlatConfig(
         .read(ignorePath, 'utf-8')
         .split('\n')
         .filter((line) => line.length > 0 && line !== 'node_modules')
-        .map((path) => mapFilePath(path, root));
+        .map((path) => mapFilePath(path));
       if (patterns.length > 0) {
         exportElements.push(generateAst({ ignores: patterns }));
       }
     }
   }
-
-  tree.delete(join(root, sourceFile));
 
   // create the node list and print it to new file
   const nodeList = createNodeList(
@@ -196,28 +186,22 @@ export function convertEslintJsonToFlatConfig(
     exportElements,
     isFlatCompatNeeded
   );
-  const content = stringifyNodeList(nodeList, root, destinationFile);
-  tree.write(join(root, destinationFile), content);
 
-  if (isFlatCompatNeeded) {
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@eslint/eslintrc': eslintrcVersion,
-      }
-    );
-  }
+  return {
+    content: stringifyNodeList(nodeList),
+    addESLintRC: isFlatCompatNeeded,
+    addESLintJS: isESLintJSNeeded,
+  };
 }
 
 // add parsed extends to export blocks and add import statements
 function addExtends(
   importsMap: Map<string, string | string[]>,
   configBlocks: ts.Expression[],
-  config: ESLint.ConfigData,
-  tree: Tree
-): boolean {
+  config: ESLint.ConfigData
+): { isFlatCompatNeeded: boolean; isESLintJSNeeded: boolean } {
   let isFlatCompatNeeded = false;
+  let isESLintJSNeeded = false;
   const extendsConfig = Array.isArray(config.extends)
     ? config.extends
     : [config.extends];
@@ -253,13 +237,7 @@ function addExtends(
     });
 
     if (eslintPluginExtends.length) {
-      addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          '@eslint/js': eslintVersion,
-        }
-      );
+      isESLintJSNeeded = true;
 
       importsMap.set('@eslint/js', 'js');
       eslintPluginExtends.forEach((plugin) => {
@@ -277,18 +255,12 @@ function addExtends(
   }
   if (eslintrcConfigs.length) {
     isFlatCompatNeeded = true;
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@eslint/js': eslintVersion,
-      }
-    );
+    isESLintJSNeeded = true;
 
     configBlocks.push(generatePluginExtendsElement(eslintrcConfigs));
   }
 
-  return isFlatCompatNeeded;
+  return { isFlatCompatNeeded, isESLintJSNeeded };
 }
 
 function addPlugins(

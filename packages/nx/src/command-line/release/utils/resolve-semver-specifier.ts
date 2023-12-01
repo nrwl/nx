@@ -1,9 +1,10 @@
 import { prompt } from 'enquirer';
 import { RELEASE_TYPES, valid } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
-import { createProjectFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
+import { createFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 import { getGitDiff, parseCommits } from './git';
 import { ConventionalCommitsConfig, determineSemverChange } from './semver';
+import { getCommitsRelevantToProjects } from './shared';
 
 // TODO: Extract config to nx.json configuration when adding changelog customization
 const CONVENTIONAL_COMMITS_CONFIG: ConventionalCommitsConfig = {
@@ -24,20 +25,11 @@ export async function resolveSemverSpecifierFromConventionalCommits(
 ): Promise<string | null> {
   const commits = await getGitDiff(from);
   const parsedCommits = parseCommits(commits);
-  const projectFileMap = await createProjectFileMapUsingProjectGraph(
-    projectGraph
+  const relevantCommits = await getCommitsRelevantToProjects(
+    projectGraph,
+    parsedCommits,
+    projectNames
   );
-  const filesInReleaseGroup = new Set<string>(
-    projectNames.reduce(
-      (files, p) => [...files, ...projectFileMap[p].map((f) => f.file)],
-      [] as string[]
-    )
-  );
-
-  const relevantCommits = parsedCommits.filter((c) =>
-    c.affectedFiles.some((f) => filesInReleaseGroup.has(f))
-  );
-
   return determineSemverChange(relevantCommits, CONVENTIONAL_COMMITS_CONFIG);
 }
 

@@ -21,9 +21,9 @@ For a discussion on #2, see [dependency management](#dependency-management) belo
 Nx comes with a powerful task scheduler that intelligently runs operations and makes sure they are quick. This happens in a variety of ways:
 
 - **Parallelization and task dependencies -** Nx automatically [knows how your projects relate to each other](/concepts/more-concepts/how-project-graph-is-built). As a result, if `project-a` depends on `project-b` and you run the build command for `project-a`, Nx first runs the builds for all of `project-a`'s dependencies and then the invoked project itself. Nx sorts these tasks to maximize parallelism.
-- **Only run what changed -** Using [Nx affected commands](/nx-cloud/features/affected) you only really execute tasks on the projects that changed, compared to a given baseline (usually the main branch).
+- **Only run what changed -** Using [Nx affected commands](/ci/features/affected) you only really execute tasks on the projects that changed, compared to a given baseline (usually the main branch).
 - **Caching -** You get Nx's [computation caching](/concepts/how-caching-works) for free. All operations, including artifacts and terminal output are restored from the cache (if present) in a completely transparent way without disrupting your DX. No configuration needed. Obviously this results in an incredible speed improvement.
-- **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization. It even learns from previous runs to better distribute tasks! [Learn more](/nx-cloud/concepts/dte)
+- **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization. It even learns from previous runs to better distribute tasks! [Learn more](/ci/concepts/dte)
 
 ## Integrating Nx with Lerna
 

@@ -76,7 +76,6 @@
             "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
             "executor": "@nrwl/linter:eslint",
             "outputs": ["{options.outputFile}"],
-            "options": { "lintFilePatterns": ["auth/**/*.ts"] },
             "configurations": {}
           },
           "test": {
@@ -155,7 +154,6 @@
             "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
             "executor": "@nrwl/linter:eslint",
             "outputs": ["{options.outputFile}"],
-            "options": { "lintFilePatterns": ["e2e/**/*.{js,ts}"] },
             "configurations": {}
           }
         }
@@ -324,7 +322,7 @@
             "inputs": ["default", "{workspaceRoot}/.eslintrc.json"],
             "executor": "@nrwl/linter:eslint",
             "outputs": ["{options.outputFile}"],
-            "options": { "lintFilePatterns": ["./**/*.ts"] },
+            "options": { "lintFilePatterns": ["./src"] },
             "configurations": {}
           }
         }

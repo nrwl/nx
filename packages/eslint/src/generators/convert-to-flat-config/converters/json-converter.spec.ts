@@ -1,4 +1,4 @@
-import { Tree } from '@nx/devkit';
+import { Tree, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertEslintJsonToFlatConfig } from './json-converter';
 
@@ -58,22 +58,23 @@ describe('convertEslintJsonToFlatConfig', () => {
 
     tree.write('.eslintignore', 'node_modules\nsomething/else');
 
-    convertEslintJsonToFlatConfig(
+    const { content } = convertEslintJsonToFlatConfig(
       tree,
       '',
-      '.eslintrc.json',
-      'eslint.config.js',
+      readJson(tree, '.eslintrc.json'),
       ['.eslintignore']
     );
 
-    expect(tree.read('eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
+    expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
       const nxEslintPlugin = require("@nx/eslint-plugin");
       const js = require("@eslint/js");
+
       const compat = new FlatCompat({
           baseDirectory: __dirname,
           recommendedConfig: js.configs.recommended,
       });
+
       module.exports = [
           { plugins: { "@nx": nxEslintPlugin } },
           {
@@ -118,8 +119,6 @@ describe('convertEslintJsonToFlatConfig', () => {
       ];
       "
     `);
-
-    expect(tree.exists('.eslintrc.json')).toBeFalsy();
   });
 
   it('should convert project configs', async () => {
@@ -170,23 +169,24 @@ describe('convertEslintJsonToFlatConfig', () => {
 
     tree.write('mylib/.eslintignore', 'node_modules\nsomething/else');
 
-    convertEslintJsonToFlatConfig(
+    const { content } = convertEslintJsonToFlatConfig(
       tree,
       'mylib',
-      '.eslintrc.json',
-      'eslint.config.js',
+      readJson(tree, 'mylib/.eslintrc.json'),
       ['mylib/.eslintignore']
     );
 
-    expect(tree.read('mylib/eslint.config.js', 'utf-8')).toMatchInlineSnapshot(`
+    expect(content).toMatchInlineSnapshot(`
       "const { FlatCompat } = require("@eslint/eslintrc");
       const baseConfig = require("../../eslint.config.js");
       const globals = require("globals");
       const js = require("@eslint/js");
+
       const compat = new FlatCompat({
           baseDirectory: __dirname,
           recommendedConfig: js.configs.recommended,
       });
+
       module.exports = [
           ...baseConfig,
           ...compat.extends("plugin:@nx/react-typescript", "next", "next/core-web-vitals"),
@@ -194,10 +194,10 @@ describe('convertEslintJsonToFlatConfig', () => {
           { rules: { "@next/next/no-html-link-for-pages": "off" } },
           {
               files: [
-                  "mylib/**/*.ts",
-                  "mylib/**/*.tsx",
-                  "mylib/**/*.js",
-                  "mylib/**/*.jsx"
+                  "**/*.ts",
+                  "**/*.tsx",
+                  "**/*.js",
+                  "**/*.jsx"
               ],
               rules: { "@next/next/no-html-link-for-pages": [
                       "error",
@@ -206,29 +206,27 @@ describe('convertEslintJsonToFlatConfig', () => {
           },
           {
               files: [
-                  "mylib/**/*.ts",
-                  "mylib/**/*.tsx"
+                  "**/*.ts",
+                  "**/*.tsx"
               ],
               rules: {}
           },
           {
               files: [
-                  "mylib/**/*.js",
-                  "mylib/**/*.jsx"
+                  "**/*.js",
+                  "**/*.jsx"
               ],
               rules: {}
           },
           ...compat.config({ parser: "jsonc-eslint-parser" }).map(config => ({
               ...config,
-              files: ["mylib/**/*.json"],
+              files: ["**/*.json"],
               rules: { "@nx/dependency-checks": "error" }
           })),
-          { ignores: ["mylib/.next/**/*"] },
-          { ignores: ["mylib/something/else"] }
+          { ignores: [".next/**/*"] },
+          { ignores: ["something/else"] }
       ];
       "
     `);
-
-    expect(tree.exists('mylib/.eslintrc.json')).toBeFalsy();
   });
 });

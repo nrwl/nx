@@ -62,13 +62,13 @@ A set of preconfigured options for a [target](#target) that should be enabled al
 
 A [cache](#cache) that can be shared between all developers using the repo and the CI system.
 
-> See: [Share Your Cache](/nx-cloud/features/remote-cache)
+> See: [Share Your Cache](/ci/features/remote-cache)
 
 ### Distributed Task Execution
 
 A system for running [tasks](#task) in CI across multiple agent processes in the most efficient way possible.
 
-> See: [Distribute Task Execution](/nx-cloud/features/distribute-task-execution)
+> See: [Distribute Task Execution](/ci/features/distribute-task-execution)
 
 ### Executor
 
@@ -120,7 +120,7 @@ A [project](#project) that is located in a sub-folder of another project. This w
 
 A service that provides [distributed caching](#distributed-cache) and [distributed task execution](#distributed-task-execution).
 
-> See: [CI with Nx](/nx-cloud/intro/ci-with-nx)
+> See: [CI with Nx](/ci/intro/ci-with-nx)
 
 ### Package
 

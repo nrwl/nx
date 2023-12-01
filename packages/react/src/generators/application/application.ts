@@ -22,7 +22,6 @@ import {
 
 import reactInitGenerator from '../init/init';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
-import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 import {
   babelLoaderVersion,
   nxRspackVersion,
@@ -49,13 +48,6 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [
-        mapLintPattern(
-          options.appProjectRoot,
-          '{ts,tsx,js,jsx}',
-          options.rootProject
-        ),
-      ],
       skipFormat: true,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
@@ -103,8 +95,18 @@ export async function applicationGeneratorInternal(
     skipFormat: true,
     skipHelperLibs: options.bundler === 'vite',
   });
-
   tasks.push(initTask);
+
+  if (options.bundler === 'webpack') {
+    const { webpackInitGenerator } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    const webpackInitTask = await webpackInitGenerator(host, {
+      uiFramework: 'react',
+      skipFormat: true,
+    });
+    tasks.push(webpackInitTask);
+  }
 
   if (!options.rootProject) {
     extractTsConfigBase(host);
@@ -157,15 +159,6 @@ export async function applicationGeneratorInternal(
       },
       false
     );
-  } else if (options.bundler === 'webpack') {
-    const { webpackInitGenerator } = ensurePackage<
-      typeof import('@nx/webpack')
-    >('@nx/webpack', nxVersion);
-    const webpackInitTask = await webpackInitGenerator(host, {
-      uiFramework: 'react',
-      skipFormat: true,
-    });
-    tasks.push(webpackInitTask);
   } else if (options.bundler === 'rspack') {
     const { configurationGenerator } = ensurePackage(
       '@nx/rspack',

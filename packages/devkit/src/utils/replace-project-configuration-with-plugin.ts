@@ -134,7 +134,7 @@ function removeConfigurationDefinedByPlugin<T>(
   for (const [optionName, optionValue] of Object.entries(
     targetFromProjectConfig.options ?? {}
   )) {
-    if (targetFromCreateNodes.options[optionName] === optionValue) {
+    if (equals(targetFromCreateNodes.options[optionName], optionValue)) {
       delete targetFromProjectConfig.options[optionName];
     }
   }
@@ -165,6 +165,16 @@ function removeConfigurationDefinedByPlugin<T>(
   if (Object.keys(targetFromProjectConfig).length === 0) {
     delete projectConfig.targets[targetName];
   }
+}
+
+function equals<T extends unknown>(a: T, b: T) {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((v, i) => v === b[i]);
+  }
+  if (typeof a === 'object' && typeof b === 'object') {
+    return hashObject(a) === hashObject(b);
+  }
+  return a === b;
 }
 
 function shouldRemoveArrayProperty(

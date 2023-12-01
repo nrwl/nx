@@ -107,6 +107,11 @@
         "type": "string",
         "description": "Current working directory of the commands. If it's not specified the commands will run in the workspace root, if a relative path is specified the commands will run in that path relative to the workspace root and if it's an absolute path the commands will run in that path."
       },
+      "env": {
+        "type": "object",
+        "description": "Environment variables that will be made available to the commands. This property has priority over the `.env` files.",
+        "additionalProperties": { "type": "string" }
+      },
       "__unparsed__": {
         "hidden": true,
         "type": "array",

@@ -36,6 +36,13 @@ fn one_or_more_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>
     )(input)
 }
 
+fn brace_group_with_empty_item(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
+    context(
+        "brace_group_with_empty_item",
+        map(preceded(tag("{,"), brace_group), GlobGroup::ZeroOrOne),
+    )(input)
+}
+
 fn exact_one_group(input: &str) -> IResult<&str, GlobGroup, VerboseError<&str>> {
     context(
         "exact_one_group",
@@ -71,6 +78,7 @@ fn non_special_character(input: &str) -> IResult<&str, GlobGroup, VerboseError<&
         "non_special_character",
         map(
             alt((
+                take_until("{,"),
                 take_while(|c| c != '?' && c != '+' && c != '@' && c != '!' && c != '('),
                 is_not("*("),
             )),
@@ -83,6 +91,13 @@ fn group(input: &str) -> IResult<&str, Cow<str>, VerboseError<&str>> {
     context(
         "group",
         map_parser(terminated(take_until(")"), tag(")")), separated_group_items),
+    )(input)
+}
+
+fn brace_group(input: &str) -> IResult<&str, Cow<str>, VerboseError<&str>> {
+    context(
+        "brace_group",
+        map_parser(terminated(take_until("}"), tag("}")), separated_group_items),
     )(input)
 }
 
@@ -117,6 +132,7 @@ fn parse_segment(input: &str) -> IResult<&str, Vec<GlobGroup>, VerboseError<&str
                     negated_file_group,
                     negated_wildcard,
                     negated_group,
+                    brace_group_with_empty_item,
                     non_special_character,
                 )),
             ),
@@ -292,6 +308,36 @@ mod test {
                     vec![GlobGroup::NonSpecial("packages".into())],
                     vec![GlobGroup::NegatedWildcard("package-a".into()),],
                     vec![GlobGroup::NonSpecial("package.json".into())]
+                ]
+            )
+        );
+    }
+    #[test]
+    fn should_parse_globs_with_braces() {
+        let result = parse_glob("**/*.spec.ts{,.snap}").unwrap();
+
+        assert_eq!(
+            result,
+            (
+                false,
+                vec![
+                    vec![GlobGroup::NonSpecial("**".into())],
+                    vec![
+                        GlobGroup::NonSpecial("*.spec.ts".into()),
+                        GlobGroup::ZeroOrOne(".snap".into())
+                    ]
+                ]
+            )
+        );
+        let result = parse_glob("**/*.spec.ts{.snapshot,.snap}").unwrap();
+
+        assert_eq!(
+            result,
+            (
+                false,
+                vec![
+                    vec![GlobGroup::NonSpecial("**".into())],
+                    vec![GlobGroup::NonSpecial("*.spec.ts{.snapshot,.snap}".into()),]
                 ]
             )
         );

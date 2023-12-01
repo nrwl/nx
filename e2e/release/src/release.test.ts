@@ -522,6 +522,83 @@ describe('nx release', () => {
 
     `);
 
+    // All packages should be skipped when the same publish is performed again
+    const publishOutput3Repeat = runCLI(publishToNext);
+    expect(publishOutput3Repeat).toMatchInlineSnapshot(`
+
+      >  NX   Running target nx-release-publish for 3 projects:
+
+      - {project-name}
+      - {project-name}
+      - {project-name}
+
+      With additional flags:
+      --registry=${customRegistryUrl}
+      --tag=next
+
+
+
+      > nx run {project-name}:nx-release-publish
+
+      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
+
+      > nx run {project-name}:nx-release-publish
+
+      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
+
+      > nx run {project-name}:nx-release-publish
+
+      Skipped package "@proj/{project-name}" from project "{project-name}" because v1000.0.0-next.0 already exists in ${customRegistryUrl} with tag "next"
+
+
+
+      >  NX   Successfully ran target nx-release-publish for 3 projects
+
+
+
+    `);
+
+    // All packages should have dist-tags updated when they were already published to a different dist-tag
+    const publishOutput3NewDistTags = runCLI(
+      `release publish --registry=${customRegistryUrl} --tag=next2`
+    );
+    expect(publishOutput3NewDistTags).toMatchInlineSnapshot(`
+
+      >  NX   Running target nx-release-publish for 3 projects:
+
+      - {project-name}
+      - {project-name}
+      - {project-name}
+
+      With additional flags:
+      --registry=${customRegistryUrl}
+      --tag=next2
+
+
+
+      > nx run {project-name}:nx-release-publish
+
+      Added the dist-tag next2 to v1000.0.0-next.0 for registry ${customRegistryUrl}.
+
+
+      > nx run {project-name}:nx-release-publish
+
+      Added the dist-tag next2 to v1000.0.0-next.0 for registry ${customRegistryUrl}.
+
+
+      > nx run {project-name}:nx-release-publish
+
+      Added the dist-tag next2 to v1000.0.0-next.0 for registry ${customRegistryUrl}.
+
+
+
+
+      >  NX   Successfully ran target nx-release-publish for 3 projects
+
+
+
+    `);
+
     // The versions now exist on the next tag in the custom registry
     expect(
       execSync(
@@ -602,7 +679,7 @@ describe('nx release', () => {
 
 
 
-      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -613,7 +690,7 @@ describe('nx release', () => {
       + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
 
 
-      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0
@@ -624,7 +701,7 @@ describe('nx release', () => {
       + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
 
 
-      >  NX   Previewing a Github release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
+      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
 
 
       + ## 1000.0.0-next.0

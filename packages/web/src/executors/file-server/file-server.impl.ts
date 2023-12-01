@@ -12,6 +12,7 @@ import { join, resolve } from 'path';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import * as detectPort from 'detect-port';
 import { daemonClient } from 'nx/src/daemon/client/client';
+import { interpolate } from 'nx/src/tasks-runner/utils';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -52,8 +53,16 @@ function getHttpServerArgs(options: Schema) {
   return args;
 }
 
-function getBuildTargetCommand(options: Schema) {
-  const cmd = ['nx', 'run', options.buildTarget];
+function getBuildTargetCommand(options: Schema, context: ExecutorContext) {
+  const target = parseTargetString(options.buildTarget, context);
+  const cmd = ['nx', 'run'];
+
+  if (target.configuration) {
+    cmd.push(`${target.project}:${target.target}:${target.configuration}`);
+  } else {
+    cmd.push(`${target.project}:${target.target}`);
+  }
+
   if (options.parallel) {
     cmd.push(`--parallel`);
   }
@@ -68,16 +77,26 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
     return options.staticFilePath;
   }
 
-  let buildOptions;
+  let outputPath: string;
   try {
     const target = parseTargetString(options.buildTarget, context);
-    buildOptions = readTargetOptions(target, context);
+    const buildOptions = readTargetOptions(target, context);
+    if (buildOptions?.outputPath) {
+      outputPath = buildOptions.outputPath;
+    } else {
+      const project = context.projectGraph.nodes[context.projectName];
+      const buildTarget = project.data.targets[target.target];
+      outputPath = buildTarget.outputs?.[0];
+      if (outputPath)
+        outputPath = interpolate(outputPath, {
+          projectName: project.data.name,
+          projectRoot: project.data.root,
+        });
+    }
   } catch (e) {
     throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
   }
 
-  // TODO: vsavkin we should also check outputs
-  const outputPath = buildOptions.outputPath;
   if (!outputPath) {
     throw new Error(
       `Unable to get the outputPath from buildTarget ${options.buildTarget}. Make sure ${options.buildTarget} has an outputPath property or manually provide an staticFilePath property`
@@ -131,7 +150,7 @@ export default async function* fileServerExecutor(
       if (!running) {
         running = true;
         try {
-          const args = getBuildTargetCommand(options);
+          const args = getBuildTargetCommand(options, context);
           execFileSync(pmCmd, args, {
             stdio: [0, 1, 2],
           });

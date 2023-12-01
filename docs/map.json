@@ -206,14 +206,14 @@
               "name": "Use Remote Caching",
               "id": "remote-cache",
               "file": "",
-              "path": "/nx-cloud/features/remote-cache",
+              "path": "/ci/features/remote-cache",
               "isExternal": true
             },
             {
               "name": "Distribute Task Execution",
               "id": "distribute-task-execution",
               "file": "",
-              "path": "/nx-cloud/features/distribute-task-execution",
+              "path": "/ci/features/distribute-task-execution",
               "isExternal": true
             },
             {
@@ -1448,11 +1448,11 @@
           "description": "Links to other pieces of documentation",
           "itemList": [
             {
-              "name": "Nx Cloud Documentation",
-              "id": "nx-cloud-documentation",
+              "name": "CI Documentation",
+              "id": "ci",
               "file": "",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "path": "/nx-cloud/intro/ci-with-nx",
+              "path": "/ci/intro/ci-with-nx",
               "isExternal": true
             },
             {
@@ -1624,8 +1624,8 @@
       ]
     },
     {
-      "name": "Nx Cloud",
-      "id": "nx-cloud-documentation",
+      "name": "CI",
+      "id": "ci",
       "description": "Learn how to enable Distributed Tasks Executions, remote caching and more.",
       "itemList": [
         {
@@ -1687,12 +1687,12 @@
               "description": "Set up Nx Cloud on machines that you control",
               "id": "on-premise",
               "tags": ["on-premise"],
-              "file": "nx-cloud/private/get-started"
+              "file": "nx-cloud/private/nx-enterprise-on-prem"
             },
             {
-              "name": "Nx Cloud Workflows",
-              "id": "nx-cloud-workflows",
-              "file": "nx-cloud/intro/nx-cloud-workflows"
+              "name": "Nx Agents",
+              "id": "nx-agents",
+              "file": "nx-cloud/intro/nx-agents"
             }
           ]
         },
@@ -1702,20 +1702,21 @@
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
             {
+              "name": "Reduce Waste in CI",
+              "tags": [],
+              "id": "reduce-waste",
+              "file": "nx-cloud/concepts/reduce-waste"
+            },
+            {
               "name": "Improve Worst Case CI Times",
               "tags": ["distribute-task-execution"],
               "id": "dte",
               "file": "shared/concepts/improve-worst-case-ci-times"
             },
             {
-              "name": "Security Scenarios",
-              "id": "scenarios",
-              "file": "nx-cloud/concepts/scenarios"
-            },
-            {
-              "name": "End to End Encryption",
-              "id": "encryption",
-              "file": "nx-cloud/concepts/encryption"
+              "name": "Cache Security",
+              "id": "cache-security",
+              "file": "nx-cloud/concepts/cache-security"
             }
           ]
         },
@@ -1728,13 +1729,8 @@
               "name": "Set Up CI",
               "id": "set-up",
               "description": "Learn how to set up Nx Cloud for your workspace.",
+              "tags": ["distribute-task-execution"],
               "itemList": [
-                {
-                  "name": "CI Setup",
-                  "id": "ci-setup",
-                  "tags": ["distribute-task-execution"],
-                  "file": "shared/ci-overview"
-                },
                 {
                   "name": "Setting up Azure Pipelines",
                   "id": "monorepo-ci-azure",
@@ -1781,6 +1777,11 @@
                   "name": "Access Tokens",
                   "id": "access-tokens",
                   "file": "nx-cloud/recipes/access-tokens"
+                },
+                {
+                  "name": "Enable End to End Encryption",
+                  "id": "encryption",
+                  "file": "nx-cloud/recipes/encryption"
                 }
               ]
             },
