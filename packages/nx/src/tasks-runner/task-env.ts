@@ -187,7 +187,8 @@ function loadDotEnvFilesForTask(
 function unloadDotEnvFiles(environmentVariables: NodeJS.ProcessEnv) {
   const unloadDotEnvFile = (filename: string) => {
     let parsedDotEnvFile: NodeJS.ProcessEnv = {};
-    loadDotEnvFile({ path: filename, processEnv: parsedDotEnvFile });
+    const myEnv = loadDotEnvFile({ path: filename, processEnv: parsedDotEnvFile });
+    parsedDotEnvFile = { ...expand(myEnv).parsed };
     Object.keys(parsedDotEnvFile).forEach((envVarKey) => {
       if (environmentVariables[envVarKey] === parsedDotEnvFile[envVarKey]) {
         delete environmentVariables[envVarKey];
