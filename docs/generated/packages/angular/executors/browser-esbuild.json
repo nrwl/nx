@@ -513,6 +513,35 @@
         "type": "boolean",
         "description": "Read buildable libraries from source instead of building them separately.",
         "default": true
+      },
+      "plugins": {
+        "description": "A list of ESBuild plugins.",
+        "type": "array",
+        "items": {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "description": "The path to the plugin. Relative to the workspace root."
+                },
+                "options": {
+                  "type": "object",
+                  "description": "The options to provide to the plugin.",
+                  "properties": {},
+                  "additionalProperties": true
+                }
+              },
+              "additionalProperties": false,
+              "required": ["path"]
+            },
+            {
+              "type": "string",
+              "description": "The path to the plugin. Relative to the workspace root."
+            }
+          ]
+        }
       }
     },
     "additionalProperties": false,
