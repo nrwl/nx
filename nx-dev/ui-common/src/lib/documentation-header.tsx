@@ -40,14 +40,14 @@ export function DocumentationHeader({
 }): JSX.Element {
   const router = useRouter();
   let routerPath = router.asPath;
-  const isNxCloud: boolean = routerPath.startsWith('/nx-cloud');
+  const isCI: boolean = routerPath.startsWith('/ci');
   const isAPI: boolean = routerPath.startsWith('/nx-api');
   const isExtendingNx: boolean = routerPath.startsWith('/extending-nx');
   const isPlugins: boolean = routerPath.startsWith('/plugin-registry');
   const isChangelog: boolean = routerPath.startsWith('/changelog');
   const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
   const isNx: boolean =
-    !isNxCloud &&
+    !isCI &&
     !isAPI &&
     !isExtendingNx &&
     !isPlugins &&
@@ -57,9 +57,9 @@ export function DocumentationHeader({
   const sections = [
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
     {
-      name: 'Nx Cloud',
-      href: '/nx-cloud/intro/ci-with-nx',
-      current: isNxCloud,
+      name: 'CI',
+      href: '/ci/intro/ci-with-nx',
+      current: isCI,
     },
     {
       name: 'Extending Nx',

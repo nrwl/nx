@@ -107,7 +107,7 @@ This approach fully optimizes the binning strategy so that tasks are optimally d
 
 ### 🎉 Pro: Easy to Scale
 
-If CI is taking too long, simply increase the number of agent jobs being started in your CI system and Nx will recognize the new agent jobs are available and distribute tasks accordingly. With this approach, your worst case CI time is only limited by your longest running individual task. If you want Nx to automatically provision the agents for you, check out [Nx Cloud Workflows](/nx-cloud/features/nx-cloud-workflows).
+If CI is taking too long, simply increase the number of agent jobs being started in your CI system and Nx will recognize the new agent jobs are available and distribute tasks accordingly. With this approach, your worst case CI time is only limited by your longest running individual task. If you want Nx to automatically provision the agents for you, check out [Nx Agents](/ci/features/nx-agents).
 
 ### 🎉 Pro: Build Artifacts
 
@@ -119,7 +119,7 @@ Because Nx uses distributed computation caching to replay all the tasks back on 
 
 ## Conclusion
 
-If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Cloud with Distributed Task Execution](/nx-cloud/features/distribute-task-execution). You can generate a simple workflow for common CI providers with a single command and then customize from there.
+If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Cloud with Distributed Task Execution](/ci/features/distribute-task-execution). You can generate a simple workflow for common CI providers with a single command and then customize from there.
 
 Nx Cloud is [free for up to 300 CI Pipeline Executions](https://nx.app/pricing/) per month. Most organizations do not exceed the free tier. If you're working on an open source repo, we'll give you a coupon for unlimited free use of Nx Cloud.
 

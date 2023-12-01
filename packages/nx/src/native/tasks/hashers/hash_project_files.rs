@@ -9,7 +9,7 @@ use crate::native::types::FileData;
 pub fn hash_project_files(
     project_name: &str,
     project_root: &str,
-    file_sets: &str,
+    file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<String> {
     let collected_files = collect_files(project_name, project_root, file_sets, project_file_map)?;
@@ -24,11 +24,11 @@ pub fn hash_project_files(
 fn collect_files<'a>(
     project_name: &str,
     project_root: &str,
-    file_sets: &str,
+    file_sets: &[String],
     project_file_map: &'a HashMap<String, Vec<FileData>>,
 ) -> Result<Vec<&'a FileData>> {
     let globs = file_sets
-        .split(',')
+        .iter()
         .map(|f| f.replace("{projectRoot}", project_root))
         .collect::<Vec<_>>();
     let now = std::time::Instant::now();
@@ -59,7 +59,10 @@ mod tests {
     fn test_collect_files() {
         let proj_name = "test_project";
         let proj_root = "test/root";
-        let file_sets = "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap),{projectRoot}/**/*";
+        let file_sets = &[
+            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
+            "{projectRoot}/**/*".to_string(),
+        ];
         let mut file_map = HashMap::new();
         let tsfile_1 = FileData {
             file: "test/root/test1.ts".into(),
@@ -94,7 +97,7 @@ mod tests {
         let result = collect_files(
             proj_name,
             proj_root,
-            "!{projectRoot}/**/*.spec.ts",
+            &["!{projectRoot}/**/*.spec.ts".into()],
             &file_map,
         )
         .unwrap();
@@ -112,7 +115,10 @@ mod tests {
     fn should_hash_deterministically() {
         let proj_name = "test_project";
         let proj_root = "test/root";
-        let file_sets = "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap),{projectRoot}/**/*";
+        let file_sets = &[
+            "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
+            "{projectRoot}/**/*".to_string(),
+        ];
         let mut file_map = HashMap::new();
         let file_data1 = FileData {
             file: "test/root/test1.ts".into(),

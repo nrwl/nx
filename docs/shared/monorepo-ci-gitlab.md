@@ -4,7 +4,7 @@ There are two general approaches to setting up CI with Nx - using a single job o
 
 ## Process Only Affected Projects With One Job on GitLab
 
-Below is an example of an GitLab setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/nx-cloud/features/affected) to run the tasks only for the projects that were affected by that PR.
+Below is an example of an GitLab setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/ci/features/affected) to run the tasks only for the projects that were affected by that PR.
 
 ```yaml {% fileName=".gitlab-ci.yml" %}
 image: node:18
@@ -61,7 +61,7 @@ The `build` and `test` jobs implement the CI workflow using `.distributed` as a 
 
 ## Distribute Tasks Across Agents on GitLab
 
-To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can run this generator:
+To set up [Distributed Task Execution (DTE)](/ci/features/distribute-task-execution), you can run this generator:
 
 ```shell
 npx nx g ci-workflow --ci=gitlab
