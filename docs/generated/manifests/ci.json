@@ -230,8 +230,18 @@
     "file": "",
     "itemList": [
       {
+        "id": "building-blocks-fast-ci",
+        "name": "The Building Blocks of Fast CI",
+        "description": "",
+        "file": "nx-cloud/concepts/building-blocks-fast-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/building-blocks-fast-ci",
+        "tags": []
+      },
+      {
         "id": "reduce-waste",
-        "name": "Reduce Waste in CI",
+        "name": "Reduce Wasted Time in CI",
         "description": "",
         "file": "nx-cloud/concepts/reduce-waste",
         "itemList": [],
@@ -264,9 +274,19 @@
     "path": "/ci/concepts",
     "tags": []
   },
+  "/ci/concepts/building-blocks-fast-ci": {
+    "id": "building-blocks-fast-ci",
+    "name": "The Building Blocks of Fast CI",
+    "description": "",
+    "file": "nx-cloud/concepts/building-blocks-fast-ci",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/building-blocks-fast-ci",
+    "tags": []
+  },
   "/ci/concepts/reduce-waste": {
     "id": "reduce-waste",
-    "name": "Reduce Waste in CI",
+    "name": "Reduce Wasted Time in CI",
     "description": "",
     "file": "nx-cloud/concepts/reduce-waste",
     "itemList": [],

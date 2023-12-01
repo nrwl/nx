@@ -1,4 +1,4 @@
-# Remote Cache Security
+# Cache Security
 
 {% callout type="warning" title="Use Caution With Read-Write Tokens" %}
 Read-write tokens allow full write access to your remote cache. They should only be used in trusted environments. For instance, open source projects should only use read-write tokens as secrets configured for protected branches (e.g, main). Read-only tokens should be used in all other cases.
