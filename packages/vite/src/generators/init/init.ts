@@ -9,7 +9,7 @@ import {
   moveToDevDependencies,
 } from './lib/utils';
 
-export function updateNxJsonSettings(tree: Tree) {
+export function updateProductionFileset(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
@@ -22,33 +22,12 @@ export function updateNxJsonSettings(tree: Tree) {
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['@nx/vite:test'] ??= {};
-  nxJson.targetDefaults['@nx/vite:test'].cache ??= true;
-  nxJson.targetDefaults['@nx/vite:test'].inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-  ];
-  nxJson.targetDefaults['@nx/vite:test'].options ??= {
-    passWithNoTests: true,
-    reporters: ['default'],
-  };
-
-  nxJson.targetDefaults['@nx/vite:build'] ??= {};
-
-  nxJson.targetDefaults['@nx/vite:build'].options ??= {
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  };
-
   updateNxJson(tree, nxJson);
 }
 
 export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   moveToDevDependencies(tree);
-  updateNxJsonSettings(tree);
+  updateProductionFileset(tree);
   const tasks = [];
 
   tasks.push(
@@ -61,9 +40,48 @@ export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   const addPlugins = process.env.NX_PCV3 === 'true';
   if (addPlugins) {
     addPlugin(tree);
+  } else {
+    addTargetDefaults(tree);
   }
   tasks.push(checkDependenciesInstalled(tree, schema));
   return runTasksInSerial(...tasks);
+}
+
+function addTargetDefaults(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  const productionFileSet = nxJson.namedInputs?.production;
+
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['@nx/vite:test'] ??= {};
+  nxJson.targetDefaults['@nx/vite:test'].cache ??= true;
+  nxJson.targetDefaults['@nx/vite:test'].inputs ??= [
+    'default',
+    productionFileSet ? '^production' : '^default',
+  ];
+
+  // TODO(@mandarini): move this to the vite.config.ts file
+  nxJson.targetDefaults['@nx/vite:test'].options ??= {
+    passWithNoTests: true,
+    reporters: ['default'],
+  };
+
+  nxJson.targetDefaults['@nx/vite:build'] ??= {};
+  nxJson.targetDefaults['@nx/vite:build'].cache ??= true;
+  nxJson.targetDefaults['@nx/vite:build'].dependsOn ??= ['^build'];
+  nxJson.targetDefaults['@nx/vite:build'].inputs ??= productionFileSet
+    ? ['production', '^production']
+    : ['default', '^default'];
+
+  // TODO(@mandarini): move this to the vite.config.ts file
+  nxJson.targetDefaults['@nx/vite:build'].options ??= {
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  };
+
+  updateNxJson(tree, nxJson);
 }
 
 export default initGenerator;

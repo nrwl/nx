@@ -106,38 +106,39 @@ function buildEslintTargets(
   const targetDefaults = readTargetDefaultsForTarget(
     options.targetName,
     context.nxJsonConfiguration.targetDefaults,
-    '@nx/eslint:lint'
+    'nx:run-commands'
   );
 
   const isRootProject = projectRoot === '.';
 
   const targets: Record<string, TargetConfiguration> = {};
 
-  const baseTargetConfig: TargetConfiguration = {
+  const targetConfiguration: TargetConfiguration = {
     command: `eslint ${isRootProject ? './src' : '.'}`,
     options: {
       cwd: projectRoot,
     },
   };
   if (eslintConfigs.some((config) => isFlatConfig(config))) {
-    baseTargetConfig.options.env = {
+    targetConfiguration.options.env = {
       ESLINT_USE_FLAT_CONFIG: 'true',
     };
   }
 
-  targets[options.targetName] = {
-    ...baseTargetConfig,
-    cache: targetDefaults?.cache ?? true,
-    inputs: targetDefaults?.inputs ?? [
+  if (targetDefaults?.cache === undefined) {
+    targetConfiguration.cache = true;
+  }
+
+  if (targetDefaults?.inputs === undefined) {
+    targetDefaults.inputs = [
       'default',
       ...eslintConfigs.map((config) => `{workspaceRoot}/${config}`),
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },
-    ],
-    options: {
-      ...baseTargetConfig.options,
-    },
-  };
+    ];
+  }
+
+  targets[options.targetName] = targetConfiguration;
 
   return targets;
 }

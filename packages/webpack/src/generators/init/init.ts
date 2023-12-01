@@ -62,7 +62,11 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
   );
   tasks.push(baseInstallTask);
 
-  if (shouldAddPlugin) addPlugin(tree);
+  if (shouldAddPlugin) {
+    addPlugin(tree);
+  } else {
+    addTargetDefaults(tree);
+  }
 
   return runTasksInSerial(...tasks);
 }
@@ -89,6 +93,21 @@ function addPlugin(tree: Tree) {
       previewTargetName: 'preview',
     } as WebpackPluginOptions,
   });
+  updateNxJson(tree, nxJson);
+}
+
+function addTargetDefaults(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  const productionFileSet = nxJson.namedInputs?.production;
+
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['@nx/webpack:webpack'] ??= {};
+  nxJson.targetDefaults['@nx/webpack:webpack'].cache ??= true;
+  nxJson.targetDefaults['@nx/webpack:webpack'].dependsOn ??= ['^build'];
+  nxJson.targetDefaults['@nx/webpack:webpack'].inputs ??= productionFileSet
+    ? ['production', '^production']
+    : ['default', '^default'];
   updateNxJson(tree, nxJson);
 }
 

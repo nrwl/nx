@@ -29,6 +29,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "@nx/devkit": "file:../devkit",
     "@babel/core": "^7.22.9",
     "autoprefixer": "^10.4.9",
     "babel-loader": "^9.1.2",
@@ -62,7 +63,6 @@
     "webpack-dev-server": "^4.9.3",
     "webpack-node-externals": "^3.0.0",
     "webpack-subresource-integrity": "^5.1.0",
-    "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js"
   },
   "publishConfig": {

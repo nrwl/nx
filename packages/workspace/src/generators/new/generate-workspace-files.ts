@@ -67,16 +67,16 @@ function createNxJson(
     affected: {
       defaultBase,
     },
-    targetDefaults: {
+  };
+
+  if (process.env.NX_PCV3 !== 'true') {
+    nxJson.targetDefaults = {
       build: {
         cache: true,
         dependsOn: ['^build'],
       },
-      lint: {
-        cache: true,
-      },
-    },
-  };
+    };
+  }
 
   if (defaultBase === 'main') {
     delete nxJson.affected;
@@ -87,6 +87,8 @@ function createNxJson(
       production: ['default'],
       sharedGlobals: [],
     };
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults.build ??= {};
     nxJson.targetDefaults.build.inputs = ['production', '^production'];
   }
 

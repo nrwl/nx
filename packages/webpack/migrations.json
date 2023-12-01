@@ -29,6 +29,11 @@
       "version": "16.0.0-beta.1",
       "description": "Replace @nrwl/webpack with @nx/webpack",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "add-target-defaults": {
+      "version": "17.2.0-beta.13",
+      "description": "Add target defaults specific to webpack",
+      "implementation": "./src/migrations/update-17-2-0/add-target-defaults"
     }
   },
   "packageJsonUpdates": {

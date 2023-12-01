@@ -43,9 +43,9 @@ function addTargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults.lint ??= {};
-  nxJson.targetDefaults.lint.cache ??= true;
-  nxJson.targetDefaults.lint.inputs ??= [
+  nxJson.targetDefaults['@nx/eslint:lint'] ??= {};
+  nxJson.targetDefaults['@nx/eslint:lint'].cache ??= true;
+  nxJson.targetDefaults['@nx/eslint:lint'].inputs ??= [
     'default',
     `{workspaceRoot}/.eslintrc.json`,
     `{workspaceRoot}/.eslintignore`,
