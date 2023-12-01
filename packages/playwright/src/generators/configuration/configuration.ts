@@ -1,4 +1,5 @@
 import {
+  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -15,6 +16,7 @@ import * as path from 'path';
 import { ConfigurationGeneratorSchema } from './schema';
 import initGenerator from '../init/init';
 import { addLinterToPlaywrightProject } from '../../utils/add-linter';
+import { typescriptVersion } from '@nx/js/src/utils/versions';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -61,7 +63,11 @@ export async function configurationGenerator(
   );
 
   if (options.js) {
-    toJS(tree, { extension: '.mjs' });
+    const { ModuleKind } = ensurePackage(
+      'typescript',
+      typescriptVersion
+    ) as typeof import('typescript');
+    toJS(tree, { extension: '.cjs', module: ModuleKind.CommonJS });
   }
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -103,7 +109,7 @@ Rename or remove the existing e2e target.`);
     outputs: [`{workspaceRoot}/dist/.playwright/${projectConfig.root}`],
     options: {
       config: `${projectConfig.root}/playwright.config.${
-        options.js ? 'mjs' : 'ts'
+        options.js ? 'cjs' : 'ts'
       }`,
     },
   };

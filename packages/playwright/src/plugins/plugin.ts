@@ -26,7 +26,7 @@ interface NormalizedOptions {
 }
 
 export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
-  '**/playwright.config.{js,ts}',
+  '**/playwright.config.{js,ts,cjs,cts,mjs,mts}',
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
 

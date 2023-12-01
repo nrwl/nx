@@ -7,4 +7,5 @@
 | Name        | Type                            |
 | :---------- | :------------------------------ |
 | `extension` | `".js"` \| `".mjs"` \| `".cjs"` |
+| `module?`   | `ModuleKind`                    |
 | `target?`   | `ScriptTarget`                  |

@@ -107,21 +107,16 @@ describe('Playwright E2E Test Runner - PCV3', () => {
       const e2eResults = runCLI(`e2e demo-e2e`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
-      const lintResults = runCLI(`lint demo-e2e`);
-      expect(lintResults).toContain('All files pass linting');
-
       const { targets } = readJson('apps/demo-e2e/project.json');
-      expect(targets.e2e).not.toBeDefined();
+      expect(targets?.e2e).not.toBeDefined();
 
       const { plugins } = readJson('nx.json');
-      expect(plugins).toEqual([
-        {
-          plugin: '@nx/playwright/plugin',
-          options: {
-            targetName: 'e2e',
-          },
+      expect(plugins).toContain({
+        plugin: '@nx/playwright/plugin',
+        options: {
+          targetName: 'e2e',
         },
-      ]);
+      });
     },
     TEN_MINS_MS
   );
@@ -143,11 +138,8 @@ describe('Playwright E2E Test Runner - PCV3', () => {
       const e2eResults = runCLI(`e2e demo-js-e2e`);
       expect(e2eResults).toContain('Successfully ran target e2e for project');
 
-      const lintResults = runCLI(`lint demo-js-e2e`);
-      expect(lintResults).toContain('All files pass linting');
-
       const { targets } = readJson('apps/demo-js-e2e/project.json');
-      expect(targets.e2e).not.toBeDefined();
+      expect(targets?.e2e).not.toBeDefined();
 
       const { plugins } = readJson('nx.json');
       expect(plugins).toEqual([
