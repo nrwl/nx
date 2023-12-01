@@ -165,6 +165,8 @@ jobs:
             codeowners: 'S04SJ6HHP0X'
           - project: e2e-expo
             codeowners: 'S04TNCNJG5N'
+          - project: e2e-gradle
+            codeowners: 'S04TNCNJG5N'
           - project: e2e-jest
             codeowners: 'S04T16BTJJY'
           - project: e2e-js
@@ -242,6 +244,8 @@ jobs:
             project: e2e-esbuild
           - node_version: 18
             project: e2e-expo
+          - node_version: 18
+            project: e2e-gradle
           - node_version: 18
             project: e2e-jest
           - node_version: 18
