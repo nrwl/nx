@@ -1,26 +1,21 @@
+import { readCachedProjectGraph, type ExecutorContext } from '@nx/devkit';
 import {
   calculateProjectDependencies,
   createTmpTsConfig,
-  DependentBuildableProjectNode,
+  type DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import { join } from 'path';
-import {
-  type ExecutorContext,
-  type ProjectGraph,
-  readCachedProjectGraph,
-} from '@nx/devkit';
 
 export function createTmpTsConfigForBuildableLibs(
   tsConfigPath: string,
-  context: ExecutorContext,
-  options?: { projectGraph?: ProjectGraph; target?: string }
+  context: ExecutorContext
 ) {
   let dependencies: DependentBuildableProjectNode[];
   const result = calculateProjectDependencies(
-    options?.projectGraph ?? readCachedProjectGraph(),
+    context.projectGraph ?? readCachedProjectGraph(),
     context.root,
     context.projectName,
-    options?.target ?? context.targetName,
+    context.targetName,
     context.configurationName
   );
   dependencies = result.dependencies;
@@ -32,7 +27,7 @@ export function createTmpTsConfigForBuildableLibs(
     dependencies
   );
   process.env.NX_TSCONFIG_PATH = tmpTsConfigPath;
-  // Angular EsBuild Builder appends the workspaceRoot to the config path, so remove it.
+
   const tmpTsConfigPathWithoutWorkspaceRoot = tmpTsConfigPath.replace(
     context.root,
     ''

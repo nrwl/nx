@@ -6553,6 +6553,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "application",
+                "path": "/nx-api/angular/executors/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "webpack-browser",
                 "path": "/nx-api/angular/executors/webpack-browser",
                 "name": "webpack-browser",

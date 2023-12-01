@@ -76,6 +76,15 @@
         "path": "/nx-api/angular/executors/module-federation-dev-server",
         "type": "executor"
       },
+      "/nx-api/angular/executors/application": {
+        "description": "Builds an application with esbuild with support for incremental builds.",
+        "file": "generated/packages/angular/executors/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/angular/src/executors/application/schema.json",
+        "path": "/nx-api/angular/executors/application",
+        "type": "executor"
+      },
       "/nx-api/angular/executors/webpack-browser": {
         "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
         "file": "generated/packages/angular/executors/webpack-browser.json",
