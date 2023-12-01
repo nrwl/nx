@@ -21,7 +21,7 @@ import {
   retrieveWorkspaceFiles,
 } from '../../project-graph/utils/retrieve-workspace-files';
 import { fileExists } from '../../utils/fileutils';
-import { writeSourceMaps } from '../../utils/source-maps';
+import { writeSourceMapsToDisk } from '../../utils/source-maps';
 import {
   resetWorkspaceContext,
   updateFilesInContext,
@@ -223,7 +223,7 @@ async function processFilesAndCreateAndSerializeProjectGraph() {
       updatedFileHashes,
       deletedFiles
     );
-    writeSourceMaps(configResult.sourceMaps);
+    writeSourceMapsToDisk(configResult.sourceMaps);
     return createAndSerializeProjectGraph(configResult);
   } catch (err) {
     return Promise.resolve({

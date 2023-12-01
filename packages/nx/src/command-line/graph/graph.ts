@@ -45,7 +45,7 @@ import { HashPlanner, transferProjectGraph } from '../../native';
 import { transformProjectGraphForRust } from '../../native/transform-objects';
 import { getAffectedGraphNodes } from '../affected/affected';
 import { readFileMapCache } from '../../project-graph/nx-deps-cache';
-import { readSourceMaps } from '../../utils/source-maps';
+import { getSourceMaps, readSourceMapsFromDisk } from '../../utils/source-maps';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
@@ -376,7 +376,7 @@ export async function generateGraph(
         depGraphClientResponse
       );
 
-      const sourceMapsResponse = createSourceMapsResponse();
+      const sourceMapsResponse = await getSourceMaps();
 
       const environmentJs = buildEnvironmentJs(
         args.exclude || [],
@@ -547,7 +547,7 @@ async function startServer(
 
     if (sanitizePath === 'source-maps.json') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(createSourceMapsResponse()));
+      res.end(JSON.stringify(await getSourceMaps()));
       return;
     }
 
@@ -783,10 +783,6 @@ async function createExpandedTaskInputResponse(
     'task input static generation:end'
   );
   return response;
-}
-
-function createSourceMapsResponse() {
-  return readSourceMaps();
 }
 
 function getAllTaskGraphsForWorkspace(
