@@ -11,6 +11,8 @@ export type VersionData = Record<
   {
     newVersion: string;
     currentVersion: string;
+    // the git ref (tag or sha) for the current version, or null if the current version was not resolved using git
+    currentVersionRef: string | null;
     dependentProjects: any[]; // TODO: investigate generic type for this once more ecosystems are explored
   }
 >;
@@ -126,14 +128,16 @@ export function createCommitMessageValues(
     if (releaseGroup.projectsRelationship === 'independent') {
       for (const project of releaseGroupProjectNames) {
         const projectVersionData = versionData[project];
-        const releaseVersion = new ReleaseVersion({
-          version: projectVersionData.newVersion,
-          releaseTagPattern: releaseGroup.releaseTagPattern,
-          projectName: project,
-        });
-        commitMessageValues.push(
-          `- project: ${project} ${releaseVersion.rawVersion}`
-        );
+        if (projectVersionData.newVersion !== null) {
+          const releaseVersion = new ReleaseVersion({
+            version: projectVersionData.newVersion,
+            releaseTagPattern: releaseGroup.releaseTagPattern,
+            projectName: project,
+          });
+          commitMessageValues.push(
+            `- project: ${project} ${releaseVersion.rawVersion}`
+          );
+        }
       }
       continue;
     }
@@ -168,12 +172,14 @@ export function createGitTagValues(
     if (releaseGroup.projectsRelationship === 'independent') {
       for (const project of releaseGroupProjectNames) {
         const projectVersionData = versionData[project];
-        tags.push(
-          interpolate(releaseGroup.releaseTagPattern, {
-            version: projectVersionData.newVersion,
-            projectName: project,
-          })
-        );
+        if (projectVersionData.newVersion !== null) {
+          tags.push(
+            interpolate(releaseGroup.releaseTagPattern, {
+              version: projectVersionData.newVersion,
+              projectName: project,
+            })
+          );
+        }
       }
       continue;
     }
