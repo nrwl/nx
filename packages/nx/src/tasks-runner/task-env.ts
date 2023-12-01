@@ -175,7 +175,7 @@ function loadDotEnvFilesForTask(
       // Do not override existing env variables as we load
       override: false,
     });
-    if (envExpand) {
+    if (process.env.NX_ENV_EXPAND !== 'false') {
       environmentVariables = {
         ...expand({
           ...myEnv,
