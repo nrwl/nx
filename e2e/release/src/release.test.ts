@@ -714,6 +714,110 @@ describe('nx release', () => {
 
     `);
 
+    const metaDryRunOutput = runCLI(`release 1000.0.0-next.1 --dry-run`);
+    expect(metaDryRunOutput).toMatchInlineSnapshot(`
+
+      >  NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 1000.0.0-next.0 from {project-name}/package.json
+      {project-name} 📄 Using the provided version specifier "1000.0.0-next.1".
+      {project-name} ✍️  New version 1000.0.0-next.1 written to {project-name}/package.json
+      {project-name} ✍️  Applying new version 1000.0.0-next.1 to 1 package which depends on {project-name}
+
+      >  NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 1000.0.0-next.0 from {project-name}/package.json
+      {project-name} 📄 Using the provided version specifier "1000.0.0-next.1".
+      {project-name} ✍️  New version 1000.0.0-next.1 written to {project-name}/package.json
+
+      >  NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+      {project-name} 📄 Resolved the current version as 1000.0.0-next.0 from {project-name}/package.json
+      {project-name} 📄 Using the provided version specifier "1000.0.0-next.1".
+      {project-name} ✍️  New version 1000.0.0-next.1 written to {project-name}/package.json
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "1000.0.0-next.0",
+      +   "version": "1000.0.0-next.1",
+      "scripts": {
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "1000.0.0-next.0",
+      +   "version": "1000.0.0-next.1",
+      "scripts": {
+
+      "dependencies": {
+      -     "@proj/{project-name}": "1000.0.0-next.0"
+      +     "@proj/{project-name}": "1000.0.0-next.1"
+      }
+
+
+      "name": "@proj/{project-name}",
+      -   "version": "1000.0.0-next.0",
+      +   "version": "1000.0.0-next.1",
+      "scripts": {
+
+
+      >  NX   Previewing an entry in CHANGELOG.md for v1000.0.0-next.1
+
+
+
+      + ## 1000.0.0-next.1
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature
+      +
+      + ### ❤️  Thank You
+      +
+      + - Test
+      +
+      ## 999.9.9
+
+
+
+
+      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.1
+
+
+      + ## 1000.0.0-next.1
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+
+
+      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.1
+
+
+      + ## 1000.0.0-next.1
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+
+
+      >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.1
+
+
+      + ## 1000.0.0-next.1
+      +
+      +
+      + ### 🚀 Features
+      +
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+
+
+    `);
+
     // port and process cleanup
     await killProcessAndPorts(process.pid, verdaccioPort);
 
