@@ -22,7 +22,7 @@ export function ProjectDetails() {
   };
 
   return (
-    <div className="m-4 overflow-auto">
+    <div className="m-4 overflow-auto w-full">
       <h1 className="text-2xl">{name}</h1>
       <h2 className="text-lg pl-6 mb-3 flex flex-row gap-2">
         {root}{' '}
