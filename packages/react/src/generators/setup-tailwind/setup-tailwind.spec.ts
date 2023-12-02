@@ -14,11 +14,9 @@ describe('setup-tailwind', () => {
     ${`src/styles.css`}
     ${`src/styles.scss`}
     ${`src/styles.less`}
-    ${`src/styles.styl`}
     ${`pages/styles.css`}
     ${`pages/styles.scss`}
     ${`pages/styles.less`}
-    ${`pages/styles.styl`}
   `('should update stylesheet', async ({ stylesPath }) => {
     const tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'example', {

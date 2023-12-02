@@ -10,10 +10,34 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
 
-export function updateProjectConfig(tree: Tree, schema: Schema) {
-  let projectConfig = readProjectConfiguration(tree, schema.project);
+export function updateProjectConfigForApplicationBuilder(
+  tree: Tree,
+  options: Schema
+): void {
+  const project = readProjectConfiguration(tree, options.project);
+  const buildTarget = project.targets.build;
+
+  buildTarget.options ??= {};
+  buildTarget.options.server = joinPathFragments(
+    project.sourceRoot ?? joinPathFragments(project.root, 'src'),
+    options.main
+  );
+  buildTarget.options.prerender = true;
+  buildTarget.options.ssr = {
+    entry: joinPathFragments(project.root, options.serverFileName),
+  };
+
+  updateProjectConfiguration(tree, options.project, project);
+}
+
+export function updateProjectConfigForBrowserBuilder(
+  tree: Tree,
+  schema: Schema
+) {
+  const projectConfig = readProjectConfiguration(tree, schema.project);
   const buildTarget = projectConfig.targets.build;
   const baseOutputPath = buildTarget.options.outputPath;
   buildTarget.options.outputPath = joinPathFragments(baseOutputPath, 'browser');
@@ -39,8 +63,13 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
     defaultConfiguration: 'production',
   };
 
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
   projectConfig.targets['serve-ssr'] = {
-    executor: '@nguniversal/builders:ssr-dev-server',
+    executor:
+      angularMajorVersion >= 17
+        ? '@angular-devkit/build-angular:ssr-dev-server'
+        : '@nguniversal/builders:ssr-dev-server',
     configurations: {
       development: {
         browserTarget: `${schema.project}:build:development`,
@@ -55,7 +84,10 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
   };
 
   projectConfig.targets.prerender = {
-    executor: '@nguniversal/builders:prerender',
+    executor:
+      angularMajorVersion >= 17
+        ? '@angular-devkit/build-angular:prerender'
+        : '@nguniversal/builders:prerender',
     options: {
       routes: ['/'],
     },
@@ -87,6 +119,10 @@ export function updateProjectConfig(tree: Tree, schema: Schema) {
     ];
     updateNxJson(tree, nxJson);
   }
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults.server ??= {};
+  nxJson.targetDefaults.server.cache ??= true;
+  updateNxJson(tree, nxJson);
 }
 
 function getServerOptions(

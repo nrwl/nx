@@ -1,11 +1,11 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -20,7 +20,6 @@ import { VitestGeneratorSchema } from './schema';
 
 import initGenerator from '../init/init';
 import {
-  vitestCoverageC8Version,
   vitestCoverageIstanbulVersion,
   vitestCoverageV8Version,
 } from '../../utils/versions';
@@ -30,7 +29,8 @@ import { join } from 'path';
 
 export async function vitestGenerator(
   tree: Tree,
-  schema: VitestGeneratorSchema
+  schema: VitestGeneratorSchema,
+  hasPlugin = false
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -43,8 +43,20 @@ export async function vitestGenerator(
     findExistingTargetsInProject(targets).validFoundTargetName.test ??
     'test';
 
-  addOrChangeTestTarget(tree, schema, testTarget);
-
+  const nxJson = readNxJson(tree);
+  const hasPluginCheck = nxJson.plugins?.some(
+    (p) =>
+      (typeof p === 'string'
+        ? p === '@nx/vite/plugin'
+        : p.plugin === '@nx/vite/plugin') || hasPlugin
+  );
+  if (!hasPluginCheck) {
+    const testTarget =
+      schema.testTarget ??
+      findExistingTargetsInProject(targets).validFoundTargetName.test ??
+      'test';
+    addOrChangeTestTarget(tree, schema, testTarget);
+  }
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
     testEnvironment: schema.testEnvironment,
@@ -61,13 +73,13 @@ export async function vitestGenerator(
           includeVitest: true,
           inSourceTests: schema.inSourceTests,
           rollupOptionsExternal: [
-            `'react'`,
-            `'react-dom'`,
-            `'react/jsx-runtime'`,
+            "'react'",
+            "'react-dom'",
+            "'react/jsx-runtime'",
           ],
-          rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
           imports: [`import react from '@vitejs/plugin-react'`],
           plugins: ['react()'],
+          coverageProvider: schema.coverageProvider,
         },
         true
       );
@@ -204,9 +216,9 @@ function getCoverageProviderDependency(
   coverageProvider: VitestGeneratorSchema['coverageProvider']
 ) {
   switch (coverageProvider) {
-    case 'c8':
+    case 'v8':
       return {
-        '@vitest/coverage-c8': vitestCoverageC8Version,
+        '@vitest/coverage-v8': vitestCoverageV8Version,
       };
     case 'istanbul':
       return {
@@ -220,4 +232,3 @@ function getCoverageProviderDependency(
 }
 
 export default vitestGenerator;
-export const vitestSchematic = convertNxGenerator(vitestGenerator);

@@ -6,14 +6,14 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from './library';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { Schema } from './schema';
 
 describe('lib', () => {
   let appTree: Tree;
 
   const defaultSchema: Schema = {
-    name: 'myLib',
+    name: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
@@ -34,11 +34,8 @@ describe('lib', () => {
       expect(projectConfiguration.root).toEqual('my-lib');
       expect(projectConfiguration.targets.build).toBeUndefined();
       expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx}'],
-        },
       });
       expect(projectConfiguration.tags).toEqual(['one', 'two']);
     });
@@ -124,7 +121,7 @@ describe('lib', () => {
     it('should update nx.json', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
-        directory: 'myDir',
+        directory: 'my-dir',
         tags: 'one',
       });
 
@@ -135,8 +132,8 @@ describe('lib', () => {
 
       await libraryGenerator(appTree, {
         ...defaultSchema,
-        name: 'myLib2',
-        directory: 'myDir2',
+        name: 'my-lib2',
+        directory: 'my-dir2',
         tags: 'one,two',
       });
 
@@ -150,21 +147,24 @@ describe('lib', () => {
     });
 
     it('should update project.json', async () => {
-      await libraryGenerator(appTree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-dir',
+      });
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
 
       expect(projectConfiguration.root).toEqual('my-dir');
       expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-dir/**/*.{ts,tsx,js,jsx}'],
-        },
       });
     });
 
     it('should update root tsconfig.base.json', async () => {
-      await libraryGenerator(appTree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-dir',
+      });
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'my-dir/src/index.ts',
@@ -177,7 +177,10 @@ describe('lib', () => {
     it('should update root tsconfig.json when no tsconfig.base.json', async () => {
       appTree.rename('tsconfig.base.json', 'tsconfig.json');
 
-      await libraryGenerator(appTree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-dir',
+      });
 
       const tsconfigJson = readJson(appTree, '/tsconfig.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
@@ -189,7 +192,10 @@ describe('lib', () => {
     });
 
     it('should create a local tsconfig.json', async () => {
-      await libraryGenerator(appTree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-dir',
+      });
 
       const tsconfigJson = readJson(appTree, 'my-dir/tsconfig.json');
       expect(tsconfigJson.extends).toBe('../tsconfig.base.json');
@@ -206,7 +212,10 @@ describe('lib', () => {
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
       appTree.rename('tsconfig.base.json', 'tsconfig.json');
 
-      await libraryGenerator(appTree, { ...defaultSchema, directory: 'myDir' });
+      await libraryGenerator(appTree, {
+        ...defaultSchema,
+        directory: 'my-dir',
+      });
 
       const tsconfigJson = readJson(appTree, 'my-dir/tsconfig.json');
       expect(tsconfigJson.extends).toBe('../tsconfig.json');
@@ -225,10 +234,7 @@ describe('lib', () => {
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
       expect(projectConfiguration.targets.test).toBeUndefined();
       expect(projectConfiguration.targets.lint).toMatchObject({
-        executor: '@nx/linter:eslint',
-        options: {
-          lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx}'],
-        },
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
       });
     });
@@ -281,16 +287,9 @@ describe('lib', () => {
       const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
       expect(projectConfiguration.targets.test).toMatchInlineSnapshot(`
         {
-          "configurations": {
-            "ci": {
-              "ci": true,
-              "codeCoverage": true,
-            },
-          },
           "executor": "@nx/jest:jest",
           "options": {
             "jestConfig": "my-lib/jest.config.ts",
-            "passWithNoTests": true,
           },
           "outputs": [
             "{workspaceRoot}/coverage/{projectRoot}",
@@ -343,7 +342,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(appTree, {
           ...defaultSchema,
-          directory: 'myDir',
+          directory: 'my-dir',
           publishable: true,
         });
       } catch (e) {
@@ -382,7 +381,7 @@ describe('lib', () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
         publishable: true,
-        directory: 'myDir',
+        directory: 'my-dir',
         importPath: '@myorg/lib',
       });
       const packageJson = readJson(appTree, 'my-dir/package.json');
@@ -397,7 +396,7 @@ describe('lib', () => {
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
-        name: 'myLib1',
+        name: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -405,7 +404,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(appTree, {
           ...defaultSchema,
-          name: 'myLib2',
+          name: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         });

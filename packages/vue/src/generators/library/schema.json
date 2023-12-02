@@ -46,7 +46,7 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["vitest", "jest", "none"],
+      "enum": ["vitest", "none"],
       "description": "Test runner to use for unit tests.",
       "x-prompt": "What unit test runner should be used?"
     },
@@ -98,7 +98,7 @@
     "component": {
       "type": "boolean",
       "description": "Generate a default component.",
-      "default": true
+      "default": false
     },
     "js": {
       "type": "boolean",

@@ -1,15 +1,15 @@
 import { ModuleFederationConfig } from '@nx/webpack/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
-import type { AsyncNxWebpackPlugin } from '@nx/webpack';
+import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
 
 /**
  * @param {ModuleFederationConfig} options
- * @return {Promise<AsyncNxWebpackPlugin>}
+ * @return {Promise<AsyncNxComposableWebpackPlugin>}
  */
 export async function withModuleFederation(
   options: ModuleFederationConfig
-): Promise<AsyncNxWebpackPlugin> {
+): Promise<AsyncNxComposableWebpackPlugin> {
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options);
 
@@ -19,7 +19,6 @@ export async function withModuleFederation(
 
     if (options.library?.type === 'var') {
       config.output.scriptType = 'text/javascript';
-      config.experiments.outputModule = false;
     }
 
     config.optimization = {
@@ -28,7 +27,7 @@ export async function withModuleFederation(
 
     config.experiments = {
       ...config.experiments,
-      outputModule: true,
+      outputModule: !(options.library?.type === 'var'),
     };
 
     config.plugins.push(

@@ -1,19 +1,41 @@
-import { readNxJson } from '../config/configuration';
+import { NxJsonConfiguration, readNxJson } from '../config/nx-json';
 
-export function isNxCloudUsed() {
-  const nxJson = readNxJson();
-  return Object.values(nxJson.tasksRunnerOptions).find(
-    (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
+export function isNxCloudUsed(nxJson: NxJsonConfiguration) {
+  return (
+    process.env.NX_CLOUD_ACCESS_TOKEN ||
+    !!nxJson.nxCloudAccessToken ||
+    !!Object.values(nxJson.tasksRunnerOptions ?? {}).find(
+      (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
+    )
   );
 }
 
-export function getNxCloudUrl(): string {
-  const taskRunner = isNxCloudUsed();
-  if (!taskRunner) throw new Error('nx-cloud runner not find in nx.json');
-  return taskRunner.options.url || 'https://nx.app';
+export function getNxCloudUrl(nxJson: NxJsonConfiguration): string {
+  const cloudRunner = Object.values(nxJson.tasksRunnerOptions ?? {}).find(
+    (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
+  );
+  if (
+    !cloudRunner &&
+    !(nxJson.nxCloudAccessToken || process.env.NX_CLOUD_ACCESS_TOKEN)
+  )
+    throw new Error('nx-cloud runner not found in nx.json');
+  return cloudRunner?.options?.url ?? nxJson.nxCloudUrl ?? 'https://nx.app';
 }
-export function getNxCloudToken(): string {
-  const taskRunner = isNxCloudUsed();
-  if (!taskRunner) throw new Error('nx-cloud runner not find in nx.json');
-  return taskRunner.options.accessToken;
+
+export function getNxCloudToken(nxJson: NxJsonConfiguration): string {
+  const cloudRunner = Object.values(nxJson.tasksRunnerOptions ?? {}).find(
+    (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
+  );
+
+  if (
+    !cloudRunner &&
+    !(nxJson.nxCloudAccessToken || process.env.NX_CLOUD_ACCESS_TOKEN)
+  )
+    throw new Error('nx-cloud runner not found in nx.json');
+
+  return (
+    process.env.NX_CLOUD_ACCESS_TOKEN ??
+    cloudRunner?.options.accessToken ??
+    nxJson.nxCloudAccessToken
+  );
 }

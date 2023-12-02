@@ -1,9 +1,0 @@
-{
-  "cli": "nx",
-  "$id": "SchematicsNxWorkspaceSchematic",
-  "title": "Create a custom generator",
-  "description": "Create a custom generator.",
-  "type": "object",
-  "properties": {},
-  "required": []
-}

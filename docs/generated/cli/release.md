@@ -67,6 +67,42 @@ nx release version [specifier]
 
 #### Options
 
+##### git-commit
+
+Type: `boolean`
+
+Whether or not to automatically commit the changes made by this command
+
+##### git-commit-args
+
+Type: `string`
+
+Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes
+
+##### git-commit-message
+
+Type: `string`
+
+Custom git commit message to use when committing the changes made by this command. {version} will be dynamically interpolated when performing fixed releases, interpolated tags will be appended to the commit body when performing independent releases.
+
+##### git-tag
+
+Type: `boolean`
+
+Whether or not to automatically tag the changes made by this command
+
+##### git-tag-args
+
+Type: `string`
+
+Additional arguments to pass to the `git tag` command invoked behind the scenes
+
+##### git-tag-message
+
+Type: `string`
+
+Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself.
+
 ##### help
 
 Type: `boolean`
@@ -85,6 +121,14 @@ Type: `string`
 
 Exact version or semver keyword to apply to the selected release group.
 
+##### stageChanges
+
+Type: `boolean`
+
+Default: `false`
+
+Whether or not to stage the changes made by this command, irrespective of the git config in nx.json related to automated commits. Useful when combining this command with changelog generation.
+
 ##### version
 
 Type: `boolean`
@@ -101,27 +145,47 @@ nx release changelog [version]
 
 #### Options
 
-##### createRelease
-
-Type: `string`
-
-Choices: [github]
-
-Create a release for the given version on a supported source control service provider, such as Github.
-
-##### file
-
-Type: `string`
-
-Default: `CHANGELOG.md`
-
-The name of the file to write the changelog to. It can also be set to `false` to disable file generation. Defaults to CHANGELOG.md.
-
 ##### from
 
 Type: `string`
 
 The git reference to use as the start of the changelog. If not set it will attempt to resolve the latest tag and use that
+
+##### git-commit
+
+Type: `boolean`
+
+Whether or not to automatically commit the changes made by this command
+
+##### git-commit-args
+
+Type: `string`
+
+Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes
+
+##### git-commit-message
+
+Type: `string`
+
+Custom git commit message to use when committing the changes made by this command. {version} will be dynamically interpolated when performing fixed releases, interpolated tags will be appended to the commit body when performing independent releases.
+
+##### git-tag
+
+Type: `boolean`
+
+Whether or not to automatically tag the changes made by this command
+
+##### git-tag-args
+
+Type: `string`
+
+Additional arguments to pass to the `git tag` command invoked behind the scenes
+
+##### git-tag-message
+
+Type: `string`
+
+Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself.
 
 ##### gitRemote
 
@@ -139,15 +203,11 @@ Show help
 
 ##### interactive
 
-Type: `boolean`
-
-##### tagVersionPrefix
-
 Type: `string`
 
-Default: `v`
+Choices: [all, workspace, projects]
 
-Prefix to apply to the version when creating the Github release tag
+Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level
 
 ##### to
 
@@ -214,6 +274,12 @@ Type: `boolean`
 Default: `false`
 
 Ignore cycles in the task graph
+
+##### otp
+
+Type: `number`
+
+A one-time password for publishing to a registry that requires 2FA
 
 ##### output-style
 

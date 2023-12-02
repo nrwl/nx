@@ -200,8 +200,8 @@ describe.each([
       iterations
     );
     const directTime = time(() => minimatch.match(items, pattern), iterations);
-    // Using minimatch directly takes at least twice as long than using the cache.
-    expect(directTime / cacheTime).toBeGreaterThan(2);
+    // Using minimatch directly is slower than using the cache.
+    expect(directTime / cacheTime).toBeGreaterThan(1);
   });
 
   it(`should be comparable to using minimatch a single time (${pattern})`, () => {

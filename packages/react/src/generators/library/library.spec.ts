@@ -7,7 +7,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { nxVersion } from '../../utils/versions';
 import applicationGenerator from '../application/application';
 import libraryGenerator from './library';
@@ -21,7 +21,7 @@ describe('lib', () => {
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
   let defaultSchema: Schema = {
-    name: 'myLib',
+    name: 'my-lib',
     linter: Linter.EsLint,
     skipFormat: false,
     skipTsConfig: false,
@@ -53,11 +53,8 @@ describe('lib', () => {
     expect(project.root).toEqual('my-lib');
     expect(project.targets.build).toBeUndefined();
     expect(project.targets.lint).toEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
-      options: {
-        lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx}'],
-      },
     });
   });
 
@@ -82,6 +79,7 @@ describe('lib', () => {
       'node',
       'vitest',
     ]);
+    expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should update tags', async () => {
@@ -316,11 +314,8 @@ describe('lib', () => {
 
       expect(config.root).toEqual('my-dir/my-lib');
       expect(config.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
-        },
       });
     });
 
@@ -367,10 +362,8 @@ describe('lib', () => {
       expect(tree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
       expect(tree.exists('my-lib/src/lib/my-lib.css')).toBeFalsy();
       expect(tree.exists('my-lib/src/lib/my-lib.scss')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.styl')).toBeFalsy();
       expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeFalsy();
       expect(tree.exists('my-lib/src/lib/my-lib.module.scss')).toBeFalsy();
-      expect(tree.exists('my-lib/src/lib/my-lib.module.styl')).toBeFalsy();
 
       const content = tree.read('my-lib/src/lib/my-lib.tsx', 'utf-8');
       expect(content).not.toContain('styled-components');
@@ -379,10 +372,8 @@ describe('lib', () => {
       expect(content).not.toContain('<StyledApp>');
 
       //for imports
-      expect(content).not.toContain('app.styl');
       expect(content).not.toContain('app.css');
       expect(content).not.toContain('app.scss');
-      expect(content).not.toContain('app.module.styl');
       expect(content).not.toContain('app.module.css');
       expect(content).not.toContain('app.module.scss');
     });
@@ -418,17 +409,24 @@ describe('lib', () => {
       expect(config.targets.test).toBeUndefined();
       expect(config.targets.lint).toMatchInlineSnapshot(`
         {
-          "executor": "@nx/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "my-lib/**/*.{ts,tsx,js,jsx}",
-            ],
-          },
+          "executor": "@nx/eslint:lint",
           "outputs": [
             "{options.outputFile}",
           ],
         }
       `);
+    });
+  });
+
+  describe('--bundler none, unit test runner vitest', () => {
+    it('should configure vite', async () => {
+      await libraryGenerator(tree, {
+        ...defaultSchema,
+        unitTestRunner: 'vitest',
+        bundler: 'none',
+      });
+
+      expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -440,7 +438,7 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'myApp',
+        name: 'my-app',
         routing: true,
         style: 'css',
         bundler: 'webpack',
@@ -469,7 +467,7 @@ describe('lib', () => {
         linter: Linter.EsLint,
         skipFormat: true,
         unitTestRunner: 'jest',
-        name: 'myApp',
+        name: 'my-app',
         style: 'css',
         bundler: 'webpack',
         projectNameAndRootFormat: 'as-provided',
@@ -500,7 +498,6 @@ describe('lib', () => {
       });
 
       const projectsConfigurations = getProjects(tree);
-
       expect(projectsConfigurations.get('my-lib').targets.build).toBeDefined();
     });
   });
@@ -797,7 +794,6 @@ describe('lib', () => {
     style     | pkg
     ${'less'} | ${'less'}
     ${'scss'} | ${'sass'}
-    ${'styl'} | ${'stylus'}
   `(
     'should add style preprocessor when vite is used',
     async ({ style, pkg }) => {

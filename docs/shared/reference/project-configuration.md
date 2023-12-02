@@ -285,7 +285,7 @@ sources (non-test sources) of its dependencies. In other words, it treats test s
 
 {% cards %}
 {% card title="nx.json reference" type="documentation" description="inputs and namedInputs are also described in the nx.json reference" url="/reference/nx-json#inputs-&-namedinputs" /%}
-{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/concepts/more-concepts/customizing-inputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/recipes/running-tasks/customizing-inputs" /%}
 {% /cards %}
 
 ### Outputs
@@ -364,6 +364,26 @@ More advanced patterns can be used to exclude files and folders in a single line
   }
 }
 ```
+
+#### Cache
+
+In Nx 17 and higher, caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
+
+```json {% fileName="project.json" %}
+{
+  "targets": {
+    "test": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% callout type="warning" title="Per Project Caching + DTE" %}
+
+If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with DTE enabled.
+
+{% /callout %}
 
 ### dependsOn
 
@@ -768,3 +788,15 @@ If you only wish for some scripts to be used as Nx targets, you can specify them
   }
 }
 ```
+
+{% short-embeds %}
+{% short-video
+title="Two Places To Define Tasks"
+embedUrl="https://www.youtube.com/embed/_oFHSXxa77E" /%}
+{% short-video
+title="Nx w/ Non-JS Languages?"
+embedUrl="https://www.youtube.com/embed/VnIDJYqipdY" /%}
+{% short-video
+title="Running Many Tasks at Once"
+embedUrl="https://www.youtube.com/embed/-lyN72D13uc" /%}
+{% /short-embeds %}

@@ -225,7 +225,6 @@ export const examples: Record<string, Example[]> = {
         'Open the project graph of the workspace in the browser, highlight the projects affected, but exclude project-one and project-two',
     },
   ],
-  'workspace-generator': [],
   list: [
     {
       command: 'list',
@@ -347,6 +346,11 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'show projects --affected',
       description: 'Show affected projects in the workspace',
+    },
+
+    {
+      command: 'show projects --affected --type app',
+      description: 'Show affected apps in the workspace',
     },
 
     {

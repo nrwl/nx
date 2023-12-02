@@ -10,7 +10,6 @@ import { setDefaults } from './lib/set-defaults';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -22,8 +21,7 @@ import {
 } from '@nx/devkit';
 
 import reactInitGenerator from '../init/init';
-import { Linter, lintProjectGenerator } from '@nx/linter';
-import { mapLintPattern } from '@nx/linter/src/generators/lint-project/lint-project';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import {
   babelLoaderVersion,
   nxRspackVersion,
@@ -38,7 +36,7 @@ import { addE2e } from './lib/add-e2e';
 import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
-} from '@nx/linter/src/generators/utils/eslint-file';
+} from '@nx/eslint/src/generators/utils/eslint-file';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -50,13 +48,6 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [
-        mapLintPattern(
-          options.appProjectRoot,
-          '{ts,tsx,js,jsx}',
-          options.rootProject
-        ),
-      ],
       skipFormat: true,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
@@ -104,8 +95,18 @@ export async function applicationGeneratorInternal(
     skipFormat: true,
     skipHelperLibs: options.bundler === 'vite',
   });
-
   tasks.push(initTask);
+
+  if (options.bundler === 'webpack') {
+    const { webpackInitGenerator } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    const webpackInitTask = await webpackInitGenerator(host, {
+      uiFramework: 'react',
+      skipFormat: true,
+    });
+    tasks.push(webpackInitTask);
+  }
 
   if (!options.rootProject) {
     extractTsConfigBase(host);
@@ -145,11 +146,10 @@ export async function applicationGeneratorInternal(
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
         rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
         ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
         imports: [
           options.compiler === 'swc'
             ? `import react from '@vitejs/plugin-react-swc'`
@@ -159,15 +159,6 @@ export async function applicationGeneratorInternal(
       },
       false
     );
-  } else if (options.bundler === 'webpack') {
-    const { webpackInitGenerator } = ensurePackage<
-      typeof import('@nx/webpack')
-    >('@nx/webpack', nxVersion);
-    const webpackInitTask = await webpackInitGenerator(host, {
-      uiFramework: 'react',
-      skipFormat: true,
-    });
-    tasks.push(webpackInitTask);
   } else if (options.bundler === 'rspack') {
     const { configurationGenerator } = ensurePackage(
       '@nx/rspack',
@@ -194,7 +185,7 @@ export async function applicationGeneratorInternal(
 
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       project: options.projectName,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
@@ -208,11 +199,10 @@ export async function applicationGeneratorInternal(
         includeVitest: true,
         inSourceTests: options.inSourceTests,
         rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
         ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
         imports: [
           options.compiler === 'swc'
             ? `import react from '@vitejs/plugin-react-swc'`
@@ -305,4 +295,3 @@ export async function applicationGeneratorInternal(
 }
 
 export default applicationGenerator;
-export const applicationSchematic = convertNxGenerator(applicationGenerator);

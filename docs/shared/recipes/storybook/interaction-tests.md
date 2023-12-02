@@ -7,10 +7,15 @@ description: This guide explains how you can set up Storybook interaction tests 
 
 [Storybook interaction tests](https://storybook.js.org/docs/react/writing-tests/interaction-testing) allow you to test user interactions within your Storybook stories. It enhances your [Storybook](https://storybook.js.org/) setup, ensuring that not only do your components look right, but they also work correctly when interacted with.
 
+{% youtube
+src="https://youtu.be/SaHoUx-TUs8"
+title="Storybook can do...WHAT???" /%}
+
 You can read more about Storybook interaction tests in the following sections of the Storybook documentation:
 
 - [Storybook interaction tests for React](https://storybook.js.org/docs/react/writing-tests/interaction-testing)
 - [Storybook interaction tests for Angular](https://storybook.js.org/docs/angular/writing-tests/interaction-testing)
+- [Storybook interaction tests for Vue](https://storybook.js.org/docs/vue/writing-tests/interaction-testing)
 - [Storybook test runner](https://storybook.js.org/docs/react/writing-tests/test-runner)
 - [The `play` function](https://storybook.js.org/docs/react/writing-stories/play-function)
 
@@ -36,6 +41,13 @@ nx g @nx/angular:storybook-configuration project-name --interactionTests=true
 
 ```shell
 nx g @nx/react:storybook-configuration project-name --interactionTests=true
+```
+
+{% /tab %}
+{% tab label="Vue" %}
+
+```shell
+nx g @nx/vue:storybook-configuration project-name --interactionTests=true
 ```
 
 {% /tab %}

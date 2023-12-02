@@ -44,11 +44,6 @@
         "type": "string"
       },
       "appName": { "type": "string", "description": "Application name." },
-      "nxCloud": {
-        "description": "Connect the workspace to the free tier of the distributed cache provided by Nx Cloud.",
-        "type": "boolean",
-        "default": false
-      },
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
@@ -74,6 +69,11 @@
         "description": "The tool to use for running e2e tests.",
         "type": "string",
         "enum": ["cypress", "playwright", "jest", "detox", "none"]
+      },
+      "ssr": {
+        "description": "Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application.",
+        "type": "boolean",
+        "default": false
       }
     },
     "additionalProperties": true,

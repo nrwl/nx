@@ -24,6 +24,7 @@ export interface DefaultTasksRunnerOptions {
   lifeCycle: LifeCycle;
   captureStderr?: boolean;
   skipNxCache?: boolean;
+  batch?: boolean;
 }
 
 export const defaultTasksRunner: TasksRunner<

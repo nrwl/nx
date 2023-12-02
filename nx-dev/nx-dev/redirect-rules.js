@@ -8,8 +8,6 @@ const schemaUrls = {
   '/workspace/remove': '/packages/workspace/generators/remove',
   '/workspace/run-commands-generator':
     '/packages/workspace/generators/run-commands',
-  '/workspace/workspace-generator':
-    '/packages/workspace/generators/workspace-generator',
   '/workspace/convert-to-nx-project-generator':
     '/packages/workspace/generators/convert-to-nx-project',
 
@@ -30,8 +28,6 @@ const schemaUrls = {
   '/web/file-server': '/packages/web/executors/file-server',
   '/web/package': '/packages/web/executors/rollup',
   '/angular/application': '/packages/angular/generators/application',
-  '/angular/convert-tslint-to-eslint':
-    '/packages/angular/generators/convert-tslint-to-eslint',
   '/angular/downgrade-module': '/packages/angular/generators/downgrade-module',
   '/angular/karma': '/packages/angular/generators/karma',
   '/angular/karma-project': '/packages/angular/generators/karma-project',
@@ -62,9 +58,12 @@ const schemaUrls = {
   '/angular/ng-packagr-lite': '/packages/angular/executors/ng-packagr-lite',
   '/angular/package': '/packages/angular/executors/package',
   '/angular/webpack-browser': '/packages/angular/executors/webpack-browser',
-  '/angular/webpack-server': '/packages/angular/executors/webpack-dev-server',
+  '/angular/webpack-server': '/packages/angular/executors/dev-server',
   '/packages/angular/executors/webpack-server':
-    '/packages/angular/executors/webpack-dev-server',
+    '/packages/angular/executors/dev-server',
+  '/angular/webpack-dev-server': '/packages/angular/executors/dev-server',
+  '/packages/angular/executors/webpack-dev-server':
+    '/packages/angular/executors/dev-server',
   '/react/application': '/packages/react/generators/application',
   '/react/component': '/packages/react/generators/component',
   '/react/component-cypress-spec':
@@ -90,9 +89,8 @@ const schemaUrls = {
   '/storybook/executors-storybook': '/packages/storybook/executors/storybook',
   '/storybook/extra-topics-for-angular-projects':
     '/storybook/overview-angular#more-documentation',
-  '/linter/eslint': '/packages/linter/executors/eslint',
-  '/linter/lint': '/packages/linter/executors/lint',
-  '/linter/workspace-rule': '/packages/linter/generators/workspace-rule',
+  '/linter/eslint': '/packages/eslint/executors/lint',
+  '/linter/workspace-rule': '/packages/eslint/generators/workspace-rule',
   '/node/application': '/packages/node/generators/application',
   '/node/library': '/packages/node/generators/library',
   '/node/webpack': '/packages/node/executors/webpack',
@@ -115,8 +113,6 @@ const schemaUrls = {
   '/nest/resolver': '/packages/nest/generators/resolver',
   '/nest/resource': '/packages/nest/generators/resource',
   '/nest/service': '/packages/nest/generators/service',
-  '/nest/convert-tslint-to-eslint':
-    '/packages/nest/generators/convert-tslint-to-eslint',
   '/next/application': '/packages/next/generators/application',
   '/next/component': '/packages/next/generators/component',
   '/next/page': '/packages/next/generators/page',
@@ -313,7 +309,7 @@ const overviewUrls = {
   '/react/overview': '/packages/react',
   '/jest/overview': '/packages/jest',
   '/cypress/overview': '/packages/cypress',
-  '/linter/overview': '/packages/linter',
+  '/linter/overview': '/packages/eslint',
   '/node/overview': '/packages/node',
   '/express/overview': '/packages/express',
   '/nest/overview': '/packages/nest',
@@ -343,8 +339,6 @@ const cliUrls = {
   '/cli/migrate': '/nx/migrate',
   '/cli/report': '/nx/report',
   '/cli/list': '/nx/list',
-  '/cli/workspace-lint': '/nx/workspace-lint',
-  '/cli/workspace-generator': '/nx/workspace-generator',
   '/cli/connect-to-nx-cloud': '/nx/connect-to-nx-cloud',
   '/cli/reset': '/nx/reset',
 };
@@ -400,9 +394,64 @@ const nxCloudUrls = {
   '/nx-cloud/set-up/add-nx-cloud': '/core-features/remote-cache',
   '/nx-cloud/set-up/set-up-caching': '/core-features/remote-cache',
   '/nx-cloud/set-up/set-up-dte': '/core-features/distribute-task-execution',
-  '/nx-cloud/private-cloud/standalone': '/nx-cloud/private-cloud/ami-setup',
+  '/nx-cloud/private-cloud/standalone': '/ci/private-cloud/ami-setup',
   '/nx-cloud/private-cloud/kubernetes-setup':
     '/nx-cloud/private-cloud/get-started',
+  '/recipes/ci': '/ci/recipes',
+  '/recipes/ci/ci-setup': '/ci/recipes/set-up',
+  '/nx-cloud/recipes/set-up/ci-setup': '/ci/recipes/set-up',
+  '/recipes/ci/monorepo-ci-azure': '/ci/recipes/set-up/monorepo-ci-azure',
+  '/recipes/ci/monorepo-ci-circle-ci':
+    '/nx-cloud/recipes/set-up/monorepo-ci-circle-ci',
+  '/recipes/ci/monorepo-ci-github-action':
+    '/nx-cloud/recipes/set-up/monorepo-ci-github-action',
+  '/recipes/ci/monorepo-ci-jenkins':
+    '/nx-cloud/recipes/set-up/monorepo-ci-jenkins',
+  '/recipes/ci/monorepo-ci-gitlab':
+    '/nx-cloud/recipes/set-up/monorepo-ci-gitlab',
+  '/recipes/ci/monorepo-ci-bitbucket-pipelines':
+    '/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines',
+  '/recipes/ci/ci-deployment': '/ci/recipes/other/ci-deployment',
+  '/nx-cloud/intro/what-is-nx-cloud': '/ci/intro/ci-with-nx',
+  '/nx-cloud/set-up': '/ci/recipes/set-up',
+  '/nx-cloud/set-up/record-commands': '/ci/recipes/other/record-commands',
+  '/nx-cloud/set-up/github':
+    '/nx-cloud/recipes/source-control-integration/github',
+  '/nx-cloud/set-up/bitbucket-cloud':
+    '/nx-cloud/recipes/source-control-integration/bitbucket-cloud',
+  '/nx-cloud/set-up/gitlab':
+    '/nx-cloud/recipes/source-control-integration/gitlab',
+  '/core-features/remote-cache': '/ci/features/remote-cache',
+  '/core-features/distribute-task-execution':
+    '/nx-cloud/features/distribute-task-execution',
+  '/concepts/affected': '/ci/features/affected',
+  '/nx-cloud/private-cloud': '/ci/recipes/on-premise',
+  '/nx-cloud/private-cloud/get-started': '/ci/features/on-premise',
+  '/nx-cloud/private-cloud/auth-single-admin':
+    '/nx-cloud/recipes/on-premise/auth-single-admin',
+  '/nx-cloud/private-cloud/auth-github':
+    '/nx-cloud/recipes/on-premise/auth-github',
+  '/nx-cloud/private-cloud/ami-setup': '/ci/recipes/on-premise/ami-setup',
+  '/nx-cloud/private-cloud/auth-gitlab':
+    '/nx-cloud/recipes/on-premise/auth-gitlab',
+  '/nx-cloud/private-cloud/auth-bitbucket':
+    '/nx-cloud/recipes/on-premise/auth-bitbucket',
+  '/nx-cloud/private-cloud/auth-saml': '/ci/recipes/on-premise/auth-saml',
+  '/nx-cloud/private-cloud/auth-saml-managed':
+    '/nx-cloud/recipes/on-premise/auth-saml-managed',
+  '/nx-cloud/private-cloud/advanced-config':
+    '/nx-cloud/recipes/on-premise/advanced-config',
+  '/concepts/dte': '/ci/concepts/dte',
+  '/nx-cloud/intro/nx-cloud-workflows': '/ci/features/nx-cloud-workflows',
+  '/nx-cloud/account': '/ci/recipes/security',
+  '/nx-cloud/account/google-auth': '/ci/recipes/security/google-auth',
+  '/nx-cloud/account/access-tokens': '/ci/recipes/security/access-tokens',
+  '/nx-cloud/account/scenarios': '/ci/concepts/cache-security',
+  '/nx-cloud/concepts/scenarios': '/ci/concepts/cache-security',
+  '/nx-cloud/account/encryption': '/ci/recipes/security/encryption',
+  '/nx-cloud/concepts/encryption': '/ci/recipes/security/encryption',
+  '/nx-cloud/features/nx-cloud-workflows': '/ci/concepts/nx-agents',
+  '/nx-cloud/:path*': '/ci/:path*',
 };
 
 /**
@@ -548,7 +597,7 @@ const packagesIndexes = {
   '/express': '/packages/express',
   '/jest': '/packages/jest',
   '/js': '/packages/js',
-  '/linter': '/packages/linter',
+  '/linter': '/packages/eslint',
   '/nest': '/packages/nest',
   '/next': '/packages/next',
   '/node': '/packages/node',
@@ -583,7 +632,6 @@ const packagesDocuments = {
   '/nx/migrate': '/packages/nx/documents/migrate',
   '/nx/report': '/packages/nx/documents/report',
   '/nx/list': '/packages/nx/documents/list',
-  '/nx/workspace-lint': '/packages/nx/documents/workspace-lint',
   '/nx/workspace-generator': '/packages/nx/documents/workspace-generator',
   '/nx/connect-to-nx-cloud': '/packages/nx/documents/connect-to-nx-cloud',
   '/nx/reset': '/packages/nx/documents/reset',
@@ -654,7 +702,7 @@ const packagesDocuments = {
     '/deprecated/storybook/upgrade-storybook-v6-react',
   '/packages/storybook/documents/migrate-storybook-7':
     '/packages/storybook/generators/migrate-7',
-  '/linter/eslint-plugin-nx': '/packages/linter/documents/eslint-plugin-nx',
+  '/linter/eslint-plugin-nx': '/packages/eslint/documents/eslint-plugin-nx',
   '/packages/add-nx-to-monorepo': '/packages/nx/documents/init',
   '/packages/cra-to-nx': '/packages/nx/documents/init',
   '/packages/make-angular-cli-faster': '/packages/nx/documents/init',
@@ -671,7 +719,7 @@ const packagesDocuments = {
 };
 
 /**
- * Concept documents Updates (updated 2023-03-31)
+ * Concept documents Updates (updated 2023-10-18)
  */
 const conceptUrls = {
   '/concepts/more-concepts/global-nx':
@@ -684,6 +732,10 @@ const conceptUrls = {
     '/getting-started/tutorials/react-standalone-tutorial',
   '/getting-started/angular-standalone-tutorial':
     '/getting-started/tutorials/angular-standalone-tutorial',
+  '/concepts/more-concepts/micro-frontend-architecture':
+    '/concepts/module-federation/micro-frontend-architecture',
+  '/concepts/more-concepts/faster-builds-with-module-federation':
+    '/concepts/module-federation/faster-builds-with-module-federation',
 };
 
 const nested5minuteTutorialUrls = {
@@ -893,8 +945,22 @@ const latestRecipesRefactoring = {
   '/reference/commands': '/packages/nx',
 };
 
-const coreFeatureRefactoring = {
+const coreFeatureAndConceptsRefactoring = {
   '/core-features/share-your-cache': '/core-features/remote-cache',
+  '/concepts/more-concepts/customizing-inputs':
+    '/recipes/running-tasks/customizing-inputs',
+  '/recipes/tips-n-tricks/root-level-scripts':
+    '/recipes/running-tasks/root-level-scripts',
+  '/recipes/tips-n-tricks/run-commands-executor':
+    '/recipes/running-tasks/run-commands-executor',
+  '/recipes/tips-n-tricks/workspace-watching':
+    '/recipes/running-tasks/workspace-watching',
+  '/recipes/tips-n-tricks/reduce-repetitive-configuration':
+    '/recipes/running-tasks/reduce-repetitive-configuration',
+  '/concepts/more-concepts/global-nx':
+    '/getting-started/installation#installing-nx-globally',
+  '/concepts/more-concepts/nx-and-the-wrapper':
+    '/getting-started/installation#selfmanaged-nx-installation',
 };
 
 /*
@@ -902,6 +968,23 @@ const coreFeatureRefactoring = {
  */
 const aiChat = {
   '/ai': '/ai-chat',
+};
+
+// rename nx/linter to eslint
+const eslintRename = {
+  '/nx-api/linter': '/nx-api/eslint',
+  '/nx-api/linter/documents': '/nx-api/eslint/documents',
+  '/nx-api/linter/documents/overview': '/nx-api/eslint/documents/overview',
+  '/nx-api/linter/executors': '/nx-api/eslint/executors',
+  '/nx-api/linter/executors/eslint': '/nx-api/eslint/executors/lint',
+  '/nx-api/linter/generators': '/nx-api/eslint/generators',
+  '/nx-api/linter/generators/convert-to-flat-config':
+    '/nx-api/eslint/generators/convert-to-flat-config',
+  '/nx-api/linter/generators/workspace-rule':
+    '/nx-api/eslint/generators/workspace-rule',
+  '/nx-api/linter/generators/workspace-rules-project':
+    '/nx-api/eslint/generators/workspace-rules-project',
+  '/packages/linter': '/packages/eslint',
 };
 
 /**
@@ -928,6 +1011,7 @@ module.exports = {
   makeMoreConceptsSubmenu,
   pluginsToExtendNx,
   latestRecipesRefactoring,
-  coreFeatureRefactoring,
+  coreFeatureRefactoring: coreFeatureAndConceptsRefactoring,
   aiChat,
+  eslintRename,
 };

@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -219,6 +218,3 @@ function maybeJs(options: NormalizedSchema, path: string): string {
 }
 
 export default reactNativeLibraryGenerator;
-export const reactNativeLibrarySchematic = convertNxGenerator(
-  reactNativeLibraryGenerator
-);

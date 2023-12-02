@@ -2,6 +2,8 @@ import {
   ExecutorContext,
   getPackageManagerCommand,
   logger,
+  parseTargetString,
+  readTargetOptions,
   runExecutor,
   workspaceRoot,
 } from '@nx/devkit';
@@ -16,6 +18,8 @@ import {
   tapAsyncIterable,
 } from '@nx/devkit/src/utils/async-iterable';
 import { execSync, fork } from 'child_process';
+import { existsSync } from 'fs';
+import { registerTsProject } from '@nx/js/src/internal';
 
 type ModuleFederationDevServerOptions = WebSsrDevServerOptions & {
   devRemotes?: string | string[];
@@ -23,28 +27,69 @@ type ModuleFederationDevServerOptions = WebSsrDevServerOptions & {
   host: string;
 };
 
+function getBuildOptions(buildTarget: string, context: ExecutorContext) {
+  const target = parseTargetString(buildTarget, context);
+
+  const buildOptions = readTargetOptions(target, context);
+
+  return {
+    ...buildOptions,
+  };
+}
+
+function getModuleFederationConfig(
+  tsconfigPath: string,
+  workspaceRoot: string,
+  projectRoot: string
+) {
+  const moduleFederationConfigPathJS = join(
+    workspaceRoot,
+    projectRoot,
+    'module-federation.config.js'
+  );
+
+  const moduleFederationConfigPathTS = join(
+    workspaceRoot,
+    projectRoot,
+    'module-federation.config.ts'
+  );
+
+  let moduleFederationConfigPath = moduleFederationConfigPathJS;
+
+  const fullTSconfigPath = tsconfigPath.startsWith(workspaceRoot)
+    ? tsconfigPath
+    : join(workspaceRoot, tsconfigPath);
+  // create a no-op so this can be called with issue
+  let cleanupTranspiler = () => {};
+  if (existsSync(moduleFederationConfigPathTS)) {
+    cleanupTranspiler = registerTsProject(fullTSconfigPath);
+    moduleFederationConfigPath = moduleFederationConfigPathTS;
+  }
+
+  try {
+    const config = require(moduleFederationConfigPath);
+    cleanupTranspiler();
+
+    return config.default || config;
+  } catch {
+    throw new Error(
+      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?\nSee: https://nx.dev/concepts/more-concepts/faster-builds-with-module-federation`
+    );
+  }
+}
+
 export default async function* moduleFederationSsrDevServer(
   options: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ) {
   let iter: any = ssrDevServerExecutor(options, context);
   const p = context.projectsConfigurations.projects[context.projectName];
-
-  const moduleFederationConfigPath = join(
+  const buildOptions = getBuildOptions(options.browserTarget, context);
+  const moduleFederationConfig = getModuleFederationConfig(
+    buildOptions.tsConfig,
     context.root,
-    p.root,
-    'module-federation.config.js'
+    p.root
   );
-
-  let moduleFederationConfig: any;
-  try {
-    moduleFederationConfig = require(moduleFederationConfigPath);
-  } catch {
-    // TODO(jack): Add a link to guide
-    throw new Error(
-      `Could not load ${moduleFederationConfigPath}. Was this project generated with "@nx/react:host"?`
-    );
-  }
 
   const remotesToSkip = new Set(options.skipRemotes ?? []);
   const remotesNotInWorkspace: string[] = [];
@@ -97,7 +142,7 @@ export default async function* moduleFederationSsrDevServer(
             const remoteServerOutput = join(
               workspaceRoot,
               remoteProject.targets.server.options.outputPath,
-              'main.js'
+              remoteProject.targets.server.options.outputFileName
             );
             const pm = getPackageManagerCommand();
             execSync(

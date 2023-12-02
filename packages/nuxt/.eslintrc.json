@@ -29,7 +29,13 @@
           "error",
           {
             "buildTargets": ["build-base"],
-            "ignoredDependencies": ["nx", "typescript"]
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              "@nx/cypress",
+              "@nx/playwright",
+              "@nx/vite"
+            ]
           }
         ]
       }

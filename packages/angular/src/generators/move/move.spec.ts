@@ -1,7 +1,7 @@
 import * as devkit from '@nx/devkit';
 import { ProjectGraph, readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { generateTestLibrary } from '../utils/testing';
@@ -39,6 +39,7 @@ describe('@nx/angular:move', () => {
       simpleName: true,
       skipFormat: false,
       unitTestRunner: UnitTestRunner.Jest,
+      standalone: false,
     });
 
     jest
@@ -335,6 +336,7 @@ describe('@nx/angular:move', () => {
         simpleName: true,
         skipFormat: false,
         unitTestRunner: UnitTestRunner.Jest,
+        standalone: false,
       });
       addProjectToGraph('my-lib');
 
@@ -355,7 +357,11 @@ describe('@nx/angular:move', () => {
   });
 
   it('should move project correctly when --project-name-and-root-format=derived', async () => {
-    await generateTestLibrary(tree, { name: 'mylib2', buildable: true });
+    await generateTestLibrary(tree, {
+      name: 'mylib2',
+      buildable: true,
+      standalone: false,
+    });
     addProjectToGraph('mylib2');
 
     await angularMoveGenerator(tree, {

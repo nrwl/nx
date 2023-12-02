@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import * as path from 'path';
 import { readJsonFile } from '../utils/fileutils';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import { NxPluginV2 } from '../devkit-exports';
+import { NxPluginV2 } from '../utils/nx-plugin';
 
 export const NX_ANGULAR_JSON_PLUGIN_NAME = 'nx-angular-json-plugin';
 
@@ -10,7 +10,7 @@ export const NxAngularJsonPlugin: NxPluginV2 = {
   name: NX_ANGULAR_JSON_PLUGIN_NAME,
   createNodes: [
     'angular.json',
-    (f, ctx) => ({
+    (f, _, ctx) => ({
       projects: readAngularJson(ctx.workspaceRoot),
     }),
   ],
@@ -56,48 +56,61 @@ function readAngularJson(angularCliWorkspaceRoot: string) {
 }
 
 export function toNewFormat(w: any): ProjectsConfigurations {
-  Object.values(w.projects || {}).forEach((projectConfig: any) => {
+  if (!w.projects) {
+    return w;
+  }
+  for (const name in w.projects ?? {}) {
+    const projectConfig = w.projects[name];
     if (projectConfig.architect) {
       renamePropertyWithStableKeys(projectConfig, 'architect', 'targets');
     }
     if (projectConfig.schematics) {
       renamePropertyWithStableKeys(projectConfig, 'schematics', 'generators');
     }
+    if (!projectConfig.name) {
+      projectConfig.name = name;
+    }
+
     Object.values(projectConfig.targets || {}).forEach((target: any) => {
       if (target.builder !== undefined) {
         renamePropertyWithStableKeys(target, 'builder', 'executor');
       }
     });
-  });
+  }
+
   if (w.schematics) {
     renamePropertyWithStableKeys(w, 'schematics', 'generators');
   }
   if (w.version !== 2) {
     w.version = 2;
   }
+
   return w;
 }
 
 export function toOldFormat(w: any) {
-  Object.values(w.projects || {}).forEach((projectConfig: any) => {
-    if (typeof projectConfig === 'string') {
-      throw new Error(
-        "'project.json' files are incompatible with version 1 workspace schemas."
-      );
-    }
-    if (projectConfig.targets) {
-      renamePropertyWithStableKeys(projectConfig, 'targets', 'architect');
-    }
-    if (projectConfig.generators) {
-      renamePropertyWithStableKeys(projectConfig, 'generators', 'schematics');
-    }
-    delete projectConfig.name;
-    Object.values(projectConfig.architect || {}).forEach((target: any) => {
-      if (target.executor !== undefined) {
-        renamePropertyWithStableKeys(target, 'executor', 'builder');
+  if (w.projects) {
+    for (const name in w.projects) {
+      const projectConfig = w.projects[name];
+      if (typeof projectConfig === 'string') {
+        throw new Error(
+          "'project.json' files are incompatible with version 1 workspace schemas."
+        );
       }
-    });
-  });
+      if (projectConfig.targets) {
+        renamePropertyWithStableKeys(projectConfig, 'targets', 'architect');
+      }
+      if (projectConfig.generators) {
+        renamePropertyWithStableKeys(projectConfig, 'generators', 'schematics');
+      }
+      delete projectConfig.name;
+      Object.values(projectConfig.architect || {}).forEach((target: any) => {
+        if (target.executor !== undefined) {
+          renamePropertyWithStableKeys(target, 'executor', 'builder');
+        }
+      });
+    }
+  }
 
   if (w.generators) {
     renamePropertyWithStableKeys(w, 'generators', 'schematics');

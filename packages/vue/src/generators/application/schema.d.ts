@@ -1,5 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 
 export interface Schema {
   name: string;
@@ -8,7 +8,7 @@ export interface Schema {
   directory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   tags?: string;
-  unitTestRunner?: 'jest' | 'vitest' | 'none';
+  unitTestRunner?: 'vitest' | 'none';
   inSourceTests?: boolean;
   e2eTestRunner: 'cypress' | 'playwright' | 'none';
   linter: Linter;

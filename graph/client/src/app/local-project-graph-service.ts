@@ -19,4 +19,12 @@ export class LocalProjectGraphService implements ProjectGraphService {
   async getTaskGraph(url: string): Promise<TaskGraphClientResponse> {
     return new Promise((resolve) => resolve(window.taskGraphResponse));
   }
+
+  async getExpandedTaskInputs(
+    taskId: string
+  ): Promise<Record<string, string[]>> {
+    return new Promise((resolve) =>
+      resolve(window.expandedTaskInputsResponse[taskId])
+    );
+  }
 }

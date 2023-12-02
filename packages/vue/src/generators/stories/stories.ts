@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -34,11 +33,12 @@ export async function createAllStories(
   projectConfiguration: ProjectConfiguration,
   ignorePaths?: string[]
 ) {
-  const { sourceRoot, root } = projectConfiguration;
+  const { sourceRoot } = projectConfiguration;
   let componentPaths: string[] = [];
   const pathsToCheck = [
     joinPathFragments(sourceRoot, 'app'), // Default component folder for apps
-    joinPathFragments(sourceRoot, 'components'), // Additional component folder
+    joinPathFragments(sourceRoot, 'lib'), // Default component folder for libs
+    joinPathFragments(sourceRoot, 'components'), // Additional component folder used by Nuxt
   ];
 
   for (const p of pathsToCheck) {
@@ -109,4 +109,3 @@ export async function storiesGenerator(
 }
 
 export default storiesGenerator;
-export const storiesSchematic = convertNxGenerator(storiesGenerator);

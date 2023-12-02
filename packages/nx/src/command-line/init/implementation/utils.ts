@@ -1,7 +1,8 @@
 import { execSync } from 'child_process';
 import * as enquirer from 'enquirer';
 import { join } from 'path';
-import { nxVersion } from '../../../utils/versions';
+
+import { NxJsonConfiguration } from '../../../config/nx-json';
 import { runNxSync } from '../../../utils/child-process';
 import {
   fileExists,
@@ -15,6 +16,8 @@ import {
   PackageManagerCommands,
 } from '../../../utils/package-manager';
 import { joinPathFragments } from '../../../utils/path';
+import { nxVersion } from '../../../utils/versions';
+import { readFileSync, writeFileSync } from 'fs';
 
 export async function askAboutNxCloud(): Promise<boolean> {
   return await enquirer
@@ -41,27 +44,21 @@ export async function askAboutNxCloud(): Promise<boolean> {
 
 export function createNxJsonFile(
   repoRoot: string,
-  targetDefaults: string[],
+  topologicalTargets: string[],
   cacheableOperations: string[],
   scriptOutputs: { [name: string]: string }
 ) {
   const nxJsonPath = joinPathFragments(repoRoot, 'nx.json');
-  let nxJson = {} as any;
+  let nxJson = {} as Partial<NxJsonConfiguration>;
   try {
     nxJson = readJsonFile(nxJsonPath);
     // eslint-disable-next-line no-empty
   } catch {}
 
-  nxJson.tasksRunnerOptions ??= {};
-  nxJson.tasksRunnerOptions.default ??= {};
-  nxJson.tasksRunnerOptions.default.runner ??= 'nx/tasks-runners/default';
-  nxJson.tasksRunnerOptions.default.options ??= {};
-  nxJson.tasksRunnerOptions.default.options.cacheableOperations =
-    cacheableOperations;
+  nxJson.targetDefaults ??= {};
 
-  if (targetDefaults.length > 0) {
-    nxJson.targetDefaults ??= {};
-    for (const scriptName of targetDefaults) {
+  if (topologicalTargets.length > 0) {
+    for (const scriptName of topologicalTargets) {
       nxJson.targetDefaults[scriptName] ??= {};
       nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
     }
@@ -74,6 +71,12 @@ export function createNxJsonFile(
       nxJson.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
     }
   }
+
+  for (const target of cacheableOperations) {
+    nxJson.targetDefaults[target] ??= {};
+    nxJson.targetDefaults[target].cache ??= true;
+  }
+
   nxJson.affected ??= {};
   nxJson.affected.defaultBase ??= deduceDefaultBase();
   writeJsonFile(nxJsonPath, nxJson);
@@ -111,15 +114,23 @@ function deduceDefaultBase() {
   }
 }
 
-export function addDepsToPackageJson(repoRoot: string, useCloud: boolean) {
+export function addDepsToPackageJson(repoRoot: string) {
   const path = joinPathFragments(repoRoot, `package.json`);
   const json = readJsonFile(path);
   if (!json.devDependencies) json.devDependencies = {};
   json.devDependencies['nx'] = nxVersion;
-  if (useCloud) {
-    json.devDependencies['nx-cloud'] = 'latest';
-  }
   writeJsonFile(path, json);
+}
+
+export function updateGitIgnore(root: string) {
+  const ignorePath = join(root, '.gitignore');
+  try {
+    let contents = readFileSync(ignorePath, 'utf-8');
+    if (!contents.includes('.nx/cache')) {
+      contents = [contents, '', '.nx/cache'].join('\n');
+      writeFileSync(ignorePath, contents, 'utf-8');
+    }
+  } catch {}
 }
 
 export function runInstall(
@@ -138,10 +149,13 @@ export function initCloud(
     | 'nx-init-nest'
     | 'nx-init-npm-repo'
 ) {
-  runNxSync(`g nx-cloud:init --installationSource=${installationSource}`, {
-    stdio: [0, 1, 2],
-    cwd: repoRoot,
-  });
+  runNxSync(
+    `g nx:connect-to-nx-cloud --installationSource=${installationSource} --quiet --no-interactive`,
+    {
+      stdio: [0, 1, 2],
+      cwd: repoRoot,
+    }
+  );
 }
 
 export function addVsCodeRecommendedExtensions(

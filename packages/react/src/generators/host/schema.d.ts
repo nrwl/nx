@@ -1,5 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 import type { SupportedStyles } from '../../../typings';
 
 export interface Schema {
@@ -25,6 +25,7 @@ export interface Schema {
   unitTestRunner: 'jest' | 'vitest' | 'none';
   minimal?: boolean;
   typescriptConfiguration?: boolean;
+  dynamic?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

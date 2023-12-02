@@ -18,7 +18,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { join, relative } from 'path';
 import {
   dedupe,
@@ -26,17 +26,17 @@ import {
   TsConfig,
 } from '../../../utils/utilities';
 import { StorybookConfigureSchema } from '../schema';
-import { UiFramework7 } from '../../../utils/models';
+import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
-import { findEslintFile } from '@nx/linter/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/linter/src/utils/flat-config';
+import { findEslintFile } from '@nx/eslint/src/generators/utils/eslint-file';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 const DEFAULT_PORT = 4400;
 
 export function addStorybookTask(
   tree: Tree,
   projectName: string,
-  uiFramework: string,
+  uiFramework: UiFramework,
   interactionTests: boolean
 ) {
   if (uiFramework === '@storybook/react-native') {
@@ -141,26 +141,26 @@ export function addAngularStorybookTask(
 export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
   const nrwlWeb = ensurePackage<typeof import('@nx/web')>('@nx/web', nxVersion);
   nrwlWeb.webStaticServeGenerator(tree, {
-    buildTarget: `${opts.name}:build-storybook`,
-    outputPath: joinPathFragments('dist/storybook', opts.name),
+    buildTarget: `${opts.project}:build-storybook`,
+    outputPath: joinPathFragments('dist/storybook', opts.project),
     targetName: 'static-storybook',
   });
 
-  const projectConfig = readProjectConfiguration(tree, opts.name);
+  const projectConfig = readProjectConfiguration(tree, opts.project);
 
   projectConfig.targets['static-storybook'].configurations = {
     ci: {
-      buildTarget: `${opts.name}:build-storybook:ci`,
+      buildTarget: `${opts.project}:build-storybook:ci`,
     },
   };
 
-  updateProjectConfiguration(tree, opts.name, projectConfig);
+  updateProjectConfiguration(tree, opts.project, projectConfig);
 }
 
 export function createStorybookTsconfigFile(
   tree: Tree,
   projectRoot: string,
-  uiFramework: UiFramework7,
+  uiFramework: UiFramework,
   isRootProject: boolean,
   mainDir: 'components' | 'src'
 ) {
@@ -282,7 +282,7 @@ export function configureTsProjectConfig(
   tree: Tree,
   schema: StorybookConfigureSchema
 ) {
-  const { name: projectName } = schema;
+  const { project: projectName } = schema;
 
   let tsConfigPath: string;
   let tsConfigContent: TsConfig;
@@ -323,7 +323,7 @@ export function configureTsSolutionConfig(
   tree: Tree,
   schema: StorybookConfigureSchema
 ) {
-  const { name: projectName } = schema;
+  const { project: projectName } = schema;
 
   const { root } = readProjectConfiguration(tree, projectName);
   const tsConfigPath = join(root, 'tsconfig.json');
@@ -361,27 +361,16 @@ export function configureTsSolutionConfig(
 }
 
 /**
- * When adding storybook we need to inform TSLint or ESLint
+ * When adding storybook we need to inform ESLint
  * of the additional tsconfig.json file which will be the only tsconfig
  * which includes *.stories files.
  *
- * For TSLint this is done via the builder config, for ESLint this is
- * done within the eslint config file.
+ * This is done within the eslint config file.
  */
 export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
-  const { name: projectName } = schema;
+  const { project: projectName } = schema;
 
-  const { targets, root } = readProjectConfiguration(tree, projectName);
-  const tslintTargets = Object.values(targets ?? {}).filter(
-    (target) => target.executor === '@angular-devkit/build-angular:tslint'
-  );
-
-  tslintTargets.forEach((target) => {
-    target.options.tsConfig = dedupe([
-      ...target.options.tsConfig,
-      joinPathFragments(root, './.storybook/tsconfig.json'),
-    ]);
-  });
+  const { root } = readProjectConfiguration(tree, projectName);
 
   const eslintFile = findEslintFile(tree, root);
   if (!eslintFile) {
@@ -536,7 +525,7 @@ export function addStorybookToNamedInputs(tree: Tree) {
 export function createProjectStorybookDir(
   tree: Tree,
   projectName: string,
-  uiFramework: UiFramework7,
+  uiFramework: UiFramework,
   js: boolean,
   tsConfiguration: boolean,
   root: string,
@@ -557,7 +546,7 @@ export function createProjectStorybookDir(
       : 'src/lib';
 
   if (uiFramework === '@storybook/vue3-vite') {
-    projectDirectory = 'src/components';
+    projectDirectory = 'src';
   }
 
   const storybookConfigExists = projectIsRootProjectInStandaloneWorkspace

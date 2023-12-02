@@ -37,7 +37,7 @@ Here's the `project.json` file for the `auth` project:
       }
     },
     "lint": {
-      "executor": "@nx/linter:eslint",
+      "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["auth/**/*.ts"]

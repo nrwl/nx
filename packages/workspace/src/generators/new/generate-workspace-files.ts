@@ -54,8 +54,6 @@ function setPresetProperty(tree: Tree, options: NormalizedSchema) {
   updateJson(tree, join(options.directory, 'nx.json'), (json) => {
     if (options.preset === Preset.NPM) {
       addPropertyWithStableKeys(json, 'extends', 'nx/presets/npm.json');
-      delete json.implicitDependencies;
-      delete json.targetDefaults;
     }
     return json;
   });
@@ -69,19 +67,14 @@ function createNxJson(
     affected: {
       defaultBase,
     },
-    tasksRunnerOptions: {
-      default: {
-        runner: 'nx/tasks-runners/default',
-        options: {
-          cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-        },
+    targetDefaults: {
+      build: {
+        cache: true,
+        dependsOn: ['^build'],
       },
-    },
-  };
-
-  nxJson.targetDefaults = {
-    build: {
-      dependsOn: ['^build'],
+      lint: {
+        cache: true,
+      },
     },
   };
 
@@ -106,6 +99,7 @@ function createFiles(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
     options.preset === Preset.VueStandalone ||
+    options.preset === Preset.NuxtStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone ||
     options.preset === Preset.TsStandalone
@@ -161,6 +155,7 @@ function addNpmScripts(tree: Tree, options: NormalizedSchema) {
     options.preset === Preset.AngularStandalone ||
     options.preset === Preset.ReactStandalone ||
     options.preset === Preset.VueStandalone ||
+    options.preset === Preset.NuxtStandalone ||
     options.preset === Preset.NodeStandalone ||
     options.preset === Preset.NextJsStandalone
   ) {

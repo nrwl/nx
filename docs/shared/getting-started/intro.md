@@ -5,7 +5,7 @@ Nx is a powerful open-source build system that provides tools and techniques for
 ## Core Features
 
 - **Run Tasks Efficiently**: Nx [runs tasks in parallel](/core-features/run-tasks) and orders the tasks based on the dependencies between them.
-- **Cache Locally & Remotely**: With [local](/core-features/cache-task-results) and [remote caching](/core-features/remote-cache), Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
+- **Cache Locally & Remotely**: With [local](/core-features/cache-task-results) and [remote caching](/ci/features/remote-cache), Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
 - **Automate Dependency Updates**: if you leverage Nx plugins you gain additional features such as [code generation](/core-features/plugin-features/use-code-generators) and tools to [automatically upgrade](core-features/automate-updating-dependencies) your codebase and dependencies.
 - **Make it Your Own**: Nx is highly customizable and extensible. Fine-tune it by [creating your own plugins](/extending-nx/intro/getting-started) and optionally [share them with the community](/extending-nx/tutorials/publish-plugin#publish-your-nx-plugin).
 
@@ -43,7 +43,7 @@ npx create-nx-workspace@latest
 
 {% link-card title="Single Angular App" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angular" /%}
 
-{% link-card title="Single Node App" type="tutorial" url="/getting-started/tutorials/node-server-tutorial" icon="node" /%}
+{% link-card title="Single Vue App" type="tutorial" url="/getting-started/tutorials/vue-standalone-tutorial" icon="vue" /%}
 
 <!-- {% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="reactMono" /%}
 
@@ -58,7 +58,7 @@ npx create-nx-workspace@latest
 {% cards cols="3" lgCols="8" mdCols="6" smCols="5" moreLink="/showcase/example-repos" %}
 
 {% link-card title="Express" appearance="small" url="/nx-api/express" icon="express" /%}
-{% link-card title="Vue" appearance="small" url="/showcase/example-repos/add-vue" icon="vue" /%}
+{% link-card title="Vue" appearance="small" url="/nx-api/vue" icon="vue" /%}
 {% link-card title="Next" appearance="small" url="/nx-api/next" icon="nextjs" /%}
 {% link-card title="Nuxt" appearance="small" url="/showcase/example-repos/add-nuxt" icon="nuxt" /%}
 {% link-card title="Nest" appearance="small" url="/nx-api/nest" icon="nestjs" /%}

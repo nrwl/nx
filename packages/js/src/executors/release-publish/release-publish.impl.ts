@@ -33,17 +33,17 @@ export default async function runExecutor(
 
   const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
   const projectPackageJson = readJsonFile(packageJsonPath);
-  const name = projectPackageJson.name;
+  const packageName = projectPackageJson.name;
 
   // If package and project name match, we can make log messages terser
   let packageTxt =
-    name === context.projectName
-      ? `package "${name}"`
-      : `package "${name}" from project "${context.projectName}"`;
+    packageName === context.projectName
+      ? `package "${packageName}"`
+      : `package "${packageName}" from project "${context.projectName}"`;
 
   if (projectPackageJson.private === true) {
     console.warn(
-      `Skipping ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`
+      `Skipped ${packageTxt}, because it has \`"private": true\` in ${packageJsonPath}`
     );
     return {
       success: true,
@@ -51,13 +51,21 @@ export default async function runExecutor(
   }
 
   const npmPublishCommandSegments = [`npm publish --json`];
+  const npmViewCommandSegments = [
+    `npm view ${packageName} versions dist-tags --json`,
+  ];
 
   if (options.registry) {
     npmPublishCommandSegments.push(`--registry=${options.registry}`);
+    npmViewCommandSegments.push(`--registry=${options.registry}`);
   }
 
   if (options.tag) {
     npmPublishCommandSegments.push(`--tag=${options.tag}`);
+  }
+
+  if (options.otp) {
+    npmPublishCommandSegments.push(`--otp=${options.otp}`);
   }
 
   if (options.dryRun) {
@@ -68,6 +76,108 @@ export default async function runExecutor(
   const registry =
     options.registry ?? execSync(`npm config get registry`).toString().trim();
   const tag = options.tag ?? execSync(`npm config get tag`).toString().trim();
+
+  /**
+   * In a dry-run scenario, it is most likely that all commands are being run with dry-run, therefore
+   * the most up to date/relevant version might not exist on disk for us to read and make the npm view
+   * request with.
+   *
+   * Therefore, so as to not produce misleading output in dry around dist-tags being altered, we do not
+   * perform the npm view step, and just show npm publish's dry-run output.
+   */
+  if (!options.dryRun) {
+    const currentVersion = projectPackageJson.version;
+    try {
+      const result = execSync(npmViewCommandSegments.join(' '), {
+        env: processEnv(true),
+        cwd: packageRoot,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      });
+
+      const resultJson = JSON.parse(result.toString());
+      const distTags = resultJson['dist-tags'] || {};
+      if (distTags[tag] === currentVersion) {
+        console.warn(
+          `Skipped ${packageTxt} because v${currentVersion} already exists in ${registry} with tag "${tag}"`
+        );
+        return {
+          success: true,
+        };
+      }
+
+      if (resultJson.versions.includes(currentVersion)) {
+        try {
+          if (!options.dryRun) {
+            execSync(
+              `npm dist-tag add ${packageName}@${currentVersion} ${tag} --registry=${registry}`,
+              {
+                env: processEnv(true),
+                cwd: packageRoot,
+                stdio: 'ignore',
+              }
+            );
+            console.log(
+              `Added the dist-tag ${tag} to v${currentVersion} for registry ${registry}.\n`
+            );
+          } else {
+            console.log(
+              `Would add the dist-tag ${tag} to v${currentVersion} for registry ${registry}, but ${chalk.keyword(
+                'orange'
+              )('[dry-run]')} was set.\n`
+            );
+          }
+          return {
+            success: true,
+          };
+        } catch (err) {
+          try {
+            const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+
+            console.error('npm dist-tag add error:');
+            if (stdoutData.error.summary) {
+              console.error(stdoutData.error.summary);
+            }
+            if (stdoutData.error.detail) {
+              console.error(stdoutData.error.detail);
+            }
+
+            if (context.isVerbose) {
+              console.error('npm dist-tag add stdout:');
+              console.error(JSON.stringify(stdoutData, null, 2));
+            }
+            return {
+              success: false,
+            };
+          } catch (err) {
+            console.error(
+              'Something unexpected went wrong when processing the npm dist-tag add output\n',
+              err
+            );
+            return {
+              success: false,
+            };
+          }
+        }
+      }
+    } catch (err) {
+      const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
+      // If the error is that the package doesn't exist, then we can ignore it because we will be publishing it for the first time in the next step
+      if (
+        !(
+          stdoutData.error?.code?.includes('E404') &&
+          stdoutData.error?.summary?.includes('no such package available')
+        )
+      ) {
+        console.error(
+          `Something unexpected went wrong when checking for existing dist-tags.\n`,
+          err
+        );
+        return {
+          success: false,
+        };
+      }
+    }
+  }
 
   try {
     const output = execSync(npmPublishCommandSegments.join(' '), {
@@ -80,7 +190,7 @@ export default async function runExecutor(
     const stdoutData = JSON.parse(output.toString());
 
     // If npm workspaces are in use, the publish output will nest the data under the package name, so we normalize it first
-    const normalizedStdoutData = stdoutData[context.projectName!] ?? stdoutData;
+    const normalizedStdoutData = stdoutData[packageName] ?? stdoutData;
     logTar(normalizedStdoutData);
 
     if (options.dryRun) {
@@ -98,23 +208,7 @@ export default async function runExecutor(
     };
   } catch (err) {
     try {
-      const currentVersion = projectPackageJson.version;
-
       const stdoutData = JSON.parse(err.stdout?.toString() || '{}');
-      if (
-        stdoutData.error?.code === 'EPUBLISHCONFLICT' ||
-        (stdoutData.error?.code === 'E403' &&
-          stdoutData.error?.body?.error?.includes(
-            'You cannot publish over the previously published versions'
-          ))
-      ) {
-        console.warn(
-          `Skipping ${packageTxt}, as v${currentVersion} has already been published to ${registry} with tag "${tag}"`
-        );
-        return {
-          success: true,
-        };
-      }
 
       console.error('npm publish error:');
       if (stdoutData.error.summary) {
@@ -123,12 +217,15 @@ export default async function runExecutor(
       if (stdoutData.error.detail) {
         console.error(stdoutData.error.detail);
       }
+
+      if (context.isVerbose) {
+        console.error('npm publish stdout:');
+        console.error(JSON.stringify(stdoutData, null, 2));
+      }
       return {
         success: false,
       };
     } catch (err) {
-      // npm v9 onwards seems to guarantee stdout will be well formed JSON when --json is used, so maybe we need to
-      // specify that as minimum supported version? (comes with node 18 and 20 by default)
       console.error(
         'Something unexpected went wrong when processing the npm publish output\n',
         err

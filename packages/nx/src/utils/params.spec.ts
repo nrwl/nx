@@ -710,6 +710,28 @@ describe('params', () => {
       expect(params).toEqual({ a: './somepath' });
     });
 
+    it('should use relativeCwd to set workingDirectory', () => {
+      const params = {};
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            a: {
+              type: 'string',
+              $default: {
+                $source: 'workingDirectory',
+              },
+              visible: false,
+            },
+          },
+        },
+        null,
+        './somepath'
+      );
+
+      expect(params).toEqual({ a: './somepath' });
+    });
+
     it('should set unparsed overrides', () => {
       const params = { __overrides_unparsed__: ['one'] };
       convertSmartDefaultsIntoNamedParams(
@@ -1741,6 +1763,44 @@ describe('params', () => {
           validate: expect.any(Function),
         },
       ]);
+    });
+
+    it('should use a multiselect if type is array and x-prompt uses shorthand', () => {
+      const prompts = getPromptsForSchema(
+        {},
+        {
+          properties: {
+            pets: {
+              type: 'array',
+              'x-prompt': 'What kind of pets do you have?',
+              items: {
+                enum: ['cat', 'dog', 'fish'],
+              },
+            },
+          },
+        },
+        {
+          version: 2,
+          projects: {},
+        }
+      );
+
+      expect(prompts).toMatchInlineSnapshot(`
+        [
+          {
+            "choices": [
+              "cat",
+              "dog",
+              "fish",
+            ],
+            "limit": 10,
+            "message": "What kind of pets do you have?",
+            "name": "pets",
+            "type": "multiselect",
+            "validate": [Function],
+          },
+        ]
+      `);
     });
 
     describe('Project prompts', () => {

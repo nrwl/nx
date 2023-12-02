@@ -64,7 +64,9 @@ export class DaemonClient {
 
   enabled() {
     if (this._enabled === undefined) {
+      // TODO(v18): Add migration to move it out of existing configs and remove the ?? here.
       const useDaemonProcessOption =
+        this.nxJson.useDaemonProcess ??
         this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
       const env = process.env.NX_DAEMON;
 
@@ -134,12 +136,13 @@ export class DaemonClient {
   hashTasks(
     runnerOptions: any,
     tasks: Task[],
-    taskGraph: TaskGraph
+    taskGraph: TaskGraph,
+    env: NodeJS.ProcessEnv
   ): Promise<Hash[]> {
     return this.sendToDaemonViaQueue({
       type: 'HASH_TASKS',
       runnerOptions,
-      env: process.env,
+      env,
       tasks,
       taskGraph,
     });
@@ -362,12 +365,6 @@ export class DaemonClient {
 
     this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
     this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
-
-    if (this.nxJson.tasksRunnerOptions.default?.options?.useParcelWatcher) {
-      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = 'false';
-    } else {
-      DAEMON_ENV_SETTINGS['NX_NATIVE_WATCHER'] = 'true';
-    }
 
     const backgroundProcess = spawn(
       process.execPath,

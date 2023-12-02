@@ -63,11 +63,19 @@ describe('Nx Affected and Graph Tests', () => {
             `
       );
 
-      const affectedApps = runCLI(
+      const affectedProjects = runCLI(
         `show projects --affected --files="libs/${mylib}/src/index.ts"`
       );
-      expect(affectedApps).toContain(myapp);
-      expect(affectedApps).not.toContain(myapp2);
+      expect(affectedProjects).toContain(myapp);
+      expect(affectedProjects).not.toContain(myapp2);
+
+      let affectedLibs = runCLI(
+        `show projects --affected --files="libs/${mylib}/src/index.ts" --type lib`
+      );
+      // type lib shows no apps
+      expect(affectedLibs).not.toContain(myapp);
+      expect(affectedLibs).not.toContain(myapp2);
+      expect(affectedLibs).toContain(mylib);
 
       const implicitlyAffectedApps = runCLI(
         'show projects --affected --files="tsconfig.base.json"'
@@ -81,7 +89,7 @@ describe('Nx Affected and Graph Tests', () => {
       expect(noAffectedApps).not.toContain(myapp);
       expect(noAffectedApps).not.toContain(myapp2);
 
-      const affectedLibs = runCLI(
+      affectedLibs = runCLI(
         `show projects --affected --files="libs/${mylib}/src/index.ts"`
       );
       expect(affectedLibs).toContain(mypublishablelib);

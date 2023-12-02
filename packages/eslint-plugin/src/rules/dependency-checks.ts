@@ -4,8 +4,6 @@ import { AST } from 'jsonc-eslint-parser';
 import { type JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
 import { normalizePath, workspaceRoot } from '@nx/devkit';
 import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
-
-import { createESLintRule } from '../utils/create-eslint-rule';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
 import {
@@ -13,6 +11,7 @@ import {
   getPackageJson,
   getProductionDependencies,
 } from '../utils/package-json-utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 export type Options = [
   {
@@ -34,13 +33,13 @@ export type MessageIds =
 
 export const RULE_NAME = 'dependency-checks';
 
-export default createESLintRule<Options, MessageIds>({
+export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
   name: RULE_NAME,
   meta: {
     type: 'suggestion',
     docs: {
       description: `Checks dependencies in project's package.json for version mismatches`,
-      recommended: 'error',
+      recommended: 'recommended',
     },
     fixable: 'code',
     schema: [
@@ -299,14 +298,14 @@ export default createESLintRule<Options, MessageIds>({
               .join(),
           },
           fix: (fixer) => {
+            expectedDependencyNames.sort().reduce((acc, d) => {
+              acc[d] = rootPackageJsonDeps[d] || npmDependencies[d];
+              return acc;
+            }, projPackageJsonDeps);
+
             const dependencies = Object.keys(projPackageJsonDeps)
               .map((d) => `\n    "${d}": "${projPackageJsonDeps[d]}"`)
               .join(',');
-
-            expectedDependencyNames.sort().reduce((acc, d) => {
-              acc[d] = rootPackageJsonDeps[d] || dependencies[d];
-              return acc;
-            }, projPackageJsonDeps);
 
             if (!node.properties.length) {
               return fixer.replaceText(

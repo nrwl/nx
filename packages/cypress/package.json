@@ -27,20 +27,20 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "schematics": "./generators.json",
-  "builders": "./executors.json",
+  "generators": "./generators.json",
+  "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "@nx/devkit": "file:../devkit",
+    "@nx/eslint": "file:../eslint",
+    "@nx/js": "file:../js",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "detect-port": "^1.5.1",
     "semver": "7.5.3",
-    "tslib": "^2.3.0",
-    "@nx/devkit": "file:../devkit",
-    "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter"
+    "tslib": "^2.3.0"
   },
   "peerDependencies": {
     "cypress": ">= 3 < 14"

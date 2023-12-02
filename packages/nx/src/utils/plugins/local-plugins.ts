@@ -21,11 +21,12 @@ export async function getLocalWorkspacePlugins(
     if (existsSync(packageJsonPath)) {
       const packageJson: PackageJson = readJsonFile(packageJsonPath);
       const includeRuntimeCapabilities = nxJson?.plugins?.some((p) =>
-        p.startsWith(packageJson.name)
+        (typeof p === 'string' ? p : p.plugin).startsWith(packageJson.name)
       );
       const capabilities = await getPluginCapabilities(
         workspaceRoot,
         packageJson.name,
+        projectsConfiguration.projects,
         includeRuntimeCapabilities
       );
       if (

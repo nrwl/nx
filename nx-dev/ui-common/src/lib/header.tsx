@@ -49,10 +49,10 @@ export function Header(): JSX.Element {
       href: '/nx-api',
     },
     {
-      name: 'Nx Cloud',
+      name: 'CI',
       description:
         'Learn everything about remote cache and distributed tasks configuration.',
-      href: '/nx-cloud/intro/what-is-nx-cloud',
+      href: '/ci/intro/ci-with-nx',
     },
   ];
   const flyoutMobileMenu = [

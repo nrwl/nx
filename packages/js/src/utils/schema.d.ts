@@ -1,8 +1,8 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-// nx-ignore-next-line
-const { Linter } = require('@nx/linter'); // use require to import to avoid circular dependency
 import type { AssetGlob, FileInputOutput } from './assets/assets';
 import { TransformerEntry } from './typescript/types';
+// nx-ignore-next-line
+const { Linter } = require('@nx/eslint'); // use require to import to avoid circular dependency
 
 export type Compiler = 'tsc' | 'swc';
 export type Bundler = 'swc' | 'tsc' | 'rollup' | 'vite' | 'esbuild' | 'none';
@@ -14,6 +14,7 @@ export interface LibraryGeneratorSchema {
   skipFormat?: boolean;
   tags?: string;
   skipTsConfig?: boolean;
+  skipPackageJson?: boolean;
   includeBabelRc?: boolean;
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   linter?: Linter;
@@ -46,18 +47,6 @@ export interface ExecutorOptions {
   watch: boolean;
   clean?: boolean;
   transformers: TransformerEntry[];
-  /**
-   * @deprecated Configure the project to use the `@nx/dependency-checks` ESLint
-   * rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).
-   * It will be removed in v17.
-   */
-  updateBuildableProjectDepsInPackageJson?: boolean;
-  /**
-   * @deprecated Configure the project to use the `@nx/dependency-checks` ESLint
-   * rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).
-   * It will be removed in v17.
-   */
-  buildableProjectDepsInPackageJsonType?: 'dependencies' | 'peerDependencies';
   external?: 'all' | 'none' | string[];
   externalBuildTargets?: string[];
   generateLockfile?: boolean;

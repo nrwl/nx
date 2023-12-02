@@ -1,6 +1,6 @@
 {
   "name": "generator",
-  "factory": "./src/generators/generator/generator",
+  "factory": "./src/generators/generator/generator#generatorGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
@@ -15,14 +15,6 @@
       }
     ],
     "properties": {
-      "project": {
-        "type": "string",
-        "description": "The name of the project.",
-        "alias": "p",
-        "$default": { "$source": "projectName" },
-        "x-prompt": "What is the name of the project for the generator?",
-        "x-priority": "important"
-      },
       "name": {
         "type": "string",
         "description": "Generator name.",
@@ -30,10 +22,16 @@
         "x-prompt": "What name would you like to use for the generator?",
         "x-priority": "important"
       },
+      "directory": {
+        "type": "string",
+        "description": "The directory at which to create the generator file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
+        "aliases": ["dir"],
+        "x-priority": "important"
+      },
       "description": {
         "type": "string",
         "description": "Generator description.",
-        "alias": "d"
+        "x-priority": "important"
       },
       "unitTestRunner": {
         "type": "string",
@@ -46,19 +44,31 @@
         "default": false,
         "description": "Do not add an eslint configuration for plugin json files."
       },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "alias": "p",
+        "$default": { "$source": "projectName" },
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
+      },
       "skipFormat": {
         "type": "boolean",
         "default": false,
         "description": "Do not format files with prettier.",
         "x-priority": "internal"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the generator in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       }
     },
-    "required": ["project", "name"],
+    "required": ["name"],
     "additionalProperties": false,
     "presets": []
   },
   "description": "Create a generator for an Nx Plugin.",
-  "implementation": "/packages/plugin/src/generators/generator/generator.ts",
+  "implementation": "/packages/plugin/src/generators/generator/generator#generatorGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/generators/generator/schema.json",

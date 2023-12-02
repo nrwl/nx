@@ -18,6 +18,7 @@ describe('convertComponentToScam', () => {
       project: 'app1',
       skipImport: true,
       export: false,
+      standalone: false,
     });
 
     // ACT
@@ -26,10 +27,11 @@ describe('convertComponentToScam', () => {
       fileName: 'example.component',
       filePath: 'apps/app1/src/app/example/example.component.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       inlineScam: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -44,7 +46,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css',
       })
       export class ExampleComponent {}
 
@@ -71,6 +73,7 @@ describe('convertComponentToScam', () => {
       project: 'app1',
       skipImport: true,
       export: false,
+      standalone: false,
     });
 
     // ACT
@@ -79,10 +82,11 @@ describe('convertComponentToScam', () => {
       fileName: 'example.component',
       filePath: 'apps/app1/src/app/example/example.component.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       inlineScam: false,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -119,6 +123,7 @@ describe('convertComponentToScam', () => {
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
     });
 
     // ACT
@@ -127,11 +132,12 @@ describe('convertComponentToScam', () => {
       fileName: 'example.component',
       filePath: 'apps/app1/src/app/example.component.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       inlineScam: true,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -146,7 +152,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css',
       })
       export class ExampleComponent {}
 
@@ -174,6 +180,7 @@ describe('convertComponentToScam', () => {
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
     });
 
     // ACT
@@ -182,11 +189,12 @@ describe('convertComponentToScam', () => {
       fileName: 'example.component',
       filePath: 'apps/app1/src/app/example.component.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       inlineScam: false,
       flat: true,
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -224,6 +232,7 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       type: 'random',
+      standalone: false,
     });
 
     // ACT
@@ -232,12 +241,13 @@ describe('convertComponentToScam', () => {
       fileName: 'example.random',
       filePath: 'apps/app1/src/app/example.random.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       inlineScam: true,
       flat: true,
       type: 'random',
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleRandom',
     });
 
     // ASSERT
@@ -252,7 +262,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.random.html',
-        styleUrls: ['./example.random.css'],
+        styleUrl: './example.random.css',
       })
       export class ExampleRandom {}
 
@@ -281,6 +291,7 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       type: 'random',
+      standalone: false,
     });
 
     // ACT
@@ -289,12 +300,13 @@ describe('convertComponentToScam', () => {
       fileName: 'example.random',
       filePath: 'apps/app1/src/app/example.random.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       inlineScam: false,
       flat: true,
       type: 'random',
       path: 'apps/app1/src/app',
+      symbolName: 'ExampleRandom',
     });
 
     // ASSERT
@@ -332,6 +344,7 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: false,
       path: 'apps/app1/src/app/random',
+      standalone: false,
     });
 
     // ACT
@@ -340,11 +353,12 @@ describe('convertComponentToScam', () => {
       fileName: 'example.component',
       filePath: 'apps/app1/src/app/random/example/example.component.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       flat: false,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -359,7 +373,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css',
       })
       export class ExampleComponent {}
 
@@ -388,6 +402,7 @@ describe('convertComponentToScam', () => {
       export: false,
       flat: true,
       path: 'apps/app1/src/app/random',
+      standalone: false,
     });
 
     // ACT
@@ -396,11 +411,12 @@ describe('convertComponentToScam', () => {
       fileName: 'example.component',
       filePath: 'apps/app1/src/app/random/example.component.ts',
       name: 'example',
-      project: 'app1',
+      projectName: 'app1',
       export: false,
       flat: true,
       inlineScam: true,
       path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleComponent',
     });
 
     // ASSERT
@@ -415,7 +431,7 @@ describe('convertComponentToScam', () => {
       @Component({
         selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css'],
+        styleUrl: './example.component.css',
       })
       export class ExampleComponent {}
 

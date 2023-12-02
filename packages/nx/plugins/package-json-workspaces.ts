@@ -30,13 +30,14 @@ export function getNxPackageJsonWorkspacesPlugin(root: string): NxPluginV2 {
 
 export function createNodeFromPackageJson(pkgJsonPath: string, root: string) {
   const json: PackageJson = readJsonFile(join(root, pkgJsonPath));
+  const project = buildProjectConfigurationFromPackageJson(
+    json,
+    pkgJsonPath,
+    readNxJson(root)
+  );
   return {
     projects: {
-      [json.name]: buildProjectConfigurationFromPackageJson(
-        json,
-        pkgJsonPath,
-        readNxJson(root)
-      ),
+      [project.root]: project,
     },
   };
 }
@@ -56,12 +57,6 @@ export function buildProjectConfigurationFromPackageJson(
   }
 
   let name = packageJson.name ?? toProjectName(normalizedPath);
-  if (nxJson?.npmScope) {
-    const npmPrefix = `@${nxJson.npmScope}/`;
-    if (name.startsWith(npmPrefix)) {
-      name = name.replace(npmPrefix, '');
-    }
-  }
   const projectType =
     nxJson?.workspaceLayout?.appsDir != nxJson?.workspaceLayout?.libsDir &&
     nxJson?.workspaceLayout?.appsDir &&

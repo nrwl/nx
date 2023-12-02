@@ -1,10 +1,11 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
+  readNxJson,
   runTasksInSerial,
   Tree,
+  updateNxJson,
 } from '@nx/devkit';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 
@@ -17,14 +18,20 @@ import {
   swcLoaderVersion,
   tsLibVersion,
   urlLoaderVersion,
+  webpackCliVersion,
 } from '../../utils/versions';
-import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
+import { WebpackPluginOptions } from '../../plugins/plugin';
 
 export async function webpackInitGenerator(tree: Tree, schema: Schema) {
+  const shouldAddPlugin = process.env.NX_PCV3 === 'true';
   const tasks: GeneratorCallback[] = [];
   const devDependencies = {
     '@nx/webpack': nxVersion,
   };
+
+  if (shouldAddPlugin) {
+    devDependencies['webpack-cli'] = webpackCliVersion;
+  }
 
   if (schema.compiler === 'swc') {
     devDependencies['swc-loader'] = swcLoaderVersion;
@@ -48,16 +55,41 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
     await formatFiles(tree);
   }
 
-  const baseInstalTask = addDependenciesToPackageJson(
+  const baseInstallTask = addDependenciesToPackageJson(
     tree,
     {},
     devDependencies
   );
-  tasks.push(baseInstalTask);
+  tasks.push(baseInstallTask);
+
+  if (shouldAddPlugin) addPlugin(tree);
 
   return runTasksInSerial(...tasks);
 }
 
-export default webpackInitGenerator;
+function addPlugin(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.plugins ??= [];
 
-export const webpackInitSchematic = convertNxGenerator(webpackInitGenerator);
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/webpack/plugin'
+        : plugin.plugin === '@nx/webpack/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/webpack/plugin',
+    options: {
+      buildTargetName: 'build',
+      serveTargetName: 'serve',
+      previewTargetName: 'preview',
+    } as WebpackPluginOptions,
+  });
+  updateNxJson(tree, nxJson);
+}
+
+export default webpackInitGenerator;

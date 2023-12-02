@@ -28,19 +28,19 @@
     "@nx/devkit": "file:../devkit",
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
-    "@nx/linter": "file:../linter",
+    "@nx/eslint": "file:../eslint",
     "@nx/react": "file:../react",
     "tslib": "^2.3.0"
   },
   "peerDependencies": {
     "detox": "^20.9.0"
   },
-  "builders": "./executors.json",
+  "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json"
   },
-  "schematics": "./generators.json",
+  "generators": "./generators.json",
   "publishConfig": {
     "access": "public"
   }

@@ -10,7 +10,7 @@ const { readNxJson } = requireNx();
  * Example:
  *
  * ```typescript
- * { appsDir: 'apps', libsDir: 'libs', npmScope: 'myorg' }
+ * { appsDir: 'apps', libsDir: 'libs' }
  * ```
  * @param tree - file system tree
  */
@@ -18,10 +18,6 @@ export function getWorkspaceLayout(tree: Tree): {
   appsDir: string;
   libsDir: string;
   standaloneAsDefault: boolean;
-  /**
-   * @deprecated This will be removed in Nx 17. Use {@link getNpmScope} instead.
-   */
-  npmScope: string;
 } {
   const nxJson = readNxJson(tree);
   return {
@@ -31,7 +27,6 @@ export function getWorkspaceLayout(tree: Tree): {
     libsDir:
       nxJson?.workspaceLayout?.libsDir ??
       inOrderOfPreference(tree, ['libs', 'packages'], '.'),
-    npmScope: nxJson?.npmScope,
     standaloneAsDefault: true,
   };
 }

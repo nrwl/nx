@@ -95,22 +95,29 @@ function createNxJson(
         : []),
     ].filter(Boolean),
   };
-  nxJson.targetDefaults = {};
+  nxJson.targetDefaults ??= {};
   if (workspaceTargets.includes('build')) {
     nxJson.targetDefaults.build = {
+      ...nxJson.targetDefaults.build,
       dependsOn: ['^build'],
       inputs: ['production', '^production'],
     };
   }
   if (workspaceTargets.includes('server')) {
-    nxJson.targetDefaults.server = { inputs: ['production', '^production'] };
+    nxJson.targetDefaults.server = {
+      ...nxJson.targetDefaults.server,
+      inputs: ['production', '^production'],
+    };
   }
   if (workspaceTargets.includes('test')) {
     const inputs = ['default', '^production'];
     if (fileExists(join(repoRoot, 'karma.conf.js'))) {
       inputs.push('{workspaceRoot}/karma.conf.js');
     }
-    nxJson.targetDefaults.test = { inputs };
+    nxJson.targetDefaults.test = {
+      ...nxJson.targetDefaults.test,
+      inputs,
+    };
   }
   if (workspaceTargets.includes('lint')) {
     const inputs = ['default'];
@@ -120,12 +127,18 @@ function createNxJson(
     if (fileExists(join(repoRoot, 'eslint.config.js'))) {
       inputs.push('{workspaceRoot}/eslint.config.js');
     }
-    nxJson.targetDefaults.lint = { inputs };
+    nxJson.targetDefaults.lint = {
+      ...nxJson.targetDefaults.lint,
+      inputs,
+    };
   }
   if (workspaceTargets.includes('e2e')) {
-    nxJson.targetDefaults.e2e = { inputs: ['default', '^production'] };
+    nxJson.targetDefaults.e2e = {
+      ...nxJson.targetDefaults.e2e,
+      inputs: ['default', '^production'],
+    };
   }
-  // Angular 14 workspaces support defaultProject, keep it until we drop support
+  // Angular 15 workspaces still support defaultProject. Support was removed in Angular 16.
   nxJson.defaultProject = angularJson.defaultProject;
   writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
 }

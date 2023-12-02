@@ -7,8 +7,7 @@
     "test": {
       "executor": "@nx/jest:jest",
       "options": {
-        "jestConfig": "packages/nuxt/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "packages/nuxt/jest.config.ts"
       },
       "outputs": ["{workspaceRoot}/coverage/packages/nuxt"]
     },
@@ -20,7 +19,8 @@
         "main": "packages/nuxt/index.ts",
         "generateExportsField": true,
         "additionalEntryPoints": [
-          "{projectRoot}/{executors,generators,migrations}.json"
+          "{projectRoot}/{executors,generators,migrations}.json",
+          "{projectRoot}/plugin.ts"
         ],
         "assets": [
           {

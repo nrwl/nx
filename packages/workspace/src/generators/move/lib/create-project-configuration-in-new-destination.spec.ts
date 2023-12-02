@@ -99,14 +99,7 @@ describe('moveProjectConfiguration', () => {
           },
         },
         lint: {
-          executor: '@angular-devkit/build-angular:tslint',
-          options: {
-            tsConfig: [
-              'apps/my-source/tsconfig.app.json',
-              'apps/my-source/tsconfig.spec.json',
-            ],
-            exclude: ['**/node_modules/**', '!apps/my-source/**/*'],
-          },
+          executor: '@nx/eslint:lint',
         },
         test: {
           executor: '@nx/jest:jest',
@@ -140,11 +133,7 @@ describe('moveProjectConfiguration', () => {
           },
         },
         lint: {
-          executor: '@angular-devkit/build-angular:tslint',
-          options: {
-            tsConfig: ['apps/my-source-e2e/tsconfig.e2e.json'],
-            exclude: ['**/node_modules/**', '!apps/my-source-e2e/**/*'],
-          },
+          executor: '@nx/eslint:lint',
         },
       },
     });

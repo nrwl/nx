@@ -3,119 +3,79 @@ import {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../../config/project-graph';
+import { output } from '../../devkit-exports';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { runCommand } from '../../tasks-runner/run-command';
 import {
   createOverrides,
   readGraphFileFromGraphArg,
 } from '../../utils/command-line-utils';
-import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { logger } from '../../utils/logger';
-import { output } from '../../utils/output';
 import { generateGraph } from '../graph/graph';
 import { PublishOptions } from './command-object';
-import { createNxReleaseConfig } from './config/config';
 import {
-  CATCH_ALL_RELEASE_GROUP,
-  ReleaseGroup,
-  createReleaseGroups,
-  handleCreateReleaseGroupsError,
-} from './config/create-release-groups';
+  createNxReleaseConfig,
+  handleNxReleaseConfigError,
+} from './config/config';
+import { filterReleaseGroups } from './config/filter-release-groups';
 
-export async function publishHandler(
-  args: PublishOptions & { __overrides_unparsed__: string[] }
-): Promise<void> {
+export const releasePublishCLIHandler = (args: PublishOptions) =>
+  releasePublish(args);
+
+/**
+ * NOTE: This function is also exported for programmatic usage and forms part of the public API
+ * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
+ * to have control over their own error handling when using the API.
+ */
+export async function releasePublish(args: PublishOptions): Promise<void> {
+  /**
+   * When used via the CLI, the args object will contain a __overrides_unparsed__ property that is
+   * important for invoking the relevant executor behind the scenes.
+   *
+   * We intentionally do not include that in the function signature, however, so as not to cause
+   * confusing errors for programmatic consumers of this function.
+   */
+  const _args = args as PublishOptions & { __overrides_unparsed__: string[] };
+
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const nxJson = readNxJson();
 
-  // Apply default configuration to any optional user configuration
-  const nxReleaseConfig = createNxReleaseConfig(nxJson.release);
-  const releaseGroupsData = await createReleaseGroups(
-    projectGraph,
-    nxReleaseConfig.groups
-  );
-  if (releaseGroupsData.error) {
-    return await handleCreateReleaseGroupsError(releaseGroupsData.error);
+  if (_args.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
-  let { releaseGroups } = releaseGroupsData;
+  // Apply default configuration to any optional user configuration
+  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
+    projectGraph,
+    nxJson.release,
+    'nx-release-publish'
+  );
+  if (configError) {
+    return await handleNxReleaseConfigError(configError);
+  }
 
-  /**
-   * User is filtering to a subset of projects. We need to make sure that what they have provided can be reconciled
-   * against their configuration in terms of release groups and the ungroupedProjectsHandling option.
-   */
+  const {
+    error: filterError,
+    releaseGroups,
+    releaseGroupToFilteredProjects,
+  } = filterReleaseGroups(
+    projectGraph,
+    nxReleaseConfig,
+    _args.projects,
+    _args.groups
+  );
+  if (filterError) {
+    output.error(filterError);
+    process.exit(1);
+  }
+
   if (args.projects?.length) {
-    const matchingProjectsForFilter = findMatchingProjects(
-      args.projects,
-      projectGraph.nodes
-    );
-
-    if (!matchingProjectsForFilter.length) {
-      output.error({
-        title: `Your --projects filter "${args.projects}" did not match any projects in the workspace`,
-      });
-      process.exit(1);
-    }
-
-    const filteredProjectToReleaseGroup = new Map<string, ReleaseGroup>();
-    const releaseGroupToFilteredProjects = new Map<ReleaseGroup, Set<string>>();
-
-    // Figure out which release groups, if any, that the filtered projects belong to so that we can resolve other config
-    for (const releaseGroup of releaseGroups) {
-      const matchingProjectsForReleaseGroup = findMatchingProjects(
-        releaseGroup.projects,
-        projectGraph.nodes
-      );
-      for (const matchingProject of matchingProjectsForFilter) {
-        if (matchingProjectsForReleaseGroup.includes(matchingProject)) {
-          filteredProjectToReleaseGroup.set(matchingProject, releaseGroup);
-          if (!releaseGroupToFilteredProjects.has(releaseGroup)) {
-            releaseGroupToFilteredProjects.set(releaseGroup, new Set());
-          }
-          releaseGroupToFilteredProjects.get(releaseGroup).add(matchingProject);
-        }
-      }
-    }
-
-    /**
-     * If there are release groups specified, each filtered project must match at least one release
-     * group, otherwise the command + config combination is invalid.
-     */
-    if (Object.keys(nxReleaseConfig.groups).length) {
-      const unmatchedProjects = matchingProjectsForFilter.filter(
-        (p) => !filteredProjectToReleaseGroup.has(p)
-      );
-      if (unmatchedProjects.length) {
-        output.error({
-          title: `The following projects which match your projects filter "${args.projects}" did not match any configured release groups:`,
-          bodyLines: unmatchedProjects.map((p) => `- ${p}`),
-        });
-        process.exit(1);
-      }
-    }
-
-    output.note({
-      title: `Your filter "${args.projects}" matched the following projects:`,
-      bodyLines: matchingProjectsForFilter.map((p) => {
-        const releaseGroupForProject = filteredProjectToReleaseGroup.get(p);
-        if (releaseGroupForProject.name === CATCH_ALL_RELEASE_GROUP) {
-          return `- ${p}`;
-        }
-        return `- ${p} (release group "${releaseGroupForProject.name}")`;
-      }),
-    });
-
-    // Filter the releaseGroups collection appropriately
-    releaseGroups = releaseGroups.filter((rg) =>
-      releaseGroupToFilteredProjects.has(rg)
-    );
-
     /**
      * Run publishing for all remaining release groups and filtered projects within them
      */
     for (const releaseGroup of releaseGroups) {
       await runPublishOnProjects(
-        args,
+        _args,
         projectGraph,
         nxJson,
         Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
@@ -126,33 +86,18 @@ export async function publishHandler(
   }
 
   /**
-   * The user is filtering by release group
-   */
-  if (args.groups?.length) {
-    releaseGroups = releaseGroups.filter((g) => args.groups?.includes(g.name));
-  }
-
-  // Should be an impossible state, as we should have explicitly handled any errors/invalid config by now
-  if (!releaseGroups.length) {
-    output.error({
-      title: `No projects could be matched for versioning, please report this case and include your nx.json config`,
-    });
-    process.exit(1);
-  }
-
-  /**
    * Run publishing for all remaining release groups
    */
   for (const releaseGroup of releaseGroups) {
     await runPublishOnProjects(
-      args,
+      _args,
       projectGraph,
       nxJson,
       releaseGroup.projects
     );
   }
 
-  if (args.dryRun) {
+  if (_args.dryRun) {
     logger.warn(
       `\nNOTE: The "dryRun" flag means no projects were actually published.`
     );
@@ -178,6 +123,9 @@ async function runPublishOnProjects(
   }
   if (args.tag) {
     overrides.tag = args.tag;
+  }
+  if (args.otp) {
+    overrides.otp = args.otp;
   }
   if (args.dryRun) {
     overrides.dryRun = args.dryRun;

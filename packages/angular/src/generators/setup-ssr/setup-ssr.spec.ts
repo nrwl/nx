@@ -3,238 +3,325 @@ import {
   readJson,
   readProjectConfiguration,
   updateJson,
-  updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { PackageJson } from 'nx/src/utils/package-json';
-import { angularVersion, ngUniversalVersion } from '../../utils/versions';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
+import {
+  angularDevkitVersion,
+  angularVersion,
+  expressVersion,
+  typesExpressVersion,
+} from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import { setupSsr } from './setup-ssr';
 
 describe('setupSSR', () => {
-  it('should create the files correctly for ssr', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  describe('with application builder', () => {
+    it('should create the files correctly for ssr', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, {
+        name: 'app1',
+        standalone: false,
+      });
 
-    await generateTestApplication(tree, {
-      name: 'app1',
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
+
+      // ASSERT
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build
+      ).toMatchSnapshot();
+      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "export { AppServerModule } from './app/app.server.module';
+        "
+      `);
+      expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+        import { AppModule } from './app/app.module';
+
+        platformBrowserDynamic()
+          .bootstrapModule(AppModule)
+          .catch((err) => console.error(err));
+        "
+      `);
+      expect(tree.exists('app1/tsconfig.server.json')).toBe(false);
+      expect(readJson(tree, 'app1/tsconfig.app.json').files).toStrictEqual([
+        'src/main.ts',
+        'src/main.server.ts',
+        'server.ts',
+      ]);
+      expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { ServerModule } from '@angular/platform-server';
+
+        import { AppModule } from './app.module';
+        import { AppComponent } from './app.component';
+
+        @NgModule({
+          imports: [AppModule, ServerModule],
+          bootstrap: [AppComponent],
+        })
+        export class AppServerModule {}
+        "
+      `);
+      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import {
+          BrowserModule,
+          provideClientHydration,
+        } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+
+        @NgModule({
+          declarations: [AppComponent, NxWelcomeComponent],
+          imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
+          providers: [provideClientHydration()],
+          bootstrap: [AppComponent],
+        })
+        export class AppModule {}
+        "
+      `);
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.targetDefaults.server).toBeUndefined();
     });
 
-    // ACT
-    await setupSsr(tree, { project: 'app1' });
+    it('should create the files correctly for ssr when app is standalone', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, { name: 'app1' });
 
-    // ASSERT
-    expect(
-      readProjectConfiguration(tree, 'app1').targets.server
-    ).toMatchSnapshot();
-    expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('app1/src/main.server.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "export { AppServerModule } from './app/app.server.module';
-      "
-    `);
-    expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-      import { AppModule } from './app/app.module';
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
 
-      platformBrowserDynamic()
-        .bootstrapModule(AppModule)
-        .catch((err) => console.error(err));
-      "
-    `);
-    expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "/* To learn more about this file see: https://angular.io/config/tsconfig. */
-      {
-        "extends": "./tsconfig.app.json",
-        "compilerOptions": {
-          "outDir": "../../out-tsc/server",
-          "target": "es2019",
-          "types": ["node"]
-        },
-        "files": ["src/main.server.ts", "server.ts"]
-      }
-      "
-    `);
-    expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { NgModule } from '@angular/core';
-      import { ServerModule } from '@angular/platform-server';
+      // ASSERT
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build
+      ).toMatchSnapshot();
+      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { bootstrapApplication } from '@angular/platform-browser';
+        import { AppComponent } from './app/app.component';
+        import { config } from './app/app.config.server';
 
-      import { AppModule } from './app.module';
-      import { AppComponent } from './app.component';
+        const bootstrap = () => bootstrapApplication(AppComponent, config);
 
-      @NgModule({
-        imports: [AppModule, ServerModule],
-        bootstrap: [AppComponent],
-      })
-      export class AppServerModule {}
-      "
-    `);
-    expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { NgModule } from '@angular/core';
-      import { BrowserModule } from '@angular/platform-browser';
-      import { AppComponent } from './app.component';
-      import { NxWelcomeComponent } from './nx-welcome.component';
+        export default bootstrap;
+        "
+      `);
+      expect(tree.exists('app1/tsconfig.server.json')).toBe(false);
+      expect(readJson(tree, 'app1/tsconfig.app.json').files).toStrictEqual([
+        'src/main.ts',
+        'src/main.server.ts',
+        'server.ts',
+      ]);
+      expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+        import { provideServerRendering } from '@angular/platform-server';
+        import { appConfig } from './app.config';
 
-      @NgModule({
-        declarations: [AppComponent, NxWelcomeComponent],
-        imports: [BrowserModule],
-        providers: [],
-        bootstrap: [AppComponent],
-      })
-      export class AppModule {}
-      "
-    `);
-    const packageJson = readJson<PackageJson>(tree, 'package.json');
-    const dependencies = {
-      '@nguniversal/express-engine': ngUniversalVersion,
-      '@angular/platform-server': angularVersion,
-    };
-    for (const [dep, version] of Object.entries(dependencies)) {
-      expect(packageJson.dependencies[dep]).toEqual(version);
-    }
-    const devDeps = {
-      '@nguniversal/builders': ngUniversalVersion,
-    };
-    for (const [dep, version] of Object.entries(devDeps)) {
-      expect(packageJson.devDependencies[dep]).toEqual(version);
-    }
-    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.tasksRunnerOptions).toMatchInlineSnapshot(`
-      {
-        "default": {
-          "options": {
-            "cacheableOperations": [
-              "build",
-              "lint",
-              "test",
-              "e2e",
-              "server",
-            ],
-          },
-          "runner": "nx/tasks-runners/default",
-        },
-      }
-    `);
+        const serverConfig: ApplicationConfig = {
+          providers: [provideServerRendering()],
+        };
+
+        export const config = mergeApplicationConfig(appConfig, serverConfig);
+        "
+      `);
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.targetDefaults.server).toBeUndefined();
+    });
   });
 
-  it('should use fileReplacements if they already exist', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  describe('with browser builder', () => {
+    it('should create the files correctly for ssr', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, {
+        name: 'app1',
+        standalone: false,
+        bundler: 'webpack',
+      });
 
-    await generateTestApplication(tree, {
-      name: 'app1',
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
+
+      // ASSERT
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.server
+      ).toMatchSnapshot();
+      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "export { AppServerModule } from './app/app.server.module';
+        "
+      `);
+      expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+        import { AppModule } from './app/app.module';
+
+        platformBrowserDynamic()
+          .bootstrapModule(AppModule)
+          .catch((err) => console.error(err));
+        "
+      `);
+      expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* To learn more about this file see: https://angular.io/config/tsconfig. */
+        {
+          "extends": "./tsconfig.app.json",
+          "compilerOptions": {
+            "outDir": "../../out-tsc/server",
+            "target": "es2019",
+            "types": ["node"]
+          },
+          "files": ["src/main.server.ts", "server.ts"]
+        }
+        "
+      `);
+      expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { ServerModule } from '@angular/platform-server';
+
+        import { AppModule } from './app.module';
+        import { AppComponent } from './app.component';
+
+        @NgModule({
+          imports: [AppModule, ServerModule],
+          bootstrap: [AppComponent],
+        })
+        export class AppServerModule {}
+        "
+      `);
+      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import {
+          BrowserModule,
+          provideClientHydration,
+        } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+
+        @NgModule({
+          declarations: [AppComponent, NxWelcomeComponent],
+          imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
+          providers: [provideClientHydration()],
+          bootstrap: [AppComponent],
+        })
+        export class AppModule {}
+        "
+      `);
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.targetDefaults.server.cache).toBe(true);
     });
 
-    tree.write('app1/src/environments/environment.ts', '');
-    tree.write('app1/src/environments/environment.prod.ts', '');
-    const project = readProjectConfiguration(tree, 'app1');
-    project.targets.build.configurations.production.fileReplacements = [
-      {
-        replace: 'app1/src/environments/environment.ts',
-        with: 'app1/src/environments/environment.prod.ts',
-      },
-    ];
-    updateProjectConfiguration(tree, 'app1', project);
+    it('should create the files correctly for ssr when app is standalone', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, {
+        name: 'app1',
+        bundler: 'webpack',
+      });
 
-    // ACT
-    await setupSsr(tree, { project: 'app1' });
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
 
-    // ASSERT
-    expect(
-      readProjectConfiguration(tree, 'app1').targets.server
-    ).toMatchSnapshot();
+      // ASSERT
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.server
+      ).toMatchSnapshot();
+      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { bootstrapApplication } from '@angular/platform-browser';
+        import { AppComponent } from './app/app.component';
+        import { config } from './app/app.config.server';
+
+        const bootstrap = () => bootstrapApplication(AppComponent, config);
+
+        export default bootstrap;
+        "
+      `);
+      expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* To learn more about this file see: https://angular.io/config/tsconfig. */
+        {
+          "extends": "./tsconfig.app.json",
+          "compilerOptions": {
+            "outDir": "../../out-tsc/server",
+            "target": "es2019",
+            "types": ["node"]
+          },
+          "files": ["src/main.server.ts", "server.ts"]
+        }
+        "
+      `);
+      expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+        import { provideServerRendering } from '@angular/platform-server';
+        import { appConfig } from './app.config';
+
+        const serverConfig: ApplicationConfig = {
+          providers: [provideServerRendering()],
+        };
+
+        export const config = mergeApplicationConfig(appConfig, serverConfig);
+        "
+      `);
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.targetDefaults.server.cache).toEqual(true);
+    });
+
+    it('should update build target output path', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, {
+        name: 'app1',
+        standalone: false,
+        bundler: 'webpack',
+      });
+      // verify default output path
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.options.outputPath
+      ).toBe('dist/app1');
+
+      await setupSsr(tree, { project: 'app1' });
+
+      expect(
+        readProjectConfiguration(tree, 'app1').targets.build.options.outputPath
+      ).toBe('dist/app1/browser');
+    });
   });
 
-  it('should create the files correctly for ssr when app is standalone', async () => {
-    // ARRANGE
+  it('should install the correct dependencies', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    await generateTestApplication(tree, { name: 'app1' });
 
-    await generateTestApplication(tree, {
-      name: 'app1',
-      standalone: true,
-    });
-
-    // ACT
     await setupSsr(tree, { project: 'app1' });
 
-    // ASSERT
-    expect(
-      readProjectConfiguration(tree, 'app1').targets.server
-    ).toMatchSnapshot();
-    expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('app1/src/main.server.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { bootstrapApplication } from '@angular/platform-browser';
-      import { AppComponent } from './app/app.component';
-      import { config } from './app/app.config.server';
-
-      const bootstrap = () => bootstrapApplication(AppComponent, config);
-
-      export default bootstrap;
-      "
-    `);
-    expect(tree.read('app1/tsconfig.server.json', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "/* To learn more about this file see: https://angular.io/config/tsconfig. */
-      {
-        "extends": "./tsconfig.app.json",
-        "compilerOptions": {
-          "outDir": "../../out-tsc/server",
-          "target": "es2019",
-          "types": ["node"]
-        },
-        "files": ["src/main.server.ts", "server.ts"]
-      }
-      "
-    `);
-    expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
-      import { provideServerRendering } from '@angular/platform-server';
-      import { appConfig } from './app.config';
-
-      const serverConfig: ApplicationConfig = {
-        providers: [provideServerRendering()],
-      };
-
-      export const config = mergeApplicationConfig(appConfig, serverConfig);
-      "
-    `);
-
-    const packageJson = readJson<PackageJson>(tree, 'package.json');
-    const dependencies = {
-      '@nguniversal/express-engine': ngUniversalVersion,
-      '@angular/platform-server': angularVersion,
-    };
-    for (const [dep, version] of Object.entries(dependencies)) {
-      expect(packageJson.dependencies[dep]).toEqual(version);
-    }
-    const devDeps = {
-      '@nguniversal/builders': ngUniversalVersion,
-    };
-    for (const [dep, version] of Object.entries(devDeps)) {
-      expect(packageJson.devDependencies[dep]).toEqual(version);
-    }
-    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.tasksRunnerOptions).toMatchInlineSnapshot(`
-      {
-        "default": {
-          "options": {
-            "cacheableOperations": [
-              "build",
-              "lint",
-              "test",
-              "e2e",
-              "server",
-            ],
-          },
-          "runner": "nx/tasks-runners/default",
-        },
-      }
-    `);
+    const { dependencies, devDependencies } = readJson<PackageJson>(
+      tree,
+      'package.json'
+    );
+    expect(dependencies['@angular/platform-server']).toEqual(angularVersion);
+    expect(dependencies['@angular/ssr']).toEqual(angularDevkitVersion);
+    expect(dependencies['express']).toEqual(expressVersion);
+    expect(dependencies['@nguniversal/express-engine']).toBeUndefined();
+    expect(devDependencies['@types/express']).toBe(typesExpressVersion);
+    expect(devDependencies['@nguniversal/builders']).toBeUndefined();
   });
 
   it('should add hydration correctly for NgModule apps', async () => {
@@ -243,6 +330,7 @@ describe('setupSSR', () => {
 
     await generateTestApplication(tree, {
       name: 'app1',
+      standalone: false,
     });
 
     // ACT
@@ -256,12 +344,14 @@ describe('setupSSR', () => {
         BrowserModule,
         provideClientHydration,
       } from '@angular/platform-browser';
+      import { RouterModule } from '@angular/router';
       import { AppComponent } from './app.component';
+      import { appRoutes } from './app.routes';
       import { NxWelcomeComponent } from './nx-welcome.component';
 
       @NgModule({
         declarations: [AppComponent, NxWelcomeComponent],
-        imports: [BrowserModule],
+        imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
         providers: [provideClientHydration()],
         bootstrap: [AppComponent],
       })
@@ -276,7 +366,6 @@ describe('setupSSR', () => {
 
     await generateTestApplication(tree, {
       name: 'app1',
-      standalone: true,
     });
 
     // ACT
@@ -286,10 +375,12 @@ describe('setupSSR', () => {
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ApplicationConfig } from '@angular/core';
+      import { provideRouter } from '@angular/router';
+      import { appRoutes } from './app.routes';
       import { provideClientHydration } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration()],
+        providers: [provideClientHydration(), provideRouter(appRoutes)],
       };
       "
     `);
@@ -309,6 +400,61 @@ describe('setupSSR', () => {
     `);
   });
 
+  it('should set "initialNavigation: enabledBlocking" in "RouterModule.forRoot" options when hydration=false', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    await generateTestApplication(tree, {
+      name: 'app1',
+      standalone: false,
+    });
+
+    await setupSsr(tree, { project: 'app1', hydration: false });
+
+    expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { BrowserModule } from '@angular/platform-browser';
+      import { RouterModule } from '@angular/router';
+      import { AppComponent } from './app.component';
+      import { appRoutes } from './app.routes';
+      import { NxWelcomeComponent } from './nx-welcome.component';
+
+      @NgModule({
+        declarations: [AppComponent, NxWelcomeComponent],
+        imports: [
+          BrowserModule,
+          RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+        ],
+        providers: [],
+        bootstrap: [AppComponent],
+      })
+      export class AppModule {}
+      "
+    `);
+  });
+
+  it('should set "withEnabledBlockingInitialNavigation()" in "provideRouter" features when hydration=false', async () => {
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    await generateTestApplication(tree, { name: 'app1' });
+
+    await setupSsr(tree, { project: 'app1', hydration: false });
+
+    expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { ApplicationConfig } from '@angular/core';
+      import {
+        provideRouter,
+        withEnabledBlockingInitialNavigation,
+      } from '@angular/router';
+      import { appRoutes } from './app.routes';
+
+      export const appConfig: ApplicationConfig = {
+        providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+      };
+      "
+    `);
+  });
+
   describe('compat', () => {
     it('should install the correct versions when using older versions of Angular', async () => {
       // ARRANGE
@@ -316,12 +462,13 @@ describe('setupSSR', () => {
 
       await generateTestApplication(tree, {
         name: 'app1',
+        standalone: false,
       });
 
       updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
-          '@angular/core': '14.2.0',
+          '@angular/core': '15.2.0',
         },
       }));
 
@@ -330,47 +477,16 @@ describe('setupSSR', () => {
 
       // ASSERT
       const pkgJson = readJson(tree, 'package.json');
+      expect(pkgJson.dependencies['@angular/ssr']).toBeUndefined();
       expect(pkgJson.dependencies['@angular/platform-server']).toEqual(
-        '~14.2.0'
+        backwardCompatibleVersions.angularV15.angularVersion
       );
       expect(pkgJson.dependencies['@nguniversal/express-engine']).toEqual(
-        '~14.2.0'
+        backwardCompatibleVersions.angularV15.ngUniversalVersion
       );
       expect(pkgJson.devDependencies['@nguniversal/builders']).toEqual(
-        '~14.2.0'
+        backwardCompatibleVersions.angularV15.ngUniversalVersion
       );
-    });
-
-    it('should create the main.server.ts file correctly for Angular v14', async () => {
-      // ARRANGE
-      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, {
-        name: 'app1',
-      });
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: { '@angular/core': '14.2.0' },
-      }));
-
-      // ACT
-      await setupSsr(tree, { project: 'app1' });
-
-      // ASSERT
-      expect(tree.read('app1/src/main.server.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "/***************************************************************************************************
-         * Initialize the server environment - for example, adding DOM built-in types to the global scope.
-         *
-         * NOTE:
-         * This import must come before any imports (direct or transitive) that rely on DOM built-ins being
-         * available, such as \`@angular/elements\`.
-         */
-        import '@angular/platform-server/init';
-
-        export { AppServerModule } from './app/app.server.module';
-        export { renderModule } from '@angular/platform-server';
-        "
-      `);
     });
 
     it('should add "withServerTransition" call to app module for angular versions lower than 16', async () => {
@@ -383,6 +499,7 @@ describe('setupSSR', () => {
 
       await generateTestApplication(tree, {
         name: 'app1',
+        standalone: false,
       });
 
       // ACT
@@ -391,20 +508,95 @@ describe('setupSSR', () => {
       // ASSERT
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
-              "import { NgModule } from '@angular/core';
-              import { BrowserModule } from '@angular/platform-browser';
-              import { AppComponent } from './app.component';
-              import { NxWelcomeComponent } from './nx-welcome.component';
+        "import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
 
-              @NgModule({
-                declarations: [AppComponent, NxWelcomeComponent],
-                imports: [BrowserModule.withServerTransition({ appId: 'serverApp' })],
-                providers: [],
-                bootstrap: [AppComponent],
-              })
-              export class AppModule {}
-              "
-          `);
+        @NgModule({
+          declarations: [AppComponent, NxWelcomeComponent],
+          imports: [
+            BrowserModule.withServerTransition({ appId: 'serverApp' }),
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+          ],
+          providers: [],
+          bootstrap: [AppComponent],
+        })
+        export class AppModule {}
+        "
+      `);
+    });
+
+    it('should set "initialNavigation: enabledBlocking" in "RouterModule.forRoot" options', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/core': '^15.2.0' },
+      }));
+
+      await generateTestApplication(tree, {
+        name: 'app1',
+        standalone: false,
+      });
+
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
+
+      // ASSERT
+      expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { NgModule } from '@angular/core';
+        import { BrowserModule } from '@angular/platform-browser';
+        import { RouterModule } from '@angular/router';
+        import { AppComponent } from './app.component';
+        import { appRoutes } from './app.routes';
+        import { NxWelcomeComponent } from './nx-welcome.component';
+
+        @NgModule({
+          declarations: [AppComponent, NxWelcomeComponent],
+          imports: [
+            BrowserModule.withServerTransition({ appId: 'serverApp' }),
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
+          ],
+          providers: [],
+          bootstrap: [AppComponent],
+        })
+        export class AppModule {}
+        "
+      `);
+    });
+
+    it('should set "withEnabledBlockingInitialNavigation()" in "provideRouter" features', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: { ...json.dependencies, '@angular/core': '^15.2.0' },
+      }));
+
+      await generateTestApplication(tree, { name: 'app1' });
+
+      // ACT
+      await setupSsr(tree, { project: 'app1' });
+
+      // ASSERT
+      expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { ApplicationConfig } from '@angular/platform-browser';
+        import {
+          provideRouter,
+          withEnabledBlockingInitialNavigation,
+        } from '@angular/router';
+        import { appRoutes } from './app.routes';
+
+        export const appConfig: ApplicationConfig = {
+          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+        };
+        "
+      `);
     });
 
     it('should wrap bootstrap call for Angular versions lower than 15.2', async () => {
@@ -412,6 +604,7 @@ describe('setupSSR', () => {
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
       await generateTestApplication(tree, {
         name: 'app1',
+        standalone: false,
       });
       updateJson(tree, 'package.json', (json) => ({
         ...json,
@@ -439,6 +632,52 @@ describe('setupSSR', () => {
               }
               "
           `);
+    });
+
+    it('should generate a correct server.ts', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          '@angular/core': '15.2.0',
+        },
+      }));
+      await generateTestApplication(tree, {
+        name: 'app1',
+        standalone: false,
+      });
+
+      await setupSsr(tree, { project: 'app1' });
+
+      expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should not set up hydration by default', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          '@angular/core': '15.2.0',
+        },
+      }));
+      await generateTestApplication(tree, { name: 'app1' });
+
+      await setupSsr(tree, { project: 'app1' });
+
+      expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { ApplicationConfig } from '@angular/platform-browser';
+        import {
+          provideRouter,
+          withEnabledBlockingInitialNavigation,
+        } from '@angular/router';
+        import { appRoutes } from './app.routes';
+
+        export const appConfig: ApplicationConfig = {
+          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+        };
+        "
+      `);
     });
   });
 });

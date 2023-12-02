@@ -22,7 +22,9 @@ export function runWebpackDevServer(
     const originalOnListen = devServerConfig.onListening;
 
     devServerConfig.onListening = function (server: any) {
-      originalOnListen(server);
+      if (typeof originalOnListen === 'function') {
+        originalOnListen(server);
+      }
 
       const devServerOptions: WebpackDevServerConfiguration = server.options;
 

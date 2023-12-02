@@ -44,7 +44,55 @@ describe('init', () => {
     expect(
       readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.e2e
     ).toEqual({
+      cache: true,
       inputs: ['default', '^production'],
     });
+  });
+
+  it('should setup @nx/cypress/plugin', async () => {
+    process.env.NX_PCV3 = 'true';
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.namedInputs ??= {};
+      json.namedInputs.production = ['default'];
+      return json;
+    });
+
+    await cypressInitGenerator(tree, {});
+
+    expect(readJson<NxJsonConfiguration>(tree, 'nx.json'))
+      .toMatchInlineSnapshot(`
+      {
+        "affected": {
+          "defaultBase": "main",
+        },
+        "namedInputs": {
+          "production": [
+            "default",
+            "!{projectRoot}/cypress/**/*",
+            "!{projectRoot}/**/*.cy.[jt]s?(x)",
+            "!{projectRoot}/cypress.config.[jt]s",
+          ],
+        },
+        "plugins": [
+          {
+            "options": {
+              "componentTestingTargetName": "component-test",
+              "targetName": "e2e",
+            },
+            "plugin": "@nx/cypress/plugin",
+          },
+        ],
+        "targetDefaults": {
+          "build": {
+            "cache": true,
+          },
+          "lint": {
+            "cache": true,
+          },
+        },
+      }
+    `);
+
+    delete process.env.NX_PCV3;
   });
 });

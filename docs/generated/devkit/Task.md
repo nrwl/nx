@@ -6,16 +6,26 @@ A representation of the invocation of an Executor
 
 ### Properties
 
+- [cache](../../devkit/documents/Task#cache): boolean
 - [endTime](../../devkit/documents/Task#endtime): number
 - [hash](../../devkit/documents/Task#hash): string
 - [hashDetails](../../devkit/documents/Task#hashdetails): Object
 - [id](../../devkit/documents/Task#id): string
+- [outputs](../../devkit/documents/Task#outputs): string[]
 - [overrides](../../devkit/documents/Task#overrides): any
 - [projectRoot](../../devkit/documents/Task#projectroot): string
 - [startTime](../../devkit/documents/Task#starttime): number
 - [target](../../devkit/documents/Task#target): Object
 
 ## Properties
+
+### cache
+
+• `Optional` **cache**: `boolean`
+
+Determines if a given task should be cacheable.
+
+---
 
 ### endTime
 
@@ -55,6 +65,14 @@ Details about the composition of the hash
 • **id**: `string`
 
 Unique ID
+
+---
+
+### outputs
+
+• **outputs**: `string`[]
+
+The outputs the task may produce
 
 ---
 

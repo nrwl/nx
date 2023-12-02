@@ -4,7 +4,7 @@ import { cypressComponentConfiguration } from './cypress-component-configuration
 import { applicationGenerator } from '../application/application';
 import { libraryGenerator } from '../library/library';
 import { setupTailwindGenerator } from '@nx/react';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 describe('cypress-component-configuration generator', () => {
   let tree: Tree;

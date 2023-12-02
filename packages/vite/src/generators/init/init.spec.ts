@@ -80,7 +80,9 @@ describe('@nx/vite:init', () => {
 
       const productionNamedInputs = readJson(tree, 'nx.json').namedInputs
         .production;
-      const testDefaults = readJson(tree, 'nx.json').targetDefaults.test;
+      const vitestDefaults = readJson(tree, 'nx.json').targetDefaults[
+        '@nx/vite:test'
+      ];
 
       expect(productionNamedInputs).toContain(
         '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
@@ -88,8 +90,13 @@ describe('@nx/vite:init', () => {
       expect(productionNamedInputs).toContain(
         '!{projectRoot}/tsconfig.spec.json'
       );
-      expect(testDefaults).toEqual({
+      expect(vitestDefaults).toEqual({
+        cache: true,
         inputs: ['default', '^production'],
+        options: {
+          passWithNoTests: true,
+          reporters: ['default'],
+        },
       });
     });
   });

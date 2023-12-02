@@ -93,7 +93,6 @@
       }
     },
     "additionalProperties": false,
-    "required": ["buildTarget"],
     "presets": []
   },
   "description": "Serve a web application from a folder.",

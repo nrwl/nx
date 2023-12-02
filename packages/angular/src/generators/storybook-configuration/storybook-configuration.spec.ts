@@ -1,7 +1,7 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import type { Tree } from '@nx/devkit';
 import { writeJson } from '@nx/devkit';
-import { Linter } from 'packages/linter/src/generators/utils/linter';
+import { Linter } from '@nx/eslint/src/generators/utils/linter';
 import { componentGenerator } from '../component/component';
 import { librarySecondaryEntryPointGenerator } from '../library-secondary-entry-point/library-secondary-entry-point';
 import { createStorybookTestWorkspaceForLib } from '../utils/testing';
@@ -46,7 +46,7 @@ describe('StorybookConfiguration generator', () => {
 
   it('should only configure storybook', async () => {
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: false,
     });
 
@@ -66,7 +66,7 @@ describe('StorybookConfiguration generator', () => {
 
   it('should configure storybook to use webpack 5', async () => {
     await storybookConfigurationGenerator(tree, {
-      name: libName,
+      project: libName,
       generateStories: false,
       linter: Linter.None,
     });
@@ -78,7 +78,7 @@ describe('StorybookConfiguration generator', () => {
 
   it('should configure storybook with interaction tests and install dependencies', async () => {
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: true,
     });
 
@@ -138,7 +138,7 @@ describe('StorybookConfiguration generator', () => {
     });
 
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: true,
     });
 
@@ -175,7 +175,7 @@ describe('StorybookConfiguration generator', () => {
     });
 
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: true,
     });
 

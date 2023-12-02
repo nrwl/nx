@@ -12,9 +12,13 @@ import { daemonClient } from '../daemon/client/client';
 import { fileExists } from '../utils/fileutils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
-import { retrieveWorkspaceFiles } from './utils/retrieve-workspace-files';
+import {
+  retrieveProjectConfigurations,
+  retrieveWorkspaceFiles,
+} from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
 import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
+import { writeSourceMaps } from '../utils/source-maps';
 
 /**
  * Synchronously reads the latest cached copy of the workspace's ProjectGraph.
@@ -50,7 +54,11 @@ export function readCachedProjectConfiguration(
 ): ProjectConfiguration {
   const graph = readCachedProjectGraph();
   const node = graph.nodes[projectName];
-  return node.data;
+  try {
+    return node.data;
+  } catch (e) {
+    throw new Error(`Cannot find project: '${projectName}' in your workspace.`);
+  }
 }
 
 /**
@@ -73,20 +81,32 @@ export function readProjectsConfigurationFromProjectGraph(
 export async function buildProjectGraphWithoutDaemon() {
   const nxJson = readNxJson();
 
-  const { allWorkspaceFiles, fileMap, projectConfigurations, externalNodes } =
-    await retrieveWorkspaceFiles(workspaceRoot, nxJson);
+  performance.mark('retrieve-project-configurations:start');
+  const { projects, externalNodes, sourceMaps, projectRootMap } =
+    await retrieveProjectConfigurations(workspaceRoot, nxJson);
+  performance.mark('retrieve-project-configurations:end');
+
+  performance.mark('retrieve-workspace-files:start');
+  const { allWorkspaceFiles, fileMap, rustReferences } =
+    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  performance.mark('retrieve-workspace-files:end');
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
+  performance.mark('build-project-graph-using-project-file-map:start');
   const projectGraph = (
     await buildProjectGraphUsingProjectFileMap(
-      projectConfigurations.projects,
+      projects,
       externalNodes,
       fileMap,
       allWorkspaceFiles,
+      rustReferences,
       cacheEnabled ? readFileMapCache() : null,
       cacheEnabled
     )
   ).projectGraph;
+  performance.mark('build-project-graph-using-project-file-map:end');
+
+  writeSourceMaps(sourceMaps);
 
   unregisterPluginTSTranspiler();
 
@@ -141,6 +161,21 @@ export async function createProjectGraphAsync(
   if (!daemonClient.enabled()) {
     try {
       const res = await buildProjectGraphWithoutDaemon();
+      performance.measure(
+        'create-project-graph-async >> retrieve-project-configurations',
+        'retrieve-project-configurations:start',
+        'retrieve-project-configurations:end'
+      );
+      performance.measure(
+        'create-project-graph-async >> retrieve-workspace-files',
+        'retrieve-workspace-files:start',
+        'retrieve-workspace-files:end'
+      );
+      performance.measure(
+        'create-project-graph-async >> build-project-graph-using-project-file-map',
+        'build-project-graph-using-project-file-map:start',
+        'build-project-graph-using-project-file-map:end'
+      );
       performance.mark('create-project-graph-async:end');
       performance.measure(
         'create-project-graph-async',

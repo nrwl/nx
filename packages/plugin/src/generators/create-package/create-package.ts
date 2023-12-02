@@ -1,19 +1,16 @@
 import {
   addDependenciesToPackageJson,
-  readProjectConfiguration,
-  Tree,
-  generateFiles,
-  readJson,
-  convertNxGenerator,
   formatFiles,
-  updateProjectConfiguration,
-  updateJson,
+  generateFiles,
   GeneratorCallback,
-  runTasksInSerial,
-  joinPathFragments,
-  getProjects,
-  detectPackageManager,
   getPackageManagerCommand,
+  joinPathFragments,
+  readJson,
+  readProjectConfiguration,
+  runTasksInSerial,
+  Tree,
+  updateJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { nxVersion } from 'nx/src/utils/versions';
@@ -77,9 +74,10 @@ async function addPresetGenerator(
   if (!hasGenerator(host, schema.project, 'preset')) {
     await generatorGenerator(host, {
       name: 'preset',
-      project: schema.project,
+      directory: join(projectRoot, 'src/generators/preset'),
       unitTestRunner: schema.unitTestRunner,
       skipFormat: true,
+      nameAndDirectoryFormat: 'as-provided',
     });
   }
 
@@ -132,8 +130,6 @@ async function createCliPackage(
     options.projectRoot,
     'bin/index.ts'
   );
-  projectConfiguration.targets.build.options.updateBuildableProjectDepsInPackageJson =
-    false;
   projectConfiguration.implicitDependencies = [options.project];
   updateProjectConfiguration(host, options.projectName, projectConfiguration);
 
@@ -191,6 +187,3 @@ function addE2eProject(host: Tree, options: NormalizedSchema) {
 }
 
 export default createPackageGenerator;
-export const createPackageSchematic = convertNxGenerator(
-  createPackageGenerator
-);

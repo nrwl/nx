@@ -12,7 +12,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 
-import type { Schema as EsLintExecutorOptions } from '@nx/linter/src/executors/eslint/schema';
+import type { Schema as EsLintExecutorOptions } from '@nx/eslint/src/executors/lint/schema';
 
 import { PluginLintChecksGeneratorSchema } from './schema';
 import { NX_PREFIX } from 'nx/src/utils/logger';
@@ -22,8 +22,8 @@ import {
   isEslintConfigSupported,
   lintConfigHasOverride,
   updateOverrideInLintConfig,
-} from '@nx/linter/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/linter/src/utils/flat-config';
+} from '@nx/eslint/src/generators/utils/eslint-file';
+import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 export default async function pluginLintCheckGenerator(
   host: Tree,
@@ -94,33 +94,37 @@ export function addMigrationJsonChecks(
     relativeMigrationsJsonPath
   );
 
+  if (!eslintTarget) {
+    return;
+  }
+
+  // Add path to lintFilePatterns if different than default "{projectRoot}"
   if (
-    eslintTarget &&
-    !eslintTargetConfiguration.options?.lintFilePatterns?.includes(
+    eslintTargetConfiguration.options?.lintFilePatterns &&
+    !eslintTargetConfiguration.options.lintFilePatterns.includes(
       migrationsJsonPath
     )
   ) {
-    // Add to lintFilePatterns
     eslintTargetConfiguration.options.lintFilePatterns.push(migrationsJsonPath);
     updateProjectConfiguration(host, options.projectName, projectConfiguration);
-
-    // Update project level eslintrc
-    updateOverrideInLintConfig(
-      host,
-      projectConfiguration.root,
-      (o) =>
-        Object.keys(o.rules ?? {})?.includes('@nx/nx-plugin-checks') ||
-        Object.keys(o.rules ?? {})?.includes('@nrwl/nx/nx-plugin-checks'),
-      (o) => {
-        const fileSet = new Set(Array.isArray(o.files) ? o.files : [o.files]);
-        fileSet.add(relativeMigrationsJsonPath);
-        return {
-          ...o,
-          files: Array.from(fileSet),
-        };
-      }
-    );
   }
+
+  // Update project level eslintrc
+  updateOverrideInLintConfig(
+    host,
+    projectConfiguration.root,
+    (o) =>
+      Object.keys(o.rules ?? {})?.includes('@nx/nx-plugin-checks') ||
+      Object.keys(o.rules ?? {})?.includes('@nrwl/nx/nx-plugin-checks'),
+    (o) => {
+      const fileSet = new Set(Array.isArray(o.files) ? o.files : [o.files]);
+      fileSet.add(relativeMigrationsJsonPath);
+      return {
+        ...o,
+        files: Array.from(fileSet),
+      };
+    }
+  );
 }
 
 function updateProjectTarget(
@@ -135,8 +139,9 @@ function updateProjectTarget(
 
   for (const [target, configuration] of Object.entries(project.targets)) {
     if (
-      configuration.executor === '@nx/linter:eslint' ||
-      configuration.executor === '@nrwl/linter:eslint'
+      configuration.executor === '@nx/eslint:lint' &&
+      // only add patterns if there are already hardcoded ones
+      configuration.options?.lintFilePatterns
     ) {
       const opts: EsLintExecutorOptions = configuration.options ?? {};
       opts.lintFilePatterns ??= [];
@@ -292,6 +297,8 @@ export function getEsLintOptions(
 ): [target: string, configuration: TargetConfiguration<EsLintExecutorOptions>] {
   return Object.entries(project.targets || {}).find(
     ([, x]) =>
-      x.executor === '@nx/linter:eslint' || x.executor === '@nrwl/linter:eslint'
+      x.executor === '@nx/eslint:lint' ||
+      x.executor === '@nx/linter:eslint' ||
+      x.executor === '@nrwl/linter:eslint'
   );
 }

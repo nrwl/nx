@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { names, readProjectConfiguration, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { UnitTestRunner } from '../../utils/test-runners';
 import { angularDevkitVersion } from '../../utils/versions';
 import { applicationGenerator } from '../application/application';
@@ -72,11 +72,13 @@ export async function createStorybookTestWorkspaceForLib(
     skipFormat: false,
     unitTestRunner: UnitTestRunner.Jest,
     projectNameAndRootFormat: 'as-provided',
+    standalone: false,
   });
 
   await componentGenerator(tree, {
     name: 'test-button',
     project: libName,
+    standalone: false,
   });
 
   tree.write(
@@ -121,6 +123,7 @@ export class TestButtonComponent {
     project: libName,
     path: `${libName}/src/lib/barrel`,
     module: 'barrel',
+    standalone: false,
   });
 
   tree.write(
@@ -152,6 +155,7 @@ export class BarrelModule {}`
     project: libName,
     path: `${libName}/src/lib/variable-declare`,
     module: 'variable-declare',
+    standalone: false,
   });
 
   await componentGenerator(tree, {
@@ -159,6 +163,7 @@ export class BarrelModule {}`
     project: libName,
     path: `${libName}/src/lib/variable-declare`,
     module: 'variable-declare',
+    standalone: false,
   });
 
   tree.write(
@@ -192,6 +197,7 @@ export class VariableDeclareModule {}`
     project: libName,
     path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
+    standalone: false,
   });
 
   await componentGenerator(tree, {
@@ -199,6 +205,7 @@ export class VariableDeclareModule {}`
     project: libName,
     path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
+    standalone: false,
   });
 
   await componentGenerator(tree, {
@@ -206,6 +213,7 @@ export class VariableDeclareModule {}`
     project: libName,
     path: `${libName}/src/lib/variable-spread-declare`,
     module: 'variable-spread-declare',
+    standalone: false,
   });
 
   tree.write(
@@ -216,9 +224,9 @@ import { VariableSpreadDeclareButtonComponent } from './variable-spread-declare-
 import { VariableSpreadDeclareViewComponent } from './variable-spread-declare-view/variable-spread-declare-view.component';
 import { VariableSpreadDeclareAnotherviewComponent } from './variable-spread-declare-anotherview/variable-spread-declare-anotherview.component';
 
-const COMPONENTS = [ 
-  VariableSpreadDeclareButtonComponent, 
-  VariableSpreadDeclareViewComponent 
+const COMPONENTS = [
+  VariableSpreadDeclareButtonComponent,
+  VariableSpreadDeclareViewComponent
 ]
 
 @NgModule({
@@ -239,6 +247,7 @@ export class VariableSpreadDeclareModule {}`
     project: libName,
     path: `${libName}/src/lib/static-member-declarations`,
     module: 'static-member-declarations',
+    standalone: false,
   });
 
   await componentGenerator(tree, {
@@ -246,6 +255,7 @@ export class VariableSpreadDeclareModule {}`
     project: libName,
     path: `${libName}/src/lib/static-member-declarations`,
     module: 'static-member-declarations',
+    standalone: false,
   });
 
   tree.write(
@@ -277,11 +287,13 @@ export class StaticMemberDeclarationsModule {
     project: libName,
     module: 'nested',
     path: `${libName}/src/lib/nested`,
+    standalone: false,
   });
 
   await componentGenerator(tree, {
     name: 'test-other',
     project: libName,
+    standalone: false,
   });
 
   return tree;
@@ -319,7 +331,7 @@ function generateModule(
     moduleFilePath,
     `import { NgModule } from '@angular/core';
   import { CommonModule } from '@angular/common';
-  
+
   @NgModule({
     declarations: [],
     imports: [CommonModule],

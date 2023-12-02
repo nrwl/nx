@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -9,6 +8,7 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
 import { addTsConfigPath } from '@nx/js';
 
@@ -25,6 +25,7 @@ import { createFiles } from './lib/create-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
+import { relative } from 'path';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
@@ -91,11 +92,10 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         includeVitest: options.unitTestRunner === 'vitest',
         inSourceTests: options.inSourceTests,
         rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
         ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
         imports: [
           options.compiler === 'swc'
             ? `import react from '@vitejs/plugin-react-swc'`
@@ -147,7 +147,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
       project: options.name,
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       testEnvironment: 'jsdom',
@@ -161,11 +161,10 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
         includeVitest: true,
         inSourceTests: options.inSourceTests,
         rollupOptionsExternal: [
-          `'react'`,
-          `'react-dom'`,
-          `'react/jsx-runtime'`,
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
         ],
-        rollupOptionsExternalString: `"'react', 'react-dom', 'react/jsx-runtime'"`,
         imports: [`import react from '@vitejs/plugin-react'`],
         plugins: ['react()'],
       },
@@ -174,8 +173,15 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.component) {
+    const relativeCwd = getRelativeCwd();
+    const name = joinPathFragments(
+      options.projectRoot,
+      'src/lib',
+      options.fileName
+    );
     const componentTask = await componentGenerator(host, {
-      name: options.fileName,
+      nameAndDirectoryFormat: 'as-provided',
+      name: relativeCwd ? relative(relativeCwd, name) : name,
       project: options.name,
       flat: true,
       style: options.style,
@@ -229,4 +235,3 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
 }
 
 export default libraryGenerator;
-export const librarySchematic = convertNxGenerator(libraryGenerator);

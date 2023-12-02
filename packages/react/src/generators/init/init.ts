@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   GeneratorCallback,
   readNxJson,
@@ -78,10 +77,10 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
 
   if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
     ensurePackage('@nx/cypress', nxVersion);
-    const { cypressInitGenerator } = await import(
+    const { cypressInitGenerator } = (await import(
       '@nx/cypress/src/generators/init/init'
-    );
-    const cypressTask = await cypressInitGenerator(host, {});
+    )) as typeof import('@nx/cypress/src/generators/init/init');
+    const cypressTask = await cypressInitGenerator(host, schema);
     tasks.push(cypressTask);
   }
 
@@ -94,5 +93,3 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
 }
 
 export default reactInitGenerator;
-
-export const reactInitSchematic = convertNxGenerator(reactInitGenerator);

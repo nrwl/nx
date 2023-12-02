@@ -38,6 +38,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
             Preset.ReactStandalone,
             Preset.VueMonorepo,
             Preset.VueStandalone,
+            Preset.Nuxt,
+            Preset.NuxtStandalone,
             Preset.AngularMonorepo,
             Preset.AngularStandalone,
             Preset.Nest,
@@ -102,6 +104,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         },
         "targetDefaults": {
           "build": {
+            "cache": true,
             "dependsOn": [
               "^build",
             ],
@@ -110,18 +113,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               "^production",
             ],
           },
-        },
-        "tasksRunnerOptions": {
-          "default": {
-            "options": {
-              "cacheableOperations": [
-                "build",
-                "lint",
-                "test",
-                "e2e",
-              ],
-            },
-            "runner": "nx/tasks-runners/default",
+          "lint": {
+            "cache": true,
           },
         },
       }
@@ -154,6 +147,7 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
         },
         "targetDefaults": {
           "build": {
+            "cache": true,
             "dependsOn": [
               "^build",
             ],
@@ -162,18 +156,8 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
               "^production",
             ],
           },
-        },
-        "tasksRunnerOptions": {
-          "default": {
-            "options": {
-              "cacheableOperations": [
-                "build",
-                "lint",
-                "test",
-                "e2e",
-              ],
-            },
-            "runner": "nx/tasks-runners/default",
+          "lint": {
+            "cache": true,
           },
         },
       }
@@ -227,17 +211,15 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
       {
         "$schema": "./node_modules/nx/schemas/nx-schema.json",
         "extends": "nx/presets/npm.json",
-        "tasksRunnerOptions": {
-          "default": {
-            "options": {
-              "cacheableOperations": [
-                "build",
-                "lint",
-                "test",
-                "e2e",
-              ],
-            },
-            "runner": "nx/tasks-runners/default",
+        "targetDefaults": {
+          "build": {
+            "cache": true,
+            "dependsOn": [
+              "^build",
+            ],
+          },
+          "lint": {
+            "cache": true,
           },
         },
       }

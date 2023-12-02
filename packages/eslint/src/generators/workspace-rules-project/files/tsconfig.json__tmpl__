@@ -1,0 +1,14 @@
+{
+  "extends": "<%= rootTsConfigPath %>",
+  "compilerOptions": {
+    "moduleResolution": "node16",
+    "module": "node16"
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.lint.json"
+    }
+  ]
+}

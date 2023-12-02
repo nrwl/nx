@@ -20,11 +20,6 @@
       },
       "additionalProperties": false
     },
-    "npmScope": {
-      "type": "string",
-      "description": "NPM Scope that the workspace uses.",
-      "deprecated": "This is inferred from the package.json in the workspace root instead."
-    },
     "tasksRunnerOptions": {
       "type": "object",
       "additionalProperties": {
@@ -56,11 +51,6 @@
         "appsDir": {
           "type": "string",
           "description": "Default folder name for apps."
-        },
-        "projectNameAndRootFormat": {
-          "type": "string",
-          "description": "Default method of handling arguments for generating projects",
-          "enum": ["as-provided", "derived"]
         }
       },
       "additionalProperties": false
@@ -75,12 +65,137 @@
       "type": "array",
       "description": "Plugins for extending the project graph.",
       "items": {
-        "type": "string"
+        "$ref": "#/definitions/plugins"
       }
     },
     "defaultProject": {
       "type": "string",
       "description": "Default project. When project isn't provided, the default project will be used."
+    },
+    "nxCloudAccessToken": {
+      "type": "string",
+      "description": "The access token to use for nx-cloud. If set, the default tasks runner will be nx-cloud."
+    },
+    "nxCloudUrl": {
+      "type": "string",
+      "description": "Specifies the url pointing to an instance of nx cloud. Used for remote caching and displaying run links."
+    },
+    "nxCloudEncryptionKey": {
+      "type": "string",
+      "description": "Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud."
+    },
+    "parallel": {
+      "type": "number",
+      "description": "Specifies how many tasks are ran in parallel by Nx for the default tasks runner."
+    },
+    "cacheDirectory": {
+      "type": "string",
+      "description": "Specifies the default location of the cache directory."
+    },
+    "useDaemonProcess": {
+      "type": "boolean",
+      "description": "Specifies whether the daemon should be used for the default tasks runner."
+    },
+    "release": {
+      "type": "object",
+      "description": "Configuration for the nx release commands.",
+      "additionalProperties": false,
+      "properties": {
+        "groups": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "projectsRelationship": {
+                "type": "string",
+                "enum": ["fixed", "independent"]
+              },
+              "projects": {
+                "oneOf": [
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "minItems": 1
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "version": {
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/NxReleaseVersionConfiguration"
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "not": {
+                          "required": ["git"]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "changelog": {
+                "oneOf": [
+                  {
+                    "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                  },
+                  {
+                    "type": "boolean"
+                  }
+                ]
+              },
+              "releaseTagPattern": {
+                "type": "string"
+              }
+            },
+            "required": ["projects"]
+          }
+        },
+        "changelog": {
+          "type": "object",
+          "properties": {
+            "workspaceChangelog": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "projectChangelogs": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/NxReleaseChangelogConfiguration"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            }
+          }
+        },
+        "projectsRelationship": {
+          "type": "string",
+          "enum": ["fixed", "independent"]
+        },
+        "git": {
+          "$ref": "#/definitions/NxReleaseGitConfiguration"
+        },
+        "version": {
+          "$ref": "#/definitions/NxReleaseVersionConfiguration"
+        },
+        "releaseTagPattern": {
+          "type": "string"
+        }
+      }
     }
   },
   "definitions": {
@@ -202,10 +317,6 @@
           "type": "string",
           "description": "The default package manager to use.",
           "enum": ["yarn", "pnpm", "npm"]
-        },
-        "defaultCollection": {
-          "type": "string",
-          "description": "The default generator collection to use."
         }
       }
     },
@@ -351,9 +462,127 @@
               }
             ]
           }
+        },
+        "cache": {
+          "type": "boolean",
+          "description": "Specifies if the given target should be cacheable"
         }
       },
       "additionalProperties": false
+    },
+    "plugins": {
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "A plugin module to load with default options"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "plugin": {
+              "type": "string",
+              "description": "The plugin module to load"
+            },
+            "options": {
+              "type": "object",
+              "description": "The options passed to the plugin when creating nodes and dependencies"
+            }
+          }
+        }
+      ]
+    },
+    "NxReleaseGitConfiguration": {
+      "type": "object",
+      "properties": {
+        "commit": {
+          "type": "boolean",
+          "description": "Whether or not to automatically commit the changes made by current command"
+        },
+        "commitMessage": {
+          "type": "string",
+          "description": "Custom git commit message to use when committing the changes made by this command"
+        },
+        "commitArgs": {
+          "type": "string",
+          "description": "Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes"
+        },
+        "tag": {
+          "type": "boolean",
+          "description": "Whether or not to automatically tag the changes made by this command"
+        },
+        "tagMessage": {
+          "type": "string",
+          "description": "Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself."
+        },
+        "tagArgs": {
+          "type": "string",
+          "description": "Additional arguments to pass to the `git tag` command invoked behind the scenes"
+        }
+      }
+    },
+    "NxReleaseVersionConfiguration": {
+      "type": "object",
+      "properties": {
+        "generator": {
+          "type": "string"
+        },
+        "generatorOptions": {
+          "type": "object",
+          "additionalProperties": true
+        },
+        "git": {
+          "$ref": "#/definitions/NxReleaseGitConfiguration"
+        }
+      }
+    },
+    "NxReleaseChangelogConfiguration": {
+      "type": "object",
+      "properties": {
+        "createRelease": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": ["github"]
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "entryWhenNoChanges": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "file": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "boolean",
+              "enum": [false]
+            }
+          ]
+        },
+        "renderer": {
+          "type": "string"
+        },
+        "renderOptions": {
+          "$ref": "#/definitions/ChangelogRenderOptions"
+        }
+      }
+    },
+    "ChangelogRenderOptions": {
+      "type": "object",
+      "additionalProperties": true
     }
   }
 }

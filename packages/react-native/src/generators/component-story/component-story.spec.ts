@@ -1,7 +1,7 @@
 import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import componentStoryGenerator from './component-story';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 import { formatFile } from '../../utils/format-file';
 import libraryGenerator from '../library/library';
@@ -75,9 +75,9 @@ describe('react-native:component-story', () => {
         appTree.write(
           'test-ui-lib/src/lib/test-ui-libplain.jsx',
           `import React from 'react';
-  
+
           import './test.scss';
-          
+
           export const Test = () => {
             return (
               <div>
@@ -85,8 +85,8 @@ describe('react-native:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -117,7 +117,7 @@ describe('react-native:component-story', () => {
           `import React from 'react';
 
           import { View, Text } from 'react-native';
-          
+
           export function Test() {
             return (
               <View>
@@ -125,8 +125,8 @@ describe('react-native:component-story', () => {
               </View>
             );
           }
-          
-          export default Test;   
+
+          export default Test;
           `
         );
         await componentStoryGenerator(appTree, {
@@ -178,14 +178,14 @@ describe('react-native:component-story', () => {
           `import React from 'react';
 
           export type ButtonStyle = 'default' | 'primary' | 'warning';
-          
+
           export interface TestProps {
             name: string;
             displayAge: boolean;
             someAction: (e: unknown) => void;
             style: ButtonStyle;
           }
-          
+
           export const Test = (props: TestProps) => {
             return (
               <div>
@@ -194,8 +194,8 @@ describe('react-native:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -337,12 +337,12 @@ describe('react-native:component-story', () => {
           appTree.write(
             cmpPath,
             `import React from 'react';
-            
+
             export interface TestProps {
               name: string;
               displayAge: boolean;
             }
-            
+
             ${config.src}
             `
           );
@@ -420,7 +420,6 @@ export async function createTestUILib(libName: string): Promise<Tree> {
   const currentWorkspaceJson = getProjects(appTree);
 
   const projectConfig = currentWorkspaceJson.get(libName);
-  projectConfig.targets.lint.options.linter = 'eslint';
 
   updateProjectConfiguration(appTree, libName, projectConfig);
 

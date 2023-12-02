@@ -9,8 +9,8 @@ Nx has first-class support for [package-based monorepos](/getting-started/tutori
 - fast [task scheduling](/core-features/run-tasks)
 - support for [task pipelines](/concepts/task-pipeline-configuration)
 - [caching](/core-features/cache-task-results)
-- optionally [remote caching with Nx Cloud](/core-features/remote-cache)
-- optionally [distributed task execution with Nx Cloud](/core-features/distribute-task-execution)
+- optionally [remote caching with Nx Cloud](/ci/features/remote-cache)
+- optionally [distributed task execution with Nx Cloud](/ci/features/distribute-task-execution)
 
 This is a low-impact operation because all that needs to be done is to install the `nx` package at the root level and add an `nx.json` for configuring caching and task pipelines.
 
@@ -49,6 +49,29 @@ This process adds `nx` to your `package.json` at the root of your workspace:
 
 It also creates a `nx.json` based on the answers given during the setup process. This includes cacheable operations as well as some initial definition of the task pipeline. Here is an example:
 
+{% tabs %}
+{% tab label="Nx >= 17" %}
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "cache": true
+    },
+    "lint": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
+
 ```json {% fileName="nx.json" %}
 {
   "tasksRunnerOptions": {
@@ -66,6 +89,9 @@ It also creates a `nx.json` based on the answers given during the setup process.
   }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Incrementally Adopting Nx
 

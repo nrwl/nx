@@ -28,6 +28,12 @@
       "type": "string",
       "enum": ["as-provided", "derived"]
     },
+    "dynamic": {
+      "type": "boolean",
+      "description": "Should the host application use dynamic federation?",
+      "default": false,
+      "x-priority": "internal"
+    },
     "style": {
       "description": "The file extension to be used for style files.",
       "type": "string",
@@ -60,10 +66,6 @@
           {
             "value": "styled-jsx",
             "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
-          },
-          {
-            "value": "styl",
-            "label": "DEPRECATD: Stylus(.styl) [ http://stylus-lang.com            ]"
           },
           {
             "value": "none",

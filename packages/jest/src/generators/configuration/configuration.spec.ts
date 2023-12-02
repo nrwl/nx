@@ -31,10 +31,8 @@ describe('jestProject', () => {
       sourceRoot: 'libs/lib1/src',
       targets: {
         lint: {
-          executor: '@angular-devkit/build-angular:tslint',
-          options: {
-            tsConfig: [],
-          },
+          executor: '@nx/eslint:lint',
+          options: {},
         },
       },
     });
@@ -86,18 +84,8 @@ describe('jestProject', () => {
       outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
       options: {
         jestConfig: 'libs/lib1/jest.config.ts',
-        passWithNoTests: true,
-      },
-      configurations: {
-        ci: {
-          ci: true,
-          codeCoverage: true,
-        },
       },
     });
-    expect(lib1.targets.lint.options.tsConfig).toContain(
-      'libs/lib1/tsconfig.spec.json'
-    );
   });
 
   it('should create a jest.config.ts', async () => {

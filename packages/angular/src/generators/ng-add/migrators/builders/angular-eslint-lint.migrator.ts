@@ -10,7 +10,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { hasRulesRequiringTypeChecking } from '@nx/linter';
+import { hasRulesRequiringTypeChecking } from '@nx/eslint';
 import { dirname } from 'path';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
 import { BuilderMigrator } from './builder.migrator';
@@ -69,7 +69,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
     targetName: string,
     target: TargetConfiguration
   ): Promise<void> {
-    target.executor = '@nx/linter:eslint';
+    target.executor = '@nx/eslint:lint';
 
     if (!target.options) {
       this.logger.warn(

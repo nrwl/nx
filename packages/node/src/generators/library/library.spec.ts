@@ -10,7 +10,7 @@ import { Schema } from './schema.d';
 import { libraryGenerator } from './library';
 
 const baseLibraryConfig = {
-  name: 'myLib',
+  name: 'my-lib',
   compiler: 'tsc' as const,
   projectNameAndRootFormat: 'as-provided' as const,
 };
@@ -29,24 +29,14 @@ describe('lib', () => {
       expect(configuration.root).toEqual('my-lib');
       expect(configuration.targets.build).toBeUndefined();
       expect(configuration.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-lib/**/*.ts'],
-        },
       });
       expect(configuration.targets.test).toEqual({
         executor: '@nx/jest:jest',
         outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
         options: {
           jestConfig: 'my-lib/jest.config.ts',
-          passWithNoTests: true,
-        },
-        configurations: {
-          ci: {
-            ci: true,
-            codeCoverage: true,
-          },
         },
       });
       expect(
@@ -196,7 +186,7 @@ describe('lib', () => {
 
       await libraryGenerator(tree, {
         ...baseLibraryConfig,
-        name: 'myLib2',
+        name: 'my-lib2',
         directory: 'my-dir/my-lib-2',
         tags: 'one,two',
       });
@@ -229,11 +219,8 @@ describe('lib', () => {
       const project = readProjectConfiguration(tree, 'my-lib');
       expect(project.root).toEqual('my-dir/my-lib');
       expect(project.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-dir/my-lib/**/*.ts'],
-        },
       });
     });
 
@@ -423,7 +410,7 @@ describe('lib', () => {
     it('should fail if the same importPath has already been used', async () => {
       await libraryGenerator(tree, {
         ...baseLibraryConfig,
-        name: 'myLib1',
+        name: 'my-lib1',
         publishable: true,
         importPath: '@myorg/lib',
       });
@@ -431,7 +418,7 @@ describe('lib', () => {
       try {
         await libraryGenerator(tree, {
           ...baseLibraryConfig,
-          name: 'myLib2',
+          name: 'my-lib2',
           publishable: true,
           importPath: '@myorg/lib',
         });
@@ -448,7 +435,7 @@ describe('lib', () => {
   describe(`--babelJest`, () => {
     it('should use babel for jest', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         babelJest: true,
       } as Schema);
 
@@ -472,7 +459,7 @@ describe('lib', () => {
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         js: true,
       } as Schema);
 
@@ -499,7 +486,7 @@ describe('lib', () => {
     });
 
     it('should update root tsconfig.json with a js file path', async () => {
-      await libraryGenerator(tree, { name: 'myLib', js: true } as Schema);
+      await libraryGenerator(tree, { name: 'my-lib', js: true } as Schema);
       const tsconfigJson = readJson(tree, '/tsconfig.base.json');
       expect(tsconfigJson.compilerOptions.paths['@proj/my-lib']).toEqual([
         'my-lib/src/index.js',
@@ -508,7 +495,7 @@ describe('lib', () => {
 
     it('should update architect builder when --buildable', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         buildable: true,
         js: true,
       } as Schema);
@@ -523,7 +510,7 @@ describe('lib', () => {
 
     it('should generate js files for nested libs as well', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         directory: 'my-dir/my-lib',
         js: true,
         projectNameAndRootFormat: 'as-provided',
@@ -538,7 +525,7 @@ describe('lib', () => {
   describe('--pascalCaseFiles', () => {
     it('should generate files with upper case names', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         pascalCaseFiles: true,
         projectNameAndRootFormat: 'as-provided',
       } as Schema);
@@ -550,7 +537,7 @@ describe('lib', () => {
 
     it('should generate files with upper case names for nested libs as well', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         directory: 'my-dir/my-lib',
         pascalCaseFiles: true,
         projectNameAndRootFormat: 'as-provided',

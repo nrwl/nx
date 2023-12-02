@@ -1,7 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
-  convertNxGenerator,
   extractLayoutDirectory,
   formatFiles,
   generateFiles,
@@ -21,7 +20,7 @@ import { addPropertyToJestConfig, configurationGenerator } from '@nx/jest';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { setupVerdaccio } from '@nx/js/src/generators/setup-verdaccio/generator';
 import { addLocalRegistryScripts } from '@nx/js/src/utils/add-local-registry-scripts';
-import { Linter, lintProjectGenerator } from '@nx/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
 import type { Schema } from './schema';
 
@@ -110,7 +109,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
   addProjectConfiguration(host, options.projectName, {
     root: options.projectRoot,
     projectType: 'application',
-    sourceRoot: `${options.projectRoot}/tests`,
+    sourceRoot: `${options.projectRoot}/src`,
     targets: {},
     implicitDependencies: [options.pluginName],
   });
@@ -149,7 +148,6 @@ async function addJest(host: Tree, options: NormalizedSchema) {
       ...testTarget.options,
       runInBand: true,
     },
-    configurations: testTarget.configurations,
   };
 
   // remove the jest build target
@@ -170,7 +168,6 @@ async function addLintingToApplication(
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
-    eslintFilePatterns: [`${options.projectRoot}/**/*.ts`],
     unitTestRunner: 'jest',
     skipFormat: true,
     setParserOptionsProject: false,
@@ -215,4 +212,3 @@ export async function e2eProjectGeneratorInternal(host: Tree, schema: Schema) {
 }
 
 export default e2eProjectGenerator;
-export const e2eProjectSchematic = convertNxGenerator(e2eProjectGenerator);

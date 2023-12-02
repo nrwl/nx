@@ -35,6 +35,7 @@ export interface NxArgs {
   nxBail?: boolean;
   nxIgnoreCycles?: boolean;
   type?: string;
+  batch?: boolean;
 }
 
 export function createOverrides(__overrides_unparsed__: string[] = []) {
@@ -180,10 +181,14 @@ export function splitArgsIntoNxArgsAndOverrides(
   } else if (
     args['parallel'] === 'true' ||
     args['parallel'] === true ||
-    args['parallel'] === ''
+    args['parallel'] === '' ||
+    process.env.NX_PARALLEL // dont require passing --parallel if NX_PARALLEL is set
   ) {
     nxArgs['parallel'] = Number(
-      nxArgs['maxParallel'] || nxArgs['max-parallel'] || 3
+      nxArgs['maxParallel'] ||
+        nxArgs['max-parallel'] ||
+        process.env.NX_PARALLEL ||
+        3
     );
   } else if (args['parallel'] !== undefined) {
     nxArgs['parallel'] = Number(args['parallel']);

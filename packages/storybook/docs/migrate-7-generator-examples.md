@@ -3,10 +3,6 @@ title: Storybook 7 Migration Generator Examples
 description: This page contains examples for the @nx/storybook:migrate-7 generator.
 ---
 
-{% callout type="info" title="Available on Nx v15.9" %}
-This is a new feature available on Nx v15.9.0. If you are using an older version of Nx, please [upgrade](/packages/nx/documents/migrate).
-{% /callout %}
-
 {% callout type="info" title="Setting up Storybook 7 in a new workspace" %}
 For setting up Storybook version 7 in a new Nx workspace, or a workspace that does NOT already have Storybook configured already, please refer to our [Storybook 7 setup guide](/packages/storybook/documents/storybook-7-setup).
 {% /callout %}

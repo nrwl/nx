@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -14,25 +13,39 @@ import {
 export type PipeGeneratorOptions = NestGeneratorWithLanguageOption &
   NestGeneratorWithTestOption;
 
-export function pipeGenerator(
+export async function pipeGenerator(
+  tree: Tree,
+  rawOptions: PipeGeneratorOptions
+) {
+  await pipeGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function pipeGeneratorInternal(
   tree: Tree,
   rawOptions: PipeGeneratorOptions
 ): Promise<any> {
-  const options = normalizePipeOptions(tree, rawOptions);
+  const options = await normalizePipeOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'pipe', options);
 }
 
 export default pipeGenerator;
 
-export const pipeSchematic = convertNxGenerator(pipeGenerator);
-
-function normalizePipeOptions(
+async function normalizePipeOptions(
   tree: Tree,
   options: PipeGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOptions = await normalizeOptions(
+    tree,
+    'pipe',
+    '@nx/nest:pipe',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOptions,
     language: options.language,
     spec: unitTestRunnerToSpec(options.unitTestRunner),
   };

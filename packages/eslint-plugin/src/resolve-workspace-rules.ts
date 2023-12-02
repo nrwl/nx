@@ -2,6 +2,7 @@ import type { TSESLint } from '@typescript-eslint/utils';
 import { existsSync } from 'fs';
 import { registerTsProject } from '@nx/js/src/internal';
 import { WORKSPACE_PLUGIN_DIR, WORKSPACE_RULE_NAMESPACE } from './constants';
+import { join } from 'path';
 
 type ESLintRules = Record<string, TSESLint.RuleModule<string, unknown[]>>;
 
@@ -11,7 +12,9 @@ export const workspaceRules = ((): ESLintRules => {
     return {};
   }
   // Register `tools/eslint-rules` for TS transpilation
-  const registrationCleanup = registerTsProject(WORKSPACE_PLUGIN_DIR);
+  const registrationCleanup = registerTsProject(
+    join(WORKSPACE_PLUGIN_DIR, 'tsconfig.json')
+  );
   try {
     /**
      * Currently we only support applying the rules from the user's workspace plugin object

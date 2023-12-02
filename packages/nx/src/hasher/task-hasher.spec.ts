@@ -1,5 +1,6 @@
 // This must come before the Hasher import
 import { TempFs } from '../internal-testing-utils/temp-fs';
+
 let tempFs = new TempFs('TaskHasher');
 
 import { DependencyType } from '../config/project-graph';
@@ -8,9 +9,9 @@ import {
   filterUsingGlobPatterns,
   InProcessTaskHasher,
 } from './task-hasher';
-import { withEnvironmentVariables } from '../internal-testing-utils/with-environment';
 
 describe('TaskHasher', () => {
+  process.env.NX_NATIVE_TASK_HASHER = 'false';
   const packageJson = {
     name: 'nrwl',
   };
@@ -51,90 +52,93 @@ describe('TaskHasher', () => {
     tempFs.cleanup();
   });
 
-  it('should create task hash', () =>
-    withEnvironmentVariables({ TESTENV: 'env123' }, async () => {
-      const hasher = new InProcessTaskHasher(
-        {
-          parent: [{ file: '/file', hash: 'file.hash' }],
-          unrelated: [{ file: 'libs/unrelated/filec.ts', hash: 'filec.hash' }],
-        },
-        allWorkspaceFiles,
-        {
-          nodes: {
-            parent: {
-              name: 'parent',
-              type: 'lib',
-              data: {
-                root: 'libs/parent',
-                targets: {
-                  build: {
-                    executor: 'nx:run-commands',
-                    inputs: [
-                      'default',
-                      '^default',
-                      { runtime: 'echo runtime123' },
-                      { env: 'TESTENV' },
-                      { env: 'NONEXISTENTENV' },
-                      {
-                        input: 'default',
-                        projects: ['unrelated', 'tag:some-tag'],
-                      },
-                    ],
-                  },
+  it('should create task hash', async () => {
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [{ file: '/file', hash: 'file.hash' }],
+        unrelated: [{ file: 'libs/unrelated/filec.ts', hash: 'filec.hash' }],
+      },
+      allWorkspaceFiles,
+      {
+        nodes: {
+          parent: {
+            name: 'parent',
+            type: 'lib',
+            data: {
+              root: 'libs/parent',
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  inputs: [
+                    'default',
+                    '^default',
+                    { runtime: 'echo runtime123' },
+                    { env: 'TESTENV' },
+                    { env: 'NONEXISTENTENV' },
+                    {
+                      input: 'default',
+                      projects: ['unrelated', 'tag:some-tag'],
+                    },
+                  ],
                 },
               },
             },
-            unrelated: {
-              name: 'unrelated',
-              type: 'lib',
-              data: {
-                root: 'libs/unrelated',
-                targets: { build: {} },
-              },
-            },
-            tagged: {
-              name: 'tagged',
-              type: 'lib',
-              data: {
-                root: 'libs/tagged',
-                targets: { build: {} },
-                tags: ['some-tag'],
-              },
+          },
+          unrelated: {
+            name: 'unrelated',
+            type: 'lib',
+            data: {
+              root: 'libs/unrelated',
+              targets: { build: {} },
             },
           },
-          dependencies: {
-            parent: [],
+          tagged: {
+            name: 'tagged',
+            type: 'lib',
+            data: {
+              root: 'libs/tagged',
+              targets: { build: {} },
+              tags: ['some-tag'],
+            },
           },
-          externalNodes: {},
         },
-
-        {} as any,
-        {
-          runtimeCacheInputs: ['echo runtime456'],
-        }
-      );
-
-      const hash = await hasher.hashTask(
-        {
-          target: { project: 'parent', target: 'build' },
-          id: 'parent-build',
-          overrides: { prop: 'prop-value' },
+        dependencies: {
+          parent: [],
         },
-        {
-          roots: ['parent-build'],
-          tasks: {
-            'parent-build': {
-              id: 'parent-build',
-              target: { project: 'parent', target: 'build' },
-              overrides: {},
-            },
-          },
-          dependencies: {},
-        }
-      );
+        externalNodes: {},
+      },
 
-      expect(hash).toMatchSnapshot();
-    }));
+      {} as any,
+      null,
+      {
+        runtimeCacheInputs: ['echo runtime456'],
+      }
+    );
+
+    const hash = await hasher.hashTask(
+      {
+        target: { project: 'parent', target: 'build' },
+        id: 'parent-build',
+        overrides: { prop: 'prop-value' },
+        outputs: [],
+      },
+      {
+        roots: ['parent-build'],
+        tasks: {
+          'parent-build': {
+            id: 'parent-build',
+            target: { project: 'parent', target: 'build' },
+            overrides: {},
+            outputs: [],
+          },
+        },
+        dependencies: {},
+      },
+      { TESTENV: 'env123' }
+    );
+
+    expect(hash).toMatchSnapshot();
+  });
 
   it('should hash task where the project has dependencies', async () => {
     const hasher = new InProcessTaskHasher(
@@ -174,6 +178,7 @@ describe('TaskHasher', () => {
         },
       },
       {} as any,
+      null,
       {}
     );
 
@@ -182,6 +187,7 @@ describe('TaskHasher', () => {
         target: { project: 'parent', target: 'build' },
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
+        outputs: [],
       },
       {
         roots: ['child-build'],
@@ -190,17 +196,20 @@ describe('TaskHasher', () => {
             id: 'parent-build',
             target: { project: 'parent', target: 'build' },
             overrides: {},
+            outputs: [],
           },
           'child-build': {
             id: 'child-build',
             target: { project: 'child', target: 'build' },
             overrides: {},
+            outputs: [],
           },
         },
         dependencies: {
           'parent-build': ['child-build'],
         },
-      }
+      },
+      {}
     );
 
     expect(hash).toMatchSnapshot();
@@ -256,6 +265,7 @@ describe('TaskHasher', () => {
           prod: ['!{projectRoot}/**/*.spec.ts'],
         },
       } as any,
+      null,
       {}
     );
 
@@ -264,6 +274,7 @@ describe('TaskHasher', () => {
         target: { project: 'parent', target: 'build' },
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
+        outputs: [],
       },
       {
         roots: ['child-build'],
@@ -272,17 +283,20 @@ describe('TaskHasher', () => {
             id: 'parent-build',
             target: { project: 'parent', target: 'build' },
             overrides: {},
+            outputs: [],
           },
           'child-build': {
             id: 'child-build',
             target: { project: 'child', target: 'build' },
             overrides: {},
+            outputs: [],
           },
         },
         dependencies: {
           'parent-build': ['child-build'],
         },
-      }
+      },
+      {}
     );
 
     expect(hash).toMatchSnapshot();
@@ -328,6 +342,7 @@ describe('TaskHasher', () => {
           prod: ['!{projectRoot}/**/*.spec.ts'],
         },
       } as any,
+      null,
       {}
     );
 
@@ -338,6 +353,7 @@ describe('TaskHasher', () => {
           id: 'parent-test',
           target: { project: 'parent', target: 'test' },
           overrides: {},
+          outputs: [],
         },
       },
       dependencies: {},
@@ -348,8 +364,10 @@ describe('TaskHasher', () => {
         target: { project: 'parent', target: 'test' },
         id: 'parent-test',
         overrides: { prop: 'prop-value' },
+        outputs: [],
       },
-      taskGraph
+      taskGraph,
+      {}
     );
 
     expect(test).toMatchSnapshot();
@@ -359,122 +377,126 @@ describe('TaskHasher', () => {
         target: { project: 'parent', target: 'build' },
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
+        outputs: [],
       },
-      taskGraph
+      taskGraph,
+      {}
     );
 
     expect(build).toMatchSnapshot();
   });
 
   it('should be able to handle multiple filesets per project', async () => {
-    await withEnvironmentVariables(
-      { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' },
-      async () => {
-        const hasher = new InProcessTaskHasher(
-          {
-            parent: [
-              { file: 'libs/parent/filea.ts', hash: 'a.hash' },
-              { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
-            ],
-            child: [
-              { file: 'libs/child/fileb.ts', hash: 'b.hash' },
-              { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
-            ],
-          },
-          allWorkspaceFiles,
-          {
-            nodes: {
-              parent: {
-                name: 'parent',
-                type: 'lib',
-                data: {
-                  root: 'libs/parent',
-                  targets: {
-                    test: {
-                      inputs: ['default', '^prod'],
-                      executor: 'nx:run-commands',
-                    },
-                  },
-                },
-              },
-              child: {
-                name: 'child',
-                type: 'lib',
-                data: {
-                  root: 'libs/child',
-                  namedInputs: {
-                    prod: [
-                      '!{projectRoot}/**/*.spec.ts',
-                      '{workspaceRoot}/global2',
-                      { env: 'MY_TEST_HASH_ENV' },
-                    ],
-                  },
-                  targets: {
-                    test: {
-                      inputs: ['default'],
-                      executor: 'nx:run-commands',
-                    },
-                  },
+    const hasher = new InProcessTaskHasher(
+      {
+        parent: [
+          { file: 'libs/parent/filea.ts', hash: 'a.hash' },
+          { file: 'libs/parent/filea.spec.ts', hash: 'a.spec.hash' },
+        ],
+        child: [
+          { file: 'libs/child/fileb.ts', hash: 'b.hash' },
+          { file: 'libs/child/fileb.spec.ts', hash: 'b.spec.hash' },
+        ],
+      },
+      allWorkspaceFiles,
+      {
+        nodes: {
+          parent: {
+            name: 'parent',
+            type: 'lib',
+            data: {
+              root: 'libs/parent',
+              targets: {
+                test: {
+                  inputs: ['default', '^prod'],
+                  executor: 'nx:run-commands',
                 },
               },
             },
-            externalNodes: {},
-            dependencies: {
-              parent: [{ source: 'parent', target: 'child', type: 'static' }],
+          },
+          child: {
+            name: 'child',
+            type: 'lib',
+            data: {
+              root: 'libs/child',
+              namedInputs: {
+                prod: [
+                  '!{projectRoot}/**/*.spec.ts',
+                  '{workspaceRoot}/global2',
+                  { env: 'MY_TEST_HASH_ENV' },
+                ],
+              },
+              targets: {
+                test: {
+                  inputs: ['default'],
+                  executor: 'nx:run-commands',
+                },
+              },
             },
           },
+        },
+        externalNodes: {},
+        dependencies: {
+          parent: [{ source: 'parent', target: 'child', type: 'static' }],
+        },
+      },
 
-          {
-            namedInputs: {
-              default: ['{projectRoot}/**/*', '{workspaceRoot}/global1'],
-              prod: ['!{projectRoot}/**/*.spec.ts'],
-            },
-          } as any,
-          {}
-        );
-
-        const taskGraph = {
-          roots: ['child-test'],
-          tasks: {
-            'parent-test': {
-              id: 'parent-test',
-              target: { project: 'parent', target: 'test' },
-              overrides: {},
-            },
-            'child-test': {
-              id: 'child-test',
-              target: { project: 'child', target: 'test' },
-              overrides: {},
-            },
-          },
-          dependencies: {
-            'parent-test': ['child-test'],
-          },
-        };
-
-        const parentHash = await hasher.hashTask(
-          {
-            target: { project: 'parent', target: 'test' },
-            id: 'parent-test',
-            overrides: { prop: 'prop-value' },
-          },
-          taskGraph
-        );
-
-        expect(parentHash).toMatchSnapshot();
-
-        const childHash = await hasher.hashTask(
-          {
-            target: { project: 'child', target: 'test' },
-            id: 'child-test',
-            overrides: { prop: 'prop-value' },
-          },
-          taskGraph
-        );
-
-        expect(childHash).toMatchSnapshot();
-      }
+      {
+        namedInputs: {
+          default: ['{projectRoot}/**/*', '{workspaceRoot}/global1'],
+          prod: ['!{projectRoot}/**/*.spec.ts'],
+        },
+      } as any,
+      null,
+      {}
     );
+
+    const taskGraph = {
+      roots: ['child-test'],
+      tasks: {
+        'parent-test': {
+          id: 'parent-test',
+          target: { project: 'parent', target: 'test' },
+          overrides: {},
+          outputs: [],
+        },
+        'child-test': {
+          id: 'child-test',
+          target: { project: 'child', target: 'test' },
+          overrides: {},
+          outputs: [],
+        },
+      },
+      dependencies: {
+        'parent-test': ['child-test'],
+      },
+    };
+
+    const parentHash = await hasher.hashTask(
+      {
+        target: { project: 'parent', target: 'test' },
+        id: 'parent-test',
+        overrides: { prop: 'prop-value' },
+        outputs: [],
+      },
+      taskGraph,
+      { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' }
+    );
+
+    expect(parentHash).toMatchSnapshot();
+
+    const childHash = await hasher.hashTask(
+      {
+        target: { project: 'child', target: 'test' },
+        id: 'child-test',
+        overrides: { prop: 'prop-value' },
+        outputs: [],
+      },
+      taskGraph,
+      { MY_TEST_HASH_ENV: 'MY_TEST_HASH_ENV_VALUE' }
+    );
+
+    expect(childHash).toMatchSnapshot();
   });
 
   it('should use targetDefaults from nx.json', async () => {
@@ -527,6 +549,7 @@ describe('TaskHasher', () => {
           },
         },
       } as any,
+      null,
       {}
     );
 
@@ -535,6 +558,7 @@ describe('TaskHasher', () => {
         target: { project: 'parent', target: 'build' },
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
+        outputs: [],
       },
       {
         roots: ['child-build'],
@@ -543,17 +567,20 @@ describe('TaskHasher', () => {
             id: 'parent-build',
             target: { project: 'parent', target: 'build' },
             overrides: {},
+            outputs: [],
           },
           'child-build': {
             id: 'child-build',
             target: { project: 'child', target: 'build' },
             overrides: {},
+            outputs: [],
           },
         },
         dependencies: {
           'parent-build': ['child-build'],
         },
-      }
+      },
+      {}
     );
     expect(hash).toMatchSnapshot();
   });
@@ -582,6 +609,7 @@ describe('TaskHasher', () => {
       },
 
       { npmScope: 'nrwl' } as any,
+      null,
       {
         runtimeCacheInputs: ['echo runtime123', 'echo runtime456'],
         selectivelyHashTsConfig: true,
@@ -593,6 +621,7 @@ describe('TaskHasher', () => {
         target: { project: 'parent', target: 'build' },
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
+        outputs: [],
       },
       {
         roots: ['parent:build'],
@@ -601,10 +630,12 @@ describe('TaskHasher', () => {
             id: 'parent-build',
             target: { project: 'parent', target: 'build' },
             overrides: {},
+            outputs: [],
           },
         },
         dependencies: {},
-      }
+      },
+      {}
     );
 
     expect(hash).toMatchSnapshot();
@@ -644,6 +675,7 @@ describe('TaskHasher', () => {
       },
 
       {} as any,
+      null,
       {}
     );
 
@@ -654,11 +686,13 @@ describe('TaskHasher', () => {
           id: 'parent-build',
           target: { project: 'parent', target: 'build' },
           overrides: {},
+          outputs: [],
         },
         'child-build': {
           id: 'child-build',
           target: { project: 'child', target: 'build' },
           overrides: {},
+          outputs: [],
         },
       },
       dependencies: {
@@ -671,8 +705,10 @@ describe('TaskHasher', () => {
         target: { project: 'parent', target: 'build' },
         id: 'parent-build',
         overrides: { prop: 'prop-value' },
+        outputs: [],
       },
-      taskGraph
+      taskGraph,
+      {}
     );
 
     expect(tasksHash).toMatchSnapshot();
@@ -682,8 +718,10 @@ describe('TaskHasher', () => {
         target: { project: 'child', target: 'build' },
         id: 'child-build',
         overrides: { prop: 'prop-value' },
+        outputs: [],
       },
-      taskGraph
+      taskGraph,
+      {}
     );
 
     expect(hashb).toMatchSnapshot();
@@ -712,6 +750,7 @@ describe('TaskHasher', () => {
         },
       },
       {} as any,
+      null,
       {
         runtimeCacheInputs: ['boom'],
       }
@@ -723,6 +762,7 @@ describe('TaskHasher', () => {
           target: { project: 'parent', target: 'build' },
           id: 'parent-build',
           overrides: {},
+          outputs: [],
         },
         {
           roots: ['parent:build'],
@@ -731,10 +771,12 @@ describe('TaskHasher', () => {
               id: 'parent-build',
               target: { project: 'parent', target: 'build' },
               overrides: {},
+              outputs: [],
             },
           },
           dependencies: {},
-        }
+        },
+        {}
       );
       fail('Should not be here');
     } catch (e) {
@@ -782,6 +824,7 @@ describe('TaskHasher', () => {
       },
 
       {} as any,
+      null,
       {}
     );
 
@@ -790,6 +833,7 @@ describe('TaskHasher', () => {
         target: { project: 'app', target: 'build' },
         id: 'app-build',
         overrides: { prop: 'prop-value' },
+        outputs: [],
       },
       {
         roots: ['app-build'],
@@ -798,10 +842,12 @@ describe('TaskHasher', () => {
             id: 'app-build',
             target: { project: 'app', target: 'build' },
             overrides: {},
+            outputs: [],
           },
         },
         dependencies: {},
-      }
+      },
+      {}
     );
     expect(hash).toMatchSnapshot();
   });
@@ -846,6 +892,7 @@ describe('TaskHasher', () => {
       },
 
       {} as any,
+      null,
       {}
     );
 
@@ -854,6 +901,7 @@ describe('TaskHasher', () => {
         target: { project: 'app', target: 'build' },
         id: 'app-build',
         overrides: { prop: 'prop-value' },
+        outputs: [],
       },
       {
         roots: ['app-build'],
@@ -862,10 +910,12 @@ describe('TaskHasher', () => {
             id: 'app-build',
             target: { project: 'app', target: 'build' },
             overrides: {},
+            outputs: [],
           },
         },
         dependencies: {},
-      }
+      },
+      {}
     );
 
     // note that the parent hash is based on parent source files only!
@@ -901,6 +951,7 @@ describe('TaskHasher', () => {
           dependencies: {},
         },
         {} as any,
+        null,
         {}
       );
 
@@ -909,6 +960,7 @@ describe('TaskHasher', () => {
           target: { project: 'app', target: 'build' },
           id: 'app-build',
           overrides: { prop: 'prop-value' },
+          outputs: [],
         },
         {
           roots: ['app-build'],
@@ -917,10 +969,12 @@ describe('TaskHasher', () => {
               id: 'app-build',
               target: { project: 'app', target: 'build' },
               overrides: {},
+              outputs: [],
             },
           },
           dependencies: {},
-        }
+        },
+        {}
       );
 
       expect(hash).toMatchSnapshot();
@@ -984,6 +1038,7 @@ describe('TaskHasher', () => {
           },
 
           {} as any,
+          null,
           {}
         );
       }
@@ -995,11 +1050,13 @@ describe('TaskHasher', () => {
             id: 'a-build',
             target: { project: 'a', target: 'build' },
             overrides: {},
+            outputs: [],
           },
           'b-build': {
             id: 'b-build',
             target: { project: 'b', target: 'build' },
             overrides: {},
+            outputs: [],
           },
         },
         dependencies: {},
@@ -1013,16 +1070,20 @@ describe('TaskHasher', () => {
           id: 'a-build',
           target: { project: 'a', target: 'build' },
           overrides: {},
+          outputs: [],
         },
-        taskGraph
+        taskGraph,
+        {}
       );
       const hashB1 = await hasher1.hashTask(
         {
           id: 'b-build',
           target: { project: 'b', target: 'build' },
           overrides: {},
+          outputs: [],
         },
-        taskGraph
+        taskGraph,
+        {}
       );
 
       const hashB2 = await hasher2.hashTask(
@@ -1030,16 +1091,20 @@ describe('TaskHasher', () => {
           id: 'b-build',
           target: { project: 'b', target: 'build' },
           overrides: {},
+          outputs: [],
         },
-        taskGraph
+        taskGraph,
+        {}
       );
       const hashA2 = await hasher2.hashTask(
         {
           id: 'a-build',
           target: { project: 'a', target: 'build' },
           overrides: {},
+          outputs: [],
         },
-        taskGraph
+        taskGraph,
+        {}
       );
 
       expect(hashA1).toEqual(hashA2);
@@ -1126,6 +1191,7 @@ describe('TaskHasher', () => {
           },
         },
         {} as any,
+        null,
         {}
       );
 
@@ -1134,6 +1200,7 @@ describe('TaskHasher', () => {
           target: { project: 'app', target: 'build' },
           id: 'app-build',
           overrides: { prop: 'prop-value' },
+          outputs: [],
         },
         {
           roots: ['app-build'],
@@ -1142,10 +1209,12 @@ describe('TaskHasher', () => {
               id: 'app-build',
               target: { project: 'app', target: 'build' },
               overrides: {},
+              outputs: [],
             },
           },
           dependencies: {},
-        }
+        },
+        {}
       );
 
       expect(hash).toMatchSnapshot();
@@ -1268,6 +1337,7 @@ describe('TaskHasher', () => {
           },
 
           {} as any,
+          null,
           {}
         );
 
@@ -1338,6 +1408,7 @@ describe('TaskHasher', () => {
         },
 
         {} as any,
+        null,
         {}
       );
 
@@ -1346,6 +1417,7 @@ describe('TaskHasher', () => {
           target: { project: 'app', target: 'build' },
           id: 'app-build',
           overrides: { prop: 'prop-value' },
+          outputs: [],
         },
         {
           roots: ['app-build'],
@@ -1354,10 +1426,12 @@ describe('TaskHasher', () => {
               id: 'app-build',
               target: { project: 'app', target: 'build' },
               overrides: {},
+              outputs: [],
             },
           },
           dependencies: {},
-        }
+        },
+        {}
       );
 
       expect(hash.details.nodes['AllExternalDependencies']).toEqual(
@@ -1418,6 +1492,7 @@ describe('TaskHasher', () => {
         },
 
         {} as any,
+        null,
         {}
       );
 
@@ -1426,6 +1501,7 @@ describe('TaskHasher', () => {
           target: { project: 'app', target: 'build' },
           id: 'app-build',
           overrides: { prop: 'prop-value' },
+          outputs: [],
         },
         {
           roots: ['app-build'],
@@ -1434,10 +1510,12 @@ describe('TaskHasher', () => {
               id: 'app-build',
               target: { project: 'app', target: 'build' },
               overrides: {},
+              outputs: [],
             },
           },
           dependencies: {},
-        }
+        },
+        {}
       );
 
       expect(hash).toMatchSnapshot();
@@ -1496,6 +1574,7 @@ describe('TaskHasher', () => {
         },
 
         {} as any,
+        null,
         {}
       );
 
@@ -1504,6 +1583,7 @@ describe('TaskHasher', () => {
           target: { project: 'app', target: 'build' },
           id: 'app-build',
           overrides: { prop: 'prop-value' },
+          outputs: [],
         },
         {
           roots: ['app-build'],
@@ -1512,10 +1592,12 @@ describe('TaskHasher', () => {
               id: 'app-build',
               target: { project: 'app', target: 'build' },
               overrides: {},
+              outputs: [],
             },
           },
           dependencies: {},
-        }
+        },
+        {}
       );
 
       expect(hash).toMatchSnapshot();
@@ -1552,7 +1634,7 @@ describe('TaskHasher', () => {
                     dependsOn: ['^build'],
                     inputs: ['prod', 'deps'],
                     executor: 'nx:run-commands',
-                    outputs: ['dist/{projectRoot}'],
+                    outputs: ['{workspaceRoot}/dist/{projectRoot}'],
                   },
                 },
               },
@@ -1567,7 +1649,7 @@ describe('TaskHasher', () => {
                     dependsOn: ['^build'],
                     inputs: ['prod', 'deps'],
                     executor: 'nx:run-commands',
-                    outputs: ['dist/{projectRoot}'],
+                    outputs: ['{workspaceRoot}/dist/{projectRoot}'],
                   },
                 },
               },
@@ -1582,7 +1664,7 @@ describe('TaskHasher', () => {
                     dependsOn: ['^build'],
                     inputs: ['prod', 'deps'],
                     executor: 'nx:run-commands',
-                    outputs: ['dist/{projectRoot}'],
+                    outputs: ['{workspaceRoot}/dist/{projectRoot}'],
                   },
                 },
               },
@@ -1613,6 +1695,7 @@ describe('TaskHasher', () => {
             },
           },
         } as any,
+        null,
         {}
       );
 
@@ -1626,6 +1709,7 @@ describe('TaskHasher', () => {
           target: { project: 'parent', target: 'build' },
           id: 'parent-build',
           overrides: { prop: 'prop-value' },
+          outputs: [],
         },
         {
           roots: ['grandchild-build'],
@@ -1634,23 +1718,27 @@ describe('TaskHasher', () => {
               id: 'parent-build',
               target: { project: 'parent', target: 'build' },
               overrides: {},
+              outputs: ['dist/libs/libs/parent'],
             },
             'child-build': {
               id: 'child-build',
               target: { project: 'child', target: 'build' },
               overrides: {},
+              outputs: ['dist/libs/libs/child'],
             },
             'grandchild-build': {
               id: 'grandchild-build',
               target: { project: 'grandchild', target: 'build' },
               overrides: {},
+              outputs: ['dist/libs/libs/grandchild'],
             },
           },
           dependencies: {
             'parent-build': ['child-build'],
             'child-build': ['grandchild-build'],
           },
-        }
+        },
+        {}
       );
 
       expect(hash).toMatchSnapshot();
@@ -1685,7 +1773,7 @@ describe('TaskHasher', () => {
                     dependsOn: ['^build'],
                     inputs: ['prod', 'deps'],
                     executor: 'nx:run-commands',
-                    outputs: ['dist/{projectRoot}'],
+                    outputs: ['{workspaceRoot}/dist/{projectRoot}'],
                   },
                 },
               },
@@ -1700,7 +1788,7 @@ describe('TaskHasher', () => {
                     dependsOn: ['^build'],
                     inputs: ['prod', 'deps'],
                     executor: 'nx:run-commands',
-                    outputs: ['dist/{projectRoot}/**/*'],
+                    outputs: ['{workspaceRoot}/dist/{projectRoot}/**/*'],
                   },
                 },
               },
@@ -1715,7 +1803,7 @@ describe('TaskHasher', () => {
                     dependsOn: ['^build'],
                     inputs: ['prod', 'deps'],
                     executor: 'nx:run-commands',
-                    outputs: ['dist/{projectRoot}'],
+                    outputs: ['{workspaceRoot}/dist/{projectRoot}'],
                   },
                 },
               },
@@ -1747,6 +1835,7 @@ describe('TaskHasher', () => {
             },
           },
         } as any,
+        null,
         {}
       );
 
@@ -1760,6 +1849,7 @@ describe('TaskHasher', () => {
           target: { project: 'parent', target: 'build' },
           id: 'parent-build',
           overrides: { prop: 'prop-value' },
+          outputs: [],
         },
         {
           roots: ['grandchild-build'],
@@ -1768,23 +1858,27 @@ describe('TaskHasher', () => {
               id: 'parent-build',
               target: { project: 'parent', target: 'build' },
               overrides: {},
+              outputs: [],
             },
             'child-build': {
               id: 'child-build',
               target: { project: 'child', target: 'build' },
               overrides: {},
+              outputs: [],
             },
             'grandchild-build': {
               id: 'grandchild-build',
               target: { project: 'grandchild', target: 'build' },
               overrides: {},
+              outputs: [],
             },
           },
           dependencies: {
             'parent-build': ['child-build'],
             'child-build': ['grandchild-build'],
           },
-        }
+        },
+        {}
       );
 
       expect(hash).toMatchSnapshot();

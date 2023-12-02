@@ -60,13 +60,22 @@ interface AngularArguments extends BaseArguments {
   routing: boolean;
   standaloneApi: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
+  bundler: 'webpack' | 'esbuild';
+  ssr: boolean;
 }
 
 interface VueArguments extends BaseArguments {
   stack: 'vue';
   workspaceType: 'standalone' | 'integrated';
   appName: string;
-  // framework: 'none' | 'nuxt';
+  style: string;
+  e2eTestRunner: 'none' | 'cypress' | 'playwright';
+}
+
+interface NuxtArguments extends BaseArguments {
+  stack: 'nuxt';
+  workspaceType: 'standalone' | 'integrated';
+  appName: string;
   style: string;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
@@ -88,6 +97,7 @@ type Arguments =
   | ReactArguments
   | AngularArguments
   | VueArguments
+  | NuxtArguments
   | NodeArguments
   | UnknownStackArguments;
 
@@ -112,10 +122,8 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
               Preset
             )
-              // TODO(v17): Remove this option when @nx/vue is released.
-              .filter(
-                (p) => p !== Preset.VueStandalone && p !== Preset.VueMonorepo
-              )
+              // TODO(katerina): Remove this option when @nx/nuxt is released.
+              .filter((p) => p !== Preset.NuxtStandalone && p !== Preset.Nuxt)
               .map((p) => `"${p}"`)
               .join(
                 ', '
@@ -143,10 +151,12 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('standaloneApi', {
             describe: chalk.dim`Use Standalone Components if generating an Angular app`,
             type: 'boolean',
+            default: true,
           })
           .option('routing', {
             describe: chalk.dim`Add a routing setup for an Angular app`,
             type: 'boolean',
+            default: true,
           })
           .option('bundler', {
             describe: chalk.dim`Bundler to be used to build the app`,
@@ -168,6 +178,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
             choices: ['cypress', 'playwright', 'none'],
             type: 'string',
+          })
+          .option('ssr', {
+            describe: chalk.dim`Enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) for the Angular application`,
+            type: 'boolean',
           }),
         withNxCloud,
         withCI,
@@ -244,7 +258,6 @@ function normalizeAndWarnOnDeprecatedPreset(
   return async (args: yargs.Arguments<Arguments>): Promise<void> => {
     if (!args.preset) return;
     if (deprecatedPresets[args.preset]) {
-      args.preset = deprecatedPresets[args.preset] as Preset;
       output.addVerticalSeparator();
       output.note({
         title: `The "${args.preset}" preset is deprecated.`,
@@ -256,6 +269,7 @@ function normalizeAndWarnOnDeprecatedPreset(
           }" preset instead.`,
         ],
       });
+      args.preset = deprecatedPresets[args.preset] as Preset;
     }
   };
 }
@@ -361,7 +375,7 @@ async function determineFolder(
 
 async function determineStack(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'unknown'> {
+): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'nuxt' | 'unknown'> {
   if (parsedArgs.preset) {
     switch (parsedArgs.preset) {
       case Preset.Angular:
@@ -377,6 +391,9 @@ async function determineStack(
       case Preset.VueStandalone:
       case Preset.VueMonorepo:
         return 'vue';
+      case Preset.NuxtStandalone:
+      case Preset.Nuxt:
+        return 'nuxt';
       case Preset.Nest:
       case Preset.NodeStandalone:
       case Preset.Express:
@@ -410,11 +427,10 @@ async function determineStack(
           name: `react`,
           message: `React:         Configures a React application with your framework of choice.`,
         },
-        // TODO(v17): Enable when @nx/vue is released.
-        // {
-        //   name: `vue`,
-        //   message: `Vue:           Configures a Vue application with modern tooling.`,
-        // },
+        {
+          name: `vue`,
+          message: `Vue:           Configures a Vue application with modern tooling.`,
+        },
         {
           name: `angular`,
           message: `Angular:       Configures a Angular application with modern tooling.`,
@@ -442,6 +458,8 @@ async function determinePresetOptions(
       return determineAngularOptions(parsedArgs);
     case 'vue':
       return determineVueOptions(parsedArgs);
+    case 'nuxt':
+      return determineNuxtOptions(parsedArgs);
     case 'node':
       return determineNodeOptions(parsedArgs);
     default:
@@ -675,15 +693,81 @@ async function determineVueOptions(
   return { preset, style, appName, e2eTestRunner };
 }
 
+async function determineNuxtOptions(
+  parsedArgs: yargs.Arguments<NuxtArguments>
+): Promise<Partial<Arguments>> {
+  let preset: Preset;
+  let style: undefined | string = undefined;
+  let appName: string;
+  let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
+
+  if (parsedArgs.preset) {
+    preset = parsedArgs.preset;
+  } else {
+    const workspaceType = await determineStandaloneOrMonorepo();
+
+    if (workspaceType === 'standalone') {
+      preset = Preset.NuxtStandalone;
+    } else {
+      preset = Preset.Nuxt;
+    }
+  }
+
+  if (preset === Preset.NuxtStandalone) {
+    appName = parsedArgs.appName ?? parsedArgs.name;
+  } else {
+    appName = await determineAppName(parsedArgs);
+  }
+
+  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
+
+  if (parsedArgs.style) {
+    style = parsedArgs.style;
+  } else {
+    const reply = await enquirer.prompt<{ style: string }>([
+      {
+        name: 'style',
+        message: `Default stylesheet format`,
+        initial: 'css' as any,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'css',
+            message: 'CSS',
+          },
+          {
+            name: 'scss',
+            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+          },
+          {
+            name: 'less',
+            message: 'LESS              [ http://lesscss.org     ]',
+          },
+          {
+            name: 'none',
+            message: 'None',
+          },
+        ],
+      },
+    ]);
+    style = reply.style;
+  }
+
+  return { preset, style, appName, e2eTestRunner };
+}
+
 async function determineAngularOptions(
   parsedArgs: yargs.Arguments<AngularArguments>
 ): Promise<Partial<Arguments>> {
   let preset: Preset;
   let style: string;
   let appName: string;
-  let standaloneApi: boolean;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-  let routing: boolean;
+  let bundler: undefined | 'webpack' | 'esbuild' = undefined;
+  let ssr: undefined | boolean = undefined;
+
+  const standaloneApi = parsedArgs.standaloneApi;
+  const routing = parsedArgs.routing;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.Angular) {
     preset = parsedArgs.preset;
@@ -703,6 +787,30 @@ async function determineAngularOptions(
       preset = Preset.AngularMonorepo;
       appName = await determineAppName(parsedArgs);
     }
+  }
+
+  if (parsedArgs.bundler) {
+    bundler = parsedArgs.bundler;
+  } else {
+    const reply = await enquirer.prompt<{ bundler: 'esbuild' | 'webpack' }>([
+      {
+        name: 'bundler',
+        message: `Which bundler would you like to use?`,
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'esbuild',
+            message: 'esbuild [ https://esbuild.github.io/ ]',
+          },
+          {
+            name: 'webpack',
+            message: 'Webpack [ https://webpack.js.org/ ]',
+          },
+        ],
+        initial: 'esbuild' as any,
+      },
+    ]);
+    bundler = reply.bundler;
   }
 
   if (parsedArgs.style) {
@@ -733,55 +841,34 @@ async function determineAngularOptions(
     style = reply.style;
   }
 
-  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-
-  if (parsedArgs.standaloneApi !== undefined) {
-    standaloneApi = parsedArgs.standaloneApi;
+  if (parsedArgs.ssr !== undefined) {
+    ssr = parsedArgs.ssr;
   } else {
-    const reply = await enquirer.prompt<{ standaloneApi: 'Yes' | 'No' }>([
+    const reply = await enquirer.prompt<{ ssr: 'Yes' | 'No' }>([
       {
-        name: 'standaloneApi',
+        name: 'ssr',
         message:
-          'Would you like to use Standalone Components in your application?',
+          'Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?',
         type: 'autocomplete',
-        choices: [
-          {
-            name: 'No',
-          },
-          {
-            name: 'Yes',
-          },
-        ],
+        choices: [{ name: 'Yes' }, { name: 'No' }],
         initial: 'No' as any,
       },
     ]);
-    standaloneApi = reply.standaloneApi === 'Yes';
+    ssr = reply.ssr === 'Yes';
   }
 
-  if (parsedArgs.routing !== undefined) {
-    routing = parsedArgs.routing;
-  } else {
-    const reply = await enquirer.prompt<{ routing: 'Yes' | 'No' }>([
-      {
-        name: 'routing',
-        message: 'Would you like to add routing?',
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-          },
+  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
 
-          {
-            name: 'No',
-          },
-        ],
-        initial: 'Yes' as any,
-      },
-    ]);
-    routing = reply.routing === 'Yes';
-  }
-
-  return { preset, style, appName, standaloneApi, routing, e2eTestRunner };
+  return {
+    preset,
+    style,
+    appName,
+    standaloneApi,
+    routing,
+    e2eTestRunner,
+    bundler,
+    ssr,
+  };
 }
 
 async function determineNodeOptions(
@@ -934,7 +1021,11 @@ async function determineStandaloneOrMonorepo(): Promise<
 
 async function determineAppName(
   parsedArgs: yargs.Arguments<
-    ReactArguments | AngularArguments | NodeArguments | VueArguments
+    | ReactArguments
+    | AngularArguments
+    | NodeArguments
+    | VueArguments
+    | NuxtArguments
   >
 ): Promise<string> {
   if (parsedArgs.appName) return parsedArgs.appName;

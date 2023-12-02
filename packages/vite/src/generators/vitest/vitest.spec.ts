@@ -17,7 +17,7 @@ describe('vitest generator', () => {
   const options: VitestGeneratorSchema = {
     project: 'my-test-react-app',
     uiFramework: 'react',
-    coverageProvider: 'c8',
+    coverageProvider: 'v8',
   };
 
   beforeEach(() => {
@@ -55,7 +55,6 @@ describe('vitest generator', () => {
       {
         "executor": "@nx/vite:test",
         "options": {
-          "passWithNoTests": true,
           "reportsDirectory": "../../coverage/apps/my-test-react-app",
         },
         "outputs": [
@@ -102,6 +101,7 @@ describe('vitest generator', () => {
           "extends": "./tsconfig.json",
           "include": [
             "vite.config.ts",
+            "vitest.config.ts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",

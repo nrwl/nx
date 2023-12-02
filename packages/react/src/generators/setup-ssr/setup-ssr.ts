@@ -2,7 +2,6 @@ import type * as ts from 'typescript';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   joinPathFragments,
@@ -121,7 +120,6 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
         compiler: 'babel',
         externalDependencies: 'all',
         outputHashing: 'none',
-        isolatedConfig: true,
         webpackConfig: joinPathFragments(projectRoot, 'webpack.config.js'),
       },
       configurations: {
@@ -183,7 +181,7 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
   const nxJson = readNxJson(tree);
   if (
     nxJson.tasksRunnerOptions?.default &&
-    !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
+    !nxJson.tasksRunnerOptions?.default.options.cacheableOperations.includes(
       'server'
     )
   ) {
@@ -192,6 +190,9 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
       'server',
     ];
   }
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['server'] ??= {};
+  nxJson.targetDefaults.server.cache = true;
 
   generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
@@ -238,5 +239,3 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
 }
 
 export default setupSsrGenerator;
-
-export const setupSsrSchematic = convertNxGenerator(setupSsrGenerator);

@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   GeneratorCallback,
   readNxJson,
   removeDependenciesFromPackageJson,
@@ -15,6 +14,7 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 import { initGenerator } from '@nx/js';
+import { CypressPluginOptions } from '../../plugins/plugin';
 
 function setupE2ETargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -28,6 +28,7 @@ function setupE2ETargetDefaults(tree: Tree) {
 
   const productionFileSet = !!nxJson.namedInputs?.production;
   nxJson.targetDefaults.e2e ??= {};
+  nxJson.targetDefaults.e2e.cache ??= true;
   nxJson.targetDefaults.e2e.inputs ??= [
     'default',
     productionFileSet ? '^production' : '^default',
@@ -50,8 +51,53 @@ function updateDependencies(tree: Tree) {
   );
 }
 
+function addPlugin(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.plugins ??= [];
+
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/cypress/plugin'
+        : plugin.plugin === '@nx/cypress/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/cypress/plugin',
+    options: {
+      targetName: 'e2e',
+      componentTestingTargetName: 'component-test',
+    } as CypressPluginOptions,
+  });
+  updateNxJson(tree, nxJson);
+}
+
+function updateProductionFileset(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  const productionFileset = nxJson.namedInputs?.production;
+  if (productionFileset) {
+    nxJson.namedInputs.production = Array.from(
+      new Set([
+        ...productionFileset,
+        '!{projectRoot}/cypress/**/*',
+        '!{projectRoot}/**/*.cy.[jt]s?(x)',
+        '!{projectRoot}/cypress.config.[jt]s',
+      ])
+    );
+  }
+  updateNxJson(tree, nxJson);
+}
+
 export async function cypressInitGenerator(tree: Tree, options: Schema) {
-  setupE2ETargetDefaults(tree);
+  const addPlugins = process.env.NX_PCV3 === 'true';
+  updateProductionFileset(tree);
+  if (!addPlugins) {
+    setupE2ETargetDefaults(tree);
+  }
 
   const tasks: GeneratorCallback[] = [];
 
@@ -62,6 +108,10 @@ export async function cypressInitGenerator(tree: Tree, options: Schema) {
     })
   );
 
+  if (addPlugins) {
+    addPlugin(tree);
+  }
+
   if (!options.skipPackageJson) {
     tasks.push(updateDependencies(tree));
   }
@@ -70,4 +120,3 @@ export async function cypressInitGenerator(tree: Tree, options: Schema) {
 }
 
 export default cypressInitGenerator;
-export const cypressInitSchematic = convertNxGenerator(cypressInitGenerator);

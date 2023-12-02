@@ -1,11 +1,9 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  joinPathFragments,
   readJson,
   stripIndents,
   Tree,
@@ -20,6 +18,8 @@ import {
   nxVersion,
   prettierVersion,
   supportedTypescriptVersions,
+  swcCoreVersion,
+  swcNodeVersion,
   typescriptVersion,
 } from '../../utils/versions';
 import { InitSchema } from './schema';
@@ -73,6 +73,10 @@ export async function initGenerator(
   const devDependencies = {
     '@nx/js': nxVersion,
     prettier: prettierVersion,
+    // When loading .ts config files (e.g. webpack.config.ts, jest.config.ts, etc.)
+    // we prefer to use SWC, and fallback to ts-node for workspaces that don't use SWC.
+    '@swc-node/register': swcNodeVersion,
+    '@swc/core': swcCoreVersion,
   };
 
   if (!schema.js) {
@@ -115,6 +119,7 @@ export async function initGenerator(
         # Add files here to ignore them from prettier formatting
         /dist
         /coverage
+        /.nx/cache
       `
     );
   }
@@ -147,5 +152,3 @@ export async function initGenerator(
 }
 
 export default initGenerator;
-
-export const initSchematic = convertNxGenerator(initGenerator);

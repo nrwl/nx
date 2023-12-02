@@ -1,0 +1,50 @@
+{
+  "extends": "../../.eslintrc",
+  "rules": {},
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": ["**/*.ts"],
+      "excludedFiles": ["./src/migrations/**"],
+      "rules": {
+        "no-restricted-imports": ["error", "@nx/workspace"]
+      }
+    },
+    {
+      "files": [
+        "./package.json",
+        "./generators.json",
+        "./executors.json",
+        "./migrations.json"
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "@nx/jest",
+              "typescript",
+              "eslint",
+              "@angular-devkit/core",
+              "@typescript-eslint/eslint-plugin"
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "ignorePatterns": ["!**/*"]
+}

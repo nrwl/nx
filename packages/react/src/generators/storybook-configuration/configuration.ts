@@ -1,7 +1,6 @@
 import { StorybookConfigureSchema } from './schema';
 import storiesGenerator from '../stories/stories';
 import {
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   readProjectConfiguration,
@@ -10,19 +9,19 @@ import {
 import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  // TODO(v18): remove Cypress
+  // TODO(katerina): Nx 18 -> remove Cypress
   ensurePackage('@nx/cypress', nxVersion);
   const { getE2eProjectName } = await import(
     '@nx/cypress/src/utils/project-name'
   );
-  const projectConfig = readProjectConfiguration(host, schema.name);
+  const projectConfig = readProjectConfiguration(host, schema.project);
   const cypressProject = getE2eProjectName(
-    schema.name,
+    schema.project,
     projectConfig.root,
     schema.cypressDirectory
   );
   await storiesGenerator(host, {
-    project: schema.name,
+    project: schema.project,
     generateCypressSpecs:
       schema.configureCypress && schema.generateCypressSpecs,
     js: schema.js,
@@ -42,7 +41,7 @@ export async function storybookConfigurationGenerator(
   >('@nx/storybook', nxVersion);
 
   let uiFramework = '@storybook/react-vite';
-  const projectConfig = readProjectConfiguration(host, schema.name);
+  const projectConfig = readProjectConfiguration(host, schema.project);
 
   if (
     projectConfig.targets['build']?.executor === '@nx/webpack:webpack' ||
@@ -54,7 +53,7 @@ export async function storybookConfigurationGenerator(
   }
 
   const installTask = await configurationGenerator(host, {
-    name: schema.name,
+    project: schema.project,
     configureCypress: schema.configureCypress,
     js: schema.js,
     linter: schema.linter,
@@ -62,7 +61,7 @@ export async function storybookConfigurationGenerator(
     tsConfiguration: schema.tsConfiguration ?? true, // default is true
     interactionTests: schema.interactionTests ?? true, // default is true
     configureStaticServe: schema.configureStaticServe,
-    uiFramework: uiFramework as any, // cannot import UiFramework7 type dynamically
+    uiFramework: uiFramework as any, // cannot import UiFramework type dynamically
     skipFormat: true,
   });
 
@@ -76,6 +75,3 @@ export async function storybookConfigurationGenerator(
 }
 
 export default storybookConfigurationGenerator;
-export const storybookConfigurationSchematic = convertNxGenerator(
-  storybookConfigurationGenerator
-);

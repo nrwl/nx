@@ -21,18 +21,25 @@ import { setupSsrForHost } from './lib/setup-ssr-for-host';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
 import { NormalizedSchema, Schema } from './schema';
 
-export async function hostGenerator(host: Tree, schema: Schema) {
+export async function hostGenerator(
+  host: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
   return hostGeneratorInternal(host, {
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
 }
 
-export async function hostGeneratorInternal(host: Tree, schema: Schema) {
+export async function hostGeneratorInternal(
+  host: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema = {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
     typescriptConfiguration: schema.typescriptConfiguration ?? true,
+    dynamic: schema.dynamic ?? false,
   };
 
   const initTask = await applicationGenerator(host, {
@@ -53,7 +60,7 @@ export async function hostGeneratorInternal(host: Tree, schema: Schema) {
       const remoteName = await normalizeRemoteName(host, remote, options);
       remotesWithPorts.push({ name: remoteName, port: remotePort });
 
-      await remoteGenerator(host, {
+      const remoteTask = await remoteGenerator(host, {
         name: remote,
         directory: normalizeRemoteDirectory(remote, options),
         style: options.style,
@@ -65,7 +72,10 @@ export async function hostGeneratorInternal(host: Tree, schema: Schema) {
         skipFormat: true,
         projectNameAndRootFormat: options.projectNameAndRootFormat,
         typescriptConfiguration: options.typescriptConfiguration,
+        dynamic: options.dynamic,
+        host: options.name,
       });
+      tasks.push(remoteTask);
       remotePort++;
     }
   }
@@ -96,6 +106,12 @@ export async function hostGeneratorInternal(host: Tree, schema: Schema) {
       `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
     );
     updateProjectConfiguration(host, options.projectName, projectConfig);
+  }
+
+  if (!options.setParserOptionsProject) {
+    host.delete(
+      joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
+    );
   }
 
   if (!options.skipFormat) {

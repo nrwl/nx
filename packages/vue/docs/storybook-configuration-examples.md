@@ -1,7 +1,18 @@
-This generator will set up Storybook for your **Vue** project. You can also use this generator to generate Storybook configuration for your **Next.js** project. By default, starting Nx 16, Storybook v7 is used.
+---
+title: Storybook configuration generator examples
+description: This page contains examples for the @nx/vue:storybook-configuration generator.
+---
+
+This generator will set up Storybook for your **Vue** project. You can also use this generator to generate Storybook configuration for your **Nuxt** project.
 
 ```bash
 nx g @nx/vue:storybook-configuration project-name
+```
+
+or
+
+```bash
+nx g @nx/nuxt:storybook-configuration project-name
 ```
 
 You can read more about how this generator works, in the [Storybook for Vue overview page](/recipes/storybook/overview-vue#generate-storybook-configuration-for-a-vue-project).
@@ -37,6 +48,14 @@ nx g @nx/vue:storybook-configuration ui --generateStories=true --ignorePaths=lib
 This will generate a Storybook configuration for the `ui` project and generate stories for all components in the `libs/ui/src/lib` directory, except for the ones in the `libs/ui/src/not-stories` directory, and the ones in the `apps/my-app` directory that end with `.something.ts`, and also for components that their file name is of the pattern `*.other.*`.
 
 This is useful if you have a project that contains components that are not meant to be used in isolation, but rather as part of a larger component.
+
+By default, Nx will ignore the following paths:
+
+```text
+*.stories.ts, *.stories.tsx, *.stories.js, *.stories.jsx, *.stories.mdx
+```
+
+but you can change this behaviour easily, as explained above.
 
 ### Generate stories using JavaScript instead of TypeScript
 

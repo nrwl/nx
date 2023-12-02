@@ -90,6 +90,24 @@
       "baseHref": {
         "type": "string",
         "description": "Base url for the application being built."
+      },
+      "static": {
+        "type": "boolean",
+        "description": "Whether to use a static file server instead of the webpack-dev-server. This should be used for remote applications that are also host applications."
+      },
+      "isInitialHost": {
+        "type": "boolean",
+        "description": "Whether the host that is running this executor is the first in the project tree to do so.",
+        "default": true,
+        "x-priority": "internal"
+      },
+      "parallel": {
+        "type": "number",
+        "description": "Max number of parallel processes for building static remotes"
+      },
+      "staticRemotesPort": {
+        "type": "number",
+        "description": "The port at which to serve the file-server for the static remotes."
       }
     },
     "presets": []

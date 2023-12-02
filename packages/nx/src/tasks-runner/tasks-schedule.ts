@@ -5,10 +5,8 @@ import {
   removeTasksFromTaskGraph,
 } from './utils';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { TaskHasher } from '../hasher/task-hasher';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
-import { hashTask } from '../hasher/hash-task';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
 
@@ -27,7 +25,6 @@ export class TasksSchedule {
   private scheduleRequestsExecutionChain = Promise.resolve();
 
   constructor(
-    private readonly hasher: TaskHasher,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
     private readonly options: DefaultTasksRunnerOptions
@@ -58,6 +55,13 @@ export class TasksSchedule {
     );
   }
 
+  public getAllScheduledTasks() {
+    return {
+      scheduledTasks: this.scheduledTasks,
+      scheduledBatches: this.scheduledBatches,
+    };
+  }
+
   public nextTask() {
     if (this.scheduledTasks.length > 0) {
       return this.taskGraph.tasks[this.scheduledTasks.shift()];
@@ -73,7 +77,7 @@ export class TasksSchedule {
   }
 
   private async scheduleTasks() {
-    if (process.env.NX_BATCH_MODE === 'true') {
+    if (this.options.batch || process.env.NX_BATCH_MODE === 'true') {
       await this.scheduleBatches();
     }
     for (let root of this.notScheduledTaskGraph.roots) {
@@ -84,17 +88,10 @@ export class TasksSchedule {
   }
 
   private async scheduleTask(taskId: string) {
-    const task = this.taskGraph.tasks[taskId];
-
-    if (!task.hash) {
-      await hashTask(this.hasher, this.projectGraph, this.taskGraph, task);
-    }
-
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
       [taskId]
     );
-    this.options.lifeCycle.scheduleTask(task);
     this.scheduledTasks = this.scheduledTasks
       .concat(taskId)
       // NOTE: sort task by most dependent on first

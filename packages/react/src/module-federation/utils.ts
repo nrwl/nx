@@ -17,11 +17,26 @@ import {
 import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
 
 export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
-  const target = isServer ? 'serve-server' : 'serve';
+  const target = 'serve';
   const remoteEntry = isServer ? 'server/remoteEntry.js' : 'remoteEntry.js';
 
   return function (remote: string) {
-    const remoteConfiguration = readCachedProjectConfiguration(remote);
+    const mappedStaticRemotesFromEnv = process.env
+      .NX_MF_DEV_SERVER_STATIC_REMOTES
+      ? JSON.parse(process.env.NX_MF_DEV_SERVER_STATIC_REMOTES)
+      : undefined;
+    if (mappedStaticRemotesFromEnv && mappedStaticRemotesFromEnv[remote]) {
+      return `${mappedStaticRemotesFromEnv[remote]}/${remoteEntry}`;
+    }
+
+    let remoteConfiguration = null;
+    try {
+      remoteConfiguration = readCachedProjectConfiguration(remote);
+    } catch (e) {
+      throw new Error(
+        `Cannot find remote: "${remote}". Check that the remote name is correct in your module federation config file.\n`
+      );
+    }
     const serveTarget = remoteConfiguration?.targets?.[target];
 
     if (!serveTarget) {

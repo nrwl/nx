@@ -4,7 +4,6 @@ import {
   readJson,
   readNxJson,
   readProjectConfiguration,
-  stripIndents,
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -23,6 +22,8 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'test',
       port: 4201,
+      typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
@@ -33,23 +34,66 @@ describe('MF Remote App Generator', () => {
     ]);
   });
 
+  it('should generate a remote mf app with no host when --typescriptConfiguration=true', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    // ACT
+    await generateTestRemoteApplication(tree, {
+      name: 'test',
+      port: 4201,
+      typescriptConfiguration: true,
+      standalone: false,
+    });
+
+    // ASSERT
+    expect(tree.read('test/webpack.config.ts', 'utf-8')).toMatchSnapshot();
+  });
+
   it('should generate a remote mf app with a host', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     await generateTestHostApplication(tree, {
       name: 'host',
+      typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
       host: 'host',
+      typescriptConfiguration: false,
+      standalone: false,
     });
 
     // ASSERT
     expect(tree.read('host/webpack.config.js', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/webpack.config.js', 'utf-8')).toMatchSnapshot();
+  });
+
+  it('should generate a remote mf app with a host when --typescriptConfiguration=true', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    await generateTestHostApplication(tree, {
+      name: 'host',
+      typescriptConfiguration: true,
+      standalone: false,
+    });
+
+    // ACT
+    await generateTestRemoteApplication(tree, {
+      name: 'test',
+      host: 'host',
+      typescriptConfiguration: true,
+      standalone: false,
+    });
+
+    // ASSERT
+    expect(tree.read('host/webpack.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('test/webpack.config.ts', 'utf-8')).toMatchSnapshot();
   });
 
   it('should error when a remote app is attempted to be generated with an incorrect host', async () => {
@@ -61,6 +105,7 @@ describe('MF Remote App Generator', () => {
       await generateTestRemoteApplication(tree, {
         name: 'test',
         host: 'host',
+        standalone: false,
       });
     } catch (error) {
       // ASSERT
@@ -76,11 +121,13 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'existing',
       port: 4201,
+      standalone: false,
     });
 
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
+      standalone: false,
     });
 
     // ASSERT
@@ -95,6 +142,7 @@ describe('MF Remote App Generator', () => {
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
+      standalone: false,
     });
 
     // ASSERT
@@ -110,6 +158,7 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'test',
       port: 4201,
+      standalone: false,
     });
 
     // ASSERT
@@ -124,7 +173,7 @@ describe('MF Remote App Generator', () => {
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
-      standalone: true,
+      typescriptConfiguration: false,
     });
 
     // ASSERT
@@ -150,6 +199,35 @@ describe('MF Remote App Generator', () => {
     ]);
   });
 
+  it('should generate the a remote setup for standalone components when --typescriptConfiguration=true', async () => {
+    // ARRANGE
+    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    // ACT
+    await generateTestRemoteApplication(tree, {
+      name: 'test',
+      typescriptConfiguration: true,
+    });
+
+    // ASSERT
+    expect(tree.exists(`test/src/app/app.module.ts`)).toBeFalsy();
+    expect(tree.exists(`test/src/app/app.component.ts`)).toBeFalsy();
+    expect(
+      tree.exists(`test/src/app/remote-entry/entry.module.ts`)
+    ).toBeFalsy();
+    expect(tree.read(`test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read(`test/module-federation.config.ts`, 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read(`test/src/app/remote-entry/entry.component.ts`, 'utf-8')
+    ).toMatchSnapshot();
+    expect(tree.read(`test/src/app/app.routes.ts`, 'utf-8')).toMatchSnapshot();
+    expect(
+      tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+    ).toMatchSnapshot();
+  });
+
   it('should not generate an e2e project when e2eTestRunner is none', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
@@ -158,6 +236,7 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'remote1',
       e2eTestRunner: E2eTestRunner.None,
+      standalone: false,
     });
 
     // ASSERT
@@ -173,6 +252,7 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'test',
       inlineTemplate: true,
+      standalone: false,
     });
 
     // ASSERT
@@ -196,7 +276,6 @@ describe('MF Remote App Generator', () => {
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
-      standalone: true,
     });
 
     // ASSERT
@@ -217,6 +296,8 @@ describe('MF Remote App Generator', () => {
       await generateTestRemoteApplication(tree, {
         name: 'test',
         ssr: true,
+        typescriptConfiguration: false,
+        standalone: false,
       });
 
       // ASSERT
@@ -254,27 +335,70 @@ describe('MF Remote App Generator', () => {
       ).toMatchSnapshot();
       expect(project.targets['static-server']).toMatchSnapshot();
     });
-  });
 
-  it('should error correctly when Angular version does not support standalone', async () => {
-    // ARRANGE
-    const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    updateJson(tree, 'package.json', (json) => ({
-      ...json,
-      dependencies: {
-        '@angular/core': '14.0.0',
-      },
-    }));
+    it('should generate the correct files when --typescriptConfiguration=true', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    // ACT & ASSERT
-    await expect(
-      generateTestRemoteApplication(tree, {
+      // ACT
+      await generateTestRemoteApplication(tree, {
         name: 'test',
-        standalone: true,
-      })
-    ).rejects
-      .toThrow(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using 14.0.0.
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
+        ssr: true,
+        typescriptConfiguration: true,
+        standalone: false,
+      });
+
+      // ASSERT
+      const project = readProjectConfiguration(tree, 'test');
+      expect(
+        tree.exists(`test/src/app/remote-entry/entry.module.ts`)
+      ).toBeTruthy();
+      expect(
+        tree.read(`test/src/app/app.module.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.read(`test/src/bootstrap.ts`, 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(`test/src/bootstrap.server.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(tree.read(`test/server.ts`, 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read(`test/module-federation.config.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`test/webpack.server.config.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`test/src/app/remote-entry/entry.component.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`test/src/app/app.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(project.targets.server).toMatchSnapshot();
+      expect(
+        tree.read(`test/src/app/remote-entry/entry.routes.ts`, 'utf-8')
+      ).toMatchSnapshot();
+      expect(project.targets['static-server']).toMatchSnapshot();
+    });
+
+    describe('compat', () => {
+      it('should generate the correct main.server.ts', async () => {
+        const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          dependencies: {
+            '@angular/core': '15.2.0',
+          },
+        }));
+
+        await generateTestRemoteApplication(tree, { name: 'test', ssr: true });
+
+        expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
+      });
+    });
   });
 
   describe('--project-name-and-root-format=derived', () => {
@@ -285,6 +409,8 @@ describe('MF Remote App Generator', () => {
         name: 'test',
         port: 4201,
         projectNameAndRootFormat: 'derived',
+        typescriptConfiguration: false,
+        standalone: false,
       });
 
       expect(tree.exists('apps/test/webpack.config.js')).toBe(true);
@@ -299,6 +425,8 @@ describe('MF Remote App Generator', () => {
         port: 4201,
         directory: 'shared',
         projectNameAndRootFormat: 'derived',
+        typescriptConfiguration: false,
+        standalone: false,
       });
 
       expect(tree.exists('apps/shared/test/webpack.config.js')).toBe(true);

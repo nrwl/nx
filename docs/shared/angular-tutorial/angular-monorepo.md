@@ -25,7 +25,7 @@ Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI
 Advantages of Nx over the Angular CLI:
 
 - [Cache any target](/core-features/cache-task-results)
-- [Run only tasks affected by a code change](/concepts/affected)
+- [Run only tasks affected by a code change](/ci/features/affected)
 - [Split a large angular.json into multiple project.json files](/concepts/more-concepts/nx-and-angular#projectjson-vs-angularjson)
 - [Integrate with modern tools](/concepts/more-concepts/nx-and-angular#integrating-with-modern-tools)
 - [Controllable update process](/concepts/more-concepts/nx-and-angular#ng-update-vs-nx-migrate)
@@ -55,14 +55,14 @@ Create a new Angular monorepo with the following command:
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · angular-store
+✔ Which bundler would you like to use? · esbuild
 ✔ Default stylesheet format · css
+✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
 ✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Would you like to use Standalone Components in your application? · Yes
-✔ Would you like to add routing? · Yes
 ✔ Enable distributed caching to make your CI faster · Yes
 ```
 
-Let's name the initial application `angular-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
+Let's name the initial application `angular-store`. In this tutorial we're going to use `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
 
 ```
 └─ angular-monorepo
@@ -132,11 +132,11 @@ All targets, such as `serve`, `build`, `test` or your custom ones, are defined i
   "name": "angular-store",
   ...
   "targets": {
-    "serve": { ... },
     "build": { ... },
-    "preview": { ... },
-    "test": { ... },
+    "serve": { ... },
+    "extract-i18n": { ... },
     "lint": { ... },
+    "test": { ... },
     "serve-static": { ... },
   },
 }
@@ -150,7 +150,7 @@ Each target contains a configuration object that tells Nx how to run that target
   ...
   "targets": {
     "serve": {
-      "executor": "@nx/vite:dev-server",
+      "executor": "@angular-devkit/build-angular:dev-server",
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "angular-store:build"
@@ -173,7 +173,7 @@ Each target contains a configuration object that tells Nx how to run that target
 
 The most critical parts are:
 
-- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the Angular app using Vite.
+- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
 Learn more about how to [run tasks with Nx](/core-features/run-tasks). We'll [revisit running tasks](#testing-and-linting-running-multiple-tasks) later in this tutorial.
@@ -404,7 +404,7 @@ export * from './lib/product-list/product-list.component';
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up the Angular router. Configure it in the `app.config.ts`.
 
-```ts {% fileName="apps/angular-store/src/app/app.config.ts" %}
+```ts {% fileName="apps/angular-store/src/app/app.config.ts" highlightLines=[2,3,4,5,6,9] %}
 import { ApplicationConfig } from '@angular/core';
 import {
   provideRouter,
@@ -425,7 +425,7 @@ And in `app.component.html`:
 
 Then we can add the `ProductListComponent` component to our `app.routes.ts` and render it via the routing mechanism whenever a user hits the `/products` route.
 
-```ts {% fileName="apps/angular-store/src/app/app.routes.ts" %}
+```ts {% fileName="apps/angular-store/src/app/app.routes.ts" highlightLines=[10,11,12,13,14] %}
 import { Route } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
@@ -454,7 +454,7 @@ Let's apply the same for our `orders` library.
 
 In the end, your `app.routes.ts` should look similar to this:
 
-```ts {% fileName="apps/angular-store/src/app/app.routes.ts" %}
+```ts {% fileName="apps/angular-store/src/app/app.routes.ts" highlightLines=[15,16,17,18,19] %}
 import { Route } from '@angular/router';
 import { NxWelcomeComponent } from './nx-welcome.component';
 
@@ -479,7 +479,7 @@ export const appRoutes: Route[] = [
 
 Let's also show products in the `inventory` app.
 
-```ts {% fileName="apps/inventory/src/app/app.component.ts" %}
+```ts {% fileName="apps/inventory/src/app/app.component.ts" highlightLines=[2,6] %}
 import { Component } from '@angular/core';
 import { ProductListComponent } from '@angular-monorepo/products';
 
@@ -921,7 +921,7 @@ To enforce the rules, Nx ships with a custom ESLint rule. Open the `.eslintrc.ba
 
 To test it, go to your `libs/products/src/lib/product-list/product-list.component.ts` file and import the `OrderListComponent` from the `orders` project:
 
-```ts {% fileName="libs/products/src/lib/product-list/product-list.component.ts" %}
+```ts {% fileName="libs/products/src/lib/product-list/product-list.component.ts" highlightLines=[4,5] %}
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -981,7 +981,7 @@ Learn more about how to [enforce module boundaries](/core-features/enforce-modul
 
 ## Setting Up CI
 
-Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps decrease the average CI time with the [`affected` command](/concepts/affected) and Nx Cloud's [distributed caching](/core-features/remote-cache). Nx also [decreases the worst case CI time](/concepts/dte) with Nx Cloud's distributed task execution.
+Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps decrease the average CI time with the [`affected` command](/ci/features/affected) and Nx Cloud's [distributed caching](/ci/features/remote-cache). Nx also [decreases the worst case CI time](/ci/concepts/dte) with Nx Cloud's distributed task execution.
 
 To set up Nx Cloud run:
 
@@ -1001,7 +1001,7 @@ nx generate ci-workflow --ci=github
 You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
 {% /callout %}
 
-This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/core-features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
+This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
 
 ## Next Steps
 
@@ -1013,8 +1013,8 @@ Here's some more things you can dive into next:
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-angular)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/core-features/remote-cache)
-- [Speed up CI: Distribute your tasks across machines](/core-features/distribute-task-execution)
+- [Speed up CI: Share your cache](/ci/features/remote-cache)
+- [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you
 

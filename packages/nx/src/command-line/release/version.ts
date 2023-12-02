@@ -1,8 +1,6 @@
 import * as chalk from 'chalk';
-import * as enquirer from 'enquirer';
 import { readFileSync } from 'node:fs';
 import { relative } from 'node:path';
-import { RELEASE_TYPES, valid } from 'semver';
 import { Generator } from '../../config/misc-interfaces';
 import { readNxJson } from '../../config/nx-json';
 import {
@@ -21,37 +19,73 @@ import {
   createProjectGraphAsync,
   readProjectsConfigurationFromProjectGraph,
 } from '../../project-graph/project-graph';
-import { findMatchingProjects } from '../../utils/find-matching-projects';
-import { combineOptionsForGenerator } from '../../utils/params';
+import { combineOptionsForGenerator, handleErrors } from '../../utils/params';
 import { parseGeneratorString } from '../generate/generate';
 import { getGeneratorInformation } from '../generate/generator-utils';
 import { VersionOptions } from './command-object';
-import { createNxReleaseConfig } from './config/config';
 import {
-  CATCH_ALL_RELEASE_GROUP,
-  ReleaseGroup,
-  createReleaseGroups,
-  handleCreateReleaseGroupsError,
-} from './config/create-release-groups';
+  createNxReleaseConfig,
+  handleNxReleaseConfigError,
+} from './config/config';
+import {
+  ReleaseGroupWithName,
+  filterReleaseGroups,
+} from './config/filter-release-groups';
+import { gitAdd, gitTag } from './utils/git';
 import { printDiff } from './utils/print-changes';
-import { isRelativeVersionKeyword } from './utils/semver';
+import {
+  VersionData,
+  commitChanges,
+  createCommitMessageValues,
+  createGitTagValues,
+  handleDuplicateGitTags,
+} from './utils/shared';
 
-// Reexport for use in plugin release-version generator implementations
+// Reexport some utils for use in plugin release-version generator implementations
 export { deriveNewSemverVersion } from './utils/semver';
+export type { VersionData } from './utils/shared';
 
 export interface ReleaseVersionGeneratorSchema {
   // The projects being versioned in the current execution
   projects: ProjectGraphProjectNode[];
+  releaseGroup: ReleaseGroupWithName;
   projectGraph: ProjectGraph;
-  specifier: string;
+  specifier?: string;
+  specifierSource?: 'prompt' | 'conventional-commits';
   preid?: string;
   packageRoot?: string;
-  currentVersionResolver?: 'registry' | 'disk';
+  currentVersionResolver?: 'registry' | 'disk' | 'git-tag';
   currentVersionResolverMetadata?: Record<string, unknown>;
 }
 
-export async function versionHandler(args: VersionOptions): Promise<void> {
+interface NxReleaseVersionResult {
+  /**
+   * In one specific (and very common) case, an overall workspace version is relevant, for example when there is
+   * only a single release group in which all projects have a fixed relationship to each other. In this case, the
+   * overall workspace version is the same as the version of the release group (and every project within it). This
+   * version could be a `string`, or it could be `null` if using conventional commits and no changes were detected.
+   *
+   * In all other cases (independent versioning, multiple release groups etc), the overall workspace version is
+   * not applicable and will be `undefined` here. If a user attempts to use this value later when it is `undefined`
+   * (for example in the changelog command), we will throw an appropriate error.
+   */
+  workspaceVersion: (string | null) | undefined;
+  projectsVersionData: VersionData;
+}
+
+export const releaseVersionCLIHandler = (args: VersionOptions) =>
+  handleErrors(args.verbose, () => releaseVersion(args));
+
+/**
+ * NOTE: This function is also exported for programmatic usage and forms part of the public API
+ * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
+ * to have control over their own error handling when using the API.
+ */
+export async function releaseVersion(
+  args: VersionOptions
+): Promise<NxReleaseVersionResult> {
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const { projects } = readProjectsConfigurationFromProjectGraph(projectGraph);
   const nxJson = readNxJson();
 
   if (args.verbose) {
@@ -59,91 +93,39 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
   }
 
   // Apply default configuration to any optional user configuration
-  const nxReleaseConfig = createNxReleaseConfig(nxJson.release);
-  const releaseGroupsData = await createReleaseGroups(
+  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
-    nxReleaseConfig.groups
+    nxJson.release,
+    'nx-release-publish'
   );
-  if (releaseGroupsData.error) {
-    return await handleCreateReleaseGroupsError(releaseGroupsData.error);
+  if (configError) {
+    return await handleNxReleaseConfigError(configError);
+  }
+
+  const {
+    error: filterError,
+    releaseGroups,
+    releaseGroupToFilteredProjects,
+  } = filterReleaseGroups(
+    projectGraph,
+    nxReleaseConfig,
+    args.projects,
+    args.groups
+  );
+  if (filterError) {
+    output.error(filterError);
+    process.exit(1);
   }
 
   const tree = new FsTree(workspaceRoot, args.verbose);
 
-  let { releaseGroups } = releaseGroupsData;
+  const versionData: VersionData = {};
+  const userCommitMessage: string | undefined =
+    args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
 
-  /**
-   * User is filtering to a subset of projects. We need to make sure that what they have provided can be reconciled
-   * against their configuration in terms of release groups and the ungroupedProjectsHandling option.
-   */
   if (args.projects?.length) {
-    const matchingProjectsForFilter = findMatchingProjects(
-      args.projects,
-      projectGraph.nodes
-    );
-
-    if (!matchingProjectsForFilter.length) {
-      output.error({
-        title: `Your --projects filter "${args.projects}" did not match any projects in the workspace`,
-      });
-      process.exit(1);
-    }
-
-    const filteredProjectToReleaseGroup = new Map<string, ReleaseGroup>();
-    const releaseGroupToFilteredProjects = new Map<ReleaseGroup, Set<string>>();
-
-    // Figure out which release groups, if any, that the filtered projects belong to so that we can resolve other config
-    for (const releaseGroup of releaseGroups) {
-      const matchingProjectsForReleaseGroup = findMatchingProjects(
-        releaseGroup.projects,
-        projectGraph.nodes
-      );
-      for (const matchingProject of matchingProjectsForFilter) {
-        if (matchingProjectsForReleaseGroup.includes(matchingProject)) {
-          filteredProjectToReleaseGroup.set(matchingProject, releaseGroup);
-          if (!releaseGroupToFilteredProjects.has(releaseGroup)) {
-            releaseGroupToFilteredProjects.set(releaseGroup, new Set());
-          }
-          releaseGroupToFilteredProjects.get(releaseGroup).add(matchingProject);
-        }
-      }
-    }
-
     /**
-     * If there are release groups specified, each filtered project must match at least one release
-     * group, otherwise the command + config combination is invalid.
-     */
-    if (Object.keys(nxReleaseConfig.groups).length) {
-      const unmatchedProjects = matchingProjectsForFilter.filter(
-        (p) => !filteredProjectToReleaseGroup.has(p)
-      );
-      if (unmatchedProjects.length) {
-        output.error({
-          title: `The following projects which match your projects filter "${args.projects}" did not match any configured release groups:`,
-          bodyLines: unmatchedProjects.map((p) => `- ${p}`),
-        });
-        process.exit(1);
-      }
-    }
-
-    output.note({
-      title: `Your filter "${args.projects}" matched the following projects:`,
-      bodyLines: matchingProjectsForFilter.map((p) => {
-        const releaseGroupForProject = filteredProjectToReleaseGroup.get(p);
-        if (releaseGroupForProject.name === CATCH_ALL_RELEASE_GROUP) {
-          return `- ${p}`;
-        }
-        return `- ${p} (release group "${releaseGroupForProject.name}")`;
-      }),
-    });
-
-    // Filter the releaseGroups collection appropriately
-    releaseGroups = releaseGroups.filter((rg) =>
-      releaseGroupToFilteredProjects.has(rg)
-    );
-
-    /**
-     * Run semver versioning for all remaining release groups and filtered projects within them
+     * Run versioning for all remaining release groups and filtered projects within them
      */
     for (const releaseGroup of releaseGroups) {
       const releaseGroupName = releaseGroup.name;
@@ -155,16 +137,11 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
           releaseGroup.version.generator
         ),
         configGeneratorOptions: releaseGroup.version.generatorOptions,
+        projects,
       });
 
-      const semverSpecifier = await resolveSemverSpecifier(
-        args.specifier,
-        `What kind of change is this for the ${
-          releaseGroupToFilteredProjects.get(releaseGroup).size
-        } matched project(s) within release group "${releaseGroupName}"?`,
-        `What is the exact version for the ${
-          releaseGroupToFilteredProjects.get(releaseGroup).size
-        } matched project(s) within release group "${releaseGroupName}"?`
+      const releaseGroupProjectNames = Array.from(
+        releaseGroupToFilteredProjects.get(releaseGroup)
       );
 
       await runVersionOnProjects(
@@ -173,33 +150,67 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
         args,
         tree,
         generatorData,
-        Array.from(releaseGroupToFilteredProjects.get(releaseGroup)),
-        semverSpecifier
+        releaseGroupProjectNames,
+        releaseGroup,
+        versionData
       );
     }
 
-    printChanges(tree, !!args.dryRun);
+    // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
+    const gitTagValues: string[] =
+      args.gitTag ?? nxReleaseConfig.version.git.tag
+        ? createGitTagValues(
+            releaseGroups,
+            releaseGroupToFilteredProjects,
+            versionData
+          )
+        : [];
+    handleDuplicateGitTags(gitTagValues);
 
-    return process.exit(0);
+    printAndFlushChanges(tree, !!args.dryRun);
+
+    if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
+      await commitChanges(
+        tree.listChanges().map((f) => f.path),
+        !!args.dryRun,
+        !!args.verbose,
+        createCommitMessageValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData,
+          userCommitMessage
+        ),
+        args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
+      );
+    }
+
+    if (args.gitTag ?? nxReleaseConfig.version.git.tag) {
+      output.logSingleLine(`Tagging commit with git`);
+      for (const tag of gitTagValues) {
+        await gitTag({
+          tag,
+          message: args.gitTagMessage || nxReleaseConfig.version.git.tagMessage,
+          additionalArgs:
+            args.gitTagArgs || nxReleaseConfig.version.git.tagArgs,
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        });
+      }
+    }
+
+    if (args.dryRun) {
+      logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+    }
+
+    return {
+      // An overall workspace version cannot be relevant when filtering to independent projects
+      workspaceVersion: undefined,
+      projectsVersionData: versionData,
+    };
   }
 
   /**
-   * The user is filtering by release group
-   */
-  if (args.groups?.length) {
-    releaseGroups = releaseGroups.filter((g) => args.groups?.includes(g.name));
-  }
-
-  // Should be an impossible state, as we should have explicitly handled any errors/invalid config by now
-  if (!releaseGroups.length) {
-    output.error({
-      title: `No projects could be matched for versioning, please report this case and include your nx.json config`,
-    });
-    process.exit(1);
-  }
-
-  /**
-   * Run semver versioning for all remaining release groups
+   * Run versioning for all remaining release groups
    */
   for (const releaseGroup of releaseGroups) {
     const releaseGroupName = releaseGroup.name;
@@ -211,17 +222,8 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
         releaseGroup.version.generator
       ),
       configGeneratorOptions: releaseGroup.version.generatorOptions,
+      projects,
     });
-
-    const semverSpecifier = await resolveSemverSpecifier(
-      args.specifier,
-      releaseGroupName === CATCH_ALL_RELEASE_GROUP
-        ? `What kind of change is this for all packages?`
-        : `What kind of change is this for release group "${releaseGroupName}"?`,
-      releaseGroupName === CATCH_ALL_RELEASE_GROUP
-        ? `What is the exact version for all packages?`
-        : `What is the exact version for release group "${releaseGroupName}"?`
-    );
 
     await runVersionOnProjects(
       projectGraph,
@@ -230,13 +232,109 @@ export async function versionHandler(args: VersionOptions): Promise<void> {
       tree,
       generatorData,
       releaseGroup.projects,
-      semverSpecifier
+      releaseGroup,
+      versionData
     );
   }
 
-  printChanges(tree, !!args.dryRun);
+  // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
+  const gitTagValues: string[] =
+    args.gitTag ?? nxReleaseConfig.version.git.tag
+      ? createGitTagValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          versionData
+        )
+      : [];
+  handleDuplicateGitTags(gitTagValues);
 
-  process.exit(0);
+  printAndFlushChanges(tree, !!args.dryRun);
+
+  // Only applicable when there is a single release group with a fixed relationship
+  let workspaceVersion: string | null | undefined = undefined;
+  if (releaseGroups.length === 1) {
+    const releaseGroup = releaseGroups[0];
+    if (releaseGroup.projectsRelationship === 'fixed') {
+      const releaseGroupProjectNames = Array.from(
+        releaseGroupToFilteredProjects.get(releaseGroup)
+      );
+      workspaceVersion = versionData[releaseGroupProjectNames[0]].newVersion; // all projects have the same version so we can just grab the first
+    }
+  }
+
+  const changedFiles = tree.listChanges().map((f) => f.path);
+
+  // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
+  if (!changedFiles.length) {
+    return {
+      workspaceVersion,
+      projectsVersionData: versionData,
+    };
+  }
+
+  if (args.stageChanges) {
+    output.logSingleLine(
+      `Staging changed files with git because --stage-changes was set`
+    );
+    await gitAdd({
+      changedFiles,
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
+  }
+
+  if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
+    await commitChanges(
+      changedFiles,
+      !!args.dryRun,
+      !!args.verbose,
+      createCommitMessageValues(
+        releaseGroups,
+        releaseGroupToFilteredProjects,
+        versionData,
+        userCommitMessage
+      ),
+      args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
+    );
+  }
+
+  if (args.gitTag ?? nxReleaseConfig.version.git.tag) {
+    output.logSingleLine(`Tagging commit with git`);
+    for (const tag of gitTagValues) {
+      await gitTag({
+        tag,
+        message: args.gitTagMessage || nxReleaseConfig.version.git.tagMessage,
+        additionalArgs: args.gitTagArgs || nxReleaseConfig.version.git.tagArgs,
+        dryRun: args.dryRun,
+        verbose: args.verbose,
+      });
+    }
+  }
+
+  if (args.dryRun) {
+    logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
+  }
+
+  return {
+    workspaceVersion,
+    projectsVersionData: versionData,
+  };
+}
+
+function appendVersionData(
+  existingVersionData: VersionData,
+  newVersionData: VersionData
+): VersionData {
+  // Mutate the existing version data
+  for (const [key, value] of Object.entries(newVersionData)) {
+    if (existingVersionData[key]) {
+      throw new Error(
+        `Version data key "${key}" already exists in version data. This is likely a bug.`
+      );
+    }
+    existingVersionData[key] = value;
+  }
+  return existingVersionData;
 }
 
 async function runVersionOnProjects(
@@ -246,32 +344,18 @@ async function runVersionOnProjects(
   tree: Tree,
   generatorData: GeneratorData,
   projectNames: string[],
-  newVersionSpecifier: string
+  releaseGroup: ReleaseGroupWithName,
+  versionData: VersionData
 ) {
-  // Should be impossible state
-  if (!newVersionSpecifier) {
-    output.error({
-      title: `No version or semver keyword could be determined`,
-    });
-    process.exit(1);
-  }
-  // Specifier could be user provided so we need to validate it
-  if (
-    !valid(newVersionSpecifier) &&
-    !isRelativeVersionKeyword(newVersionSpecifier)
-  ) {
-    output.error({
-      title: `The given version specifier "${newVersionSpecifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`,
-    });
-    process.exit(1);
-  }
-
   const generatorOptions: ReleaseVersionGeneratorSchema = {
+    // Always ensure a string to avoid generator schema validation errors
+    specifier: args.specifier ?? '',
+    preid: args.preid ?? '',
+    ...generatorData.configGeneratorOptions,
+    // The following are not overridable by user config
     projects: projectNames.map((p) => projectGraph.nodes[p]),
     projectGraph,
-    specifier: newVersionSpecifier,
-    preid: args.preid,
-    ...generatorData.configGeneratorOptions,
+    releaseGroup,
   };
 
   // Apply generator defaults from schema.json file etc
@@ -289,10 +373,24 @@ async function runVersionOnProjects(
   );
 
   const releaseVersionGenerator = generatorData.implementationFactory();
-  await releaseVersionGenerator(tree, combinedOpts);
+
+  // We expect all version generator implementations to return a VersionData object, rather than a GeneratorCallback
+  const versionDataForProjects = (await releaseVersionGenerator(
+    tree,
+    combinedOpts
+  )) as unknown as VersionData;
+
+  if (typeof versionDataForProjects === 'function') {
+    throw new Error(
+      `The version generator ${generatorData.collectionName}:${generatorData.normalizedGeneratorName} returned a function instead of an expected VersionData object`
+    );
+  }
+
+  // Merge the extra version data into the existing
+  appendVersionData(versionData, versionDataForProjects);
 }
 
-function printChanges(tree: Tree, isDryRun: boolean) {
+function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
   const changes = tree.listChanges();
 
   console.log('');
@@ -325,59 +423,6 @@ function printChanges(tree: Tree, isDryRun: boolean) {
 
   if (!isDryRun) {
     flushChanges(workspaceRoot, changes);
-  }
-
-  if (isDryRun) {
-    logger.warn(`\nNOTE: The "dryRun" flag means no changes were made.`);
-  }
-}
-
-async function resolveSemverSpecifier(
-  cliArgSpecifier: string,
-  selectionMessage: string,
-  customVersionMessage: string
-): Promise<string> {
-  try {
-    let newVersionSpecifier = cliArgSpecifier;
-    // If the user didn't provide a new version specifier directly on the CLI, prompt for one
-    if (!newVersionSpecifier) {
-      const reply = await enquirer.prompt<{ specifier: string }>([
-        {
-          name: 'specifier',
-          message: selectionMessage,
-          type: 'select',
-          choices: [
-            ...RELEASE_TYPES.map((t) => ({ name: t, message: t })),
-            {
-              name: 'custom',
-              message: 'Custom exact version',
-            },
-          ],
-        },
-      ]);
-      if (reply.specifier !== 'custom') {
-        newVersionSpecifier = reply.specifier;
-      } else {
-        const reply = await enquirer.prompt<{ specifier: string }>([
-          {
-            name: 'specifier',
-            message: customVersionMessage,
-            type: 'input',
-            validate: (input) => {
-              if (valid(input)) {
-                return true;
-              }
-              return 'Please enter a valid semver version';
-            },
-          },
-        ]);
-        newVersionSpecifier = reply.specifier;
-      }
-    }
-    return newVersionSpecifier;
-  } catch {
-    // We need to catch the error from enquirer prompt, otherwise yargs will print its help
-    process.exit(1);
   }
 }
 
@@ -413,9 +458,15 @@ function resolveGeneratorData({
   collectionName,
   generatorName,
   configGeneratorOptions,
+  projects,
 }): GeneratorData {
   const { normalizedGeneratorName, schema, implementationFactory } =
-    getGeneratorInformation(collectionName, generatorName, workspaceRoot);
+    getGeneratorInformation(
+      collectionName,
+      generatorName,
+      workspaceRoot,
+      projects
+    );
 
   return {
     collectionName,

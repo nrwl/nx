@@ -29,13 +29,13 @@ We are going to assume that you are at the state where you already have your `st
 It does not matter which framework you use for the host Storybook library. It can be any framework really, and it does not have to be one of the frameworks that are used in the hosted apps. The only thing that is important is for this host library to have _at least one story_. This is important, or else Storybook will not load. The one story can be a component, for example, which would work like a title for the application, or any other introduction to your Storybook you see fit.
 
 {% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
 So, let’s use React for the Storybook Composition host library:
 
 ```shell
-nx g @nx/react:lib storybook-host --directory=libs/storybook-host
+nx g @nx/react:lib storybook-host --directory=libs/storybook-host --bundler=none --unitTestRunner=none --projectNameAndRootFormat=as-provided
 ```
 
 Now that your library is generated, you can write your intro in the generated component (you can also do this later, it does not matter).
@@ -45,22 +45,29 @@ Now that your library is generated, you can write your intro in the generated co
 Since you do need a story for your host Storybook, you should use the React storybook configuration generator, and actually choose to generate stories (not an e2e project though):
 
 ```shell
-nx g @nx/react:storybook-configuration –-name=storybook-host
+nx g @nx/react:storybook-configuration storybook-host --interactionTests=true --generateStories=true
 ```
-
-And choose `yes` to generate stories, and `no` to generate a Cypress app.
 
 ### Change the Storybook port in the hosted apps
 
 Now it’s important to change the Storybook ports in the `storybook-host-angular` and `storybook-host-react`. Go to the `project.json` of each of these libraries (`libs/storybook-host-angular/project.json` and `libs/storybook-host-react/project.json`), find the `storybook` target, and set the port to `4401` and `4402` accordingly. This is because the Storybook Composition host is going to be looking at these ports to find which Storybooks to host, and which Storybook goes where.
 
-### Add the `refs` to the main.js of the host library
+### Add the `refs` to the main.ts of the host library
 
 Create the composition in ``:
 
-```javascript {% fileName="libs/storybook-host/.storybook/main.js" %}
-module.exports = {
-  core: { builder: 'webpack5' },
+```javascript {% fileName="libs/storybook-host/.storybook/main.ts" %}
+import type { StorybookConfig } from '@storybook/react-vite';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { mergeConfig } from 'vite';
+
+const config: StorybookConfig = {
+  stories: ['../src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  framework: {
+    name: '@storybook/react-vite',
+    options: {},
+  },
   refs: {
     'angular-stories': {
       title: 'Angular Stories',
@@ -71,9 +78,13 @@ module.exports = {
       url: 'http://localhost:4402',
     },
   },
-  stories: ['../src/lib/**/*.stories.tsx'],
-  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  viteFinal: async (config) =>
+    mergeConfig(config, {
+      plugins: [nxViteTsPaths()],
+    }),
 };
+
+export default config;
 ```
 
 ### Serve the Storybook instances
@@ -96,7 +107,7 @@ To deploy the composed Storybooks you need to do the following:
 
 1. Deploy the `storybook-host-angular` Storybook
 2. Deploy the `storybook-host-react` Storybook
-3. Change the `refs` in `libs/storybook-host/.storybook/main.js` to point to the URLs of the deployed Storybooks mentioned above
+3. Change the `refs` in `libs/storybook-host/.storybook/main.ts` to point to the URLs of the deployed Storybooks mentioned above
 4. Deploy the `storybook-host` Storybook
 
 ## Use cases that apply to this solution

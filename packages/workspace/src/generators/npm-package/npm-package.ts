@@ -1,6 +1,5 @@
 import {
   addProjectConfiguration,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   Tree,
@@ -18,6 +17,7 @@ export interface ProjectOptions {
   directory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
 }
+
 interface NormalizedProjectOptions extends ProjectOptions {
   projectRoot: string;
 }
@@ -86,5 +86,3 @@ export async function npmPackageGeneratorInternal(
 
   await formatFiles(tree);
 }
-
-export const npmPackageSchematic = convertNxGenerator(npmPackageGenerator);

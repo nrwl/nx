@@ -2,7 +2,7 @@ import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from '../library/library';
 import componentStoryGenerator from './component-story';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 
 describe('react:component-story', () => {
   let appTree: Tree;
@@ -62,9 +62,9 @@ describe('react:component-story', () => {
         appTree.write(
           'test-ui-lib/src/lib/test-ui-libplain.jsx',
           `import React from 'react';
-  
+
           import './test.scss';
-          
+
           export const Test = () => {
             return (
               <div>
@@ -72,8 +72,8 @@ describe('react:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -97,9 +97,9 @@ describe('react:component-story', () => {
         appTree.write(
           cmpPath,
           `import React from 'react';
-  
+
           import './test.scss';
-          
+
           export const Test = () => {
             return (
               <div>
@@ -107,8 +107,8 @@ describe('react:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -128,14 +128,14 @@ describe('react:component-story', () => {
         appTree.write(
           cmpPath,
           `import React from 'react';
-  
+
           import './test.scss';
-          
+
           export interface TestProps {
             name: string;
             displayAge: boolean;
           }
-          
+
           export const Test = (props: TestProps) => {
             return (
               <div>
@@ -143,8 +143,8 @@ describe('react:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -164,18 +164,18 @@ describe('react:component-story', () => {
         appTree.write(
           cmpPath,
           `import React from 'react';
-  
+
           import './test.scss';
 
           export type ButtonStyle = 'default' | 'primary' | 'warning';
-          
+
           export interface TestProps {
             name: string;
             displayAge: boolean;
             someAction: (e: unknown) => void;
             style: ButtonStyle;
           }
-          
+
           export const Test = (props: TestProps) => {
             return (
               <div>
@@ -184,8 +184,8 @@ describe('react:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -320,14 +320,14 @@ describe('react:component-story', () => {
               appTree.write(
                 cmpPath,
                 `import React from 'react';
-    
+
             import './test.scss';
-            
+
             export interface TestProps {
               name: string;
               displayAge: boolean;
             }
-            
+
             ${src}
             `
               );
@@ -435,14 +435,14 @@ describe('react:component-story', () => {
               appTree.write(
                 cmpPath,
                 `import React from 'react';
-      
+
               import './test.scss';
-              
+
               export interface TestProps {
                 name: string;
                 displayAge: boolean;
               }
-              
+
               ${src}
               `
               );
@@ -463,19 +463,19 @@ describe('react:component-story', () => {
           appTree.write(
             cmpPath,
             `import React from 'react';
-  
+
             function One() {
               return <div>Hello one</div>;
             }
-            
+
             function Two() {
               return <div>Hello two</div>;
             }
-            
+
             export interface ThreeProps {
               name: string;
-            }           
-    
+            }
+
             function Three(props: ThreeProps) {
               return (
                 <div>
@@ -483,8 +483,8 @@ describe('react:component-story', () => {
                 </div>
               );
             }
-            
-            export { One, Two, Three };    
+
+            export { One, Two, Three };
             `
           );
 
@@ -539,7 +539,6 @@ export async function createTestUILib(libName: string): Promise<Tree> {
   const currentWorkspaceJson = getProjects(appTree);
 
   const projectConfig = currentWorkspaceJson.get(libName);
-  projectConfig.targets.lint.options.linter = 'eslint';
 
   updateProjectConfiguration(appTree, libName, projectConfig);
 

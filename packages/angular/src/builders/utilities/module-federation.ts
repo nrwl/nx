@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { basename, dirname, join } from 'path';
 import { existsSync, readFileSync } from 'fs';
 import { logger, ProjectConfiguration } from '@nx/devkit';
 import { registerTsProject } from '@nx/js/src/internal';
@@ -92,10 +92,7 @@ function getModuleFederationConfig(
 
   let cleanupTranspiler = () => {};
   if (existsSync(moduleFederationConfigPathTS)) {
-    cleanupTranspiler = registerTsProject(
-      moduleFederationConfigPathTS,
-      tsconfigPath
-    );
+    cleanupTranspiler = registerTsProject(join(workspaceRoot, tsconfigPath));
     moduleFederationConfigPath = moduleFederationConfigPathTS;
   }
 
@@ -161,9 +158,8 @@ export function validateDevRemotes(
   options: { devRemotes?: string[] },
   workspaceProjects: Record<string, ProjectConfiguration>
 ): void {
-  const invalidDevRemotes = options.devRemotes?.filter(
-    (remote) => !workspaceProjects[remote]
-  );
+  const invalidDevRemotes =
+    options.devRemotes?.filter((remote) => !workspaceProjects[remote]) ?? [];
 
   if (invalidDevRemotes.length) {
     throw new Error(

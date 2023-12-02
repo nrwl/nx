@@ -1,5 +1,5 @@
 import { Tree } from 'nx/src/generators/tree';
-import { Linter, lintProjectGenerator } from '@nx/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
   addDependenciesToPackageJson,
@@ -10,7 +10,7 @@ import { extraEslintDependencies } from './lint';
 import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
-} from '@nx/linter/src/generators/utils/eslint-file';
+} from '@nx/eslint/src/generators/utils/eslint-file';
 
 export async function addLinting(
   host: Tree,
@@ -18,7 +18,7 @@ export async function addLinting(
     linter: Linter;
     name: string;
     projectRoot: string;
-    unitTestRunner?: 'jest' | 'vitest' | 'none';
+    unitTestRunner?: 'vitest' | 'none';
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
@@ -33,7 +33,6 @@ export async function addLinting(
         joinPathFragments(options.projectRoot, `tsconfig.${projectType}.json`),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx,vue}`],
       skipFormat: true,
       setParserOptionsProject: options.setParserOptionsProject,
       rootProject: options.rootProject,
@@ -65,7 +64,7 @@ export async function addLinting(
   }
 }
 
-function editEslintConfigFiles(
+export function editEslintConfigFiles(
   tree: Tree,
   projectRoot: string,
   rootProject?: boolean
@@ -86,7 +85,7 @@ function editEslintConfigFiles(
         json.overrides = [
           {
             files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
-            rules: {},
+            rules: { 'vue/multi-word-component-names': 'off' },
           },
         ];
       }
@@ -108,7 +107,7 @@ function editEslintConfigFiles(
         json.overrides = [
           {
             files: ['*.ts', '*.tsx', '*.js', '*.jsx', '*.vue'],
-            rules: {},
+            rules: { 'vue/multi-word-component-names': 'off' },
           },
         ];
       }

@@ -1,7 +1,7 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import libraryGenerator from './library';
 import { Schema } from './schema';
 
@@ -28,7 +28,7 @@ describe('next library', () => {
 
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'myLib',
+      name: 'my-lib',
     });
     const tsconfigTypes = readJson(appTree, 'my-lib/tsconfig.lib.json')
       .compilerOptions.types;
@@ -52,11 +52,11 @@ describe('next library', () => {
 
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'myLib',
+      name: 'my-lib',
     });
     await libraryGenerator(appTree, {
       ...baseOptions,
-      name: 'myLib2',
+      name: 'my-lib2',
       style: '@emotion/styled',
     });
 
@@ -72,7 +72,7 @@ describe('next library', () => {
     const appTree = createTreeWithEmptyWorkspace();
 
     await libraryGenerator(appTree, {
-      name: 'myLib',
+      name: 'my-lib',
       linter: Linter.EsLint,
       skipFormat: false,
       skipTsConfig: false,
@@ -94,5 +94,27 @@ describe('next library', () => {
       '@proj/my-lib': ['my-lib/src/index.ts'],
       '@proj/my-lib/server': ['my-lib/src/server.ts'],
     });
+  });
+
+  it('should not add cypress dependencies', async () => {
+    const appTree = createTreeWithEmptyWorkspace();
+
+    await libraryGenerator(appTree, {
+      name: 'my-lib',
+      linter: Linter.EsLint,
+      skipFormat: false,
+      skipTsConfig: false,
+      unitTestRunner: 'jest',
+      style: 'css',
+      component: false,
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    expect(
+      readJson(appTree, 'package.json').devDependencies['@nx/cypress']
+    ).toBeUndefined();
+    expect(
+      readJson(appTree, 'package.json').devDependencies['cypress']
+    ).toBeUndefined();
   });
 });

@@ -1,7 +1,7 @@
 # Distribute Task Execution (DTE)
 
 Nx speeds up your average CI time with [caching](/core-features/cache-task-results) and
-the [affected command](/concepts/affected). But neither of these features help with the worst case scenario. When
+the [affected command](/ci/features/affected). But neither of these features help with the worst case scenario. When
 something at the core of your repo has been modified and every task needs to be run in CI, the only way to improve the
 performance is by adding more agent jobs and efficiently parallelizing the tasks.
 
@@ -25,7 +25,7 @@ When you set up Nx's distributed task execution, your task graph will look more 
 And not only will CI finish faster, but the debugging experience is the same as if you ran all of your CI on a single
 job. That's because Nx uses distributed caching to recreate all of the logs and build artifacts on the main job.
 
-Find more information in this [detailed guide to improve your worst case CI times](/concepts/dte).
+Find more information in this [detailed guide to improve your worst case CI times](/ci/concepts/dte).
 
 ## Set up
 
@@ -54,7 +54,7 @@ For existing workspaces you would probably want to adjust your configuration by 
 
 Distributed task execution can work on any CI provider. You are responsible for launching jobs in your CI system. Nx
 Cloud then coordinates the way those jobs work together. There are two different kinds of jobs that you'll need to
-create in your CI system.
+create in your CI system. If you would like Nx Cloud to dynamically provision agents for you, check out [Nx Agents](/ci/features/nx-agents)
 
 1. Main job that controls what is going to be executed
 2. Multiple agent jobs that actually execute the tasks
@@ -87,7 +87,7 @@ Depending on your CI setup, you might want to stop the agents explicitly. You ca
 
 > For most CI providers, Nx Cloud is able to able to match the main and the agents automatically but for some you might
 > need to provision the `NX_BRANCH` and `NX_CI_EXECUTION_ID` env variables (
-> see [Environment Variables](/nx-cloud/reference/env-vars) for more info).
+> see [Environment Variables](/ci/reference/env-vars) for more info).
 
 The main job looks more or less the same way as if you haven't used any distribution. The only thing you need to do is
 to invoke `npx nx-cloud start-ci-run` at the beginning and, optionally, invoke `npx nx-cloud stop-all-agents` at the
@@ -150,11 +150,10 @@ CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly.
 
 Read the guides for more information on how to configure them in CI.
 
-- [Overview](/recipes/ci/ci-setup#distributed-ci-with-nx-cloud)
-- [Azure Pipelines](/recipes/ci/monorepo-ci-azure#distributed-ci-with-nx-cloud)
-- [Circle CI](/recipes/ci/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
-- [GitHub Actions](/recipes/ci/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
-- [Jenkins](/recipes/ci/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
+- [Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#distributed-ci-with-nx-cloud)
+- [Circle CI](/ci/recipes/set-up/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
+- [GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions#distributed-ci-with-nx-cloud)
+- [Jenkins](/ci/recipes/set-up/monorepo-ci-jenkins#distributed-ci-with-nx-cloud)
 
 Note that only cacheable operations can be distributed because they have to be replayed on the main job.
 

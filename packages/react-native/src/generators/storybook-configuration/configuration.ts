@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
@@ -39,7 +38,7 @@ export async function storybookConfigurationGenerator(
   >('@nx/storybook', nxVersion);
 
   const installTask = await configurationGenerator(host, {
-    name: schema.name,
+    project: schema.name,
     uiFramework: '@storybook/react-native',
     configureCypress: false,
     js: false,
@@ -87,6 +86,3 @@ function addStorybookTask(host: Tree, projectName: string) {
 }
 
 export default storybookConfigurationGenerator;
-export const storybookConfigurationSchematic = convertNxGenerator(
-  storybookConfigurationGenerator
-);

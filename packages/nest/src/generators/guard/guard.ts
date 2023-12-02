@@ -1,5 +1,4 @@
 import type { Tree } from '@nx/devkit';
-import { convertNxGenerator } from '@nx/devkit';
 import type {
   NestGeneratorWithLanguageOption,
   NestGeneratorWithTestOption,
@@ -14,25 +13,39 @@ import {
 export type GuardGeneratorOptions = NestGeneratorWithLanguageOption &
   NestGeneratorWithTestOption;
 
-export function guardGenerator(
+export async function guardGenerator(
+  tree: Tree,
+  rawOptions: GuardGeneratorOptions
+) {
+  await guardGeneratorInternal(tree, {
+    nameAndDirectoryFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function guardGeneratorInternal(
   tree: Tree,
   rawOptions: GuardGeneratorOptions
 ): Promise<any> {
-  const options = normalizeGuardOptions(tree, rawOptions);
+  const options = await normalizeGuardOptions(tree, rawOptions);
 
   return runNestSchematic(tree, 'guard', options);
 }
 
 export default guardGenerator;
 
-export const guardSchematic = convertNxGenerator(guardGenerator);
-
-function normalizeGuardOptions(
+async function normalizeGuardOptions(
   tree: Tree,
   options: GuardGeneratorOptions
-): NormalizedOptions {
+): Promise<NormalizedOptions> {
+  const normalizedOptions = await normalizeOptions(
+    tree,
+    'guard',
+    '@nx/nest:guard',
+    options
+  );
   return {
-    ...normalizeOptions(tree, options),
+    ...normalizedOptions,
     language: options.language,
     spec: unitTestRunnerToSpec(options.unitTestRunner),
   };

@@ -1,8 +1,8 @@
-// TODO(v18): remove Cypress
+// TODO(katerina): Nx 18 -> remove Cypress
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import applicationGenerator from '../application/application';
 import componentGenerator from '../component/component';
 import libraryGenerator from '../library/library';
@@ -37,7 +37,7 @@ describe('react:storybook-configuration', () => {
   it('should configure everything and install correct dependencies', async () => {
     appTree = await createTestUILib('test-ui-lib');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-lib',
+      project: 'test-ui-lib',
     });
 
     expect(
@@ -59,7 +59,7 @@ describe('react:storybook-configuration', () => {
   it('should generate stories for components', async () => {
     appTree = await createTestUILib('test-ui-lib');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-lib',
+      project: 'test-ui-lib',
       generateStories: true,
     });
 
@@ -89,7 +89,7 @@ describe('react:storybook-configuration', () => {
       `
     );
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-lib',
+      project: 'test-ui-lib',
       generateStories: true,
       js: true,
     });
@@ -102,7 +102,7 @@ describe('react:storybook-configuration', () => {
   it('should configure everything at once', async () => {
     appTree = await createTestAppLib('test-ui-app');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
     });
 
     expect(appTree.exists('test-ui-app/.storybook/main.ts')).toBeTruthy();
@@ -112,7 +112,7 @@ describe('react:storybook-configuration', () => {
   it('should generate stories for components', async () => {
     appTree = await createTestAppLib('test-ui-app');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
       generateStories: true,
     });
 
@@ -130,7 +130,7 @@ describe('react:storybook-configuration', () => {
   it('should generate stories for components without interaction tests', async () => {
     appTree = await createTestAppLib('test-ui-app');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
       generateStories: true,
       interactionTests: false,
     });

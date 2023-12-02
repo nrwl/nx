@@ -23,6 +23,7 @@ import {
   markRootPackageJsonAsNxProject,
   printFinalMessage,
   runInstall,
+  updateGitIgnore,
 } from './utils';
 import { nxVersion } from '../../../utils/versions';
 
@@ -117,7 +118,8 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
 
   const pmc = getPackageManagerCommand();
 
-  addDepsToPackageJson(repoRoot, useNxCloud);
+  updateGitIgnore(repoRoot);
+  addDepsToPackageJson(repoRoot);
   addNestPluginToPackageJson(repoRoot);
   markRootPackageJsonAsNxProject(
     repoRoot,
@@ -235,10 +237,10 @@ function createProjectJson(
 
     // lint
     json.targets['lint'] = {
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
       options: {
-        lintFilePatterns: ['src/**/*.ts', 'test/**/*.ts'],
+        lintFilePatterns: ['./src', './test'],
       },
     };
 
@@ -367,7 +369,7 @@ function addNrwlJsPluginsConfig(repoRoot: string) {
     json.pluginsConfig = {
       '@nx/js': {
         analyzeSourceFiles: true,
-      } as NrwlJsPluginConfig,
+      },
     };
   }
 

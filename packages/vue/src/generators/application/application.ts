@@ -6,7 +6,7 @@ import {
   toJS,
   Tree,
 } from '@nx/devkit';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { vueInitGenerator } from '../init/init';
@@ -14,7 +14,6 @@ import { addLinting } from '../../utils/add-linting';
 import { addE2e } from './lib/add-e2e';
 import { createApplicationFiles } from './lib/create-application-files';
 import { addVite } from './lib/add-vite';
-import { addJest } from './lib/add-jest';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 
 export async function applicationGenerator(
@@ -38,7 +37,9 @@ export async function applicationGenerator(
     })
   );
 
-  extractTsConfigBase(tree);
+  if (!options.rootProject) {
+    extractTsConfigBase(tree);
+  }
 
   createApplicationFiles(tree, options);
 
@@ -59,9 +60,6 @@ export async function applicationGenerator(
   );
 
   tasks.push(await addVite(tree, options));
-
-  if (options.unitTestRunner === 'jest')
-    tasks.push(await addJest(tree, options));
 
   tasks.push(await addE2e(tree, options));
 

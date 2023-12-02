@@ -1,5 +1,5 @@
 import { Tree } from 'nx/src/generators/tree';
-import { Linter, lintProjectGenerator } from '@nx/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
 import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 
@@ -8,7 +8,7 @@ import { extraEslintDependencies } from '../../../utils/lint';
 import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
-} from '@nx/linter/src/generators/utils/eslint-file';
+} from '@nx/eslint/src/generators/utils/eslint-file';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === Linter.EsLint) {
@@ -19,7 +19,6 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
         joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       setParserOptionsProject: options.setParserOptionsProject,

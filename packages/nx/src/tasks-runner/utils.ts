@@ -10,6 +10,7 @@ import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-
 import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
 import { CustomHasher } from '../config/misc-interfaces';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
@@ -81,9 +82,14 @@ export function expandDependencyConfigSyntaxSugar(
 
 export function getOutputs(
   p: Record<string, ProjectGraphProjectNode>,
-  task: Task
+  target: Task['target'],
+  overrides: Task['overrides']
 ) {
-  return getOutputsForTargetAndConfiguration(task, p[task.target.project]);
+  return getOutputsForTargetAndConfiguration(
+    target,
+    overrides,
+    p[target.project]
+  );
 }
 
 class InvalidOutputsError extends Error {
@@ -102,7 +108,7 @@ export function validateOutputs(outputs: string[]) {
   const invalidOutputs = new Set<string>();
 
   for (const output of outputs) {
-    if (!/^{[\s\S]+}/.test(output)) {
+    if (!/^!?{[\s\S]+}/.test(output)) {
       invalidOutputs.add(output);
     }
   }
@@ -120,52 +126,63 @@ export function transformLegacyOutputs(
       return output;
     }
 
-    const relativePath = isRelativePath(output)
+    let [isNegated, outputPath] = output.startsWith('!')
+      ? [true, output.substring(1)]
+      : [false, output];
+
+    const relativePath = isRelativePath(outputPath)
       ? output
-      : relative(projectRoot, output);
+      : relative(projectRoot, outputPath);
 
     const isWithinProject = !relativePath.startsWith('..');
-    return joinPathFragments(
-      isWithinProject ? '{projectRoot}' : '{workspaceRoot}',
-      isWithinProject ? relativePath : output
+    return (
+      (isNegated ? '!' : '') +
+      joinPathFragments(
+        isWithinProject ? '{projectRoot}' : '{workspaceRoot}',
+        isWithinProject ? relativePath : outputPath
+      )
     );
   });
 }
 
 /**
- * Returns the list of outputs that will be cached.
- * @param task target + overrides
- * @param node ProjectGraphProjectNode object that the task runs against
+ * @deprecated Pass the target and overrides instead. This will be removed in v18.
  */
 export function getOutputsForTargetAndConfiguration(
-  task: Pick<Task, 'target' | 'overrides'>,
+  task: Task,
   node: ProjectGraphProjectNode
+): string[];
+export function getOutputsForTargetAndConfiguration(
+  target: Task['target'] | Task,
+  overrides: Task['overrides'] | ProjectGraphProjectNode,
+  node: ProjectGraphProjectNode
+): string[];
+/**
+ * Returns the list of outputs that will be cached.
+ */
+export function getOutputsForTargetAndConfiguration(
+  taskTargetOrTask: Task['target'] | Task,
+  overridesOrNode: Task['overrides'] | ProjectGraphProjectNode,
+  node?: ProjectGraphProjectNode
 ): string[] {
-  const { target, configuration } = task.target;
+  const taskTarget =
+    'id' in taskTargetOrTask ? taskTargetOrTask.target : taskTargetOrTask;
+  const overrides =
+    'id' in taskTargetOrTask ? taskTargetOrTask.overrides : overridesOrNode;
+  node = 'id' in taskTargetOrTask ? overridesOrNode : node;
+
+  const { target, configuration } = taskTarget;
 
   const targetConfiguration = node.data.targets[target];
 
   const options = {
     ...targetConfiguration.options,
     ...targetConfiguration?.configurations?.[configuration],
-    ...task.overrides,
+    ...overrides,
   };
 
   if (targetConfiguration?.outputs) {
-    try {
-      validateOutputs(targetConfiguration.outputs);
-    } catch (error) {
-      if (error instanceof InvalidOutputsError) {
-        // TODO(@FrozenPandaz): In v17, throw this error and do not transform.
-        console.warn(error.message);
-        targetConfiguration.outputs = transformLegacyOutputs(
-          node.data.root,
-          error
-        );
-      } else {
-        throw error;
-      }
-    }
+    validateOutputs(targetConfiguration.outputs);
 
     return targetConfiguration.outputs
       .map((output: string) => {
@@ -246,7 +263,12 @@ export async function getExecutorForTask(
   const executor = await getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
-  return getExecutorInformation(nodeModule, executorName, workspaceRoot);
+  return getExecutorInformation(
+    nodeModule,
+    executorName,
+    workspaceRoot,
+    readProjectsConfigurationFromProjectGraph(projectGraph).projects
+  );
 }
 
 export async function getCustomHasher(
@@ -261,19 +283,39 @@ export function removeTasksFromTaskGraph(
   graph: TaskGraph,
   ids: string[]
 ): TaskGraph {
-  const tasks = {};
+  const newGraph = removeIdsFromGraph<Task>(graph, ids, graph.tasks);
+  return {
+    dependencies: newGraph.dependencies,
+    roots: newGraph.roots,
+    tasks: newGraph.mapWithIds,
+  };
+}
+
+export function removeIdsFromGraph<T>(
+  graph: {
+    roots: string[];
+    dependencies: Record<string, string[]>;
+  },
+  ids: string[],
+  mapWithIds: Record<string, T>
+): {
+  mapWithIds: Record<string, T>;
+  roots: string[];
+  dependencies: Record<string, string[]>;
+} {
+  const filteredMapWithIds = {};
   const dependencies = {};
   const removedSet = new Set(ids);
-  for (let taskId of Object.keys(graph.tasks)) {
-    if (!removedSet.has(taskId)) {
-      tasks[taskId] = graph.tasks[taskId];
-      dependencies[taskId] = graph.dependencies[taskId].filter(
-        (depTaskId) => !removedSet.has(depTaskId)
+  for (let id of Object.keys(mapWithIds)) {
+    if (!removedSet.has(id)) {
+      filteredMapWithIds[id] = mapWithIds[id];
+      dependencies[id] = graph.dependencies[id].filter(
+        (depId) => !removedSet.has(depId)
       );
     }
   }
   return {
-    tasks,
+    mapWithIds: filteredMapWithIds,
     dependencies: dependencies,
     roots: Object.keys(dependencies).filter(
       (k) => dependencies[k].length === 0
@@ -328,11 +370,7 @@ export function getSerializedArgsForTask(task: Task, isVerbose: boolean) {
 
 export function shouldStreamOutput(
   task: Task,
-  initiatingProject: string | null,
-  options: {
-    cacheableOperations?: string[] | null;
-    cacheableTargets?: string[] | null;
-  }
+  initiatingProject: string | null
 ): boolean {
   if (process.env.NX_STREAM_OUTPUT === 'true') return true;
   if (longRunningTask(task)) return true;
@@ -347,6 +385,10 @@ export function isCacheableTask(
     cacheableTargets?: string[] | null;
   }
 ): boolean {
+  if (task.cache !== undefined && !longRunningTask(task)) {
+    return task.cache;
+  }
+
   const cacheable = options.cacheableOperations || options.cacheableTargets;
   return (
     cacheable &&

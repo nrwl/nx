@@ -84,7 +84,7 @@ describe('Next.js Webpack', () => {
     updateJson(join('apps', appName, 'project.json'), (json) => {
       json.targets.build = {
         command: 'npx next build',
-        outputs: [`apps/${appName}/.next`],
+        outputs: [`{projectRoot}/.next`],
         options: {
           cwd: `apps/${appName}`,
         },

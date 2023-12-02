@@ -12,6 +12,7 @@ import { calculateFileChanges, FileData } from '../../project-graph/file-utils';
 import * as yargs from 'yargs';
 
 import * as prettier from 'prettier';
+import type { SupportInfo } from 'prettier';
 import { sortObjectByKeys } from '../../utils/object-sort';
 import { readModulePackageJson } from '../../utils/package-json';
 import {
@@ -81,9 +82,11 @@ async function getPatterns(
 
     const p = parseFiles(args);
 
-    const supportedExtensions = prettier
-      .getSupportInfo()
-      .languages.flatMap((language) => language.extensions)
+    // In prettier v3 the getSupportInfo result is a promise
+    const supportedExtensions = (
+      await (prettier.getSupportInfo() as Promise<SupportInfo> | SupportInfo)
+    ).languages
+      .flatMap((language) => language.extensions)
       .filter((extension) => !!extension)
       // Prettier supports ".swcrc" as a file instead of an extension
       // So we add ".swcrc" as a supported extension manually

@@ -40,7 +40,7 @@ You can add nodes to the project graph with [`createNodes`](/nx-api/devkit/docum
 
 Looking at the tuple, you can see that the first element is a file pattern. This is a glob pattern that Nx will use to find files in your workspace. The second element is a function that will be called for each file that matches the pattern. The function will be called with the path to the file and a context object. Your plugin can then return a set of projects and external nodes.
 
-If a plugin identifies a project that is already in the project graph, it will be merged with the information that is already present. The builtin plugins that identify projects from `package.json` files and `project.json` files are ran after any plugins listed in `nx.json`, and as such will overwrite any configuration that was identified by them. In practice, this means that if a project has both a `project.json`, and a file that your plugin identified, the settings the plugin idenfied will be overwritten by the `project.json`'s contents.
+If a plugin identifies a project that is already in the project graph, it will be merged with the information that is already present. The builtin plugins that identify projects from `package.json` files and `project.json` files are ran after any plugins listed in `nx.json`, and as such will overwrite any configuration that was identified by them. In practice, this means that if a project has both a `project.json`, and a file that your plugin identified, the settings the plugin identified will be overwritten by the `project.json`'s contents.
 
 Project nodes in the graph are considered to be the same if the project has the same root. If multiple plugins identify a project with the same root, the project will be merged. In doing so, the name that is already present in the graph is kept, and the properties below are shallowly merged. Any other properties are overwritten.
 
@@ -58,22 +58,27 @@ A simplified version of Nx's built-in `project.json` plugin is shown below, whic
 ```typescript {% fileName="/my-plugin/index.ts" %}
 export const createNodes: CreateNodes = [
   '**/project.json',
-  (projectConfigurationFile: string, context: CreateNodesContext) => {
-    const projectConfiguration = readJson(projectConfigurationFile);
-    const projectRoot = dirname(projectConfigurationFile);
-    const projectName = projectConfiguration.name;
+  (projectConfigurationFile: string, opts, context: CreateNodesContext) => {
+    const projectConfiguration = readJsonFile(projectConfigurationFile);
+    const root = dirname(projectConfigurationFile);
 
     return {
       projects: {
-        [projectName]: {
-          ...projectConfiguration,
-          root: projectRoot,
-        },
+        [root]: projectConfiguration,
       },
     };
   },
 ];
 ```
+
+{% callout type="warning" title="Dynamic target configurations can't be migrated" %}
+
+If you create targets for a project within a plugin's code, the Nx migration generators can not find that target configuration to update it. There are two ways to account for this:
+
+1. Only create dynamic targets using executors that you own. This way you can update the configuration in both places when needed.
+2. If you create a dynamic target for an executor you don't own, only define the `executor` property and instruct your users to define their options in the `targetDefaults` property of `nx.json`.
+
+{% /callout %}
 
 ### Adding External Nodes
 
@@ -88,7 +93,8 @@ It's more common for plugins to create new dependencies. First-party code contai
 The shape of the [`createDependencies`](/nx-api/devkit/documents/CreateDependencies) function follows:
 
 ```typescript
-export type CreateDependencies = (
+export type CreateDependencies<T> = (
+  opts: T,
   context: CreateDependenciesContext
 ) => CandidateDependency[] | Promise<CandidateDependency[]>;
 ```
@@ -157,7 +163,7 @@ Even though the plugin is written in JavaScript, resolving dependencies of diffe
 A small plugin that recognizes dependencies to projects in the current workspace which a referenced in another project's `package.json` file may look like so:
 
 ```typescript {% fileName="/my-plugin/index.ts" %}
-export const createNodes: CreateNodes = (ctx) => {
+export const createDependencies: CreateDependencies = (opts, ctx) => {
   const packageJsonProjectMap = new Map();
   const nxProjects = Object.values(ctx.projectsConfigurations);
   const results = [];
@@ -201,6 +207,52 @@ Breaking down this example, we can see that it follows this flow:
 6. Validates the dependency
 7. Pushes it into the located dependency array
 8. Returns the located dependencies
+
+## Accepting Plugin Options
+
+When looking at `createNodes`, and `createDependencies` you may notice a parameter called `options`. This is the first parameter for `createDependencies` or the second parameter for `createDependencies`.
+
+By default, its typed as unknown. This is because it belongs to the plugin author. The `CreateNodes`, `CreateDependencies`, and `NxPluginV2` types all accept a generic parameter that allows you to specify the type of the options.
+
+The options are read from `nx.json` when your plugin is specified as an object rather than just its module name.
+
+As an example, the below `nx.json` file specifies a plugin called `my-plugin` and passes it an option called `tagName`.
+
+```json
+{
+  "plugins": [
+    {
+      "name": "my-plugin",
+      "options": {
+        "tagName": "plugin:my-plugin"
+      }
+    }
+  ]
+}
+```
+
+`my-plugin` could then consume these options to add a tag to each project it detected:
+
+```typescript
+type MyPluginOptions = { tagName: string };
+
+export const createNodes: CreateNodes<MyPluginOptions> = [
+  '**/project.json',
+  (fileName, opts, ctx) => {
+    const root = dirname(fileName);
+
+    return {
+      projects: {
+        [root]: {
+          tags: opts.tagName ? [opts.tagName] : [],
+        },
+      },
+    };
+  },
+];
+```
+
+This functionality is available in Nx 17 or higher.
 
 ## Visualizing the Project Graph
 

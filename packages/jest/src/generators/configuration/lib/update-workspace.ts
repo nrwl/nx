@@ -28,31 +28,8 @@ export function updateWorkspace(
         normalizePath(projectConfig.root),
         `jest.config.${options.js ? 'js' : 'ts'}`
       ),
-      passWithNoTests: true,
-    },
-    configurations: {
-      ci: {
-        ci: true,
-        codeCoverage: true,
-      },
     },
   };
 
-  /**
-   * @deprecated this will be removed in the v17
-   */
-  const isUsingTSLint =
-    projectConfig.targets.lint?.executor ===
-    '@angular-devkit/build-angular:tslint';
-
-  if (isUsingTSLint) {
-    projectConfig.targets.lint.options.tsConfig = [
-      ...(projectConfig.targets.lint.options.tsConfig || []),
-      joinPathFragments(
-        normalizePath(projectConfig.root),
-        'tsconfig.spec.json'
-      ),
-    ];
-  }
   updateProjectConfiguration(tree, options.project, projectConfig);
 }

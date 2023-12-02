@@ -13,6 +13,7 @@ import {
   initCloud,
   printFinalMessage,
   runInstall,
+  updateGitIgnore,
 } from './utils';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
@@ -88,7 +89,8 @@ export async function addNxToMonorepo(options: Options) {
     scriptOutputs
   );
 
-  addDepsToPackageJson(repoRoot, useNxCloud);
+  updateGitIgnore(repoRoot);
+  addDepsToPackageJson(repoRoot);
 
   output.log({ title: '📦 Installing dependencies' });
   runInstall(repoRoot);

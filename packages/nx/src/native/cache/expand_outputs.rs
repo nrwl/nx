@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
-use crate::native::utils::glob::build_glob_set;
-use crate::native::utils::path::Normalize;
+use crate::native::glob::build_glob_set;
+use crate::native::utils::Normalize;
 use crate::native::walker::nx_walker_sync;
 
 #[napi]
@@ -58,6 +58,7 @@ pub fn get_files_for_outputs(
     }
 
     if !globs.is_empty() {
+        // todo(jcammisuli): optimize this as nx_walker_sync is very slow on the root directory. We need to change this to only search smaller directories
         let glob_set = build_glob_set(&globs)?;
         let found_paths = nx_walker_sync(&directory).filter_map(|path| {
             if glob_set.is_match(&path) {
@@ -74,17 +75,15 @@ pub fn get_files_for_outputs(
         for dir in directories {
             let dir = PathBuf::from(dir);
             let dir_path = directory.join(&dir);
-            let files_in_dir: Vec<String> = nx_walker_sync(&dir_path)
-                .filter_map(|e| {
-                    let path = dir_path.join(&e);
+            let files_in_dir = nx_walker_sync(&dir_path).filter_map(|e| {
+                let path = dir_path.join(&e);
 
-                    if path.is_file() {
-                        Some(dir.join(e).to_normalized_string())
-                    } else {
-                        None
-                    }
-                })
-                .collect();
+                if path.is_file() {
+                    Some(dir.join(e).to_normalized_string())
+                } else {
+                    None
+                }
+            });
             files.extend(files_in_dir);
         }
     }

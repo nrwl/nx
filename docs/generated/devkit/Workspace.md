@@ -17,6 +17,7 @@ use ProjectsConfigurations or NxJsonConfiguration
 ### Properties
 
 - [affected](../../devkit/documents/Workspace#affected): NxAffectedConfig
+- [cacheDirectory](../../devkit/documents/Workspace#cachedirectory): string
 - [cli](../../devkit/documents/Workspace#cli): Object
 - [defaultProject](../../devkit/documents/Workspace#defaultproject): string
 - [extends](../../devkit/documents/Workspace#extends): string
@@ -24,13 +25,17 @@ use ProjectsConfigurations or NxJsonConfiguration
 - [implicitDependencies](../../devkit/documents/Workspace#implicitdependencies): ImplicitDependencyEntry&lt;string[] | &quot;\*&quot;&gt;
 - [installation](../../devkit/documents/Workspace#installation): NxInstallationConfiguration
 - [namedInputs](../../devkit/documents/Workspace#namedinputs): Object
-- [npmScope](../../devkit/documents/Workspace#npmscope): string
-- [plugins](../../devkit/documents/Workspace#plugins): string[]
-- [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, unknown&gt;
+- [nxCloudAccessToken](../../devkit/documents/Workspace#nxcloudaccesstoken): string
+- [nxCloudEncryptionKey](../../devkit/documents/Workspace#nxcloudencryptionkey): string
+- [nxCloudUrl](../../devkit/documents/Workspace#nxcloudurl): string
+- [parallel](../../devkit/documents/Workspace#parallel): number
+- [plugins](../../devkit/documents/Workspace#plugins): PluginConfiguration[]
+- [pluginsConfig](../../devkit/documents/Workspace#pluginsconfig): Record&lt;string, Record&lt;string, unknown&gt;&gt;
 - [projects](../../devkit/documents/Workspace#projects): Record&lt;string, ProjectConfiguration&gt;
 - [release](../../devkit/documents/Workspace#release): NxReleaseConfiguration
 - [targetDefaults](../../devkit/documents/Workspace#targetdefaults): TargetDefaults
 - [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions): Object
+- [useDaemonProcess](../../devkit/documents/Workspace#usedaemonprocess): boolean
 - [version](../../devkit/documents/Workspace#version): number
 - [workspaceLayout](../../devkit/documents/Workspace#workspacelayout): Object
 
@@ -48,6 +53,18 @@ Default options for `nx affected`
 
 ---
 
+### cacheDirectory
+
+• `Optional` **cacheDirectory**: `string`
+
+Changes the directory used by Nx to store its cache.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[cacheDirectory](../../devkit/documents/NxJsonConfiguration#cachedirectory)
+
+---
+
 ### cli
 
 • `Optional` **cli**: `Object`
@@ -56,11 +73,10 @@ Default generator collection. It is used when no collection is provided.
 
 #### Type declaration
 
-| Name                  | Type                                                      | Description                                                            |
-| :-------------------- | :-------------------------------------------------------- | :--------------------------------------------------------------------- |
-| `defaultCollection?`  | `string`                                                  | **`Deprecated`** - defaultCollection is deprecated and will be removed |
-| `defaultProjectName?` | `string`                                                  | -                                                                      |
-| `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) | -                                                                      |
+| Name                  | Type                                                      |
+| :-------------------- | :-------------------------------------------------------- |
+| `defaultProjectName?` | `string`                                                  |
+| `packageManager?`     | [`PackageManager`](../../devkit/documents/PackageManager) |
 
 #### Inherited from
 
@@ -169,24 +185,59 @@ Named inputs targets can refer to reduce duplication
 
 ---
 
-### npmScope
+### nxCloudAccessToken
 
-• `Optional` **npmScope**: `string`
+• `Optional` **nxCloudAccessToken**: `string`
 
-**`Deprecated`**
-
-This is inferred from the package.json in the workspace root. Please use getNpmScope instead.
-NPM Scope that the workspace uses
+If specified Nx will use nx-cloud by default with the given token.
+To use a different runner that accepts an access token, define it in [tasksRunnerOptions](../../devkit/documents/Workspace#tasksrunneroptions)
 
 #### Inherited from
 
-[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[npmScope](../../devkit/documents/NxJsonConfiguration#npmscope)
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudAccessToken](../../devkit/documents/NxJsonConfiguration#nxcloudaccesstoken)
+
+---
+
+### nxCloudEncryptionKey
+
+• `Optional` **nxCloudEncryptionKey**: `string`
+
+Specifies the encryption key used to encrypt artifacts data before sending it to nx cloud.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudEncryptionKey](../../devkit/documents/NxJsonConfiguration#nxcloudencryptionkey)
+
+---
+
+### nxCloudUrl
+
+• `Optional` **nxCloudUrl**: `string`
+
+Specifies the url pointing to an instance of nx cloud. Used for remote
+caching and displaying run links.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[nxCloudUrl](../../devkit/documents/NxJsonConfiguration#nxcloudurl)
+
+---
+
+### parallel
+
+• `Optional` **parallel**: `number`
+
+Specifies how many tasks can be run in parallel.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[parallel](../../devkit/documents/NxJsonConfiguration#parallel)
 
 ---
 
 ### plugins
 
-• `Optional` **plugins**: `string`[]
+• `Optional` **plugins**: [`PluginConfiguration`](../../devkit/documents/PluginConfiguration)[]
 
 Plugins for extending the project graph
 
@@ -198,7 +249,7 @@ Plugins for extending the project graph
 
 ### pluginsConfig
 
-• `Optional` **pluginsConfig**: `Record`<`string`, `unknown`\>
+• `Optional` **pluginsConfig**: `Record`<`string`, `Record`<`string`, `unknown`\>\>
 
 Configuration for Nx Plugins
 
@@ -234,7 +285,7 @@ Projects' projects
 
 ### targetDefaults
 
-• `Optional` **targetDefaults**: `TargetDefaults`
+• `Optional` **targetDefaults**: [`TargetDefaults`](../../devkit/documents/TargetDefaults)
 
 Dependencies between different target names across all projects
 
@@ -252,11 +303,23 @@ Available Task Runners
 
 #### Index signature
 
-▪ [tasksRunnerName: `string`]: { `options?`: `any` ; `runner`: `string` }
+▪ [tasksRunnerName: `string`]: { `options?`: `any` ; `runner?`: `string` }
 
 #### Inherited from
 
 [NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[tasksRunnerOptions](../../devkit/documents/NxJsonConfiguration#tasksrunneroptions)
+
+---
+
+### useDaemonProcess
+
+• `Optional` **useDaemonProcess**: `boolean`
+
+Set this to false to disable the daemon.
+
+#### Inherited from
+
+[NxJsonConfiguration](../../devkit/documents/NxJsonConfiguration).[useDaemonProcess](../../devkit/documents/NxJsonConfiguration#usedaemonprocess)
 
 ---
 

@@ -25,7 +25,7 @@ function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
   tree.write(
     '/package.json',
     JSON.stringify({
-      name: 'test-name',
+      name: '@proj/source',
       dependencies: {},
       devDependencies: {},
     })
@@ -33,16 +33,15 @@ function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
   tree.write(
     '/nx.json',
     JSON.stringify({
-      npmScope: 'proj',
       affected: {
         defaultBase: 'main',
       },
-      tasksRunnerOptions: {
-        default: {
-          runner: 'nx/tasks-runners/default',
-          options: {
-            cacheableOperations: ['build', 'lint', 'test', 'e2e'],
-          },
+      targetDefaults: {
+        build: {
+          cache: true,
+        },
+        lint: {
+          cache: true,
         },
       },
     })

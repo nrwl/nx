@@ -37,7 +37,7 @@ export function fetchCorePlugins(): CorePlugin[] {
       capabilities: 'executors,generators',
     },
     {
-      name: '@nx/linter',
+      name: '@nx/eslint',
       capabilities: 'executors,generators',
     },
     {

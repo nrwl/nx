@@ -1,7 +1,6 @@
-import { workspaceLayout, workspaceRoot } from '@nx/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import { mergeConfig } from 'metro-config';
 import type { MetroConfig } from 'metro-config';
-import { join } from 'path';
 import { existsSync } from 'fs-extra';
 
 import { getResolveRequest } from './metro-resolver';
@@ -9,10 +8,6 @@ import { getResolveRequest } from './metro-resolver';
 interface WithNxOptions {
   debug?: boolean;
   extensions?: string[];
-  /**
-   * @deprecated TODO(v17) in the metro.config.js, pass in to the getDefaultConfig instead: getDefaultConfig(__dirname)
-   */
-  projectRoot?: string;
   watchFolders?: string[];
 }
 
@@ -24,12 +19,7 @@ export async function withNxMetro(
   if (opts.debug) process.env.NX_REACT_NATIVE_DEBUG = 'true';
   if (opts.extensions) extensions.push(...opts.extensions);
 
-  let watchFolders = [
-    join(workspaceRoot, 'node_modules'),
-    join(workspaceRoot, workspaceLayout().libsDir),
-    join(workspaceRoot, 'packages'),
-    join(workspaceRoot, '.storybook'),
-  ];
+  let watchFolders = [workspaceRoot];
   if (opts.watchFolders?.length) {
     watchFolders = watchFolders.concat(opts.watchFolders);
   }

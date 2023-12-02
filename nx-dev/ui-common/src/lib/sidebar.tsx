@@ -177,18 +177,26 @@ export function SidebarMobile({
   navIsOpen,
 }: FloatingSidebarProps): JSX.Element {
   const router = useRouter();
-  const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
+  const isCI: boolean = router.asPath.startsWith('/ci');
   const isAPI: boolean = router.asPath.startsWith('/nx-api');
   const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
-  const isNx: boolean = !isNxCloud && !isAPI && !isPlugins;
+  const isChangelog: boolean = router.asPath.startsWith('/changelog');
+  const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
+  const isNx: boolean =
+    !isCI && !isAPI && !isPlugins && !isChangelog && !isAiChat;
 
   const sections = [
     { name: 'Home', href: '/', current: false },
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
     {
-      name: 'Nx Cloud',
-      href: '/nx-cloud/intro/what-is-nx-cloud',
-      current: isNxCloud,
+      name: 'CI',
+      href: '/ci/intro/ci-with-nx',
+      current: isCI,
+    },
+    {
+      name: 'Extending Nx',
+      href: '/extending-nx/intro/getting-started',
+      current: isPlugins,
     },
     {
       name: 'API',
@@ -196,9 +204,14 @@ export function SidebarMobile({
       current: isAPI,
     },
     {
-      name: 'Extending Nx',
-      href: '/extending-nx/intro/getting-started',
-      current: isPlugins,
+      name: 'Changelog',
+      href: '/changelog',
+      current: isChangelog,
+    },
+    {
+      name: 'AI Chat (beta)',
+      href: '/ai-chat',
+      current: isAiChat,
     },
   ];
   return (

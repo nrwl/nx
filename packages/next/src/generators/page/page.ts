@@ -1,6 +1,5 @@
 import { componentGenerator as reactComponentGenerator } from '@nx/react';
 import {
-  convertNxGenerator,
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
@@ -10,29 +9,36 @@ import {
 
 import { addStyleDependencies } from '../../utils/styles';
 import { Schema } from './schema';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+
+export async function pageGenerator(host: Tree, schema: Schema) {
+  return pageGeneratorInternal(host, {
+    nameAndDirectoryFormat: 'derived',
+    ...schema,
+  });
+}
 
 /*
  * This schematic is basically the React component one, but for Next we need
- * extra dependencies for css, sass, less, styl style options, and make sure
+ * extra dependencies for css, sass, less style options, and make sure
  * it is under `pages` folder.
  */
-export async function pageGenerator(host: Tree, schema: Schema) {
-  const options = normalizeOptions(host, schema);
+export async function pageGeneratorInternal(host: Tree, schema: Schema) {
+  const options = await normalizeOptions(host, schema);
   const componentTask = await reactComponentGenerator(host, {
     ...options,
-    project: schema.project,
-    pascalCaseFiles: false,
+    nameAndDirectoryFormat: 'as-provided', // already determined the directory so use as is
     export: false,
     classComponent: false,
     routing: false,
     skipTests: !options.withTests,
-    flat: !!options.flat,
     skipFormat: true,
   });
 
+  const project = readProjectConfiguration(host, options.projectName);
   const styledTask = addStyleDependencies(host, {
     style: options.style,
-    swc: !host.exists(joinPathFragments(options.project.root, '.babelrc')),
+    swc: !host.exists(joinPathFragments(project.root, '.babelrc')),
   });
 
   if (!options.skipFormat) {
@@ -42,18 +48,49 @@ export async function pageGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(componentTask, styledTask);
 }
 
-function normalizeOptions(host: Tree, options: Schema) {
-  const project = readProjectConfiguration(host, options.project);
+async function normalizeOptions(host: Tree, options: Schema) {
+  let isAppRouter: boolean;
+  let derivedDirectory: string;
 
-  // app/ is a reserved folder in nextjs so it is safe to check it's existence
-  const isAppRouter = host.exists(`${project.root}/app`);
-  const routerDirectory = isAppRouter ? 'app' : 'pages';
-  const directory = options.directory
-    ? `${routerDirectory}/${options.directory}`
-    : `${routerDirectory}`;
-  const fileName = isAppRouter ? 'page' : !options.flat ? 'index' : undefined;
-  return { ...options, project, directory, fileName };
+  if (options.project) {
+    // Legacy behavior, detect app vs page router from specified project.
+    // TODO(v18): remove this logic
+    const project = readProjectConfiguration(host, options.project);
+    // app/ is a reserved folder in nextjs so it is safe to check it's existence
+    isAppRouter = host.exists(`${project.root}/app`);
+
+    const routerDirectory = isAppRouter ? 'app' : 'pages';
+    derivedDirectory = options.directory
+      ? `${routerDirectory}/${options.directory}`
+      : `${routerDirectory}`;
+  } else {
+    // New behavior, use directory as is without detecting whether we're using app or pages router.
+    derivedDirectory = options.directory;
+  }
+
+  const {
+    artifactName: name,
+    project: projectName,
+    fileName,
+    directory,
+  } = await determineArtifactNameAndDirectoryOptions(host, {
+    artifactType: 'page',
+    callingGenerator: '@nx/next:page',
+    name: options.name,
+    fileName: isAppRouter ? 'page' : 'index',
+    directory: options.directory,
+    derivedDirectory,
+    flat: options.flat,
+    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    project: options.project,
+    fileExtension: 'tsx',
+  });
+  return {
+    ...options,
+    directory,
+    fileName,
+    projectName,
+  };
 }
 
 export default pageGenerator;
-export const pageSchematic = convertNxGenerator(pageGenerator);

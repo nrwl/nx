@@ -1,5 +1,7 @@
 import { merge } from 'webpack-merge';
 import { registerTsProject } from '@nx/js/src/internal';
+import { workspaceRoot } from '@nx/devkit';
+import { join } from 'path';
 
 export async function mergeCustomWebpackConfig(
   baseWebpackConfig: any,
@@ -9,7 +11,9 @@ export async function mergeCustomWebpackConfig(
 ) {
   const customWebpackConfiguration = resolveCustomWebpackConfig(
     pathToWebpackConfig,
-    options.tsConfig
+    options.tsConfig.startsWith(workspaceRoot)
+      ? options.tsConfig
+      : join(workspaceRoot, options.tsConfig)
   );
   // The extra Webpack configuration file can also export a Promise, for instance:
   // `module.exports = new Promise(...)`. If it exports a single object, but not a Promise,
@@ -26,7 +30,7 @@ export async function mergeCustomWebpackConfig(
 }
 
 export function resolveCustomWebpackConfig(path: string, tsConfig: string) {
-  const cleanupTranspiler = registerTsProject(path, tsConfig);
+  const cleanupTranspiler = registerTsProject(tsConfig);
   const customWebpackConfig = require(path);
   cleanupTranspiler();
   // If the user provides a configuration in TS file
@@ -42,7 +46,7 @@ export function resolveIndexHtmlTransformer(
   tsConfig: string,
   target: import('@angular-devkit/architect').Target
 ) {
-  const cleanupTranspiler = registerTsProject(path, tsConfig);
+  const cleanupTranspiler = registerTsProject(tsConfig);
   const indexTransformer = require(path);
   cleanupTranspiler();
 

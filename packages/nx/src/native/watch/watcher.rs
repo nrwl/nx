@@ -33,7 +33,10 @@ pub struct Watcher {
 #[napi]
 impl Watcher {
     /// Creates a new Watcher instance.
-    /// If `useIgnore` is set to false, no ignores will be used, even when `additionalGlobs` is set
+    /// Will always ignore the following directories:
+    /// * .git/
+    /// * node_modules/
+    /// * .nx/
     #[napi(constructor)]
     pub fn new(
         origin: String,
@@ -43,14 +46,18 @@ impl Watcher {
         let watch_exec = Watchexec::new(InitConfig::default(), RuntimeConfig::default())
             .map_err(anyhow::Error::from)?;
 
-        let mut globs = additional_globs.unwrap_or_default();
-
-        // always ignore the .git  and node_modules folder
-        globs.push(".git/".into());
-        globs.push("node_modules/".into());
+        // always have these globs come before the additional globs
+        let mut globs = vec![".git/".into(), "node_modules/".into(), ".nx/".into()];
+        if let Some(additional_globs) = additional_globs {
+            globs.extend(additional_globs);
+        }
 
         Ok(Watcher {
-            origin,
+            origin: if cfg!(window) {
+                origin.replace('/', "\\")
+            } else {
+                origin
+            },
             watch_exec,
             additional_globs: globs,
             use_ignore: use_ignore.unwrap_or(true),
@@ -90,7 +97,7 @@ impl Watcher {
         let origin = self.origin.clone();
         let watch_exec = self.watch_exec.clone();
         let additional_globs = self.additional_globs.clone();
-        let use_ignore = self.use_ignore.clone();
+        let use_ignore = self.use_ignore;
         let start = async move {
             let mut runtime = watch_config::create_runtime(
                 &origin,

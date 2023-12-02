@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   logger,
@@ -29,13 +28,18 @@ import {
   projectIsRootProjectInStandaloneWorkspace,
   updateLintConfig,
 } from './lib/util-functions';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   pleaseUpgrade,
   storybookMajorVersion,
 } from '../../utils/utilities';
-import { coreJsVersion, nxVersion, tsNodeVersion } from '../../utils/versions';
+import {
+  coreJsVersion,
+  nxVersion,
+  tsLibVersion,
+  tsNodeVersion,
+} from '../../utils/versions';
 import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 
 export async function configurationGenerator(
@@ -52,7 +56,7 @@ export async function configurationGenerator(
 
   const { projectType, targets, root } = readProjectConfiguration(
     tree,
-    schema.name
+    schema.project
   );
   const { nextBuildTarget, compiler, viteBuildTarget } =
     findStorybookAndBuildTargetsAndCompiler(targets);
@@ -70,14 +74,14 @@ export async function configurationGenerator(
   if (viteBuildTarget) {
     if (schema.uiFramework === '@storybook/react-webpack5') {
       logger.info(
-        `Your project ${schema.name} uses Vite as a bundler. 
+        `Your project ${schema.project} uses Vite as a bundler.
         Nx will configure Storybook for this project to use Vite as well.`
       );
       schema.uiFramework = '@storybook/react-vite';
     }
     if (schema.uiFramework === '@storybook/web-components-webpack5') {
       logger.info(
-        `Your project ${schema.name} uses Vite as a bundler. 
+        `Your project ${schema.project} uses Vite as a bundler.
         Nx will configure Storybook for this project to use Vite as well.`
       );
       schema.uiFramework = '@storybook/web-components-vite';
@@ -97,9 +101,11 @@ export async function configurationGenerator(
   const mainDir =
     !!nextBuildTarget && projectType === 'application' ? 'components' : 'src';
 
+  const usesVite = !!viteBuildTarget || schema.uiFramework.endsWith('-vite');
+
   createProjectStorybookDir(
     tree,
-    schema.name,
+    schema.project,
     schema.uiFramework,
     schema.js,
     schema.tsConfiguration,
@@ -110,7 +116,7 @@ export async function configurationGenerator(
     mainDir,
     !!nextBuildTarget,
     compiler === 'swc',
-    !!viteBuildTarget || schema.uiFramework.endsWith('-vite'),
+    usesVite,
     viteConfigFilePath
   );
 
@@ -132,11 +138,11 @@ export async function configurationGenerator(
   addStorybookToNamedInputs(tree);
 
   if (schema.uiFramework === '@storybook/angular') {
-    addAngularStorybookTask(tree, schema.name, schema.interactionTests);
+    addAngularStorybookTask(tree, schema.project, schema.interactionTests);
   } else {
     addStorybookTask(
       tree,
-      schema.name,
+      schema.project,
       schema.uiFramework,
       schema.interactionTests
     );
@@ -146,12 +152,12 @@ export async function configurationGenerator(
     addStaticTarget(tree, schema);
   }
 
-  // TODO(v18): remove Cypress
+  // TODO(katerina): Nx 18 -> remove Cypress
   if (schema.configureCypress) {
-    const e2eProject = await getE2EProjectName(tree, schema.name);
+    const e2eProject = await getE2EProjectName(tree, schema.project);
     if (!e2eProject) {
       const cypressTask = await cypressProjectGenerator(tree, {
-        name: schema.name,
+        name: schema.project,
         js: schema.js,
         linter: schema.linter,
         directory: schema.cypressDirectory,
@@ -164,7 +170,7 @@ export async function configurationGenerator(
       tasks.push(cypressTask);
     } else {
       logger.warn(
-        `There is already an e2e project setup for ${schema.name}, called ${e2eProject}.`
+        `There is already an e2e project setup for ${schema.project}, called ${e2eProject}.`
       );
     }
   }
@@ -173,6 +179,10 @@ export async function configurationGenerator(
 
   if (schema.tsConfiguration) {
     devDeps['ts-node'] = tsNodeVersion;
+  }
+
+  if (usesVite && !viteConfigFilePath) {
+    devDeps['tslib'] = tsLibVersion;
   }
 
   if (schema.interactionTests) {
@@ -229,6 +239,3 @@ function normalizeSchema(
 }
 
 export default configurationGenerator;
-export const configurationSchematic = convertNxGenerator(
-  configurationGenerator
-);

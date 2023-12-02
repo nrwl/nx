@@ -1,4 +1,4 @@
-import { getCommandAsString, getOutputs } from '../../tasks-runner/utils';
+import { getCommandAsString } from '../../tasks-runner/utils';
 import * as yargs from 'yargs';
 import type { NxArgs } from '../../utils/command-line-utils';
 import {
@@ -10,11 +10,18 @@ import {
   mapTargetDefaultsToDependencies,
 } from '../../tasks-runner/create-task-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { InProcessTaskHasher } from '../../hasher/task-hasher';
+import {
+  DaemonBasedTaskHasher,
+  InProcessTaskHasher,
+  TaskHasher,
+} from '../../hasher/task-hasher';
 import { hashTask } from '../../hasher/hash-task';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { printAffectedDeprecationMessage } from './command-object';
 import { logger, NX_PREFIX } from '../../utils/logger';
+import { getTaskSpecificEnv } from '../../tasks-runner/task-env';
+import { getFileMap } from '../../project-graph/build-project-graph';
+import { daemonClient } from '../../daemon/client/client';
 
 /**
  * @deprecated Use showProjectsHandler, generateGraph, or affected (without the print-affected mode) instead.
@@ -71,12 +78,36 @@ async function createTasks(
     nxArgs.configuration,
     overrides
   );
-  const hasher = new InProcessTaskHasher({}, [], projectGraph, nxJson, {});
+
+  let hasher: TaskHasher;
+  if (daemonClient.enabled()) {
+    hasher = new DaemonBasedTaskHasher(daemonClient, {});
+  } else {
+    const { fileMap, allWorkspaceFiles, rustReferences } = getFileMap();
+    hasher = new InProcessTaskHasher(
+      fileMap?.projectFileMap,
+      allWorkspaceFiles,
+      projectGraph,
+      nxJson,
+      rustReferences,
+      {}
+    );
+  }
+
   const execCommand = getPackageManagerCommand().exec;
   const tasks = Object.values(taskGraph.tasks);
 
   await Promise.all(
-    tasks.map((t) => hashTask(hasher, projectGraph, taskGraph, t))
+    tasks.map((t) =>
+      hashTask(
+        hasher,
+        projectGraph,
+        taskGraph,
+        t,
+        // This loads dotenv files for the task
+        getTaskSpecificEnv(t)
+      )
+    )
   );
 
   return tasks.map((task) => ({
@@ -85,7 +116,7 @@ async function createTasks(
     target: task.target,
     hash: task.hash,
     command: getCommandAsString(execCommand, task),
-    outputs: getOutputs(projectGraph.nodes, task),
+    outputs: task.outputs,
   }));
 }
 

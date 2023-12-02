@@ -1,5 +1,11 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
-import { logger, readJson, Tree } from '@nx/devkit';
+import {
+  logger,
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { createApp, createLib } from '../../utils/testing-generators';
 import { componentGenerator } from './component';
@@ -140,6 +146,22 @@ describe('component', () => {
 
       expect(indexContent).not.toMatch(/lib\/hello/);
     });
+
+    it('should work for projects without sourceRoot', async () => {
+      const projectConfig = readProjectConfiguration(appTree, 'my-lib');
+      delete projectConfig.sourceRoot;
+      updateProjectConfiguration(appTree, 'my-lib', projectConfig);
+
+      await componentGenerator(appTree, {
+        name: 'my-lib/src/lib/hello',
+        style: 'css',
+        export: true,
+      });
+
+      const indexContent = appTree.read('my-lib/src/index.ts', 'utf-8');
+
+      expect(indexContent).not.toMatch(/lib\/hello/);
+    });
   });
 
   describe('--pascalCaseFiles', () => {
@@ -194,15 +216,11 @@ describe('component', () => {
       ).toBeTruthy();
       expect(appTree.exists('my-lib/src/lib/hello/hello.css')).toBeFalsy();
       expect(appTree.exists('my-lib/src/lib/hello/hello.scss')).toBeFalsy();
-      expect(appTree.exists('my-lib/src/lib/hello/hello.styl')).toBeFalsy();
       expect(
         appTree.exists('my-lib/src/lib/hello/hello.module.css')
       ).toBeFalsy();
       expect(
         appTree.exists('my-lib/src/lib/hello/hello.module.scss')
-      ).toBeFalsy();
-      expect(
-        appTree.exists('my-lib/src/lib/hello/hello.module.styl')
       ).toBeFalsy();
 
       const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
@@ -212,10 +230,8 @@ describe('component', () => {
       expect(content).not.toContain('<StyledHello>');
 
       //for imports
-      expect(content).not.toContain('hello.styl');
       expect(content).not.toContain('hello.css');
       expect(content).not.toContain('hello.scss');
-      expect(content).not.toContain('hello.module.styl');
       expect(content).not.toContain('hello.module.css');
       expect(content).not.toContain('hello.module.scss');
     });

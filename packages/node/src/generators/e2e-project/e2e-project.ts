@@ -1,7 +1,6 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -13,11 +12,11 @@ import {
   Tree,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { Linter, lintProjectGenerator } from '@nx/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
-} from '@nx/linter/src/generators/init/global-eslint-config';
+} from '@nx/eslint/src/generators/init/global-eslint-config';
 import * as path from 'path';
 import { axiosVersion } from '../../utils/versions';
 import { Schema } from './schema';
@@ -25,7 +24,7 @@ import {
   addPluginsToLintConfig,
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
-} from '@nx/linter/src/generators/utils/eslint-file';
+} from '@nx/eslint/src/generators/utils/eslint-file';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
@@ -116,7 +115,6 @@ export async function e2eProjectGeneratorInternal(
       tsConfigPaths: [
         joinPathFragments(options.e2eProjectRoot, 'tsconfig.json'),
       ],
-      eslintFilePatterns: [`${options.e2eProjectRoot}/**/*.{js,ts}`],
       setParserOptionsProject: false,
       skipPackageJson: false,
       rootProject: options.rootProject,
@@ -167,4 +165,3 @@ async function normalizeOptions(
 }
 
 export default e2eProjectGenerator;
-export const e2eProjectSchematic = convertNxGenerator(e2eProjectGenerator);

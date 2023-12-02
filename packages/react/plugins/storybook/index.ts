@@ -169,7 +169,13 @@ export const webpack = async (
   const { withNx, withWeb } = require('@nx/webpack');
 
   const projectData = await getProjectData(options);
-  const tsconfigPath = join(projectData.projectRoot, 'tsconfig.storybook.json');
+  const tsconfigPath = existsSync(
+    join(projectData.projectRoot, 'tsconfig.storybook.json')
+  )
+    ? join(projectData.projectRoot, 'tsconfig.storybook.json')
+    : join(projectData.projectRoot, 'tsconfig.json');
+  // The 'tsconfig.json' is mainly for the cypress test to be able to run
+  // because it will look into the cypress project dir and it will not find tsconfig.storybook.json
 
   fixBabelConfigurationIfNeeded(storybookWebpackConfig, projectData);
 
@@ -190,8 +196,7 @@ export const webpack = async (
   // ESM build for modern browsers.
   let baseWebpackConfig: Configuration = {};
   const configure = composePluginsSync(
-    withNx({ skipTypeChecking: true }),
-    withWeb(),
+    withNx({ target: 'web', skipTypeChecking: true }),
     withReact()
   );
   const finalConfig = configure(baseWebpackConfig, {

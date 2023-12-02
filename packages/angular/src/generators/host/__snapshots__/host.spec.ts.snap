@@ -1,42 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Host App Generator --ssr should generate the correct files 1`] = `
-"import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { RouterModule } from '@angular/router';
-import { AppComponent } from './app.component';
-import { appRoutes } from './app.routes';
-import { NxWelcomeComponent } from './nx-welcome.component';
-
-@NgModule({
-  declarations: [AppComponent, NxWelcomeComponent],
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-  ],
-  providers: [],
-  bootstrap: [AppComponent],
-})
-export class AppModule {}
-"
-`;
-
-exports[`Host App Generator --ssr should generate the correct files 2`] = `
-"import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-import { AppModule } from './app/app.module';
-
-platformBrowserDynamic()
-  .bootstrapModule(AppModule)
-  .catch((err) => console.error(err));
-"
-`;
-
-exports[`Host App Generator --ssr should generate the correct files 3`] = `
-"export { AppServerModule } from './app/app.server.module';
-"
-`;
-
-exports[`Host App Generator --ssr should generate the correct files 4`] = `
+exports[`Host App Generator --ssr compat should generate the correct main.server.ts 1`] = `
 "import 'zone.js/dist/zone-node';
 
 import { APP_BASE_HREF } from '@angular/common';
@@ -46,7 +10,7 @@ import * as cors from 'cors';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
-import { AppServerModule } from './bootstrap.server';
+import bootstrap from './bootstrap.server';
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
@@ -62,7 +26,7 @@ export function app(): express.Express {
   server.engine(
     'html',
     ngExpressEngine({
-      bootstrap: AppServerModule,
+      bootstrap,
     })
   );
 
@@ -102,7 +66,114 @@ function run(): void {
 
 run();
 
-export * from './bootstrap.server';
+export default bootstrap;
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files 1`] = `
+"import { NgModule } from '@angular/core';
+import {
+  BrowserModule,
+  provideClientHydration,
+} from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
+import { appRoutes } from './app.routes';
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
+  providers: [provideClientHydration()],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files 2`] = `
+"import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { AppModule } from './app/app.module';
+
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
+  .catch((err) => console.error(err));
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files 3`] = `
+"export { AppServerModule } from './app/app.server.module';
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files 4`] = `
+"import 'zone.js/node';
+
+import { APP_BASE_HREF } from '@angular/common';
+import { CommonEngine } from '@angular/ssr';
+import * as express from 'express';
+import * as cors from 'cors';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { AppServerModule } from './bootstrap.server';
+
+// The Express app is exported so that it can be used by serverless Functions.
+export function app(): express.Express {
+  const server = express();
+  const distFolder = join(process.cwd(), 'dist/test/browser');
+  const indexHtml = existsSync(join(distFolder, 'index.original.html'))
+    ? join(distFolder, 'index.original.html')
+    : join(distFolder, 'index.html');
+
+  server.use(cors());
+
+  const commonEngine = new CommonEngine();
+
+  server.set('view engine', 'html');
+  server.set('views', distFolder);
+
+  // Example Express Rest API endpoints
+  // server.get('/api/**', (req, res) => { });
+  // Serve static files from /browser
+  server.get(
+    '*.*',
+    express.static(distFolder, {
+      maxAge: '1y',
+    })
+  );
+
+  // All regular routes use the Angular engine
+  server.get('*', (req, res, next) => {
+    const { protocol, originalUrl, baseUrl, headers } = req;
+
+    commonEngine
+      .render({
+        bootstrap: AppServerModule,
+        documentFilePath: indexHtml,
+        url: \`\${protocol}://\${headers.host}\${originalUrl}\`,
+        publicPath: distFolder,
+        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
+      })
+      .then((html) => res.send(html))
+      .catch((err) => next(err));
+  });
+
+  return server;
+}
+
+function run(): void {
+  const port = process.env['PORT'] || 4000;
+
+  // Start up the Node server
+  const server = app();
+  server.listen(port, () => {
+    console.log(\`Node Express server listening on http://localhost:\${port}\`);
+  });
+}
+
+run();
+
+export default AppServerModule;
 "
 `;
 
@@ -114,6 +185,18 @@ exports[`Host App Generator --ssr should generate the correct files 5`] = `
 exports[`Host App Generator --ssr should generate the correct files 6`] = `
 "module.exports = {
   name: 'test',
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
   remotes: [],
 };
 "
@@ -209,54 +292,55 @@ export default bootstrap;
 `;
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 3`] = `
-"import 'zone.js/dist/zone-node';
+"import 'zone.js/node';
 
 import { APP_BASE_HREF } from '@angular/common';
-import { ngExpressEngine } from '@nguniversal/express-engine';
+import { CommonEngine } from '@angular/ssr';
 import * as express from 'express';
 import * as cors from 'cors';
-import { existsSync } from 'fs';
-import { join } from 'path';
-
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import bootstrap from './bootstrap.server';
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const browserBundles = join(process.cwd(), 'dist/test/browser');
+  const distFolder = join(process.cwd(), 'dist/test/browser');
+  const indexHtml = existsSync(join(distFolder, 'index.original.html'))
+    ? join(distFolder, 'index.original.html')
+    : join(distFolder, 'index.html');
 
   server.use(cors());
-  const indexHtml = existsSync(join(browserBundles, 'index.original.html'))
-    ? 'index.original.html'
-    : 'index';
 
-  // Our Universal express-engine (found @ https://github.com/angular/universal/tree/main/modules/express-engine)
-  server.engine(
-    'html',
-    ngExpressEngine({
-      bootstrap,
-    })
-  );
+  const commonEngine = new CommonEngine();
 
   server.set('view engine', 'html');
-  server.set('views', browserBundles);
+  server.set('views', distFolder);
 
+  // Example Express Rest API endpoints
+  // server.get('/api/**', (req, res) => { });
   // Serve static files from /browser
   server.get(
     '*.*',
-    express.static(browserBundles, {
+    express.static(distFolder, {
       maxAge: '1y',
     })
   );
 
-  // All regular routes use the Universal engine
-  server.get('*', (req, res) => {
-    // keep it async to avoid blocking the server thread
+  // All regular routes use the Angular engine
+  server.get('*', (req, res, next) => {
+    const { protocol, originalUrl, baseUrl, headers } = req;
 
-    res.render(indexHtml, {
-      providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }],
-      req,
-    });
+    commonEngine
+      .render({
+        bootstrap,
+        documentFilePath: indexHtml,
+        url: \`\${protocol}://\${headers.host}\${originalUrl}\`,
+        publicPath: distFolder,
+        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
+      })
+      .then((html) => res.send(html))
+      .catch((err) => next(err));
   });
 
   return server;
@@ -286,6 +370,18 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 exports[`Host App Generator --ssr should generate the correct files for standalone 5`] = `
 "module.exports = {
   name: 'test',
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
   remotes: [],
 };
 "
@@ -313,14 +409,12 @@ export const appRoutes: Route[] = [
 
 exports[`Host App Generator --ssr should generate the correct files for standalone 8`] = `
 "import { ApplicationConfig } from '@angular/core';
-import {
-  provideRouter,
-  withEnabledBlockingInitialNavigation,
-} from '@angular/router';
+import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
+import { provideClientHydration } from '@angular/platform-browser';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+  providers: [provideClientHydration(), provideRouter(appRoutes)],
 };
 "
 `;
@@ -385,6 +479,425 @@ exports[`Host App Generator --ssr should generate the correct files for standalo
 }
 `;
 
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 1`] = `
+"import { bootstrapApplication } from '@angular/platform-browser';
+import { appConfig } from './app/app.config';
+import { AppComponent } from './app/app.component';
+
+bootstrapApplication(AppComponent, appConfig).catch((err) =>
+  console.error(err)
+);
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 2`] = `
+"import { bootstrapApplication } from '@angular/platform-browser';
+import { AppComponent } from './app/app.component';
+import { config } from './app/app.config.server';
+
+const bootstrap = () => bootstrapApplication(AppComponent, config);
+
+export default bootstrap;
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 3`] = `
+"import 'zone.js/node';
+
+import { APP_BASE_HREF } from '@angular/common';
+import { CommonEngine } from '@angular/ssr';
+import * as express from 'express';
+import * as cors from 'cors';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import bootstrap from './bootstrap.server';
+
+// The Express app is exported so that it can be used by serverless Functions.
+export function app(): express.Express {
+  const server = express();
+  const distFolder = join(process.cwd(), 'dist/test/browser');
+  const indexHtml = existsSync(join(distFolder, 'index.original.html'))
+    ? join(distFolder, 'index.original.html')
+    : join(distFolder, 'index.html');
+
+  server.use(cors());
+
+  const commonEngine = new CommonEngine();
+
+  server.set('view engine', 'html');
+  server.set('views', distFolder);
+
+  // Example Express Rest API endpoints
+  // server.get('/api/**', (req, res) => { });
+  // Serve static files from /browser
+  server.get(
+    '*.*',
+    express.static(distFolder, {
+      maxAge: '1y',
+    })
+  );
+
+  // All regular routes use the Angular engine
+  server.get('*', (req, res, next) => {
+    const { protocol, originalUrl, baseUrl, headers } = req;
+
+    commonEngine
+      .render({
+        bootstrap,
+        documentFilePath: indexHtml,
+        url: \`\${protocol}://\${headers.host}\${originalUrl}\`,
+        publicPath: distFolder,
+        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
+      })
+      .then((html) => res.send(html))
+      .catch((err) => next(err));
+  });
+
+  return server;
+}
+
+function run(): void {
+  const port = process.env['PORT'] || 4000;
+
+  // Start up the Node server
+  const server = app();
+  server.listen(port, () => {
+    console.log(\`Node Express server listening on http://localhost:\${port}\`);
+  });
+}
+
+run();
+
+export default bootstrap;
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 4`] = `
+"import('./src/main.server');
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 5`] = `
+"import { ModuleFederationConfig } from '@nx/webpack';
+
+const config: ModuleFederationConfig = {
+  name: 'test',
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
+  remotes: [],
+};
+
+export default config;
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 6`] = `
+"import { withModuleFederationForSSR } from '@nx/angular/module-federation';
+import config from './module-federation.config';
+
+export default withModuleFederationForSSR(config);
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 7`] = `
+"import { NxWelcomeComponent } from './nx-welcome.component';
+import { Route } from '@angular/router';
+
+export const appRoutes: Route[] = [
+  {
+    path: '',
+    component: NxWelcomeComponent,
+  },
+];
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 8`] = `
+"import { ApplicationConfig } from '@angular/core';
+import { provideRouter } from '@angular/router';
+import { appRoutes } from './app.routes';
+import { provideClientHydration } from '@angular/platform-browser';
+
+export const appConfig: ApplicationConfig = {
+  providers: [provideClientHydration(), provideRouter(appRoutes)],
+};
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 9`] = `
+"import { mergeApplicationConfig, ApplicationConfig } from '@angular/core';
+import { provideServerRendering } from '@angular/platform-server';
+import { appConfig } from './app.config';
+
+const serverConfig: ApplicationConfig = {
+  providers: [provideServerRendering()],
+};
+
+export const config = mergeApplicationConfig(appConfig, serverConfig);
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 10`] = `
+{
+  "configurations": {
+    "development": {
+      "buildOptimizer": false,
+      "extractLicenses": false,
+      "optimization": false,
+      "sourceMap": true,
+      "vendorChunk": true,
+    },
+    "production": {
+      "outputHashing": "media",
+    },
+  },
+  "defaultConfiguration": "production",
+  "dependsOn": [
+    "build",
+  ],
+  "executor": "@nx/angular:webpack-server",
+  "options": {
+    "customWebpackConfig": {
+      "path": "test/webpack.server.config.ts",
+    },
+    "main": "test/server.ts",
+    "outputPath": "dist/test/server",
+    "tsConfig": "test/tsconfig.server.json",
+  },
+}
+`;
+
+exports[`Host App Generator --ssr should generate the correct files for standalone when --typescript=true 11`] = `
+{
+  "configurations": {
+    "development": {
+      "browserTarget": "test:build:development",
+      "serverTarget": "test:server:development",
+    },
+    "production": {
+      "browserTarget": "test:build:production",
+      "serverTarget": "test:server:production",
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nx/angular:module-federation-dev-ssr",
+}
+`;
+
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 1`] = `
+"import { NgModule } from '@angular/core';
+import {
+  BrowserModule,
+  provideClientHydration,
+} from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
+import { appRoutes } from './app.routes';
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
+  providers: [provideClientHydration()],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 2`] = `
+"import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { AppModule } from './app/app.module';
+
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
+  .catch((err) => console.error(err));
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 3`] = `
+"export { AppServerModule } from './app/app.server.module';
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 4`] = `
+"import 'zone.js/node';
+
+import { APP_BASE_HREF } from '@angular/common';
+import { CommonEngine } from '@angular/ssr';
+import * as express from 'express';
+import * as cors from 'cors';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { AppServerModule } from './bootstrap.server';
+
+// The Express app is exported so that it can be used by serverless Functions.
+export function app(): express.Express {
+  const server = express();
+  const distFolder = join(process.cwd(), 'dist/test/browser');
+  const indexHtml = existsSync(join(distFolder, 'index.original.html'))
+    ? join(distFolder, 'index.original.html')
+    : join(distFolder, 'index.html');
+
+  server.use(cors());
+
+  const commonEngine = new CommonEngine();
+
+  server.set('view engine', 'html');
+  server.set('views', distFolder);
+
+  // Example Express Rest API endpoints
+  // server.get('/api/**', (req, res) => { });
+  // Serve static files from /browser
+  server.get(
+    '*.*',
+    express.static(distFolder, {
+      maxAge: '1y',
+    })
+  );
+
+  // All regular routes use the Angular engine
+  server.get('*', (req, res, next) => {
+    const { protocol, originalUrl, baseUrl, headers } = req;
+
+    commonEngine
+      .render({
+        bootstrap: AppServerModule,
+        documentFilePath: indexHtml,
+        url: \`\${protocol}://\${headers.host}\${originalUrl}\`,
+        publicPath: distFolder,
+        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
+      })
+      .then((html) => res.send(html))
+      .catch((err) => next(err));
+  });
+
+  return server;
+}
+
+function run(): void {
+  const port = process.env['PORT'] || 4000;
+
+  // Start up the Node server
+  const server = app();
+  server.listen(port, () => {
+    console.log(\`Node Express server listening on http://localhost:\${port}\`);
+  });
+}
+
+run();
+
+export default AppServerModule;
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 5`] = `
+"import('./src/main.server');
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 6`] = `
+"import { ModuleFederationConfig } from '@nx/webpack';
+
+const config: ModuleFederationConfig = {
+  name: 'test',
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
+  remotes: [],
+};
+
+export default config;
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 7`] = `
+"import { withModuleFederationForSSR } from '@nx/angular/module-federation';
+import config from './module-federation.config';
+
+export default withModuleFederationForSSR(config);
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 8`] = `
+"import { NxWelcomeComponent } from './nx-welcome.component';
+import { Route } from '@angular/router';
+
+export const appRoutes: Route[] = [
+  {
+    path: '',
+    component: NxWelcomeComponent,
+  },
+];
+"
+`;
+
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 9`] = `
+{
+  "configurations": {
+    "development": {
+      "buildOptimizer": false,
+      "extractLicenses": false,
+      "optimization": false,
+      "sourceMap": true,
+      "vendorChunk": true,
+    },
+    "production": {
+      "outputHashing": "media",
+    },
+  },
+  "defaultConfiguration": "production",
+  "dependsOn": [
+    "build",
+  ],
+  "executor": "@nx/angular:webpack-server",
+  "options": {
+    "customWebpackConfig": {
+      "path": "test/webpack.server.config.ts",
+    },
+    "main": "test/server.ts",
+    "outputPath": "dist/test/server",
+    "tsConfig": "test/tsconfig.server.json",
+  },
+}
+`;
+
+exports[`Host App Generator --ssr should generate the correct files when --typescript=true 10`] = `
+{
+  "configurations": {
+    "development": {
+      "browserTarget": "test:build:development",
+      "serverTarget": "test:server:development",
+    },
+    "production": {
+      "browserTarget": "test:build:production",
+      "serverTarget": "test:server:production",
+    },
+  },
+  "defaultConfiguration": "development",
+  "executor": "@nx/angular:module-federation-dev-ssr",
+}
+`;
+
 exports[`Host App Generator should generate a host app with a remote 1`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
@@ -399,10 +912,34 @@ module.exports = withModuleFederation(config);
 "
 `;
 
+exports[`Host App Generator should generate a host app with a remote when --typesscript=true 1`] = `
+"import { withModuleFederation } from '@nx/angular/module-federation';
+import config from './module-federation.config';
+
+export default withModuleFederation(config);
+"
+`;
+
+exports[`Host App Generator should generate a host app with a remote when --typesscript=true 2`] = `
+"import { withModuleFederation } from '@nx/angular/module-federation';
+import config from './module-federation.config';
+
+export default withModuleFederation(config);
+"
+`;
+
 exports[`Host App Generator should generate a host app with no remotes 1`] = `
 "const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);
+"
+`;
+
+exports[`Host App Generator should generate a host app with no remotes when --typescript=true 1`] = `
+"import { withModuleFederation } from '@nx/angular/module-federation';
+import config from './module-federation.config';
+
+export default withModuleFederation(config);
 "
 `;
 
@@ -427,7 +964,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   imports: [NxWelcomeComponent, RouterModule],
   selector: 'proj-root',
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  styleUrl: './app.component.css',
 })
 export class AppComponent {
   title = 'host';
@@ -449,8 +986,9 @@ describe('AppComponent', () => {
         RouterTestingModule.withRoutes([
           { path: '', component: NxWelcomeComponent },
         ]),
+        AppComponent,
+        NxWelcomeComponent,
       ],
-      declarations: [AppComponent, NxWelcomeComponent],
     }).compileComponents();
   });
 
@@ -493,8 +1031,9 @@ describe('AppComponent', () => {
         RouterTestingModule.withRoutes([
           { path: '', component: NxWelcomeComponent },
         ]),
+        AppComponent,
+        NxWelcomeComponent,
       ],
-      declarations: [AppComponent, NxWelcomeComponent],
     }).compileComponents();
   });
 

@@ -15,7 +15,7 @@ describe('lib', () => {
   describe('not nested', () => {
     it('should update project configuration', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -23,31 +23,21 @@ describe('lib', () => {
       expect(config.root).toEqual(`my-lib`);
       expect(config.targets.build).toBeUndefined();
       expect(config.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: [`my-lib/**/*.ts`],
-        },
       });
       expect(config.targets.test).toEqual({
         executor: '@nx/jest:jest',
         outputs: [`{workspaceRoot}/coverage/{projectRoot}`],
         options: {
           jestConfig: `my-lib/jest.config.ts`,
-          passWithNoTests: true,
-        },
-        configurations: {
-          ci: {
-            ci: true,
-            codeCoverage: true,
-          },
         },
       });
     });
 
     it('should include a controller', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         controller: true,
         projectNameAndRootFormat: 'as-provided',
       });
@@ -57,7 +47,7 @@ describe('lib', () => {
 
     it('should include a service', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         service: true,
         projectNameAndRootFormat: 'as-provided',
       });
@@ -67,7 +57,7 @@ describe('lib', () => {
 
     it('should add the @Global decorator', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         global: true,
         projectNameAndRootFormat: 'as-provided',
       });
@@ -79,7 +69,7 @@ describe('lib', () => {
 
     it('should remove the default file from @nx/node:lib', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         global: true,
         projectNameAndRootFormat: 'as-provided',
       });
@@ -90,7 +80,7 @@ describe('lib', () => {
 
     it('should provide the controller and service', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         controller: true,
         service: true,
         projectNameAndRootFormat: 'as-provided',
@@ -107,7 +97,7 @@ describe('lib', () => {
 
     it('should update tags', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         tags: 'one,two',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -122,7 +112,7 @@ describe('lib', () => {
 
     it('should update root tsconfig.json', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -134,7 +124,7 @@ describe('lib', () => {
 
     it('should create a local tsconfig.json', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -144,7 +134,7 @@ describe('lib', () => {
 
     it('should extend the local tsconfig.json with tsconfig.spec.json', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -154,7 +144,7 @@ describe('lib', () => {
 
     it('should extend the local tsconfig.json with tsconfig.lib.json', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -169,7 +159,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -183,7 +173,7 @@ describe('lib', () => {
   describe('nested', () => {
     it('should update tags', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         directory: 'my-dir/my-lib',
         tags: 'one,two',
         projectNameAndRootFormat: 'as-provided',
@@ -199,7 +189,7 @@ describe('lib', () => {
 
     it('should generate files', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         directory: 'my-dir/my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -211,7 +201,7 @@ describe('lib', () => {
 
     it('should update workspace.json', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         directory: 'my-dir/my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -219,17 +209,14 @@ describe('lib', () => {
       const project = readProjectConfiguration(tree, `my-lib`);
       expect(project.root).toEqual(`my-dir/my-lib`);
       expect(project.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
+        executor: '@nx/eslint:lint',
         outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: [`my-dir/my-lib/**/*.ts`],
-        },
       });
     });
 
     it('should update tsconfig.json', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         directory: 'my-dir/my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -243,7 +230,7 @@ describe('lib', () => {
 
     it('should create a local tsconfig.json', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         directory: 'my-dir/my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -255,7 +242,7 @@ describe('lib', () => {
   describe('--strict', () => {
     it('should update the projects tsconfig with strict true', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         strict: true,
         projectNameAndRootFormat: 'as-provided',
       });
@@ -274,7 +261,7 @@ describe('lib', () => {
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         unitTestRunner: 'none',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -294,7 +281,7 @@ describe('lib', () => {
       const importPath = `@proj/myLib`;
 
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         publishable: true,
         importPath,
         projectNameAndRootFormat: 'as-provided',
@@ -308,7 +295,7 @@ describe('lib', () => {
   describe('compiler options target', () => {
     it('should set target to es6 in tsconfig.lib.json by default', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -318,7 +305,7 @@ describe('lib', () => {
 
     it('should set target to es2021 in tsconfig.lib.json', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         target: 'es2021',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -333,7 +320,7 @@ describe('lib', () => {
       jest.spyOn(devkit, 'formatFiles');
 
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -344,7 +331,7 @@ describe('lib', () => {
       jest.spyOn(devkit, 'formatFiles');
 
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         skipFormat: true,
         projectNameAndRootFormat: 'as-provided',
       });
@@ -356,7 +343,7 @@ describe('lib', () => {
   describe('--testEnvironment', () => {
     it('should set target jest testEnvironment to node by default', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -365,7 +352,7 @@ describe('lib', () => {
 
     it('should set target jest testEnvironment to jsdom', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         testEnvironment: 'jsdom',
         projectNameAndRootFormat: 'as-provided',
       });
@@ -377,7 +364,7 @@ describe('lib', () => {
   describe('--simpleName', () => {
     it('should generate a library with a simple name', async () => {
       await libraryGenerator(tree, {
-        name: 'myLib',
+        name: 'my-lib',
         simpleName: true,
         directory: 'api/my-lib',
         service: true,

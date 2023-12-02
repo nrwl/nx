@@ -1,3 +1,5 @@
+import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+
 export type Language = 'js' | 'ts';
 export type UnitTestRunner = 'jest' | 'none';
 export type NestSchematic =
@@ -25,10 +27,18 @@ export type TransportLayer =
 
 export type NestGeneratorOptions = {
   name: string;
-  project: string;
   directory?: string;
-  flat?: boolean;
   skipFormat?: boolean;
+  nameAndDirectoryFormat?: NameAndDirectoryFormat;
+
+  /**
+   * @deprecated Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18.
+   */
+  flat?: boolean;
+  /**
+   * @deprecated Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18.
+   */
+  project?: string;
 };
 
 export type NestGeneratorWithLanguageOption = NestGeneratorOptions & {

@@ -12,6 +12,7 @@ import { join, resolve } from 'path';
 import { readModulePackageJson } from 'nx/src/utils/package-json';
 import * as detectPort from 'detect-port';
 import { daemonClient } from 'nx/src/daemon/client/client';
+import { interpolate } from 'nx/src/tasks-runner/utils';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -52,8 +53,16 @@ function getHttpServerArgs(options: Schema) {
   return args;
 }
 
-function getBuildTargetCommand(options: Schema) {
-  const cmd = ['nx', 'run', options.buildTarget];
+function getBuildTargetCommand(options: Schema, context: ExecutorContext) {
+  const target = parseTargetString(options.buildTarget, context);
+  const cmd = ['nx', 'run'];
+
+  if (target.configuration) {
+    cmd.push(`${target.project}:${target.target}:${target.configuration}`);
+  } else {
+    cmd.push(`${target.project}:${target.target}`);
+  }
+
   if (options.parallel) {
     cmd.push(`--parallel`);
   }
@@ -68,16 +77,26 @@ function getBuildTargetOutputPath(options: Schema, context: ExecutorContext) {
     return options.staticFilePath;
   }
 
-  let buildOptions;
+  let outputPath: string;
   try {
     const target = parseTargetString(options.buildTarget, context);
-    buildOptions = readTargetOptions(target, context);
+    const buildOptions = readTargetOptions(target, context);
+    if (buildOptions?.outputPath) {
+      outputPath = buildOptions.outputPath;
+    } else {
+      const project = context.projectGraph.nodes[context.projectName];
+      const buildTarget = project.data.targets[target.target];
+      outputPath = buildTarget.outputs?.[0];
+      if (outputPath)
+        outputPath = interpolate(outputPath, {
+          projectName: project.data.name,
+          projectRoot: project.data.root,
+        });
+    }
   } catch (e) {
     throw new Error(`Invalid buildTarget: ${options.buildTarget}`);
   }
 
-  // TODO: vsavkin we should also check outputs
-  const outputPath = buildOptions.outputPath;
   if (!outputPath) {
     throw new Error(
       `Unable to get the outputPath from buildTarget ${options.buildTarget}. Make sure ${options.buildTarget} has an outputPath property or manually provide an staticFilePath property`
@@ -97,12 +116,12 @@ function createFileWatcher(
       includeGlobalWorkspaceFiles: true,
       includeDependentProjects: true,
     },
-    async (error, { changedFiles }) => {
+    async (error, val) => {
       if (error === 'closed') {
         throw new Error('Watch error: Daemon closed the connection');
       } else if (error) {
         throw new Error(`Watch error: ${error?.message ?? 'Unknown'}`);
-      } else if (changedFiles.length > 0) {
+      } else if (val?.changedFiles.length > 0) {
         changeHandler();
       }
     }
@@ -113,35 +132,47 @@ export default async function* fileServerExecutor(
   options: Schema,
   context: ExecutorContext
 ) {
-  let running = false;
-
-  const run = () => {
-    if (!running) {
-      running = true;
-      try {
-        const args = getBuildTargetCommand(options);
-        execFileSync(pmCmd, args, {
-          stdio: [0, 1, 2],
-        });
-      } catch {
-        throw new Error(
-          `Build target failed: ${chalk.bold(options.buildTarget)}`
-        );
-      } finally {
-        running = false;
-      }
-    }
-  };
-
-  let disposeWatch: () => void;
-  if (options.watch) {
-    const projectRoot =
-      context.projectsConfigurations.projects[context.projectName].root;
-    disposeWatch = await createFileWatcher(context.projectName, run);
+  if (!options.buildTarget && !options.staticFilePath) {
+    throw new Error("You must set either 'buildTarget' or 'staticFilePath'.");
   }
 
-  // perform initial run
-  run();
+  if (options.watch && !options.buildTarget) {
+    throw new Error(
+      "Watch error: You can only specify 'watch' when 'buildTarget' is set."
+    );
+  }
+
+  let running = false;
+  let disposeWatch: () => void;
+
+  if (options.buildTarget) {
+    const run = () => {
+      if (!running) {
+        running = true;
+        try {
+          const args = getBuildTargetCommand(options, context);
+          execFileSync(pmCmd, args, {
+            stdio: [0, 1, 2],
+          });
+        } catch {
+          throw new Error(
+            `Build target failed: ${chalk.bold(options.buildTarget)}`
+          );
+        } finally {
+          running = false;
+        }
+      }
+    };
+
+    if (options.watch) {
+      const projectRoot =
+        context.projectsConfigurations.projects[context.projectName].root;
+      disposeWatch = await createFileWatcher(context.projectName, run);
+    }
+
+    // perform initial run
+    run();
+  }
 
   const outputPath = getBuildTargetOutputPath(options, context);
 

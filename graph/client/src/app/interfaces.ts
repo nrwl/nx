@@ -11,6 +11,7 @@ export interface WorkspaceData {
   label: string;
   projectGraphUrl: string;
   taskGraphUrl: string;
+  taskInputsUrl: string;
 }
 
 export interface WorkspaceLayout {
@@ -22,6 +23,8 @@ export interface ProjectGraphService {
   getHash: () => Promise<string>;
   getProjectGraph: (url: string) => Promise<ProjectGraphClientResponse>;
   getTaskGraph: (url: string) => Promise<TaskGraphClientResponse>;
+  setTaskInputsUrl?: (url: string) => void;
+  getExpandedTaskInputs?: (taskId: string) => Promise<Record<string, string[]>>;
 }
 
 export interface Environment {

@@ -1,5 +1,6 @@
 import {
   joinPathFragments,
+  normalizePath,
   ProjectGraph,
   readCachedProjectGraph,
 } from '@nx/devkit';
@@ -9,6 +10,7 @@ import { existsSync } from 'fs';
 import { readNxJson } from 'nx/src/config/configuration';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
+import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
@@ -17,7 +19,6 @@ import {
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
 import type { BrowserBuilderSchema } from './schema';
-import { validateOptions } from './validate-options';
 
 function shouldSkipInitialTargetRun(
   projectGraph: ProjectGraph,
@@ -47,7 +48,6 @@ export function executeWebpackBrowserBuilder(
   options: BrowserBuilderSchema,
   context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/architect').BuilderOutput> {
-  validateOptions(options);
   options.buildLibsFromSource ??= true;
 
   const {
@@ -86,7 +86,9 @@ export function executeWebpackBrowserBuilder(
         { projectGraph }
       );
     dependencies = foundDependencies;
-    delegateBuilderOptions.tsConfig = tsConfigPath;
+    delegateBuilderOptions.tsConfig = normalizePath(
+      relative(context.workspaceRoot, tsConfigPath)
+    );
   }
 
   return from(import('@angular-devkit/build-angular')).pipe(

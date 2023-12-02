@@ -18,3 +18,40 @@ export default async function* execute(
   yield* asyncGenerator();
 }
 `;
+
+export const NX_PLUGIN_V2_CONTENTS = `import { basename, dirname } from "path";
+import { CreateNodes } from "@nx/devkit";
+
+type PluginOptions = {
+    inferredTags: string[]
+}
+
+export const createNodes: CreateNodes<PluginOptions> = [
+    "**/my-project-file",
+    (f, options, ctx) => {
+        // f = path/to/my/file/my-project-file
+        const root = dirname(f);
+        // root = path/to/my/file
+        const name = basename(root);
+        // name = file
+
+        return {
+            projects: {
+                [root]: {
+                    root,
+                    name,
+                    targets: {
+                        build: {
+                            executor: "nx:run-commands",
+                            options: {
+                                command: "echo 'custom registered target'",
+                            },
+                        },
+                    },
+                    tags: options.inferredTags
+                },
+            },
+        };
+    },
+];
+`;

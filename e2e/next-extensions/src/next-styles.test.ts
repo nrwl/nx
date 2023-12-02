@@ -32,19 +32,6 @@ describe('Next.js Styles', () => {
       checkExport: false,
     });
 
-    const stylusApp = uniq('app');
-
-    runCLI(
-      `generate @nx/next:app ${stylusApp} --no-interactive --style=styl --appDir=false`
-    );
-
-    await checkApp(stylusApp, {
-      checkUnitTest: false,
-      checkLint: false,
-      checkE2E: false,
-      checkExport: false,
-    });
-
     const scApp = uniq('app');
 
     runCLI(

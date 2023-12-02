@@ -6,12 +6,11 @@ import {
   names,
 } from '@nx/devkit';
 import { addToNgModule, findModule } from '../utils';
-import { normalizeOptions, validateOptions } from './lib';
+import { normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
-  validateOptions(tree, rawOptions);
-  const options = normalizeOptions(tree, rawOptions);
+  const options = await normalizeOptions(tree, rawOptions);
 
   const pipeNames = names(options.name);
 
@@ -20,9 +19,9 @@ export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
     joinPathFragments(__dirname, 'files'),
     options.directory,
     {
-      pipeClassName: pipeNames.className,
-      pipeFileName: pipeNames.fileName,
-      pipePropertyName: pipeNames.propertyName,
+      symbolName: options.symbolName,
+      fileName: options.fileName,
+      selector: pipeNames.propertyName,
       standalone: options.standalone,
       tpl: '',
     }
@@ -31,23 +30,23 @@ export async function pipeGenerator(tree: Tree, rawOptions: Schema) {
   if (options.skipTests) {
     const pathToSpecFile = joinPathFragments(
       options.directory,
-      `${pipeNames.fileName}.pipe.spec.ts`
+      `${options.fileName}.spec.ts`
     );
 
     tree.delete(pathToSpecFile);
   }
 
   if (!options.skipImport && !options.standalone) {
-    const modulePath = findModule(tree, options.path, options.module);
+    const modulePath = findModule(tree, options.directory, options.module);
     addToNgModule(
       tree,
-      options.path,
+      options.directory,
       modulePath,
-      pipeNames.fileName,
-      `${pipeNames.className}Pipe`,
-      `${pipeNames.fileName}.pipe`,
+      options.name,
+      options.symbolName,
+      options.fileName,
       'declarations',
-      options.flat,
+      true,
       options.export
     );
   }

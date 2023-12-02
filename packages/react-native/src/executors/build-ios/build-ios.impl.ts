@@ -68,13 +68,10 @@ function runCliBuildIOS(
   });
 }
 
-const nxOptions = ['sync', 'install', 'packager'];
 const startOptions = ['port', 'resetCache'];
 
 function createBuildIOSOptions(options: ReactNativeBuildIosOptions) {
-  return getCliOptions<ReactNativeBuildIosOptions>(
-    options,
-    [...nxOptions, ...startOptions],
-    ['buildFolder']
-  );
+  return getCliOptions<ReactNativeBuildIosOptions>(options, startOptions, [
+    'buildFolder',
+  ]);
 }

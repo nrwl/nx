@@ -47,7 +47,10 @@ import {
   resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
 import { handleErrors } from '../../utils/params';
-import { connectToNxCloudCommand } from '../connect/connect-to-nx-cloud';
+import {
+  connectToNxCloudCommand,
+  onlyDefaultRunnerIsUsed,
+} from '../connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
 import { messages, recordStat } from '../../utils/ab-testing';
 import { nxVersion } from '../../utils/versions';
@@ -59,6 +62,10 @@ import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import {
+  createProjectGraphAsync,
+  readProjectsConfigurationFromProjectGraph,
+} from '../../project-graph/project-graph';
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
@@ -1203,20 +1210,22 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     let originalPackageJson = existsSync(rootPkgJsonPath)
       ? readJsonFile<PackageJson>(rootPkgJsonPath)
       : null;
-    const originalNxInstallation = readNxJson().installation;
+    const originalNxJson = readNxJson();
     const from =
-      originalNxInstallation?.version ?? readNxVersion(originalPackageJson);
+      originalNxJson.installation?.version ??
+      readNxVersion(originalPackageJson);
 
     try {
       if (
         ['nx', '@nrwl/workspace'].includes(opts.targetPackage) &&
         (await isMigratingToNewMajor(from, opts.targetVersion)) &&
         !isCI() &&
-        !isNxCloudUsed()
+        !isNxCloudUsed(originalNxJson)
       ) {
-        const useCloud = await connectToNxCloudCommand(
-          messages.getPromptMessage('nxCloudMigration')
-        );
+        const useCloud = await connectToNxCloudCommand({
+          promptOverride: messages.getPromptMessage('nxCloudMigration'),
+          interactive: true,
+        });
         await recordStat({
           command: 'migrate',
           nxVersion,
@@ -1237,7 +1246,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     const migrator = new Migrator({
       packageJson: originalPackageJson,
-      nxInstallation: originalNxInstallation,
+      nxInstallation: originalNxJson.installation,
       getInstalledPackageVersion: createInstalledPackageVersionsResolver(root),
       fetch: createFetcher(),
       from: opts.from,
@@ -1332,14 +1341,8 @@ function addSplitConfigurationMigrationIfAvailable(
 
 function showConnectToCloudMessage() {
   try {
-    const nxJson = readJsonFile<NxJsonConfiguration>('nx.json');
-    const defaultRunnerIsUsed =
-      !nxJson.tasksRunnerOptions ||
-      Object.values(nxJson.tasksRunnerOptions).find(
-        (r: any) =>
-          r.runner == '@nrwl/workspace/tasks-runners/default' ||
-          r.runner == 'nx/tasks-runners/default'
-      );
+    const nxJson = readNxJson();
+    const defaultRunnerIsUsed = onlyDefaultRunnerIsUsed(nxJson);
     return !!defaultRunnerIsUsed;
   } catch {
     return false;
@@ -1405,6 +1408,9 @@ export async function executeMigrations(
           root,
           m.package,
           m.name,
+          readProjectsConfigurationFromProjectGraph(
+            await createProjectGraphAsync()
+          ).projects,
           isVerbose
         );
 

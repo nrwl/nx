@@ -1,10 +1,4 @@
 import { basename, join, parse } from 'path';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
-import { ProjectGraphProjectNode } from 'nx/src/config/project-graph';
-import {
-  DependentBuildableProjectNode,
-  updateBuildableProjectPackageJsonDependencies,
-} from '@nx/js/src/utils/buildable-libs-utils';
 import { writeJsonFile } from 'nx/src/utils/fileutils';
 import { writeFileSync } from 'fs';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -14,9 +8,6 @@ import { stripIndents } from '@nx/devkit';
 // TODO(jack): Use updatePackageJson from @nx/js instead.
 export function updatePackageJson(
   options: NormalizedRollupExecutorOptions,
-  context: ExecutorContext,
-  target: ProjectGraphProjectNode,
-  dependencies: DependentBuildableProjectNode[],
   packageJson: PackageJson
 ) {
   const hasEsmFormat = options.format.includes('esm');
@@ -105,21 +96,6 @@ export function updatePackageJson(
   }
 
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
-
-  if (
-    dependencies.length > 0 &&
-    options.updateBuildableProjectDepsInPackageJson
-  ) {
-    updateBuildableProjectPackageJsonDependencies(
-      context.root,
-      context.projectName,
-      context.targetName,
-      context.configurationName,
-      target,
-      dependencies,
-      options.buildableProjectDepsInPackageJsonType
-    );
-  }
 }
 
 interface Exports {

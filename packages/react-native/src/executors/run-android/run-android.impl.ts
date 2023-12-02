@@ -21,7 +21,7 @@ export default async function* runAndroidExecutor(
     context.projectsConfigurations.projects[context.projectName].root;
   chmodAndroidGradlewFiles(join(projectRoot, 'android'));
 
-  if (options.packager && options.mode !== 'Release') {
+  if (options.mode !== 'Release') {
     const startResults = startExecutor(
       {
         port: options.port,
@@ -92,14 +92,12 @@ function runCliRunAndroid(
   });
 }
 
-const nxOptions = ['sync', 'packager'];
 const startOptions = ['port', 'resetCache'];
-const deprecatedOptions = ['variant', 'jetifier'];
 
 function createRunAndroidOptions(options: ReactNativeRunAndroidOptions) {
-  return getCliOptions<ReactNativeRunAndroidOptions>(
-    options,
-    [...nxOptions, ...startOptions, ...deprecatedOptions],
-    ['appId', 'appIdSuffix', 'deviceId']
-  );
+  return getCliOptions<ReactNativeRunAndroidOptions>(options, startOptions, [
+    'appId',
+    'appIdSuffix',
+    'deviceId',
+  ]);
 }

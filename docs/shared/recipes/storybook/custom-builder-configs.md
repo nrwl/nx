@@ -17,7 +17,7 @@ If you want to add a global configuration for Webpack or Vite in your workspace,
 
 The `webpackFinal` field would look like this:
 
-```ts {% fileName=".storybook/main.js" %}
+```ts {% fileName=".storybook/main.ts" %}
 webpackFinal: async (config, { configType }) => {
   // Make whatever fine-grained changes you need that should apply to all storybook configs
 
@@ -30,7 +30,7 @@ webpackFinal: async (config, { configType }) => {
 
 The `viteFinal` field would look like this:
 
-```ts {% fileName=".storybook/main.js" %}
+```ts {% fileName=".storybook/main.ts" %}
 async viteFinal(config, { configType }) {
    if (configType === 'DEVELOPMENT') {
      // Your development configuration goes here
@@ -46,7 +46,7 @@ async viteFinal(config, { configType }) {
 
 In the `viteFinal` case, you would have to import the `mergeConfig` function from `vite`. So, on the top of your root `.storybook/main.js|ts` file, you would have to add:
 
-```ts {% fileName=".storybook/main.js" %}
+```ts {% fileName=".storybook/main.ts" %}
 import { mergeConfig } from 'vite';
 ```
 
@@ -56,37 +56,49 @@ import { mergeConfig } from 'vite';
 
 You can customize the `webpack` configuration for a specific project by adding a `webpackFinal` field in your project-specific `.storybok/main.js|ts` file, like this:
 
-```ts {% fileName="apps/my-react-webpack-app/.storybook/main.js" %}
-export default {
-  ...
+```ts {% fileName="apps/my-react-webpack-app/.storybook/main.ts" %}
+import type { StorybookConfig } from '@storybook/react-webpack5';
+
+const config: StorybookConfig = {
+  stories: ...,
+  addons: ...,
+  framework: {
+    name: '@storybook/react-webpack5',
+    options: {},
+  },
   webpackFinal: async (config, { configType }) => {
-
     // add your own webpack tweaks if needed
-
     return config;
   },
 };
+
+export default config;
 ```
 
 If you are using a global, root-level, `webpack` configuration in your project, you can customize or extend that for a specific project like this:
 
-```ts {% fileName="apps/my-react-webpack-app/.storybook/main.js" %}
+```ts {% fileName="apps/my-react-webpack-app/.storybook/main.ts" %}
 import rootMain from '../../../.storybook/main';
 
-export default {
+const config: StorybookConfig = {
   ...rootMain,
-  ...
+  stories: ...,
+  addons: ...,
+  framework: {
+    name: '@storybook/react-webpack5',
+    options: {},
+  },
   webpackFinal: async (config, { configType }) => {
     // apply any global webpack configs that might have been specified in .storybook/main.js
     if (rootMain.webpackFinal) {
       config = await rootMain.webpackFinal(config, { configType });
     }
-
     // add your own webpack tweaks if needed
-
     return config;
   },
 };
+
+export default config;
 ```
 
 Take note how, in this case, we are first applying the global `webpack` configuration, and then adding our own tweaks. If you don't want to apply any global configuration, you can just return your own configuration, and skip the `rootMain.webpackFinal` check.
@@ -95,50 +107,56 @@ Take note how, in this case, we are first applying the global `webpack` configur
 
 You can customize the `vite` configuration for a specific project by adding a `viteFinal` field in your project-specific `.storybok/main.js|ts` file, like this:
 
-```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
+```ts {% fileName="apps/my-react-vite-app/.storybook/main.ts" %}
+import type { StorybookConfig } from '@storybook/react-vite';
 import { mergeConfig } from 'vite';
-import viteTsConfigPaths from 'vite-tsconfig-paths';
 
-export default {
-  ...
+const config: StorybookConfig = {
+  stories: ...,
+  addons: ...,
+  framework: {
+    name: '@storybook/react-vite',
+    options: {
+      builder: {
+        viteConfigPath: 'apps/web/vite.config.ts',
+      },
+    },
+  },
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
       ... <your config here>
     });
   },
 };
+
+export default config;
 ```
 
 If you are using a global, root-level, `vite` configuration in your workspace, you can customize or extend that for a specific project like this:
 
-```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
+```ts {% fileName="apps/my-react-vite-app/.storybook/main.ts" %}
+import type { StorybookConfig } from '@storybook/react-vite';
 import { mergeConfig } from 'vite';
 import rootMain from '../../../.storybook/main';
 
-export default {
-  ...
+const config: StorybookConfig = {
+  ...rootMain,
+  stories: ...,
+  addons: ...,
+  framework: {
+    name: '@storybook/react-vite',
+    options: {
+      builder: {
+        viteConfigPath: 'apps/web/vite.config.ts',
+      },
+    },
+  },
   async viteFinal(config, { configType }) {
     return mergeConfig(config, {
       ...((await rootMain.viteFinal(config, { configType })) ?? {})
     });
   },
 };
-```
 
-So, a full project-level `.storybook/main.js|ts` file for a Vite.js project would look like this:
-
-```ts {% fileName="apps/my-react-vite-app/.storybook/main.js" %}
-import { mergeConfig } from 'vite';
-
-export default {
-  stories: ['../src/app/**/*.stories.@(mdx|js|jsx|ts|tsx)'],
-  addons: ['@storybook/addon-essentials'],
-  framework: {
-    name: '@storybook/react-vite',
-    options: {},
-  },
-  async viteFinal(config, { configType }) {
-    return mergeConfig(config, {});
-  },
-};
+export default config;
 ```

@@ -1,13 +1,11 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   getPackageManagerCommand,
-  getWorkspaceLayout,
   joinPathFragments,
   names,
   offsetFromRoot,
@@ -23,11 +21,13 @@ import {
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 import { join } from 'path';
 import { nxVersion, swcLoaderVersion } from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
+import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -38,26 +38,60 @@ interface NormalizedSchema extends Schema {
 }
 
 function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
-  generateFiles(
-    tree,
-    join(
-      __dirname,
-      options.bundler === 'vite' ? './files/app-vite' : './files/app-webpack'
-    ),
-    options.appProjectRoot,
-    {
-      ...options,
-      ...names(options.name),
-      tmpl: '',
-      offsetFromRoot: offsetFromRoot(options.appProjectRoot),
-      rootTsConfigPath: getRelativePathToRootTsConfig(
-        tree,
-        options.appProjectRoot
-      ),
+  if (options.bundler === 'vite') {
+    generateFiles(
+      tree,
+      join(__dirname, './files/app-vite'),
+      options.appProjectRoot,
+      {
+        ...options,
+        ...names(options.name),
+        tmpl: '',
+        offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+        rootTsConfigPath: getRelativePathToRootTsConfig(
+          tree,
+          options.appProjectRoot
+        ),
+      }
+    );
+  } else {
+    generateFiles(
+      tree,
+      join(__dirname, './files/app-webpack'),
+      options.appProjectRoot,
+      {
+        ...options,
+        ...names(options.name),
+        tmpl: '',
+        offsetFromRoot: offsetFromRoot(options.appProjectRoot),
+        rootTsConfigPath: getRelativePathToRootTsConfig(
+          tree,
+          options.appProjectRoot
+        ),
+        webpackPluginOptions: hasWebpackPlugin(tree)
+          ? {
+              target: 'web',
+              outputPath: joinPathFragments(
+                'dist',
+                options.appProjectRoot != '.'
+                  ? options.appProjectRoot
+                  : options.projectName
+              ),
+              tsConfig: './tsconfig.app.json',
+              main: './src/main.ts',
+              assets: ['./src/favicon.ico', './src/assets'],
+              index: './src/index.html',
+              baseHref: '/',
+              styles: [`./src/styles.${options.style}`],
+            }
+          : null,
+      }
+    );
+    if (options.unitTestRunner === 'none') {
+      tree.delete(
+        join(options.appProjectRoot, './src/app/app.element.spec.ts')
+      );
     }
-  );
-  if (options.unitTestRunner === 'none') {
-    tree.delete(join(options.appProjectRoot, './src/app/app.element.spec.ts'));
   }
 }
 
@@ -77,6 +111,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       typeof import('@nx/webpack')
     >('@nx/webpack', nxVersion);
     await configurationGenerator(tree, {
+      target: 'web',
       project: options.projectName,
       main,
       tsConfig,
@@ -89,43 +124,48 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
       skipFormat: true,
     });
     const project = readProjectConfiguration(tree, options.projectName);
-    const prodConfig = project.targets.build.configurations.production;
-    const buildOptions = project.targets.build.options;
-    buildOptions.assets = assets;
-    buildOptions.index = joinPathFragments(
-      options.appProjectRoot,
-      'src/index.html'
-    );
-    buildOptions.baseHref = '/';
-    buildOptions.styles = [
-      joinPathFragments(options.appProjectRoot, `src/styles.${options.style}`),
-    ];
-    // We can delete that, because this projest is an application
-    // and applications have a .babelrc file in their root dir.
-    // So Nx will find it and use it
-    delete buildOptions.babelUpwardRootMode;
-    buildOptions.scripts = [];
-    prodConfig.fileReplacements = [
-      {
-        replace: joinPathFragments(
+    if (project.targets.build) {
+      const prodConfig = project.targets.build.configurations.production;
+      const buildOptions = project.targets.build.options;
+      buildOptions.assets = assets;
+      buildOptions.index = joinPathFragments(
+        options.appProjectRoot,
+        'src/index.html'
+      );
+      buildOptions.baseHref = '/';
+      buildOptions.styles = [
+        joinPathFragments(
           options.appProjectRoot,
-          `src/environments/environment.ts`
+          `src/styles.${options.style}`
         ),
-        with: joinPathFragments(
-          options.appProjectRoot,
-          `src/environments/environment.prod.ts`
-        ),
-      },
-    ];
-    prodConfig.optimization = true;
-    prodConfig.outputHashing = 'all';
-    prodConfig.sourceMap = false;
-    prodConfig.namedChunks = false;
-    prodConfig.extractLicenses = true;
-    prodConfig.vendorChunk = false;
-    updateProjectConfiguration(tree, options.projectName, project);
-  } else if (options.bundler === 'none') {
+      ];
+      // We can delete that, because this projest is an application
+      // and applications have a .babelrc file in their root dir.
+      // So Nx will find it and use it
+      delete buildOptions.babelUpwardRootMode;
+      buildOptions.scripts = [];
+      prodConfig.fileReplacements = [
+        {
+          replace: joinPathFragments(
+            options.appProjectRoot,
+            `src/environments/environment.ts`
+          ),
+          with: joinPathFragments(
+            options.appProjectRoot,
+            `src/environments/environment.prod.ts`
+          ),
+        },
+      ];
+      prodConfig.optimization = true;
+      prodConfig.outputHashing = 'all';
+      prodConfig.sourceMap = false;
+      prodConfig.namedChunks = false;
+      prodConfig.extractLicenses = true;
+      prodConfig.vendorChunk = false;
+      updateProjectConfiguration(tree, options.projectName, project);
+    }
     // TODO(jack): Flush this out... no bundler should be possible for web but the experience isn't holistic due to missing features (e.g. writing index.html).
+  } else if (options.bundler === 'none') {
     const project = readProjectConfiguration(tree, options.projectName);
     project.targets.build = {
       executor: `@nx/js:${options.compiler}`,
@@ -134,7 +174,6 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
         main,
         outputPath: joinPathFragments('dist', options.appProjectRoot),
         tsConfig,
-        assets,
       },
     };
     updateProjectConfiguration(tree, options.projectName, project);
@@ -158,10 +197,6 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
     },
     options.standaloneConfig
   );
-
-  if (options.bundler !== 'vite') {
-    await setupBundler(tree, options);
-  }
 }
 
 function setDefaults(tree: Tree, options: NormalizedSchema) {
@@ -195,13 +230,17 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   });
   tasks.push(webTask);
 
-  createApplicationFiles(host, options);
   await addProject(host, options);
 
+  if (options.bundler !== 'vite') {
+    await setupBundler(host, options);
+  }
+
+  createApplicationFiles(host, options);
+
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage<
-      typeof import('@nx/vite')
-    >('@nx/vite', nxVersion);
+    const { viteConfigurationGenerator, createOrEditViteConfig } =
+      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     if (
@@ -221,21 +260,40 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(viteTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: options.unitTestRunner === 'vitest',
+        inSourceTests: options.inSourceTests,
+      },
+      false
+    );
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
-      '@nx/vite',
-      nxVersion
-    );
+    const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'none',
       project: options.projectName,
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
     });
     tasks.push(vitestTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: true,
+        inSourceTests: options.inSourceTests,
+      },
+      true
+    );
   }
 
   if (
@@ -248,7 +306,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = ensurePackage('@nx/linter', nxVersion);
+    const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -256,7 +314,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [`${options.appProjectRoot}/**/*.ts`],
       skipFormat: true,
       setParserOptionsProject: options.setParserOptionsProject,
     });
@@ -264,16 +321,23 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.e2eTestRunner === 'cypress') {
-    const { cypressProjectGenerator } = ensurePackage<
+    const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
     >('@nx/cypress', nxVersion);
-    const cypressTask = await cypressProjectGenerator(host, {
+    addProjectConfiguration(host, options.e2eProjectName, {
+      root: options.e2eProjectRoot,
+      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+      projectType: 'application',
+      targets: {},
+      tags: [],
+      implicitDependencies: [options.projectName],
+    });
+    const cypressTask = await configurationGenerator(host, {
       ...options,
-      name: options.e2eProjectName,
-      directory: options.e2eProjectRoot,
-      // the name and root are already normalized, instruct the generator to use them as is
-      projectNameAndRootFormat: 'as-provided',
-      project: options.projectName,
+      project: options.e2eProjectName,
+      devServerTarget: `${options.projectName}:serve`,
+      baseUrl: 'http://localhost:4200',
+      directory: 'src',
       skipFormat: true,
     });
     tasks.push(cypressTask);
@@ -281,7 +345,6 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
     const { configurationGenerator: playwrightConfigGenerator } = ensurePackage<
       typeof import('@nx/playwright')
     >('@nx/playwright', nxVersion);
-
     addProjectConfiguration(host, options.e2eProjectName, {
       root: options.e2eProjectRoot,
       sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
@@ -364,17 +427,16 @@ async function normalizeOptions(
     callingGenerator: '@nx/web:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
-
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
 
-  const { npmScope } = getWorkspaceLayout(host);
+  const npmScope = getNpmScope(host);
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
-  if (options.bundler === 'vite' && !options.unitTestRunner) {
+  if (options.bundler === 'vite' && options.unitTestRunner !== 'none') {
     options.unitTestRunner = 'vitest';
   }
 
@@ -398,4 +460,3 @@ async function normalizeOptions(
 }
 
 export default applicationGenerator;
-export const applicationSchematic = convertNxGenerator(applicationGenerator);

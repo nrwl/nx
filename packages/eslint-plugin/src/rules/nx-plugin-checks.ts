@@ -1,5 +1,6 @@
 import type { AST } from 'jsonc-eslint-parser';
 import type { TSESLint } from '@typescript-eslint/utils';
+import { ESLintUtils } from '@typescript-eslint/utils';
 
 import {
   ProjectGraphProjectNode,
@@ -10,8 +11,7 @@ import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
 import { existsSync } from 'fs';
 import { registerTsProject } from '@nx/js/src/internal';
 import * as path from 'path';
-
-import { createESLintRule } from '../utils/create-eslint-rule';
+import { join } from 'path';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { valid } from 'semver';
 
@@ -48,14 +48,47 @@ export type MessageIds =
 
 export const RULE_NAME = 'nx-plugin-checks';
 
-export default createESLintRule<Options, MessageIds>({
+export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
   name: RULE_NAME,
   meta: {
     docs: {
       description: 'Checks common nx-plugin configuration files for validity',
-      recommended: 'error',
+      recommended: 'recommended',
     },
-    schema: [],
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          generatorsJson: {
+            type: 'string',
+            description:
+              "The path to the project's generators.json file, relative to the project root",
+          },
+          executorsJson: {
+            type: 'string',
+            description:
+              "The path to the project's executors.json file, relative to the project root",
+          },
+          migrationsJson: {
+            type: 'string',
+            description:
+              "The path to the project's migrations.json file, relative to the project root",
+          },
+          packageJson: {
+            type: 'string',
+            description:
+              "The path to the project's package.json file, relative to the project root",
+          },
+          allowedVersionStrings: {
+            type: 'array',
+            description:
+              'A list of specifiers that are valid for versions within package group. Defaults to ["*", "latest", "next"]',
+            items: { type: 'string' },
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
     type: 'problem',
     messages: {
       invalidSchemaPath: 'Schema path should point to a valid file',
@@ -114,7 +147,7 @@ export default createESLintRule<Options, MessageIds>({
     }
 
     if (!(global as any).tsProjectRegistered) {
-      registerTsProject(workspaceRoot, 'tsconfig.base.json');
+      registerTsProject(join(workspaceRoot, 'tsconfig.base.json'));
       (global as any).tsProjectRegistered = true;
     }
 

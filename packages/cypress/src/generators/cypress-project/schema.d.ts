@@ -1,5 +1,5 @@
 import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 
 export interface Schema {
   project?: string;
@@ -11,7 +11,6 @@ export interface Schema {
   js?: boolean;
   skipFormat?: boolean;
   setParserOptionsProject?: boolean;
-  standaloneConfig?: boolean;
   skipPackageJson?: boolean;
   bundler?: 'webpack' | 'vite' | 'none';
 }

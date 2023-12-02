@@ -56,9 +56,8 @@
     },
     "routing": {
       "type": "boolean",
-      "description": "Generate a routing module.",
-      "default": false,
-      "x-prompt": "Would you like to configure routing for this application?",
+      "description": "Enable routing for the application.",
+      "default": true,
       "x-priority": "important"
     },
     "inlineStyle": {
@@ -155,8 +154,9 @@
       "default": false
     },
     "standalone": {
-      "description": "Generate an application that is setup to use standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
+      "description": "Generate an application that is setup to use standalone components.",
       "type": "boolean",
+      "default": true,
       "x-priority": "important"
     },
     "rootProject": {
@@ -172,10 +172,17 @@
       "default": false
     },
     "bundler": {
-      "description": "Bundler to use to build the application.",
+      "description": "Bundler to use to build the application. It defaults to `esbuild` for Angular versions >= 17.0.0. Otherwise, it defaults to `webpack`. _Note: The `esbuild` bundler is only considered stable from Angular v17._",
       "type": "string",
       "enum": ["webpack", "esbuild"],
-      "default": "webpack"
+      "x-prompt": "Which bundler do you want to use to build the application?",
+      "x-priority": "important"
+    },
+    "ssr": {
+      "description": "Creates an application with Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering) enabled.",
+      "type": "boolean",
+      "x-prompt": "Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?",
+      "default": false
     }
   },
   "additionalProperties": false,

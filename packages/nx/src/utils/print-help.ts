@@ -324,7 +324,7 @@ function generateExamplesOutput(schema: Schema): string {
   return ui.toString();
 }
 
-// TODO: generalize link generation so it works for non @nrwl plugins as well
+// TODO: generalize link generation so it works for non @nx plugins as well
 function generateLinkOutput({
   pluginName,
   name,

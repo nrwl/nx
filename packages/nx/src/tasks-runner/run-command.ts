@@ -194,7 +194,11 @@ export async function runCommand(
 }
 
 function setEnvVarsBasedOnArgs(nxArgs: NxArgs, loadDotEnvFiles: boolean) {
-  if (nxArgs.outputStyle == 'stream' || process.env.NX_BATCH_MODE === 'true') {
+  if (
+    nxArgs.outputStyle == 'stream' ||
+    process.env.NX_BATCH_MODE === 'true' ||
+    nxArgs.batch
+  ) {
     process.env.NX_STREAM_OUTPUT = 'true';
     process.env.NX_PREFIX_OUTPUT = 'true';
   }
@@ -233,12 +237,13 @@ export async function invokeTasksRunner({
   if (daemonClient.enabled()) {
     hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
   } else {
-    const { fileMap, allWorkspaceFiles } = getFileMap();
+    const { fileMap, allWorkspaceFiles, rustReferences } = getFileMap();
     hasher = new InProcessTaskHasher(
       fileMap?.projectFileMap,
       allWorkspaceFiles,
       projectGraph,
       nxJson,
+      rustReferences,
       runnerOptions
     );
   }
@@ -246,15 +251,13 @@ export async function invokeTasksRunner({
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
-  performance.mark('hashing:start');
+
   await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     hasher,
     projectGraph,
     taskGraph,
     nxJson
   );
-  performance.mark('hashing:end');
-  performance.measure('hashing', 'hashing:start', 'hashing:end');
 
   const promiseOrObservable = tasksRunner(
     tasks,
@@ -270,30 +273,56 @@ export async function invokeTasksRunner({
       nxArgs,
       taskGraph,
       hasher: {
-        hashTask(task: Task, taskGraph_?: TaskGraph) {
+        hashTask(task: Task, taskGraph_?: TaskGraph, env?: NodeJS.ProcessEnv) {
           if (!taskGraph_) {
             output.warn({
-              title: `TaskGraph is now required as an argument to hashTasks`,
+              title: `TaskGraph is now required as an argument to hashTask`,
               bodyLines: [
                 `The TaskGraph object can be retrieved from the context`,
+                'This will result in an error in Nx 18',
               ],
             });
             taskGraph_ = taskGraph;
           }
-          return hasher.hashTask(task, taskGraph_);
+          if (!env) {
+            output.warn({
+              title: `The environment variables are now required as an argument to hashTask`,
+              bodyLines: [
+                `Please pass the environment variables used when running the task`,
+                'This will result in an error in Nx 18',
+              ],
+            });
+            env = process.env;
+          }
+          return hasher.hashTask(task, taskGraph_, env);
         },
-        hashTasks(task: Task[], taskGraph_?: TaskGraph) {
+        hashTasks(
+          task: Task[],
+          taskGraph_?: TaskGraph,
+          env?: NodeJS.ProcessEnv
+        ) {
           if (!taskGraph_) {
             output.warn({
               title: `TaskGraph is now required as an argument to hashTasks`,
               bodyLines: [
                 `The TaskGraph object can be retrieved from the context`,
+                'This will result in an error in Nx 18',
               ],
             });
             taskGraph_ = taskGraph;
+          }
+          if (!env) {
+            output.warn({
+              title: `The environment variables are now required as an argument to hashTasks`,
+              bodyLines: [
+                `Please pass the environment variables used when running the tasks`,
+                'This will result in an error in Nx 18',
+              ],
+            });
+            env = process.env;
           }
 
-          return hasher.hashTasks(task, taskGraph_);
+          return hasher.hashTasks(task, taskGraph_, env);
         },
       },
       daemon: daemonClient,
@@ -390,7 +419,28 @@ function shouldUseDynamicLifeCycle(
   if (isCI()) return false;
   if (outputStyle === 'static' || outputStyle === 'stream') return false;
 
-  return !tasks.find((t) => shouldStreamOutput(t, null, options));
+  return !tasks.find((t) => shouldStreamOutput(t, null));
+}
+
+function loadTasksRunner(modulePath: string) {
+  try {
+    const maybeTasksRunner = require(modulePath) as
+      | TasksRunner
+      | { default: TasksRunner };
+    // to support both babel and ts formats
+    return 'default' in maybeTasksRunner
+      ? maybeTasksRunner.default
+      : maybeTasksRunner;
+  } catch (e) {
+    if (
+      e.code === 'MODULE_NOT_FOUND' &&
+      (modulePath === 'nx-cloud' || modulePath === '@nrwl/nx-cloud')
+    ) {
+      return require('../nx-cloud/nx-cloud-tasks-runner-shell')
+        .nxCloudTasksRunnerShell;
+    }
+    throw e;
+  }
 }
 
 export function getRunner(
@@ -402,35 +452,106 @@ export function getRunner(
 } {
   let runner = nxArgs.runner;
   runner = runner || 'default';
-  if (!nxJson.tasksRunnerOptions) {
-    throw new Error(`Could not find any runner configurations in nx.json`);
+
+  if (runner !== 'default' && !nxJson.tasksRunnerOptions?.[runner]) {
+    throw new Error(`Could not find runner configuration for ${runner}`);
   }
-  if (nxJson.tasksRunnerOptions[runner]) {
-    let modulePath: string = nxJson.tasksRunnerOptions[runner].runner;
 
-    let tasksRunner;
-    if (modulePath) {
-      if (isRelativePath(modulePath)) {
-        modulePath = join(workspaceRoot, modulePath);
-      }
+  const modulePath: string = getTasksRunnerPath(runner, nxJson);
 
-      tasksRunner = require(modulePath);
-      // to support both babel and ts formats
-      if (tasksRunner.default) {
-        tasksRunner = tasksRunner.default;
-      }
-    } else {
-      tasksRunner = require('./default-tasks-runner').defaultTasksRunner;
-    }
+  try {
+    const tasksRunner = loadTasksRunner(modulePath);
 
     return {
       tasksRunner,
-      runnerOptions: {
-        ...nxJson.tasksRunnerOptions[runner].options,
-        ...nxArgs,
-      },
+      runnerOptions: getRunnerOptions(
+        runner,
+        nxJson,
+        nxArgs,
+        modulePath === 'nx-cloud'
+      ),
     };
-  } else {
+  } catch {
     throw new Error(`Could not find runner configuration for ${runner}`);
   }
+}
+function getTasksRunnerPath(
+  runner: string,
+  nxJson: NxJsonConfiguration<string[] | '*'>
+) {
+  let modulePath: string = nxJson.tasksRunnerOptions?.[runner]?.runner;
+
+  if (modulePath) {
+    if (isRelativePath(modulePath)) {
+      return join(workspaceRoot, modulePath);
+    }
+    return modulePath;
+  }
+
+  const isCloudRunner =
+    // No tasksRunnerOptions for given --runner
+    nxJson.nxCloudAccessToken ||
+    // No runner prop in tasks runner options, check if access token is set.
+    nxJson.tasksRunnerOptions?.[runner]?.options?.accessToken ||
+    // Cloud access token specified in env var.
+    process.env.NX_CLOUD_ACCESS_TOKEN;
+
+  return isCloudRunner ? 'nx-cloud' : require.resolve('./default-tasks-runner');
+}
+
+export function getRunnerOptions(
+  runner: string,
+  nxJson: NxJsonConfiguration<string[] | '*'>,
+  nxArgs: NxArgs,
+  isCloudDefault: boolean
+): any {
+  const defaultCacheableOperations = [];
+
+  for (const key in nxJson.targetDefaults) {
+    if (nxJson.targetDefaults[key].cache) {
+      defaultCacheableOperations.push(key);
+    }
+  }
+
+  const result = {
+    ...nxJson.tasksRunnerOptions?.[runner]?.options,
+    ...nxArgs,
+  };
+
+  // NOTE: we don't pull from env here because the cloud package
+  // supports it within nx-cloud's implementation. We could
+  // normalize it here, and that may make more sense, but
+  // leaving it as is for now.
+  if (nxJson.nxCloudAccessToken && isCloudDefault) {
+    result.accessToken ??= nxJson.nxCloudAccessToken;
+  }
+
+  if (nxJson.nxCloudUrl && isCloudDefault) {
+    result.url ??= nxJson.nxCloudUrl;
+  }
+
+  if (nxJson.nxCloudEncryptionKey && isCloudDefault) {
+    result.encryptionKey ??= nxJson.nxCloudEncryptionKey;
+  }
+
+  if (nxJson.parallel) {
+    result.parallel ??= nxJson.parallel;
+  }
+
+  if (nxJson.cacheDirectory) {
+    result.cacheDirectory ??= nxJson.cacheDirectory;
+  }
+
+  if (defaultCacheableOperations.length) {
+    result.cacheableOperations ??= [];
+    result.cacheableOperations = result.cacheableOperations.concat(
+      defaultCacheableOperations
+    );
+  }
+
+  if (nxJson.useDaemonProcess !== undefined) {
+    result.useDaemonProcess ??= nxJson.useDaemonProcess;
+  }
+
+  return result;
 }

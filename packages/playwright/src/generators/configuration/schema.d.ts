@@ -1,4 +1,4 @@
-import type { Linter } from '@nx/linter';
+import type { Linter } from '@nx/eslint';
 
 export interface ConfigurationGeneratorSchema {
   project: string;
@@ -21,4 +21,5 @@ export interface ConfigurationGeneratorSchema {
    * @example: "http://localhost:4200"
    **/
   webServerAddress?: string;
+  rootProject?: boolean;
 }

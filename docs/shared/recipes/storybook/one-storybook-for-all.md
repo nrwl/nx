@@ -8,7 +8,7 @@ description: Dive into a comprehensive guide on how to consolidate all your Stor
 This guide extends the
 [Using Storybook in a Nx workspace - Best practices](/nx-api/storybook/documents/best-practices) guide. In that guide, we discussed the best practices of using Storybook in a Nx workspace. We explained the main concepts and the mental model of how to best set up Storybook. In this guide, we are going to see how to put that into practice, by looking at a real-world example. We are going to see how you can publish one single Storybook for your workspace.
 
-This case would work if all your projects (applications and libraries) containing stories that you want to use are using the same framework (Angular, React, Vue, etc). The reason is that you will be importing the stories in a central host Storybook's `.storybook/main.js`, and we will be using one specific builder to build that Storybook. Storybook does not support mixing frameworks in the same Storybook instance.
+This case would work if all your projects (applications and libraries) containing stories that you want to use are using the same framework (Angular, React, Vue, etc). The reason is that you will be importing the stories in a central host Storybook's `.storybook/main.ts`, and we will be using one specific builder to build that Storybook. Storybook does not support mixing frameworks in the same Storybook instance.
 
 Let’s see how we can implement this solution:
 
@@ -18,14 +18,14 @@ Let’s see how we can implement this solution:
 
 ### Generate a new library that will host our Storybook instance
 
-According to the framework you are using, use the corresponding generator to generate a new library. Let’s suppose that you are using React and all your stories are using `@storybook/react`:
+According to the framework you are using, use the corresponding generator to generate a new library. Let’s suppose that you are using React and all your stories are using the `@storybook/react-vite` framework:
 
 {% callout type="note" title="Directory Flag Behavior Changes" %}
-The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [workspace layout documentation](/reference/nx-json#workspace-layout) for more details.
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
 ```shell
-nx g @nx/react:library storybook-host --directory=libs/storybook-host
+nx g @nx/react:library storybook-host --directory=libs/storybook-host --bundler=none --unitTestRunner=none --projectNameAndRootFormat=as-provided
 ```
 
 Now, you have a new library, which will act as a shell/host for all your stories.
@@ -35,28 +35,40 @@ Now, you have a new library, which will act as a shell/host for all your stories
 Now let’s configure our new library to use Storybook, using the [`@nx/storybook:configuration` generator](/nx-api/storybook/generators/configuration). Run:
 
 ```shell
-nx g @nx/storybook:configuration storybook-host
+nx g @nx/storybook:configuration storybook-host --interactionTests=true --uiFramework=@storybook/react-vite
 ```
 
-and choose the framework you want to use (in our case, choose `@storybook/react`).
+This generator will only generate the `storybook`, `build-storybook` and `test-storybook` targets in our new library's `project.json` (`libs/storybook-host/project.json`), and also the `libs/storybook-host/.storybook` folder. This is all we care about. We don’t need any stories in this project, since we will be importing the stories from other projects in our workspace. So, if you want, you can delete the contents of the `src/lib` folder. You may also delete the `lint` and `test` targets in `libs/storybook-host/project.json`. We will not be needing those.
 
-This generator will only generate the `storybook` and `build-storybook` targets in our new library's `project.json` (`libs/storybook-host/project.json`), and also the `libs/storybook-host/.storybook` folder. This is all we care about. We don’t need any stories in this project, since we will be importing the stories from other projects in our workspace. So, if you want, you can delete the contents of the `src/lib` folder. You may also delete the `lint` and `test` targets in `libs/storybook-host/project.json`. We will not be needing those.
+### Import the stories in our library's main.ts
 
-### Import the stories in our library's main.js
+Now it’s time to import the stories of our other projects in our new library's `./storybook/main.ts`.
 
-Now it’s time to import the stories of our other projects in our new library's `./storybook/main.js`.
+Here is a sample `libs/storybook-host/.storybook/main.ts` file:
 
-Here is a sample `libs/storybook-host/.storybook/main.js` file:
+```javascript {% fileName="libs/storybook-host/.storybook/main.ts" %}
+import type { StorybookConfig } from '@storybook/react-vite';
+import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import { mergeConfig } from 'vite';
 
-```javascript {% fileName="libs/storybook-host/.storybook/main.js" %}
-module.exports = {
-  core: { builder: 'webpack5' },
+const config: StorybookConfig = {
   stories: ['../../**/ui/**/src/lib/**/*.stories.@(js|jsx|ts|tsx|mdx)'],
-  addons: ['@storybook/addon-essentials', '@nx/react/plugins/storybook'],
+  addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+  framework: {
+    name: '@storybook/react-vite',
+    options: {},
+  },
+
+  viteFinal: async (config) =>
+    mergeConfig(config, {
+      plugins: [nxViteTsPaths()],
+    }),
 };
+
+export default config;
 ```
 
-Notice how we only link the stories matching that pattern. According to your workspace set-up, you can adjust the pattern, or add more patterns, so that you can match all the stories in all the projects you want.
+Notice how we only link the stories matching a specific pattern. According to your workspace set-up, you can adjust the pattern, or add more patterns, so that you can match all the stories in all the projects you want.
 
 For example:
 
@@ -68,28 +80,26 @@ stories: [
 ];
 ```
 
-### Import the stories in Storybook’s tsconfig.json
+### If you're using Angular add the stories in your tsconfig.json
 
-If you are using Angular, do not forget to import the stories in the TypeScript configuration of Storybook.
+Here is a sample `libs/storybook-host/.storybook/tsconfig.json` file:
 
-Here is a sample `libs/storybook-host-angular/.storybook/tsconfig.json` file:
-
-```json {% fileName="libs/storybook-host-angular/.storybook/tsconfig.json" %}
+```json {% fileName="libs/storybook-host/.storybook/tsconfig.json" %}
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "emitDecoratorMetadata": true
   },
   "exclude": ["../**/*.spec.ts"],
-  "include": ["../../**/ui/**/src/lib/**/*.stories.ts", "*.js"]
+  "include": ["../../**/ui/**/src/lib/**/*.stories.ts", "*.ts"]
 }
 ```
 
-Notice how in the `include` array we are specifying the paths to our stories, using the same pattern we used in our `.storybook/main.js`.
+Notice how in the `include` array we are specifying the paths to our stories, using the same pattern we used in our `.storybook/main.ts`.
 
-### Serve or build your Storybook!
+### Serve or build your Storybook
 
-Now you can serve or build your Storybook as you would, normally. And then you can publish the bundled app!
+Now you can serve, test or build your Storybook as you would, normally. And then you can publish the bundled app!
 
 ```shell
 nx storybook storybook-host
@@ -99,6 +109,12 @@ or
 
 ```shell
 nx build-storybook storybook-host
+```
+
+or
+
+```shell
+nx test-storybook storybook-host
 ```
 
 ## Use cases that apply to this solution
@@ -113,7 +129,7 @@ Ideal for:
 
 ## Extras - Dependencies
 
-Your new Storybook host, essentially, depends on all the projects from which it is importing stories. This means whenever one of these projects updates a component, or updates a story, our Storybook host would have to rebuild, to reflect these changes. It cannot rely on the cached result. However, Nx does not understand the imports in `libs/storybook-host/.storybook/main.js`, and the result is that Nx does not know which projects the Storybook host depends on, based solely on the `main.js` imports. The good thing is that there is a solution to this. You can manually add the projects your Storybook host depends on as implicit dependencies in your project’s `project.json`, in the implicit dependencies array.
+Your new Storybook host, essentially, depends on all the projects from which it is importing stories. This means whenever one of these projects updates a component, or updates a story, our Storybook host would have to rebuild, to reflect these changes. It cannot rely on the cached result. However, Nx does not understand the imports in `libs/storybook-host/.storybook/main.ts`, and the result is that Nx does not know which projects the Storybook host depends on, based solely on the `main.ts` imports. The good thing is that there is a solution to this. You can manually add the projects your Storybook host depends on as implicit dependencies in your project’s `project.json`, in the implicit dependencies array.
 
 For example, `libs/storybook-host/project.json`:
 

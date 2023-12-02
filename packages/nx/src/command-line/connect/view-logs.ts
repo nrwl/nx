@@ -3,9 +3,10 @@ import { execSync } from 'child_process';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { output } from '../../utils/output';
 import { runNxSync } from '../../utils/child-process';
+import { readNxJson } from '../../config/nx-json';
 
 export async function viewLogs(): Promise<number> {
-  const cloudUsed = isNxCloudUsed();
+  const cloudUsed = isNxCloudUsed(readNxJson());
   if (cloudUsed) {
     output.error({
       title: 'Your workspace is already connected to Nx Cloud',
@@ -41,26 +42,17 @@ export async function viewLogs(): Promise<number> {
   if (!installCloud) return;
 
   const pmc = getPackageManagerCommand();
-  try {
-    output.log({
-      title: 'Installing nx-cloud',
-    });
-    execSync(`${pmc.addDev} nx-cloud@latest`, { stdio: 'ignore' });
-  } catch (e) {
-    output.log({
-      title: 'Installation failed',
-    });
-    console.log(e);
-    return 1;
-  }
 
   try {
     output.log({
       title: 'Connecting to Nx Cloud',
     });
-    runNxSync(`g nx-cloud:init --installation-source=view-logs`, {
-      stdio: 'ignore',
-    });
+    runNxSync(
+      `g nx:connect-to-nx-cloud --installation-source=view-logs --quiet --no-interactive`,
+      {
+        stdio: 'ignore',
+      }
+    );
   } catch (e) {
     output.log({
       title: 'Failed to connect to Nx Cloud',

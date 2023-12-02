@@ -21,7 +21,7 @@ export default async function* runIosExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
-  if (options.packager && options.mode !== 'Release') {
+  if (options.mode !== 'Release') {
     const startResults = startExecutor(
       {
         port: options.port,
@@ -92,14 +92,10 @@ function runCliRunIOS(
   });
 }
 
-const nxOptions = ['sync', 'install', 'packager'];
 const startOptions = ['port', 'resetCache'];
-const deprecatedOptions = ['xcodeConfiguration'];
 
 function createRunIOSOptions(options: ReactNativeRunIosOptions) {
-  return getCliOptions<ReactNativeRunIosOptions>(
-    options,
-    [...nxOptions, ...startOptions, ...deprecatedOptions],
-    ['buildFolder']
-  );
+  return getCliOptions<ReactNativeRunIosOptions>(options, startOptions, [
+    'buildFolder',
+  ]);
 }

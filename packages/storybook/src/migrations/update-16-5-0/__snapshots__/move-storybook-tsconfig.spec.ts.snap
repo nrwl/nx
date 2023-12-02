@@ -91,39 +91,35 @@ exports[`Ignore @nx/react/plugins/storybook in Storybook eslint plugin should up
 `;
 
 exports[`Ignore @nx/react/plugins/storybook in Storybook eslint plugin should update nx.json inputs 1`] = `
-"{
-  "npmScope": "proj",
+{
   "affected": {
-    "defaultBase": "main"
-  },
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "cacheableOperations": ["build", "lint", "test", "e2e"]
-      }
-    }
+    "defaultBase": "main",
   },
   "namedInputs": {
     "production": [
       "default",
       "!{projectRoot}/**/*.stories.@(js|jsx|ts|tsx|mdx)",
       "!{projectRoot}/.storybook/**/*",
-      "!{projectRoot}/tsconfig.storybook.json"
-    ]
+      "!{projectRoot}/tsconfig.storybook.json",
+    ],
   },
   "targetDefaults": {
+    "build": {
+      "cache": true,
+    },
     "build-storybook": {
       "inputs": [
         "default",
         "^production",
         "{projectRoot}/.storybook/**/*",
-        "{projectRoot}/tsconfig.storybook.json"
-      ]
-    }
-  }
+        "{projectRoot}/tsconfig.storybook.json",
+      ],
+    },
+    "lint": {
+      "cache": true,
+    },
+  },
 }
-"
 `;
 
 exports[`Ignore @nx/react/plugins/storybook in Storybook eslint plugin should update projects tsconfig.json 1`] = `

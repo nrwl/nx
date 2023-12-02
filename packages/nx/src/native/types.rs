@@ -1,28 +1,9 @@
-use std::cmp::Ordering;
+mod file_data;
+mod inputs;
+mod napi_dashmap;
+mod nx_json;
 
-#[napi(object)]
-#[derive(Clone)]
-pub struct FileData {
-    pub file: String,
-    pub hash: String,
-}
-
-impl Eq for FileData {}
-
-impl PartialEq<Self> for FileData {
-    fn eq(&self, other: &Self) -> bool {
-        self.file.eq(&other.file)
-    }
-}
-
-impl PartialOrd<Self> for FileData {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.file.partial_cmp(&other.file)
-    }
-}
-
-impl Ord for FileData {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.file.cmp(&other.file)
-    }
-}
+pub use file_data::FileData;
+pub use inputs::*;
+pub use napi_dashmap::NapiDashMap;
+pub use nx_json::*;

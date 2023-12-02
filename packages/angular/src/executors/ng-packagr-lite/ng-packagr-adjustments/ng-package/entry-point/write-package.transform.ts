@@ -59,12 +59,19 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
     }
 
     // 6. WRITE PACKAGE.JSON
-    // As of APF 14 only the primary entrypoint has a package.json
+    const relativeUnixFromDestPath = (filePath: string) =>
+      ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
+
     if (!ngEntryPoint.isSecondaryEntryPoint) {
       try {
         logger.info('Writing package manifest');
-        const relativeUnixFromDestPath = (filePath: string) =>
-          ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
+        if (!options.watch) {
+          const primary = ngPackageNode.data.primary;
+          await writeFile(
+            path.join(primary.destinationPath, '.npmignore'),
+            `# Nested package.json's are only needed for development.\n**/package.json`
+          );
+        }
 
         await writePackageJson(
           ngEntryPoint,
@@ -100,26 +107,45 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
       } catch (error) {
         throw error;
       }
-    } else if (options.watch) {
-      // update the watch version of the primary entry point `package.json` file.
-      // this is needed because of Webpack's 5 `cachemanagedpaths`
-      // https://github.com/ng-packagr/ng-packagr/issues/2069
-      const primary = ngPackageNode.data.primary;
-      const packageJsonPath = path.join(
-        primary.destinationPath,
-        'package.json'
-      );
+    } else if (ngEntryPoint.isSecondaryEntryPoint) {
+      if (options.watch) {
+        // Update the watch version of the primary entry point `package.json` file.
+        // this is needed because of Webpack's 5 `cachemanagedpaths`
+        // https://github.com/ng-packagr/ng-packagr/issues/2069
+        const primary = ngPackageNode.data.primary;
+        const packageJsonPath = path.join(
+          primary.destinationPath,
+          'package.json'
+        );
 
-      if (await exists(packageJsonPath)) {
-        const packageJson = JSON.parse(
-          await readFile(packageJsonPath, { encoding: 'utf8' })
-        );
-        packageJson.version = generateWatchVersion();
-        await writeFile(
-          path.join(primary.destinationPath, 'package.json'),
-          JSON.stringify(packageJson, undefined, 2)
-        );
+        if (await exists(packageJsonPath)) {
+          const packageJson = JSON.parse(
+            await readFile(packageJsonPath, { encoding: 'utf8' })
+          );
+          packageJson.version = generateWatchVersion();
+          await writeFile(
+            path.join(primary.destinationPath, 'package.json'),
+            JSON.stringify(packageJson, undefined, 2)
+          );
+        }
       }
+
+      // Write a package.json in each secondary entry-point
+      // This is need for esbuild to secondary entry-points in dist correctly.
+      await writeFile(
+        path.join(ngEntryPoint.destinationPath, 'package.json'),
+        JSON.stringify(
+          {
+            module: relativeUnixFromDestPath(
+              angularVersion.major < 16
+                ? (destinationFiles as any).esm2020
+                : destinationFiles.esm2022
+            ),
+          },
+          undefined,
+          2
+        )
+      );
     }
 
     logger.info(`Built ${ngEntryPoint.moduleId}`);

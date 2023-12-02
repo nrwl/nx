@@ -87,6 +87,9 @@ export async function* esbuildExecutor(
       generateLockfile: true,
       outputFileExtensionForCjs: getOutExtension('cjs', options),
       excludeLibsInPackageJson: !options.thirdParty,
+      // TODO(jack): Remove the need to pass updateBuildableProjectDepsInPackageJson option when overrideDependencies or extraDependencies are passed.
+      // Add this back to fix a regression.
+      // See: https://github.com/nrwl/nx/issues/19773
       updateBuildableProjectDepsInPackageJson: externalDependencies.length > 0,
     };
 

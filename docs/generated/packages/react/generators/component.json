@@ -1,6 +1,6 @@
 {
   "name": "component",
-  "factory": "./src/generators/component/component#componentGenerator",
+  "factory": "./src/generators/component/component#componentGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "cli": "nx",
@@ -8,24 +8,13 @@
     "title": "Create a React Component",
     "description": "Create a React Component for Nx.",
     "type": "object",
-    "examples": [
-      {
-        "command": "nx g component my-component --project=mylib",
-        "description": "Generate a component in the `mylib` library"
-      },
-      {
-        "command": "nx g component my-component --project=mylib --classComponent",
-        "description": "Generate a class component in the `mylib` library"
-      }
-    ],
     "properties": {
       "project": {
         "type": "string",
         "description": "The name of the project.",
         "alias": "p",
         "$default": { "$source": "projectName" },
-        "x-prompt": "What is the name of the project for this component?",
-        "x-priority": "important"
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
       },
       "name": {
         "type": "string",
@@ -64,11 +53,7 @@
               "value": "styled-jsx",
               "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
             },
-            { "value": "none", "label": "None" },
-            {
-              "value": "styl",
-              "label": "Stylus(.styl)     [ http://stylus-lang.com        ] (DEPRECATED)"
-            }
+            { "value": "none", "label": "None" }
           ]
         }
       },
@@ -85,14 +70,20 @@
       },
       "directory": {
         "type": "string",
-        "description": "Create the component under this directory (can be nested).",
+        "description": "The directory at which to create the component file. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the project root.",
         "alias": "dir",
         "x-priority": "important"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "flat": {
         "type": "boolean",
         "description": "Create component at the source root rather than its own directory.",
-        "default": false
+        "default": false,
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v18."
       },
       "export": {
         "type": "boolean",
@@ -105,13 +96,15 @@
         "type": "boolean",
         "description": "Use pascal case component file name (e.g. `App.tsx`).",
         "alias": "P",
-        "default": false
+        "default": false,
+        "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v18."
       },
       "pascalCaseDirectory": {
         "type": "boolean",
         "description": "Use pascal case directory name (e.g. `App/App.tsx`).",
         "alias": "R",
-        "default": false
+        "default": false,
+        "x-deprecated": "Provide the `directory` in pascal-case and use the `as-provided` format. This option will be removed in Nx v18."
       },
       "classComponent": {
         "type": "boolean",
@@ -144,12 +137,13 @@
         "x-priority": "internal"
       }
     },
-    "required": ["name", "project"],
+    "required": ["name"],
+    "examplesFile": "## Examples\n\n{% tabs %}\n{% tab label=\"Simple Component\" %}\n\nCreate a component named `my-component` under the `libs/ui` project:\n\n```shell\nnx g @nx/react:component libs/ui/src/my-component\n```\n\n{% /tab %}\n\n{% tab label=\"Standalone Component\" %}\n\nCreate a class component named `my-component` under the `libs/ui` project:\n\n```shell\nnx g @nx/react:component libs/ui/src/my-component --classComponent\n```\n\n{% /tab %}\n",
     "presets": []
   },
   "description": "Create a React component.",
   "aliases": ["c"],
-  "implementation": "/packages/react/src/generators/component/component#componentGenerator.ts",
+  "implementation": "/packages/react/src/generators/component/component#componentGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/react/src/generators/component/schema.json",
   "type": "generator"

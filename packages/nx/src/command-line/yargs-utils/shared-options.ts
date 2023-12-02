@@ -25,6 +25,7 @@ export interface RunOptions {
   skipNxCache: boolean;
   cloud: boolean;
   dte: boolean;
+  batch: boolean;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
@@ -89,7 +90,7 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .options('dte', {
       type: 'boolean',
       hidden: true,
-    }) as Argv<Omit<RunOptions, 'projects' | 'exclude'>> as any;
+    }) as Argv<Omit<RunOptions, 'exclude' | 'batch'>> as any;
 }
 
 export function withTargetAndConfigurationOption(
@@ -114,6 +115,17 @@ export function withConfiguration(yargs: Argv) {
     type: 'string',
     alias: 'c',
   });
+}
+
+export function withBatch(yargs: Argv) {
+  return yargs.options('batch', {
+    type: 'boolean',
+    describe: 'Run task(s) in batches for executors which support batches',
+    coerce: (v) => {
+      return v || process.env.NX_BATCH_MODE === 'true';
+    },
+    default: false,
+  }) as any;
 }
 
 export function withAffectedOptions(yargs: Argv) {
@@ -212,9 +224,24 @@ export function withOverrides<T extends { _: Array<string | number> }>(
   };
 }
 
+const allOutputStyles = [
+  'dynamic',
+  'static',
+  'stream',
+  'stream-without-prefixes',
+  'compact',
+] as const;
+
+export type OutputStyle = typeof allOutputStyles[number];
+
 export function withOutputStyleOption(
   yargs: Argv,
-  choices = ['dynamic', 'static', 'stream', 'stream-without-prefixes']
+  choices: ReadonlyArray<OutputStyle> = [
+    'dynamic',
+    'static',
+    'stream',
+    'stream-without-prefixes',
+  ]
 ) {
   return yargs.option('output-style', {
     describe: 'Defines how Nx emits outputs tasks logs',
@@ -283,13 +310,7 @@ export function withRunOneOptions(yargs: Argv) {
   );
 
   const res = withRunOptions(
-    withOutputStyleOption(withConfiguration(yargs), [
-      'dynamic',
-      'static',
-      'stream',
-      'stream-without-prefixes',
-      'compact',
-    ])
+    withOutputStyleOption(withConfiguration(yargs), allOutputStyles)
   )
     .parserConfiguration({
       'strip-dashed': true,

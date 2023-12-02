@@ -6,7 +6,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from '@nx/linter';
+import { Linter } from '@nx/eslint';
 import { nxVersion } from '../../utils/versions';
 import libraryGenerator from './library';
 import { Schema } from './schema';
@@ -42,11 +42,8 @@ describe('lib', () => {
     expect(project.root).toEqual('my-lib');
     expect(project.targets.build).toBeUndefined();
     expect(project.targets.lint).toEqual({
-      executor: '@nx/linter:eslint',
+      executor: '@nx/eslint:lint',
       outputs: ['{options.outputFile}'],
-      options: {
-        lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx,vue}'],
-      },
     });
   });
 
@@ -82,14 +79,6 @@ describe('lib', () => {
   it('should add vue, vite and vitest to package.json', async () => {
     await libraryGenerator(tree, defaultSchema);
     expect(readJson(tree, '/package.json')).toMatchSnapshot();
-  });
-
-  it('should add correct jest.config.ts and dependencies to package.json', async () => {
-    await libraryGenerator(tree, { ...defaultSchema, unitTestRunner: 'jest' });
-    expect(readJson(tree, '/package.json')).toMatchSnapshot();
-    expect(readJson(tree, '.eslintrc.json')).toMatchSnapshot();
-    expect(tree.read('my-lib/jest.config.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('my-lib/.babelrc', 'utf-8')).toMatchSnapshot();
   });
 
   it('should update root tsconfig.base.json', async () => {
@@ -162,8 +151,8 @@ describe('lib', () => {
     await libraryGenerator(tree, defaultSchema);
     expect(tree.exists('my-lib/package.json')).toBeFalsy();
     expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
-    expect(tree.exists('my-lib/src/components/my-lib.vue')).toBeTruthy();
-    expect(tree.exists('my-lib/src/components/my-lib.spec.ts')).toBeTruthy();
+    expect(tree.exists('my-lib/src/lib/my-lib.vue')).toBeTruthy();
+    expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
     const eslintJson = readJson(tree, 'my-lib/.eslintrc.json');
     expect(eslintJson).toMatchSnapshot();
   });
@@ -201,10 +190,10 @@ describe('lib', () => {
       await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
       expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
       expect(
-        tree.exists('my-dir/my-lib/src/components/my-dir-my-lib.vue')
+        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.vue')
       ).toBeTruthy();
       expect(
-        tree.exists('my-dir/my-lib/src/components/my-dir-my-lib.spec.ts')
+        tree.exists('my-dir/my-lib/src/lib/my-dir-my-lib.spec.ts')
       ).toBeTruthy();
     });
 
@@ -213,13 +202,6 @@ describe('lib', () => {
       const config = readProjectConfiguration(tree, 'my-dir-my-lib');
 
       expect(config.root).toEqual('my-dir/my-lib');
-      expect(config.targets.lint).toEqual({
-        executor: '@nx/linter:eslint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-dir/my-lib/**/*.{ts,tsx,js,jsx,vue}'],
-        },
-      });
     });
 
     it('should update root tsconfig.base.json', async () => {
@@ -261,12 +243,7 @@ describe('lib', () => {
       expect(config.targets.test).toBeUndefined();
       expect(config.targets.lint).toMatchInlineSnapshot(`
         {
-          "executor": "@nx/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "my-lib/**/*.{ts,tsx,js,jsx,vue}",
-            ],
-          },
+          "executor": "@nx/eslint:lint",
           "outputs": [
             "{options.outputFile}",
           ],

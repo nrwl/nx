@@ -12,6 +12,7 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
   taskGraph: TaskGraph,
   nxJson: NxJsonConfiguration
 ) {
+  performance.mark('hashMultipleTasks:start');
   const tasks = Object.values(taskGraph.tasks);
   const tasksWithHashers = await Promise.all(
     tasks.map(async (task) => {
@@ -39,14 +40,22 @@ export async function hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     tasksToHash[i].hash = hashes[i].value;
     tasksToHash[i].hashDetails = hashes[i].details;
   }
+  performance.mark('hashMultipleTasks:end');
+  performance.measure(
+    'hashMultipleTasks',
+    'hashMultipleTasks:start',
+    'hashMultipleTasks:end'
+  );
 }
 
 export async function hashTask(
   hasher: TaskHasher,
   projectGraph: ProjectGraph,
   taskGraph: TaskGraph,
-  task: Task
+  task: Task,
+  env: NodeJS.ProcessEnv
 ) {
+  performance.mark('hashSingleTask:start');
   const customHasher = await getCustomHasher(task, projectGraph);
   const projectsConfigurations =
     readProjectsConfigurationFromProjectGraph(projectGraph);
@@ -58,8 +67,15 @@ export async function hashTask(
         workspaceConfig: projectsConfigurations, // to make the change non-breaking. Remove after v18
         projectsConfigurations,
         nxJsonConfiguration: readNxJson(),
+        env,
       } as any)
-    : hasher.hashTask(task, taskGraph));
+    : hasher.hashTask(task, taskGraph, env));
   task.hash = value;
   task.hashDetails = details;
+  performance.mark('hashSingleTask:end');
+  performance.measure(
+    'hashSingleTask',
+    'hashSingleTask:start',
+    'hashSingleTask:end'
+  );
 }

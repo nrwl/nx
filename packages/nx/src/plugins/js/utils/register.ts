@@ -18,11 +18,24 @@ let ts: typeof import('typescript');
  *
  * @returns cleanup function
  */
-export const registerTsProject = (
+export function registerTsProject(tsConfigPath: string): () => void;
+/**
+ * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
+ * register hooks so that .ts files can be used for writing custom workspace projects.
+ *
+ * If ts-node and tsconfig-paths are not available, the user can still provide an index.js file in
+ * the root of their project and the fundamentals will still work (but
+ * workspace path mapping will not, for example).
+ *
+ * @returns cleanup function
+ * @deprecated This signature will be removed in Nx v18. You should pass the full path to the tsconfig in the first argument.
+ */
+export function registerTsProject(path: string, configFilename: string);
+export function registerTsProject(
   path: string,
-  configFilename = 'tsconfig.json'
-): (() => void) => {
-  const tsConfigPath = join(path, configFilename);
+  configFilename?: string
+): () => void {
+  const tsConfigPath = configFilename ? join(path, configFilename) : path;
   const compilerOptions: CompilerOptions = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
@@ -35,7 +48,7 @@ export const registerTsProject = (
       fn();
     }
   };
-};
+}
 
 export function getSwcTranspiler(
   compilerOptions: CompilerOptions
@@ -81,6 +94,16 @@ export function getTsNodeTranspiler(
 export function getTranspiler(compilerOptions: CompilerOptions) {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
+  if (!ts) {
+    ts = require('typescript');
+  }
+
+  compilerOptions.lib = ['es2021'];
+  compilerOptions.module = ts.ModuleKind.CommonJS;
+  compilerOptions.target = ts.ScriptTarget.ES2021;
+  compilerOptions.inlineSourceMap = true;
+  compilerOptions.skipLibCheck = true;
+
   if (swcNodeInstalled && !preferTsNode) {
     return () => getSwcTranspiler(compilerOptions);
   }
@@ -122,7 +145,7 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
     /**
      * Load the ts config from the source project
      */
-    const tsconfigPaths: typeof import('tsconfig-paths') = require('tsconfig-paths');
+    const tsconfigPaths = loadTsConfigPaths();
     const tsConfigResult = tsconfigPaths.loadConfig(tsConfigPath);
     /**
      * Register the custom workspace path mappings with node so that workspace libraries
@@ -135,13 +158,17 @@ export function registerTsConfigPaths(tsConfigPath): () => void {
       });
     }
   } catch (err) {
-    warnNoTsconfigPaths();
+    if (err instanceof Error) {
+      throw new Error(`Unable to load ${tsConfigPath}: ` + err.message);
+    }
   }
-  return () => {};
+  throw new Error(`Unable to load ${tsConfigPath}`);
 }
 
 function readCompilerOptions(tsConfigPath): CompilerOptions {
-  if (swcNodeInstalled) {
+  const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
+
+  if (swcNodeInstalled && !preferTsNode) {
     const {
       readDefaultTsConfig,
     }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
@@ -166,6 +193,14 @@ function readCompilerOptionsWithTypescript(tsConfigPath) {
   // ts-node fails on unknown props, so we have to remove it.
   delete options.configFilePath;
   return options;
+}
+
+function loadTsConfigPaths(): typeof import('tsconfig-paths') | null {
+  try {
+    return require('tsconfig-paths');
+  } catch {
+    warnNoTsconfigPaths();
+  }
 }
 
 function warnTsNodeUsage() {

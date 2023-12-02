@@ -1,74 +1,17 @@
-import { joinPathFragments, Tree, writeJson } from '@nx/devkit';
-import {
-  overrideCollectionResolutionForTesting,
-  wrapAngularDevkitSchematic,
-} from '@nx/devkit/ngcli-adapter';
+import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   findStorybookAndBuildTargetsAndCompiler,
   isTheFileAStory,
 } from './utilities';
-import { nxVersion, storybookVersion } from './versions';
 import * as targetVariations from './test-configs/different-target-variations.json';
-
-// nested code imports graph from the repo, which might have innacurate graph version
-jest.mock('nx/src/project-graph/project-graph', () => ({
-  ...jest.requireActual<any>('nx/src/project-graph/project-graph'),
-  createProjectGraphAsync: jest
-    .fn()
-    .mockImplementation(async () => ({ nodes: {}, dependencies: {} })),
-}));
-
-const componentSchematic = wrapAngularDevkitSchematic(
-  '@schematics/angular',
-  'component'
-);
-const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
-  '@schematics/angular',
-  'library'
-);
-const runAngularStorybookSchematic = wrapAngularDevkitSchematic(
-  '@nx/angular',
-  'storybook-configuration'
-);
 
 describe('testing utilities', () => {
   describe('Test functions that need workspace tree', () => {
     let appTree: Tree;
 
     beforeEach(async () => {
-      overrideCollectionResolutionForTesting({
-        '@nx/storybook': joinPathFragments(
-          __dirname,
-          '../../../../generators.json'
-        ),
-      });
-
       appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-
-      await runAngularLibrarySchematic(appTree, {
-        name: 'test-ui-lib',
-      });
-
-      await componentSchematic(appTree, {
-        name: 'button',
-        project: 'test-ui-lib',
-      });
-
-      writeJson(appTree, 'package.json', {
-        devDependencies: {
-          '@nx/storybook': nxVersion,
-          '@storybook/addon-knobs': storybookVersion,
-          '@storybook/angular': storybookVersion,
-        },
-      });
-      writeJson(appTree, 'test-ui-lib/tsconfig.json', {});
-
-      await runAngularStorybookSchematic(appTree, {
-        name: 'test-ui-lib',
-        configureCypress: true,
-        configureStaticServe: false,
-      });
 
       appTree.write(
         `test-ui-lib/src/lib/button/button.component.stories.ts`,
@@ -93,13 +36,13 @@ describe('testing utilities', () => {
         `
         import type { Meta } from '@storybook/react';
         import { Button } from './button';
-        
+
         const Story: Meta<typeof Button> = {
           component: Button,
           title: 'Layout/Texts/Button',
         };
         export default Story;
-        
+
         export const Primary = {
           args: {},
         };
@@ -110,6 +53,16 @@ describe('testing utilities', () => {
         `test-ui-lib/src/lib/button/button.component.other.ts`,
         `
         import { Button } from './button';
+
+        // test test
+      `
+      );
+
+      appTree.write(
+        `test-ui-lib/src/lib/button/button.test.stories.ts`,
+        `
+        import { Button } from './button';
+        import * as Storybook from '@storybook/react';
 
         // test test
       `
@@ -177,6 +130,14 @@ describe('testing utilities', () => {
         const fileIsStory = isTheFileAStory(
           appTree,
           'test-ui-lib/src/lib/button/button.other.stories.ts'
+        );
+        expect(fileIsStory).toBeTruthy();
+      });
+
+      it('should verify it is story when using unnamed import', () => {
+        const fileIsStory = isTheFileAStory(
+          appTree,
+          'test-ui-lib/src/lib/button/button.test.stories.ts'
         );
         expect(fileIsStory).toBeTruthy();
       });

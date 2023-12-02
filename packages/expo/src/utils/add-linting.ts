@@ -1,4 +1,4 @@
-import { Linter, lintProjectGenerator } from '@nx/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
@@ -10,7 +10,7 @@ import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
   isEslintConfigSupported,
-} from '@nx/linter/src/generators/utils/eslint-file';
+} from '@nx/eslint/src/generators/utils/eslint-file';
 
 interface NormalizedSchema {
   linter?: Linter;
@@ -31,7 +31,6 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     linter: options.linter,
     project: options.projectName,
     tsConfigPaths: options.tsConfigPaths,
-    eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
   });

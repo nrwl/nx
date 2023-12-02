@@ -5,7 +5,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Linter } from 'packages/linter/src/generators/utils/linter';
+import { Linter } from '@nx/eslint/src/generators/utils/linter';
 
 import detoxApplicationGenerator from './application';
 
@@ -287,12 +287,12 @@ describe('detox application generator', () => {
     });
 
     it('should update configuration', async () => {
-      const project = readProjectConfiguration(tree, 'my-dir/my-app-e2e');
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
       expect(project.root).toEqual('my-dir/my-app-e2e');
     });
 
     it('should update nx.json', async () => {
-      const project = readProjectConfiguration(tree, 'my-dir/my-app-e2e');
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
       expect(project.tags).toEqual([]);
       expect(project.implicitDependencies).toEqual(['my-dir-my-app']);
     });
@@ -368,13 +368,13 @@ describe('detox application generator', () => {
     });
 
     it('should update configuration', async () => {
-      const project = readProjectConfiguration(tree, 'my-dir/my-app-e2e');
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
 
       expect(project.root).toEqual('my-dir/my-app-e2e');
     });
 
     it('should update nx.json', async () => {
-      const project = readProjectConfiguration(tree, 'my-dir/my-app-e2e');
+      const project = readProjectConfiguration(tree, 'my-app-e2e');
       expect(project.tags).toEqual([]);
       expect(project.implicitDependencies).toEqual(['my-dir-my-app']);
     });
