@@ -658,7 +658,6 @@ describe('nx release - independent projects', () => {
             releaseTagPattern: '{projectName}@v{version}',
             version: {
               generatorOptions: {
-                specifierSource: 'conventional-commits',
                 currentVersionResolver: 'git-tag',
               },
             },
@@ -668,6 +667,39 @@ describe('nx release - independent projects', () => {
           },
         };
       });
+    });
+
+    it('should allow versioning projects independently with conventional commits', async () => {
+      runCommand(`git tag ${pkg1}@v1.2.0`);
+      runCommand(`git tag ${pkg2}@v1.4.0`);
+      runCommand(`git tag ${pkg3}@v1.6.0`);
+
+      const metaOutput = runCLI(`release patch -y`);
+
+      expect(
+        metaOutput.match(new RegExp(`New version 1\.2\.1 written`, 'g')).length
+      ).toEqual(1);
+
+      expect(
+        metaOutput.match(new RegExp(`New version 1\.4\.1 written`, 'g')).length
+      ).toEqual(1);
+
+      expect(
+        metaOutput.match(new RegExp(`New version 1\.6\.1 written`, 'g')).length
+      ).toEqual(1);
+
+      expect(
+        metaOutput.match(new RegExp(`Generating an entry in `, 'g')).length
+      ).toEqual(3);
+
+      expect(
+        metaOutput.match(
+          new RegExp(
+            `Successfully ran target nx-release-publish for 3 projects`,
+            'g'
+          )
+        ).length
+      ).toEqual(1);
     });
   });
 });
