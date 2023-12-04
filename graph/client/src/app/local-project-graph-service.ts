@@ -27,4 +27,10 @@ export class LocalProjectGraphService implements ProjectGraphService {
       resolve(window.expandedTaskInputsResponse[taskId])
     );
   }
+
+  async getSourceMaps(
+    url: string
+  ): Promise<Record<string, Record<string, string[]>>> {
+    return new Promise((resolve) => resolve(window.sourceMapsResponse));
+  }
 }

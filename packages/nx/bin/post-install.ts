@@ -1,4 +1,4 @@
-import { buildProjectGraphWithoutDaemon } from '../src/project-graph/project-graph';
+import { buildProjectGraphAndSourceMapsWithoutDaemon } from '../src/project-graph/project-graph';
 import { workspaceRoot } from '../src/utils/workspace-root';
 import { fileExists } from '../src/utils/fileutils';
 import { join } from 'path';
@@ -20,7 +20,9 @@ import { setupWorkspaceContext } from '../src/utils/workspace-context';
       try {
         await daemonClient.stop();
       } catch (e) {}
-      const tasks: Array<Promise<any>> = [buildProjectGraphWithoutDaemon()];
+      const tasks: Array<Promise<any>> = [
+        buildProjectGraphAndSourceMapsWithoutDaemon(),
+      ];
       if (isNxCloudUsed(readNxJson())) {
         tasks.push(verifyOrUpdateNxCloudClient(getCloudOptions()));
       }

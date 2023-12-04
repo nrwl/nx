@@ -24,6 +24,7 @@ import { Message, SocketMessenger } from './socket-messenger';
 import { safelyCleanUpExistingProcess } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 
 const DAEMON_ENV_SETTINGS = {
   ...process.env,
@@ -124,9 +125,17 @@ export class DaemonClient {
     return this.sendToDaemonViaQueue({ type: 'REQUEST_SHUTDOWN' });
   }
 
-  async getProjectGraph(): Promise<ProjectGraph> {
-    return (await this.sendToDaemonViaQueue({ type: 'REQUEST_PROJECT_GRAPH' }))
-      .projectGraph;
+  async getProjectGraphAndSourceMaps(): Promise<{
+    projectGraph: ProjectGraph;
+    sourceMaps: ConfigurationSourceMaps;
+  }> {
+    const response = await this.sendToDaemonViaQueue({
+      type: 'REQUEST_PROJECT_GRAPH',
+    });
+    return {
+      projectGraph: response.projectGraph,
+      sourceMaps: response.sourceMaps,
+    };
   }
 
   async getAllFileData(): Promise<FileData[]> {
@@ -162,7 +171,7 @@ export class DaemonClient {
       } | null
     ) => void
   ): Promise<UnregisterCallback> {
-    await this.getProjectGraph();
+    await this.getProjectGraphAndSourceMaps();
     let messenger: SocketMessenger | undefined;
 
     await this.queue.sendToQueue(() => {

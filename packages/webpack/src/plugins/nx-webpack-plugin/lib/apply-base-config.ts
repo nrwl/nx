@@ -95,6 +95,11 @@ function applyNxIndependentConfig(
 
   config.output = {
     ...config.output,
+    libraryTarget:
+      (config as Configuration).output?.libraryTarget ??
+      options.target === 'node'
+        ? 'commonjs'
+        : undefined,
     path:
       config.output?.path ??
       (options.outputPath
