@@ -194,7 +194,7 @@ ensureDir(targetFolder).then(() =>
       ),
       targetFolder,
       item.mediaImage ? '' : item.title,
-      item.content,
+      item.mediaImage ? '' : item.content,
       item.filename
     )
   )
