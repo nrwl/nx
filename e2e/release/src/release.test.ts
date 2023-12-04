@@ -714,22 +714,6 @@ describe('nx release', () => {
 
     `);
 
-    // Update custom nx release config to demonstrate project level changelogs
-    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-      nxJson.release = {
-        groups: {
-          default: {
-            // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
-            projects: ['*', '!@proj/source'],
-          },
-        },
-        changelog: {
-          projectChangelogs: {},
-        },
-      };
-      return nxJson;
-    });
-
     // port and process cleanup
     await killProcessAndPorts(process.pid, verdaccioPort);
 

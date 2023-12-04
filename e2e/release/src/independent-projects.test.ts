@@ -695,9 +695,34 @@ describe('nx release - independent projects', () => {
 
       expect(
         metaOutput.match(
-          new RegExp(`Running release version for project: `, 'g')
+          new RegExp(
+            `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
+            'g'
+          )
         ).length
-      ).toEqual(3);
+      ).toEqual(1);
+
+      expect(
+        metaOutput.match(
+          new RegExp(
+            `Resolved the specifier as "patch" using git history and the conventional commits standard.`,
+            'g'
+          )
+        ).length
+      ).toEqual(1);
+
+      expect(
+        metaOutput.match(new RegExp(`Generating an entry in `, 'g')).length
+      ).toEqual(2);
+
+      expect(
+        metaOutput.match(
+          new RegExp(
+            `Successfully ran target nx-release-publish for 3 projects`,
+            'g'
+          )
+        ).length
+      ).toEqual(1);
 
       expect(
         metaOutput.match(new RegExp(`Generating an entry in `, 'g')).length
