@@ -412,7 +412,7 @@ export async function handleNxReleaseConfigError(
           'projects',
         ]);
         output.error({
-          title: `"projects" is a shorthand intended to be used when you have only one release group and it cannot be combined with "groups" config. If you are using "groups" then you should remove the "projects" property`,
+          title: `"projects" is not valid when explicitly defining release groups and everything should be expressed within "groups" in that case. If you are using "groups" then you should remove the "projects" property`,
           bodyLines: [nxJsonMessage],
         });
       }
