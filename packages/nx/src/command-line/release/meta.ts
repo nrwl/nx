@@ -36,8 +36,6 @@ export async function releaseMeta(
     workspaceChangelog: versionResult.workspaceVersion !== undefined,
   });
 
-  console.log('\n');
-
   let shouldPublish = !!args.yes && !args.no;
   const shouldPromptPublishing = !args.yes && !args.no && !args.dryRun;
 
@@ -48,13 +46,15 @@ export async function releaseMeta(
   if (shouldPublish) {
     await releasePublish(args);
   } else {
-    console.log('\nSkipped publishing packages.');
+    console.log('Skipped publishing packages.');
   }
 
   return versionResult;
 }
 
 async function promptForPublish(): Promise<boolean> {
+  console.log('\n');
+
   const reply = await prompt<{ confirmation: 'yes' | 'no' }>([
     {
       name: 'confirmation',
@@ -72,6 +72,9 @@ async function promptForPublish(): Promise<boolean> {
       ],
     },
   ]);
+
+  console.log('\n');
+
   return reply.confirmation === 'yes';
 }
 

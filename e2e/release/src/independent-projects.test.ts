@@ -648,4 +648,69 @@ describe('nx release - independent projects', () => {
       `);
     });
   });
+
+  describe('meta', () => {
+    beforeEach(() => {
+      updateJson('nx.json', () => {
+        return {
+          release: {
+            projectsRelationship: 'independent',
+            releaseTagPattern: '{projectName}@v{version}',
+            version: {
+              generatorOptions: {
+                specifierSource: 'conventional-commits',
+                currentVersionResolver: 'git-tag',
+              },
+            },
+            changelog: {
+              projectChangelogs: {},
+            },
+          },
+        };
+      });
+    });
+
+    it('should allow versioning projects independently with conventional commits', async () => {
+      runCommand(`git tag ${pkg1}@v1.0.0`);
+      runCommand(`git tag ${pkg2}@v1.0.0`);
+      runCommand(`git tag ${pkg3}@v1.0.0`);
+
+      // update my-pkg-1 with a feature commit
+      updateJson(`${pkg1}/package.json`, (json) => ({
+        ...json,
+        license: 'MIT',
+      }));
+      runCommand(`git add ${pkg1}/package.json`);
+      runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
+
+      // update my-pkg-3 with a fix commit
+      updateJson(`${pkg3}/package.json`, (json) => ({
+        ...json,
+        license: 'MIT',
+      }));
+      runCommand(`git add ${pkg3}/package.json`);
+      runCommand(`git commit -m "fix(${pkg3}): new fix 1"`);
+
+      const metaOutput = runCLI(`release -y`);
+
+      expect(
+        metaOutput.match(
+          new RegExp(`Running release version for project: `, 'g')
+        ).length
+      ).toEqual(3);
+
+      expect(
+        metaOutput.match(new RegExp(`Generating an entry in `, 'g')).length
+      ).toEqual(3);
+
+      expect(
+        metaOutput.match(
+          new RegExp(
+            `Successfully ran target nx-release-publish for 3 projects`,
+            'g'
+          )
+        ).length
+      ).toEqual(1);
+    });
+  });
 });
