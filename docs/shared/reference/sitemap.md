@@ -276,7 +276,7 @@
     - [Nx Agents](/ci/features/nx-agents)
   - [Concepts](/ci/concepts)
     - [Reduce Waste in CI](/ci/concepts/reduce-waste)
-    - [Improve Worst Case CI Times](/ci/concepts/dte)
+    - [Parallelization and Distribution](/ci/concepts/parallelization-distribution)
     - [Cache Security](/ci/concepts/cache-security)
   - [Recipes](/ci/recipes)
     - [Set Up CI](/ci/recipes/set-up)
