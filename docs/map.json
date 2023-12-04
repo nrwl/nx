@@ -1708,10 +1708,10 @@
               "file": "nx-cloud/concepts/reduce-waste"
             },
             {
-              "name": "Improve Worst Case CI Times",
+              "name": "Parallelization and Distribution",
               "tags": ["distribute-task-execution"],
-              "id": "dte",
-              "file": "shared/concepts/improve-worst-case-ci-times"
+              "id": "parallelization-distribution",
+              "file": "nx-cloud/concepts/parallelization-distribution"
             },
             {
               "name": "Cache Security",

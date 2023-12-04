@@ -25,7 +25,7 @@ When you set up Nx's distributed task execution, your task graph will look more 
 And not only will CI finish faster, but the debugging experience is the same as if you ran all of your CI on a single
 job. That's because Nx uses distributed caching to recreate all of the logs and build artifacts on the main job.
 
-Find more information in this [detailed guide to improve your worst case CI times](/ci/concepts/dte).
+Find more information in this [guide to parallelization and distribution in CI](/ci/concepts/parallelization-distribution).
 
 ## Set up
 
