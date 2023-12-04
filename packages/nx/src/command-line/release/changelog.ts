@@ -333,20 +333,26 @@ async function applyChangesAndExit(
 ) {
   let latestCommit = toSHA;
 
+  const changes = tree.listChanges();
+
+  /**
+   * In the case where we are expecting changelog file updates, but there is nothing
+   * to flush from the tree, we exit early. This could happen we using conventional
+   * commits, for example.
+   */
+  const changelogFilesEnabled = checkChangelogFilesEnabled(nxReleaseConfig);
+  if (changelogFilesEnabled && !changes.length) {
+    output.warn({
+      title: `No changes detected for changelogs`,
+      bodyLines: [
+        `No changes were detected for any changelog files, so no changelog entries will be generated.`,
+      ],
+    });
+    return 0;
+  }
+
   // Generate a new commit for the changes, if configured to do so
   if (args.gitCommit ?? nxReleaseConfig.changelog.git.commit) {
-    const changes = tree.listChanges();
-    // This could happen we using conventional commits, for example
-    if (!changes.length) {
-      output.warn({
-        title: `No changes detected for changelogs`,
-        bodyLines: [
-          `No changes were detected for any changelog files, so no changelog entries will be generated.`,
-        ],
-      });
-      return 0;
-    }
-
     await commitChanges(
       changes.map((f) => f.path),
       !!args.dryRun,
@@ -896,4 +902,19 @@ async function generateChangelogForProjects(
 
     printSummary();
   }
+}
+
+function checkChangelogFilesEnabled(nxReleaseConfig: NxReleaseConfig): boolean {
+  if (
+    nxReleaseConfig.changelog.workspaceChangelog &&
+    nxReleaseConfig.changelog.workspaceChangelog.file
+  ) {
+    return true;
+  }
+  for (const releaseGroup of Object.values(nxReleaseConfig.groups)) {
+    if (releaseGroup.changelog && releaseGroup.changelog.file) {
+      return true;
+    }
+  }
+  return false;
 }
