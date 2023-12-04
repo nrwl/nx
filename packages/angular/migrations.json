@@ -329,6 +329,24 @@
       "version": "17.2.0-beta.2",
       "description": "Rename '@nx/angular:webpack-dev-server' executor to '@nx/angular:dev-server'",
       "factory": "./src/migrations/update-17-2-0/rename-webpack-dev-server"
+    },
+    "update-angular-cli-version-17-1-0": {
+      "cli": "nx",
+      "version": "17.3.0-beta.8",
+      "requires": {
+        "@angular/core": ">=17.1.0"
+      },
+      "description": "Update the @angular/cli package version to ~17.1.0.",
+      "factory": "./src/migrations/update-17-3-0/update-angular-cli"
+    },
+    "add-browser-sync-dependency": {
+      "cli": "nx",
+      "version": "17.3.0-beta.8",
+      "requires": {
+        "@angular/core": ">=17.1.0"
+      },
+      "description": "Add 'browser-sync' as dev dependency when '@angular-devkit/build-angular:ssr-dev-server' is used, as it is no longer a direct dependency of '@angular-devkit/build-angular'.",
+      "factory": "./src/migrations/update-17-3-0/add-browser-sync-dependency"
     }
   },
   "packageJsonUpdates": {
@@ -1528,11 +1546,72 @@
         }
       }
     },
-    "17.3.0": {
+    "17.3.0-types-node": {
       "version": "17.3.0-beta.3",
       "packages": {
         "@types/node": {
-          "version": "18.16.9",
+          "version": "^18.16.9",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.3.0": {
+      "version": "17.3.0-beta.8",
+      "x-prompt": "Do you want to update the Angular version to v17.1?",
+      "requires": {
+        "@angular/core": ">=17.0.0 <17.1.0"
+      },
+      "packages": {
+        "@angular-devkit/build-angular": {
+          "version": "~17.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/core": {
+          "version": "~17.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/schematics": {
+          "version": "~17.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
+          "version": "~17.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/ssr": {
+          "version": "~17.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@schematics/angular": {
+          "version": "~17.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/architect": {
+          "version": "~0.1701.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular-devkit/build-webpack": {
+          "version": "~0.1701.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/core": {
+          "version": "~17.1.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@angular/material": {
+          "version": "~17.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/cdk": {
+          "version": "~17.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "ng-packagr": {
+          "version": "~17.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "zone.js": {
+          "version": "~0.14.3",
           "alwaysAddToPackageJson": false
         }
       }
