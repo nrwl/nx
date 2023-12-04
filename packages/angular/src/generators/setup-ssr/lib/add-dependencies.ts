@@ -1,4 +1,5 @@
 import { addDependenciesToPackageJson, type Tree } from '@nx/devkit';
+import { gte } from 'semver';
 import type { PackageCompatVersions } from '../../../utils/backward-compatible-versions';
 import {
   getInstalledAngularVersionInfo,
@@ -6,9 +7,13 @@ import {
   versions,
 } from '../../utils/version-utils';
 
-export function addDependencies(tree: Tree): void {
+export function addDependencies(
+  tree: Tree,
+  isUsingApplicationBuilder: boolean
+): void {
   const pkgVersions = versions(tree);
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  const { major: angularMajorVersion, version: angularVersion } =
+    getInstalledAngularVersionInfo(tree);
 
   const dependencies: Record<string, string> = {
     '@angular/platform-server':
@@ -24,6 +29,11 @@ export function addDependencies(tree: Tree): void {
     dependencies['@angular/ssr'] =
       getInstalledPackageVersionInfo(tree, '@angular-devkit/build-angular')
         ?.version ?? pkgVersions.angularDevkitVersion;
+    // TODO(leo): we can compare to the stable version once it's released, we
+    // need to compare to a pre-release version for now so e2e tests don't fail
+    if (!isUsingApplicationBuilder && gte(angularVersion, '17.1.0-next.0')) {
+      devDependencies['browser-sync'] = pkgVersions.browserSyncVersion;
+    }
   } else {
     dependencies['@nguniversal/express-engine'] =
       getInstalledPackageVersionInfo(tree, '@nguniversal/express-engine')
