@@ -452,6 +452,7 @@ const nxCloudUrls = {
   '/nx-cloud/account/encryption': '/ci/recipes/security/encryption',
   '/nx-cloud/concepts/encryption': '/ci/recipes/security/encryption',
   '/nx-cloud/features/nx-cloud-workflows': '/ci/concepts/nx-agents',
+  '/ci': '/ci/intro/ci-with-nx',
   '/nx-cloud/:path*': '/ci/:path*',
 };
 
