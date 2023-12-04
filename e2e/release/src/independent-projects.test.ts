@@ -702,4 +702,74 @@ describe('nx release - independent projects', () => {
       ).toEqual(1);
     });
   });
+
+  it('should allow versioning projects independently with conventional commits', async () => {
+    updateJson('nx.json', () => {
+      return {
+        release: {
+          projectsRelationship: 'independent',
+          releaseTagPattern: '{projectName}@v{version}',
+          version: {
+            generatorOptions: {
+              // added specifierSource to ensure conventional commits are used
+              specifierSource: 'conventional-commits',
+              currentVersionResolver: 'git-tag',
+            },
+          },
+          changelog: {
+            projectChangelogs: {},
+          },
+        },
+      };
+    });
+
+    // update my-pkg-1 with a feature commit
+    updateJson(`${pkg1}/package.json`, (json) => ({
+      ...json,
+      license: 'MIT',
+    }));
+    runCommand(`git add ${pkg1}/package.json`);
+    runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
+
+    // update my-pkg-3 with a fix commit
+    updateJson(`${pkg3}/package.json`, (json) => ({
+      ...json,
+      license: 'MIT',
+    }));
+    runCommand(`git add ${pkg3}/package.json`);
+    runCommand(`git commit -m "fix(${pkg3}): new fix 1"`);
+
+    const metaOutput = runCLI(`release -y`);
+
+    expect(
+      metaOutput.match(
+        new RegExp(
+          `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+
+    expect(
+      metaOutput.match(
+        new RegExp(
+          `Resolved the specifier as "patch" using git history and the conventional commits standard.`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+
+    expect(
+      metaOutput.match(new RegExp(`Generating an entry in `, 'g')).length
+    ).toEqual(2);
+
+    expect(
+      metaOutput.match(
+        new RegExp(
+          `Successfully ran target nx-release-publish for 3 projects`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+  });
 });
