@@ -240,13 +240,13 @@
         "tags": []
       },
       {
-        "id": "dte",
-        "name": "Improve Worst Case CI Times",
+        "id": "parallelization-distribution",
+        "name": "Parallelization and Distribution",
         "description": "",
-        "file": "shared/concepts/improve-worst-case-ci-times",
+        "file": "nx-cloud/concepts/parallelization-distribution",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/concepts/dte",
+        "path": "/ci/concepts/parallelization-distribution",
         "tags": ["distribute-task-execution"]
       },
       {
@@ -274,14 +274,14 @@
     "path": "/ci/concepts/reduce-waste",
     "tags": []
   },
-  "/ci/concepts/dte": {
-    "id": "dte",
-    "name": "Improve Worst Case CI Times",
+  "/ci/concepts/parallelization-distribution": {
+    "id": "parallelization-distribution",
+    "name": "Parallelization and Distribution",
     "description": "",
-    "file": "shared/concepts/improve-worst-case-ci-times",
+    "file": "nx-cloud/concepts/parallelization-distribution",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/concepts/dte",
+    "path": "/ci/concepts/parallelization-distribution",
     "tags": ["distribute-task-execution"]
   },
   "/ci/concepts/cache-security": {
