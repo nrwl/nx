@@ -35,7 +35,12 @@ const targetFolder: string = resolve(
   `./nx-dev/nx-dev/public/images/open-graph`
 );
 
-const data: { title: string; content: string; filename: string }[] = [];
+const data: {
+  title: string;
+  content: string;
+  mediaImage?: string;
+  filename: string;
+}[] = [];
 documents.forEach((category) => {
   data.push({
     title: category.name,
@@ -46,6 +51,7 @@ documents.forEach((category) => {
     data.push({
       title: item.name,
       content: item.description || category.name,
+      mediaImage: item.mediaImage,
       filename: [category.sidebarId, category.id, item.id]
         .filter(Boolean)
         .join('-'),
@@ -54,6 +60,7 @@ documents.forEach((category) => {
       data.push({
         title: subItem.name,
         content: subItem.description || category.name,
+        mediaImage: item.mediaImage,
         filename: [category.sidebarId, category.id, item.id, subItem.id]
           .filter(Boolean)
           .join('-'),
@@ -181,9 +188,12 @@ console.log(
 ensureDir(targetFolder).then(() =>
   data.map((item) =>
     createOpenGraphImage(
-      resolve(__dirname, './media.jpg'),
+      resolve(
+        __dirname,
+        item.mediaImage ? '../../../docs/' + item.mediaImage : './media.jpg'
+      ),
       targetFolder,
-      item.title,
+      item.mediaImage ? '' : item.title,
       item.content,
       item.filename
     )
