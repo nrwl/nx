@@ -333,20 +333,20 @@ async function applyChangesAndExit(
 ) {
   let latestCommit = toSHA;
 
-  const changes = tree.listChanges();
-  // This could happen we using conventional commits, for example
-  if (!changes.length) {
-    output.warn({
-      title: `No changes detected for changelogs`,
-      bodyLines: [
-        `No changes were detected for any changelog files, so no changelog entries will be generated.`,
-      ],
-    });
-    return 0;
-  }
-
   // Generate a new commit for the changes, if configured to do so
   if (args.gitCommit ?? nxReleaseConfig.changelog.git.commit) {
+    const changes = tree.listChanges();
+    // This could happen we using conventional commits, for example
+    if (!changes.length) {
+      output.warn({
+        title: `No changes detected for changelogs`,
+        bodyLines: [
+          `No changes were detected for any changelog files, so no changelog entries will be generated.`,
+        ],
+      });
+      return 0;
+    }
+
     await commitChanges(
       changes.map((f) => f.path),
       !!args.dryRun,
