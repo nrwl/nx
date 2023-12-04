@@ -162,10 +162,10 @@ jobs:
      timeout-minutes: 45
      steps:
        - uses: actions/checkout@v4
-         if: ${{ !contains(github.ref, '-') }}
+         if: ${{ !contains(github.ref, '-') && github.event_name != 'schedule' }}
        - name: Build
          id: build
-         if: ${{ !contains(github.ref, '-') }}
+         if: ${{ !contains(github.ref, '-') && github.event_name != 'schedule' }}
          uses: cross-platform-actions/action@v0.21.1
          env:
            DEBUG: napi:*
@@ -206,7 +206,7 @@ jobs:
              killall node || true
              echo "COMPLETE"
        - name: Upload artifact
-         if: ${{ !contains(github.ref, '-') }}
+         if: ${{ !contains(github.ref, '-') && github.event_name != 'schedule' }}
          uses: actions/upload-artifact@v3
          with:
            name: bindings-freebsd
@@ -214,7 +214,7 @@ jobs:
            if-no-files-found: error
 
   publish:
-    if: ${{ github.event_name == 'release' && github.repository_owner == 'nrwl' }}
+    if: ${{ github.repository_owner == 'nrwl' }}
     name: Publish
     runs-on: ubuntu-latest
     permissions:
@@ -253,7 +253,13 @@ jobs:
             # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
             VERSION="${GITHUB_REF_NAME}"
           fi
-          pnpm nx-release --local=false $VERSION
+          # If triggered via workflow_dispatch, perform a dry-run
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            DRY_RUN="--dry-run"
+          else
+            DRY_RUN=""
+          fi
+          pnpm nx-release --local=false $VERSION $DRY_RUN
       - name: Trigger Docs Release
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease }}
