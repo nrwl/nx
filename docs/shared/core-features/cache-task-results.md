@@ -119,13 +119,13 @@ The cache is stored in `.nx/cache` by default. You can also [change where the ca
 
 ## Enable Remote Caching
 
-You can enable remote caching by connecting to [Nx Cloud](/nx-cloud). To connect Nx to Nx Cloud run the following command:
+You can enable remote caching by connecting to [Nx Cloud](/ci/features/remote-cache). To connect Nx to Nx Cloud run the following command:
 
 ```shell
 npx nx connect
 ```
 
-Learn more about [remote caching](/nx-cloud/features/remote-cache).
+Learn more about [remote caching](/ci/features/remote-cache).
 
 ## Turn off or Skip the Cache
 
@@ -135,7 +135,7 @@ If you want to ignore the cache (both reads and writes), use the `--skip-nx-cach
 nx build header --skip-nx-cache
 ```
 
-Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached targets](/core-features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/nx-cloud/features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
+Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached targets](/core-features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/ci/features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
 
 ## Clear the Local Cache
 

@@ -60,6 +60,13 @@ export const cacheDir = cacheDirectory(
   readCacheDirectoryProperty(workspaceRoot)
 );
 
+export function cacheDirectoryForWorkspace(workspaceRoot: string) {
+  return cacheDirectory(
+    workspaceRoot,
+    readCacheDirectoryProperty(workspaceRoot)
+  );
+}
+
 export const projectGraphCacheDirectory = absolutePath(
   workspaceRoot,
   process.env.NX_PROJECT_GRAPH_CACHE_DIRECTORY ??

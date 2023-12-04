@@ -169,7 +169,7 @@ export class Watcher {
 }
 export class WorkspaceContext {
   workspaceRoot: string
-  constructor(workspaceRoot: string)
+  constructor(workspaceRoot: string, cacheDir: string)
   getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string

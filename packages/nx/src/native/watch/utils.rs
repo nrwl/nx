@@ -52,7 +52,7 @@ pub(super) fn get_nx_ignore<P: AsRef<Path>>(origin: P) -> Option<IgnoreFile> {
 }
 
 pub(super) fn transform_event(watch_event: &Event) -> Option<Event> {
-    if cfg!(linux) {
+    if cfg!(target_os = "linux") {
         let tags = watch_event
             .tags
             .clone()

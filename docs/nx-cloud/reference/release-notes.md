@@ -70,8 +70,8 @@ When upgrading to this version and anything above it, you will need to use Helm 
 
 ##### Breaking changes - MongoDB migration
 
-In the last big release we announced [the deprecation of Mongo 4.2](/nx-cloud/reference/release-notes#breaking-changes)
-With this release, we have now stopped supporting Mongo 4.2 completely. Please upgrade Mongo to version 6 before installing this new image. You will find instructions [here](/nx-cloud/reference/release-notes#breaking-changes).
+In the last big release we announced [the deprecation of Mongo 4.2](/ci/reference/release-notes#breaking-changes)
+With this release, we have now stopped supporting Mongo 4.2 completely. Please upgrade Mongo to version 6 before installing this new image. You will find instructions [here](/ci/reference/release-notes#breaking-changes).
 
 ### 2306.01.2.patch4
 

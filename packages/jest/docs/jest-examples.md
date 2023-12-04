@@ -51,4 +51,4 @@ Adding a _ci_ configuration is helpful for adding this behavior.
 nx affected --target=test --configuration=ci
 ```
 
-Learn more [about _affected_](/nx-cloud/features/affected)
+Learn more [about _affected_](/ci/features/affected)

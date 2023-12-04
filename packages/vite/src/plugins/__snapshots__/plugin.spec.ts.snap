@@ -1,0 +1,137 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/vite/plugin not root project should create nodes 1`] = `
+{
+  "projects": {
+    "my-app": {
+      "root": "my-app",
+      "targets": {
+        "build-something": {
+          "cache": true,
+          "command": "vite build",
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "vite",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "{options.outputPath}",
+          ],
+        },
+        "my-serve": {
+          "command": "vite serve",
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "preview-site": {
+          "command": "vite preview",
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "build-something",
+          },
+        },
+        "vitest": {
+          "cache": true,
+          "command": "vitest run",
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "vitest",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "{options.reportsDirectory}",
+          ],
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/vite/plugin root project should create nodes 1`] = `
+{
+  "projects": {
+    ".": {
+      "root": ".",
+      "targets": {
+        "build": {
+          "cache": true,
+          "command": "vite build",
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "vite",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "{options.outputPath}",
+          ],
+        },
+        "preview": {
+          "command": "vite preview",
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "serve": {
+          "command": "vite serve",
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "build",
+          },
+        },
+        "test": {
+          "cache": true,
+          "command": "vitest run",
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "vitest",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "{options.reportsDirectory}",
+          ],
+        },
+      },
+    },
+  },
+}
+`;

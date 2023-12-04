@@ -8,6 +8,9 @@ import type {
 /* eslint-enable @nx/enforce-module-boundaries */
 import { AppConfig } from './app/interfaces';
 import { ExternalApi } from './app/external-api';
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
+import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 
 export declare global {
   export interface Window {
@@ -17,6 +20,7 @@ export declare global {
     projectGraphResponse?: ProjectGraphClientResponse;
     taskGraphResponse?: TaskGraphClientResponse;
     expandedTaskInputsResponse?: ExpandedTaskInputsReponse;
+    sourceMapsResponse?: ConfigurationSourceMaps;
     environment: 'dev' | 'watch' | 'release' | 'nx-console';
     appConfig: AppConfig;
     useXstateInspect: boolean;

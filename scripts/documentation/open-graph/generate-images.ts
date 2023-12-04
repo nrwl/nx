@@ -19,9 +19,9 @@ const documents: any[] = [
       return item;
     }),
   ...mapJson
-    .find((x) => x.id === 'nx-cloud-documentation')
+    .find((x) => x.id === 'ci')
     ?.['itemList'].map((item) => {
-      item.sidebarId = 'nx-cloud';
+      item.sidebarId = 'ci';
       return item;
     }),
 ].filter(Boolean);

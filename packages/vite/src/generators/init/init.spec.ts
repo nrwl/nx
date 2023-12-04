@@ -93,6 +93,10 @@ describe('@nx/vite:init', () => {
       expect(vitestDefaults).toEqual({
         cache: true,
         inputs: ['default', '^production'],
+        options: {
+          passWithNoTests: true,
+          reporters: ['default'],
+        },
       });
     });
   });

@@ -85,7 +85,7 @@ export async function generateIndexMarkdownFile(
     recipes: `/recipes/`,
     plugins: `/plugins/`,
     packages: `/packages/`,
-    cloud: `/nx-cloud/`,
+    ci: `/ci/`,
   };
   const content = json
     .map(

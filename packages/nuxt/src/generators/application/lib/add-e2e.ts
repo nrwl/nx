@@ -5,8 +5,6 @@ import {
   joinPathFragments,
   Tree,
 } from '@nx/devkit';
-import { Linter } from '@nx/eslint';
-
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 

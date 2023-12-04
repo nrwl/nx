@@ -4,7 +4,7 @@ There are two general approaches to setting up CI with Nx - using a single job o
 
 ## Process Only Affected Projects With One Job on Azure Pipelines
 
-Below is an example of an Azure Pipelines setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/nx-cloud/features/affected) to run the tasks only for the projects that were affected by that PR.
+Below is an example of an Azure Pipelines setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/ci/features/affected) to run the tasks only for the projects that were affected by that PR.
 
 ```yaml {% fileName="azure-pipelines.yml" %}
 trigger:
@@ -56,7 +56,7 @@ jobs:
 
 {% callout type="note" title="Check your Shallow Fetch settings" %}
 
-Nx needs additional Git history available for [`affected`](/nx-cloud/features/affected) to function correctly. Make sure Shallow fetching is disabled in your pipeline settings UI. For more info, check out this article from Microsoft [here](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/steps-checkout?view=azure-pipelines#shallow-fetch).
+Nx needs additional Git history available for [`affected`](/ci/features/affected) to function correctly. Make sure Shallow fetching is disabled in your pipeline settings UI. For more info, check out this article from Microsoft [here](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/steps-checkout?view=azure-pipelines#shallow-fetch).
 
 {% /callout %}
 
@@ -105,7 +105,7 @@ Finally we extract the result in a common [custom variable](https://learn.micros
 
 ## Distribute Tasks Across Agents on Azure Pipelines
 
-To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can run this generator:
+To set up [Distributed Task Execution (DTE)](/ci/features/distribute-task-execution), you can run this generator:
 
 ```shell
 npx nx g ci-workflow --ci=azure

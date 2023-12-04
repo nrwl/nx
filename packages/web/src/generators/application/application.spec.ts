@@ -404,7 +404,6 @@ describe('app', () => {
   it('should setup the nrwl vite:build builder if bundler is vite', async () => {
     await applicationGenerator(tree, {
       name: 'my-app',
-
       bundler: 'vite',
       projectNameAndRootFormat: 'as-provided',
     });

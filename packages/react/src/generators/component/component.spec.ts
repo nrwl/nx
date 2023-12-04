@@ -369,6 +369,17 @@ describe('component', () => {
 
       expect(appTree.exists('/my-lib/src/lib/foo/hello-world/hello-world.tsx'));
     });
+
+    it('should create directory when the path is provided as the component name', async () => {
+      await componentGenerator(appTree, {
+        name: `my-lib/src/btn/btn`,
+        project: projectName,
+        style: 'css',
+        nameAndDirectoryFormat: 'as-provided',
+      });
+
+      expect(appTree.exists('my-lib/src/btn/btn.tsx')).toBeTruthy();
+    });
   });
 
   describe('--flat', () => {

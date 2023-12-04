@@ -1,5 +1,6 @@
-import { joinPathFragments } from '@nx/devkit';
+import { joinPathFragments, normalizePath } from '@nx/devkit';
 import { existsSync } from 'fs';
+import { relative } from 'path';
 import { Observable, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
@@ -100,7 +101,9 @@ export function executeWebpackServerBuilder(
       options.tsConfig,
       context
     );
-    options.tsConfig = tsConfigPath;
+    options.tsConfig = normalizePath(
+      relative(context.workspaceRoot, tsConfigPath)
+    );
   }
 
   return buildServerApp(options, context);

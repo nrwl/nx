@@ -150,7 +150,22 @@ export async function resolveGithubToken(): Promise<string | null> {
     const yamlContents = await fsp.readFile(ghCLIPath, 'utf8');
     const { load } = require('@zkochan/js-yaml');
     const ghCLIConfig = load(yamlContents);
-    return ghCLIConfig['github.com'].oauth_token;
+    if (ghCLIConfig['github.com']) {
+      // Web based session (the token is already embedded in the config)
+      if (ghCLIConfig['github.com'].oauth_token) {
+        return ghCLIConfig['github.com'].oauth_token;
+      }
+      // SSH based session (we need to dynamically resolve a token using the CLI)
+      if (
+        ghCLIConfig['github.com'].user &&
+        ghCLIConfig['github.com'].git_protocol === 'ssh'
+      ) {
+        return execSync(`gh auth token`, {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }).trim();
+      }
+    }
   }
   return null;
 }

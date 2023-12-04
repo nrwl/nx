@@ -19,7 +19,8 @@
         "main": "packages/nuxt/index.ts",
         "generateExportsField": true,
         "additionalEntryPoints": [
-          "{projectRoot}/{executors,generators,migrations}.json"
+          "{projectRoot}/{executors,generators,migrations}.json",
+          "{projectRoot}/plugin.ts"
         ],
         "assets": [
           {

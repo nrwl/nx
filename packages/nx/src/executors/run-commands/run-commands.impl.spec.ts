@@ -180,6 +180,29 @@ describe('Run Commands', () => {
       ).toEqual('echo one -a=b');
     });
 
+    it('should add all args when forwardAllArgs is true', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { args: '--additional-arg', __unparsed__: [] } as any,
+          true
+        )
+      ).toEqual('echo --additional-arg');
+    });
+
+    it('should add all args and unparsed args when forwardAllArgs is true', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            args: '--additional-arg',
+            __unparsed__: ['--additional-unparsed-arg'],
+          } as any,
+          true
+        )
+      ).toEqual('echo --additional-arg --additional-unparsed-arg');
+    });
+
     it("shouldn't add literal `undefined` if arg is not provided", () => {
       expect(
         interpolateArgsIntoCommand(

@@ -9,6 +9,7 @@ import { webStaticServeGenerator } from '@nx/web';
 
 import { nxVersion } from '../../../utils/versions';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
+import { hasVitePlugin } from '../../../utils/has-vite-plugin';
 import { NormalizedSchema } from '../schema';
 
 export async function addE2e(
@@ -17,7 +18,10 @@ export async function addE2e(
 ): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      if (!hasWebpackPlugin(tree)) {
+      if (
+        (options.bundler === 'webpack' && !hasWebpackPlugin(tree)) ||
+        (options.bundler === 'vite' && !hasVitePlugin(tree))
+      ) {
         webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:build`,
           targetName: 'serve-static',

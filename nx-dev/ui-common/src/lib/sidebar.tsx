@@ -177,21 +177,21 @@ export function SidebarMobile({
   navIsOpen,
 }: FloatingSidebarProps): JSX.Element {
   const router = useRouter();
-  const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
+  const isCI: boolean = router.asPath.startsWith('/ci');
   const isAPI: boolean = router.asPath.startsWith('/nx-api');
   const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
   const isChangelog: boolean = router.asPath.startsWith('/changelog');
   const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
   const isNx: boolean =
-    !isNxCloud && !isAPI && !isPlugins && !isChangelog && !isAiChat;
+    !isCI && !isAPI && !isPlugins && !isChangelog && !isAiChat;
 
   const sections = [
     { name: 'Home', href: '/', current: false },
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
     {
-      name: 'Nx Cloud',
-      href: '/nx-cloud/intro/ci-with-nx',
-      current: isNxCloud,
+      name: 'CI',
+      href: '/ci/intro/ci-with-nx',
+      current: isCI,
     },
     {
       name: 'Extending Nx',

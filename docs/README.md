@@ -82,6 +82,16 @@ Your content goes here.
 {% /callout %}
 ```
 
+#### Disclosure
+
+A disclosure can be used for less important information that is initially collapsed.
+
+```markdown
+{% disclosure title="string" %}
+Your content goes here.
+{% /disclosure %}
+```
+
 #### Cards
 
 Cards allow showing content in a grid system with a title, a description, a type and an url (internal/external).

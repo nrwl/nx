@@ -368,10 +368,10 @@ function createDocumentSections(
       prefix: 'extending-nx',
     },
     {
-      name: 'cloud',
-      content: documents.find((x) => x.id === 'nx-cloud-documentation')!
+      name: 'ci',
+      content: documents.find((x) => x.id === 'ci')!
         .itemList as Partial<DocumentMetadata>[],
-      prefix: 'nx-cloud',
+      prefix: 'ci',
     },
   ];
 }

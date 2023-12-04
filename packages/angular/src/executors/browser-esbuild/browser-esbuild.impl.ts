@@ -1,10 +1,9 @@
-import { type EsBuildSchema } from './schema';
-import { type DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import { type ExecutorContext, readCachedProjectGraph } from '@nx/devkit';
-import { createTmpTsConfigForBuildableLibs } from './lib/buildable-libs';
+import type { ExecutorContext } from '@nx/devkit';
+import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
-import { type BuilderOutput } from '@angular-devkit/architect';
-import { type OutputFile } from 'esbuild';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
+import { loadPlugins } from '../utilities/esbuild-extensions';
+import type { EsBuildSchema } from './schema';
 
 export default async function* esbuildExecutor(
   options: EsBuildSchema,
@@ -12,22 +11,26 @@ export default async function* esbuildExecutor(
 ) {
   options.buildLibsFromSource ??= true;
 
-  const { buildLibsFromSource, ...delegateExecutorOptions } = options;
+  const {
+    buildLibsFromSource,
+    plugins: pluginPaths,
+    ...delegateExecutorOptions
+  } = options;
 
   let dependencies: DependentBuildableProjectNode[];
-  let projectGraph = context.projectGraph;
 
   if (!buildLibsFromSource) {
-    projectGraph = projectGraph ?? readCachedProjectGraph();
     const { tsConfigPath, dependencies: foundDependencies } =
       createTmpTsConfigForBuildableLibs(
         delegateExecutorOptions.tsConfig,
-        context,
-        { projectGraph }
+        context
       );
     dependencies = foundDependencies;
     delegateExecutorOptions.tsConfig = tsConfigPath;
   }
+
+  const plugins = await loadPlugins(pluginPaths, options.tsConfig);
+
   const { buildEsbuildBrowser } = await import(
     '@angular-devkit/build-angular/src/builders/browser-esbuild/index'
   );
@@ -45,11 +48,8 @@ export default async function* esbuildExecutor(
 
   return yield* buildEsbuildBrowser(
     delegateExecutorOptions,
-    builderContext
-  ) as AsyncIterable<
-    BuilderOutput & {
-      outputFiles?: OutputFile[];
-      assetFiles?: { source: string; destination: string }[];
-    }
-  >;
+    builderContext,
+    /* infrastructureSettings */ undefined,
+    plugins
+  );
 }

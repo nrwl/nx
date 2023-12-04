@@ -1,5 +1,5 @@
 import { performance } from 'perf_hooks';
-import { readNxJson, NxJsonConfiguration } from '../../config/nx-json';
+import { readNxJson } from '../../config/nx-json';
 import {
   FileData,
   FileMap,
@@ -21,7 +21,6 @@ import {
   retrieveWorkspaceFiles,
 } from '../../project-graph/utils/retrieve-workspace-files';
 import { fileExists } from '../../utils/fileutils';
-import { writeSourceMaps } from '../../utils/source-maps';
 import {
   resetWorkspaceContext,
   updateFilesInContext,
@@ -31,14 +30,17 @@ import { notifyFileWatcherSockets } from './file-watching/file-watcher-sockets';
 import { serverLogger } from './logger';
 import { NxWorkspaceFilesExternals } from '../../native';
 
-let cachedSerializedProjectGraphPromise: Promise<{
+interface SerializedProjectGraph {
   error: Error | null;
   projectGraph: ProjectGraph | null;
   fileMap: FileMap | null;
   allWorkspaceFiles: FileData[] | null;
   serializedProjectGraph: string | null;
+  serializedSourceMaps: string | null;
   rustReferences: NxWorkspaceFilesExternals | null;
-}>;
+}
+
+let cachedSerializedProjectGraphPromise: Promise<SerializedProjectGraph>;
 export let fileMapWithFiles:
   | {
       fileMap: FileMap;
@@ -56,7 +58,7 @@ let waitPeriod = 100;
 let scheduledTimeoutId;
 let knownExternalNodes: Record<string, ProjectGraphExternalNode> = {};
 
-export async function getCachedSerializedProjectGraphPromise() {
+export async function getCachedSerializedProjectGraphPromise(): Promise<SerializedProjectGraph> {
   try {
     // recomputing it now on demand. we can ignore the scheduled timeout
     if (scheduledTimeoutId) {
@@ -81,6 +83,7 @@ export async function getCachedSerializedProjectGraphPromise() {
     return {
       error: e,
       serializedProjectGraph: null,
+      serializedSourceMaps: null,
       projectGraph: null,
       fileMap: null,
       allWorkspaceFiles: null,
@@ -196,7 +199,7 @@ async function processCollectedUpdatedAndDeletedFiles(
   }
 }
 
-async function processFilesAndCreateAndSerializeProjectGraph() {
+async function processFilesAndCreateAndSerializeProjectGraph(): Promise<SerializedProjectGraph> {
   try {
     performance.mark('hash-watched-changes-start');
     const updatedFiles = [...collectedUpdatedFiles.values()];
@@ -214,17 +217,16 @@ async function processFilesAndCreateAndSerializeProjectGraph() {
     serverLogger.requestLog([...updatedFiles.values()]);
     serverLogger.requestLog([...deletedFiles]);
     const nxJson = readNxJson(workspaceRoot);
-    const configResult = await retrieveProjectConfigurations(
+    const graphNodes = await retrieveProjectConfigurations(
       workspaceRoot,
       nxJson
     );
     await processCollectedUpdatedAndDeletedFiles(
-      configResult,
+      graphNodes,
       updatedFileHashes,
       deletedFiles
     );
-    writeSourceMaps(configResult.sourceMaps);
-    return createAndSerializeProjectGraph(configResult);
+    return createAndSerializeProjectGraph(graphNodes);
   } catch (err) {
     return Promise.resolve({
       error: err,
@@ -233,6 +235,7 @@ async function processFilesAndCreateAndSerializeProjectGraph() {
       rustReferences: null,
       allWorkspaceFiles: null,
       serializedProjectGraph: null,
+      serializedSourceMaps: null,
     });
   }
 }
@@ -254,14 +257,8 @@ function copyFileMap(m: FileMap) {
 
 async function createAndSerializeProjectGraph({
   projects,
-}: RetrievedGraphNodes): Promise<{
-  error: string | null;
-  projectGraph: ProjectGraph | null;
-  fileMap: FileMap | null;
-  allWorkspaceFiles: FileData[] | null;
-  rustReferences: NxWorkspaceFilesExternals | null;
-  serializedProjectGraph: string | null;
-}> {
+  sourceMaps,
+}: RetrievedGraphNodes): Promise<SerializedProjectGraph> {
   try {
     performance.mark('create-project-graph-start');
     const fileMap = copyFileMap(fileMapWithFiles.fileMap);
@@ -289,6 +286,7 @@ async function createAndSerializeProjectGraph({
 
     performance.mark('json-stringify-start');
     const serializedProjectGraph = JSON.stringify(projectGraph);
+    const serializedSourceMaps = JSON.stringify(sourceMaps);
     performance.mark('json-stringify-end');
     performance.measure(
       'serialize graph',
@@ -302,6 +300,7 @@ async function createAndSerializeProjectGraph({
       fileMap,
       allWorkspaceFiles,
       serializedProjectGraph,
+      serializedSourceMaps,
       rustReferences,
     };
   } catch (e) {
@@ -314,6 +313,7 @@ async function createAndSerializeProjectGraph({
       fileMap: null,
       allWorkspaceFiles: null,
       serializedProjectGraph: null,
+      serializedSourceMaps: null,
       rustReferences: null,
     };
   }

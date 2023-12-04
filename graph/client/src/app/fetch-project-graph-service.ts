@@ -34,6 +34,16 @@ export class FetchProjectGraphService implements ProjectGraphService {
     return response.json();
   }
 
+  async getSourceMaps(
+    url: string
+  ): Promise<Record<string, Record<string, string[]>>> {
+    const request = new Request(url, { mode: 'no-cors' });
+
+    const response = await fetch(request);
+
+    return response.json();
+  }
+
   setTaskInputsUrl(url: string) {
     this.taskInputsUrl = url;
   }
