@@ -58,6 +58,7 @@ type Options = [
 ];
 export type MessageIds =
   | 'noRelativeOrAbsoluteImportsAcrossLibraries'
+  | 'noRelativeOrAbsoluteExternals'
   | 'noSelfCircularDependencies'
   | 'noCircularDependencies'
   | 'noImportsOfApps'
@@ -159,6 +160,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
     ],
     messages: {
       noRelativeOrAbsoluteImportsAcrossLibraries: `Projects cannot be imported by a relative or absolute path, and must begin with a npm scope`,
+      noRelativeOrAbsoluteExternals: `External resources cannot be imported using a relative or absolute path`,
       noCircularDependencies: `Circular dependency between "{{sourceProjectName}}" and "{{targetProjectName}}" detected: {{path}}\n\nCircular file chain:\n{{filePaths}}`,
       noSelfCircularDependencies: `Projects should use relative imports to import from other files within the same project. Use "./path/to/file" instead of import from "{{imp}}"`,
       noImportsOfApps: 'Imports of apps are forbidden',
@@ -345,8 +347,15 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
           imp
         );
 
-      // If target is not part of an nx workspace, return.
       if (!targetProject) {
+        // non-project imports cannot be import with relative paths
+        if (isRelativePath(imp) || imp.startsWith('/')) {
+          context.report({
+            node,
+            messageId: 'noRelativeOrAbsoluteExternals',
+          });
+        }
+        // If target is found to be part of the workspace (including node internals)
         return;
       }
 
