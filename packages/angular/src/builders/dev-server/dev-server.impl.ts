@@ -145,6 +145,7 @@ export function executeDevServerBuilder(
   const isUsingWebpackBuilder = ![
     '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser-esbuild',
+    '@nx/angular:application',
     '@nx/angular:browser-esbuild',
   ].includes(buildTarget.executor);
 
@@ -248,6 +249,7 @@ const executorToBuilderMap = new Map<string, string>([
     '@nx/angular:browser-esbuild',
     '@angular-devkit/build-angular:browser-esbuild',
   ],
+  ['@nx/angular:application', '@angular-devkit/build-angular:application'],
 ]);
 function patchBuilderContext(
   context: BuilderContext,

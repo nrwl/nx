@@ -6,6 +6,7 @@ export * from './src/executors/delegate-build/delegate-build.impl';
 export * from './src/executors/ng-packagr-lite/ng-packagr-lite.impl';
 export * from './src/executors/package/package.impl';
 export * from './src/executors/browser-esbuild/browser-esbuild.impl';
+export * from './src/executors/application/application.impl';
 
 import { executeDevServerBuilder } from './src/builders/dev-server/dev-server.impl';
 

@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "title": "Schema for Nx ESBuild Executor",
-  "description": "Nx ESBuild Executor supporting Incremental Builds.",
-  "examplesFile": "../../../docs/browser-esbuild-examples.md",
+  "title": "Schema for Nx Application Executor",
+  "description": "Builds an application with esbuild with support for incremental builds.",
+  "examplesFile": "../../../docs/application-executor-examples.md",
   "outputCapture": "direct-nodejs",
   "type": "object",
   "properties": {
@@ -14,27 +14,22 @@
         "$ref": "#/definitions/assetPattern"
       }
     },
-    "main": {
+    "browser": {
       "type": "string",
-      "description": "The full path for the main entry point to the app, relative to the current workspace."
+      "description": "The full path for the browser entry point to the application, relative to the current workspace."
+    },
+    "server": {
+      "type": "string",
+      "description": "The full path for the server entry point to the application, relative to the current workspace."
     },
     "polyfills": {
-      "description": "Polyfills to be included in the build.",
-      "oneOf": [
-        {
-          "type": "array",
-          "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'.",
-          "items": {
-            "type": "string",
-            "uniqueItems": true
-          },
-          "default": []
-        },
-        {
-          "type": "string",
-          "description": "The full path for the polyfills file, relative to the current workspace or a module specifier. Example: 'zone.js'."
-        }
-      ]
+      "description": "A list of polyfills to include in the build. Can be a full path for a file, relative to the current workspace or module specifier. Example: 'zone.js'.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "uniqueItems": true
+      },
+      "default": []
     },
     "tsConfig": {
       "type": "string",
@@ -169,6 +164,11 @@
                       "type": "boolean",
                       "description": "Extract and inline critical CSS definitions to improve first paint time.",
                       "default": true
+                    },
+                    "removeSpecialComments": {
+                      "type": "boolean",
+                      "description": "Remove comments in global CSS that contains '@license' or '@preserve' or that starts with '//!' or '/*!'.",
+                      "default": true
                     }
                   },
                   "additionalProperties": false
@@ -206,6 +206,13 @@
         }
       ]
     },
+    "loader": {
+      "description": "Defines the type of loader to use with a specified file extension when used with a JavaScript `import`. `text` inlines the content as a string; `binary` inlines the content as a Uint8Array; `file` emits the file and provides the runtime location of the file; `empty` considers the content to be empty and not include it in bundles.",
+      "type": "object",
+      "patternProperties": {
+        "^\\.\\S+$": { "enum": ["text", "binary", "file", "empty"] }
+      }
+    },
     "fileReplacements": {
       "description": "Replace compilation source files with other compilation source files in the build.",
       "type": "array",
@@ -217,10 +224,6 @@
     "outputPath": {
       "type": "string",
       "description": "The full path for the new output directory, relative to the current workspace."
-    },
-    "resourcesOutputPath": {
-      "type": "string",
-      "description": "The path where style resources will be placed, relative to outputPath."
     },
     "aot": {
       "type": "boolean",
@@ -263,24 +266,9 @@
         }
       ]
     },
-    "vendorChunk": {
-      "type": "boolean",
-      "description": "Generate a separate bundle containing only vendor libraries. This option should only be used for development to reduce the incremental compilation time.",
-      "default": false
-    },
-    "commonChunk": {
-      "type": "boolean",
-      "description": "Generate a separate bundle containing code used across multiple bundles.",
-      "default": true
-    },
     "baseHref": {
       "type": "string",
       "description": "Base url for the application being built."
-    },
-    "deployUrl": {
-      "type": "string",
-      "description": "URL where files will be deployed.",
-      "x-deprecated": "Use \"baseHref\" option, \"APP_BASE_HREF\" DI token or a combination of both instead. For more information, see https://angular.io/guide/deployment#the-deploy-url."
     },
     "verbose": {
       "type": "boolean",
@@ -351,11 +339,6 @@
       "description": "Extract all licenses in a separate file.",
       "default": true
     },
-    "buildOptimizer": {
-      "type": "boolean",
-      "description": "Enables advanced build optimizations when using the 'aot' option.",
-      "default": true
-    },
     "namedChunks": {
       "type": "boolean",
       "description": "Use file name for lazy loaded chunks.",
@@ -367,13 +350,19 @@
       "default": false
     },
     "serviceWorker": {
-      "type": "boolean",
-      "description": "Generates a service worker config for production builds.",
-      "default": false
-    },
-    "ngswConfigPath": {
-      "type": "string",
-      "description": "Path to ngsw-config.json."
+      "description": "Generates a service worker configuration.",
+      "default": false,
+      "oneOf": [
+        {
+          "type": "string",
+          "description": "Path to ngsw-config.json."
+        },
+        {
+          "const": false,
+          "type": "boolean",
+          "description": "Does not generate a service worker configuration."
+        }
+      ]
     },
     "index": {
       "description": "Configures the generation of the application's HTML index.",
@@ -409,7 +398,7 @@
     },
     "statsJson": {
       "type": "boolean",
-      "description": "Generates a 'stats.json' file which can be analyzed using tools such as 'webpack-bundle-analyzer'.",
+      "description": "Generates a 'stats.json' file which can be analyzed with https://esbuild.github.io/analyze/.",
       "default": false
     },
     "budgets": {
@@ -437,6 +426,56 @@
         "type": "string"
       },
       "default": []
+    },
+    "prerender": {
+      "description": "Prerender (SSG) pages of your application during build time.",
+      "default": false,
+      "oneOf": [
+        {
+          "type": "boolean",
+          "description": "Enable prerending of pages of your application during build time."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "routesFile": {
+              "type": "string",
+              "description": "The path to a file that contains a list of all routes to prerender, separated by newlines. This option is useful if you want to prerender routes with parameterized URLs."
+            },
+            "discoverRoutes": {
+              "type": "boolean",
+              "description": "Whether the builder should process the Angular Router configuration to find all unparameterized routes and prerender them.",
+              "default": true
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ssr": {
+      "description": "Server side render (SSR) pages of your application during runtime.",
+      "default": false,
+      "oneOf": [
+        {
+          "type": "boolean",
+          "description": "Enable the server bundles to be written to disk."
+        },
+        {
+          "type": "object",
+          "properties": {
+            "entry": {
+              "type": "string",
+              "description": "The server entry-point that when executed will spawn the web server."
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "appShell": {
+      "type": "boolean",
+      "description": "Generates an application shell during build time.",
+      "default": false
     },
     "buildLibsFromSource": {
       "type": "boolean",
@@ -474,7 +513,7 @@
     }
   },
   "additionalProperties": false,
-  "required": ["outputPath", "index", "main", "tsConfig"],
+  "required": ["outputPath", "index", "browser", "tsConfig"],
   "definitions": {
     "assetPattern": {
       "oneOf": [
