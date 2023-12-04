@@ -59,7 +59,7 @@ Show version number
 
 ### $0
 
-Create a version and release for the workspace, then generate a changelog
+Create a version and release for the workspace, generate a changelog, and optionally publish the packages
 
 ```shell
 nx release $0 [specifier]
@@ -131,6 +131,12 @@ Choices: [all, workspace, projects]
 
 Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level
 
+##### no
+
+Type: `boolean`
+
+Automatically answer no to the confirmation prompt for publishing
+
 ##### preid
 
 Type: `string`
@@ -164,6 +170,12 @@ The git reference to use as the end of the changelog
 Type: `string`
 
 The version to create a Github release and changelog for
+
+##### yes
+
+Type: `boolean`
+
+Automatically answer yes to the confirmation prompt for publishing
 
 ### version
 
