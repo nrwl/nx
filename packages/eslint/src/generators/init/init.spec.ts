@@ -5,9 +5,15 @@ import { lintInitGenerator } from './init';
 
 describe('@nx/eslint:init', () => {
   let tree: Tree;
+  let envV3: string | undefined;
 
   beforeEach(() => {
+    envV3 = process.env.NX_PCV3;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
+  afterEach(() => {
+    process.env.NX_PCV3 = envV3;
   });
 
   it('should generate the global eslint config', async () => {
