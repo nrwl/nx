@@ -1,11 +1,11 @@
 export const nxVersion = require('../../package.json').version;
 
-export const angularVersion = '~17.0.0';
-export const angularDevkitVersion = '~17.0.0';
-export const ngPackagrVersion = '~17.0.0';
+export const angularVersion = '~17.1.0';
+export const angularDevkitVersion = '~17.1.0';
+export const ngPackagrVersion = '~17.1.0';
 export const ngrxVersion = '~17.0.0';
 export const rxjsVersion = '~7.8.0';
-export const zoneJsVersion = '~0.14.0';
+export const zoneJsVersion = '~0.14.3';
 export const angularJsVersion = '1.7.9';
 export const tsLibVersion = '^2.3.0';
 
@@ -13,6 +13,7 @@ export const corsVersion = '~2.8.5';
 export const typesCorsVersion = '~2.8.5';
 export const expressVersion = '~4.18.2';
 export const typesExpressVersion = '4.17.14';
+export const browserSyncVersion = '^3.0.0';
 export const moduleFederationNodeVersion = '~1.0.5';
 
 export const angularEslintVersion = '~17.0.0';
