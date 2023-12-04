@@ -139,7 +139,12 @@ export interface NxReleaseGitConfiguration {
  */
 interface NxReleaseConfiguration {
   /**
-   * @note: When no groups are configured at all (the default), all projects in the workspace are treated as
+   * Shorthand for amending the projects which will be included in the implicit default release group (all projects by default).
+   * @note Only one of `projects` or `groups` can be specified, the cannot be used together.
+   */
+  projects?: string[] | string;
+  /**
+   * @note When no projects or groups are configured at all (the default), all projects in the workspace are treated as
    * if they were in a release group together with a fixed relationship.
    */
   groups?: Record<
