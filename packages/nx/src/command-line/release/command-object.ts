@@ -52,6 +52,9 @@ export type PublishOptions = NxReleaseArgs &
     otp?: number;
   };
 
+export type MetaOptions = VersionOptions &
+  ChangelogOptions & { yes?: boolean; no?: boolean };
+
 export const yargsReleaseCommand: CommandModule<
   Record<string, unknown>,
   NxReleaseArgs
@@ -118,20 +121,37 @@ export const yargsReleaseCommand: CommandModule<
   },
 };
 
-const metaCommand: CommandModule<
-  NxReleaseArgs,
-  VersionOptions & ChangelogOptions
-> = {
+const metaCommand: CommandModule<NxReleaseArgs, MetaOptions> = {
   command: '$0 [specifier]',
   describe:
-    'Create a version and release for the workspace, then generate a changelog',
+    'Create a version and release for the workspace, generate a changelog, and optionally publish the packages',
   builder: (yargs) =>
     withGitCommitAndGitTagOptions(
       withVersionOptions(withChangelogOptions(yargs))
-    ),
+    )
+      .option('yes', {
+        type: 'boolean',
+        alias: 'y',
+        description:
+          'Automatically answer yes to the confirmation prompt for publishing',
+      })
+      .option('no', {
+        type: 'boolean',
+        alias: 'n',
+        description:
+          'Automatically answer no to the confirmation prompt for publishing',
+      })
+      .check((argv) => {
+        if (argv.yes && argv.no) {
+          throw new Error(
+            'The --yes and --no options are mutually exclusive, please use one or the other.'
+          );
+        }
+        return true;
+      }),
   handler: (args) =>
     import('./meta')
-      .then((m) => m.releaseMeta(args))
+      .then((m) => m.releaseMetaCLIHandler(args))
       .then((versionDataOrExitCode) => {
         if (typeof versionDataOrExitCode === 'number') {
           return process.exit(versionDataOrExitCode);

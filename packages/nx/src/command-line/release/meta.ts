@@ -1,49 +1,82 @@
+import { prompt } from 'enquirer';
 import { readNxJson } from '../../config/nx-json';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
-import { releaseChangelogCLIHandler } from './changelog';
-import { ChangelogOptions, VersionOptions } from './command-object';
+import { handleErrors } from '../../utils/params';
+import { releaseChangelog } from './changelog';
+import { MetaOptions, VersionOptions } from './command-object';
 import {
   NxReleaseConfig,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
-import { NxReleaseVersionResult, releaseVersionCLIHandler } from './version';
+import { releasePublish } from './publish';
+import { NxReleaseVersionResult, releaseVersion } from './version';
+
+export const releaseMetaCLIHandler = (args: VersionOptions) =>
+  handleErrors(args.verbose, () => releaseMeta(args));
 
 export async function releaseMeta(
-  args: VersionOptions & ChangelogOptions
+  args: MetaOptions
 ): Promise<NxReleaseVersionResult | number> {
   const nxReleaseConfig = await readNxReleaseConfig(args);
 
-  const versionResult: NxReleaseVersionResult | 1 =
-    await releaseVersionCLIHandler({
-      ...args,
-      // if enabled, committing and tagging will be handled by the changelog
-      // command, so we should only stage the changes in the version command
-      stageChanges: args.gitCommit || nxReleaseConfig.git?.commit,
-      gitCommit: false,
-      gitTag: false,
-    });
+  const versionResult: NxReleaseVersionResult = await releaseVersion({
+    ...args,
+    // if enabled, committing and tagging will be handled by the changelog
+    // command, so we should only stage the changes in the version command
+    stageChanges: args.gitCommit || nxReleaseConfig.git?.commit,
+    gitCommit: false,
+    gitTag: false,
+  });
 
-  if (versionResult === 1) {
-    return 1;
-  }
-
-  const changelogResult = await releaseChangelogCLIHandler({
+  await releaseChangelog({
     ...args,
     versionData: versionResult.projectsVersionData,
     version: versionResult.workspaceVersion,
     workspaceChangelog: versionResult.workspaceVersion !== undefined,
   });
 
-  if (changelogResult === 1) {
-    return 1;
+  console.log('\n');
+
+  let shouldPublish = !!args.yes && !args.no;
+  const shouldPromptPublishing = !args.yes && !args.no && !args.dryRun;
+
+  if (shouldPromptPublishing) {
+    shouldPublish = await promptForPublish();
+  }
+
+  if (shouldPublish) {
+    await releasePublish(args);
+  } else {
+    console.log('\nSkipped publishing packages.');
   }
 
   return versionResult;
 }
 
+async function promptForPublish(): Promise<boolean> {
+  const reply = await prompt<{ confirmation: 'yes' | 'no' }>([
+    {
+      name: 'confirmation',
+      message: 'Do you want to publish these versions?',
+      type: 'select',
+      choices: [
+        {
+          name: 'no',
+          message: 'No',
+        },
+        {
+          name: 'yes',
+          message: 'Yes',
+        },
+      ],
+    },
+  ]);
+  return reply.confirmation === 'yes';
+}
+
 async function readNxReleaseConfig(
-  args: VersionOptions & ChangelogOptions
+  args: MetaOptions
 ): Promise<NxReleaseConfig> {
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const nxJson = readNxJson();
