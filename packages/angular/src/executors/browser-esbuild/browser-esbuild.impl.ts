@@ -1,10 +1,8 @@
-import type { BuilderOutput } from '@angular-devkit/architect';
-import { readCachedProjectGraph, type ExecutorContext } from '@nx/devkit';
+import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import type { OutputFile } from 'esbuild';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { loadPlugins } from '../utilities/esbuild-extensions';
-import { createTmpTsConfigForBuildableLibs } from './lib/buildable-libs';
 import type { EsBuildSchema } from './schema';
 
 export default async function* esbuildExecutor(
@@ -20,15 +18,12 @@ export default async function* esbuildExecutor(
   } = options;
 
   let dependencies: DependentBuildableProjectNode[];
-  let projectGraph = context.projectGraph;
 
   if (!buildLibsFromSource) {
-    projectGraph = projectGraph ?? readCachedProjectGraph();
     const { tsConfigPath, dependencies: foundDependencies } =
       createTmpTsConfigForBuildableLibs(
         delegateExecutorOptions.tsConfig,
-        context,
-        { projectGraph }
+        context
       );
     dependencies = foundDependencies;
     delegateExecutorOptions.tsConfig = tsConfigPath;
@@ -56,10 +51,5 @@ export default async function* esbuildExecutor(
     builderContext,
     /* infrastructureSettings */ undefined,
     plugins
-  ) as AsyncIterable<
-    BuilderOutput & {
-      outputFiles?: OutputFile[];
-      assetFiles?: { source: string; destination: string }[];
-    }
-  >;
+  );
 }

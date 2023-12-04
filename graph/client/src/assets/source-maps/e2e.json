@@ -1,0 +1,1753 @@
+{
+  "apps/cart": {
+    "root": ["nx-core-build-project-json-nodes", "apps/cart/project.json"],
+    "name": ["nx-core-build-project-json-nodes", "apps/cart/project.json"],
+    "$schema": ["nx-core-build-project-json-nodes", "apps/cart/project.json"],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets": ["nx-core-build-project-json-nodes", "apps/cart/project.json"],
+    "tags": ["nx-core-build-project-json-nodes", "apps/cart/project.json"],
+    "implicitDependencies": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "tags.type:app": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "tags.scope:cart": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "implicitDependencies.shared-assets": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "implicitDependencies.shared-styles": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.outputs": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.defaultConfiguration": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.outputPath": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.webpackConfig": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.index": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.main": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.polyfills": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.tsConfig": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.assets": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.maxWorkers": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.styles": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.scripts": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.buildLibsFromSource": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.options.isolatedConfig": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.production": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.production.fileReplacements": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.production.optimization": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.production.outputHashing": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.production.sourceMap": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.production.extractCss": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.production.namedChunks": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.production.extractLicenses": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.production.vendorChunk": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.production.budgets": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.development": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.development.extractLicenses": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.development.optimization": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.development.sourceMap": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.build.configurations.development.vendorChunk": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.serve": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.serve.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.serve.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.serve.configurations": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.serve.defaultConfiguration": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.serve.options.buildTarget": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.serve.configurations.production": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.serve.configurations.production.buildTarget": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.serve.configurations.development": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.serve.configurations.development.buildTarget": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.test": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.test.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.test.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.test.outputs": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.test.options.jestConfig": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.deploy": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.deploy.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.deploy.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ],
+    "targets.deploy.options.commands": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart/project.json"
+    ]
+  },
+  "apps/cart-e2e": {
+    "root": ["nx-core-build-project-json-nodes", "apps/cart-e2e/project.json"],
+    "name": ["nx-core-build-project-json-nodes", "apps/cart-e2e/project.json"],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "tags": ["nx-core-build-project-json-nodes", "apps/cart-e2e/project.json"],
+    "implicitDependencies": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "tags.scope:cart": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "tags.type:e2e": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "implicitDependencies.cart": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.e2e": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.e2e.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.e2e.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.e2e.configurations": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.e2e.options.cypressConfig": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.e2e.options.devServerTarget": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.e2e.options.testingType": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.e2e.configurations.production": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.e2e.configurations.production.devServerTarget": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "apps/cart-e2e/project.json"
+    ]
+  },
+  "apps/products": {
+    "root": ["nx-core-build-project-json-nodes", "apps/products/project.json"],
+    "name": ["nx-core-build-project-json-nodes", "apps/products/project.json"],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "prefix": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "tags": ["nx-core-build-project-json-nodes", "apps/products/project.json"],
+    "implicitDependencies": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "tags.type:app": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "tags.scope:products": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "implicitDependencies.shared-assets": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "implicitDependencies.shared-styles": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "generators.@nx/workspace:component": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "generators.@nx/workspace:component.style": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.outputs": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.options.aot": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.options.outputPath": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.options.index": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.options.main": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.options.polyfills": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.options.tsConfig": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.options.assets": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.options.styles": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.options.scripts": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production.fileReplacements": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production.optimization": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production.outputHashing": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production.sourceMap": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production.namedChunks": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production.aot": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production.extractLicenses": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production.vendorChunk": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production.buildOptimizer": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.build.configurations.production.budgets": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.serve": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.serve.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.serve.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.serve.configurations": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.serve.options.browserTarget": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.serve.configurations.production": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.serve.configurations.production.browserTarget": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.extract-i18n": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.extract-i18n.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.extract-i18n.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.extract-i18n.options.browserTarget": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.test": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.test.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.test.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.test.outputs": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.test.options.jestConfig": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.deploy": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.deploy.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.deploy.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ],
+    "targets.deploy.options.commands": [
+      "nx-core-build-project-json-nodes",
+      "apps/products/project.json"
+    ]
+  },
+  "apps/products-e2e": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "implicitDependencies": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "tags.scope:products": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "tags.type:e2e": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "implicitDependencies.products": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.e2e": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.e2e.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.e2e.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.e2e.configurations": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.e2e.options.cypressConfig": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.e2e.options.devServerTarget": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.e2e.options.testingType": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.e2e.configurations.production": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.e2e.configurations.production.devServerTarget": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "apps/products-e2e/project.json"
+    ]
+  },
+  "libs/cart/cart-page": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "tags.scope:cart": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "tags.type:feature": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.test": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.test.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.test.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.test.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.test.options.jestConfig": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "nx-core-build-project-json-nodes",
+      "libs/cart/cart-page/project.json"
+    ]
+  },
+  "libs/products/home-page": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "prefix": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "tags.scope:products": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "tags.type:feature": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "generators.@nx/angular:component": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "generators.@nx/angular:component.styleext": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.test": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.test.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.test.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.test.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.test.options.jestConfig": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/home-page/project.json"
+    ]
+  },
+  "libs/products/product-detail-page": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "prefix": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "tags.type:feature": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "tags.scope:products": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "generators.@nx/angular:component": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "generators.@nx/angular:component.styleext": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.test": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.test.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.test.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.test.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.test.options.jestConfig": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "nx-core-build-project-json-nodes",
+      "libs/products/product-detail-page/project.json"
+    ]
+  },
+  "libs/shared/assets": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/assets/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/assets/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/assets/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/assets/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/assets/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/assets/project.json"
+    ],
+    "tags.type:assets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/assets/project.json"
+    ],
+    "tags.scope:shared": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/assets/project.json"
+    ]
+  },
+  "libs/shared/cart/state": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "prefix": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "tags.scope:shared": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "tags.type:state": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "generators.@nx/angular:component": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "generators.@nx/angular:component.styleext": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.test": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.test.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.test.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.test.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.test.options.jestConfig": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/cart/state/project.json"
+    ]
+  },
+  "libs/shared/e2e-utils": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "tags.scope:shared": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "tags.type:e2e-utils": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/e2e-utils/project.json"
+    ]
+  },
+  "libs/shared/header": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "tags.scope:shared": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "tags.type:ui": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.test": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.test.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.test.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.test.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.test.options.jestConfig": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/header/project.json"
+    ]
+  },
+  "libs/shared/jsxify": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "tags.scope:shared": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "tags.type:types": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/jsxify/project.json"
+    ]
+  },
+  "libs/shared/product/data": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "tags.type:data": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "tags.scope:shared": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/data/project.json"
+    ]
+  },
+  "libs/shared/product/state": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "prefix": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "tags.scope:shared": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "tags.type:state": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "generators.@nx/angular:component": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "generators.@nx/angular:component.styleext": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.test": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.test.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.test.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.test.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.test.options.jestConfig": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/state/project.json"
+    ]
+  },
+  "libs/shared/product/types": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "tags.type:types": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "tags.scope:shared": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/types/project.json"
+    ]
+  },
+  "libs/shared/product/ui": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "tags.scope:shared": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "tags.type:ui": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.test": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.test.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.test.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.test.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.test.options.jestConfig": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ],
+    "targets.test.options.passWithNoTests": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/product/ui/project.json"
+    ]
+  },
+  "libs/shared/styles": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/styles/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/styles/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/styles/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/styles/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/styles/project.json"
+    ],
+    "generators": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/styles/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/styles/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/styles/project.json"
+    ],
+    "tags.scope:shared": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/styles/project.json"
+    ],
+    "tags.type:styles": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/styles/project.json"
+    ]
+  },
+  "libs/shared/translate": {
+    "root": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "name": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "$schema": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "sourceRoot": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "projectType": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "targets": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "tags": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "targets.lint": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "targets.lint.executor": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "targets.lint.outputs": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "targets.lint.options": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ],
+    "targets.lint.options.lintFilePatterns": [
+      "nx-core-build-project-json-nodes",
+      "libs/shared/translate/project.json"
+    ]
+  }
+}
