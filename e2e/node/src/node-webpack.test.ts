@@ -52,7 +52,7 @@ describe('Node Applications + webpack', () => {
 
     await runCLIAsync(`build ${app} --optimization`);
     const optimizedContent = readFile(`dist/apps/${app}/main.js`);
-    expect(optimizedContent).toContain('console.log("foo bar")');
+    expect(optimizedContent).toContain('console.log("foo "+"bar")');
 
     // Test that serve can re-run dependency builds.
     const lib = uniq('nodelib');
