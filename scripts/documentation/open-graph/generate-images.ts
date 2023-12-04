@@ -1,6 +1,12 @@
 import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 import { PackageMetadata } from '../../../nx-dev/models-package/src/lib/package.models';
-import { ensureDir, readFile, readJSONSync, writeFileSync } from 'fs-extra';
+import {
+  ensureDir,
+  readFile,
+  readJSONSync,
+  writeFileSync,
+  copyFileSync,
+} from 'fs-extra';
 import { resolve } from 'path';
 
 const mapJson = readJSONSync('./docs/map.json', 'utf8').content;
@@ -153,6 +159,19 @@ function createOpenGraphImage(
   });
 }
 
+function copyImage(
+  backgroundImagePath: string,
+  targetFolder: string,
+  filename: string
+) {
+  const splits = backgroundImagePath.split('.');
+  const extension = splits[splits.length - 1];
+  copyFileSync(
+    backgroundImagePath,
+    resolve(targetFolder + `/${filename}.${extension}`)
+  );
+}
+
 function splitLines(
   context: SKRSContext2D,
   text: string,
@@ -187,15 +206,18 @@ console.log(
 );
 ensureDir(targetFolder).then(() =>
   data.map((item) =>
-    createOpenGraphImage(
-      resolve(
-        __dirname,
-        item.mediaImage ? '../../../docs/' + item.mediaImage : './media.jpg'
-      ),
-      targetFolder,
-      item.mediaImage ? '' : item.title,
-      item.mediaImage ? '' : item.content,
-      item.filename
-    )
+    item.mediaImage
+      ? copyImage(
+          resolve(__dirname, '../../../docs/' + item.mediaImage),
+          targetFolder,
+          item.filename
+        )
+      : createOpenGraphImage(
+          resolve(__dirname, './media.jpg'),
+          targetFolder,
+          item.mediaImage ? '' : item.title,
+          item.mediaImage ? '' : item.content,
+          item.filename
+        )
   )
 );
