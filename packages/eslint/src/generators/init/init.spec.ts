@@ -97,4 +97,31 @@ describe('@nx/eslint:init', () => {
       ]
     `);
   });
+
+  it('should add @nx/eslint/plugin in subsequent step', async () => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.namedInputs ??= {};
+      json.namedInputs.production = ['default'];
+      return json;
+    });
+
+    await lintInitGenerator(tree, {});
+    expect(
+      readJson<NxJsonConfiguration>(tree, 'nx.json').plugins
+    ).not.toBeDefined();
+
+    process.env.NX_PCV3 = 'true';
+    await lintInitGenerator(tree, {});
+    expect(readJson<NxJsonConfiguration>(tree, 'nx.json').plugins)
+      .toMatchInlineSnapshot(`
+      [
+        {
+          "options": {
+            "targetName": "lint",
+          },
+          "plugin": "@nx/eslint/plugin",
+        },
+      ]
+    `);
+  });
 });
