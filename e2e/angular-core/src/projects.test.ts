@@ -355,17 +355,6 @@ describe('Angular Projects', () => {
       
       export default replaceTextPlugin;`
     );
-    updateJson(join(esbuildApp, 'project.json'), (config) => {
-      config.targets.build.executor = '@nx/angular:browser-esbuild';
-      config.targets.build.options = {
-        ...config.targets.build.options,
-        outputPath: `dist/${esbuildApp}`,
-        main: config.targets.build.options.browser,
-        browser: undefined,
-        plugins: [`${esbuildApp}/replace-text.plugin.mjs`],
-      };
-      return config;
-    });
     updateFile(
       `${esbuildApp}/src/app/app.component.ts`,
       `import { Component } from '@angular/core';
@@ -382,11 +371,37 @@ describe('Angular Projects', () => {
       }`
     );
 
-    // ACT
+    // check @nx/angular:application
+    updateJson(join(esbuildApp, 'project.json'), (config) => {
+      config.targets.build.executor = '@nx/angular:application';
+      config.targets.build.options = {
+        ...config.targets.build.options,
+        plugins: [`${esbuildApp}/replace-text.plugin.mjs`],
+      };
+      return config;
+    });
+
     runCLI(`build ${esbuildApp} --configuration=development`);
 
-    // ASSERT
-    const mainBundle = readFile(`dist/${esbuildApp}/main.js`);
+    let mainBundle = readFile(`dist/${esbuildApp}/browser/main.js`);
+    expect(mainBundle).toContain(
+      'this.buildDefined = "Value was provided at build time";'
+    );
+
+    // check @nx/angular:browser-esbuild
+    updateJson(join(esbuildApp, 'project.json'), (config) => {
+      config.targets.build.executor = '@nx/angular:browser-esbuild';
+      config.targets.build.options = {
+        ...config.targets.build.options,
+        main: config.targets.build.options.browser,
+        browser: undefined,
+      };
+      return config;
+    });
+
+    runCLI(`build ${esbuildApp} --configuration=development`);
+
+    mainBundle = readFile(`dist/${esbuildApp}/main.js`);
     expect(mainBundle).toContain(
       'this.buildDefined = "Value was provided at build time";'
     );

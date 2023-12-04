@@ -3,16 +3,14 @@ import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-l
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { loadPlugins } from '../utilities/esbuild-extensions';
-import type { EsBuildSchema } from './schema';
+import type { ApplicationExecutorOptions } from './schema';
 
-export default async function* esbuildExecutor(
-  options: EsBuildSchema,
+export default async function* applicationExecutor(
+  options: ApplicationExecutorOptions,
   context: ExecutorContext
 ) {
-  options.buildLibsFromSource ??= true;
-
   const {
-    buildLibsFromSource,
+    buildLibsFromSource = true,
     plugins: pluginPaths,
     ...delegateExecutorOptions
   } = options;
@@ -31,25 +29,19 @@ export default async function* esbuildExecutor(
 
   const plugins = await loadPlugins(pluginPaths, options.tsConfig);
 
-  const { buildEsbuildBrowser } = await import(
-    '@angular-devkit/build-angular/src/builders/browser-esbuild/index'
-  );
-
+  const { buildApplication } = await import('@angular-devkit/build-angular');
   const builderContext = await createBuilderContext(
     {
-      builderName: 'browser-esbuild',
-      description: 'Build a browser application',
-      optionSchema: await import(
-        '@angular-devkit/build-angular/src/builders/browser-esbuild/schema.json'
-      ),
+      builderName: 'application',
+      description: 'Build an application.',
+      optionSchema: await import('./schema.json'),
     },
     context
   );
 
-  return yield* buildEsbuildBrowser(
+  return yield* buildApplication(
     delegateExecutorOptions,
     builderContext,
-    /* infrastructureSettings */ undefined,
     plugins
   );
 }
