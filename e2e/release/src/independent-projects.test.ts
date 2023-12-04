@@ -669,7 +669,7 @@ describe('nx release - independent projects', () => {
       });
     });
 
-    it('should allow versioning projects independently with conventional commits', async () => {
+    it('should allow versioning projects independently', async () => {
       runCommand(`git tag ${pkg1}@v1.2.0`);
       runCommand(`git tag ${pkg2}@v1.4.0`);
       runCommand(`git tag ${pkg3}@v1.6.0`);
