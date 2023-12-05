@@ -348,14 +348,14 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
         );
 
       if (!targetProject) {
-        // non-project imports cannot be import with relative paths
+        // non-project imports cannot use relative or absolute paths
         if (isRelativePath(imp) || imp.startsWith('/')) {
           context.report({
             node,
             messageId: 'noRelativeOrAbsoluteExternals',
           });
         }
-        // If target is found to be part of the workspace (including node internals)
+        // If target is not found (including node internals) we bail early
         return;
       }
 
