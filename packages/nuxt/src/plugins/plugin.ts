@@ -2,16 +2,15 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
-  TargetConfiguration,
   detectPackageManager,
   joinPathFragments,
   offsetFromRoot,
   readJsonFile,
+  TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
 import { basename, dirname, join } from 'path';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
@@ -102,20 +101,16 @@ async function buildNuxtTargets(
   const targets: Record<string, TargetConfiguration> = {};
 
   targets[options.buildTargetName] = buildTarget(
-    context,
     namedInputs,
     buildOutputs,
-    projectRoot,
-    options
+    projectRoot
   );
 
   targets[options.serveTargetName] = serveTarget(projectRoot);
 
   targets[options.testTargetName] = testTarget(
-    context,
     namedInputs,
     testOutputs,
-    options,
     projectRoot
   );
 
@@ -123,36 +118,17 @@ async function buildNuxtTargets(
 }
 
 function buildTarget(
-  context: CreateNodesContext,
   namedInputs: {
     [inputName: string]: any[];
   },
   buildOutputs: string[],
-  projectRoot: string,
-  options: NuxtPluginOptions
+  projectRoot: string
 ) {
-  const targetDefaults = readTargetDefaultsForTarget(
-    options.buildTargetName,
-    context.nxJsonConfiguration.targetDefaults
-  );
-
-  const targetConfig: TargetConfiguration = {
+  return {
     command: `nuxi build`,
-    options: {
-      cwd: projectRoot,
-    },
-  };
-
-  if (targetDefaults?.outputs === undefined) {
-    targetConfig.outputs = buildOutputs;
-  }
-
-  if (targetDefaults?.cache === undefined) {
-    targetConfig.cache = true;
-  }
-
-  if (targetDefaults?.inputs === undefined) {
-    targetConfig.inputs = [
+    options: { cwd: projectRoot },
+    cache: true,
+    inputs: [
       ...('production' in namedInputs
         ? ['default', '^production']
         : ['default', '^default']),
@@ -160,9 +136,9 @@ function buildTarget(
       {
         externalDependencies: ['nuxi'],
       },
-    ];
-  }
-  return targetConfig;
+    ],
+    outputs: buildOutputs,
+  };
 }
 
 function serveTarget(projectRoot: string) {
@@ -177,36 +153,17 @@ function serveTarget(projectRoot: string) {
 }
 
 function testTarget(
-  context: CreateNodesContext,
   namedInputs: {
     [inputName: string]: any[];
   },
   outputs: string[],
-  options: NuxtPluginOptions,
   projectRoot: string
 ) {
-  const targetDefaults = readTargetDefaultsForTarget(
-    options.testTargetName,
-    context.nxJsonConfiguration.targetDefaults
-  );
-
-  const targetConfig: TargetConfiguration = {
+  return {
     command: `vitest run`,
-    options: {
-      cwd: projectRoot,
-    },
-  };
-
-  if (targetDefaults?.outputs === undefined) {
-    targetConfig.outputs = outputs;
-  }
-
-  if (targetDefaults?.cache === undefined) {
-    targetConfig.cache = true;
-  }
-
-  if (targetDefaults?.inputs === undefined) {
-    targetConfig.inputs = [
+    options: { cwd: projectRoot },
+    cache: true,
+    inputs: [
       ...('production' in namedInputs
         ? ['default', '^production']
         : ['default', '^default']),
@@ -214,10 +171,9 @@ function testTarget(
       {
         externalDependencies: ['vitest'],
       },
-    ];
-  }
-
-  return targetConfig;
+    ],
+    outputs,
+  };
 }
 
 async function getInfoFromNuxtConfig(
