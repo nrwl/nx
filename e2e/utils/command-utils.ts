@@ -171,6 +171,19 @@ export function getPackageManagerCommand({
       list: 'pnpm ls --depth 10',
       runLerna: `pnpm exec lerna`,
     },
+    bun: {
+      createWorkspace: `bunx create-nx-workspace@${publishedVersion}`,
+      run: (script: string, args: string) => `bun run ${script} -- ${args}`,
+      runNx: `bun nx`,
+      runNxSilent: `bun nx`,
+      runUninstalledPackage: 'bunx',
+      install: 'bun i',
+      ciInstall: 'bun install --frozen-lockfile',
+      addProd: 'bun add',
+      addDev: 'bun add --dev',
+      list: 'bun pm ls',
+      runLerna: `bun lerna`,
+    },
   }[packageManager.trim() as PackageManager];
 }
 

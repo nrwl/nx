@@ -7,7 +7,7 @@ import { join } from 'path';
  * we duplicate the helper functions from @nx/workspace in this file.
  */
 
-export const packageManagerList = ['pnpm', 'yarn', 'npm'] as const;
+export const packageManagerList = ['pnpm', 'yarn', 'npm', 'bun'] as const;
 
 export type PackageManager = typeof packageManagerList[number];
 
@@ -16,6 +16,8 @@ export function detectPackageManager(dir: string = ''): PackageManager {
     ? 'yarn'
     : existsSync(join(dir, 'pnpm-lock.yaml'))
     ? 'pnpm'
+    : existsSync(join(dir, 'bun.lockb'))
+    ? 'bun'
     : 'npm';
 }
 
@@ -63,7 +65,11 @@ export function getPackageManagerCommand(
         install: 'pnpm install --no-frozen-lockfile --silent --ignore-scripts',
         exec: useExec ? 'pnpm exec' : 'pnpx',
       };
-
+    case 'bun':
+      return {
+        install: 'bun install --silent --ignore-scripts',
+        exec: 'bunx',
+      };
     case 'npm':
       return {
         install: 'npm install --silent --ignore-scripts',

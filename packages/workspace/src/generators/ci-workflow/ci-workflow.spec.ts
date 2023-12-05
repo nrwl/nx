@@ -15,7 +15,7 @@ describe('CI Workflow generator', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  ['npm', 'yarn', 'pnpm'].forEach((packageManager) => {
+  ['npm', 'yarn', 'bun', 'pnpm'].forEach((packageManager) => {
     describe(`with ${packageManager}`, () => {
       beforeEach(() => {
         jest.mock('@nx/devkit', () => ({

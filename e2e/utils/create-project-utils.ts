@@ -157,7 +157,7 @@ export function runCreateWorkspace(
     appName?: string;
     style?: string;
     base?: string;
-    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
     extraArgs?: string;
     ci?: 'azure' | 'github' | 'circleci';
     useDetectedPm?: boolean;

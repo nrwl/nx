@@ -129,7 +129,7 @@ Enable distributed caching to make your CI faster
 
 Type: `string`
 
-Choices: [npm, pnpm, yarn]
+Choices: [bun, npm, pnpm, yarn]
 
 Default: `npm`
 
