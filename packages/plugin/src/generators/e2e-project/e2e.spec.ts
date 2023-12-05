@@ -163,7 +163,6 @@ describe('NxPlugin e2e-project Generator', () => {
     const projectsConfigurations = getProjects(tree);
     expect(projectsConfigurations.get('my-plugin-e2e').targets.lint).toEqual({
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
     });
   });
 });

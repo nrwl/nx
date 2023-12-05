@@ -1129,9 +1129,6 @@ describe('lib', () => {
           .toMatchInlineSnapshot(`
           {
             "executor": "@nx/eslint:lint",
-            "outputs": [
-              "{options.outputFile}",
-            ],
           }
         `);
       });

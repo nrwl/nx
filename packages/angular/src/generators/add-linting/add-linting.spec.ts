@@ -72,7 +72,6 @@ describe('addLinting generator', () => {
     const project = readProjectConfiguration(tree, appProjectName);
     expect(project.targets.lint).toEqual({
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
     });
   });
 });

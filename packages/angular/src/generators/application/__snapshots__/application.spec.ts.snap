@@ -267,9 +267,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
     "serve": {
       "configurations": {
@@ -333,9 +330,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
   },
 }
@@ -492,9 +486,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
     "serve": {
       "configurations": {
@@ -558,9 +549,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
   },
 }
@@ -941,9 +929,6 @@ exports[`app nested should create project configs 1`] = `
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
     "serve": {
       "configurations": {
@@ -1007,9 +992,6 @@ exports[`app nested should create project configs 2`] = `
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
   },
 }
@@ -1079,9 +1061,6 @@ exports[`app not nested should create project configs 1`] = `
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
     "serve": {
       "configurations": {
@@ -1145,9 +1124,6 @@ exports[`app not nested should create project configs 2`] = `
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
   },
 }
