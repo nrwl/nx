@@ -3,22 +3,36 @@ import { readNxJson } from '../../config/nx-json';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { handleErrors } from '../../utils/params';
 import { releaseChangelog } from './changelog';
-import { MetaOptions, VersionOptions } from './command-object';
+import { ReleaseOptions, VersionOptions } from './command-object';
 import {
-  NxReleaseConfig,
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
 import { releasePublish } from './publish';
 import { NxReleaseVersionResult, releaseVersion } from './version';
 
-export const releaseMetaCLIHandler = (args: VersionOptions) =>
-  handleErrors(args.verbose, () => releaseMeta(args));
+export const releaseCLIHandler = (args: VersionOptions) =>
+  handleErrors(args.verbose, () => release(args));
 
-export async function releaseMeta(
-  args: MetaOptions
+export async function release(
+  args: ReleaseOptions
 ): Promise<NxReleaseVersionResult | number> {
-  const nxReleaseConfig = await readNxReleaseConfig(args);
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const nxJson = readNxJson();
+
+  if (args.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
+
+  // Apply default configuration to any optional user configuration
+  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
+    projectGraph,
+    nxJson.release,
+    'nx-release-publish'
+  );
+  if (configError) {
+    return await handleNxReleaseConfigError(configError);
+  }
 
   const versionResult: NxReleaseVersionResult = await releaseVersion({
     ...args,
@@ -76,27 +90,4 @@ async function promptForPublish(): Promise<boolean> {
   console.log('\n');
 
   return reply.confirmation === 'yes';
-}
-
-async function readNxReleaseConfig(
-  args: MetaOptions
-): Promise<NxReleaseConfig> {
-  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const nxJson = readNxJson();
-
-  if (args.verbose) {
-    process.env.NX_VERBOSE_LOGGING = 'true';
-  }
-
-  // Apply default configuration to any optional user configuration
-  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
-    projectGraph,
-    nxJson.release,
-    'nx-release-publish'
-  );
-  if (configError) {
-    return await handleNxReleaseConfigError(configError);
-  }
-
-  return nxReleaseConfig;
 }

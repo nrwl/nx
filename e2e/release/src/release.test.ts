@@ -855,7 +855,7 @@ describe('nx release', () => {
       ).length
     ).toEqual(3);
 
-    // Reset the nx release config to something basic for testing the meta command
+    // Reset the nx release config to something basic for testing the release command
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         groups: {
@@ -869,21 +869,22 @@ describe('nx release', () => {
       return nxJson;
     });
 
-    const metaOutput = runCLI(`release 1200.0.0 -y`);
+    const releaseOutput = runCLI(`release 1200.0.0 -y`);
 
     expect(
-      metaOutput.match(new RegExp(`Running release version for project: `, 'g'))
-        .length
+      releaseOutput.match(
+        new RegExp(`Running release version for project: `, 'g')
+      ).length
     ).toEqual(3);
 
     expect(
-      metaOutput.match(
+      releaseOutput.match(
         new RegExp(`Generating an entry in CHANGELOG\.md for v1200\.0\.0`, 'g')
       ).length
     ).toEqual(1);
 
     expect(
-      metaOutput.match(
+      releaseOutput.match(
         new RegExp(
           `Successfully ran target nx-release-publish for 3 projects`,
           'g'

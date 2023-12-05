@@ -52,7 +52,7 @@ export type PublishOptions = NxReleaseArgs &
     otp?: number;
   };
 
-export type MetaOptions = VersionOptions &
+export type ReleaseOptions = VersionOptions &
   ChangelogOptions & { yes?: boolean; skipPublish?: boolean };
 
 export const yargsReleaseCommand: CommandModule<
@@ -64,7 +64,7 @@ export const yargsReleaseCommand: CommandModule<
     '**ALPHA**: Orchestrate versioning and publishing of applications and libraries',
   builder: (yargs) =>
     yargs
-      .command(metaCommand)
+      .command(releaseCommand)
       .command(versionCommand)
       .command(changelogCommand)
       .command(publishCommand)
@@ -121,7 +121,7 @@ export const yargsReleaseCommand: CommandModule<
   },
 };
 
-const metaCommand: CommandModule<NxReleaseArgs, MetaOptions> = {
+const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
   command: '$0 [specifier]',
   describe:
     'Create a version and release for the workspace, generate a changelog, and optionally publish the packages',
@@ -149,8 +149,8 @@ const metaCommand: CommandModule<NxReleaseArgs, MetaOptions> = {
         return true;
       }),
   handler: (args) =>
-    import('./meta')
-      .then((m) => m.releaseMetaCLIHandler(args))
+    import('./release')
+      .then((m) => m.releaseCLIHandler(args))
       .then((versionDataOrExitCode) => {
         if (typeof versionDataOrExitCode === 'number') {
           return process.exit(versionDataOrExitCode);
