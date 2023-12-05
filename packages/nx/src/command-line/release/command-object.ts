@@ -141,7 +141,7 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
           'Skip publishing by automatically answering no to the confirmation prompt for publishing',
       })
       .check((argv) => {
-        if (argv.yes && argv.no) {
+        if (argv.yes !== undefined && argv.skipPublish !== undefined) {
           throw new Error(
             'The --yes and --skip-publish options are mutually exclusive, please use one or the other.'
           );

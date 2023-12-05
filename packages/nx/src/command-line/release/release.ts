@@ -1,5 +1,6 @@
 import { prompt } from 'enquirer';
 import { readNxJson } from '../../config/nx-json';
+import { output } from '../../devkit-exports';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
 import { handleErrors } from '../../utils/params';
 import { releaseChangelog } from './changelog';
@@ -9,6 +10,7 @@ import {
   handleNxReleaseConfigError,
 } from './config/config';
 import { releasePublish } from './publish';
+import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import { NxReleaseVersionResult, releaseVersion } from './version';
 
 export const releaseCLIHandler = (args: VersionOptions) =>
@@ -32,6 +34,29 @@ export async function release(
   );
   if (configError) {
     return await handleNxReleaseConfigError(configError);
+  }
+
+  if (
+    nxReleaseConfig.version.git.commit ||
+    nxReleaseConfig.version.git.tag ||
+    nxReleaseConfig.changelog.git.commit ||
+    nxReleaseConfig.changelog.git.tag
+  ) {
+    const jsonConfigErrorPath = nxReleaseConfig.version.git.commit
+      ? ['release', 'version', 'git', 'commit']
+      : nxReleaseConfig.version.git.tag
+      ? ['release', 'version', 'git', 'tag']
+      : nxReleaseConfig.changelog.git.commit
+      ? ['release', 'changelog', 'git', 'commit']
+      : ['release', 'changelog', 'git', 'tag'];
+    const nxJsonMessage = await resolveNxJsonConfigErrorMessage(
+      jsonConfigErrorPath
+    );
+    output.error({
+      title: `The 'release' top level command cannot be used with granular git configuration. Instead, configure git options in the 'release.git' property in nx.json.`,
+      bodyLines: [nxJsonMessage],
+    });
+    process.exit(1);
   }
 
   const versionResult: NxReleaseVersionResult = await releaseVersion({
