@@ -18,6 +18,7 @@ import { Linter } from '../utils/linter';
 import { findEslintFile } from '../utils/eslint-file';
 import { getGlobalEsLintConfiguration } from './global-eslint-config';
 import { EslintPluginOptions } from '../../plugins/plugin';
+import { hasEslintPlugin } from '../utils/plugin';
 
 export interface LinterInitOptions {
   linter?: Linter;
@@ -94,7 +95,16 @@ function updateVSCodeExtensions(tree: Tree) {
  * Initializes ESLint configuration in a workspace and adds necessary dependencies.
  */
 function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
-  if (findEslintFile(tree)) {
+  const addPlugins = process.env.NX_PCV3 === 'true';
+  const hasPlugin = hasEslintPlugin(tree);
+  const rootEslintFile = findEslintFile(tree);
+
+  if (rootEslintFile && addPlugins && !hasPlugin) {
+    addPlugin(tree);
+    return () => {};
+  }
+
+  if (rootEslintFile) {
     return () => {};
   }
 
@@ -111,7 +121,6 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
 
   updateProductionFileset(tree);
 
-  const addPlugins = process.env.NX_PCV3 === 'true';
   if (addPlugins) {
     addPlugin(tree);
   } else {
