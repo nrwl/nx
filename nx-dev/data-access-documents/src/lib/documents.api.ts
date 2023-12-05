@@ -95,6 +95,7 @@ export class DocumentsApi {
       filePath: this.getFilePath(document.file),
       id: document.id,
       name: document.name,
+      mediaImage: document.mediaImage || '',
       relatedDocuments: this.getRelatedDocuments(document.tags),
       tags: document.tags,
     };

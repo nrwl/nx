@@ -66,7 +66,7 @@ documents.forEach((category) => {
       data.push({
         title: subItem.name,
         content: subItem.description || category.name,
-        mediaImage: item.mediaImage,
+        mediaImage: subItem.mediaImage,
         filename: [category.sidebarId, category.id, item.id, subItem.id]
           .filter(Boolean)
           .join('-'),
@@ -168,7 +168,7 @@ function copyImage(
   const extension = splits[splits.length - 1];
   copyFileSync(
     backgroundImagePath,
-    resolve(targetFolder + `/${filename}.${extension}`)
+    resolve(targetFolder, `./${filename}.${extension}`)
   );
 }
 
@@ -215,8 +215,8 @@ ensureDir(targetFolder).then(() =>
       : createOpenGraphImage(
           resolve(__dirname, './media.jpg'),
           targetFolder,
-          item.mediaImage ? '' : item.title,
-          item.mediaImage ? '' : item.content,
+          item.title,
+          item.content,
           item.filename
         )
   )
