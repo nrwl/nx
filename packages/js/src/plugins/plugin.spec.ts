@@ -53,7 +53,7 @@ describe('@nx/js/plugin', () => {
                   "cache": true,
                   "executor": "@nx/js:tsc",
                   "inputs": [
-                    "default",
+                    "production",
                     "^production",
                   ],
                   "options": {
@@ -96,7 +96,7 @@ describe('@nx/js/plugin', () => {
                   "cache": true,
                   "executor": "@nx/js:tsc",
                   "inputs": [
-                    "default",
+                    "production",
                     "^production",
                   ],
                   "options": {
@@ -246,7 +246,7 @@ describe('@nx/js/plugin', () => {
                   "cache": true,
                   "executor": "@nx/js:tsc",
                   "inputs": [
-                    "default",
+                    "production",
                     "^production",
                   ],
                   "options": {

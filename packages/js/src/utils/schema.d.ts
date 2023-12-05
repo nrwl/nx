@@ -44,9 +44,9 @@ export interface ExecutorOptions {
   generateExportsField?: boolean;
   additionalEntryPoints?: string[];
   swcrc?: string;
-  watch: boolean;
+  watch?: boolean;
   clean?: boolean;
-  transformers: TransformerEntry[];
+  transformers?: TransformerEntry[];
   external?: 'all' | 'none' | string[];
   externalBuildTargets?: string[];
   generateLockfile?: boolean;
@@ -59,6 +59,8 @@ export interface NormalizedExecutorOptions extends ExecutorOptions {
   files: Array<FileInputOutput>;
   root?: string;
   sourceRoot?: string;
+  watch: boolean;
+  transformers: TransformerEntry[];
 }
 
 export interface SwcExecutorOptions extends ExecutorOptions {
@@ -82,4 +84,5 @@ export interface NormalizedSwcExecutorOptions
   swcExclude: string[];
   skipTypeCheck: boolean;
   swcCliOptions: SwcCliOptions;
+  watch: boolean;
 }

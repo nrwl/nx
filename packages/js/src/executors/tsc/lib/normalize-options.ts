@@ -19,10 +19,6 @@ export function normalizeOptions(
     ? join(contextRoot, options.rootDir)
     : join(contextRoot, projectRoot);
 
-  if (options.watch == null) {
-    options.watch = false;
-  }
-
   // TODO: put back when inlining story is more stable
   // if (options.external == null) {
   //   options.external = 'all';
@@ -56,5 +52,7 @@ export function normalizeOptions(
       outputPath,
       options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
     ),
+    watch: options.watch ?? false,
+    transformers: options.transformers ?? [],
   };
 }

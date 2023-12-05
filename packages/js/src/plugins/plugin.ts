@@ -173,7 +173,9 @@ function getBuildTscTarget(
     '@nx/js:tsc'
   );
 
-  const baseTscTargetConfig: TargetConfiguration<TscExecutorOptions> = {
+  const namedInputs = getNamedInputs(projectRoot, context);
+
+  const target: TargetConfiguration<TscExecutorOptions> = {
     executor: '@nx/js:tsc',
     options: {
       outputPath: joinPathFragments(
@@ -182,25 +184,26 @@ function getBuildTscTarget(
       ),
       main: entryPoint,
       tsConfig: tsConfigPath,
-      assets: [joinPathFragments(projectRoot, '*.md')],
-      ...tscTargetDefaults?.options,
+      assets: !tscTargetDefaults?.options?.assets
+        ? [joinPathFragments(projectRoot, '*.md')]
+        : undefined,
     },
   };
 
-  const namedInputs = getNamedInputs(projectRoot, context);
+  if (tscTargetDefaults?.cache === undefined) {
+    target.cache = true;
+  }
+  if (tscTargetDefaults?.inputs === undefined) {
+    target.inputs =
+      'production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default'];
+  }
+  if (tscTargetDefaults?.outputs === undefined) {
+    target.outputs = ['{options.outputPath}'];
+  }
 
-  return {
-    ...baseTscTargetConfig,
-    cache: tscTargetDefaults?.cache ?? true,
-    inputs:
-      tscTargetDefaults?.inputs ?? 'production' in namedInputs
-        ? ['default', '^production']
-        : ['default', '^default'],
-    outputs: tscTargetDefaults?.outputs ?? ['{options.outputPath}'],
-    options: {
-      ...baseTscTargetConfig.options,
-    },
-  };
+  return target;
 }
 
 function getBuildTsConfig(
