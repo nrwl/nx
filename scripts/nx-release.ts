@@ -36,7 +36,7 @@ const LARGE_BUFFER = 1024 * 1000000;
   });
 
   // Expected to run as part of the Github `publish` workflow
-  if (!options.local && process.env.NPM_TOKEN) {
+  if (!options.local && process.env.NODE_AUTH_TOKEN) {
     // Delete all .node files that were built during the previous steps
     // Always run before the artifacts step because we still need the .node files for native-packages
     execSync('find ./build -name "*.node" -delete', {
@@ -65,7 +65,7 @@ const LARGE_BUFFER = 1024 * 1000000;
   };
 
   // Intended for creating a github release which triggers the publishing workflow
-  if (!options.local && !process.env.NPM_TOKEN) {
+  if (!options.local && !process.env.NODE_AUTH_TOKEN) {
     // For this important use-case it makes sense to always have full logs
     isVerboseLogging = true;
 
