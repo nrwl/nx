@@ -65,7 +65,10 @@ const LARGE_BUFFER = 1024 * 1000000;
   };
 
   // Intended for creating a github release which triggers the publishing workflow
-  if (!options.local && !process.env.NPM_TOKEN) {
+  if (
+    !options.local &&
+    !(process.env.NODE_AUTH_TOKEN || process.env.NPM_TOKEN)
+  ) {
     // For this important use-case it makes sense to always have full logs
     isVerboseLogging = true;
 
