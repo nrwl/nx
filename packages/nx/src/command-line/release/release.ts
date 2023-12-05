@@ -26,29 +26,21 @@ export async function release(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
-  // Apply default configuration to any optional user configuration
-  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
-    projectGraph,
-    nxJson.release,
-    'nx-release-publish'
-  );
-  if (configError) {
-    return await handleNxReleaseConfigError(configError);
-  }
-
   if (
-    nxReleaseConfig.version.git.commit ||
-    nxReleaseConfig.version.git.tag ||
-    nxReleaseConfig.changelog.git.commit ||
-    nxReleaseConfig.changelog.git.tag
+    (nxJson.release?.version?.git?.commit ??
+      nxJson.release?.version?.git?.tag ??
+      nxJson.release?.changelog?.git?.commit ??
+      nxJson.release?.changelog?.git?.tag ??
+      undefined) !== undefined
   ) {
-    const jsonConfigErrorPath = nxReleaseConfig.version.git.commit
-      ? ['release', 'version', 'git', 'commit']
-      : nxReleaseConfig.version.git.tag
-      ? ['release', 'version', 'git', 'tag']
-      : nxReleaseConfig.changelog.git.commit
-      ? ['release', 'changelog', 'git', 'commit']
-      : ['release', 'changelog', 'git', 'tag'];
+    const jsonConfigErrorPath =
+      nxJson.release?.version?.git?.commit !== undefined
+        ? ['release', 'version', 'git', 'commit']
+        : nxJson.release?.version?.git?.tag !== undefined
+        ? ['release', 'version', 'git', 'tag']
+        : nxJson.release?.changelog?.git?.commit !== undefined
+        ? ['release', 'changelog', 'git', 'commit']
+        : ['release', 'changelog', 'git', 'tag'];
     const nxJsonMessage = await resolveNxJsonConfigErrorMessage(
       jsonConfigErrorPath
     );
@@ -57,6 +49,16 @@ export async function release(
       bodyLines: [nxJsonMessage],
     });
     process.exit(1);
+  }
+
+  // Apply default configuration to any optional user configuration
+  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
+    projectGraph,
+    nxJson.release,
+    'nx-release-publish'
+  );
+  if (configError) {
+    return await handleNxReleaseConfigError(configError);
   }
 
   const versionResult: NxReleaseVersionResult = await releaseVersion({
@@ -94,25 +96,15 @@ export async function release(
 async function promptForPublish(): Promise<boolean> {
   console.log('\n');
 
-  const reply = await prompt<{ confirmation: 'yes' | 'no' }>([
+  const reply = await prompt<{ confirmation: boolean }>([
     {
       name: 'confirmation',
       message: 'Do you want to publish these versions?',
-      type: 'select',
-      choices: [
-        {
-          name: 'no',
-          message: 'No',
-        },
-        {
-          name: 'yes',
-          message: 'Yes',
-        },
-      ],
+      type: 'confirm',
     },
   ]);
 
   console.log('\n');
 
-  return reply.confirmation === 'yes';
+  return reply.confirmation;
 }
