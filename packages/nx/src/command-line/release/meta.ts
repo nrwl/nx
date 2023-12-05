@@ -36,8 +36,8 @@ export async function releaseMeta(
     workspaceChangelog: versionResult.workspaceVersion !== undefined,
   });
 
-  let shouldPublish = !!args.yes && !args.no;
-  const shouldPromptPublishing = !args.yes && !args.no && !args.dryRun;
+  let shouldPublish = !!args.yes && !args.skipPublish;
+  const shouldPromptPublishing = !args.yes && !args.skipPublish && !args.dryRun;
 
   if (shouldPromptPublishing) {
     shouldPublish = await promptForPublish();

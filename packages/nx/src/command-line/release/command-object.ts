@@ -53,7 +53,7 @@ export type PublishOptions = NxReleaseArgs &
   };
 
 export type MetaOptions = VersionOptions &
-  ChangelogOptions & { yes?: boolean; no?: boolean };
+  ChangelogOptions & { yes?: boolean; skipPublish?: boolean };
 
 export const yargsReleaseCommand: CommandModule<
   Record<string, unknown>,
@@ -135,16 +135,15 @@ const metaCommand: CommandModule<NxReleaseArgs, MetaOptions> = {
         description:
           'Automatically answer yes to the confirmation prompt for publishing',
       })
-      .option('no', {
+      .option('skip-publish', {
         type: 'boolean',
-        alias: 'n',
         description:
-          'Automatically answer no to the confirmation prompt for publishing',
+          'Skip publishing by automatically answering no to the confirmation prompt for publishing',
       })
       .check((argv) => {
         if (argv.yes && argv.no) {
           throw new Error(
-            'The --yes and --no options are mutually exclusive, please use one or the other.'
+            'The --yes and --skip-publish options are mutually exclusive, please use one or the other.'
           );
         }
         return true;

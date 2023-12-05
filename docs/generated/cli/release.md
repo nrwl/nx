@@ -131,17 +131,17 @@ Choices: [all, workspace, projects]
 
 Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level
 
-##### no
-
-Type: `boolean`
-
-Automatically answer no to the confirmation prompt for publishing
-
 ##### preid
 
 Type: `string`
 
 The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.
+
+##### skip-publish
+
+Type: `boolean`
+
+Skip publishing by automatically answering no to the confirmation prompt for publishing
 
 ##### specifier
 
