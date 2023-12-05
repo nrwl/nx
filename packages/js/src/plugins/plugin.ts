@@ -11,7 +11,6 @@ import {
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { dirname, extname, join } from 'path';
@@ -167,16 +166,16 @@ function getBuildTscTarget(
     return undefined;
   }
 
-  const tscTargetDefaults = readTargetDefaultsForTarget(
-    options.buildTargetName,
-    context.nxJsonConfiguration.targetDefaults,
-    '@nx/js:tsc'
-  );
-
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  const target: TargetConfiguration<TscExecutorOptions> = {
+  return {
     executor: '@nx/js:tsc',
+    cache: true,
+    inputs:
+      'production' in namedInputs
+        ? ['production', '^production']
+        : ['default', '^default'],
+    outputs: ['{options.outputPath}'],
     options: {
       outputPath: joinPathFragments(
         projectRoot,
@@ -184,26 +183,9 @@ function getBuildTscTarget(
       ),
       main: entryPoint,
       tsConfig: tsConfigPath,
-      assets: !tscTargetDefaults?.options?.assets
-        ? [joinPathFragments(projectRoot, '*.md')]
-        : undefined,
+      assets: [joinPathFragments(projectRoot, '*.md')],
     },
   };
-
-  if (tscTargetDefaults?.cache === undefined) {
-    target.cache = true;
-  }
-  if (tscTargetDefaults?.inputs === undefined) {
-    target.inputs =
-      'production' in namedInputs
-        ? ['production', '^production']
-        : ['default', '^default'];
-  }
-  if (tscTargetDefaults?.outputs === undefined) {
-    target.outputs = ['{options.outputPath}'];
-  }
-
-  return target;
 }
 
 function getBuildTsConfig(
