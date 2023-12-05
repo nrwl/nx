@@ -26,6 +26,7 @@ describe('TaskHasher', () => {
   });
   const allWorkspaceFiles = [
     { file: 'yarn.lock', hash: 'yarn.lock.hash' },
+    { file: 'bun.lockb', hash: 'bun.lockb.hash' },
     { file: 'nx.json', hash: 'nx.json.hash' },
     { file: 'package-lock.json', hash: 'package-lock.json.hash' },
     { file: 'package.json', hash: 'package.json.hash' },

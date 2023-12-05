@@ -331,9 +331,10 @@ mod test {
         assert!(glob_set.is_match("apps/app-a"));
         assert!(!glob_set.is_match("apps/app-a/nested"));
 
-        let glob_set = build_glob_set(&["{package-lock.json,yarn.lock,pnpm-lock.yaml}"]).unwrap();
+        let glob_set = build_glob_set(&["{package-lock.json,yarn.lock,bun.lockb,pnpm-lock.yaml}"]).unwrap();
         assert!(glob_set.is_match("package-lock.json"));
         assert!(glob_set.is_match("yarn.lock"));
+        assert!(glob_set.is_match("bun.lockb"));
         assert!(glob_set.is_match("pnpm-lock.yaml"));
 
         let glob_set =

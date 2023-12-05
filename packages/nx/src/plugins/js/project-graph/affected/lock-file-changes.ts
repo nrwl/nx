@@ -8,6 +8,7 @@ export const getTouchedProjectsFromLockFile: TouchedProjectLocator<
   const lockFiles = [
     'package-lock.json',
     'yarn.lock',
+    'bun.lockb',
     'pnpm-lock.yaml',
     'pnpm-lock.yml',
   ];

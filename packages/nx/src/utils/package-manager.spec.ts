@@ -8,6 +8,9 @@ import {
 
 describe('package-manager', () => {
   describe('detectPackageManager', () => {
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
     it('should detect package manager in nxJson', () => {
       jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({
         cli: {
@@ -28,6 +31,8 @@ describe('package-manager', () => {
             return false;
           case 'package-lock.json':
             return false;
+          case 'bun.lockb':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
@@ -47,12 +52,35 @@ describe('package-manager', () => {
             return true;
           case 'package-lock.json':
             return false;
+          case 'bun.lockb':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('pnpm');
+      expect(fs.existsSync).toHaveBeenCalledTimes(2);
+    });
+
+    it('should detect bun package manager from bun.lockb', () => {
+      jest.spyOn(configModule, 'readNxJson').mockReturnValueOnce({});
+      jest.spyOn(fs, 'existsSync').mockImplementation((p) => {
+        switch (p) {
+          case 'yarn.lock':
+            return false;
+          case 'pnpm-lock.yaml':
+            return false;
+          case 'package-lock.json':
+            return false;
+          case 'bun.lockb':
+            return true;
+          default:
+            return jest.requireActual('fs').existsSync(p);
+        }
+      });
+      const packageManager = detectPackageManager();
+      expect(packageManager).toEqual('bun');
       expect(fs.existsSync).toHaveBeenCalledTimes(3);
     });
 
@@ -66,13 +94,15 @@ describe('package-manager', () => {
             return false;
           case 'package-lock.json':
             return false;
+          case 'bun.lockb':
+            return false;
           default:
             return jest.requireActual('fs').existsSync(p);
         }
       });
       const packageManager = detectPackageManager();
       expect(packageManager).toEqual('npm');
-      expect(fs.existsSync).toHaveBeenCalledTimes(5);
+      expect(fs.existsSync).toHaveBeenCalledTimes(3);
     });
   });
 

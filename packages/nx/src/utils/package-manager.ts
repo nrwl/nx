@@ -12,7 +12,7 @@ import { readNxJson } from '../config/configuration';
 
 const execAsync = promisify(exec);
 
-export type PackageManager = 'yarn' | 'pnpm' | 'npm';
+export type PackageManager = 'yarn' | 'pnpm' | 'npm' | 'bun';
 
 export interface PackageManagerCommands {
   preInstall?: string;
@@ -38,6 +38,8 @@ export function detectPackageManager(dir: string = ''): PackageManager {
       ? 'yarn'
       : existsSync(join(dir, 'pnpm-lock.yaml'))
       ? 'pnpm'
+      : existsSync(join(dir, 'bun.lockb'))
+      ? 'bun'
       : 'npm')
   );
 }
@@ -115,6 +117,19 @@ export function getPackageManagerCommand(
         dlx: 'npx',
         run: (script: string, args: string) => `npm run ${script} -- ${args}`,
         list: 'npm ls',
+      };
+    },
+    bun: () => {
+      return {
+        install: 'bun install',
+        ciInstall: 'bun install --frozen-lockfile',
+        add: 'bun add',
+        addDev: 'bun add --dev',
+        rm: 'bun remove',
+        exec: 'bunx',
+        dlx: 'bunx',
+        run: (script: string, args: string) => `bun run ${script} -- ${args}`,
+        list: 'bun pm ls',
       };
     },
   };

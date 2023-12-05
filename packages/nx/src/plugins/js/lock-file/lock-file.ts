@@ -40,11 +40,18 @@ import { readJsonFile } from '../../../utils/fileutils';
 import { CreateDependenciesContext } from '../../../utils/nx-plugin';
 
 const YARN_LOCK_FILE = 'yarn.lock';
+const BUN_LOCK_FILE = 'bun.lockb';
 const NPM_LOCK_FILE = 'package-lock.json';
 const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
-export const LOCKFILES = [YARN_LOCK_FILE, NPM_LOCK_FILE, PNPM_LOCK_FILE];
+export const LOCKFILES = [
+  YARN_LOCK_FILE,
+  BUN_LOCK_FILE,
+  NPM_LOCK_FILE,
+  PNPM_LOCK_FILE,
+];
 
 const YARN_LOCK_PATH = join(workspaceRoot, YARN_LOCK_FILE);
+const BUN_LOCK_PATH = join(workspaceRoot, BUN_LOCK_FILE);
 const NPM_LOCK_PATH = join(workspaceRoot, NPM_LOCK_FILE);
 const PNPM_LOCK_PATH = join(workspaceRoot, PNPM_LOCK_FILE);
 
@@ -114,6 +121,9 @@ export function lockFileExists(packageManager: PackageManager): boolean {
   if (packageManager === 'yarn') {
     return existsSync(YARN_LOCK_PATH);
   }
+  if (packageManager === 'bun') {
+    return existsSync(BUN_LOCK_PATH);
+  }
   if (packageManager === 'pnpm') {
     return existsSync(PNPM_LOCK_PATH);
   }
@@ -133,6 +143,9 @@ export function lockFileExists(packageManager: PackageManager): boolean {
 export function getLockFileName(packageManager: PackageManager): string {
   if (packageManager === 'yarn') {
     return YARN_LOCK_FILE;
+  }
+  if (packageManager === 'bun') {
+    return BUN_LOCK_FILE;
   }
   if (packageManager === 'pnpm') {
     return PNPM_LOCK_FILE;
