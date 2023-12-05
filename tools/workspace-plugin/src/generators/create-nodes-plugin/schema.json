@@ -3,6 +3,7 @@
   "$id": "Generator",
   "title": "",
   "type": "object",
+  "description": "Generator for the new nodes plugin.",
   "properties": {},
   "required": []
 }
