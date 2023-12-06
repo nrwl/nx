@@ -125,6 +125,7 @@ async function createWebpackTargets(
     command: `webpack -c ${configBasename} --node-env=production`,
     options: { cwd: projectRoot },
     cache: true,
+    dependsOn: [`^${options.buildTargetName}`],
     inputs:
       'production' in namedInputs
         ? [
