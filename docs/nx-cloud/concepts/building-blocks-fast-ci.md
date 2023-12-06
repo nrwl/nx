@@ -2,7 +2,7 @@
 
 Nx has many features that make your CI faster. Each of these features speeds up your CI in a different way, so that enabling an individual feature will have an immediate impact. These features are also designed to complement each other so that you can use them together to create a fully optimized CI pipeline.
 
-## Use Cutting Edge Build Tools
+## Use Fast Build Tools
 
 The purpose of a CI pipeline is to run tasks like `build`, `test`, `lint` and `e2e`. You use different tools to run these tasks (like Webpack or Vite for you `build` task). If the individual tasks in your CI pipeline are slow, then your overall CI pipeline will be slow. Nx has two ways to help with this.
 
