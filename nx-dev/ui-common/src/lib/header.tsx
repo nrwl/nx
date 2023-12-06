@@ -30,7 +30,7 @@ export function Header(): JSX.Element {
       name: 'Distributed cache & task execution',
       description:
         'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
-      href: '/core-features/distribute-task-execution',
+      href: '/ci/features/distribute-task-execution',
     },
     {
       name: 'Recipes',
