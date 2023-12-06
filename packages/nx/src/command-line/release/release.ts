@@ -26,21 +26,14 @@ export async function release(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
-  if (
-    (nxJson.release?.version?.git?.commit ??
-      nxJson.release?.version?.git?.tag ??
-      nxJson.release?.changelog?.git?.commit ??
-      nxJson.release?.changelog?.git?.tag ??
-      undefined) !== undefined
-  ) {
-    const jsonConfigErrorPath =
-      nxJson.release?.version?.git?.commit !== undefined
-        ? ['release', 'version', 'git', 'commit']
-        : nxJson.release?.version?.git?.tag !== undefined
-        ? ['release', 'version', 'git', 'tag']
-        : nxJson.release?.changelog?.git?.commit !== undefined
-        ? ['release', 'changelog', 'git', 'commit']
-        : ['release', 'changelog', 'git', 'tag'];
+  const hasVersionGitConfig =
+    Object.keys(nxJson.release?.version?.git ?? {}).length > 0;
+  const hasChangelogGitConfig =
+    Object.keys(nxJson.release?.changelog?.git ?? {}).length > 0;
+  if (hasVersionGitConfig || hasChangelogGitConfig) {
+    const jsonConfigErrorPath = hasVersionGitConfig
+      ? ['release', 'version', 'git']
+      : ['release', 'changelog', 'git'];
     const nxJsonMessage = await resolveNxJsonConfigErrorMessage(
       jsonConfigErrorPath
     );
