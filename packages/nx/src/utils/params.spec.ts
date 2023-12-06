@@ -950,6 +950,32 @@ describe('params', () => {
       ).toThrow("'b' is not found in schema");
     });
 
+    it('should throw if property name matching pattern is not valid', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {
+            a: true,
+            b: false,
+          },
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+            },
+            patternProperties: {
+              '^b$': {
+                type: 'number',
+              },
+            },
+            additionalProperties: false,
+          }
+        )
+      ).toThrow(
+        "Property 'b' does not match the schema. 'false' should be a 'number'."
+      );
+    });
+
     it('should throw if found unsupported positional property', () => {
       expect(() =>
         validateOptsAgainstSchema(
