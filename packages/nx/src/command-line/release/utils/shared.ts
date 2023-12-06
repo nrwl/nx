@@ -108,14 +108,44 @@ export function createCommitMessageValues(
   }
 
   /**
-   * At this point we have multiple release groups for a single commit, we will not interpolate an overall {version} because that won't be appropriate
-   * (for any {version} value within the string, we will replace it with an empty string so that it doesn't end up in the final output).
+   * There is another special case for interpolation: if, after all filtering, we have a single independent release group with a single project.
+   * In this case we will directly interpolate both {version} and {projectName} within the commit message.
+   */
+  if (
+    releaseGroups.length === 1 &&
+    releaseGroups[0].projectsRelationship === 'independent'
+  ) {
+    const releaseGroup = releaseGroups[0];
+    const releaseGroupProjectNames = Array.from(
+      releaseGroupToFilteredProjects.get(releaseGroup)
+    );
+    if (releaseGroupProjectNames.length === 1) {
+      const projectVersionData = versionData[releaseGroupProjectNames[0]];
+      const releaseVersion = new ReleaseVersion({
+        version: projectVersionData.newVersion,
+        releaseTagPattern: releaseGroup.releaseTagPattern,
+        projectName: releaseGroupProjectNames[0],
+      });
+      commitMessageValues[0] = interpolate(commitMessageValues[0], {
+        version: releaseVersion.rawVersion,
+        projectName: releaseGroupProjectNames[0],
+      }).trim();
+      return commitMessageValues;
+    }
+  }
+
+  /**
+   * At this point we have multiple release groups for a single commit, we will not interpolate an overall {version} or {projectName} because that won't be
+   * appropriate (for any {version} or {projectName} value within the string, we will replace it with an empty string so that it doesn't end up in the final output).
    *
    * Instead for fixed groups we will add one bullet point the release group, and for independent groups we will add one bullet point per project.
    */
-  commitMessageValues[0] = commitMessageValues[0]
-    .replace('{version}', '')
-    .trim();
+  commitMessageValues[0] = stripPlaceholders(commitMessageValues[0], [
+    // for cleanest possible final result try and replace the common pattern of a v prefix in front of the version first
+    'v{version}',
+    '{version}',
+    '{projectName}',
+  ]);
 
   for (const releaseGroup of releaseGroups) {
     const releaseGroupProjectNames = Array.from(
@@ -151,6 +181,18 @@ export function createCommitMessageValues(
   }
 
   return commitMessageValues;
+}
+
+function stripPlaceholders(str: string, placeholders: string[]): string {
+  for (const placeholder of placeholders) {
+    // for cleanest possible final result try and replace relevant spacing around placeholders first
+    str = str
+      .replace(` ${placeholder}`, '')
+      .replace(`${placeholder} `, '')
+      .replace(placeholder, '')
+      .trim();
+  }
+  return str;
 }
 
 export function createGitTagValues(
