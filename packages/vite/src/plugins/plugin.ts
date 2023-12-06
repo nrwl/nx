@@ -110,6 +110,7 @@ async function buildViteTargets(
   const targets: Record<string, TargetConfiguration> = {};
 
   targets[options.buildTargetName] = await buildTarget(
+    options.buildTargetName,
     namedInputs,
     buildOutputs,
     projectRoot
@@ -131,6 +132,7 @@ async function buildViteTargets(
 }
 
 async function buildTarget(
+  buildTargetName: string,
   namedInputs: {
     [inputName: string]: any[];
   },
@@ -141,6 +143,7 @@ async function buildTarget(
     command: `vite build`,
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
+    dependsOn: [`^${buildTargetName}`],
     inputs: [
       ...('production' in namedInputs
         ? ['production', '^production']

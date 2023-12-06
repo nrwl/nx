@@ -9,6 +9,9 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
         "build-something": {
           "cache": true,
           "command": "nuxi build",
+          "dependsOn": [
+            "^build-something",
+          ],
           "inputs": [
             "default",
             "^production",
@@ -66,6 +69,9 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
         "build": {
           "cache": true,
           "command": "nuxi build",
+          "dependsOn": [
+            "^build",
+          ],
           "inputs": [
             "default",
             "^production",

@@ -9,6 +9,9 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
         "build-something": {
           "cache": true,
           "command": "webpack -c webpack.config.js --node-env=production",
+          "dependsOn": [
+            "^build-something",
+          ],
           "inputs": [
             "default",
             "^production",
