@@ -16,6 +16,7 @@ ignore-files = "1.3.0"
 itertools = "0.10.5"
 once_cell = "1.18.0"
 parking_lot = { version = "0.12.1", features = ["send_guard"] }
+portable-pty = "0.8.1"
 napi = { version = '2.12.6', default-features = false, features = [
     'anyhow',
     'napi4',
@@ -36,6 +37,7 @@ watchexec-events = "1.0.0"
 watchexec-filterer-ignore = "1.2.1"
 watchexec-signals = "1.0.0"
 xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }
+smol = "1.3"
 swc_common = "0.31.16"
 swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"

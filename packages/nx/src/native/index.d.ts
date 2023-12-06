@@ -21,6 +21,7 @@ export function expandOutputs(directory: string, entries: Array<string>): Array<
 export function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
 export function remove(src: string): void
 export function copy(src: string, dest: string): void
+export function runCommand(command: string, commandDir?: string | undefined | null, readyWhen?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null): Promise<number>
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): string | null
 export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
