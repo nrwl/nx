@@ -109,7 +109,8 @@ async function createWebpackTargets(
   const namedInputs = getNamedInputs(projectRoot, context);
   const webpackConfig = resolveUserDefinedWebpackConfig(
     join(context.workspaceRoot, configFilePath),
-    getRootTsConfigPath()
+    getRootTsConfigPath(),
+    true
   );
   const webpackOptions = await readWebpackOptions(webpackConfig);
 
