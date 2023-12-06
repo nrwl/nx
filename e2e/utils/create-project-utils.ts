@@ -264,7 +264,7 @@ export function runCreatePlugin(
     extraArgs,
     useDetectedPm = false,
   }: {
-    packageManager?: 'npm' | 'yarn' | 'pnpm';
+    packageManager?: 'npm' | 'yarn' | 'pnpm' | 'bun';
     extraArgs?: string;
     useDetectedPm?: boolean;
   }
