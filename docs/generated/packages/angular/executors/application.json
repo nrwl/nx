@@ -191,6 +191,11 @@
                         "type": "boolean",
                         "description": "Extract and inline critical CSS definitions to improve first paint time.",
                         "default": true
+                      },
+                      "removeSpecialComments": {
+                        "type": "boolean",
+                        "description": "Remove comments in global CSS that contains '@license' or '@preserve' or that starts with '//!' or '/*!'. _Note: this is only supported in Angular versions >= 17.1.0_.",
+                        "default": true
                       }
                     },
                     "additionalProperties": false
@@ -221,6 +226,13 @@
           },
           { "type": "boolean" }
         ]
+      },
+      "loader": {
+        "description": "Defines the type of loader to use with a specified file extension when used with a JavaScript `import`. `text` inlines the content as a string; `binary` inlines the content as a Uint8Array; `file` emits the file and provides the runtime location of the file; `empty` considers the content to be empty and not include it in bundles. _Note: this is only supported in Angular versions >= 17.1.0_.",
+        "type": "object",
+        "patternProperties": {
+          "^\\.\\S+$": { "enum": ["text", "binary", "file", "empty"] }
+        }
       },
       "fileReplacements": {
         "description": "Replace compilation source files with other compilation source files in the build.",
@@ -395,6 +407,11 @@
                 "minLength": 1,
                 "default": "index.html",
                 "description": "The output path of the application's generated HTML index file. The full provided path will be used and will be considered relative to the application's configured output path."
+              },
+              "preloadInitial": {
+                "type": "boolean",
+                "default": true,
+                "description": "Generates 'preload', 'modulepreload', and 'preconnect' link elements for initial application files and resources. _Note: this is only supported in Angular versions >= 17.1.0_."
               }
             },
             "required": ["input"]
