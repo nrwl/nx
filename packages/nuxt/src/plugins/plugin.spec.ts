@@ -29,6 +29,13 @@ describe('@nx/nuxt/plugin', () => {
     beforeEach(async () => {
       context = {
         nxJsonConfiguration: {
+          // These defaults should be overridden by plugin
+          targetDefaults: {
+            build: {
+              cache: false,
+              inputs: ['foo', '^foo'],
+            },
+          },
           namedInputs: {
             default: ['{projectRoot}/**/*'],
             production: ['!{projectRoot}/**/*.spec.ts'],
