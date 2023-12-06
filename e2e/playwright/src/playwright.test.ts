@@ -98,7 +98,7 @@ describe('Playwright E2E Test Runner - PCV3', () => {
       const pmc = getPackageManagerCommand();
 
       runCLI(
-        `g @nx/web:app demo-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive`
+        `g @nx/web:app demo-e2e --directory apps/demo-e2e --unitTestRunner=none --bundler=vite --e2eTestRunner=none --style=css --no-interactive --projectNameAndRootFormat=as-provided`
       );
       runCLI(
         `g @nx/playwright:configuration --project demo-e2e --webServerCommand="${pmc.runNx} serve demo-e2e" --webServerAddress="http://localhost:4200"`
@@ -111,12 +111,17 @@ describe('Playwright E2E Test Runner - PCV3', () => {
       expect(targets?.e2e).not.toBeDefined();
 
       const { plugins } = readJson('nx.json');
-      expect(plugins).toContain({
-        plugin: '@nx/playwright/plugin',
-        options: {
-          targetName: 'e2e',
-        },
-      });
+      const playwrightPlugin = plugins?.find(
+        (p) => p.plugin === '@nx/playwright/plugin'
+      );
+      expect(playwrightPlugin).toMatchInlineSnapshot(`
+        {
+          "options": {
+            "targetName": "e2e",
+          },
+          "plugin": "@nx/playwright/plugin",
+        }
+      `);
     },
     TEN_MINS_MS
   );
@@ -142,14 +147,17 @@ describe('Playwright E2E Test Runner - PCV3', () => {
       expect(targets?.e2e).not.toBeDefined();
 
       const { plugins } = readJson('nx.json');
-      expect(plugins).toEqual([
+      const playwrightPlugin = plugins?.find(
+        (p) => p.plugin === '@nx/playwright/plugin'
+      );
+      expect(playwrightPlugin).toMatchInlineSnapshot(`
         {
-          plugin: '@nx/playwright/plugin',
-          options: {
-            targetName: 'e2e',
+          "options": {
+            "targetName": "e2e",
           },
-        },
-      ]);
+          "plugin": "@nx/playwright/plugin",
+        }
+      `);
     },
     TEN_MINS_MS
   );

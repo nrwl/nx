@@ -46,9 +46,8 @@ export async function configurationGenerator(
 
   if (!hasPlugin) {
     addE2eTarget(tree, options);
+    setupE2ETargetDefaults(tree);
   }
-
-  setupE2ETargetDefaults(tree);
 
   tasks.push(
     await addLinterToPlaywrightProject(tree, {

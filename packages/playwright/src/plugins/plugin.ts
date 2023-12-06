@@ -1,5 +1,4 @@
 import { readdirSync } from 'fs';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { basename, dirname, join, relative } from 'path';
 
 import {
@@ -40,13 +39,11 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
     }
 
     const normalizedOptions = normalizeOptions(options);
-    const projectName = basename(projectRoot);
 
     return {
       projects: {
-        [projectName]: {
+        [projectRoot]: {
           root: projectRoot,
-          projectType: 'library',
           targets: await buildPlaywrightTargets(
             configFilePath,
             projectRoot,
@@ -69,12 +66,6 @@ async function buildPlaywrightTargets(
     join(context.workspaceRoot, configFilePath)
   );
 
-  const targetDefaults = readTargetDefaultsForTarget(
-    options.targetName,
-    context.nxJsonConfiguration.targetDefaults,
-    'nx:run-commands'
-  );
-
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration<unknown>> = {};
@@ -88,43 +79,29 @@ async function buildPlaywrightTargets(
 
   targets[options.targetName] = {
     ...baseTargetConfig,
-    cache: targetDefaults?.cache ?? true,
+    cache: true,
     inputs:
-      targetDefaults?.inputs ?? 'production' in namedInputs
+      'production' in namedInputs
         ? ['default', '^production']
         : ['default', '^default'],
-    outputs:
-      targetDefaults?.outputs ?? getOutputs(projectRoot, playwrightConfig),
-    options: {
-      ...baseTargetConfig.options,
-      ...targetDefaults?.options,
-    },
+    outputs: getOutputs(projectRoot, playwrightConfig),
   };
 
   if (options.ciTargetName) {
-    const ciTargetDefaults = readTargetDefaultsForTarget(
-      options.ciTargetName,
-      context.nxJsonConfiguration.targetDefaults,
-      'nx:run-commands'
-    );
-
     const ciBaseTargetConfig: TargetConfiguration = {
       ...baseTargetConfig,
-      cache: ciTargetDefaults?.cache ?? true,
+      cache: true,
       inputs:
-        ciTargetDefaults?.inputs ?? 'production' in namedInputs
+        'production' in namedInputs
           ? ['default', '^production']
           : ['default', '^default'],
-      outputs:
-        ciTargetDefaults?.outputs ?? getOutputs(projectRoot, playwrightConfig),
-      options: {
-        ...baseTargetConfig.options,
-        ...ciTargetDefaults?.options,
-      },
+      outputs: getOutputs(projectRoot, playwrightConfig),
     };
 
-    const testDir =
-      joinPathFragments(projectRoot, playwrightConfig.testDir) ?? projectRoot;
+    const testDir = playwrightConfig.testDir
+      ? joinPathFragments(projectRoot, playwrightConfig.testDir)
+      : projectRoot;
+
     // Playwright defaults to the following pattern.
     playwrightConfig.testMatch ??= '**/*.@(spec|test).?(c|m)[jt]s?(x)';
 
@@ -177,7 +154,9 @@ async function forEachTestFile(
     opts.path
   );
   const matcher = createMatcher(opts.config.testMatch);
-  const ignoredMatcher = createMatcher(opts.config.testIgnore);
+  const ignoredMatcher = opts.config.testIgnore
+    ? createMatcher(opts.config.testIgnore)
+    : () => false;
   for (const file of files) {
     if (matcher(file) && !ignoredMatcher(file)) {
       cb(file);
@@ -192,7 +171,13 @@ function createMatcher(pattern: string | RegExp | Array<string | RegExp>) {
   } else if (pattern instanceof RegExp) {
     return (path: string) => pattern.test(path);
   } else {
-    return (path: string) => minimatch(path, pattern);
+    return (path: string) => {
+      try {
+        return minimatch(path, pattern);
+      } catch (e) {
+        throw new Error(`Error matching ${path} with ${pattern}: ${e.message}`);
+      }
+    };
   }
 }
 
@@ -250,5 +235,6 @@ function normalizeOptions(options: PlaywrightPluginOptions): NormalizedOptions {
   return {
     ...options,
     targetName: options.targetName ?? 'e2e',
+    ciTargetName: options.ciTargetName ?? 'e2e-ci',
   };
 }

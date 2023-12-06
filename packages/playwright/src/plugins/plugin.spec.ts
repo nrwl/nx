@@ -51,7 +51,6 @@ describe('@nx/playwright/plugin', () => {
     expect(projects).toMatchInlineSnapshot(`
       {
         ".": {
-          "projectType": "library",
           "root": ".",
           "targets": {
             "e2e": {
@@ -64,6 +63,18 @@ describe('@nx/playwright/plugin', () => {
               "options": {
                 "cwd": "{projectRoot}",
               },
+              "outputs": [
+                "{projectRoot}/test-results",
+              ],
+            },
+            "e2e-ci": {
+              "cache": true,
+              "dependsOn": [],
+              "executor": "nx:noop",
+              "inputs": [
+                "default",
+                "^production",
+              ],
               "outputs": [
                 "{projectRoot}/test-results",
               ],
@@ -93,7 +104,6 @@ describe('@nx/playwright/plugin', () => {
     expect(projects).toMatchInlineSnapshot(`
       {
         ".": {
-          "projectType": "library",
           "root": ".",
           "targets": {
             "e2e": {
@@ -106,6 +116,21 @@ describe('@nx/playwright/plugin', () => {
               "options": {
                 "cwd": "{projectRoot}",
               },
+              "outputs": [
+                "{projectRoot}/playwright-report",
+                "{projectRoot}/test-results/report.json",
+                "{projectRoot}/test-results/html",
+                "{projectRoot}/test-results",
+              ],
+            },
+            "e2e-ci": {
+              "cache": true,
+              "dependsOn": [],
+              "executor": "nx:noop",
+              "inputs": [
+                "default",
+                "^production",
+              ],
               "outputs": [
                 "{projectRoot}/playwright-report",
                 "{projectRoot}/test-results/report.json",
@@ -132,6 +157,7 @@ describe('@nx/playwright/plugin', () => {
       'tests/run-me-2.spec.ts': '',
       'tests/skip-me.spec.ts': '',
       'tests/ignored/run-me.spec.ts': '',
+      'not-tests/run-me.spec.ts': '',
     });
 
     const { projects } = await createNodesFunction(
@@ -202,6 +228,7 @@ describe('@nx/playwright/plugin', () => {
     `);
     expect(targets['e2e-ci--tests/skip-me.spec.ts']).not.toBeDefined();
     expect(targets['e2e-ci--tests/ignored/run-me.spec.ts']).not.toBeDefined();
+    expect(targets['e2e-ci--not-tests/run-me.spec.ts']).not.toBeDefined();
   });
 });
 
