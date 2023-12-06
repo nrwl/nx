@@ -108,12 +108,14 @@ export function createCommitMessageValues(
   }
 
   /**
-   * There is another special case for interpolation: if, after all filtering, we have a single independent release group with a single project.
+   * There is another special case for interpolation: if, after all filtering, we have a single independent release group with a single project,
+   * and the user has provided {projectName} within the custom message.
    * In this case we will directly interpolate both {version} and {projectName} within the commit message.
    */
   if (
     releaseGroups.length === 1 &&
-    releaseGroups[0].projectsRelationship === 'independent'
+    releaseGroups[0].projectsRelationship === 'independent' &&
+    userCommitMessage?.includes('{projectName}')
   ) {
     const releaseGroup = releaseGroups[0];
     const releaseGroupProjectNames = Array.from(
