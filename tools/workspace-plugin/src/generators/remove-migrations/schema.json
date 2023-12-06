@@ -3,6 +3,7 @@
   "$id": "RemoveMigrations",
   "title": "",
   "type": "object",
+  "description": "Remove migrations older than 2 major versions ago.",
   "properties": {
     "v": {
       "type": "number"
