@@ -70,6 +70,8 @@ launch-templates:
       - ...
 ```
 
+Here are the [available resource classes](https://nx.app/pricing#resource-classes).
+
 ## Intelligent Dynamic Scaling
 
 Instead of defining
