@@ -127,5 +127,6 @@
       "type": "number",
       "description": "The port at which to serve the file-server for the static remotes."
     }
-  }
+  },
+  "examplesFile": "../../../docs/module-federation-dev-server-examples.md"
 }
