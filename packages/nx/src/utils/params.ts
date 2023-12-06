@@ -55,6 +55,11 @@ type PropertyDescription = {
   pattern?: string;
   minLength?: number;
   maxLength?: number;
+
+  // Objects Only
+  patternProperties?: {
+    [pattern: string]: PropertyDescription;
+  };
 };
 
 type Properties = {
@@ -69,6 +74,9 @@ export type Schema = {
   definitions?: Properties;
   additionalProperties?: boolean;
   examples?: { command: string; description?: string }[];
+  patternProperties?: {
+    [pattern: string]: PropertyDescription;
+  };
 };
 
 export type Unmatched = {
@@ -278,7 +286,13 @@ export function validateObject(
 
   if (schema.additionalProperties === false) {
     Object.keys(opts).find((p) => {
-      if (Object.keys(schema.properties).indexOf(p) === -1) {
+      if (
+        Object.keys(schema.properties).indexOf(p) === -1 &&
+        (!schema.patternProperties ||
+          !Object.keys(schema.patternProperties).some((pattern) =>
+            new RegExp(pattern).test(p)
+          ))
+      ) {
         if (p === '_') {
           throw new SchemaError(
             `Schema does not support positional arguments. Argument '${opts[p]}' found`
@@ -292,6 +306,19 @@ export function validateObject(
 
   Object.keys(opts).forEach((p) => {
     validateProperty(p, opts[p], (schema.properties ?? {})[p], definitions);
+
+    if (schema.patternProperties) {
+      Object.keys(schema.patternProperties).forEach((pattern) => {
+        if (new RegExp(pattern).test(p)) {
+          validateProperty(
+            p,
+            opts[p],
+            schema.patternProperties[pattern],
+            definitions
+          );
+        }
+      });
+    }
   });
 }
 
