@@ -150,7 +150,7 @@ function withNx(
     const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = await import(
       'next/constants'
     );
-    if ([PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER].includes(phase)) {
+    if (PHASE_PRODUCTION_SERVER === phase) {
       // If we are running an already built production server, just return the configuration.
       // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
       const { nx, ...validNextConfig } = _nextConfig;
@@ -233,10 +233,14 @@ function withNx(
         const outputDir = `${offsetFromRoot(projectDirectory)}${
           options.outputPath
         }`;
-        nextConfig.distDir =
-          nextConfig.distDir && nextConfig.distDir !== '.next'
-            ? joinPathFragments(outputDir, nextConfig.distDir)
-            : joinPathFragments(outputDir, '.next');
+        // If running dev-server, we should keep `.next` inside project directory since Turbopack expects this.
+        // See: https://github.com/nrwl/nx/issues/19365
+        if (phase !== PHASE_DEVELOPMENT_SERVER) {
+          nextConfig.distDir =
+            nextConfig.distDir && nextConfig.distDir !== '.next'
+              ? joinPathFragments(outputDir, nextConfig.distDir)
+              : joinPathFragments(outputDir, '.next');
+        }
       }
 
       const userWebpackConfig = nextConfig.webpack;

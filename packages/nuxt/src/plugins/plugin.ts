@@ -101,6 +101,7 @@ async function buildNuxtTargets(
   const targets: Record<string, TargetConfiguration> = {};
 
   targets[options.buildTargetName] = buildTarget(
+    options.buildTargetName,
     namedInputs,
     buildOutputs,
     projectRoot
@@ -118,6 +119,7 @@ async function buildNuxtTargets(
 }
 
 function buildTarget(
+  buildTargetName: string,
   namedInputs: {
     [inputName: string]: any[];
   },
@@ -128,6 +130,7 @@ function buildTarget(
     command: `nuxi build`,
     options: { cwd: projectRoot },
     cache: true,
+    dependsOn: [`^${buildTargetName}`],
     inputs: [
       ...('production' in namedInputs
         ? ['default', '^production']

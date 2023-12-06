@@ -263,15 +263,15 @@ function getCypressConfig(
     if (tsConfigPath) {
       const unregisterTsProject = registerTsProject(tsConfigPath);
       try {
-        module = require(resolvedPath);
+        module = load(resolvedPath);
       } finally {
         unregisterTsProject();
       }
     } else {
-      module = require(resolvedPath);
+      module = load(resolvedPath);
     }
   } else {
-    module = require(resolvedPath);
+    module = load(resolvedPath);
   }
   return module.default ?? module;
 }
@@ -296,4 +296,19 @@ function getInputs(
       externalDependencies: ['cypress'],
     },
   ];
+}
+
+/**
+ * Load the module after ensuring that the require cache is cleared.
+ */
+function load(path: string): any {
+  // Clear cache if the path is in the cache
+  if (require.cache[path]) {
+    for (const k of Object.keys(require.cache)) {
+      delete require.cache[k];
+    }
+  }
+
+  // Then require
+  return require(path);
 }

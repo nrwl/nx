@@ -9,6 +9,9 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
         "build-something": {
           "cache": true,
           "command": "vite build",
+          "dependsOn": [
+            "^build-something",
+          ],
           "inputs": [
             "production",
             "^production",
@@ -77,6 +80,9 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
         "build": {
           "cache": true,
           "command": "vite build",
+          "dependsOn": [
+            "^build",
+          ],
           "inputs": [
             "production",
             "^production",
