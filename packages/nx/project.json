@@ -19,6 +19,9 @@
         }
       }
     },
+    "test-command": {
+      "command": "node -p 'process.stdout.isTTY'"
+    },
     "copy-native-package-directories": {
       "command": "node scripts/copy.js build/packages/nx/native-packages/* build/packages"
     },

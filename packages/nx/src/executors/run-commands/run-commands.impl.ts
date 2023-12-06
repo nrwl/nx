@@ -4,6 +4,7 @@ import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import * as chalk from 'chalk';
+import { runCommand } from '../../native';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -212,10 +213,34 @@ function createProcess(
   cwd: string,
   env: Record<string, string>
 ): Promise<boolean> {
+  env = processEnv(color, cwd, env);
+  if (process.env.NX_NATIVE_COMMAND_RUNNER == 'true') {
+    return runCommand(commandConfig.command, cwd, readyWhen, env).then(
+      (code) => {
+        return code === 0;
+      }
+    );
+  }
+
+  return nodeProcess(commandConfig, color, cwd, env, readyWhen);
+}
+
+function nodeProcess(
+  commandConfig: {
+    command: string;
+    color?: string;
+    bgColor?: string;
+    prefix?: string;
+  },
+  color: boolean,
+  cwd: string,
+  env: Record<string, string>,
+  readyWhen: string
+): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(commandConfig.command, {
       maxBuffer: LARGE_BUFFER,
-      env: processEnv(color, cwd, env),
+      env,
       cwd,
     });
     /**
