@@ -18,10 +18,10 @@ export async function addE2e(
 ): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      if (
-        (options.bundler === 'webpack' && !hasWebpackPlugin(tree)) ||
-        (options.bundler === 'vite' && !hasVitePlugin(tree))
-      ) {
+      const hasNxBuildPlugin =
+        (options.bundler === 'webpack' && hasWebpackPlugin(tree)) ||
+        (options.bundler === 'vite' && hasVitePlugin(tree));
+      if (!hasNxBuildPlugin) {
         webStaticServeGenerator(tree, {
           buildTarget: `${options.projectName}:build`,
           targetName: 'serve-static',
@@ -52,6 +52,15 @@ export async function addE2e(
         baseUrl: 'http://localhost:4200',
         jsx: true,
         rootProject: options.rootProject,
+        webServerCommands: hasNxBuildPlugin
+          ? {
+              default: `nx run ${options.projectName}:serve`,
+              production: `nx run ${options.projectName}:preview`,
+            }
+          : undefined,
+        ciWebServerCommand: hasNxBuildPlugin
+          ? `nx run ${options.projectName}:serve-static`
+          : undefined,
       });
     }
     case 'playwright': {
