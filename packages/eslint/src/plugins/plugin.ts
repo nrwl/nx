@@ -1,10 +1,5 @@
-import {
-  CreateNodes,
-  CreateNodesContext,
-  TargetConfiguration,
-} from '@nx/devkit';
+import { CreateNodes, TargetConfiguration } from '@nx/devkit';
 import { dirname, join } from 'path';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { readdirSync } from 'fs';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import {
@@ -35,12 +30,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     return {
       projects: {
         [projectRoot]: {
-          targets: buildEslintTargets(
-            eslintConfigs,
-            projectRoot,
-            options,
-            context
-          ),
+          targets: buildEslintTargets(eslintConfigs, projectRoot, options),
         },
       },
     };
@@ -100,42 +90,29 @@ function getEslintConfigsForProject(
 function buildEslintTargets(
   eslintConfigs: string[],
   projectRoot: string,
-  options: EslintPluginOptions,
-  context: CreateNodesContext
+  options: EslintPluginOptions
 ) {
-  const targetDefaults = readTargetDefaultsForTarget(
-    options.targetName,
-    context.nxJsonConfiguration.targetDefaults,
-    'nx:run-commands'
-  );
-
   const isRootProject = projectRoot === '.';
 
   const targets: Record<string, TargetConfiguration> = {};
 
   const targetConfig: TargetConfiguration = {
     command: `eslint ${isRootProject ? './src' : '.'}`,
+    cache: true,
     options: {
       cwd: projectRoot,
     },
+    inputs: [
+      'default',
+      ...eslintConfigs.map((config) => `{workspaceRoot}/${config}`),
+      '{workspaceRoot}/tools/eslint-rules/**/*',
+      { externalDependencies: ['eslint'] },
+    ],
   };
   if (eslintConfigs.some((config) => isFlatConfig(config))) {
     targetConfig.options.env = {
       ESLINT_USE_FLAT_CONFIG: 'true',
     };
-  }
-
-  if (targetDefaults?.cache === undefined) {
-    targetConfig.cache = true;
-  }
-
-  if (targetDefaults?.inputs === undefined) {
-    targetConfig.inputs = [
-      'default',
-      ...eslintConfigs.map((config) => `{workspaceRoot}/${config}`),
-      '{workspaceRoot}/tools/eslint-rules/**/*',
-      { externalDependencies: ['eslint'] },
-    ];
   }
 
   targets[options.targetName] = targetConfig;

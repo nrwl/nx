@@ -10,7 +10,6 @@ import {
 } from '@nx/devkit';
 import { basename, dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { WebpackExecutorOptions } from '../executors/webpack/schema';
 import { WebDevServerOptions } from '../executors/dev-server/schema';
 import { existsSync, readdirSync } from 'fs';
@@ -124,22 +123,9 @@ async function createWebpackTargets(
 
   targets[options.buildTargetName] = {
     command: `webpack -c ${configBasename} --node-env=production`,
-    options: {
-      cwd: projectRoot,
-    },
-  };
-
-  const buildTargetDefaults = readTargetDefaultsForTarget(
-    options.buildTargetName,
-    context.nxJsonConfiguration.targetDefaults
-  );
-
-  if (buildTargetDefaults?.cache === undefined) {
-    targets[options.buildTargetName].cache = true;
-  }
-
-  if (buildTargetDefaults?.inputs === undefined) {
-    targets[options.buildTargetName].inputs =
+    options: { cwd: projectRoot },
+    cache: true,
+    inputs:
       'production' in namedInputs
         ? [
             'default',
@@ -154,12 +140,9 @@ async function createWebpackTargets(
             {
               externalDependencies: ['webpack-cli'],
             },
-          ];
-  }
-
-  if (buildTargetDefaults?.outputs === undefined) {
-    targets[options.buildTargetName].outputs = [outputPath];
-  }
+          ],
+    outputs: [outputPath],
+  };
 
   targets[options.serveTargetName] = {
     command: `webpack serve -c ${configBasename} --node-env=development`,

@@ -35,6 +35,7 @@ import {
   baseEsLintConfigFile,
   baseEsLintFlatConfigFile,
 } from '../../utils/config-file';
+import { hasEslintPlugin } from '../utils/plugin';
 
 interface LintProjectOptions {
   project: string;
@@ -73,12 +74,7 @@ export async function lintProjectGenerator(
     lintFilePatterns.push(`{projectRoot}/package.json`);
   }
 
-  const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/eslint/plugin'
-      : p.plugin === '@nx/eslint/plugin'
-  );
+  const hasPlugin = hasEslintPlugin(tree);
   if (hasPlugin) {
     if (
       lintFilePatterns &&

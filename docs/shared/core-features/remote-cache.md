@@ -81,7 +81,7 @@ During the setup process you might have seen a link to claim your Nx Cloud conne
 
 Click on this link to associate the workspace with your Nx Cloud account. If you don't have an Nx Cloud account, you can create one on the spot.
 
-![Nx Cloud Workspace Dashboard](/shared/images/ci/nx-cloud-workspace-overview.png)
+![Nx Cloud Workspace Dashboard](/shared/images/nx-cloud/nx-cloud-workspace-overview.png)
 
 Claiming your workspace allows you to
 
