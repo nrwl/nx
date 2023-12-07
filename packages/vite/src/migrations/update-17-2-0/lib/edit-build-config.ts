@@ -81,29 +81,63 @@ function fixBuild(
     configContents,
     `PropertyAssignment:has(Identifier[name="build"])`
   )?.[0];
-  let buildOutDir: ts.Node[];
+
   if (buildObject) {
-    buildOutDir = tsquery.query(
+    const reportCompressedSizeExists =
+      tsquery.query(
+        buildObject,
+        `PropertyAssignment:has(Identifier[name="reportCompressedSize"])`
+      )?.length > 0;
+
+    const commonjsOptionsExists =
+      tsquery.query(
+        buildObject,
+        `PropertyAssignment:has(Identifier[name="commonjsOptions"])`
+      )?.length > 0;
+
+    const buildOutDir = tsquery.query(
       buildObject,
       `PropertyAssignment:has(Identifier[name="outDir"])`
-    );
-  }
+    )?.length;
 
-  if (buildOutDir?.length > 0) {
-    return configContents;
-  } else if (buildObject) {
-    // has build, has no outDir
-    // so add outDir
-    return applyChangesToString(configContents, [
-      {
+    // Array to store changes
+    let changes = [];
+
+    // Add outDir if not present
+    if (!buildOutDir) {
+      changes.push({
         type: ChangeType.Insert,
         index: buildObject.getStart() + `build: {`.length + 1,
         text: `outDir: '${outputPath}',`,
-      },
-    ]);
+      });
+    }
+
+    // Add reportCompressedSize if not present
+    if (!reportCompressedSizeExists) {
+      changes.push({
+        type: ChangeType.Insert,
+        index: buildObject.getStart() + `build: {`.length + 1,
+        text: `reportCompressedSize: true,`,
+      });
+    }
+
+    // Add commonjsOptions if not present
+    if (!commonjsOptionsExists) {
+      changes.push({
+        type: ChangeType.Insert,
+        index: buildObject.getStart() + `build: {`.length + 1,
+        text: `commonjsOptions: { transformMixedEsModules: true },`,
+      });
+    }
+
+    if (changes.length > 0) {
+      return applyChangesToString(configContents, changes);
+    }
   } else {
     return addBuildProperty(configContents, outputPath, foundDefineConfig);
   }
+
+  return configContents;
 }
 
 function addRoot(
@@ -140,6 +174,10 @@ function addBuildProperty(
         index: foundDefineConfig.getStart() + 14,
         text: `build: {
                 outDir: '${outputPath}',
+                reportCompressedSize: true,
+                commonjsOptions: {
+                  transformMixedEsModules: true,
+                },
               },`,
       },
     ]);

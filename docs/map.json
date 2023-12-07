@@ -1702,7 +1702,13 @@
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
             {
-              "name": "Reduce Waste in CI",
+              "name": "The Building Blocks of Fast CI",
+              "tags": [],
+              "id": "building-blocks-fast-ci",
+              "file": "nx-cloud/concepts/building-blocks-fast-ci"
+            },
+            {
+              "name": "Reduce Wasted Time in CI",
               "tags": [],
               "id": "reduce-waste",
               "file": "nx-cloud/concepts/reduce-waste"

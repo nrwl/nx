@@ -13,7 +13,7 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
             "^build-something",
           ],
           "inputs": [
-            "default",
+            "production",
             "^production",
             {
               "externalDependencies": [

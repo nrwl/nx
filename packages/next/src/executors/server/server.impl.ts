@@ -24,7 +24,7 @@ export default async function* serveExecutor(
   }
 
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
-    parseTargetString(options.buildTarget, context.projectGraph),
+    parseTargetString(options.buildTarget, context),
     context
   );
   const projectRoot = context.workspace.projects[context.projectName].root;
