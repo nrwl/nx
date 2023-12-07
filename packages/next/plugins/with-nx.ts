@@ -469,7 +469,7 @@ export function getAliasForProject(
   paths: Record<string, string[]>
 ): null | string {
   // Match workspace libs to their alias in tsconfig paths.
-  for (const [alias, lookup] of Object.entries(paths)) {
+  for (const [alias, lookup] of Object.entries(paths ?? {})) {
     const lookupContainsDepNode = lookup.some(
       (lookupPath) =>
         lookupPath.startsWith(node?.data?.root) ||
