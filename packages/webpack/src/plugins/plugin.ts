@@ -130,14 +130,14 @@ async function createWebpackTargets(
     inputs:
       'production' in namedInputs
         ? [
-            'default',
+            'production',
             '^production',
             {
               externalDependencies: ['webpack-cli'],
             },
           ]
         : [
-            'default',
+            'production',
             '^default',
             {
               externalDependencies: ['webpack-cli'],

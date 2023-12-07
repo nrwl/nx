@@ -50,7 +50,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
           "cache": true,
           "command": "vitest run",
           "inputs": [
-            "production",
+            "default",
             "^production",
             {
               "externalDependencies": [
@@ -121,7 +121,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
           "cache": true,
           "command": "vitest run",
           "inputs": [
-            "production",
+            "default",
             "^production",
             {
               "externalDependencies": [

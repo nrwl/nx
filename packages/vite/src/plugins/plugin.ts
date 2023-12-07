@@ -191,7 +191,7 @@ async function testTarget(
     cache: true,
     inputs: [
       ...('production' in namedInputs
-        ? ['production', '^production']
+        ? ['default', '^production']
         : ['default', '^default']),
       {
         externalDependencies: ['vitest'],
