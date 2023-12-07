@@ -13,7 +13,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "^build-something",
           ],
           "inputs": [
-            "default",
+            "production",
             "^production",
             {
               "externalDependencies": [
@@ -25,7 +25,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "cwd": "my-app",
           },
           "outputs": [
-            "{options.outputPath}",
+            "{workspaceRoot}/dist/my-app/",
           ],
         },
         "my-serve": {
@@ -50,8 +50,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "cwd": "my-app",
           },
           "outputs": [
-            "{options.reportsDirectory}",
-            "{workspaceRoot}/coverage/my-app",
+            "{workspaceRoot}/coverage/{projectRoot}",
           ],
         },
       },
@@ -73,7 +72,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "^build",
           ],
           "inputs": [
-            "default",
+            "production",
             "^production",
             {
               "externalDependencies": [
@@ -85,7 +84,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "{options.outputPath}",
+            "dist/my-app/",
           ],
         },
         "serve": {
@@ -110,8 +109,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "{options.reportsDirectory}",
-            "{projectRoot}/coverage",
+            "{workspaceRoot}/coverage/{projectRoot}",
           ],
         },
       },

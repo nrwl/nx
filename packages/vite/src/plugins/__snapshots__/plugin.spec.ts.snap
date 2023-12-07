@@ -25,7 +25,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             "cwd": "my-app",
           },
           "outputs": [
-            "{options.outputPath}",
+            "{workspaceRoot}/dist/{projectRoot}",
           ],
         },
         "my-serve": {
@@ -62,7 +62,7 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             "cwd": "my-app",
           },
           "outputs": [
-            "{options.reportsDirectory}",
+            "{workspaceRoot}/coverage/{projectRoot}",
           ],
         },
       },
@@ -96,7 +96,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "{options.outputPath}",
+            "{workspaceRoot}/dist/{projectRoot}",
           ],
         },
         "preview": {
@@ -133,7 +133,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "{options.reportsDirectory}",
+            "{workspaceRoot}/coverage/{projectRoot}",
           ],
         },
       },

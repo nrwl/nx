@@ -9,7 +9,7 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { loadConfigFromFile, UserConfig } from 'vite';
 import { existsSync, readdirSync } from 'fs';
@@ -101,8 +101,8 @@ async function buildViteTargets(
   );
 
   const { buildOutputs, testOutputs } = getOutputs(
-    projectRoot,
-    viteConfig?.config
+    viteConfig?.config,
+    projectRoot
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -213,35 +213,42 @@ function serveStaticTarget(options: VitePluginOptions) {
 }
 
 function getOutputs(
-  projectRoot: string,
-  viteConfig: UserConfig
+  viteConfig: UserConfig,
+  projectRoot: string
 ): {
   buildOutputs: string[];
   testOutputs: string[];
 } {
   const { build, test } = viteConfig;
-  const buildOutputs = ['{options.outputPath}'];
-  const testOutputs = ['{options.reportsDirectory}'];
 
-  function getOutput(path: string, projectRoot: string): string {
-    if (path.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, path));
-    } else if (isAbsolute(resolve(path))) {
-      return `{workspaceRoot}/${relative(workspaceRoot, path)}`;
+  const buildOutputPath =
+    normalizeOutputPath(build?.outDir, projectRoot) ??
+    '{workspaceRoot}/dist/{projectRoot}';
+
+  const reportsDirectoryPath =
+    normalizeOutputPath(test?.coverage?.reportsDirectory, projectRoot) ??
+    '{workspaceRoot}/coverage/{projectRoot}';
+
+  return {
+    buildOutputs: [buildOutputPath],
+    testOutputs: [reportsDirectoryPath],
+  };
+}
+
+function normalizeOutputPath(
+  outputPath: string | undefined,
+  projectRoot: string
+): string | undefined {
+  if (!outputPath) return undefined;
+  if (isAbsolute(outputPath)) {
+    return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+  } else {
+    if (outputPath.startsWith('..')) {
+      return join('{workspaceRoot}', join(projectRoot, outputPath));
     } else {
-      return join('{projectRoot}', path);
+      return outputPath;
     }
   }
-
-  if (build?.outDir) {
-    buildOutputs.push(getOutput(build.outDir, projectRoot));
-  }
-
-  if (test?.coverage?.reportsDirectory) {
-    testOutputs.push(getOutput(test.coverage.reportsDirectory, projectRoot));
-  }
-
-  return { buildOutputs, testOutputs };
 }
 
 function normalizeOptions(options: VitePluginOptions): VitePluginOptions {
