@@ -58,7 +58,7 @@ export function Hero(): JSX.Element {
             <svg
               viewBox="0 0 2 2"
               fill="currentColor"
-              className="mx-4 inline-flex h-2 w-2 text-slate-500"
+              className="mx-4 inline-flex h-2 w-2"
             >
               <circle cx={1} cy={1} r={1} />
             </svg>
