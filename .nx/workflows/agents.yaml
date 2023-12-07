@@ -21,7 +21,6 @@ launch-templates:
           lscpu
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
-#        uses: 'nrwl/nx-cloud-workflows/JamesHenry-patch-1/workflow-steps/checkout/main.yaml'
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/cache/main.yaml'
         env:
