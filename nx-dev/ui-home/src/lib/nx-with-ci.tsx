@@ -72,7 +72,7 @@ export function NxWithCi(): JSX.Element {
         <div>
           <header>
             <SectionHeading as="h1" variant="title" id="nx-is-fast">
-              From 90 minutes to under 10
+              Speed up your CI from 90 mins to 10 mins with 1 flag
             </SectionHeading>
             <SectionHeading
               as="p"
@@ -126,20 +126,20 @@ export function NxWithCi(): JSX.Element {
         </div>
       </motion.div>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8 lg:pb-16">
-        <dl className="grid grid-cols-1 gap-16 sm:grid-cols-3">
+        <dl className="grid grid-cols-1 gap-16 sm:grid-cols-3 items-stretch">
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg blur opacity-25 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
             <div className="relative flex flex-col-reverse rounded-lg border border-slate-200 bg-white p-4 text-sm shadow-sm  transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
               <dd className="mt-4 text-slate-400 dark:text-slate-500 sr-only">
                 <p>DESCRIPTION HERE - CHANGE TEXT</p>
               </dd>
-              <dt className="flex items-center space-x-4 py-8">
-                <CloudArrowDownIcon
-                  className="h-8 w-8 flex-none text-slate-800 dark:text-slate-200"
-                  aria-hidden="true"
-                />
-                <div className="flex-auto">
-                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+              <dt className="py-8">
+                <div className="flex items-center text-slate-800 dark:text-slate-200 gap-4">
+                  <CloudArrowDownIcon
+                    className="h-8 w-8 flex-none "
+                    aria-hidden="true"
+                  />
+                  <div className="font-semibold text-lg">
                     <a
                       target="_blank"
                       rel="noreferrer"
@@ -148,10 +148,10 @@ export function NxWithCi(): JSX.Element {
                       <span className="absolute inset-0"></span>Nx Cache
                     </a>
                   </div>
-                  <div className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                    Built-in local and remote caching to speed up your tasks and
-                    save you time and money.
-                  </div>
+                </div>
+                <div className="mt-2 text-base text-slate-600 dark:text-slate-400">
+                  Built-in local and remote caching to speed up your tasks and
+                  save you time and money.
                 </div>
               </dt>
             </div>
