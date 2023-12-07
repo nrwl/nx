@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "Remix",
+  "title": "",
+  "type": "object",
+  "properties": {
+    "tags": {
+      "type": "string",
+      "description": "Add tags to the app (used for linting).",
+      "alias": "t"
+    }
+  }
+}

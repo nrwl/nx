@@ -1,0 +1,95 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`route --nameAndDirectoryFormat=as-provided should add route component 1`] = `
+"import { useLoaderData, useActionData } from '@remix-run/react';
+import { json } from '@remix-run/node';
+import type {
+  LoaderFunctionArgs,
+  MetaFunction,
+  ActionFunctionArgs,
+  LinksFunction,
+} from '@remix-run/node';
+
+import stylesUrl from '../../../styles/path/to/example.css';
+
+export const links: LinksFunction = () => {
+  return [{ rel: 'stylesheet', href: stylesUrl }];
+};
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+  let formData = await request.formData();
+
+  return json({ message: formData.toString() }, { status: 200 });
+};
+
+export const meta: MetaFunction = () => {
+  return [{ title: 'Example Route' }];
+};
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  return json({
+    message: 'Hello, world!',
+  });
+};
+
+export default function Example() {
+  const actionMessage = useActionData<typeof action>();
+  const data = useLoaderData<typeof loader>();
+
+  return <p>Message: {data.message}</p>;
+}
+"
+`;
+
+exports[`route --nameAndDirectoryFormat=as-provided should error if it detects a possible missing route param because of un-escaped dollar sign 1`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`route --nameAndDirectoryFormat=as-provided should error if it detects a possible missing route param because of un-escaped dollar sign 2`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`route --nameAndDirectoryFormat=as-provided should error if it detects a possible missing route param because of un-escaped dollar sign 3`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`route --nameAndDirectoryFormat=derived should add route component 1`] = `
+"import { useLoaderData, useActionData } from '@remix-run/react';
+import { json } from '@remix-run/node';
+import type {
+  LoaderFunctionArgs,
+  MetaFunction,
+  ActionFunctionArgs,
+  LinksFunction,
+} from '@remix-run/node';
+
+import stylesUrl from '../../../styles/path/to/example.css';
+
+export const links: LinksFunction = () => {
+  return [{ rel: 'stylesheet', href: stylesUrl }];
+};
+
+export const action = async ({ request }: ActionFunctionArgs) => {
+  let formData = await request.formData();
+
+  return json({ message: formData.toString() }, { status: 200 });
+};
+
+export const meta: MetaFunction = () => {
+  return [{ title: 'PathToExample Route' }];
+};
+
+export const loader = async ({ request }: LoaderFunctionArgs) => {
+  return json({
+    message: 'Hello, world!',
+  });
+};
+
+export default function PathToExample() {
+  const actionMessage = useActionData<typeof action>();
+  const data = useLoaderData<typeof loader>();
+
+  return <p>Message: {data.message}</p>;
+}
+"
+`;
+
+exports[`route --nameAndDirectoryFormat=derived should error if it detects a possible missing route param because of un-escaped dollar sign 1`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`route --nameAndDirectoryFormat=derived should error if it detects a possible missing route param because of un-escaped dollar sign 2`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`route --nameAndDirectoryFormat=derived should error if it detects a possible missing route param because of un-escaped dollar sign 3`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
