@@ -260,8 +260,11 @@ export function withDepGraphOptions(yargs: Argv) {
     .option('view', {
       describe: 'Choose whether to view the projects or task graph',
       type: 'string',
-      default: 'projects',
       choices: ['projects', 'tasks'],
+    })
+    .option('projects', {
+      describe: 'The projects to show in the project graph',
+      coerce: parseCSV,
     })
     .option('targets', {
       describe: 'The target to show tasks for in the task graph',
@@ -301,6 +304,23 @@ export function withDepGraphOptions(yargs: Argv) {
       describe: 'Open the project graph in the browser.',
       type: 'boolean',
       default: true,
+    })
+    .middleware((args) => {
+      if (!args.view) {
+        if (args.targets) {
+          args.view = 'tasks';
+        } else {
+          args.view = 'projects';
+        }
+      }
+
+      if (args.projects && !args.targets) {
+        args.focus = args.projects[0];
+      }
+
+      if (args.focus) {
+        args.projects = [args.focus];
+      }
     });
 }
 
