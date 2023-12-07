@@ -344,7 +344,12 @@ export async function generateGraph(
     if (args.file === 'stdout') {
       console.log(
         JSON.stringify(
-          await createJsonOutput(prunedGraph, args.projects, args.targets),
+          await createJsonOutput(
+            prunedGraph,
+            rawGraph,
+            args.projects,
+            args.targets
+          ),
           null,
           2
         )
@@ -406,6 +411,7 @@ export async function generateGraph(
       ensureDirSync(dirname(fullFilePath));
 
       const json = await createJsonOutput(
+        prunedGraph,
         rawGraph,
         args.projects,
         args.targets
@@ -1034,12 +1040,13 @@ interface GraphJsonResponse {
 }
 
 async function createJsonOutput(
-  graph: ProjectGraph,
+  prunedGraph: ProjectGraph,
+  rawGraph: ProjectGraph,
   projects: string[],
   targets?: string[]
 ): Promise<GraphJsonResponse> {
   const response: GraphJsonResponse = {
-    graph,
+    graph: prunedGraph,
   };
 
   if (targets?.length) {
@@ -1050,7 +1057,7 @@ async function createJsonOutput(
     );
 
     const taskGraph = createTaskGraph(
-      graph,
+      rawGraph,
       defaultDependencyConfigs,
       projects,
       targets,
@@ -1058,7 +1065,7 @@ async function createJsonOutput(
       {}
     );
 
-    const hasher = createTaskHasher(graph, readNxJson());
+    const hasher = createTaskHasher(rawGraph, readNxJson());
     let tasks = Object.values(taskGraph.tasks);
     const hashes = await hasher.hashTasks(tasks, taskGraph);
     response.tasks = taskGraph;
