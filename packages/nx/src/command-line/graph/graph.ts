@@ -51,6 +51,7 @@ import { readFileMapCache } from '../../project-graph/nx-deps-cache';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration-utils';
 
 import { filterUsingGlobPatterns } from '../../hasher/task-hasher';
+import { createTaskHasher } from '../../hasher/create-task-hasher';
 
 export interface ProjectGraphClientResponse {
   hash: string;
@@ -343,7 +344,7 @@ export async function generateGraph(
     if (args.file === 'stdout') {
       console.log(
         JSON.stringify(
-          createJsonOutput(prunedGraph, args.projects, args.targets),
+          await createJsonOutput(prunedGraph, args.projects, args.targets),
           null,
           2
         )
@@ -404,7 +405,11 @@ export async function generateGraph(
     } else if (ext === '.json') {
       ensureDirSync(dirname(fullFilePath));
 
-      const json = createJsonOutput(prunedGraph, args.projects, args.targets);
+      const json = await createJsonOutput(
+        rawGraph,
+        args.projects,
+        args.targets
+      );
       json.affectedProjects = affectedProjects;
       json.criticalPath = affectedProjects;
 
@@ -1014,6 +1019,7 @@ function expandInputs(
 
 interface GraphJsonResponse {
   tasks?: TaskGraph;
+  taskPlans?: Record<string, string[]>;
   graph: ProjectGraph;
 
   /**
@@ -1027,11 +1033,11 @@ interface GraphJsonResponse {
   criticalPath?: string[];
 }
 
-function createJsonOutput(
+async function createJsonOutput(
   graph: ProjectGraph,
   projects: string[],
   targets?: string[]
-): GraphJsonResponse {
+): Promise<GraphJsonResponse> {
   const response: GraphJsonResponse = {
     graph,
   };
@@ -1043,7 +1049,7 @@ function createJsonOutput(
       nxJson.targetDefaults
     );
 
-    response.tasks = createTaskGraph(
+    const taskGraph = createTaskGraph(
       graph,
       defaultDependencyConfigs,
       projects,
@@ -1051,6 +1057,15 @@ function createJsonOutput(
       undefined,
       {}
     );
+
+    const hasher = createTaskHasher(graph, readNxJson());
+    let tasks = Object.values(taskGraph.tasks);
+    const hashes = await hasher.hashTasks(tasks, taskGraph);
+    response.tasks = taskGraph;
+    response.taskPlans = tasks.reduce((acc, task, index) => {
+      acc[task.id] = Object.keys(hashes[index].details.nodes).sort();
+      return acc;
+    }, {});
   }
 
   return response;
