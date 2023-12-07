@@ -72,7 +72,7 @@ export function NxWithCi(): JSX.Element {
         <div>
           <header>
             <SectionHeading as="h1" variant="title" id="nx-is-fast">
-              Smart project ecosystem
+              From 90 minutes to under 10
             </SectionHeading>
             <SectionHeading
               as="p"
@@ -80,17 +80,15 @@ export function NxWithCi(): JSX.Element {
               id="nx-ci"
               className="mt-4"
             >
-              Peak CI performance, no matter the project size
+              Effortless, Fast CI
             </SectionHeading>
           </header>
           <div className="mt-8 flex gap-16 font-normal">
             <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
-              Nx understands and help you modularize your code, it can ensure
-              top-tier performance and scalability{' '}
-              <span className="font-medium">
-                from your local environment to CI executions
-              </span>{' '}
-              with native task and compute distribution.
+              Nx comes with the building blocks to not only scale your monorepo
+              locally and provide great DX while developing, but also to address
+              one of the major pain points:{' '}
+              <span className="font-bold">fast, maintainable CI.</span>
             </p>
           </div>
         </div>
@@ -135,7 +133,7 @@ export function NxWithCi(): JSX.Element {
               <dd className="mt-4 text-slate-400 dark:text-slate-500 sr-only">
                 <p>DESCRIPTION HERE - CHANGE TEXT</p>
               </dd>
-              <dt className="flex items-center space-x-4">
+              <dt className="flex items-center space-x-4 py-8">
                 <CloudArrowDownIcon
                   className="h-8 w-8 flex-none text-slate-800 dark:text-slate-200"
                   aria-hidden="true"
@@ -151,7 +149,8 @@ export function NxWithCi(): JSX.Element {
                     </a>
                   </div>
                   <div className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                    Local and remote caching solution.
+                    Built-in local and remote caching to speed up your tasks and
+                    save you time and money.
                   </div>
                 </div>
               </dt>
@@ -163,7 +162,7 @@ export function NxWithCi(): JSX.Element {
               <dd className="mt-4 text-slate-400 dark:text-slate-500 sr-only">
                 <p>DESCRIPTION HERE - CHANGE TEXT</p>
               </dd>
-              <dt className="flex items-center space-x-4">
+              <dt className="flex items-center space-x-4 py-8">
                 <ServerStackIcon
                   className="h-8 w-8 flex-none text-slate-800 dark:text-slate-200"
                   aria-hidden="true"
@@ -178,8 +177,18 @@ export function NxWithCi(): JSX.Element {
                     </a>
                   </div>
                   <div className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                    Native task & compute distribution.
+                    A single flag to enable distributed computation, across
+                    multiple machines. Fully managed agents, dynamically
+                    allocated based on PR size.
                   </div>
+                  {/* <div className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+                    A single flag to enable powerful task distribution, on any CI provider.
+
+
+                    Streamline CI with dynamic task distribution across
+                    machines, managed by a single flag. Works seamlessly across
+                    different CI providers.
+                  </div> */}
                 </div>
               </dt>
             </div>
@@ -190,7 +199,7 @@ export function NxWithCi(): JSX.Element {
               <dd className="mt-4 text-slate-400 dark:text-slate-500 sr-only">
                 <p>DESCRIPTION HERE - CHANGE TEXT</p>
               </dd>
-              <dt className="flex items-center space-x-4">
+              <dt className="flex items-center space-x-4 py-8">
                 <CogIcon
                   className="h-8 w-8 flex-none text-slate-800 dark:text-slate-200"
                   aria-hidden="true"
@@ -205,7 +214,8 @@ export function NxWithCi(): JSX.Element {
                     {/*</a>*/}
                   </div>
                   <div className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                    Full CI solution with distribution at its core.
+                    Next generation, fully managed CI solution with distribution
+                    at its core, designed from the ground up for monorepos.
                   </div>
                 </div>
               </dt>
