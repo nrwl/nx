@@ -4,18 +4,19 @@ import {
   CreateNodesContext,
   detectPackageManager,
   joinPathFragments,
-  offsetFromRoot,
   readJsonFile,
   TargetConfiguration,
+  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { basename, dirname, join } from 'path';
+import { basename, dirname, isAbsolute, join, relative } from 'path';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
+import { loadConfigFromFile, UserConfig } from 'vite';
 
 const cachePath = join(projectGraphCacheDirectory, 'nuxt.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
@@ -90,11 +91,36 @@ async function buildNuxtTargets(
   options: NuxtPluginOptions,
   context: CreateNodesContext
 ) {
+  let viteConfig:
+    | {
+        path: string;
+        config: UserConfig;
+        dependencies: string[];
+      }
+    | undefined;
+  if (
+    existsSync(
+      joinPathFragments(context.workspaceRoot, projectRoot, 'vitest.config.ts')
+    )
+  ) {
+    viteConfig = await loadConfigFromFile(
+      {
+        command: 'build',
+        mode: 'production',
+      },
+      joinPathFragments(context.workspaceRoot, projectRoot, 'vitest.config.ts')
+    );
+  }
+
   const nuxtConfig: {
     buildDir: string;
   } = await getInfoFromNuxtConfig(configFilePath, context, projectRoot);
 
-  const { buildOutputs, testOutputs } = getOutputs(projectRoot, nuxtConfig);
+  const { buildOutputs, testOutputs } = getOutputs(
+    nuxtConfig,
+    viteConfig?.config,
+    projectRoot
+  );
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -133,7 +159,7 @@ function buildTarget(
     dependsOn: [`^${buildTargetName}`],
     inputs: [
       ...('production' in namedInputs
-        ? ['default', '^production']
+        ? ['production', '^production']
         : ['default', '^default']),
 
       {
@@ -187,59 +213,64 @@ async function getInfoFromNuxtConfig(
   buildDir: string;
 }> {
   const { loadNuxtConfig } = await loadNuxtKitDynamicImport();
+
   const config = await loadNuxtConfig({
     cwd: joinPathFragments(context.workspaceRoot, projectRoot),
     configFile: basename(configFilePath),
   });
 
   return {
-    // to preserve only the relative path from the workspace root
-    // because nuxt automatically prepends the rootDir to buildDir
-    buildDir: config?.buildDir?.replace(config?.rootDir, ''),
+    buildDir: config?.buildDir,
   };
 }
 
 function getOutputs(
-  projectRoot: string,
-  nuxtConfig: {
-    buildDir: string;
-  }
+  nuxtConfig: { buildDir: string },
+  viteConfig: UserConfig,
+  projectRoot: string
 ): {
   buildOutputs: string[];
-  outputPath: string;
   testOutputs: string[];
-  reportsDirectory: string;
 } {
-  const buildOutputs = ['{options.outputPath}'];
-  const testOutputs = ['{options.reportsDirectory}'];
+  const reportsDirectory =
+    normalizeOutputPath(
+      viteConfig?.['test']?.coverage?.reportsDirectory,
+      projectRoot
+    ) ?? '{workspaceRoot}/coverage/{projectRoot}';
 
-  function getOutput(path: string, projectRoot: string): string {
-    if (path.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, path));
-    } else {
-      return join('{projectRoot}', path);
-    }
-  }
-
-  let distPath = undefined;
+  let nuxtBuildDir = nuxtConfig?.buildDir;
   if (nuxtConfig?.buildDir && basename(nuxtConfig?.buildDir) === '.nuxt') {
     // buildDir will most probably be `../dist/my-app/.nuxt`
     // we want the "general" outputPath to be `../dist/my-app`
-    distPath = nuxtConfig.buildDir.replace(basename(nuxtConfig.buildDir), '');
-    buildOutputs.push(getOutput(distPath, projectRoot));
+    nuxtBuildDir = nuxtConfig.buildDir.replace(
+      basename(nuxtConfig.buildDir),
+      ''
+    );
   }
+  const buildOutputPath =
+    normalizeOutputPath(nuxtBuildDir, projectRoot) ??
+    '{workspaceRoot}/dist/{projectRoot}';
 
-  const outputPath = distPath ?? joinPathFragments('dist', projectRoot);
+  return {
+    buildOutputs: [buildOutputPath],
+    testOutputs: [reportsDirectory],
+  };
+}
 
-  const reportsDirectory = joinPathFragments(
-    offsetFromRoot(projectRoot),
-    'coverage',
-    projectRoot
-  );
-
-  testOutputs.push(getOutput(reportsDirectory, projectRoot));
-
-  return { buildOutputs, outputPath, testOutputs, reportsDirectory };
+function normalizeOutputPath(
+  outputPath: string | undefined,
+  projectRoot: string
+): string | undefined {
+  if (!outputPath) return undefined;
+  if (isAbsolute(outputPath)) {
+    return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+  } else {
+    if (outputPath.startsWith('..')) {
+      return join('{workspaceRoot}', join(projectRoot, outputPath));
+    } else {
+      return outputPath;
+    }
+  }
 }
 
 function normalizeOptions(options: NuxtPluginOptions): NuxtPluginOptions {
