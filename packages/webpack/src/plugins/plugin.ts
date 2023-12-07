@@ -137,7 +137,7 @@ async function createWebpackTargets(
             },
           ]
         : [
-            'production',
+            'default',
             '^default',
             {
               externalDependencies: ['webpack-cli'],
