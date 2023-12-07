@@ -40,6 +40,7 @@ export function DocViewer({
   const vm = {
     title: metadata['title'] ?? document.name,
     description: metadata['description'] ?? document.description,
+    mediaImage: document.mediaImage,
     content: node,
     relatedContent: renderMarkdown(
       generateRelatedDocumentsTemplate(
@@ -51,6 +52,11 @@ export function DocViewer({
     ).node,
     tableOfContent: collectHeadings(treeNode),
   };
+
+  function getExtension(path: string): string {
+    const splits = path.split('.');
+    return splits[splits.length - 1];
+  }
 
   return (
     <>
@@ -68,11 +74,11 @@ export function DocViewer({
             'Next generation build system with first class monorepo support and powerful integrations.',
           images: [
             {
-              url: router.asPath.includes('turbo-and-nx')
-                ? 'https://nx.dev/socials/nx-media-monorepo.jpg'
-                : `https://nx.dev/images/open-graph/${router.asPath
-                    .replace('/', '')
-                    .replace(/\//gi, '-')}.jpg`,
+              url: `https://nx.dev/images/open-graph/${router.asPath
+                .replace('/', '')
+                .replace(/\//gi, '-')}.${
+                vm.mediaImage ? getExtension(vm.mediaImage) : 'jpg'
+              }`,
               width: 1600,
               height: 800,
               alt: 'Nx: Smart, Fast and Extensible Build System',

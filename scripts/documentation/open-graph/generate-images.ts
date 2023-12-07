@@ -1,6 +1,12 @@
 import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 import { PackageMetadata } from '../../../nx-dev/models-package/src/lib/package.models';
-import { ensureDir, readFile, readJSONSync, writeFileSync } from 'fs-extra';
+import {
+  ensureDir,
+  readFile,
+  readJSONSync,
+  writeFileSync,
+  copyFileSync,
+} from 'fs-extra';
 import { resolve } from 'path';
 
 const mapJson = readJSONSync('./docs/map.json', 'utf8').content;
@@ -35,7 +41,12 @@ const targetFolder: string = resolve(
   `./nx-dev/nx-dev/public/images/open-graph`
 );
 
-const data: { title: string; content: string; filename: string }[] = [];
+const data: {
+  title: string;
+  content: string;
+  mediaImage?: string;
+  filename: string;
+}[] = [];
 documents.forEach((category) => {
   data.push({
     title: category.name,
@@ -46,6 +57,7 @@ documents.forEach((category) => {
     data.push({
       title: item.name,
       content: item.description || category.name,
+      mediaImage: item.mediaImage,
       filename: [category.sidebarId, category.id, item.id]
         .filter(Boolean)
         .join('-'),
@@ -54,6 +66,7 @@ documents.forEach((category) => {
       data.push({
         title: subItem.name,
         content: subItem.description || category.name,
+        mediaImage: subItem.mediaImage,
         filename: [category.sidebarId, category.id, item.id, subItem.id]
           .filter(Boolean)
           .join('-'),
@@ -146,6 +159,19 @@ function createOpenGraphImage(
   });
 }
 
+function copyImage(
+  backgroundImagePath: string,
+  targetFolder: string,
+  filename: string
+) {
+  const splits = backgroundImagePath.split('.');
+  const extension = splits[splits.length - 1];
+  copyFileSync(
+    backgroundImagePath,
+    resolve(targetFolder, `./${filename}.${extension}`)
+  );
+}
+
 function splitLines(
   context: SKRSContext2D,
   text: string,
@@ -180,12 +206,18 @@ console.log(
 );
 ensureDir(targetFolder).then(() =>
   data.map((item) =>
-    createOpenGraphImage(
-      resolve(__dirname, './media.jpg'),
-      targetFolder,
-      item.title,
-      item.content,
-      item.filename
-    )
+    item.mediaImage
+      ? copyImage(
+          resolve(__dirname, '../../../docs/' + item.mediaImage),
+          targetFolder,
+          item.filename
+        )
+      : createOpenGraphImage(
+          resolve(__dirname, './media.jpg'),
+          targetFolder,
+          item.title,
+          item.content,
+          item.filename
+        )
   )
 );
