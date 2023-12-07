@@ -354,6 +354,7 @@
                 {
                   "name": "Nx and Turborepo",
                   "id": "turbo-and-nx",
+                  "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
                   "file": "shared/guides/turbo-and-nx"
                 },
                 {
