@@ -11,7 +11,6 @@ import {
   updateJson,
   updateProjectConfiguration,
   writeJson,
-  readNxJson,
 } from '@nx/devkit';
 
 import { Linter as LinterEnum } from '../utils/linter';
