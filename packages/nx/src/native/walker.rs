@@ -20,14 +20,28 @@ pub struct NxFile {
 
 /// Walks the directory in a single thread and does not ignore any files
 /// Should only be used for small directories, and not traversing the whole workspace
-pub fn nx_walker_sync<'a, P>(directory: P) -> impl Iterator<Item = PathBuf>
+///
+/// The `ignores` argument is used to filter entries. This is important to make sure that any ignore globs are applied on the `filter_entry` function
+pub fn nx_walker_sync<'a, P>(
+    directory: P,
+    ignores: Option<&[String]>,
+) -> impl Iterator<Item = PathBuf>
 where
     P: AsRef<Path> + 'a,
 {
     let base_dir: PathBuf = directory.as_ref().into();
 
-    let ignore_glob_set =
-        build_glob_set(&["**/node_modules", "**/.git"]).expect("These static ignores always build");
+    let mut base_ignores: Vec<String> = vec![
+        "**/node_modules".into(),
+        "**/.git".into(),
+        "**/.nx/cache".into(),
+    ];
+
+    if let Some(additional_ignores) = ignores {
+        base_ignores.extend(additional_ignores.iter().map(|s| format!("**/{}", s)));
+    };
+
+    let ignore_glob_set = build_glob_set(&base_ignores).expect("Should be valid globs");
 
     // Use WalkDir instead of ignore::WalkBuilder because it's faster
     WalkDir::new(&base_dir)
@@ -50,8 +64,8 @@ where
 {
     let directory = directory.as_ref();
 
-    let ignore_glob_set =
-        build_glob_set(&["**/node_modules", "**/.git"]).expect("These static ignores always build");
+    let ignore_glob_set = build_glob_set(&["**/node_modules", "**/.git", "**/.nx/cache"])
+        .expect("These static ignores always build");
 
     let mut walker = WalkBuilder::new(directory);
     walker.hidden(false);
