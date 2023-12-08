@@ -152,6 +152,7 @@ export function runCreateWorkspace(
     nextAppDir,
     e2eTestRunner,
     ssr,
+    framework,
   }: {
     preset: string;
     appName?: string;
@@ -169,6 +170,7 @@ export function runCreateWorkspace(
     nextAppDir?: boolean;
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
     ssr?: boolean;
+    framework?: string;
   }
 ) {
   projName = name;
@@ -216,6 +218,10 @@ export function runCreateWorkspace(
 
   if (e2eTestRunner) {
     command += ` --e2eTestRunner=${e2eTestRunner}`;
+  }
+
+  if (framework) {
+    command += ` --framework=${framework}`;
   }
 
   if (extraArgs) {
