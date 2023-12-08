@@ -245,6 +245,13 @@
               "file": "shared/core-features/integrate-with-editors"
             },
             {
+              "name": "Manage Releases",
+              "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+              "id": "manage-releases",
+              "tags": ["manage-releases"],
+              "file": "shared/core-features/manage-releases"
+            },
+            {
               "name": "Plugin Features",
               "id": "plugin-features",
               "description": "Learn what is a plugin, the different type of plugins and how to create one.",

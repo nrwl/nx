@@ -871,6 +871,17 @@
         "tags": ["integrate-with-editors"]
       },
       {
+        "id": "manage-releases",
+        "name": "Manage Releases",
+        "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+        "mediaImage": "",
+        "file": "shared/core-features/manage-releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/manage-releases",
+        "tags": ["manage-releases"]
+      },
+      {
         "id": "plugin-features",
         "name": "Plugin Features",
         "description": "Learn what is a plugin, the different type of plugins and how to create one.",
@@ -996,6 +1007,17 @@
     "isExternal": false,
     "path": "/core-features/integrate-with-editors",
     "tags": ["integrate-with-editors"]
+  },
+  "/core-features/manage-releases": {
+    "id": "manage-releases",
+    "name": "Manage Releases",
+    "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+    "mediaImage": "",
+    "file": "shared/core-features/manage-releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/manage-releases",
+    "tags": ["manage-releases"]
   },
   "/core-features/plugin-features": {
     "id": "plugin-features",

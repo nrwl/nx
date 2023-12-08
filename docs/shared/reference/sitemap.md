@@ -40,6 +40,7 @@
     - [Automate Updating Dependencies](/core-features/automate-updating-dependencies)
     - [Enforce Module Boundaries](/core-features/enforce-module-boundaries)
     - [Integrate with Editors](/core-features/integrate-with-editors)
+    - [Manage Releases](/core-features/manage-releases)
     - [Plugin Features](/core-features/plugin-features)
       - [Use Task Executors](/core-features/plugin-features/use-task-executors)
       - [Use Code Generators](/core-features/plugin-features/use-code-generators)
