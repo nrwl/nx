@@ -96,7 +96,7 @@ export function NxWithCi(): JSX.Element {
           <div className="w-full">
             <div className="flex">
               <div className="shrink-0 w-28 border-r border-slate-200 dark:border-slate-500 py-3 text-slate-700 dark:text-slate-400">
-                Average CI
+                CI without Nx
               </div>
               <div className="flex-grow py-1">
                 <motion.div
