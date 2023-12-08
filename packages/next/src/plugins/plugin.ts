@@ -117,6 +117,7 @@ async function getBuildTargetConfig(
   projectRoot: string,
   nextConfig: NextConfig
 ) {
+  const nextOutputPath = await getOutputs(projectRoot, nextConfig);
   // Set output path here so that `withNx` can pick it up.
   const targetConfig: TargetConfiguration = {
     command: `next build`,
@@ -126,7 +127,7 @@ async function getBuildTargetConfig(
     dependsOn: ['^build'],
     cache: true,
     inputs: getInputs(namedInputs),
-    outputs: [await getOutputs(projectRoot, nextConfig)],
+    outputs: [nextOutputPath, `${nextOutputPath}/!(cache)`],
   };
   return targetConfig;
 }
