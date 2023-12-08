@@ -89,7 +89,7 @@ export function Hero(): JSX.Element {
               leaveTo="opacity-0"
             >
               <span className="rounded-md bg-gradient-to-r from-orange-500 to-yellow-500 bg-clip-text text-transparent">
-                optimized for monorepo
+                optimized for monorepos
               </span>
             </Transition>{' '}
             with{' '}
