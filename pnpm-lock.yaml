@@ -527,9 +527,6 @@ devDependencies:
   copy-webpack-plugin:
     specifier: ^10.2.4
     version: 10.2.4(webpack@5.88.0)
-  cpu-benchmark:
-    specifier: ^1.0.1
-    version: 1.0.1
   css-minimizer-webpack-plugin:
     specifier: ^5.0.0
     version: 5.0.0(esbuild@0.19.5)(webpack@5.88.0)
@@ -14241,10 +14238,6 @@ packages:
       js-yaml: 4.1.0
       parse-json: 5.2.0
       path-type: 4.0.0
-    dev: true
-
-  /cpu-benchmark@1.0.1:
-    resolution: {integrity: sha512-b6FmkWdWvwKySXIdMFjXqh9xkWl5MCDq5EZv26/PxzlSoY+/pugsA8wx2rUJ4/w7MhtU/GqmKmifr+uufgMFnw==}
     dev: true
 
   /create-require@1.1.1:

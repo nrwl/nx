@@ -150,7 +150,6 @@
     "conventional-changelog-cli": "^2.0.23",
     "convert-source-map": "^2.0.0",
     "copy-webpack-plugin": "^10.2.4",
-    "cpu-benchmark": "^1.0.1",
     "css-minimizer-webpack-plugin": "^5.0.0",
     "cypress": "^13.0.0",
     "cytoscape": "^3.18.2",
