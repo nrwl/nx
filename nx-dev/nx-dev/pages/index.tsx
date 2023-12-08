@@ -18,19 +18,19 @@ export default function Index(): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx: Smart, Fast and Extensible Build System"
-        description="Next generation build system with first class monorepo support and powerful integrations."
+        title="Nx: Smart Monorepos · Fast CI"
+        description="Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI."
         openGraph={{
           url: 'https://nx.dev',
-          title: 'Nx: Smart, Fast and Extensible Build System',
+          title: 'Nx: Smart Monorepos · Fast CI',
           description:
-            'Nx is a smart, fast and extensible build system which comes with first class monorepo support and powerful integrations.',
+            'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 1200,
               height: 600,
-              alt: 'Nx: Smart, Fast and Extensible Build System',
+              alt: 'Nx: Smart Monorepos · Fast CI',
               type: 'image/png',
             },
           ],

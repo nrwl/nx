@@ -61,7 +61,7 @@ export function PackageSchemaList({
               url: vm.seo.imageUrl,
               width: 1600,
               height: 800,
-              alt: 'Nx: Smart, Fast and Extensible Build System',
+              alt: 'Nx: Smart Monorepos · Fast CI',
               type: 'image/jpeg',
             },
           ],

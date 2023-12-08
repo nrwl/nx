@@ -416,7 +416,7 @@
     "source": "/packages/create-nx-plugin/src"
   },
   {
-    "description": "Smart, Fast and Extensible Build System",
+    "description": "Smart Monorepos · Fast CI",
     "documents": [],
     "executors": [],
     "generators": [],
