@@ -372,12 +372,6 @@ To fix this you will either need to add a package.json file at that location, or
             'package.json'
           ),
           (json) => {
-            // Do not update "*" as it already matches all possible versions including the new one
-            if (
-              json[dependentProject.dependencyCollection][packageName] === '*'
-            ) {
-              return json;
-            }
             json[dependentProject.dependencyCollection][packageName] =
               newVersion;
             return json;
