@@ -53,6 +53,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
+      revertedHashes: [],
       affectedFiles: [
         'packages/pkg-a/src/index.ts',
         'packages/pkg-b/src/index.ts',
@@ -82,6 +83,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
+      revertedHashes: [],
       affectedFiles: ['packages/pkg-b/src/index.ts'],
     },
     {
@@ -108,6 +110,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
+      revertedHashes: [],
       affectedFiles: ['packages/pkg-a/src/index.ts'],
     },
     {
@@ -134,6 +137,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
+      revertedHashes: [],
       affectedFiles: ['packages/pkg-b/src/index.ts'],
     },
     {
@@ -160,6 +164,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
+      revertedHashes: [],
       affectedFiles: ['packages/pkg-a/src/index.ts'],
     },
   ];
@@ -376,6 +381,162 @@ describe('defaultChangelogRenderer()', () => {
           entryWhenNoChanges: false, // should not create an entry
         })
       ).toMatchInlineSnapshot(`""`);
+    });
+  });
+
+  describe('revert commits', () => {
+    it('should generate a Revert section for the changelog if the reverted commit is not part of the same release', async () => {
+      const commitsWithOnlyRevert: GitCommit[] = [
+        {
+          message:
+            'Revert "fix(release): do not update dependents when they already use "*" (#20607)"',
+          shortHash: '6528e88aa',
+          author: {
+            name: 'James Henry',
+            email: 'jh@example.com',
+          },
+          body: 'This reverts commit 6d68236d467812aba4557a2bc7f667157de80fdb.\n"\n\nM\tpackages/js/src/generators/release-version/release-version.spec.ts\nM\tpackages/js/src/generators/release-version/release-version.ts\n',
+          authors: [
+            {
+              name: 'James Henry',
+              email: 'jh@example.com',
+            },
+          ],
+          description:
+            'Revert "fix(release): do not update dependents when they already use "*" (#20607)"',
+          type: 'revert',
+          scope: 'release',
+          references: [
+            {
+              type: 'pull-request',
+              value: '#20607',
+            },
+            {
+              value: '6528e88aa',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: ['6d68236d467812aba4557a2bc7f667157de80fdb'],
+          affectedFiles: [
+            'packages/js/src/generators/release-version/release-version.spec.ts',
+            'packages/js/src/generators/release-version/release-version.ts',
+          ],
+        },
+      ];
+
+      const markdown = await defaultChangelogRenderer({
+        projectGraph,
+        commits: commitsWithOnlyRevert,
+        releaseVersion: 'v1.1.0',
+        project: null,
+        entryWhenNoChanges: false,
+        changelogRenderOptions: {
+          includeAuthors: true,
+        },
+      });
+
+      expect(markdown).toMatchInlineSnapshot(`
+        "## v1.1.0
+
+
+        ### ⏪ Revert
+
+        - **release:** Revert "fix(release): do not update dependents when they already use "*" (#20607)"
+
+        ### ❤️  Thank You
+
+        - James Henry"
+      `);
+    });
+
+    it('should strip both the original commit and its revert if they are both included in the current range of commits', async () => {
+      const commitsWithRevertAndOriginal: GitCommit[] = [
+        {
+          message:
+            'Revert "fix(release): do not update dependents when they already use "*" (#20607)"',
+          shortHash: '6528e88aa',
+          author: {
+            name: 'James Henry',
+            email: 'jh@example.com',
+          },
+          body: 'This reverts commit 6d68236d467812aba4557a2bc7f667157de80fdb.\n"\n\nM\tpackages/js/src/generators/release-version/release-version.spec.ts\nM\tpackages/js/src/generators/release-version/release-version.ts\n',
+          authors: [
+            {
+              name: 'James Henry',
+              email: 'jh@example.com',
+            },
+          ],
+          description:
+            'Revert "fix(release): do not update dependents when they already use "*" (#20607)"',
+          type: 'revert',
+          scope: 'release',
+          references: [
+            {
+              type: 'pull-request',
+              value: '#20607',
+            },
+            {
+              value: '6528e88aa',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: ['6d68236d467812aba4557a2bc7f667157de80fdb'],
+          affectedFiles: [
+            'packages/js/src/generators/release-version/release-version.spec.ts',
+            'packages/js/src/generators/release-version/release-version.ts',
+          ],
+        },
+        {
+          message:
+            'fix(release): do not update dependents when they already use "*" (#20607)',
+          shortHash: '6d68236d4',
+          author: {
+            name: 'James Henry',
+            email: 'jh@example.com',
+          },
+          body: '"\n\nM\tpackages/js/src/generators/release-version/release-version.spec.ts\nM\tpackages/js/src/generators/release-version/release-version.ts\n',
+          authors: [
+            {
+              name: 'James Henry',
+              email: 'jh@example.com',
+            },
+          ],
+          description: 'do not update dependents when they already use "*"',
+          type: 'fix',
+          scope: 'release',
+          references: [
+            {
+              type: 'pull-request',
+              value: '#20607',
+            },
+            {
+              value: '6d68236d4',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: [],
+          affectedFiles: [
+            'packages/js/src/generators/release-version/release-version.spec.ts',
+            'packages/js/src/generators/release-version/release-version.ts',
+          ],
+        },
+      ];
+
+      const markdown = await defaultChangelogRenderer({
+        projectGraph,
+        commits: commitsWithRevertAndOriginal,
+        releaseVersion: 'v1.1.0',
+        project: null,
+        entryWhenNoChanges: false,
+        changelogRenderOptions: {
+          includeAuthors: true,
+        },
+      });
+
+      expect(markdown).toMatchInlineSnapshot(`""`);
     });
   });
 });
