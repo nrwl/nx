@@ -7,7 +7,6 @@ export * from './lib/migrate';
 export * from './lib/migrations-and-code-generation';
 export * from './lib/monorepo-styles';
 export * from './lib/newsletter';
-export * from './lib/nx-is-fast';
 export * from './lib/nx-statistics';
 export * from './lib/nx-with-ci';
 export * from './lib/testimonials';
