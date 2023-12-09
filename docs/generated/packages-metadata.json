@@ -72,6 +72,15 @@
         "type": "executor"
       },
       {
+        "description": "Builds an application with esbuild with support for incremental builds. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "file": "generated/packages/angular/executors/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/angular/src/executors/application/schema.json",
+        "path": "angular/executors/application",
+        "type": "executor"
+      },
+      {
         "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
         "file": "generated/packages/angular/executors/webpack-browser.json",
         "hidden": false,
@@ -407,7 +416,7 @@
     "source": "/packages/create-nx-plugin/src"
   },
   {
-    "description": "Smart, Fast and Extensible Build System",
+    "description": "Smart Monorepos · Fast CI",
     "documents": [],
     "executors": [],
     "generators": [],

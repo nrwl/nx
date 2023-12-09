@@ -354,6 +354,7 @@
                 {
                   "name": "Nx and Turborepo",
                   "id": "turbo-and-nx",
+                  "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
                   "file": "shared/guides/turbo-and-nx"
                 },
                 {
@@ -1702,16 +1703,22 @@
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
             {
-              "name": "Reduce Waste in CI",
+              "name": "The Building Blocks of Fast CI",
+              "tags": [],
+              "id": "building-blocks-fast-ci",
+              "file": "nx-cloud/concepts/building-blocks-fast-ci"
+            },
+            {
+              "name": "Reduce Wasted Time in CI",
               "tags": [],
               "id": "reduce-waste",
               "file": "nx-cloud/concepts/reduce-waste"
             },
             {
-              "name": "Improve Worst Case CI Times",
+              "name": "Parallelization and Distribution",
               "tags": ["distribute-task-execution"],
-              "id": "dte",
-              "file": "shared/concepts/improve-worst-case-ci-times"
+              "id": "parallelization-distribution",
+              "file": "nx-cloud/concepts/parallelization-distribution"
             },
             {
               "name": "Cache Security",

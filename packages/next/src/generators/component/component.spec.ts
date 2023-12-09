@@ -88,4 +88,15 @@ describe('component', () => {
     expect(tree.exists('my-lib/src/foo/hello.spec.tsx')).toBeTruthy();
     expect(tree.exists('my-lib/src/foo/hello.module.css')).toBeTruthy();
   });
+
+  it('should work with directory as a part of the component name', async () => {
+    await componentGenerator(tree, {
+      name: `${libName}/src/btn/btn`,
+      project: appName,
+      style: 'css',
+      nameAndDirectoryFormat: 'as-provided',
+    });
+
+    expect(tree.exists(`${libName}/src/btn/btn.tsx`)).toBeTruthy();
+  });
 });

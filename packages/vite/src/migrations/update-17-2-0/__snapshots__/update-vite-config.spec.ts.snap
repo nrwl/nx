@@ -10,6 +10,10 @@ export default defineConfig({
   root: __dirname,
   build: {
     outDir: '../../dist/apps/demo',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
   cacheDir: '../../node_modules/.vite/demo',
   server: {
@@ -39,6 +43,7 @@ export default defineConfig({
   // },
 
   test: {
+    reporters: ['default'],
     coverage: {
       reportsDirectory: '../../coverage/apps/demo',
       provider: 'v8',
@@ -82,10 +87,13 @@ export default defineConfig({
 
   build: {
     outDir: '../dist/demo2',
+    reportCompressedSize: true,
+    commonjsOptions: { transformMixedEsModules: true },
     someProperty: 'someValue',
   },
 
   test: {
+    reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/demo2',
       provider: 'v8',
@@ -136,10 +144,13 @@ export default defineConfig({
 
   build: {
     outDir: '../dist/demo3',
+    reportCompressedSize: true,
+    commonjsOptions: { transformMixedEsModules: true },
     someProperty: 'someValue',
   },
 
   test: {
+    reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/demo3',
       provider: 'v8',

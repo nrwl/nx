@@ -504,6 +504,10 @@ export function createOrEditViteConfig(
       // See: https://vitejs.dev/guide/build.html#library-mode
       build: {
         outDir: '${offsetFromRoot(projectRoot)}dist/${projectRoot}',
+        reportCompressedSize: true,
+        commonjsOptions: {
+          transformMixedEsModules: true,
+        },
         lib: {
           // Could also be a dictionary or array of multiple entry points.
           entry: 'src/index.ts',
@@ -521,6 +525,10 @@ export function createOrEditViteConfig(
     : `
     build: {
       outDir: '${offsetFromRoot(projectRoot)}dist/${projectRoot}',
+      reportCompressedSize: true,
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
     },
     `;
 
@@ -558,6 +566,7 @@ export function createOrEditViteConfig(
         ? `includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],`
         : ''
     }
+    reporters: ['default'],
     coverage: {
       reportsDirectory: '${offsetFromRoot(projectRoot)}coverage/${projectRoot}',
       provider: ${
@@ -812,9 +821,17 @@ function handleViteConfigFileExists(
           external: options.rollupOptionsExternal ?? [],
         },
         outDir: `${offsetFromRoot}dist/${projectRoot}`,
+        reportCompressedSize: true,
+        commonjsOptions: {
+          transformMixedEsModules: true,
+        },
       }
     : {
         outDir: `${offsetFromRoot}dist/${projectRoot}`,
+        reportCompressedSize: true,
+        commonjsOptions: {
+          transformMixedEsModules: true,
+        },
       };
 
   const testOptionObject = {
@@ -824,6 +841,7 @@ function handleViteConfigFileExists(
     },
     environment: options.testEnvironment ?? 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
     coverage: {
       reportsDirectory: `${offsetFromRoot}coverage/${projectRoot}`,
       provider: `${options.coverageProvider ?? 'v8'}`,

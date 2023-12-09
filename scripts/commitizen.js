@@ -20,6 +20,7 @@ const scopes = [
   { value: 'react',         name: 'react:           anything React specific' },
   { value: 'react-native',  name: 'react-native:    anything React Native specific' },
   { value: 'expo',          name: 'expo:            anything Expo specific' },
+  { value: 'release',       name: 'release:         anything related to nx release' },
   { value: 'repo',          name: 'repo:            anything related to managing the repo itself' },
   { value: 'storybook',     name: 'storybook:       anything Storybook specific' },
   { value: 'testing',       name: 'testing:         anything testing specific (e.g. jest or cypress)' },

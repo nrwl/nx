@@ -1,16 +1,24 @@
-import type { BuilderOutput } from '@angular-devkit/architect';
-import { readCachedProjectGraph, type ExecutorContext } from '@nx/devkit';
+import { stripIndents, type ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import type { OutputFile } from 'esbuild';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
+import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
+import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import { loadPlugins } from '../utilities/esbuild-extensions';
-import { createTmpTsConfigForBuildableLibs } from './lib/buildable-libs';
 import type { EsBuildSchema } from './schema';
 
 export default async function* esbuildExecutor(
   options: EsBuildSchema,
   context: ExecutorContext
 ) {
+  if (options.plugins) {
+    const { major: angularMajorVersion, version: angularVersion } =
+      getInstalledAngularVersionInfo();
+    if (angularMajorVersion < 17) {
+      throw new Error(stripIndents`The "plugins" option is only supported in Angular >= 17.0.0. You are currently using "${angularVersion}".
+        You can resolve this error by removing the "plugins" option or by migrating to Angular 17.0.0.`);
+    }
+  }
+
   options.buildLibsFromSource ??= true;
 
   const {
@@ -20,15 +28,12 @@ export default async function* esbuildExecutor(
   } = options;
 
   let dependencies: DependentBuildableProjectNode[];
-  let projectGraph = context.projectGraph;
 
   if (!buildLibsFromSource) {
-    projectGraph = projectGraph ?? readCachedProjectGraph();
     const { tsConfigPath, dependencies: foundDependencies } =
       createTmpTsConfigForBuildableLibs(
         delegateExecutorOptions.tsConfig,
-        context,
-        { projectGraph }
+        context
       );
     dependencies = foundDependencies;
     delegateExecutorOptions.tsConfig = tsConfigPath;
@@ -56,10 +61,5 @@ export default async function* esbuildExecutor(
     builderContext,
     /* infrastructureSettings */ undefined,
     plugins
-  ) as AsyncIterable<
-    BuilderOutput & {
-      outputFiles?: OutputFile[];
-      assetFiles?: { source: string; destination: string }[];
-    }
-  >;
+  );
 }

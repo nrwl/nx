@@ -94,6 +94,6 @@ describe('Next.js Webpack', () => {
     expect(() => {
       runCLI(`build ${appName}`);
     }).not.toThrow();
-    checkFilesExist(`apps/${appName}/.next/build-manifest.json`);
+    checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
   }, 300_000);
 });

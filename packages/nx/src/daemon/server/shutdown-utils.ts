@@ -99,6 +99,6 @@ export async function respondWithErrorAndExit(
 
   error.message = `${error.message}\n\nBecause of the error the Nx daemon process has exited. The next Nx command is going to restart the daemon process.\nIf the error persists, please run "nx reset".`;
 
-  await respondToClient(socket, serializeResult(error, null), null);
+  await respondToClient(socket, serializeResult(error, null, null), null);
   process.exit(1);
 }

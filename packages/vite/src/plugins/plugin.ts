@@ -2,22 +2,21 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
-  TargetConfiguration,
   detectPackageManager,
   joinPathFragments,
   readJsonFile,
+  TargetConfiguration,
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, isAbsolute, join, relative, resolve } from 'path';
-
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
+import { dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { UserConfig, loadConfigFromFile } from 'vite';
+import { loadConfigFromFile, UserConfig } from 'vite';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
+
 export interface VitePluginOptions {
   buildTargetName?: string;
   testTargetName?: string;
@@ -102,8 +101,8 @@ async function buildViteTargets(
   );
 
   const { buildOutputs, testOutputs } = getOutputs(
-    projectRoot,
-    viteConfig?.config
+    viteConfig?.config,
+    projectRoot
   );
 
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -111,10 +110,9 @@ async function buildViteTargets(
   const targets: Record<string, TargetConfiguration> = {};
 
   targets[options.buildTargetName] = await buildTarget(
-    context,
+    options.buildTargetName,
     namedInputs,
     buildOutputs,
-    options,
     projectRoot
   );
 
@@ -123,10 +121,8 @@ async function buildViteTargets(
   targets[options.previewTargetName] = previewTarget(projectRoot);
 
   targets[options.testTargetName] = await testTarget(
-    context,
     namedInputs,
     testOutputs,
-    options,
     projectRoot
   );
 
@@ -136,46 +132,28 @@ async function buildViteTargets(
 }
 
 async function buildTarget(
-  context: CreateNodesContext,
+  buildTargetName: string,
   namedInputs: {
     [inputName: string]: any[];
   },
   outputs: string[],
-  options: VitePluginOptions,
   projectRoot: string
 ) {
-  const targetDefaults = readTargetDefaultsForTarget(
-    options.buildTargetName,
-    context.nxJsonConfiguration.targetDefaults
-  );
-
-  const targetConfig: TargetConfiguration = {
+  return {
     command: `vite build`,
-    options: {
-      cwd: joinPathFragments(projectRoot),
-    },
-  };
-
-  if (targetDefaults?.outputs === undefined) {
-    targetConfig.outputs = outputs;
-  }
-
-  if (targetDefaults?.cache === undefined) {
-    targetConfig.cache = true;
-  }
-
-  if (targetDefaults?.inputs === undefined) {
-    targetConfig.inputs = [
+    options: { cwd: joinPathFragments(projectRoot) },
+    cache: true,
+    dependsOn: [`^${buildTargetName}`],
+    inputs: [
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
       {
         externalDependencies: ['vite'],
       },
-    ];
-  }
-
-  return targetConfig;
+    ],
+    outputs,
+  };
 }
 
 function serveTarget(projectRoot: string) {
@@ -201,45 +179,26 @@ function previewTarget(projectRoot: string) {
 }
 
 async function testTarget(
-  context: CreateNodesContext,
   namedInputs: {
     [inputName: string]: any[];
   },
   outputs: string[],
-  options: VitePluginOptions,
   projectRoot: string
 ) {
-  const targetDefaults = readTargetDefaultsForTarget(
-    options.testTargetName,
-    context.nxJsonConfiguration.targetDefaults
-  );
-
-  const targetConfig: TargetConfiguration = {
+  return {
     command: `vitest run`,
-    options: {
-      cwd: joinPathFragments(projectRoot),
-    },
-  };
-
-  if (targetDefaults?.outputs === undefined) {
-    targetConfig.outputs = outputs;
-  }
-
-  if (targetDefaults?.cache === undefined) {
-    targetConfig.cache = true;
-  }
-
-  if (targetDefaults?.inputs === undefined) {
-    targetConfig.inputs = [
+    options: { cwd: joinPathFragments(projectRoot) },
+    cache: true,
+    inputs: [
       ...('production' in namedInputs
-        ? ['production', '^production']
+        ? ['default', '^production']
         : ['default', '^default']),
       {
         externalDependencies: ['vitest'],
       },
-    ];
-  }
-  return targetConfig;
+    ],
+    outputs,
+  };
 }
 
 function serveStaticTarget(options: VitePluginOptions) {
@@ -254,35 +213,42 @@ function serveStaticTarget(options: VitePluginOptions) {
 }
 
 function getOutputs(
-  projectRoot: string,
-  viteConfig: UserConfig
+  viteConfig: UserConfig,
+  projectRoot: string
 ): {
   buildOutputs: string[];
   testOutputs: string[];
 } {
   const { build, test } = viteConfig;
-  const buildOutputs = ['{options.outputPath}'];
-  const testOutputs = ['{options.reportsDirectory}'];
 
-  function getOutput(path: string, projectRoot: string): string {
-    if (path.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, path));
-    } else if (isAbsolute(resolve(path))) {
-      return `{workspaceRoot}/${relative(workspaceRoot, path)}`;
+  const buildOutputPath =
+    normalizeOutputPath(build?.outDir, projectRoot) ??
+    '{workspaceRoot}/dist/{projectRoot}';
+
+  const reportsDirectoryPath =
+    normalizeOutputPath(test?.coverage?.reportsDirectory, projectRoot) ??
+    '{workspaceRoot}/coverage/{projectRoot}';
+
+  return {
+    buildOutputs: [buildOutputPath],
+    testOutputs: [reportsDirectoryPath],
+  };
+}
+
+function normalizeOutputPath(
+  outputPath: string | undefined,
+  projectRoot: string
+): string | undefined {
+  if (!outputPath) return undefined;
+  if (isAbsolute(outputPath)) {
+    return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+  } else {
+    if (outputPath.startsWith('..')) {
+      return join('{workspaceRoot}', join(projectRoot, outputPath));
     } else {
-      return join('{projectRoot}', path);
+      return outputPath;
     }
   }
-
-  if (build?.outDir) {
-    buildOutputs.push(getOutput(build.outDir, projectRoot));
-  }
-
-  if (test?.coverage?.reportsDirectory) {
-    testOutputs.push(getOutput(test.coverage.reportsDirectory, projectRoot));
-  }
-
-  return { buildOutputs, testOutputs };
 }
 
 function normalizeOptions(options: VitePluginOptions): VitePluginOptions {

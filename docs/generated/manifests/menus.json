@@ -5706,7 +5706,15 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Reduce Waste in CI",
+            "name": "The Building Blocks of Fast CI",
+            "path": "/ci/concepts/building-blocks-fast-ci",
+            "id": "building-blocks-fast-ci",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Reduce Wasted Time in CI",
             "path": "/ci/concepts/reduce-waste",
             "id": "reduce-waste",
             "isExternal": false,
@@ -5714,9 +5722,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Improve Worst Case CI Times",
-            "path": "/ci/concepts/dte",
-            "id": "dte",
+            "name": "Parallelization and Distribution",
+            "path": "/ci/concepts/parallelization-distribution",
+            "id": "parallelization-distribution",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5733,7 +5741,15 @@
         "disableCollapsible": false
       },
       {
-        "name": "Reduce Waste in CI",
+        "name": "The Building Blocks of Fast CI",
+        "path": "/ci/concepts/building-blocks-fast-ci",
+        "id": "building-blocks-fast-ci",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Reduce Wasted Time in CI",
         "path": "/ci/concepts/reduce-waste",
         "id": "reduce-waste",
         "isExternal": false,
@@ -5741,9 +5757,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Improve Worst Case CI Times",
-        "path": "/ci/concepts/dte",
-        "id": "dte",
+        "name": "Parallelization and Distribution",
+        "path": "/ci/concepts/parallelization-distribution",
+        "id": "parallelization-distribution",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6548,6 +6564,14 @@
                 "id": "module-federation-dev-server",
                 "path": "/nx-api/angular/executors/module-federation-dev-server",
                 "name": "module-federation-dev-server",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/nx-api/angular/executors/application",
+                "name": "application",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

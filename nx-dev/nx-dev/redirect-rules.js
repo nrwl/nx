@@ -256,7 +256,7 @@ const diataxis = {
   '/ci/monorepo-ci-gitlab': '/recipes/ci/monorepo-ci-gitlab',
   '/ci/monorepo-ci-bitbucket-pipelines':
     '/recipes/ci/monorepo-ci-bitbucket-pipelines',
-  '/ci/distributed-builds': '/concepts/dte', // 👀
+  '/ci/distributed-builds': '/nx-cloud/concepts/parallelization-distribution', // 👀
   '/ci/incremental-builds': '/concepts/more-concepts/incremental-builds',
   '/ci/setup-incremental-builds-angular':
     '/recipes/other/setup-incremental-builds-angular',
@@ -441,7 +441,8 @@ const nxCloudUrls = {
     '/nx-cloud/recipes/on-premise/auth-saml-managed',
   '/nx-cloud/private-cloud/advanced-config':
     '/nx-cloud/recipes/on-premise/advanced-config',
-  '/concepts/dte': '/ci/concepts/dte',
+  '/concepts/dte': '/ci/concepts/parallelization-distribution',
+  '/nx-cloud/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/intro/nx-cloud-workflows': '/ci/features/nx-cloud-workflows',
   '/nx-cloud/account': '/ci/recipes/security',
   '/nx-cloud/account/google-auth': '/ci/recipes/security/google-auth',
@@ -450,7 +451,8 @@ const nxCloudUrls = {
   '/nx-cloud/concepts/scenarios': '/ci/concepts/cache-security',
   '/nx-cloud/account/encryption': '/ci/recipes/security/encryption',
   '/nx-cloud/concepts/encryption': '/ci/recipes/security/encryption',
-  '/nx-cloud/features/nx-cloud-workflows': '/ci/concepts/nx-agents',
+  '/nx-cloud/features/nx-cloud-workflows': '/ci/features/nx-agents',
+  '/ci': '/ci/intro/ci-with-nx',
   '/nx-cloud/:path*': '/ci/:path*',
 };
 

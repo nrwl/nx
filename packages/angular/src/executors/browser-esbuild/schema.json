@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for Nx ESBuild Executor",
   "description": "Nx ESBuild Executor supporting Incremental Builds.",
+  "examplesFile": "../../../docs/browser-esbuild-examples.md",
   "outputCapture": "direct-nodejs",
   "type": "object",
   "properties": {
@@ -443,7 +444,7 @@
       "default": true
     },
     "plugins": {
-      "description": "A list of ESBuild plugins.",
+      "description": "A list of ESBuild plugins. _Note: this is only supported in Angular versions >= 17.0.0_.",
       "type": "array",
       "items": {
         "oneOf": [

@@ -2,6 +2,7 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
+  targetToTargetString,
   workspaceLayout,
 } from '@nx/devkit';
 import exportApp from 'next/dist/export';
@@ -53,10 +54,12 @@ export default async function exportExecutor(
     dependencies = result.dependencies;
   }
 
+  // Returns { project: ProjectGraphNode; target: string; configuration?: string;}
   const buildTarget = parseTargetString(options.buildTarget, context);
 
   try {
-    const args = getBuildTargetCommand(options);
+    const buildTargetName = targetToTargetString(buildTarget);
+    const args = getBuildTargetCommand(buildTargetName);
     execFileSync(pmCmd, args, {
       stdio: [0, 1, 2],
     });
@@ -88,7 +91,7 @@ export default async function exportExecutor(
   return { success: true };
 }
 
-function getBuildTargetCommand(options: NextExportBuilderOptions) {
-  const cmd = ['nx', 'run', options.buildTarget];
+function getBuildTargetCommand(buildTarget: string) {
+  const cmd = ['nx', 'run', buildTarget];
   return cmd;
 }

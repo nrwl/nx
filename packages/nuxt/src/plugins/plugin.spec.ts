@@ -2,12 +2,20 @@ import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
+jest.mock('vite', () => ({
+  loadConfigFromFile: jest.fn().mockImplementation(() => {
+    return Promise.resolve({
+      path: 'vite.config.ts',
+      config: {},
+      dependencies: [],
+    });
+  }),
+}));
+
 jest.mock('@nuxt/kit', () => ({
   loadNuxtConfig: jest.fn().mockImplementation(() => {
     return Promise.resolve({
-      path: 'nuxt.config.ts',
-      config: {},
-      dependencies: [],
+      buildDir: '../dist/my-app/.nuxt',
     });
   }),
 }));
@@ -15,20 +23,25 @@ jest.mock('@nuxt/kit', () => ({
 jest.mock('../utils/executor-utils', () => ({
   loadNuxtKitDynamicImport: jest.fn().mockResolvedValue({
     loadNuxtConfig: jest.fn().mockResolvedValue({
-      path: 'nuxt.config.ts',
-      config: {},
-      dependencies: [],
+      buildDir: '../dist/my-app/.nuxt',
     }),
   }),
 }));
-
 describe('@nx/nuxt/plugin', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
+
   describe('root project', () => {
     beforeEach(async () => {
       context = {
         nxJsonConfiguration: {
+          // These defaults should be overridden by plugin
+          targetDefaults: {
+            build: {
+              cache: false,
+              inputs: ['foo', '^foo'],
+            },
+          },
           namedInputs: {
             default: ['{projectRoot}/**/*'],
             production: ['!{projectRoot}/**/*.spec.ts'],

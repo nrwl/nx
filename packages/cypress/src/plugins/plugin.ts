@@ -14,7 +14,6 @@ import { registerTsProject } from '@nx/js/src/internal';
 import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 
 import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -139,6 +138,7 @@ function getOutputs(
 
   return outputs;
 }
+
 function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
@@ -164,32 +164,11 @@ function buildCypressTargets(
   if ('e2e' in cypressConfig) {
     targets[options.targetName] = {
       command: `cypress run --config-file ${relativeConfigPath} --e2e`,
-      options: {
-        cwd: projectRoot,
-      },
+      options: { cwd: projectRoot },
+      cache: true,
+      inputs: getInputs(namedInputs),
+      outputs: getOutputs(projectRoot, cypressConfig, 'e2e'),
     };
-
-    const e2eTargetDefaults = readTargetDefaultsForTarget(
-      options.targetName,
-      context.nxJsonConfiguration.targetDefaults,
-      'run-commands'
-    );
-
-    if (e2eTargetDefaults?.cache === undefined) {
-      targets[options.targetName].cache = true;
-    }
-
-    if (e2eTargetDefaults?.inputs === undefined) {
-      targets[options.targetName].inputs = getInputs(namedInputs);
-    }
-
-    if (e2eTargetDefaults?.outputs === undefined) {
-      targets[options.targetName].outputs = getOutputs(
-        projectRoot,
-        cypressConfig,
-        'e2e'
-      );
-    }
 
     if (webServerCommands?.default) {
       delete webServerCommands.default;
@@ -258,36 +237,14 @@ function buildCypressTargets(
   }
 
   if ('component' in cypressConfig) {
-    const componentTestingTargetDefaults = readTargetDefaultsForTarget(
-      options.componentTestingTargetName,
-      context.nxJsonConfiguration.targetDefaults,
-      'nx:run-commands'
-    );
-
     // This will not override the e2e target if it is the same
     targets[options.componentTestingTargetName] ??= {
       command: `cypress open --config-file ${relativeConfigPath} --component`,
-      options: {
-        cwd: projectRoot,
-      },
+      options: { cwd: projectRoot },
+      cache: true,
+      inputs: getInputs(namedInputs),
+      outputs: getOutputs(projectRoot, cypressConfig, 'component'),
     };
-
-    if (componentTestingTargetDefaults?.cache === undefined) {
-      targets[options.componentTestingTargetName].cache = true;
-    }
-
-    if (componentTestingTargetDefaults?.inputs === undefined) {
-      targets[options.componentTestingTargetName].inputs =
-        getInputs(namedInputs);
-    }
-
-    if (componentTestingTargetDefaults?.outputs === undefined) {
-      targets[options.componentTestingTargetName].outputs = getOutputs(
-        projectRoot,
-        cypressConfig,
-        'component'
-      );
-    }
   }
 
   return targets;
@@ -306,15 +263,15 @@ function getCypressConfig(
     if (tsConfigPath) {
       const unregisterTsProject = registerTsProject(tsConfigPath);
       try {
-        module = require(resolvedPath);
+        module = load(resolvedPath);
       } finally {
         unregisterTsProject();
       }
     } else {
-      module = require(resolvedPath);
+      module = load(resolvedPath);
     }
   } else {
-    module = require(resolvedPath);
+    module = load(resolvedPath);
   }
   return module.default ?? module;
 }
@@ -326,6 +283,7 @@ function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
   options.ciTargetName ??= 'e2e-ci';
   return options;
 }
+
 function getInputs(
   namedInputs: NxJsonConfiguration['namedInputs']
 ): TargetConfiguration['inputs'] {
@@ -338,4 +296,19 @@ function getInputs(
       externalDependencies: ['cypress'],
     },
   ];
+}
+
+/**
+ * Load the module after ensuring that the require cache is cleared.
+ */
+function load(path: string): any {
+  // Clear cache if the path is in the cache
+  if (require.cache[path]) {
+    for (const k of Object.keys(require.cache)) {
+      delete require.cache[k];
+    }
+  }
+
+  // Then require
+  return require(path);
 }
