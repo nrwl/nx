@@ -70,10 +70,13 @@ description: "${command.description}"
       templateLines.push(h2('Subcommands'));
       for (const subcommand of command.subcommands) {
         templateLines.push(
-          h3(subcommand.name),
+          h3(subcommand.name.replace('$0', 'Base Command Options')),
           formatDescription(subcommand.description, subcommand.deprecated),
           codeBlock(
-            `nx ${command.commandString} ${subcommand.commandString}`,
+            `nx ${command.commandString} ${subcommand.commandString.replace(
+              '$0 ',
+              ''
+            )}`,
             'shell'
           ),
           generateOptionsMarkdown(subcommand, 2)

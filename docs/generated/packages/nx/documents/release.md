@@ -15,7 +15,7 @@ nx release
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
 
-## Options
+## Shared Options
 
 ### dry-run
 
@@ -57,12 +57,12 @@ Show version number
 
 ## Subcommands
 
-### $0
+### Base Command Options
 
 Create a version and release for the workspace, generate a changelog, and optionally publish the packages
 
 ```shell
-nx release $0 [specifier]
+nx release [specifier]
 ```
 
 #### Options
