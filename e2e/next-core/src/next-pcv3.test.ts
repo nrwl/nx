@@ -7,6 +7,7 @@ import {
   runE2ETests,
   directoryExists,
   readJson,
+  updateFile,
 } from 'e2e/utils';
 
 describe('@nx/next/plugin', () => {
@@ -54,6 +55,26 @@ describe('@nx/next/plugin', () => {
   }, 200_000);
 
   it('should serve the app', async () => {
+    // update cypress config to serve on a different port to avoid port conflicts.
+    updateFile(`${appName}-e2e/cypress.config.ts`, (_) => {
+      return `
+      import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+      import { defineConfig } from 'cypress';
+
+      export default defineConfig({
+        e2e: {
+          ...nxE2EPreset(__filename, {
+            cypressDir: 'src',
+            webServerCommands: { default: 'nx run ${appName}:start --port=4000' },
+            webServerConfig: { timeout: 20_000 },
+          }),
+          baseUrl: 'http://localhost:4000',
+        },
+      });
+
+      `;
+    });
     if (runE2ETests()) {
       const e2eResult = runCLI(`run ${appName}-e2e:e2e --verbose`);
 
