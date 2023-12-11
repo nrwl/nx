@@ -1943,9 +1943,9 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Manually set up your project to use Vite.js",
-                "path": "/recipes/vite/set-up-vite-manually",
-                "id": "set-up-vite-manually",
+                "name": "Configure Vite on your Nx workspace",
+                "path": "/recipes/vite/configure-vite",
+                "id": "configure-vite",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3382,9 +3382,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Manually set up your project to use Vite.js",
-            "path": "/recipes/vite/set-up-vite-manually",
-            "id": "set-up-vite-manually",
+            "name": "Configure Vite on your Nx workspace",
+            "path": "/recipes/vite/configure-vite",
+            "id": "configure-vite",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3393,9 +3393,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Manually set up your project to use Vite.js",
-        "path": "/recipes/vite/set-up-vite-manually",
-        "id": "set-up-vite-manually",
+        "name": "Configure Vite on your Nx workspace",
+        "path": "/recipes/vite/configure-vite",
+        "id": "configure-vite",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
