@@ -139,7 +139,7 @@
     - [Next](/recipes/next)
       - [How to configure Next.js plugins](/recipes/next/next-config-setup)
     - [Vite](/recipes/vite)
-      - [Manually set up your project to use Vite.js](/recipes/vite/set-up-vite-manually)
+      - [Configure Vite on your Nx workspace](/recipes/vite/configure-vite)
     - [Webpack](/recipes/webpack)
       - [How to configure webpack on your Nx workspace](/recipes/webpack/webpack-config-setup)
       - [Webpack plugins](/recipes/webpack/webpack-plugins)
