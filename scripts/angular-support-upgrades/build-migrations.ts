@@ -43,6 +43,7 @@ async function addMigrationPackageGroup(
         '@angular/material',
         '@angular/cdk',
         '@angular/ssr',
+        '@angular/pwa',
       ].includes(pkgName)
     ) {
       continue;
