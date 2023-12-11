@@ -338,6 +338,15 @@
       },
       "description": "Update the @angular/cli package version to ~17.1.0-next.1.",
       "factory": "./src/migrations/update-17-3-0/update-angular-cli"
+    },
+    "add-browser-sync-dependency": {
+      "cli": "nx",
+      "version": "17.3.0-beta.0",
+      "requires": {
+        "@angular/core": ">=17.1.0-next.3"
+      },
+      "description": "Add 'browser-sync' as dev dependency when '@angular-devkit/build-angular:ssr-dev-server' is used, as it is no longer a direct dependency of '@angular-devkit/build-angular'.",
+      "factory": "./src/migrations/update-17-3-0/add-browser-sync-dependency"
     }
   },
   "packageJsonUpdates": {
@@ -1549,6 +1558,10 @@
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
+          "version": "~17.1.0-next.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@angular/pwa": {
           "version": "~17.1.0-next.1",
           "alwaysAddToPackageJson": false
         },
