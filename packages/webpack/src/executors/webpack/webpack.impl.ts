@@ -56,7 +56,11 @@ async function getWebpackConfigs(
     ? {}
     : composePlugins(withNx(options), withWeb(options));
 
-  if (isNxWebpackComposablePlugin(userDefinedWebpackConfig)) {
+  if (
+    typeof userDefinedWebpackConfig === 'function' &&
+    isNxWebpackComposablePlugin(userDefinedWebpackConfig) &&
+    !options.standardWebpackConfigFunction
+  ) {
     // Old behavior, call the Nx-specific webpack config function that user exports
     return await userDefinedWebpackConfig(config, {
       options,
