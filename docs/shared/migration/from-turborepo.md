@@ -34,7 +34,7 @@ This process adds `nx` to your `package.json` at the root of your workspace:
   ...
   "devDependencies": {
     ...
-    "nx": "16.8.0"
+    "nx": "17.2.0"
   }
 }
 ```
