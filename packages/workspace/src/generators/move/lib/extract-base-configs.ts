@@ -1,4 +1,9 @@
-import { joinPathFragments, ProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  getProjects,
+  joinPathFragments,
+  ProjectConfiguration,
+  Tree,
+} from '@nx/devkit';
 
 export function maybeExtractTsConfigBase(tree: Tree): void {
   let extractTsConfigBase: any;
@@ -22,27 +27,19 @@ export async function maybeExtractJestConfigBase(tree: Tree): Promise<void> {
   await jestInitGenerator(tree, {});
 }
 
-export function maybeExtractEslintConfigIfRootProject(
+export function maybeMigrateEslintConfigIfRootProject(
   tree: Tree,
   rootProject: ProjectConfiguration
 ): void {
-  if (rootProject.root !== '.') return;
-  if (tree.exists('.eslintrc.base.json')) return;
-  let migrateConfigToMonorepoStyle: any;
-  try {
-    migrateConfigToMonorepoStyle = require('@nx/' +
-      'eslint/src/generators/init/init-migration').migrateConfigToMonorepoStyle;
-  } catch {
-    // eslint not installed
-  }
-  // Only need to handle migrating the root rootProject.
-  // If other libs/apps exist, then this migration is already done by `@nx/eslint:lint-rootProject` generator.
-  migrateConfigToMonorepoStyle?.(
-    [rootProject],
+  const { migrateConfigToMonorepoStyle } = require('@nx/' +
+    'eslint/src/generators/init/init-migration');
+  migrateConfigToMonorepoStyle(
+    getProjects(tree),
     tree,
     tree.exists(joinPathFragments(rootProject.root, 'jest.config.ts')) ||
       tree.exists(joinPathFragments(rootProject.root, 'jest.config.js'))
       ? 'jest'
-      : 'none'
+      : 'none',
+    true
   );
 }

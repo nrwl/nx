@@ -1,4 +1,4 @@
-import { readJson, Tree, updateJson } from '@nx/devkit';
+import { readJson, Tree, updateJson, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { moveGenerator } from './move';
 // nx-ignore-next-line
@@ -173,7 +173,18 @@ describe('move', () => {
     // Test that root configs are extracted
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
     expect(tree.exists('jest.config.ts')).toBeTruthy();
-    expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
+    expect(tree.exists('.eslintrc.base.json')).not.toBeTruthy();
+    expect(tree.exists('.eslintrc.json')).toBeTruthy();
+
+    // Test that eslint migration was done
+    expect(readJson(tree, 'my-lib/.eslintrc.json').extends)
+      .toMatchInlineSnapshot(`
+      [
+        "../.eslintrc.json",
+      ]
+    `);
+    expect(readJson(tree, 'my-lib/.eslintrc.json').plugins).not.toBeDefined();
+    expect(readJson(tree, '.eslintrc.json').plugins).toEqual(['@nx']);
   });
 
   it('should support moving standalone repos', async () => {
@@ -190,6 +201,8 @@ describe('move', () => {
       style: 'css',
       projectNameAndRootFormat: 'as-provided',
     });
+    expect(readJson(tree, '.eslintrc.json').plugins).toEqual(['@nx']);
+    expect(readJson(tree, 'e2e/.eslintrc.json').plugins).toEqual(['@nx']);
 
     // Test that this does not get moved
     tree.write('other-lib/index.ts', '');
@@ -200,6 +213,14 @@ describe('move', () => {
       destination: 'apps/react-app',
       projectNameAndRootFormat: 'as-provided',
     });
+
+    // expect both eslint configs to have been changed
+    expect(tree.exists('.eslintrc.json')).toBeDefined();
+    expect(
+      readJson(tree, 'apps/react-app/.eslintrc.json').plugins
+    ).toBeUndefined();
+    expect(readJson(tree, 'e2e/.eslintrc.json').plugins).toBeUndefined();
+
     await moveGenerator(tree, {
       projectName: 'e2e',
       updateImportPath: false,

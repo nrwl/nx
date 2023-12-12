@@ -3,10 +3,10 @@ import {
   names,
   offsetFromRoot,
   readJson,
-  Tree,
   updateJson,
 } from '@nx/devkit';
-import { Linter } from 'eslint';
+import type { Tree } from '@nx/devkit';
+import type { Linter } from 'eslint';
 import { useFlatConfig } from '../../utils/flat-config';
 import {
   addBlockToFlatConfigExport,

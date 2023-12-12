@@ -39,18 +39,21 @@ export function migrateConfigToMonorepoStyle(
       }
     );
     tree.write(
-      'eslint.base.config.js',
+      tree.exists('eslint.config.js')
+        ? 'eslint.base.config.js'
+        : 'eslint.config.js',
       getGlobalFlatEslintConfiguration(unitTestRunner)
     );
   } else {
+    const eslintFile = findEslintFile(tree, '.');
     writeJson(
       tree,
-      '.eslintrc.base.json',
+      eslintFile ? '.eslintrc.base.json' : '.eslintrc.json',
       getGlobalEsLintConfiguration(unitTestRunner)
     );
   }
 
-  // update extens in all projects' eslint configs
+  // update extends in all projects' eslint configs
   projects.forEach((project) => {
     const lintTarget = findLintTarget(project);
     if (lintTarget) {
@@ -76,6 +79,7 @@ export function findLintTarget(
 }
 
 function migrateEslintFile(projectEslintPath: string, tree: Tree) {
+  const baseFile = findEslintFile(tree);
   if (isEslintConfigSupported(tree)) {
     if (useFlatConfig(tree)) {
       let config = tree.read(projectEslintPath, 'utf-8');
@@ -85,7 +89,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
       config = addImportToFlatConfig(
         config,
         'baseConfig',
-        `${offsetFromRoot(dirname(projectEslintPath))}eslint.base.config.js`
+        `${offsetFromRoot(dirname(projectEslintPath))}${baseFile}`
       );
       config = addBlockToFlatConfigExport(
         config,
@@ -117,7 +121,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
         json.extends = json.extends || [];
         const pathToRootConfig = `${offsetFromRoot(
           dirname(projectEslintPath)
-        )}.eslintrc.base.json`;
+        )}${baseFile}`;
         if (json.extends.indexOf(pathToRootConfig) === -1) {
           json.extends.push(pathToRootConfig);
         }
