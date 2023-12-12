@@ -1,4 +1,5 @@
 import { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import type { Linter } from '@nx/eslint';
 
 export interface NxRemixGeneratorSchema {
   name: string;
@@ -6,6 +7,7 @@ export interface NxRemixGeneratorSchema {
   js?: boolean;
   directory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
+  linter?: Linter;
   unitTestRunner?: 'vitest' | 'jest' | 'none';
   e2eTestRunner?: 'cypress' | 'none';
   skipFormat?: boolean;

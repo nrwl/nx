@@ -14,7 +14,7 @@ describe('remix e2e', () => {
   let proj: string;
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/remix'] });
   });
 
   afterAll(() => {

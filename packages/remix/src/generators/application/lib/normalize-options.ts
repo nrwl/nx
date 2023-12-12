@@ -1,6 +1,7 @@
 import { type Tree } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { type NxRemixGeneratorSchema } from '../schema';
+import { Linter } from '@nx/eslint';
 
 export interface NormalizedSchema extends NxRemixGeneratorSchema {
   projectName: string;
@@ -34,6 +35,7 @@ export async function normalizeOptions(
 
   return {
     ...options,
+    linter: options.linter ?? Linter.EsLint,
     projectName,
     projectRoot,
     e2eProjectName,

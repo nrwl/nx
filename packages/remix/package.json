@@ -31,10 +31,6 @@
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/react": "file:../react",
-    "@nx/vite": "file:../vite",
-    "@nx/jest": "file:../jest",
-    "@nx/cypress": "file:../cypress",
-    "@nx/storybook": "file:../storybook",
     "tslib": "^2.3.1",
     "@phenomnomnominal/tsquery": "~5.0.1"
   },

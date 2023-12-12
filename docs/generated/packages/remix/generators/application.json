@@ -29,6 +29,12 @@
         "type": "string",
         "enum": ["as-provided", "derived"]
       },
+      "linter": {
+        "description": "The tool to use for running lint checks.",
+        "type": "string",
+        "enum": ["eslint", "none"],
+        "default": "eslint"
+      },
       "unitTestRunner": {
         "type": "string",
         "enum": ["vitest", "jest", "none"],

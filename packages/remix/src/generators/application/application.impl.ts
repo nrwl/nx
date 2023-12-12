@@ -1,7 +1,7 @@
-import { configurationGenerator } from '@nx/cypress';
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -34,8 +34,6 @@ import {
   updateUnitTestConfig,
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
-import { vitestGenerator } from '@nx/vite';
-import { configurationGenerator as jestConfigurationGenerator } from '@nx/jest';
 
 export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
   const options = await normalizeOptions(tree, _options);
@@ -139,6 +137,10 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
 
   if (options.unitTestRunner !== 'none') {
     if (options.unitTestRunner === 'vitest') {
+      const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
+        '@nx/vite',
+        getPackageVersion(tree, 'nx')
+      );
       const vitestTask = await vitestGenerator(tree, {
         uiFramework: 'react',
         project: options.projectName,
@@ -149,6 +151,11 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
       });
       tasks.push(vitestTask);
     } else {
+      const { configurationGenerator: jestConfigurationGenerator } =
+        ensurePackage<typeof import('@nx/jest')>(
+          '@nx/jest',
+          getPackageVersion(tree, 'nx')
+        );
       const jestTask = await jestConfigurationGenerator(tree, {
         project: options.projectName,
         setupFile: 'none',
@@ -174,6 +181,24 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
     tree.delete(
       joinPathFragments(options.projectRoot, `app/routes/_index.spec.tsx`)
     );
+  }
+
+  if (options.linter !== 'none') {
+    const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
+      '@nx/eslint',
+      getPackageVersion(tree, 'nx')
+    );
+    const eslintTask = await lintProjectGenerator(tree, {
+      linter: options.linter,
+      project: options.projectName,
+      tsConfigPaths: [
+        joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      skipFormat: true,
+      rootProject: options.rootProject,
+    });
+    tasks.push(eslintTask);
   }
 
   if (options.js) {
@@ -211,6 +236,9 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
   }
 
   if (options.e2eTestRunner === 'cypress') {
+    const { configurationGenerator } = ensurePackage<
+      typeof import('@nx/cypress')
+    >('@nx/cypress', getPackageVersion(tree, 'nx'));
     addFileServerTarget(tree, options, 'serve-static');
     addProjectConfiguration(tree, options.e2eProjectName, {
       projectType: 'application',
