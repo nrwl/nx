@@ -8,25 +8,22 @@ import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-optio
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 
 export default async function (tree: Tree) {
-  forEachExecutorOptions<WebpackExecutorOptions>(
-    tree,
-    '@nrwl/webpack:webpack',
-    (
-      options: WebpackExecutorOptions,
-      projectName,
-      targetName,
-      configurationName
-    ) => {
-      // Only handle webpack config for default configuration
-      if (configurationName) return;
+  const update = (
+    options: WebpackExecutorOptions,
+    projectName: string,
+    targetName: string,
+    configurationName: string
+  ) => {
+    // Only handle webpack config for default configuration
+    if (configurationName) return;
 
-      const projectConfiguration = readProjectConfiguration(tree, projectName);
+    const projectConfiguration = readProjectConfiguration(tree, projectName);
 
-      if (!options.webpackConfig && options.isolatedConfig !== false) {
-        options.webpackConfig = `${projectConfiguration.root}/webpack.config.js`;
-        tree.write(
-          options.webpackConfig,
-          `
+    if (!options.webpackConfig && options.isolatedConfig !== false) {
+      options.webpackConfig = `${projectConfiguration.root}/webpack.config.js`;
+      tree.write(
+        options.webpackConfig,
+        `
         const { composePlugins, withNx } = require('@nx/webpack');
 
         // Nx plugins for webpack.
@@ -36,12 +33,22 @@ export default async function (tree: Tree) {
           return config;
         });
         `
-        );
+      );
 
-        projectConfiguration.targets[targetName].options = options;
-        updateProjectConfiguration(tree, projectName, projectConfiguration);
-      }
+      projectConfiguration.targets[targetName].options = options;
+      updateProjectConfiguration(tree, projectName, projectConfiguration);
     }
+  };
+
+  forEachExecutorOptions<WebpackExecutorOptions>(
+    tree,
+    '@nx/webpack:webpack',
+    update
+  );
+  forEachExecutorOptions<WebpackExecutorOptions>(
+    tree,
+    '@nrwl/webpack:webpack',
+    update
   );
 
   await formatFiles(tree);

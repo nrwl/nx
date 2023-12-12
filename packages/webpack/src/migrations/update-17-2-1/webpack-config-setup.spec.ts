@@ -9,21 +9,27 @@ describe('17.2.1 migration (setup webpack.config file)', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should create webpack.config.js for projects that did not set webpackConfig', async () => {
-    addProjectConfiguration(tree, 'myapp', {
-      root: 'apps/myapp',
-      targets: {
-        build: {
-          executor: '@nrwl/webpack:webpack',
-          options: {},
+  it.each`
+    executor
+    ${'@nx/webpack:webpack'}
+    ${'@nrwl/webpack:webpack'}
+  `(
+    'should create webpack.config.js for projects that did not set webpackConfig',
+    async ({ executor }) => {
+      addProjectConfiguration(tree, 'myapp', {
+        root: 'apps/myapp',
+        targets: {
+          build: {
+            executor,
+            options: {},
+          },
         },
-      },
-    });
+      });
 
-    await webpackConfigSetup(tree);
+      await webpackConfigSetup(tree);
 
-    expect(tree.read('apps/myapp/webpack.config.js', 'utf-8'))
-      .toEqual(`const { composePlugins, withNx } = require('@nx/webpack');
+      expect(tree.read('apps/myapp/webpack.config.js', 'utf-8'))
+        .toEqual(`const { composePlugins, withNx } = require('@nx/webpack');
 
 // Nx plugins for webpack.
 module.exports = composePlugins(withNx(), (config) => {
@@ -32,7 +38,8 @@ module.exports = composePlugins(withNx(), (config) => {
   return config;
 });
 `);
-  });
+    }
+  );
 
   it('should not create webpack.config.js when webpackConfig is already set', async () => {
     tree.write(
