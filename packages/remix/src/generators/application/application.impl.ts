@@ -179,7 +179,7 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
     tasks.push(pkgInstallTask);
   } else {
     tree.delete(
-      joinPathFragments(options.projectRoot, `app/routes/_index.spec.tsx`)
+      joinPathFragments(options.projectRoot, `tests/routes/_index.spec.tsx`)
     );
   }
 

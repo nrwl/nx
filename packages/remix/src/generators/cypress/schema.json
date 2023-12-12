@@ -3,6 +3,7 @@
   "$id": "NxRemixCypress",
   "title": "",
   "type": "object",
+  "description": "Generate a Cypress e2e project for a given application.",
   "properties": {
     "project": {
       "type": "string",

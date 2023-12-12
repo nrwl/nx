@@ -3,6 +3,7 @@ import {
   joinPathFragments,
   stripIndents,
   type Tree,
+  workspaceRoot,
 } from '@nx/devkit';
 import {
   updateJestTestSetup,
@@ -37,10 +38,22 @@ export function updateUnitTestConfig(
       pathToViteConfig,
       './app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
     );
+    updateViteTestIncludes(
+      tree,
+      pathToViteConfig,
+      './tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
+    );
     updateViteTestSetup(tree, pathToViteConfig, './test-setup.ts');
   } else if (unitTestRunner === 'jest') {
     const pathToJestConfig = joinPathFragments(pathToRoot, 'jest.config.ts');
+    tree.rename('jest.preset.js', 'jest.preset.cjs');
     updateJestTestSetup(tree, pathToJestConfig, `<rootDir>/test-setup.ts`);
+    tree.write(
+      pathToJestConfig,
+      tree
+        .read(pathToJestConfig, 'utf-8')
+        .replace('jest.preset.js', 'jest.preset.cjs')
+    );
   }
 
   return addDependenciesToPackageJson(

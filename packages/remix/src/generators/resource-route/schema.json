@@ -3,6 +3,7 @@
   "$id": "NxRemixResourceRoute",
   "title": "Create a Resource Route",
   "type": "object",
+  "description": "Generate a resource route.",
   "examples": [
     {
       "command": "g resource-route 'path/to/page'",

@@ -6,6 +6,7 @@
     "$id": "Remix",
     "title": "",
     "type": "object",
+    "description": "Generate a Remix application in a standalone workspace. Can be used with `create-nx-workspace --preset=@nx/remix`.",
     "properties": {
       "tags": {
         "type": "string",

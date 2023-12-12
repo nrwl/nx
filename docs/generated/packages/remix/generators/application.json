@@ -5,6 +5,7 @@
     "$schema": "http://json-schema.org/schema",
     "$id": "NxRemixApplication",
     "title": "Create an Application",
+    "description": "Generate a new Remix application.",
     "type": "object",
     "properties": {
       "name": {

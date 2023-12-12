@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "data-loader",
   "type": "object",
+  "description": "Generate an loader for a given route.",
   "properties": {
     "path": {
       "type": "string",

@@ -22,6 +22,11 @@ describe('Remix Application', () => {
       expect(tree.read('remix.config.cjs', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app/root.tsx', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app/routes/_index.tsx', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('tests/routes/_index.spec.tsx', 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
     });
 
     describe(`--js`, () => {
@@ -62,6 +67,9 @@ describe('Remix Application', () => {
 
         expect(tree.read('remix.config.cjs', 'utf-8')).toMatchSnapshot();
         expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
+        expect(
+          tree.read('tests/routes/_index.spec.tsx', 'utf-8')
+        ).toMatchSnapshot();
         expect(tree.read('test-setup.ts', 'utf-8')).toMatchSnapshot();
       });
 
@@ -82,6 +90,10 @@ describe('Remix Application', () => {
         expect(tree.read('remix.config.cjs', 'utf-8')).toMatchSnapshot();
         expect(tree.read('jest.config.ts', 'utf-8')).toMatchSnapshot();
         expect(tree.read('test-setup.ts', 'utf-8')).toMatchSnapshot();
+        expect(
+          tree.read('tests/routes/_index.spec.tsx', 'utf-8')
+        ).toMatchSnapshot();
+        expect(tree.exists('jest.preset.cjs')).toBeTruthy();
       });
     });
 
@@ -298,6 +310,7 @@ function expectTargetsToBeCorrect(tree: Tree, projectRoot: string) {
     tree,
     joinPathFragments(projectRoot === '.' ? '/' : projectRoot, 'project.json')
   );
+  expect(targets.lint).toBeTruthy();
   expect(targets.build).toBeTruthy();
   expect(targets.build.executor).toEqual('@nx/remix:build');
   expect(targets.build.options.outputPath).toEqual(

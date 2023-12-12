@@ -42,6 +42,11 @@
               "prettier",
               "typescript",
               "react",
+              "@nx/workspace",
+              "fs-extra",
+              "@remix-run/dev",
+              "@nx/web",
+              "@nx/eslint",
               // These are installed by ensurePackage so missing in package.json
               "@nx/cypress",
               "@nx/playwright",

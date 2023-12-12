@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/schema",
   "$id": "NxRemixErrorBoundary",
   "title": "Create an ErrorBoundary for a Route",
+  "description": "Generate an ErrorBoundary for a given route.",
   "type": "object",
   "examples": [
     {

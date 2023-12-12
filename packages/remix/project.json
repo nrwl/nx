@@ -8,21 +8,8 @@
       "command": "node ./scripts/copy-readme.js remix",
       "outputs": ["{workspaceRoot}/build/packages/remix"]
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"],
-      "options": {
-        "lintFilePatterns": ["packages/remix/**/*.ts"]
-      }
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "outputs": ["{workspaceRoot}/coverage/packages/remix"],
-      "options": {
-        "jestConfig": "packages/remix/jest.config.ts",
-        "passWithNoTests": true
-      }
-    },
+    "lint": {},
+    "test": {},
     "build-base": {
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],

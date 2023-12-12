@@ -298,7 +298,7 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 export default {
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
-  preset: '../jest.preset.js',
+  preset: '../jest.preset.cjs',
   transform: {
     '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
@@ -354,7 +354,7 @@ export default defineConfig({
       dir: '../node_modules/.vitest',
     },
     environment: 'jsdom',
-    include: ['./app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 
     reporters: ['default'],
     coverage: {
@@ -760,7 +760,7 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --
 export default {
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
-  preset: '../../jest.preset.js',
+  preset: '../../jest.preset.cjs',
   transform: {
     '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
@@ -816,7 +816,7 @@ export default defineConfig({
       dir: '../../node_modules/.vitest',
     },
     environment: 'jsdom',
-    include: ['./app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 
     reporters: ['default'],
     coverage: {
@@ -1044,7 +1044,7 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
 export default {
   setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
-  preset: './jest.preset.js',
+  preset: './jest.preset.cjs',
   transform: {
     '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
@@ -1062,6 +1062,26 @@ exports[`Remix Application Standalone Project Repo --unitTestRunner should gener
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
+"
+`;
+
+exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 4`] = `
+"import { createRemixStub } from '@remix-run/testing';
+import { render, screen, waitFor } from '@testing-library/react';
+import Index from '../../app/routes/_index';
+
+test('renders loader data', async () => {
+  const RemixStub = createRemixStub([
+    {
+      path: '/',
+      Component: Index,
+    },
+  ]);
+
+  render(<RemixStub />);
+
+  await waitFor(() => screen.findByText('Welcome to Remix'));
+});
 "
 `;
 
@@ -1104,7 +1124,7 @@ export default defineConfig({
       dir: './node_modules/.vitest',
     },
     environment: 'jsdom',
-    include: ['./app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['./tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 
     reporters: ['default'],
     coverage: {
@@ -1117,6 +1137,26 @@ export default defineConfig({
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 3`] = `
+"import { createRemixStub } from '@remix-run/testing';
+import { render, screen, waitFor } from '@testing-library/react';
+import Index from '../../app/routes/_index';
+
+test('renders loader data', async () => {
+  const RemixStub = createRemixStub([
+    {
+      path: '/',
+      Component: Index,
+    },
+  ]);
+
+  render(<RemixStub />);
+
+  await waitFor(() => screen.findByText('Welcome to Remix'));
+});
+"
+`;
+
+exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 4`] = `
 "import { installGlobals } from '@remix-run/node';
 import '@testing-library/jest-dom/matchers';
 installGlobals();
@@ -1208,6 +1248,49 @@ exports[`Remix Application Standalone Project Repo should create the application
       </ul>
     </div>
   );
+}
+"
+`;
+
+exports[`Remix Application Standalone Project Repo should create the application correctly 4`] = `
+"import { createRemixStub } from '@remix-run/testing';
+import { render, screen, waitFor } from '@testing-library/react';
+import Index from '../../app/routes/_index';
+
+test('renders loader data', async () => {
+  const RemixStub = createRemixStub([
+    {
+      path: '/',
+      Component: Index,
+    },
+  ]);
+
+  render(<RemixStub />);
+
+  await waitFor(() => screen.findByText('Welcome to Remix'));
+});
+"
+`;
+
+exports[`Remix Application Standalone Project Repo should create the application correctly 5`] = `null`;
+
+exports[`Remix Application Standalone Project Repo should create the application correctly 6`] = `
+"{
+  "root": true,
+  "ignorePatterns": ["!**/*"],
+  "plugins": ["@nx"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx"],
+      "extends": ["plugin:@nx/typescript"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "extends": ["plugin:@nx/javascript"],
+      "rules": {}
+    }
+  ]
 }
 "
 `;
