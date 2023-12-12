@@ -244,6 +244,63 @@ describe('move', () => {
     `);
   });
 
+  it('should correctly move standalone repos that have migrated eslint config', async () => {
+    // Test that these are not moved
+    tree.write('.gitignore', '');
+    tree.write('README.md', '');
+
+    await applicationGenerator(tree, {
+      name: 'react-app',
+      rootProject: true,
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'cypress',
+      linter: 'eslint',
+      style: 'css',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      bundler: 'tsc',
+      buildable: true,
+      unitTestRunner: 'jest',
+      linter: 'eslint',
+      directory: 'my-lib',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    // assess the correct starting position
+    expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
+    expect(readJson(tree, '.eslintrc.json').plugins).not.toBeDefined();
+    expect(readJson(tree, '.eslintrc.json').extends).toEqual([
+      'plugin:@nx/react',
+      './.eslintrc.base.json',
+    ]);
+    expect(readJson(tree, 'e2e/.eslintrc.json').plugins).not.toBeDefined();
+    expect(readJson(tree, 'e2e/.eslintrc.json').extends).toEqual([
+      'plugin:cypress/recommended',
+      '../.eslintrc.base.json',
+    ]);
+
+    await moveGenerator(tree, {
+      projectName: 'react-app',
+      updateImportPath: false,
+      destination: 'apps/react-app',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    // expect both eslint configs to have been changed
+    expect(tree.exists('.eslintrc.json')).toBeTruthy();
+    expect(tree.exists('.eslintrc.base.json')).toBeFalsy();
+
+    expect(readJson(tree, 'apps/react-app/.eslintrc.json').extends).toEqual([
+      'plugin:@nx/react',
+      '../../.eslintrc.json',
+    ]);
+    expect(readJson(tree, 'e2e/.eslintrc.json').extends).toEqual([
+      'plugin:cypress/recommended',
+      '../.eslintrc.json',
+    ]);
+  });
+
   it('should move project correctly when --project-name-and-root-format=derived', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',

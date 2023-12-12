@@ -31,15 +31,19 @@ export function maybeMigrateEslintConfigIfRootProject(
   tree: Tree,
   rootProject: ProjectConfiguration
 ): void {
-  const { migrateConfigToMonorepoStyle } = require('@nx/' +
-    'eslint/src/generators/init/init-migration');
-  migrateConfigToMonorepoStyle(
-    getProjects(tree),
+  let migrateConfigToMonorepoStyle: any;
+  try {
+    migrateConfigToMonorepoStyle = require('@nx/' +
+      'eslint/src/generators/init/init-migration').migrateConfigToMonorepoStyle;
+  } catch {
+    // eslint not installed
+  }
+  migrateConfigToMonorepoStyle?.(
+    Array.from(getProjects(tree).values()),
     tree,
     tree.exists(joinPathFragments(rootProject.root, 'jest.config.ts')) ||
       tree.exists(joinPathFragments(rootProject.root, 'jest.config.js'))
       ? 'jest'
-      : 'none',
-    true
+      : 'none'
   );
 }
