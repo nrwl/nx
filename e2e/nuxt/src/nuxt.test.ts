@@ -15,6 +15,7 @@ describe('Nuxt Plugin', () => {
     proj = newProject({
       unsetProjectNameAndRootFormat: false,
     });
+    console.log('Hello, trigger this');
     runCLI(`generate @nx/nuxt:app ${app} --unitTestRunner=vitest`);
     runCLI(
       `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`

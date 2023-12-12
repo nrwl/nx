@@ -14,6 +14,7 @@ describe('Vite ESM tests', () => {
   beforeAll(() => newProject({ unsetProjectNameAndRootFormat: false }));
 
   it('should build with Vite when it is ESM-only', async () => {
+    console.log('Hello, trigger this');
     const appName = uniq('viteapp');
     runCLI(`generate @nx/react:app ${appName} --bundler=vite`);
 

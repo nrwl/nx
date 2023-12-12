@@ -12,6 +12,7 @@ describe('Storybook generators and executors for Vue projects', () => {
   const vueStorybookApp = uniq('vue-app');
   let proj;
   beforeAll(async () => {
+    console.log('Hello, trigger this');
     proj = newProject();
     runCLI(
       `generate @nx/vue:app ${vueStorybookApp} --project-name-and-root-format=as-provided --no-interactive`

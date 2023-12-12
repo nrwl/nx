@@ -27,6 +27,7 @@ const myApp = uniq('my-app');
 
 describe('Vite Plugin', () => {
   let proj: string;
+  console.log('Hello, trigger this');
 
   describe('Vite on React apps', () => {
     describe('set up new React app with --bundler=vite option', () => {

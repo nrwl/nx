@@ -10,6 +10,7 @@ import {
 
 describe('vue tailwind support', () => {
   beforeAll(() => {
+    console.log('Hello, trigger this');
     newProject({ unsetProjectNameAndRootFormat: false });
   });
 

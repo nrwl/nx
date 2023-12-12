@@ -9,6 +9,7 @@ describe('@nx/vite/plugin', () => {
   beforeAll(() => {
     originalEnv = process.env.NX_PCV3;
     process.env.NX_PCV3 = 'true';
+    console.log('Hello, trigger this');
   });
 
   afterAll(() => {

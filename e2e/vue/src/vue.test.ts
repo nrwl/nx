@@ -11,6 +11,7 @@ describe('Vue Plugin', () => {
   let proj: string;
 
   beforeAll(() => {
+    console.log('Hello, trigger this');
     proj = newProject({
       unsetProjectNameAndRootFormat: false,
     });
