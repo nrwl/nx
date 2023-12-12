@@ -3,31 +3,35 @@ import cx from 'classnames';
 import { ReactNode, createContext, useState } from 'react';
 import { computeEmbedURL } from './youtube.component';
 
-const FlipCardContext = createContext('');
+const FlipCardContext = createContext({ day: 0, onClick: () => {} });
 
 export function FlipCard({
   isFlippable,
   isFlipped,
-  text,
-  link,
+  day,
+  onFlip,
+  onClick,
   children,
 }: {
   isFlippable?: boolean;
   isFlipped?: boolean;
-  text: string;
-  link: string;
+  onFlip?: (day: number, isFlipped: boolean) => void;
+  day: number;
+  onClick: () => void;
   children: ReactNode;
 }) {
-  const [flipped, setFlipped] = useState(isFlipped || false);
+  const [flipped, setFlipped] = useState(isFlipped);
 
   return (
-    <FlipCardContext.Provider value={text}>
+    <FlipCardContext.Provider value={{ day, onClick }}>
       <a
-        href={flipped || isFlippable ? link : undefined}
         onClick={(event) => {
           if (isFlippable && !flipped) {
             setFlipped(true);
+            onFlip && onFlip(day, true);
             event.preventDefault();
+          } else {
+            onClick();
           }
         }}
         className={cx(
@@ -46,7 +50,7 @@ export function FlipCard({
               : 'border-1 border-slate-300 dark:border-slate-800'
           )}
         >
-          <FlipCardFront>{text}</FlipCardFront>
+          <FlipCardFront>{day}</FlipCardFront>
           {children}
         </div>
       </a>
@@ -65,10 +69,10 @@ export function FlipCardFront({ children }: { children: ReactNode }) {
 export function FlipCardBack({ children }: { children: ReactNode }) {
   return (
     <FlipCardContext.Consumer>
-      {(text) => (
+      {({ day }) => (
         <div className="absolute my-rotate-y-180 backface-hidden w-full h-full overflow-hidden rounded-md dark:text-slate-100 text-slate-900 text-3xl dark:bg-white/10 bg-slate-800/20 flex justify-center items-center">
           <span className="absolute top-0 left-0 pt-2 pl-3 text-base">
-            {text}
+            {day}
           </span>
           <div className="px-2 text-center text-base sm:text-lg md:text-xl lg:text-3xl">
             {children}
@@ -93,11 +97,15 @@ export function FlipCardBackYoutube({
 }) {
   return (
     <FlipCardContext.Consumer>
-      {(text) => (
+      {({ day, onClick }) => (
         <div className="absolute my-rotate-y-180 backface-hidden w-full h-full overflow-hidden rounded-md dark:text-slate-100 text-slate-900 text-3xl bg-black">
           <span className="absolute pt-2 pl-3 text-base text-slate-100">
-            {text}
+            {day}
           </span>
+          <div
+            className="absolute top-0 bottom-0 left-0 right-0"
+            onClick={onClick}
+          ></div>
           <div className="text-center">
             {' '}
             {/* Center alignment applied to the container */}
