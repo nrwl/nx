@@ -49,7 +49,7 @@ export async function* viteBuildExecutor(
       ? process.cwd()
       : relative(context.cwd, joinPathFragments(context.root, projectRoot));
 
-  const { buildOptions, otherOptions } = await getExtraArgs(options);
+  const { buildOptions, otherOptions } = await getBuildExtraArgs(options);
 
   const resolved = await loadConfigFromFile(
     {
@@ -188,7 +188,9 @@ export async function* viteBuildExecutor(
   }
 }
 
-async function getExtraArgs(options: ViteBuildExecutorOptions): Promise<{
+export async function getBuildExtraArgs(
+  options: ViteBuildExecutorOptions
+): Promise<{
   buildOptions: BuildOptions;
   otherOptions: Record<string, any>;
 }> {
