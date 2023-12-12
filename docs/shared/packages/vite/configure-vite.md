@@ -13,7 +13,7 @@ The `@nx/vite` plugin generators take care of configuring Vite for you. However,
 
 ## TypeScript paths
 
-You need to use the `nxViteTsPaths()` plugin to make sure that your TypeScript paths are resolved correctly in your monorepo. This
+You need to use the `nxViteTsPaths()` plugin to make sure that your TypeScript paths are resolved correctly in your monorepo.
 
 ## Framework plugins
 
