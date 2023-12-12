@@ -79,10 +79,9 @@ export async function getExtraArgs(
   const schema = await import('../schema.json');
   const extraArgs: Record<string, any> = {};
   for (const key of Object.keys(options)) {
-    if (!schema.properties[key]) {
+    if (!schema.properties[key] || key === 'watch') {
       extraArgs[key] = options[key];
     }
   }
-
   return extraArgs;
 }
