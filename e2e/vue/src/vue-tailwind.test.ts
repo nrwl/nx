@@ -10,7 +10,7 @@ import {
 
 describe('vue tailwind support', () => {
   beforeAll(() => {
-    newProject({ unsetProjectNameAndRootFormat: false });
+    newProject({ unsetProjectNameAndRootFormat: false, packages: ['@nx/vue'] });
   });
 
   afterAll(() => {
