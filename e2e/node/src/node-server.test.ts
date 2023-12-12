@@ -17,11 +17,13 @@ import { join } from 'path';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
-  beforeEach(() => {
-    proj = newProject();
+  beforeAll(() => {
+    proj = newProject({
+      packages: ['@nx/node'],
+    });
   });
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   function addLibImport(appName: string, libName: string, importPath?: string) {
     const content = readFile(`apps/${appName}/src/main.ts`);

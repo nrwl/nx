@@ -855,10 +855,10 @@
               "description": "Vite related recipes",
               "itemList": [
                 {
-                  "id": "set-up-vite-manually",
-                  "name": "Manually set up your project to use Vite.js",
-                  "description": "Manually set up your project to use Vite.js",
-                  "file": "shared/packages/vite/set-up-vite-manually"
+                  "id": "configure-vite",
+                  "name": "Configure Vite on your Nx workspace",
+                  "description": "Configure Vite on your Nx workspace",
+                  "file": "shared/packages/vite/configure-vite"
                 }
               ]
             },

@@ -6,7 +6,7 @@ By default, when you invite a member by email, they can create a separate NxClou
 
 If you'd like them to sign-in with Google directly, which ensures they automatically lose access to their NxCloud account if their email gets disabled, you need to enable this option when inviting them: "_Require Social OAuth Sign-In_". They will then only be able to accept the invite if they sign-in with Google directly.
 
-![Require Google OAuth Sign-In toggle](/nx-cloud/account/require-google-signin.webp)
+![Require Google OAuth Sign-In toggle](/nx-cloud/recipes/require-google-signin.webp)
 
 ## SAML integration
 

@@ -56,6 +56,3 @@ launch-templates:
 
       - name: Load Cargo Env
         script: echo "PATH=$HOME/.cargo/bin:$PATH" >> $NX_CLOUD_ENV
-
-      - name: Benchmark
-        script: node tools/benchmark/benchmark.js

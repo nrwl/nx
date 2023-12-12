@@ -130,7 +130,7 @@ function createOpenGraphImage(
     context.font = 'bold 50px system-ui';
     context.textAlign = 'center';
     context.textBaseline = 'top';
-    context.fillStyle = '#0F172A';
+    context.fillStyle = '#FFFFFF';
     const titleLines = splitLines(context, title.toUpperCase(), 1100);
     titleLines.forEach((line, index) => {
       context.fillText(line, 600, 220 + index * TITLE_LINE_HEIGHT);
@@ -139,7 +139,7 @@ function createOpenGraphImage(
     context.font = 'normal 32px system-ui';
     context.textAlign = 'center';
     context.textBaseline = 'top';
-    context.fillStyle = '#334155';
+    context.fillStyle = '#F8FAFC';
 
     const lines = splitLines(context, content, 1100);
     lines.forEach((line, index) => {

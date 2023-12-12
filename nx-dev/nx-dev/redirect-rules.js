@@ -381,6 +381,7 @@ const recipesUrls = {
     '/recipes/next/next-config-setup',
   '/packages/vite/documents/set-up-vite-manually':
     '/recipes/vite/set-up-vite-manually',
+  '/recipes/vite/set-up-vite-manually': '/recipes/vite/configure-vite',
   '/packages/webpack/documents/webpack-plugins':
     '/recipes/webpack/webpack-plugins',
   '/packages/webpack/documents/webpack-config-setup':

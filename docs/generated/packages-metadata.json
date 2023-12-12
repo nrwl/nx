@@ -416,7 +416,7 @@
     "source": "/packages/create-nx-plugin/src"
   },
   {
-    "description": "Smart, Fast and Extensible Build System",
+    "description": "Smart Monorepos · Fast CI",
     "documents": [],
     "executors": [],
     "generators": [],
@@ -1496,6 +1496,57 @@
     "packageName": "@nx/node",
     "root": "/packages/node",
     "source": "/packages/node/src"
+  },
+  {
+    "description": "The Nuxt plugin for Nx contains executors and generators for managing Nuxt applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview of the Nx Nuxt Plugin",
+        "description": "The Nx Plugin for Nuxt contains generators for managing Nuxt applications within a Nx workspace. This page also explains how to configure Nuxt on your Nx workspace.",
+        "file": "generated/packages/nuxt/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nuxt/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/nuxt/nuxt-plugin"
+      }
+    ],
+    "executors": [],
+    "generators": [
+      {
+        "description": "Initialize the `@nx/nuxt` plugin.",
+        "file": "generated/packages/nuxt/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/nuxt/src/generators/init/schema.json",
+        "path": "nuxt/generators/init",
+        "type": "generator"
+      },
+      {
+        "description": "Create a Nuxt application.",
+        "file": "generated/packages/nuxt/generators/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/nuxt/src/generators/application/schema.json",
+        "path": "nuxt/generators/application",
+        "type": "generator"
+      },
+      {
+        "description": "Set up storybook for a Nuxt app.",
+        "file": "generated/packages/nuxt/generators/storybook-configuration.json",
+        "hidden": false,
+        "name": "storybook-configuration",
+        "originalFilePath": "/packages/nuxt/src/generators/storybook-configuration/schema.json",
+        "path": "nuxt/generators/storybook-configuration",
+        "type": "generator"
+      }
+    ],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "nuxt",
+    "packageName": "@nx/nuxt",
+    "root": "/packages/nuxt",
+    "source": "/packages/nuxt/src"
   },
   {
     "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",

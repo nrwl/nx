@@ -2683,14 +2683,14 @@
         "file": "",
         "itemList": [
           {
-            "id": "set-up-vite-manually",
-            "name": "Manually set up your project to use Vite.js",
-            "description": "Manually set up your project to use Vite.js",
+            "id": "configure-vite",
+            "name": "Configure Vite on your Nx workspace",
+            "description": "Configure Vite on your Nx workspace",
             "mediaImage": "",
-            "file": "shared/packages/vite/set-up-vite-manually",
+            "file": "shared/packages/vite/configure-vite",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/vite/set-up-vite-manually",
+            "path": "/recipes/vite/configure-vite",
             "tags": []
           }
         ],
@@ -4655,14 +4655,14 @@
     "file": "",
     "itemList": [
       {
-        "id": "set-up-vite-manually",
-        "name": "Manually set up your project to use Vite.js",
-        "description": "Manually set up your project to use Vite.js",
+        "id": "configure-vite",
+        "name": "Configure Vite on your Nx workspace",
+        "description": "Configure Vite on your Nx workspace",
         "mediaImage": "",
-        "file": "shared/packages/vite/set-up-vite-manually",
+        "file": "shared/packages/vite/configure-vite",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/vite/set-up-vite-manually",
+        "path": "/recipes/vite/configure-vite",
         "tags": []
       }
     ],
@@ -4670,15 +4670,15 @@
     "path": "/recipes/vite",
     "tags": []
   },
-  "/recipes/vite/set-up-vite-manually": {
-    "id": "set-up-vite-manually",
-    "name": "Manually set up your project to use Vite.js",
-    "description": "Manually set up your project to use Vite.js",
+  "/recipes/vite/configure-vite": {
+    "id": "configure-vite",
+    "name": "Configure Vite on your Nx workspace",
+    "description": "Configure Vite on your Nx workspace",
     "mediaImage": "",
-    "file": "shared/packages/vite/set-up-vite-manually",
+    "file": "shared/packages/vite/configure-vite",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/vite/set-up-vite-manually",
+    "path": "/recipes/vite/configure-vite",
     "tags": []
   },
   "/recipes/webpack": {
