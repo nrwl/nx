@@ -3,6 +3,7 @@ import {
   loadConfigFromFile,
   type InlineConfig,
   type ViteDevServer,
+  ServerOptions,
 } from 'vite';
 
 import {
@@ -43,11 +44,11 @@ export async function* viteDevServerExecutor(
     projectRoot,
     buildTargetOptions.configFile
   );
-  const extraArgs = await getExtraArgs(options);
+  const { serverOptions, otherOptions } = await getServerExtraArgs(options);
   const resolved = await loadConfigFromFile(
     {
-      mode: extraArgs?.mode ?? 'production',
-      command: 'build',
+      mode: otherOptions?.mode ?? 'development',
+      command: 'serve',
     },
     viteConfigPath
   );
@@ -62,9 +63,9 @@ export async function* viteDevServerExecutor(
     {
       server: {
         ...(await getViteServerOptions(options, context)),
-        ...extraArgs,
+        ...serverOptions,
       },
-      ...extraArgs,
+      ...otherOptions,
     }
   );
 
@@ -111,9 +112,12 @@ async function runViteDevServer(server: ViteDevServer): Promise<void> {
 
 export default viteDevServerExecutor;
 
-async function getExtraArgs(
+async function getServerExtraArgs(
   options: ViteDevServerExecutorOptions
-): Promise<InlineConfig> {
+): Promise<{
+  serverOptions: ServerOptions;
+  otherOptions: Record<string, any>;
+}> {
   // support passing extra args to vite cli
   const schema = await import('./schema.json');
   const extraArgs = {};
@@ -123,5 +127,37 @@ async function getExtraArgs(
     }
   }
 
-  return extraArgs as InlineConfig;
+  const serverOptions = {} as ServerOptions;
+  const serverSchemaKeys = [
+    'hmr',
+    'warmup',
+    'watch',
+    'middlewareMode',
+    'fs',
+    'origin',
+    'preTransformRequests',
+    'sourcemapIgnoreList',
+    'port',
+    'strictPort',
+    'host',
+    'https',
+    'open',
+    'proxy',
+    'cors',
+    'headers',
+  ];
+
+  const otherOptions = {};
+  for (const key of Object.keys(extraArgs)) {
+    if (serverSchemaKeys.includes(key)) {
+      serverOptions[key] = extraArgs[key];
+    } else {
+      otherOptions[key] = extraArgs[key];
+    }
+  }
+
+  return {
+    serverOptions,
+    otherOptions,
+  };
 }
