@@ -26,7 +26,11 @@ import { major } from 'semver';
 import { join } from 'path';
 
 describe('Nx Commands', () => {
-  beforeAll(() => newProject());
+  beforeAll(() =>
+    newProject({
+      packages: ['@nx/web', '@nx/angular', '@nx/next'],
+    })
+  );
 
   afterAll(() => cleanupProject());
 
@@ -309,7 +313,7 @@ describe('Nx Commands', () => {
 // TODO(colum): Change the fetcher to allow incremental migrations over multiple versions, allowing for beforeAll
 describe('migrate', () => {
   beforeEach(() => {
-    newProject();
+    newProject({ packages: [] });
 
     updateFile(
       `./node_modules/migrate-parent-package/package.json`,
@@ -641,7 +645,7 @@ describe('global installation', () => {
 
   describe('inside nx directory', () => {
     beforeAll(() => {
-      newProject();
+      newProject({ packages: [] });
     });
 
     it('should invoke Nx commands from local repo', () => {
