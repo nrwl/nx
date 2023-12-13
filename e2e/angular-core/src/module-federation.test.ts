@@ -18,7 +18,7 @@ describe('Angular Module Federation', () => {
   let oldVerboseLoggingValue: string;
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/angular'] });
     oldVerboseLoggingValue = process.env.NX_E2E_VERBOSE_LOGGING;
     process.env.NX_E2E_VERBOSE_LOGGING = 'true';
   });

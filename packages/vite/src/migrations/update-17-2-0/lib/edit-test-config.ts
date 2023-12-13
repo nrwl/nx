@@ -7,13 +7,21 @@ import {
 } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import ts = require('typescript');
+import { getConfigNode, notFoundWarning } from '../update-vite-config';
 
 export function updateTestConfig(
   configContents: string,
-  projectConfig: ProjectConfiguration
+  projectConfig: ProjectConfiguration,
+  configPath: string
 ): string {
+  const configNode = getConfigNode(configContents);
+  if (!configNode) {
+    notFoundWarning(configPath);
+    return configContents;
+  }
+
   const testObject = tsquery.query(
-    configContents,
+    configNode,
     `PropertyAssignment:has(Identifier[name="test"])`
   )?.[0];
   let testCoverageDir: ts.Node;

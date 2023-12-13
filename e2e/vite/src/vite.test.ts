@@ -31,7 +31,9 @@ describe('Vite Plugin', () => {
   describe('Vite on React apps', () => {
     describe('set up new React app with --bundler=vite option', () => {
       beforeEach(async () => {
-        proj = newProject();
+        proj = newProject({
+          packages: ['@nx/react'],
+        });
         runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
         createFile(`apps/${myApp}/public/hello.md`, `# Hello World`);
       });
@@ -49,7 +51,9 @@ describe('Vite Plugin', () => {
   describe('Vite on Web apps', () => {
     describe('set up new @nx/web app with --bundler=vite option', () => {
       beforeEach(() => {
-        proj = newProject();
+        proj = newProject({
+          packages: ['@nx/web'],
+        });
         runCLI(`generate @nx/web:app ${myApp} --bundler=vite`);
       });
       afterEach(() => cleanupProject());
@@ -122,7 +126,10 @@ describe('Vite Plugin', () => {
     const app = uniq('demo');
     const lib = uniq('my-lib');
     beforeAll(() => {
-      proj = newProject({ name: uniq('vite-incr-build') });
+      proj = newProject({
+        name: uniq('vite-incr-build'),
+        packages: ['@nx/react'],
+      });
       runCLI(`generate @nx/react:app ${app} --bundler=vite --no-interactive`);
 
       // only this project will be directly used from dist
@@ -206,7 +213,7 @@ export default App;
   describe('should be able to create libs that use vitest', () => {
     const lib = uniq('my-lib');
     beforeEach(() => {
-      proj = newProject({ name: uniq('vite-proj') });
+      proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
     });
 
     it('should be able to run tests', async () => {
@@ -359,7 +366,10 @@ export default defineConfig({
 
   describe('ESM-only apps', () => {
     beforeAll(() => {
-      newProject({ unsetProjectNameAndRootFormat: false });
+      newProject({
+        unsetProjectNameAndRootFormat: false,
+        packages: ['@nx/react'],
+      });
     });
 
     it('should support ESM-only plugins in vite.config.ts for root apps (#NXP-168)', () => {

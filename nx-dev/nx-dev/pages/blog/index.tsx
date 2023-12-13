@@ -20,7 +20,7 @@ export default function Blog(): JSX.Element {
               url: 'https://nx.dev/socials/nx-media.png',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart, Fast and Extensible Build System',
+              alt: 'Nx: Smart Monorepos · Fast CI',
               type: 'image/jpeg',
             },
           ],
@@ -70,10 +70,10 @@ export default function Blog(): JSX.Element {
                   Current, official "Nrwl" blog
                 </h4>
                 <a
-                  href="https://dev.to/nx"
+                  href="https://blog.nrwl.io"
                   rel="noreferrer"
                   target="_blank"
-                  title="Nrwl Blog"
+                  title="Nx Blog"
                   className="focus:outline-none"
                 >
                   <span className="absolute inset-0" aria-hidden="true"></span>
@@ -102,10 +102,10 @@ export default function Blog(): JSX.Element {
                   We're on Dev.to, too!
                 </h4>
                 <a
-                  href="https://blog.nrwl.io"
+                  href="https://dev.to/nx"
                   rel="noreferrer"
                   target="_blank"
-                  title="Nrwl Blog"
+                  title="Nx Blog"
                   className="focus:outline-none"
                 >
                   <span className="absolute inset-0" aria-hidden="true"></span>
