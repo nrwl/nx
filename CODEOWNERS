@@ -56,6 +56,11 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/react-native/** @nrwl/nx-react-reviewers
 /e2e/react-native/** @nrwl/nx-react-reviewers
 
+## remix
+/docs/generated/packages/remix/** @nrwl/nx-react-reviewers @nrwl/nx-docs-reviewers @Coly010
+/packages/remix/** @nrwl/nx-react-reviewers @Coly010
+/e2e/remix/** @nrwl/nx-react-reviewers @Coly010
+
 # Vue
 /packages/vue/** @nrwl/nx-vue-reviewers
 /e2e/vue/** @nrwl/nx-vue-reviewers

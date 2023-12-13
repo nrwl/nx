@@ -53,6 +53,7 @@ const nxPackages = [
   `@nx/playwright`,
   `@nx/rollup`,
   `@nx/react`,
+  `@nx/remix`,
   `@nx/storybook`,
   `@nx/vue`,
   `@nx/vite`,
