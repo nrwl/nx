@@ -50,6 +50,7 @@ describe('nx release', () => {
   beforeAll(() => {
     newProject({
       unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/js'],
     });
 
     pkg1 = uniq('my-pkg-1');
@@ -111,11 +112,26 @@ describe('nx release', () => {
     ).toEqual(3);
 
     // Only one dependency relationship exists, so this log should only match once
-    expect(
-      versionOutput.match(
-        /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
-      ).length
-    ).toEqual(1);
+    const dependencyRelationshipLogMatch = versionOutput.match(
+      /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
+    );
+    if (
+      !dependencyRelationshipLogMatch ||
+      dependencyRelationshipLogMatch.length !== 1
+    ) {
+      // From JamesHenry: explicit error to assist troubleshooting NXC-143
+      throw new Error(
+        `
+Error: Expected to find exactly one dependency relationship log line.
+
+If you are seeing this message then you have been impacted by some currently undiagnosed flakiness in the test.
+
+Please report the full nx release version command output below to the Nx team:
+
+${versionOutput}`
+      );
+    }
+    expect(dependencyRelationshipLogMatch.length).toEqual(1);
 
     // Generate a changelog for the new version
     expect(exists('CHANGELOG.md')).toEqual(false);
