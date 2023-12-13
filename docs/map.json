@@ -2398,6 +2398,19 @@
           ]
         },
         {
+          "name": "remix",
+          "id": "remix",
+          "description": "Remix package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "name": "Overview",
+              "path": "/nx-api/remix",
+              "file": "shared/packages/remix/remix-plugin"
+            }
+          ]
+        },
+        {
           "name": "detox",
           "id": "detox",
           "description": "Detox package.",

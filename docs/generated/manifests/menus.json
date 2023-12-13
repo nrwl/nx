@@ -8899,6 +8899,186 @@
         "disableCollapsible": false
       },
       {
+        "id": "remix",
+        "path": "/nx-api/remix",
+        "name": "remix",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/remix/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/remix/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "executors",
+            "path": "/nx-api/remix/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "serve",
+                "path": "/nx-api/remix/executors/serve",
+                "name": "serve",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "build",
+                "path": "/nx-api/remix/executors/build",
+                "name": "build",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/remix/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "preset",
+                "path": "/nx-api/remix/generators/preset",
+                "name": "preset",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup",
+                "path": "/nx-api/remix/generators/setup",
+                "name": "setup",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/nx-api/remix/generators/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "cypress-component-configuration",
+                "path": "/nx-api/remix/generators/cypress-component-configuration",
+                "name": "cypress-component-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "library",
+                "path": "/nx-api/remix/generators/library",
+                "name": "library",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "route",
+                "path": "/nx-api/remix/generators/route",
+                "name": "route",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "resource-route",
+                "path": "/nx-api/remix/generators/resource-route",
+                "name": "resource-route",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "action",
+                "path": "/nx-api/remix/generators/action",
+                "name": "action",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "loader",
+                "path": "/nx-api/remix/generators/loader",
+                "name": "loader",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "style",
+                "path": "/nx-api/remix/generators/style",
+                "name": "style",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-tailwind",
+                "path": "/nx-api/remix/generators/setup-tailwind",
+                "name": "setup-tailwind",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "storybook-configuration",
+                "path": "/nx-api/remix/generators/storybook-configuration",
+                "name": "storybook-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "meta",
+                "path": "/nx-api/remix/generators/meta",
+                "name": "meta",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "error-boundary",
+                "path": "/nx-api/remix/generators/error-boundary",
+                "name": "error-boundary",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "cypress",
+                "path": "/nx-api/remix/generators/cypress",
+                "name": "cypress",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "rollup",
         "path": "/nx-api/rollup",
         "name": "rollup",

@@ -2342,6 +2342,184 @@
     "source": "/packages/react-native/src"
   },
   {
+    "description": "The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, routes, loaders, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+    "documents": [
+      {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, routes, loaders, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+        "file": "generated/packages/remix/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "remix/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/remix/remix-plugin"
+      }
+    ],
+    "executors": [
+      {
+        "description": "Serve a Remix application.",
+        "file": "generated/packages/remix/executors/serve.json",
+        "hidden": false,
+        "name": "serve",
+        "originalFilePath": "/packages/remix/src/executors/serve/schema.json",
+        "path": "remix/executors/serve",
+        "type": "executor"
+      },
+      {
+        "description": "Build a Remix application.",
+        "file": "generated/packages/remix/executors/build.json",
+        "hidden": false,
+        "name": "build",
+        "originalFilePath": "/packages/remix/src/executors/build/schema.json",
+        "path": "remix/executors/build",
+        "type": "executor"
+      }
+    ],
+    "generators": [
+      {
+        "description": "Generate a new Remix workspace",
+        "file": "generated/packages/remix/generators/preset.json",
+        "hidden": true,
+        "name": "preset",
+        "originalFilePath": "/packages/remix/src/generators/preset/schema.json",
+        "path": "remix/generators/preset",
+        "type": "generator"
+      },
+      {
+        "description": "Setup a Remix in an existing workspace",
+        "file": "generated/packages/remix/generators/setup.json",
+        "hidden": true,
+        "name": "setup",
+        "originalFilePath": "/packages/remix/src/generators/setup/schema.json",
+        "path": "remix/generators/setup",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a new Remix application",
+        "file": "generated/packages/remix/generators/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/remix/src/generators/application/schema.json",
+        "path": "remix/generators/application",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a Cypress Component Testing configuration for a Remix project",
+        "file": "generated/packages/remix/generators/cypress-component-configuration.json",
+        "hidden": false,
+        "name": "cypress-component-configuration",
+        "originalFilePath": "/packages/remix/src/generators/cypress-component-configuration/schema.json",
+        "path": "remix/generators/cypress-component-configuration",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a new library",
+        "file": "generated/packages/remix/generators/library.json",
+        "hidden": false,
+        "name": "library",
+        "originalFilePath": "/packages/remix/src/generators/library/schema.json",
+        "path": "remix/generators/library",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a new route",
+        "file": "generated/packages/remix/generators/route.json",
+        "hidden": false,
+        "name": "route",
+        "originalFilePath": "/packages/remix/src/generators/route/schema.json",
+        "path": "remix/generators/route",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a new resource route",
+        "file": "generated/packages/remix/generators/resource-route.json",
+        "hidden": false,
+        "name": "resource-route",
+        "originalFilePath": "/packages/remix/src/generators/resource-route/schema.json",
+        "path": "remix/generators/resource-route",
+        "type": "generator"
+      },
+      {
+        "description": "Add an action function to an existing route",
+        "file": "generated/packages/remix/generators/action.json",
+        "hidden": false,
+        "name": "action",
+        "originalFilePath": "/packages/remix/src/generators/action/schema.json",
+        "path": "remix/generators/action",
+        "type": "generator"
+      },
+      {
+        "description": "Add a loader function to an existing route",
+        "file": "generated/packages/remix/generators/loader.json",
+        "hidden": false,
+        "name": "loader",
+        "originalFilePath": "/packages/remix/src/generators/loader/schema.json",
+        "path": "remix/generators/loader",
+        "type": "generator"
+      },
+      {
+        "description": "Generates a new stylesheet and adds it to an existing route",
+        "file": "generated/packages/remix/generators/style.json",
+        "hidden": false,
+        "name": "style",
+        "originalFilePath": "/packages/remix/src/generators/style/schema.json",
+        "path": "remix/generators/style",
+        "type": "generator"
+      },
+      {
+        "description": "Generates a TailwindCSS configuration for the Remix application",
+        "file": "generated/packages/remix/generators/setup-tailwind.json",
+        "hidden": false,
+        "name": "setup-tailwind",
+        "originalFilePath": "/packages/remix/src/generators/setup-tailwind/schema.json",
+        "path": "remix/generators/setup-tailwind",
+        "type": "generator"
+      },
+      {
+        "description": "Generates a Storybook configuration for a Remix application",
+        "file": "generated/packages/remix/generators/storybook-configuration.json",
+        "hidden": false,
+        "name": "storybook-configuration",
+        "originalFilePath": "/packages/remix/src/generators/storybook-configuration/schema.json",
+        "path": "remix/generators/storybook-configuration",
+        "type": "generator"
+      },
+      {
+        "description": "Add a meta function to an existing route",
+        "file": "generated/packages/remix/generators/meta.json",
+        "hidden": false,
+        "name": "meta",
+        "originalFilePath": "/packages/remix/src/generators/meta/schema.json",
+        "path": "remix/generators/meta",
+        "type": "generator"
+      },
+      {
+        "description": "Add an ErrorBoundary to an existing route",
+        "file": "generated/packages/remix/generators/error-boundary.json",
+        "hidden": false,
+        "name": "error-boundary",
+        "originalFilePath": "/packages/remix/src/generators/error-boundary/schema.json",
+        "path": "remix/generators/error-boundary",
+        "type": "generator"
+      },
+      {
+        "description": "Generate a project for testing Remix apps using Cypress",
+        "file": "generated/packages/remix/generators/cypress.json",
+        "hidden": false,
+        "name": "cypress",
+        "originalFilePath": "/packages/remix/src/generators/cypress/schema.json",
+        "path": "remix/generators/cypress",
+        "type": "generator"
+      }
+    ],
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "remix",
+    "packageName": "@nx/remix",
+    "root": "/packages/remix",
+    "source": "/packages/remix/src"
+  },
+  {
     "description": "The Nx Plugin for Rollup contains executors and generators that support building applications using Rollup.",
     "documents": [],
     "executors": [
