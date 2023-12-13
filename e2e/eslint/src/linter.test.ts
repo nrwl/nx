@@ -26,7 +26,9 @@ describe('Linter', () => {
     let projScope;
 
     beforeAll(() => {
-      projScope = newProject();
+      projScope = newProject({
+        packages: ['@nx/react', '@nx/js', '@nx/eslint'],
+      });
       runCLI(`generate @nx/react:app ${myapp} --tags=validtag`);
       runCLI(`generate @nx/js:lib ${mylib}`);
     });
@@ -619,7 +621,11 @@ describe('Linter', () => {
   });
 
   describe('Root projects migration', () => {
-    beforeEach(() => newProject());
+    beforeEach(() =>
+      newProject({
+        packages: ['@nx/react', '@nx/js', '@nx/angular', '@nx/node'],
+      })
+    );
     afterEach(() => cleanupProject());
 
     function verifySuccessfulStandaloneSetup(myapp: string) {
@@ -773,6 +779,7 @@ describe('Linter', () => {
       newProject({
         name: uniq('eslint'),
         unsetProjectNameAndRootFormat: false,
+        packages: ['@nx/react'],
       });
     });
 

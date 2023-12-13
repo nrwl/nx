@@ -29,7 +29,7 @@ import {
   RunCmdOpts,
   runCommand,
 } from './command-utils';
-import { output } from '@nx/devkit';
+import { output, readJsonFile } from '@nx/devkit';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
@@ -143,8 +143,16 @@ export function newProject({
     const projectDirectory = tmpProjPath();
     copySync(`${tmpBackupProjPath()}`, `${projectDirectory}`);
 
-    // TODO: What is this for?
-    if (packageManager === 'pnpm') {
+    const dependencies = readJsonFile(
+      `${projectDirectory}/package.json`
+    ).devDependencies;
+    const missingPackages = (packages || []).filter((p) => !dependencies[p]);
+
+    if (missingPackages.length > 0) {
+      packageInstall(missingPackages.join(` `), projName);
+    } else if (packageManager === 'pnpm') {
+      // pnpm creates sym links to the pnpm store,
+      // we need to run the install again after copying the temp folder
       execSync(getPackageManagerCommand().install, {
         cwd: projectDirectory,
         stdio: 'pipe',
