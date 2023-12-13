@@ -1,4 +1,10 @@
-import { readJson, Tree, updateJson, writeJson } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  updateProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { moveGenerator } from './move';
 // nx-ignore-next-line
@@ -33,6 +39,51 @@ describe('move', () => {
     expect(afterJestConfig).toContain("preset: '../../jest.preset.js'");
     expect(afterJestConfig).toContain(
       "coverageDirectory: '../../coverage/shared/my-lib-new'"
+    );
+  });
+
+  it('should make sure build targets are correct when moving', async () => {
+    await libraryGenerator(tree, {
+      name: 'one',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    const myLibConfig = readProjectConfiguration(tree, 'one');
+
+    updateProjectConfiguration(tree, 'one', {
+      ...myLibConfig,
+      targets: {
+        ...myLibConfig.targets,
+        custom: {
+          executor: 'some-executor',
+          options: {
+            buildTarget: 'one:build:production',
+            serveTarget: 'one:serve:production',
+            irrelevantTarget: 'my-lib:build:production',
+          },
+        },
+      },
+    });
+
+    await moveGenerator(tree, {
+      projectName: 'one',
+      importPath: '@proj/two',
+      newProjectName: 'two',
+      updateImportPath: true,
+      destination: 'shared/two',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    const myLibNewConfig = readProjectConfiguration(tree, 'two');
+
+    expect(myLibNewConfig.targets.custom.options.buildTarget).toEqual(
+      'two:build:production'
+    );
+    expect(myLibNewConfig.targets.custom.options.serveTarget).toEqual(
+      'two:serve:production'
+    );
+    expect(myLibNewConfig.targets.custom.options.irrelevantTarget).toEqual(
+      'my-lib:build:production'
     );
   });
 
