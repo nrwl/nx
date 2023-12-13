@@ -24,6 +24,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/angular/** @nrwl/nx-angular-reviewers
 /e2e/angular-core/** @nrwl/nx-angular-reviewers
 /e2e/angular-extensions/** @nrwl/nx-angular-reviewers
+/e2e/angular-module-federation/** @nrwl/nx-angular-reviewers
 /packages/angular/plugins/component-testing.ts @nrwl/nx-angular-reviewers @nrwl/nx-testing-tools-reviewers
 /packages/angular/src/generators/cypress-component-configuration/** @nrwl/nx-angular-reviewers @nrwl/nx-testing-tools-reviewers
 /packages/angular/src/generators/component-test/** @nrwl/nx-angular-reviewers @nrwl/nx-testing-tools-reviewers
@@ -54,6 +55,11 @@ rust-toolchain @nrwl/nx-native-reviewers
 /e2e/expo/** @nrwl/nx-react-reviewers
 /packages/react-native/** @nrwl/nx-react-reviewers
 /e2e/react-native/** @nrwl/nx-react-reviewers
+
+## remix
+/docs/generated/packages/remix/** @nrwl/nx-react-reviewers @nrwl/nx-docs-reviewers @Coly010
+/packages/remix/** @nrwl/nx-react-reviewers @Coly010
+/e2e/remix/** @nrwl/nx-react-reviewers @Coly010
 
 # Vue
 /packages/vue/** @nrwl/nx-vue-reviewers
@@ -158,6 +164,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/workspace/** @nrwl/nx-core-reviewers
 /e2e/workspace-create/** @nrwl/nx-core-reviewers
 /e2e/workspace-create-npm/** @nrwl/nx-core-reviewers
+/e2e/release/** @nrwl/nx-core-reviewers
 
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
