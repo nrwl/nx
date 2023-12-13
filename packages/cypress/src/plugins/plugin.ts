@@ -19,6 +19,7 @@ import { existsSync, readdirSync } from 'fs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { NX_PLUGIN_OPTIONS } from '../utils/symbols';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
@@ -147,13 +148,14 @@ function buildCypressTargets(
 ) {
   const cypressConfig = getCypressConfig(configFilePath, context);
 
-  const cypressEnv = {
+  const pluginPresetOptions = {
+    ...cypressConfig.e2e?.[NX_PLUGIN_OPTIONS],
     ...cypressConfig.env,
     ...cypressConfig.e2e?.env,
   };
 
   const webServerCommands: Record<string, string> =
-    cypressEnv?.webServerCommands;
+    pluginPresetOptions?.webServerCommands;
 
   const relativeConfigPath = relative(projectRoot, configFilePath);
 
@@ -185,7 +187,7 @@ function buildCypressTargets(
       }
     }
 
-    const ciWebServerCommand: string = cypressEnv?.ciWebServerCommand;
+    const ciWebServerCommand: string = pluginPresetOptions?.ciWebServerCommand;
     if (ciWebServerCommand) {
       const specPatterns = Array.isArray(cypressConfig.e2e.specPattern)
         ? cypressConfig.e2e.specPattern.map((p) => join(projectRoot, p))

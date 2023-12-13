@@ -4,6 +4,7 @@ import { defineConfig } from 'cypress';
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
+import { nxE2EPreset } from '../../plugins/cypress-preset';
 
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodes[1];
@@ -15,8 +16,9 @@ describe('@nx/cypress/plugin', () => {
 
     await tempFs.createFiles({
       'package.json': '{}',
-      'test.cy.ts': '',
+      'src/test.cy.ts': '',
     });
+    process.chdir(tempFs.tempDir);
     context = {
       nxJsonConfiguration: {
         // These defaults should be overridden by plugin
@@ -44,12 +46,12 @@ describe('@nx/cypress/plugin', () => {
     mockCypressConfig(
       defineConfig({
         e2e: {
-          env: {
+          ...nxE2EPreset('.', {
             webServerCommands: {
               default: 'nx run my-app:serve',
               production: 'nx run my-app:serve:production',
             },
-          },
+          }),
           videosFolder: './dist/videos',
           screenshotsFolder: './dist/screenshots',
         },
@@ -162,13 +164,13 @@ describe('@nx/cypress/plugin', () => {
           specPattern: '**/*.cy.ts',
           videosFolder: './dist/videos',
           screenshotsFolder: './dist/screenshots',
-          env: {
+          ...nxE2EPreset('.', {
             webServerCommands: {
               default: 'my-app:serve',
               production: 'my-app:serve:production',
             },
             ciWebServerCommand: 'my-app:serve-static',
-          },
+          }),
         },
       })
     );
@@ -207,8 +209,8 @@ describe('@nx/cypress/plugin', () => {
                   "cwd": ".",
                 },
                 "outputs": [
-                  "{projectRoot}/dist/videos",
-                  "{projectRoot}/dist/screenshots",
+                  "{projectRoot}/dist/cypress/videos",
+                  "{projectRoot}/dist/cypress/screenshots",
                 ],
               },
               "e2e-ci": {
@@ -217,7 +219,7 @@ describe('@nx/cypress/plugin', () => {
                   {
                     "params": "forward",
                     "projects": "self",
-                    "target": "e2e-ci--test.cy.ts",
+                    "target": "e2e-ci--src/test.cy.ts",
                   },
                 ],
                 "executor": "nx:noop",
@@ -231,13 +233,13 @@ describe('@nx/cypress/plugin', () => {
                   },
                 ],
                 "outputs": [
-                  "{projectRoot}/dist/videos",
-                  "{projectRoot}/dist/screenshots",
+                  "{projectRoot}/dist/cypress/videos",
+                  "{projectRoot}/dist/cypress/screenshots",
                 ],
               },
-              "e2e-ci--test.cy.ts": {
+              "e2e-ci--src/test.cy.ts": {
                 "cache": true,
-                "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="my-app:serve-static" --spec test.cy.ts",
+                "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="my-app:serve-static" --spec src/test.cy.ts",
                 "inputs": [
                   "default",
                   "^production",
@@ -251,8 +253,8 @@ describe('@nx/cypress/plugin', () => {
                   "cwd": ".",
                 },
                 "outputs": [
-                  "{projectRoot}/dist/videos",
-                  "{projectRoot}/dist/screenshots",
+                  "{projectRoot}/dist/cypress/videos",
+                  "{projectRoot}/dist/cypress/screenshots",
                 ],
               },
             },
