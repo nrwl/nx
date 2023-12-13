@@ -48,6 +48,7 @@ describe('nx release - private JS packages', () => {
   beforeAll(() => {
     newProject({
       unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/js'],
     });
 
     publicPkg1 = uniq('public-pkg-1');
