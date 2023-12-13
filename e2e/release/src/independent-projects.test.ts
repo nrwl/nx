@@ -49,6 +49,7 @@ describe('nx release - independent projects', () => {
   beforeAll(() => {
     newProject({
       unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/js'],
     });
 
     pkg1 = uniq('my-pkg-1');
