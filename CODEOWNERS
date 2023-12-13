@@ -164,6 +164,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/workspace/** @nrwl/nx-core-reviewers
 /e2e/workspace-create/** @nrwl/nx-core-reviewers
 /e2e/workspace-create-npm/** @nrwl/nx-core-reviewers
+/e2e/release/** @nrwl/nx-core-reviewers
 
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
