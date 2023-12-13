@@ -1,6 +1,6 @@
-# Type alias: CreateDependencies<T\>
+# Type alias: CreateDependencies\<T\>
 
-Ƭ **CreateDependencies**<`T`\>: (`options`: `T` \| `undefined`, `context`: [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext)) => [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
+Ƭ **CreateDependencies**\<`T`\>: (`options`: `T` \| `undefined`, `context`: [`CreateDependenciesContext`](../../devkit/documents/CreateDependenciesContext)) => [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`\<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
 
 #### Type parameters
 
@@ -10,7 +10,7 @@
 
 #### Type declaration
 
-▸ (`options`, `context`): [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
+▸ (`options`, `context`): [`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`\<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
 
 A function which parses files in the workspace to create dependencies in the [ProjectGraph](../../devkit/documents/ProjectGraph)
 Use [validateDependency](../../devkit/documents/validateDependency) to validate dependencies
@@ -24,4 +24,4 @@ Use [validateDependency](../../devkit/documents/validateDependency) to validate 
 
 ##### Returns
 
-[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>
+[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[] \| `Promise`\<[`RawProjectGraphDependency`](../../devkit/documents/RawProjectGraphDependency)[]\>

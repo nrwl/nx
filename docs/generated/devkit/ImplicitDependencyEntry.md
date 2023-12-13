@@ -1,6 +1,6 @@
-# Type alias: ImplicitDependencyEntry<T\>
+# Type alias: ImplicitDependencyEntry\<T\>
 
-Ƭ **ImplicitDependencyEntry**<`T`\>: `Object`
+Ƭ **ImplicitDependencyEntry**\<`T`\>: `Object`
 
 #### Type parameters
 
@@ -10,4 +10,4 @@
 
 #### Index signature
 
-▪ [key: `string`]: `T` \| [`ImplicitJsonSubsetDependency`](../../devkit/documents/ImplicitJsonSubsetDependency)<`T`\>
+▪ [key: `string`]: `T` \| [`ImplicitJsonSubsetDependency`](../../devkit/documents/ImplicitJsonSubsetDependency)\<`T`\>

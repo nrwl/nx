@@ -1,6 +1,6 @@
 # Function: readTargetOptions
 
-▸ **readTargetOptions**<`T`\>(`«destructured»`, `context`): `T`
+▸ **readTargetOptions**\<`T`\>(`«destructured»`, `context`): `T`
 
 Reads and combines options for a given target.
 
