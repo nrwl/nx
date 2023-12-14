@@ -67,10 +67,10 @@
     "@nx/workspace": "file:../workspace"
   },
   "peerDependencies": {
-    "@angular-devkit/build-angular": "~17.1.0-next.1",
-    "@angular-devkit/schematics": "~17.1.0-next.1",
-    "@schematics/angular": "~17.1.0-next.1",
-    "@angular-devkit/core": "~17.1.0-next.1",
+    "@angular-devkit/build-angular": ">= 15.0.0 < 18.0.0",
+    "@angular-devkit/schematics": ">= 15.0.0 < 18.0.0",
+    "@schematics/angular": ">= 15.0.0 < 18.0.0",
+    "@angular-devkit/core": ">= 15.0.0 < 18.0.0",
     "rxjs": "^6.5.3 || ^7.5.0",
     "esbuild": "^0.19.2"
   },
