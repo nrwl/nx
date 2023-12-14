@@ -16,7 +16,10 @@ describe('Playwright E2E Test runner', () => {
   });
 
   beforeAll(() => {
-    newProject({ name: uniq('playwright') });
+    newProject({
+      name: uniq('playwright'),
+      packages: ['@nx/playwright', '@nx/web'],
+    });
   });
 
   afterAll(() => cleanupProject());
