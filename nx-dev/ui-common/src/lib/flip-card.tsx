@@ -41,7 +41,7 @@ export function FlipCard({
       >
         <div
           className={cx(
-            'relative preserve-3d transition w-full h-full duration-200 aspect-[1/1] content-center rounded-lg border-2 shadow-sm focus-within:ring-offset-2 bg-white/40 dark:bg-slate-800/60',
+            'relative preserve-3d transition w-full h-full duration-200 aspect-[16/9] content-center rounded-lg border-2 shadow-sm focus-within:ring-offset-2 bg-white/40 dark:bg-slate-800/60',
             flipped ? 'my-rotate-y-180 bg-white dark:bg-slate-800' : '',
             isFlippable
               ? flipped
@@ -74,7 +74,7 @@ export function FlipCardBack({ children }: { children: ReactNode }) {
           <span className="absolute top-0 left-0 pt-2 pl-3 text-base">
             {day}
           </span>
-          <div className="px-2 text-center text-base sm:text-lg md:text-xl lg:text-3xl">
+          <div className="px-2 text-center text-sm sm:text-sm md:text-sm lg:text-lg">
             {children}
           </div>
           <div className="text-center opacity-0 group-hover:opacity-100 transition pb-2 absolute w-full bottom-0">
@@ -115,7 +115,7 @@ export function FlipCardBackYoutube({
               width="100%"
               allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               loading="lazy"
-              className="shadow-lg mb-1 mt-[21.875%]"
+              className="shadow-lg mb-1"
             />
           </div>
           <div className="text-center text-slate-100 opacity-0 group-hover:opacity-100 transition pb-2 absolute w-full bottom-0">

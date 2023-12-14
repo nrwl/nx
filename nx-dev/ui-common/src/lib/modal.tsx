@@ -97,7 +97,10 @@ export function Modal({
       )}
     >
       <div className="relative p-4 w-full max-w-4xl max-h-full">
-        <div className="relative bg-slate-50 rounded-lg shadow dark:bg-slate-700">
+        <div
+          className="relative bg-slate-50 rounded-lg shadow dark:bg-slate-700"
+          onClick={(event) => event.stopPropagation()}
+        >
           {children}
         </div>
       </div>
