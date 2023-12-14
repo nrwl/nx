@@ -261,11 +261,11 @@ export default function NewYear(): JSX.Element {
             <Modal
               key={tip.day}
               isOpen={currentModal === tip.day}
-              onClose={() => {
-                setCurrentModal(0);
-              }}
+              onClose={() => setCurrentModal(0)}
             >
-              <ModalHeader>{tip.modalHeader}</ModalHeader>
+              <ModalHeader onClose={() => setCurrentModal(0)}>
+                {tip.modalHeader}
+              </ModalHeader>
               <div className="p-6">{tip.modalContent}</div>
             </Modal>
           ))}
