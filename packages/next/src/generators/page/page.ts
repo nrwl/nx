@@ -27,6 +27,7 @@ export async function pageGeneratorInternal(host: Tree, schema: Schema) {
   const options = await normalizeOptions(host, schema);
   const componentTask = await reactComponentGenerator(host, {
     ...options,
+    isNextPage: true,
     nameAndDirectoryFormat: 'as-provided', // already determined the directory so use as is
     export: false,
     classComponent: false,
