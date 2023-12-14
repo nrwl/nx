@@ -7,7 +7,6 @@ import * as nxDevkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateBuildTargets } from './update-build-targets';
-import { array } from 'yargs';
 
 describe('updateBuildTargets', () => {
   let tree: Tree;
@@ -52,6 +51,39 @@ describe('updateBuildTargets', () => {
         },
       },
     });
+
+    addProjectConfiguration(tree, 'my-flat-source', {
+      root: 'my-flat-source',
+      name: 'my-flat-source',
+      sourceRoot: 'my-flat-source/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          cache: true,
+          dependsOn: ['^build'],
+          inputs: ['production', '^production'],
+          executor: '@nx/vite:build',
+        },
+        serve: {
+          executor: '@nx/vite:dev-server',
+          defaultConfiguration: 'development',
+          options: {
+            buildTarget: 'my-flat-source:build:development',
+            hmr: true,
+          },
+          configurations: {
+            development: {
+              buildTarget: 'my-flat-source:build:development',
+              hmr: true,
+            },
+            production: {
+              buildTarget: 'my-flat-source:build:production',
+              hmr: false,
+            },
+          },
+        },
+      },
+    });
   });
 
   it('should update build targets', async () => {
@@ -65,6 +97,19 @@ describe('updateBuildTargets', () => {
     expect(
       e2eProject.targets.e2e.configurations.production.devServerTarget
     ).toBe('subfolder-my-destination:serve:production');
+  });
+
+  it('should update build targets for flat projects', async () => {
+    updateBuildTargets(tree, { ...schema, projectName: 'my-flat-source' });
+
+    const updatedProject = readProjectConfiguration(tree, 'my-flat-source');
+    expect(updatedProject).toBeDefined();
+    expect(updatedProject.targets.serve.options.buildTarget).toBe(
+      'subfolder-my-destination:build:development'
+    );
+    expect(
+      updatedProject.targets.serve.configurations.production.buildTarget
+    ).toBe('subfolder-my-destination:build:production');
   });
 
   it('should NOT update storybook target', async () => {
