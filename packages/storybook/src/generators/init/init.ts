@@ -39,7 +39,7 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
 
   let storybook7VersionToInstall = storybookVersion;
   if (
-    storybookMajorVersion() === 7 &&
+    storybookMajorVersion() >= 7 &&
     getInstalledStorybookVersion() &&
     gte(getInstalledStorybookVersion(), '7.0.0')
   ) {
