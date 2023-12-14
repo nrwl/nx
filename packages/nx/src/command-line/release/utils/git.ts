@@ -30,6 +30,7 @@ export interface GitCommit extends RawGitCommit {
   authors: GitCommitAuthor[];
   isBreaking: boolean;
   affectedFiles: string[];
+  revertedHashes: string[];
 }
 
 function escapeRegExp(string) {
@@ -274,14 +275,13 @@ const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
 const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
+const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
 export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const match = commit.message.match(ConventionalCommitRegex);
   if (!match) {
     return null;
   }
-
-  const type = match.groups.type;
 
   const scope = match.groups.scope || '';
 
@@ -302,6 +302,18 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
 
   // Remove references and normalize
   description = description.replace(PullRequestRE, '').trim();
+
+  let type = match.groups.type;
+  // Extract any reverted hashes, if applicable
+  const revertedHashes = [];
+  const matchedHashes = commit.body.matchAll(RevertHashRE);
+  for (const matchedHash of matchedHashes) {
+    revertedHashes.push(matchedHash.groups.hash);
+  }
+  if (revertedHashes.length) {
+    type = 'revert';
+    description = commit.message;
+  }
 
   // Find all authors
   const authors: GitCommitAuthor[] = [commit.author];
@@ -333,6 +345,7 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     scope,
     references,
     isBreaking,
+    revertedHashes,
     affectedFiles,
   };
 }
