@@ -348,7 +348,7 @@ export default defineConfig({
   // },
 
   test: {
-    setupFiles: ['./test-setup.ts'],
+    setupFiles: ['test-setup.ts'],
     globals: true,
     cache: {
       dir: '../node_modules/.vitest',
@@ -810,7 +810,7 @@ export default defineConfig({
   // },
 
   test: {
-    setupFiles: ['./test-setup.ts'],
+    setupFiles: ['test-setup.ts'],
     globals: true,
     cache: {
       dir: '../../node_modules/.vitest',
@@ -1118,7 +1118,7 @@ export default defineConfig({
   // },
 
   test: {
-    setupFiles: ['./test-setup.ts'],
+    setupFiles: ['test-setup.ts'],
     globals: true,
     cache: {
       dir: './node_modules/.vitest',

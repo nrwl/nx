@@ -43,7 +43,7 @@ export function updateUnitTestConfig(
       pathToViteConfig,
       './tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
     );
-    updateViteTestSetup(tree, pathToViteConfig, './test-setup.ts');
+    updateViteTestSetup(tree, pathToViteConfig, 'test-setup.ts');
   } else if (unitTestRunner === 'jest') {
     const pathToJestConfig = joinPathFragments(pathToRoot, 'jest.config.ts');
     tree.rename('jest.preset.js', 'jest.preset.cjs');
