@@ -1,17 +1,24 @@
 import { ChangeType, applyChangesToString } from '@nx/devkit';
 import { FileReplacement } from '../../../../plugins/rollup-replace-files.plugin';
 import { tsquery } from '@phenomnomnominal/tsquery';
+import { getConfigNode, notFoundWarning } from '../update-vite-config';
 
 export function addFileReplacements(
   configContents: string,
-  fileReplacements: FileReplacement[]
+  fileReplacements: FileReplacement[],
+  configPath: string
 ): string {
+  const configNode = getConfigNode(configContents);
+  if (!configNode) {
+    notFoundWarning(configPath);
+    return configContents;
+  }
   const pluginsObject = tsquery.query(
-    configContents,
+    configNode,
     `PropertyAssignment:has(Identifier[name="plugins"])`
   )?.[0];
   const replaceFilesPlugin = tsquery.query(
-    configContents,
+    configNode,
     `PropertyAssignment:has(Identifier[name="plugins"]) CallExpression:has(Identifier[name="replaceFiles"])`
   )?.[0];
 
@@ -55,7 +62,7 @@ export function addFileReplacements(
     return applyChangesToString(configContents, [
       {
         type: ChangeType.Insert,
-        index: foundDefineConfig.getStart() + 14,
+        index: configNode.getStart() + 1,
         text: `plugins: [replaceFiles(${JSON.stringify(fileReplacements)})],`,
       },
       firstImportDeclaration

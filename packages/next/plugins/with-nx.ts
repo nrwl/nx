@@ -5,12 +5,11 @@
 import type { NextConfig } from 'next';
 import type { NextConfigFn } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
-import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import type {
-  ExecutorContext,
-  ProjectGraph,
-  ProjectGraphProjectNode,
-  Target,
+import {
+  type ExecutorContext,
+  type ProjectGraph,
+  type ProjectGraphProjectNode,
+  type Target,
 } from '@nx/devkit';
 
 const baseNXEnvironmentVariables = [
@@ -48,6 +47,7 @@ const baseNXEnvironmentVariables = [
   'NX_MAPPINGS',
   'NX_FILE_TO_RUN',
   'NX_NEXT_PUBLIC_DIR',
+  'NX_CYPRESS_COMPONENT_TEST',
 ];
 
 export interface WithNxOptions extends NextConfig {
@@ -150,7 +150,10 @@ function withNx(
     const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = await import(
       'next/constants'
     );
-    if ([PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER].includes(phase)) {
+    if (
+      PHASE_PRODUCTION_SERVER === phase ||
+      !process.env.NX_TASK_TARGET_TARGET
+    ) {
       // If we are running an already built production server, just return the configuration.
       // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
       const { nx, ...validNextConfig } = _nextConfig;
@@ -161,15 +164,22 @@ function withNx(
     } else {
       const {
         createProjectGraphAsync,
+        readCachedProjectGraph,
         joinPathFragments,
         offsetFromRoot,
         workspaceRoot,
       } = require('@nx/devkit');
 
-      // Otherwise, add in webpack and eslint configuration for build or test.
-      let dependencies: DependentBuildableProjectNode[] = [];
-
-      const graph = await createProjectGraphAsync();
+      let graph = readCachedProjectGraph();
+      if (!graph) {
+        try {
+          graph = await createProjectGraphAsync();
+        } catch (e) {
+          throw new Error(
+            'Could not create project graph. Please ensure that your workspace is valid.'
+          );
+        }
+      }
 
       const originalTarget = {
         project: process.env.NX_TASK_TARGET_PROJECT,
@@ -181,24 +191,8 @@ function withNx(
         node: projectNode,
         options,
         projectName: project,
-        targetName,
-        configurationName,
       } = getNxContext(graph, originalTarget);
       const projectDirectory = projectNode.data.root;
-
-      if (options.buildLibsFromSource === false && targetName) {
-        const {
-          calculateProjectDependencies,
-        } = require('@nx/js/src/utils/buildable-libs-utils');
-        const result = calculateProjectDependencies(
-          graph,
-          workspaceRoot,
-          project,
-          targetName,
-          configurationName
-        );
-        dependencies = result.dependencies;
-      }
 
       // Get next config
       const nextConfig = getNextConfig(_nextConfig, context);
@@ -229,10 +223,12 @@ function withNx(
 
       // outputPath may be undefined if using run-commands or other executors other than @nx/next:build.
       // In this case, the user should set distDir in their next.config.js.
-      if (options.outputPath) {
+      if (options.outputPath && phase !== PHASE_DEVELOPMENT_SERVER) {
         const outputDir = `${offsetFromRoot(projectDirectory)}${
           options.outputPath
         }`;
+        // If running dev-server, we should keep `.next` inside project directory since Turbopack expects this.
+        // See: https://github.com/nrwl/nx/issues/19365
         nextConfig.distDir =
           nextConfig.distDir && nextConfig.distDir !== '.next'
             ? joinPathFragments(outputDir, nextConfig.distDir)
@@ -469,7 +465,7 @@ export function getAliasForProject(
   paths: Record<string, string[]>
 ): null | string {
   // Match workspace libs to their alias in tsconfig paths.
-  for (const [alias, lookup] of Object.entries(paths)) {
+  for (const [alias, lookup] of Object.entries(paths ?? {})) {
     const lookupContainsDepNode = lookup.some(
       (lookupPath) =>
         lookupPath.startsWith(node?.data?.root) ||

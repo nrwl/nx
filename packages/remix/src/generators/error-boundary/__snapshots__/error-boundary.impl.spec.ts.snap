@@ -1,0 +1,61 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ErrorBoundary --nameAndDirectoryFormat=as-provided --apiVersion=2 should correctly add the ErrorBoundary to the route file 1`] = `
+"import { useRouteError, isRouteErrorResponse } from '@remix-run/react';
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  // when true, this is what used to go to 'CatchBoundary'
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div>
+        <h1>Oops</h1>
+        <p>Status: {error.status}</p>
+        <p>{error.data.message}</p>
+      </div>
+    );
+  } else if (error instanceof Error) {
+    return (
+      <div>
+        <h1>Error</h1>
+        <p>{error.message}</p>
+        <p>The stack trace is:</p>
+        <pre>{error.stack}</pre>
+      </div>
+    );
+  } else {
+    return <h1>Unknown Error</h1>;
+  }
+}
+"
+`;
+
+exports[`ErrorBoundary --nameAndDirectoryFormat=as-provided --apiVersion=2 should correctly add the ErrorBoundary to the route file 2`] = `
+"import { useRouteError, isRouteErrorResponse } from '@remix-run/react';
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  // when true, this is what used to go to 'CatchBoundary'
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div>
+        <h1>Oops</h1>
+        <p>Status: {error.status}</p>
+        <p>{error.data.message}</p>
+      </div>
+    );
+  } else if (error instanceof Error) {
+    return (
+      <div>
+        <h1>Error</h1>
+        <p>{error.message}</p>
+        <p>The stack trace is:</p>
+        <pre>{error.stack}</pre>
+      </div>
+    );
+  } else {
+    return <h1>Unknown Error</h1>;
+  }
+}
+"
+`;

@@ -21,7 +21,10 @@ describe('Angular Cypress Component Tests', () => {
   const buildableLibName = uniq('cy-angular-buildable-lib');
 
   beforeAll(async () => {
-    projectName = newProject({ name: uniq('cy-ng') });
+    projectName = newProject({
+      name: uniq('cy-ng'),
+      packages: ['@nx/angular'],
+    });
 
     createApp(appName);
 
@@ -359,6 +362,7 @@ describe(InputStandaloneComponent.name, () => {
 `
   );
 }
+
 function useBuildableLibInLib(
   projectName: string,
   buildableLibName: string,

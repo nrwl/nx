@@ -81,7 +81,11 @@ export async function* devServerExecutor(
 
     // Only add the dev server option if user is composable plugin.
     // Otherwise, user should define `devServer` option directly in their webpack config.
-    if (isNxWebpackComposablePlugin(userDefinedWebpackConfig)) {
+    if (
+      typeof userDefinedWebpackConfig === 'function' &&
+      (isNxWebpackComposablePlugin(userDefinedWebpackConfig) ||
+        !buildOptions.standardWebpackConfigFunction)
+    ) {
       config = await userDefinedWebpackConfig(
         { devServer },
         {

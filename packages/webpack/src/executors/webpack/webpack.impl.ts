@@ -23,7 +23,7 @@ import type {
 } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import {
-  composePlugins,
+  composePluginsSync,
   isNxWebpackComposablePlugin,
 } from '../../utils/config';
 import { withNx } from '../../utils/with-nx';
@@ -54,9 +54,15 @@ async function getWebpackConfigs(
 
   const config = options.isolatedConfig
     ? {}
-    : composePlugins(withNx(options), withWeb(options));
+    : (options.target === 'web'
+        ? composePluginsSync(withNx(options), withWeb(options))
+        : withNx(options))({}, { options, context });
 
-  if (isNxWebpackComposablePlugin(userDefinedWebpackConfig)) {
+  if (
+    typeof userDefinedWebpackConfig === 'function' &&
+    (isNxWebpackComposablePlugin(userDefinedWebpackConfig) ||
+      !options.standardWebpackConfigFunction)
+  ) {
     // Old behavior, call the Nx-specific webpack config function that user exports
     return await userDefinedWebpackConfig(config, {
       options,

@@ -109,7 +109,8 @@ async function createWebpackTargets(
   const namedInputs = getNamedInputs(projectRoot, context);
   const webpackConfig = resolveUserDefinedWebpackConfig(
     join(context.workspaceRoot, configFilePath),
-    getRootTsConfigPath()
+    getRootTsConfigPath(),
+    true
   );
   const webpackOptions = await readWebpackOptions(webpackConfig);
 
@@ -125,10 +126,11 @@ async function createWebpackTargets(
     command: `webpack -c ${configBasename} --node-env=production`,
     options: { cwd: projectRoot },
     cache: true,
+    dependsOn: [`^${options.buildTargetName}`],
     inputs:
       'production' in namedInputs
         ? [
-            'default',
+            'production',
             '^production',
             {
               externalDependencies: ['webpack-cli'],

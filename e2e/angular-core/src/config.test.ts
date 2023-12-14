@@ -12,7 +12,7 @@ describe('angular.json v1 config', () => {
   const app1 = uniq('app1');
 
   beforeAll(() => {
-    newProject();
+    newProject({ packages: ['@nx/angular'] });
     runCLI(
       `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`
     );

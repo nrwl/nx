@@ -6,7 +6,7 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { PreviewOptions, ServerOptions } from 'vite';
+import { ProxyOptions, ServerOptions } from 'vite';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 
 /**
@@ -117,24 +117,16 @@ export async function getViteServerOptions(
   return serverOptions;
 }
 
-/**
- * Builds the options for the vite preview server.
- */
-export function getVitePreviewOptions(
-  options: Record<string, any>,
-  context: ExecutorContext
-): PreviewOptions {
-  const serverOptions: ServerOptions = {};
-  const proxyConfigPath = getViteServerProxyConfigPath(
-    options.proxyConfig,
-    context
-  );
+export function getProxyConfig(
+  context: ExecutorContext,
+  proxyConfig?: string
+): Record<string, string | ProxyOptions> | undefined {
+  const proxyConfigPath = getViteServerProxyConfigPath(proxyConfig, context);
   if (proxyConfigPath) {
     logger.info(`Loading proxy configuration from: ${proxyConfigPath}`);
-    serverOptions.proxy = require(proxyConfigPath);
+    return require(proxyConfigPath);
   }
-
-  return serverOptions;
+  return;
 }
 
 export function getNxTargetOptions(target: string, context: ExecutorContext) {

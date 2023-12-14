@@ -1,7 +1,7 @@
 export const nxVersion = require('../../package.json').version;
 
-export const nextVersion = '13.4.1';
-export const eslintConfigNextVersion = '13.4.1';
+export const nextVersion = '14.0.4';
+export const eslintConfigNextVersion = '14.0.4';
 export const sassVersion = '1.62.1';
 export const lessLoader = '11.1.0';
 export const emotionServerVersion = '11.11.0';
