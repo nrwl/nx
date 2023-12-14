@@ -29,7 +29,7 @@ describe('Cypress generator', () => {
           },
         },
       },
-      lint: { executor: '@nx/eslint:lint', outputs: ['{options.outputFile}'] },
+      lint: { executor: '@nx/eslint:lint' },
     });
   });
 });
