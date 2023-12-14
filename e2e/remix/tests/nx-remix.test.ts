@@ -50,7 +50,7 @@ describe('remix e2e', () => {
 
     const buildResult = runCLI(`build ${plugin}`);
     expect(buildResult).toContain('Successfully ran target build');
-
+    console.log('Running tests');
     const testResult = runCLI(`test ${plugin}`);
     expect(testResult).toContain('Successfully ran target test');
   }, 120000);
