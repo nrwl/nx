@@ -60,10 +60,10 @@
     "@nestjs/schematics": "^9.1.0",
     "@nestjs/swagger": "^6.0.0",
     "@nestjs/testing": "^9.0.0",
-    "@nuxt/kit": "^3.8.1",
     "@ngrx/effects": "17.0.1",
     "@ngrx/router-store": "17.0.1",
     "@ngrx/store": "17.0.1",
+    "@nuxt/kit": "^3.8.1",
     "@nuxt/schema": "^3.8.1",
     "@nx/angular": "17.2.0-rc.2",
     "@nx/cypress": "17.2.0-rc.2",
@@ -287,7 +287,8 @@
     "url-loader": "^4.1.1",
     "use-sync-external-store": "^1.2.0",
     "verdaccio": "^5.0.4",
-    "vite": "5.0.5",
+    "vite": "5.0.8",
+    "vitest": "^1.0.4",
     "webpack": "5.88.0",
     "webpack-dev-server": "^4.9.3",
     "webpack-merge": "^5.8.0",
@@ -352,7 +353,6 @@
     "tailwind-merge": "^1.8.1",
     "tailwindcss": "3.2.4",
     "tslib": "^2.3.0",
-    "vitest": "^0.34.6",
     "weak-napi": "^2.0.2"
   },
   "resolutions": {
@@ -371,4 +371,3 @@
     ]
   }
 }
-
