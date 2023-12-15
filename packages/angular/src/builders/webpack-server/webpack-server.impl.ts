@@ -1,4 +1,8 @@
-import { joinPathFragments, normalizePath } from '@nx/devkit';
+import {
+  joinPathFragments,
+  normalizePath,
+  targetToTargetString,
+} from '@nx/devkit';
 import { existsSync } from 'fs';
 import { relative } from 'path';
 import { Observable, from } from 'rxjs';
@@ -95,6 +99,9 @@ export function executeWebpackServerBuilder(
   validateOptions(options);
 
   options.buildLibsFromSource ??= true;
+
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${options.buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = targetToTargetString({ ...context.target });
 
   if (!options.buildLibsFromSource) {
     const { tsConfigPath } = createTmpTsConfigForBuildableLibs(
