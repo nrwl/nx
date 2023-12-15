@@ -40,7 +40,7 @@ const iconMap: { [key: string]: JSX.Element } = {
 function CategoryBox({ category }: { category: RelatedDocumentsCategory }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white/60 p-5 dark:border-slate-800/40 dark:bg-slate-800/60">
-      <h4 className="flex items-center mt-0 mb-2 text-xl font-bold">
+      <h4 className="flex items-center mt-0 pb-2 text-xl font-bold">
         {iconMap[category.id] ?? iconMap.default}
         {category.name}
       </h4>
