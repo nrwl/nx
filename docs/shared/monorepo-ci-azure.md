@@ -22,6 +22,7 @@ variables:
     NX_BRANCH: $(Build.SourceBranchName)
     BASE_SHA: $(git rev-parse HEAD~1)
   HEAD_SHA: $(git rev-parse HEAD)
+  YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
 jobs:
   - job: main
@@ -33,11 +34,7 @@ jobs:
         displayName: 'Set default Azure DevOps organization and project'
 
       # Get last successfull commit from Azure Devops CLI
-      - displayName: 'Get last successful commit SHA'
-        condition: ne(variables['Build.Reason'], 'PullRequest')
-        env:
-          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
-        bash: |
+      - bash: |
           LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
           if [ -z "$LAST_SHA" ]
           then
@@ -46,12 +43,65 @@ jobs:
             echo "Last successful commit SHA: $LAST_SHA"
             echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
           fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
       # Required for nx affected if we're on a branch
       - script: git branch --track main origin/main
-      - script: npm ci
+
+      - task: Cache@2
+        inputs:
+          key: '"yarn" | "$(Agent.OS)" | yarn.lock'
+          restoreKeys: |
+            "yarn" | "$(Agent.OS)"
+            "yarn"
+          path: $(YARN_CACHE_FOLDER)
+        displayName: Cache Yarn packages
+
+      - script: yarn --frozen-lockfile
+        displayName: 'Install dependencies'
+
       - script: npx nx format:check --base=$(BASE_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) -t lint,test,build --parallel=3 --configuration=ci
+        displayName: 'Format check'
+      - script: npx nx affected --base=$(BASE_SHA) -t lint --parallel=3
+        displayName: 'Lint'
+      - script: npx nx affected --base=$(BASE_SHA) -t test --parallel=3
+        displayName: 'Test'
+      - script: npx nx affected --base=$(BASE_SHA) -t build --parallel=3
+        displayName: 'Build'
+
+      # archive and publish artifacts
+      - task: ArchiveFiles@2
+        displayName: Archive Build Artifacts
+        condition: always()
+        continueOnError: true
+        inputs:
+          rootFolderOrFile: '$(System.DefaultWorkingDirectory)/dist'
+          includeRootFolder: false
+          archiveType: 'zip'
+          archiveFile: $(Build.ArtifactStagingDirectory)/build/$(Build.BuildId).zip
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Build Artifacts
+        condition: always()
+        continueOnError: true
+        inputs:
+          pathtoPublish: $(Build.ArtifactStagingDirectory)/build/$(Build.BuildId).zip
+          artifactName: 'drop'
+
+      # Tag build to trigger release pipelines
+      - script: |
+          projects=`npx nx show projects --affected --base=$(BASE_SHA) --head=$(HEAD_SHA)`
+          echo "Touched projects:"
+          echo $projects
+
+          for project in ${projects//,/ }
+          do
+            echo "##vso[build.addbuildtag]$project"
+            echo "Creating tag for: $project"
+          done
+        displayName: 'Tag build'
 ```
 
 {% callout type="note" title="Check your Shallow Fetch settings" %}
@@ -122,13 +172,14 @@ pr:
 variables:
   CI: 'true'
   ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
-    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    NX_BRANCH: $(System.PullRequest.PullRequestId) # You can use $(System.PullRequest.PullRequestNumber if your pipeline is triggered by a PR from GitHub ONLY)
     TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
     BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
   ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
     NX_BRANCH: $(Build.SourceBranchName)
     BASE_SHA: $(git rev-parse HEAD~1)
   HEAD_SHA: $(git rev-parse HEAD)
+  YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
 jobs:
   - job: agents
@@ -138,8 +189,19 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      - script: npm ci
+      - task: Cache@2
+        inputs:
+          key: '"yarn" | "$(Agent.OS)" | yarn.lock'
+          restoreKeys: |
+            "yarn" | "$(Agent.OS)"
+            "yarn"
+          path: $(YARN_CACHE_FOLDER)
+        displayName: Cache Yarn packages
+
+      - script: yarn --frozen-lockfile
+        displayName: 'Install dependencies'
       - script: npx nx-cloud start-agent
+        displayName: Start Nx-Cloud agent
 
   - job: main
     displayName: Nx Cloud Main
@@ -147,11 +209,7 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       # Get last successfull commit from Azure Devops CLI
-      - displayName: 'Get last successful commit SHA'
-        condition: ne(variables['Build.Reason'], 'PullRequest')
-        env:
-          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
-        bash: |
+      - bash: |
           LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
           if [ -z "$LAST_SHA" ]
           then
@@ -160,12 +218,65 @@ jobs:
             echo "Last successful commit SHA: $LAST_SHA"
             echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
           fi
+        displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
       - script: git branch --track main origin/main
-      - script: npm ci
-      - script: npx nx-cloud start-ci-run --stop-agents-after="build"
-      - script: npx nx-cloud record -- npx nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint,test,build --parallel=2 --configuration=ci
+      - task: Cache@2
+        inputs:
+          key: '"yarn" | "$(Agent.OS)" | yarn.lock'
+          restoreKeys: |
+            "yarn" | "$(Agent.OS)"
+            "yarn"
+          path: $(YARN_CACHE_FOLDER)
+        displayName: Cache Yarn packages
+
+      - script: yarn --frozen-lockfile
+      - script: yarn nx-cloud start-ci-run --agent-count=3
+        displayName: Start CI run
+      - script: yarn nx-cloud record -- yarn nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+        displayName: Check format
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint --parallel=3
+        displayName: Run lint
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=test --parallel=3 --ci --code-coverage
+        displayName: Run test
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=build --parallel=3
+        displayName: Run build
+        # archive and publish artifacts
+      - task: ArchiveFiles@2
+        displayName: Archive Build Artifacts
+        condition: always()
+        continueOnError: true
+        inputs:
+          rootFolderOrFile: '$(System.DefaultWorkingDirectory)/dist'
+          includeRootFolder: false
+          archiveType: 'zip'
+          archiveFile: $(Build.ArtifactStagingDirectory)/build/$(Build.BuildId).zip
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Build Artifacts
+        condition: always()
+        continueOnError: true
+        inputs:
+          pathtoPublish: $(Build.ArtifactStagingDirectory)/build/$(Build.BuildId).zip
+          artifactName: 'drop'
+
+      - script: |
+          projects=`npx nx show projects --affected --base=$(BASE_SHA) --head=$(HEAD_SHA)`
+          echo "Touched projects:"
+          echo $projects
+
+          for project in ${projects//,/ }
+          do
+            echo "##vso[build.addbuildtag]$project"
+            echo "Creating tag for: $project"
+          done
+        displayName: 'Tag build'
+
+      - script: yarn nx-cloud stop-all-agents
+        condition: always()
+        displayName: Stop all Nx-Cloud agents
 ```
 
 This configuration is setting up two types of jobs - a main job and three agent jobs.
