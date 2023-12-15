@@ -79,7 +79,23 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     test: { title: '✅ Tests' },
     style: { title: '🎨 Styles' },
     ci: { title: '🤖 CI' },
+    revert: { title: '⏪ Revert' },
   };
+
+  // If the current range of commits contains both a commit and its revert, we strip them both from the final list
+  for (const commit of commits) {
+    if (commit.type === 'revert') {
+      for (const revertedHash of commit.revertedHashes) {
+        const revertedCommit = commits.find((c) =>
+          revertedHash.startsWith(c.shortHash)
+        );
+        if (revertedCommit) {
+          commits.splice(commits.indexOf(revertedCommit), 1);
+          commits.splice(commits.indexOf(commit), 1);
+        }
+      }
+    }
+  }
 
   // workspace root level changelog
   if (project === null) {

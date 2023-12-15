@@ -1,6 +1,6 @@
 # Function: runExecutor
 
-▸ **runExecutor**<`T`\>(`targetDescription`, `overrides`, `context`): `Promise`<`AsyncIterableIterator`<`T`\>\>
+▸ **runExecutor**\<`T`\>(`targetDescription`, `overrides`, `context`): `Promise`\<`AsyncIterableIterator`\<`T`\>\>
 
 Loads and invokes executor.
 
@@ -46,4 +46,4 @@ Note that the return value is a promise of an iterator, so you need to await bef
 
 #### Returns
 
-`Promise`<`AsyncIterableIterator`<`T`\>\>
+`Promise`\<`AsyncIterableIterator`\<`T`\>\>

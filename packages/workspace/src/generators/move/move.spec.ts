@@ -1,4 +1,10 @@
-import { readJson, Tree, updateJson } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  updateJson,
+  updateProjectConfiguration,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { moveGenerator } from './move';
 // nx-ignore-next-line
@@ -33,6 +39,51 @@ describe('move', () => {
     expect(afterJestConfig).toContain("preset: '../../jest.preset.js'");
     expect(afterJestConfig).toContain(
       "coverageDirectory: '../../coverage/shared/my-lib-new'"
+    );
+  });
+
+  it('should make sure build targets are correct when moving', async () => {
+    await libraryGenerator(tree, {
+      name: 'one',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    const myLibConfig = readProjectConfiguration(tree, 'one');
+
+    updateProjectConfiguration(tree, 'one', {
+      ...myLibConfig,
+      targets: {
+        ...myLibConfig.targets,
+        custom: {
+          executor: 'some-executor',
+          options: {
+            buildTarget: 'one:build:production',
+            serveTarget: 'one:serve:production',
+            irrelevantTarget: 'my-lib:build:production',
+          },
+        },
+      },
+    });
+
+    await moveGenerator(tree, {
+      projectName: 'one',
+      importPath: '@proj/two',
+      newProjectName: 'two',
+      updateImportPath: true,
+      destination: 'shared/two',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    const myLibNewConfig = readProjectConfiguration(tree, 'two');
+
+    expect(myLibNewConfig.targets.custom.options.buildTarget).toEqual(
+      'two:build:production'
+    );
+    expect(myLibNewConfig.targets.custom.options.serveTarget).toEqual(
+      'two:serve:production'
+    );
+    expect(myLibNewConfig.targets.custom.options.irrelevantTarget).toEqual(
+      'my-lib:build:production'
     );
   });
 
@@ -173,7 +224,18 @@ describe('move', () => {
     // Test that root configs are extracted
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
     expect(tree.exists('jest.config.ts')).toBeTruthy();
-    expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
+    expect(tree.exists('.eslintrc.base.json')).not.toBeTruthy();
+    expect(tree.exists('.eslintrc.json')).toBeTruthy();
+
+    // Test that eslint migration was done
+    expect(readJson(tree, 'my-lib/.eslintrc.json').extends)
+      .toMatchInlineSnapshot(`
+      [
+        "../.eslintrc.json",
+      ]
+    `);
+    expect(readJson(tree, 'my-lib/.eslintrc.json').plugins).not.toBeDefined();
+    expect(readJson(tree, '.eslintrc.json').plugins).toEqual(['@nx']);
   });
 
   it('should support moving standalone repos', async () => {
@@ -190,6 +252,8 @@ describe('move', () => {
       style: 'css',
       projectNameAndRootFormat: 'as-provided',
     });
+    expect(readJson(tree, '.eslintrc.json').plugins).toEqual(['@nx']);
+    expect(readJson(tree, 'e2e/.eslintrc.json').plugins).toEqual(['@nx']);
 
     // Test that this does not get moved
     tree.write('other-lib/index.ts', '');
@@ -200,6 +264,14 @@ describe('move', () => {
       destination: 'apps/react-app',
       projectNameAndRootFormat: 'as-provided',
     });
+
+    // expect both eslint configs to have been changed
+    expect(tree.exists('.eslintrc.json')).toBeDefined();
+    expect(
+      readJson(tree, 'apps/react-app/.eslintrc.json').plugins
+    ).toBeUndefined();
+    expect(readJson(tree, 'e2e/.eslintrc.json').plugins).toBeUndefined();
+
     await moveGenerator(tree, {
       projectName: 'e2e',
       updateImportPath: false,
@@ -220,6 +292,124 @@ describe('move', () => {
         },
       });
       "
+    `);
+  });
+
+  it('should correctly move standalone repos that have migrated eslint config', async () => {
+    // Test that these are not moved
+    tree.write('.gitignore', '');
+    tree.write('README.md', '');
+
+    await applicationGenerator(tree, {
+      name: 'react-app',
+      rootProject: true,
+      unitTestRunner: 'jest',
+      e2eTestRunner: 'cypress',
+      linter: 'eslint',
+      style: 'css',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      bundler: 'tsc',
+      buildable: true,
+      unitTestRunner: 'jest',
+      linter: 'eslint',
+      directory: 'my-lib',
+      projectNameAndRootFormat: 'as-provided',
+    });
+    // assess the correct starting position
+    expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
+    expect(readJson(tree, '.eslintrc.json').plugins).not.toBeDefined();
+    expect(readJson(tree, '.eslintrc.json').extends).toEqual([
+      'plugin:@nx/react',
+      './.eslintrc.base.json',
+    ]);
+    expect(readJson(tree, 'e2e/.eslintrc.json').plugins).not.toBeDefined();
+    expect(readJson(tree, 'e2e/.eslintrc.json').extends).toEqual([
+      'plugin:cypress/recommended',
+      '../.eslintrc.base.json',
+    ]);
+
+    await moveGenerator(tree, {
+      projectName: 'react-app',
+      updateImportPath: false,
+      destination: 'apps/react-app',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    // expect both eslint configs to have been changed
+    expect(tree.exists('.eslintrc.json')).toBeTruthy();
+    expect(tree.exists('.eslintrc.base.json')).toBeFalsy();
+
+    expect(readJson(tree, 'apps/react-app/.eslintrc.json').extends).toEqual([
+      'plugin:@nx/react',
+      '../../.eslintrc.json',
+    ]);
+    expect(readJson(tree, 'e2e/.eslintrc.json').extends).toEqual([
+      'plugin:cypress/recommended',
+      '../.eslintrc.json',
+    ]);
+  });
+
+  it('should support scoped new project name for libraries', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    await moveGenerator(tree, {
+      projectName: 'my-lib',
+      newProjectName: '@proj/shared-my-lib',
+      updateImportPath: true,
+      destination: 'shared/my-lib',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    expect(tree.exists('shared/my-lib/package.json')).toBeTruthy();
+    expect(tree.exists('shared/my-lib/tsconfig.lib.json')).toBeTruthy();
+    expect(tree.exists('shared/my-lib/src/index.ts')).toBeTruthy();
+    expect(readProjectConfiguration(tree, '@proj/shared-my-lib'))
+      .toMatchInlineSnapshot(`
+      {
+        "$schema": "../../node_modules/nx/schemas/project-schema.json",
+        "name": "@proj/shared-my-lib",
+        "projectType": "library",
+        "root": "shared/my-lib",
+        "sourceRoot": "shared/my-lib/src",
+        "tags": [],
+        "targets": {
+          "build": {
+            "executor": "@nx/js:tsc",
+            "options": {
+              "assets": [
+                "shared/my-lib/*.md",
+              ],
+              "main": "shared/my-lib/src/index.ts",
+              "outputPath": "dist/shared/my-lib",
+              "tsConfig": "shared/my-lib/tsconfig.lib.json",
+            },
+            "outputs": [
+              "{options.outputPath}",
+            ],
+          },
+          "lint": {
+            "executor": "@nx/eslint:lint",
+            "outputs": [
+              "{options.outputFile}",
+            ],
+          },
+          "test": {
+            "executor": "@nx/jest:jest",
+            "options": {
+              "jestConfig": "shared/my-lib/jest.config.ts",
+            },
+            "outputs": [
+              "{workspaceRoot}/coverage/{projectRoot}",
+            ],
+          },
+        },
+      }
     `);
   });
 

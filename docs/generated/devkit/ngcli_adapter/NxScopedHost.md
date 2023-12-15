@@ -2,7 +2,7 @@
 
 ## Hierarchy
 
-- `ScopedHost`<`any`\>
+- `ScopedHost`\<`any`\>
 
   ↳ **`NxScopedHost`**
 
@@ -14,7 +14,7 @@
 
 ### Properties
 
-- [\_delegate](../../devkit/documents/ngcli_adapter/NxScopedHost#_delegate): Host&lt;any&gt;
+- [\_delegate](../../devkit/documents/ngcli_adapter/NxScopedHost#_delegate): Host<any>
 - [\_root](../../devkit/documents/ngcli_adapter/NxScopedHost#_root): Path
 - [root](../../devkit/documents/ngcli_adapter/NxScopedHost#root): string
 
@@ -44,7 +44,7 @@
 
 ### constructor
 
-• **new NxScopedHost**(`root`)
+• **new NxScopedHost**(`root`): [`NxScopedHost`](../../devkit/documents/ngcli_adapter/NxScopedHost)
 
 #### Parameters
 
@@ -52,15 +52,19 @@
 | :----- | :------- |
 | `root` | `string` |
 
+#### Returns
+
+[`NxScopedHost`](../../devkit/documents/ngcli_adapter/NxScopedHost)
+
 #### Overrides
 
-virtualFs.ScopedHost&lt;any\&gt;.constructor
+virtualFs.ScopedHost\&lt;any\&gt;.constructor
 
 ## Properties
 
 ### \_delegate
 
-• `Protected` **\_delegate**: `Host`<`any`\>
+• `Protected` **\_delegate**: `Host`\<`any`\>
 
 #### Inherited from
 
@@ -100,7 +104,7 @@ virtualFs.ScopedHost.capabilities
 
 ### \_resolve
 
-▸ `Protected` **\_resolve**(`path`): `Path`
+▸ **\_resolve**(`path`): `Path`
 
 #### Parameters
 
@@ -120,7 +124,7 @@ virtualFs.ScopedHost.\_resolve
 
 ### delete
 
-▸ **delete**(`path`): `Observable`<`void`\>
+▸ **delete**(`path`): `Observable`\<`void`\>
 
 #### Parameters
 
@@ -130,7 +134,7 @@ virtualFs.ScopedHost.\_resolve
 
 #### Returns
 
-`Observable`<`void`\>
+`Observable`\<`void`\>
 
 #### Inherited from
 
@@ -140,7 +144,7 @@ virtualFs.ScopedHost.delete
 
 ### exists
 
-▸ **exists**(`path`): `Observable`<`boolean`\>
+▸ **exists**(`path`): `Observable`\<`boolean`\>
 
 #### Parameters
 
@@ -150,7 +154,7 @@ virtualFs.ScopedHost.delete
 
 #### Returns
 
-`Observable`<`boolean`\>
+`Observable`\<`boolean`\>
 
 #### Overrides
 
@@ -160,7 +164,7 @@ virtualFs.ScopedHost.exists
 
 ### isDirectory
 
-▸ **isDirectory**(`path`): `Observable`<`boolean`\>
+▸ **isDirectory**(`path`): `Observable`\<`boolean`\>
 
 #### Parameters
 
@@ -170,7 +174,7 @@ virtualFs.ScopedHost.exists
 
 #### Returns
 
-`Observable`<`boolean`\>
+`Observable`\<`boolean`\>
 
 #### Inherited from
 
@@ -180,7 +184,7 @@ virtualFs.ScopedHost.isDirectory
 
 ### isFile
 
-▸ **isFile**(`path`): `Observable`<`boolean`\>
+▸ **isFile**(`path`): `Observable`\<`boolean`\>
 
 #### Parameters
 
@@ -190,7 +194,7 @@ virtualFs.ScopedHost.isDirectory
 
 #### Returns
 
-`Observable`<`boolean`\>
+`Observable`\<`boolean`\>
 
 #### Overrides
 
@@ -200,7 +204,7 @@ virtualFs.ScopedHost.isFile
 
 ### list
 
-▸ **list**(`path`): `Observable`<`PathFragment`[]\>
+▸ **list**(`path`): `Observable`\<`PathFragment`[]\>
 
 #### Parameters
 
@@ -210,7 +214,7 @@ virtualFs.ScopedHost.isFile
 
 #### Returns
 
-`Observable`<`PathFragment`[]\>
+`Observable`\<`PathFragment`[]\>
 
 #### Inherited from
 
@@ -238,7 +242,7 @@ virtualFs.ScopedHost.list
 
 ### read
 
-▸ **read**(`path`): `Observable`<`ArrayBuffer`\>
+▸ **read**(`path`): `Observable`\<`ArrayBuffer`\>
 
 #### Parameters
 
@@ -248,7 +252,7 @@ virtualFs.ScopedHost.list
 
 #### Returns
 
-`Observable`<`ArrayBuffer`\>
+`Observable`\<`ArrayBuffer`\>
 
 #### Overrides
 
@@ -258,17 +262,17 @@ virtualFs.ScopedHost.read
 
 ### readExistingAngularJson
 
-▸ **readExistingAngularJson**(): `Observable`<`any`\>
+▸ **readExistingAngularJson**(): `Observable`\<`any`\>
 
 #### Returns
 
-`Observable`<`any`\>
+`Observable`\<`any`\>
 
 ---
 
 ### readJson
 
-▸ `Private` **readJson**<`T`\>(`path`): `Observable`<`T`\>
+▸ **readJson**\<`T`\>(`path`): `Observable`\<`T`\>
 
 #### Type parameters
 
@@ -284,23 +288,23 @@ virtualFs.ScopedHost.read
 
 #### Returns
 
-`Observable`<`T`\>
+`Observable`\<`T`\>
 
 ---
 
 ### readMergedWorkspaceConfiguration
 
-▸ `Private` **readMergedWorkspaceConfiguration**(): `Observable`<`any`\>
+▸ **readMergedWorkspaceConfiguration**(): `Observable`\<`any`\>
 
 #### Returns
 
-`Observable`<`any`\>
+`Observable`\<`any`\>
 
 ---
 
 ### rename
 
-▸ **rename**(`from`, `to`): `Observable`<`void`\>
+▸ **rename**(`from`, `to`): `Observable`\<`void`\>
 
 #### Parameters
 
@@ -311,7 +315,7 @@ virtualFs.ScopedHost.read
 
 #### Returns
 
-`Observable`<`void`\>
+`Observable`\<`void`\>
 
 #### Inherited from
 
@@ -321,7 +325,7 @@ virtualFs.ScopedHost.rename
 
 ### stat
 
-▸ **stat**(`path`): `Observable`<`any`\>
+▸ **stat**(`path`): `Observable`\<`any`\>
 
 #### Parameters
 
@@ -331,7 +335,7 @@ virtualFs.ScopedHost.rename
 
 #### Returns
 
-`Observable`<`any`\>
+`Observable`\<`any`\>
 
 #### Inherited from
 
@@ -341,7 +345,7 @@ virtualFs.ScopedHost.stat
 
 ### watch
 
-▸ **watch**(`path`, `options?`): `Observable`<`HostWatchEvent`\>
+▸ **watch**(`path`, `options?`): `Observable`\<`HostWatchEvent`\>
 
 #### Parameters
 
@@ -352,7 +356,7 @@ virtualFs.ScopedHost.stat
 
 #### Returns
 
-`Observable`<`HostWatchEvent`\>
+`Observable`\<`HostWatchEvent`\>
 
 #### Inherited from
 
@@ -362,7 +366,7 @@ virtualFs.ScopedHost.watch
 
 ### write
 
-▸ **write**(`path`, `content`): `Observable`<`void`\>
+▸ **write**(`path`, `content`): `Observable`\<`void`\>
 
 #### Parameters
 
@@ -373,7 +377,7 @@ virtualFs.ScopedHost.watch
 
 #### Returns
 
-`Observable`<`void`\>
+`Observable`\<`void`\>
 
 #### Overrides
 

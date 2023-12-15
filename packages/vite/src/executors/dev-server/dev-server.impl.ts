@@ -1,17 +1,9 @@
 import { ExecutorContext, joinPathFragments } from '@nx/devkit';
 import {
-  loadConfigFromFile,
-  type InlineConfig,
-  type ViteDevServer,
-  ServerOptions,
-} from 'vite';
-
-import {
   getNxTargetOptions,
   getViteServerOptions,
   normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
-
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
 import { createBuildableTsConfig } from '../../utils/executor-utils';
@@ -23,7 +15,7 @@ export async function* viteDevServerExecutor(
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, createServer } = await (Function(
+  const { mergeConfig, createServer, loadConfigFromFile } = await (Function(
     'return import("vite")'
   )() as Promise<typeof import('vite')>);
 
@@ -54,7 +46,8 @@ export async function* viteDevServerExecutor(
     viteConfigPath
   );
 
-  const serverConfig: InlineConfig = mergeConfig(
+  // vite InlineConfig
+  const serverConfig = mergeConfig(
     {
       // This should not be needed as it's going to be set in vite.config.ts
       // but leaving it here in case someone did not migrate correctly
@@ -96,8 +89,8 @@ export async function* viteDevServerExecutor(
     process.once('exit', () => resolve());
   });
 }
-
-async function runViteDevServer(server: ViteDevServer): Promise<void> {
+// vite ViteDevServer
+async function runViteDevServer(server: Record<string, any>): Promise<void> {
   await server.listen();
 
   server.printUrls();
@@ -116,7 +109,8 @@ export default viteDevServerExecutor;
 async function getServerExtraArgs(
   options: ViteDevServerExecutorOptions
 ): Promise<{
-  serverOptions: ServerOptions;
+  // vite ServerOptions
+  serverOptions: Record<string, unknown>;
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
@@ -128,7 +122,7 @@ async function getServerExtraArgs(
     }
   }
 
-  const serverOptions = {} as ServerOptions;
+  const serverOptions = {};
   const serverSchemaKeys = [
     'hmr',
     'warmup',
