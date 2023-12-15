@@ -5,7 +5,7 @@
 {% /callout %}
 
 {% youtube
-src="https://youtu.be/KPCMg_Dn0Eo?si=TK-Ky8270ZGNmMUc"
+src="https://youtu.be/XLOUFZeqRpM"
 title="Nx Agents in action splitting e2e tests at a file level"
  /%}
 
