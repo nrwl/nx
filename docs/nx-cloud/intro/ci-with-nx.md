@@ -22,7 +22,7 @@ npx nx connect
 
 {% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/NZF0ZJpgaJM" icon="nxcloud" /%}
 
-{% link-card title="Nx Cloud 3.0 - What is new?" type="video" url="https://youtu.be/cG2hEI5L3qI?si=xVnSLMU2VN1UAEpJ" icon="nxcloud" /%}
+{% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/XLOUFZeqRpM" icon="nxcloud" /%}
 
 {% link-card title="Nx in 10 minutes!" type="video" url="https://youtu.be/-_4WMl-Fn0w" icon="nx" /%}
 {% link-card title="More On Youtube" type="video" url="https://www.youtube.com/@nxdevtools" icon="youtube" /%}
