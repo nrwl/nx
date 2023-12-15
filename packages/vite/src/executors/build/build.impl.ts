@@ -25,7 +25,6 @@ import {
   createBuildableTsConfig,
   validateTypes,
 } from '../../utils/executor-utils';
-import { BuildOptions } from 'vite';
 
 export async function* viteBuildExecutor(
   options: Record<string, any> & ViteBuildExecutorOptions,
@@ -192,7 +191,8 @@ export async function* viteBuildExecutor(
 export async function getBuildExtraArgs(
   options: ViteBuildExecutorOptions
 ): Promise<{
-  buildOptions: BuildOptions;
+  // vite BuildOptions
+  buildOptions: Record<string, unknown>;
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
@@ -204,7 +204,7 @@ export async function getBuildExtraArgs(
     }
   }
 
-  const buildOptions = {} as BuildOptions;
+  const buildOptions = {};
   const buildSchemaKeys = [
     'target',
     'polyfillModulePreload',
