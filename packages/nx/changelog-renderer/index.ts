@@ -143,7 +143,16 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
           const line = formatCommit(commit, repoSlug);
           markdownLines.push(line);
           if (commit.isBreaking) {
-            breakingChanges.push(line);
+            const breakingChangeExplanation = extractBreakingChangeExplanation(
+              commit.body
+            );
+            breakingChanges.push(
+              breakingChangeExplanation
+                ? `- ${
+                    commit.scope ? `**${commit.scope.trim()}:** ` : ''
+                  }${breakingChangeExplanation}`
+                : line
+            );
           }
         }
       }
@@ -188,7 +197,16 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
         const line = formatCommit(commit, repoSlug);
         markdownLines.push(line + '\n');
         if (commit.isBreaking) {
-          breakingChanges.push(line);
+          const breakingChangeExplanation = extractBreakingChangeExplanation(
+            commit.body
+          );
+          breakingChanges.push(
+            breakingChangeExplanation
+              ? `- ${
+                  commit.scope ? `**${commit.scope.trim()}:** ` : ''
+                }${breakingChangeExplanation}`
+              : line
+          );
         }
       }
     }
@@ -294,11 +312,37 @@ function groupBy(items: any[], key: string) {
 function formatCommit(commit: GitCommit, repoSlug?: RepoSlug): string {
   let commitLine =
     '- ' +
-    (commit.scope ? `**${commit.scope.trim()}:** ` : '') +
     (commit.isBreaking ? '⚠️  ' : '') +
+    (commit.scope ? `**${commit.scope.trim()}:** ` : '') +
     commit.description;
   if (repoSlug) {
     commitLine += formatReferences(commit.references, repoSlug);
   }
   return commitLine;
+}
+
+/**
+ * It is common to add further information about a breaking change in the commit body,
+ * and it is naturally that information that should be included in the BREAKING CHANGES
+ * section of changelog, rather than repeating the commit title/description.
+ */
+function extractBreakingChangeExplanation(message: string): string | null {
+  const breakingChangeIdentifier = 'BREAKING CHANGE:';
+  const startIndex = message.indexOf(breakingChangeIdentifier);
+
+  if (startIndex === -1) {
+    // "BREAKING CHANGE:" not found in the message
+    return null;
+  }
+
+  const startOfBreakingChange = startIndex + breakingChangeIdentifier.length;
+  const endOfBreakingChange = message.indexOf('\n', startOfBreakingChange);
+
+  if (endOfBreakingChange === -1) {
+    // No newline character found, extract till the end of the message
+    return message.substring(startOfBreakingChange).trim();
+  }
+
+  // Extract and return the breaking change message
+  return message.substring(startOfBreakingChange, endOfBreakingChange).trim();
 }
