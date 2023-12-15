@@ -26,6 +26,8 @@ export const workspaceRules = ((): ESLintRules => {
     const namespacedRules: ESLintRules = {};
     for (const [ruleName, ruleConfig] of Object.entries(rules as ESLintRules)) {
       namespacedRules[`${WORKSPACE_RULE_PREFIX}-${ruleName}`] = ruleConfig;
+      // keep the old namespaced rules for backwards compatibility
+      namespacedRules[`${WORKSPACE_RULE_PREFIX}/${ruleName}`] = ruleConfig;
     }
     return namespacedRules;
   } catch (err) {
