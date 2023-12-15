@@ -19,7 +19,7 @@ exports[`@nx/eslint:workspace-rule --dir should support creating the rule in a n
 
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-// NOTE: The rule will be available in ESLint configs as "@nx/workspace/another-rule"
+// NOTE: The rule will be available in ESLint configs as "@nx/workspace-another-rule"
 export const RULE_NAME = 'another-rule';
 
 export const rule = ESLintUtils.RuleCreator(() => __filename)({
@@ -75,7 +75,7 @@ exports[`@nx/eslint:workspace-rule --dir should support creating the rule in a n
 
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-// NOTE: The rule will be available in ESLint configs as "@nx/workspace/one-more-rule"
+// NOTE: The rule will be available in ESLint configs as "@nx/workspace-one-more-rule"
 export const RULE_NAME = 'one-more-rule';
 
 export const rule = ESLintUtils.RuleCreator(() => __filename)({
@@ -131,7 +131,7 @@ exports[`@nx/eslint:workspace-rule should generate the required files 1`] = `
 
 import { ESLintUtils } from '@typescript-eslint/utils';
 
-// NOTE: The rule will be available in ESLint configs as "@nx/workspace/my-rule"
+// NOTE: The rule will be available in ESLint configs as "@nx/workspace-my-rule"
 export const RULE_NAME = 'my-rule';
 
 export const rule = ESLintUtils.RuleCreator(() => __filename)({

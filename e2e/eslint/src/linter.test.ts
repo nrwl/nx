@@ -169,7 +169,7 @@ describe('Linter', () => {
         );
         updateFile(newRulePath, updatedRuleContents);
 
-        const newRuleNameForUsage = `@nx/workspace/${newRuleName}`;
+        const newRuleNameForUsage = `@nx/workspace-${newRuleName}`;
 
         // Add the new workspace rule to the lint config and run linting
         const eslintrc = readJson('.eslintrc.json');
