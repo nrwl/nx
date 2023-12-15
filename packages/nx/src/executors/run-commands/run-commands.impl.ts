@@ -20,7 +20,9 @@ async function loadEnvVars(path?: string) {
   }
 }
 
-export type Json = { [k: string]: any };
+export type Json = {
+  [k: string]: any;
+};
 
 export interface RunCommandsOptions extends Json {
   command?: string;
@@ -43,6 +45,7 @@ export interface RunCommandsOptions extends Json {
   parallel?: boolean;
   readyWhen?: string;
   cwd?: string;
+  env?: Record<string, string>;
   args?: string;
   envFile?: string;
   __unparsed__: string[];
@@ -64,13 +67,17 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
     command: string;
     forwardAllArgs?: boolean;
   }[];
-  parsedArgs: { [k: string]: any };
+  parsedArgs: {
+    [k: string]: any;
+  };
 }
 
 export default async function (
   options: RunCommandsOptions,
   context: ExecutorContext
-): Promise<{ success: boolean }> {
+): Promise<{
+  success: boolean;
+}> {
   await loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
@@ -113,7 +120,8 @@ async function runInParallel(
       c,
       options.readyWhen,
       options.color,
-      calculateCwd(options.cwd, context)
+      calculateCwd(options.cwd, context),
+      options.env ?? {}
     ).then((result) => ({
       result,
       command: c.command,
@@ -178,7 +186,8 @@ async function runSerially(
       c,
       undefined,
       options.color,
-      calculateCwd(options.cwd, context)
+      calculateCwd(options.cwd, context),
+      options.env ?? {}
     );
     if (!success) {
       process.stderr.write(
@@ -200,18 +209,19 @@ function createProcess(
   },
   readyWhen: string,
   color: boolean,
-  cwd: string
+  cwd: string,
+  env: Record<string, string>
 ): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(commandConfig.command, {
       maxBuffer: LARGE_BUFFER,
-      env: processEnv(color, cwd),
+      env: processEnv(color, cwd, env),
       cwd,
     });
     /**
      * Ensure the child process is killed when the parent exits
      */
-    const processExitListener = (signal?: number | NodeJS.Signals) => () =>
+    const processExitListener = (signal?: number | NodeJS.Signals) =>
       childProcess.kill(signal);
 
     process.on('exit', processExitListener);
@@ -277,21 +287,25 @@ function calculateCwd(
   return path.join(context.root, cwd);
 }
 
-function processEnv(color: boolean, cwd: string) {
-  const env = {
+function processEnv(color: boolean, cwd: string, env: Record<string, string>) {
+  const res = {
     ...process.env,
     ...appendLocalEnv({ cwd: cwd ?? process.cwd() }),
+    ...env,
   };
 
   if (color) {
-    env.FORCE_COLOR = `${color}`;
+    res.FORCE_COLOR = `${color}`;
   }
-  return env;
+  return res;
 }
 
 export function interpolateArgsIntoCommand(
   command: string,
-  opts: Pick<NormalizedRunCommandsOptions, 'parsedArgs' | '__unparsed__'>,
+  opts: Pick<
+    NormalizedRunCommandsOptions,
+    'args' | 'parsedArgs' | '__unparsed__'
+  >,
   forwardAllArgs: boolean
 ) {
   if (command.indexOf('{args.') > -1) {
@@ -300,7 +314,7 @@ export function interpolateArgsIntoCommand(
       opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
     );
   } else if (forwardAllArgs) {
-    return `${command}${
+    return `${command}${opts.args ? ' ' + opts.args : ''}${
       opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
     }`;
   } else {

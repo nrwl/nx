@@ -2,6 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for Nx ESBuild Executor",
   "description": "Nx ESBuild Executor supporting Incremental Builds.",
+  "examplesFile": "../../../docs/browser-esbuild-examples.md",
   "outputCapture": "direct-nodejs",
   "type": "object",
   "properties": {
@@ -441,6 +442,35 @@
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately.",
       "default": true
+    },
+    "plugins": {
+      "description": "A list of ESBuild plugins. _Note: this is only supported in Angular versions >= 17.0.0_.",
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "description": "The path to the plugin. Relative to the workspace root."
+              },
+              "options": {
+                "type": "object",
+                "description": "The options to provide to the plugin.",
+                "properties": {},
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": false,
+            "required": ["path"]
+          },
+          {
+            "type": "string",
+            "description": "The path to the plugin. Relative to the workspace root."
+          }
+        ]
+      }
     }
   },
   "additionalProperties": false,

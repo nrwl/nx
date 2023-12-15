@@ -4,7 +4,10 @@ import { valid } from 'semver';
 import { dirSync } from 'tmp';
 import type { ChangelogRenderer } from '../../../changelog-renderer';
 import { readNxJson } from '../../config/nx-json';
-import { ProjectGraphProjectNode } from '../../config/project-graph';
+import {
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
 import { FsTree, Tree } from '../../generators/tree';
 import { registerTsProject } from '../../plugins/js/utils/register';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -56,183 +59,158 @@ import {
 
 type PostGitTask = (latestCommit: string) => Promise<void>;
 
+export const releaseChangelogCLIHandler = (args: ChangelogOptions) =>
+  handleErrors(args.verbose, () => releaseChangelog(args));
+
 /**
  * NOTE: This function is also exported for programmatic usage and forms part of the public API
- * of Nx.
+ * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
+ * to have control over their own error handling when using the API.
  */
 export async function releaseChangelog(
   args: ChangelogOptions
 ): Promise<number> {
-  return handleErrors(args.verbose, async () => {
-    const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-    const nxJson = readNxJson();
+  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
+  const nxJson = readNxJson();
 
-    if (args.verbose) {
-      process.env.NX_VERBOSE_LOGGING = 'true';
-    }
+  if (args.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
 
-    // Apply default configuration to any optional user configuration
-    const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
-      projectGraph,
-      nxJson.release
-    );
-    if (configError) {
-      return await handleNxReleaseConfigError(configError);
-    }
+  // Apply default configuration to any optional user configuration
+  const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
+    projectGraph,
+    nxJson.release
+  );
+  if (configError) {
+    return await handleNxReleaseConfigError(configError);
+  }
 
-    const {
-      error: filterError,
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-    } = filterReleaseGroups(
-      projectGraph,
-      nxReleaseConfig,
-      args.projects,
-      args.groups
-    );
-    if (filterError) {
-      output.error(filterError);
-      process.exit(1);
-    }
+  const {
+    error: filterError,
+    releaseGroups,
+    releaseGroupToFilteredProjects,
+  } = filterReleaseGroups(
+    projectGraph,
+    nxReleaseConfig,
+    args.projects,
+    args.groups
+  );
+  if (filterError) {
+    output.error(filterError);
+    process.exit(1);
+  }
 
-    /**
-     * For determining the versions to use within changelog files, there are a few different possibilities:
-     * - the user is using the nx CLI, and therefore passes a single --version argument which represents the version for any and all changelog
-     * files which will be generated (i.e. both the workspace changelog, and all project changelogs, depending on which of those has been enabled)
-     * - the user is using the nxReleaseChangelog API programmatically, and:
-     *   - passes only a version property
-     *     - this works in the same way as described above for the CLI
-     *   - passes only a versionData object
-     *     - this is a special case where the user is providing a version for each project, and therefore the version argument is not needed
-     *     - NOTE: it is not possible to generate a workspace level changelog with only a versionData object, and this will produce an error
-     *   - passes both a version and a versionData object
-     *     - in this case, the version property will be used as the reference for the workspace changelog, and the versionData object will be used
-     *    to generate project changelogs
-     */
-    const { workspaceChangelogVersion, projectsVersionData } =
-      resolveChangelogVersions(
-        args,
-        releaseGroups,
-        releaseGroupToFilteredProjects
-      );
-
-    const to = args.to || 'HEAD';
-    const toSHA = await getCommitHash(to);
-    const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
-
-    /**
-     * Protect the user against attempting to create a new commit when recreating an old release changelog,
-     * this seems like it would always be unintentional.
-     */
-    const autoCommitEnabled =
-      args.gitCommit ?? nxReleaseConfig.changelog.git.commit;
-    if (autoCommitEnabled && headSHA !== toSHA) {
-      throw new Error(
-        `You are attempting to recreate the changelog for an old release, but you have enabled auto-commit mode. Please disable auto-commit mode by updating your nx.json, or passing --git-commit=false`
-      );
-    }
-
-    const fromRef =
-      args.from ||
-      (await getLatestGitTagForPattern(nxReleaseConfig.releaseTagPattern))?.tag;
-    if (!fromRef) {
-      throw new Error(
-        `Unable to determine the previous git tag, please provide an explicit git reference using --from`
-      );
-    }
-
-    // Make sure that the fromRef is actually resolvable
-    const fromSHA = await getCommitHash(fromRef);
-
-    const rawCommits = await getGitDiff(fromSHA, toSHA);
-
-    // Parse as conventional commits
-    const commits = parseCommits(rawCommits).filter((c) => {
-      const type = c.type;
-      // Always ignore non user-facing commits for now
-      // TODO: allow this filter to be configurable via config in a future release
-      if (type === 'feat' || type === 'fix' || type === 'perf') {
-        return true;
-      }
-      return false;
-    });
-
-    const tree = new FsTree(workspaceRoot, args.verbose);
-
-    const userCommitMessage: string | undefined =
-      args.gitCommitMessage || nxReleaseConfig.changelog.git.commitMessage;
-
-    const commitMessageValues: string[] = createCommitMessageValues(
-      releaseGroups,
-      releaseGroupToFilteredProjects,
-      projectsVersionData,
-      userCommitMessage
-    );
-
-    // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
-    const gitTagValues: string[] =
-      args.gitTag ?? nxReleaseConfig.changelog.git.tag
-        ? createGitTagValues(
-            releaseGroups,
-            releaseGroupToFilteredProjects,
-            projectsVersionData
-          )
-        : [];
-    handleDuplicateGitTags(gitTagValues);
-
-    const postGitTasks: PostGitTask[] = [];
-
-    await generateChangelogForWorkspace(
-      tree,
+  /**
+   * For determining the versions to use within changelog files, there are a few different possibilities:
+   * - the user is using the nx CLI, and therefore passes a single --version argument which represents the version for any and all changelog
+   * files which will be generated (i.e. both the workspace changelog, and all project changelogs, depending on which of those has been enabled)
+   * - the user is using the nxReleaseChangelog API programmatically, and:
+   *   - passes only a version property
+   *     - this works in the same way as described above for the CLI
+   *   - passes only a versionData object
+   *     - this is a special case where the user is providing a version for each project, and therefore the version argument is not needed
+   *     - NOTE: it is not possible to generate a workspace level changelog with only a versionData object, and this will produce an error
+   *   - passes both a version and a versionData object
+   *     - in this case, the version property will be used as the reference for the workspace changelog, and the versionData object will be used
+   *    to generate project changelogs
+   */
+  const { workspaceChangelogVersion, projectsVersionData } =
+    resolveChangelogVersions(
       args,
-      nxReleaseConfig,
-      workspaceChangelogVersion,
-      commits,
-      postGitTasks
+      releaseGroups,
+      releaseGroupToFilteredProjects
     );
 
-    if (args.projects?.length) {
-      /**
-       * Run changelog generation for all remaining release groups and filtered projects within them
-       */
-      for (const releaseGroup of releaseGroups) {
-        const projectNodes = Array.from(
-          releaseGroupToFilteredProjects.get(releaseGroup)
-        ).map((name) => projectGraph.nodes[name]);
+  const to = args.to || 'HEAD';
+  const toSHA = await getCommitHash(to);
+  const headSHA = to === 'HEAD' ? toSHA : await getCommitHash('HEAD');
 
-        await generateChangelogForProjects(
-          tree,
-          args,
-          commits,
-          projectsVersionData,
-          postGitTasks,
-          releaseGroup,
-          projectNodes
-        );
-      }
+  /**
+   * Protect the user against attempting to create a new commit when recreating an old release changelog,
+   * this seems like it would always be unintentional.
+   */
+  const autoCommitEnabled =
+    args.gitCommit ?? nxReleaseConfig.changelog.git.commit;
+  if (autoCommitEnabled && headSHA !== toSHA) {
+    throw new Error(
+      `You are attempting to recreate the changelog for an old release, but you have enabled auto-commit mode. Please disable auto-commit mode by updating your nx.json, or passing --git-commit=false`
+    );
+  }
 
-      return await applyChangesAndExit(
-        args,
-        nxReleaseConfig,
-        tree,
-        toSHA,
-        postGitTasks,
-        commitMessageValues,
-        gitTagValues
-      );
+  const fromRef =
+    args.from ||
+    (await getLatestGitTagForPattern(nxReleaseConfig.releaseTagPattern))?.tag;
+  if (!fromRef) {
+    throw new Error(
+      `Unable to determine the previous git tag, please provide an explicit git reference using --from`
+    );
+  }
+
+  // Make sure that the fromRef is actually resolvable
+  const fromSHA = await getCommitHash(fromRef);
+
+  const rawCommits = await getGitDiff(fromSHA, toSHA);
+
+  // Parse as conventional commits
+  const commits = parseCommits(rawCommits).filter((c) => {
+    const type = c.type;
+    // Always ignore non user-facing commits for now
+    // TODO: allow this filter to be configurable via config in a future release
+    if (type === 'feat' || type === 'fix' || type === 'perf') {
+      return true;
     }
+    return false;
+  });
 
+  const tree = new FsTree(workspaceRoot, args.verbose);
+
+  const userCommitMessage: string | undefined =
+    args.gitCommitMessage || nxReleaseConfig.changelog.git.commitMessage;
+
+  const commitMessageValues: string[] = createCommitMessageValues(
+    releaseGroups,
+    releaseGroupToFilteredProjects,
+    projectsVersionData,
+    userCommitMessage
+  );
+
+  // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
+  const gitTagValues: string[] =
+    args.gitTag ?? nxReleaseConfig.changelog.git.tag
+      ? createGitTagValues(
+          releaseGroups,
+          releaseGroupToFilteredProjects,
+          projectsVersionData
+        )
+      : [];
+  handleDuplicateGitTags(gitTagValues);
+
+  const postGitTasks: PostGitTask[] = [];
+
+  await generateChangelogForWorkspace(
+    tree,
+    args,
+    projectGraph,
+    nxReleaseConfig,
+    workspaceChangelogVersion,
+    commits,
+    postGitTasks
+  );
+
+  if (args.projects?.length) {
     /**
-     * Run changelog generation for all remaining release groups
+     * Run changelog generation for all remaining release groups and filtered projects within them
      */
     for (const releaseGroup of releaseGroups) {
-      const projectNodes = releaseGroup.projects.map(
-        (name) => projectGraph.nodes[name]
-      );
+      const projectNodes = Array.from(
+        releaseGroupToFilteredProjects.get(releaseGroup)
+      ).map((name) => projectGraph.nodes[name]);
 
       await generateChangelogForProjects(
         tree,
         args,
+        projectGraph,
         commits,
         projectsVersionData,
         postGitTasks,
@@ -250,7 +228,37 @@ export async function releaseChangelog(
       commitMessageValues,
       gitTagValues
     );
-  });
+  }
+
+  /**
+   * Run changelog generation for all remaining release groups
+   */
+  for (const releaseGroup of releaseGroups) {
+    const projectNodes = releaseGroup.projects.map(
+      (name) => projectGraph.nodes[name]
+    );
+
+    await generateChangelogForProjects(
+      tree,
+      args,
+      projectGraph,
+      commits,
+      projectsVersionData,
+      postGitTasks,
+      releaseGroup,
+      projectNodes
+    );
+  }
+
+  return await applyChangesAndExit(
+    args,
+    nxReleaseConfig,
+    tree,
+    toSHA,
+    postGitTasks,
+    commitMessageValues,
+    gitTagValues
+  );
 }
 
 function resolveChangelogVersions(
@@ -326,8 +334,14 @@ async function applyChangesAndExit(
   let latestCommit = toSHA;
 
   const changes = tree.listChanges();
-  // This could happen we using conventional commits, for example
-  if (!changes.length) {
+
+  /**
+   * In the case where we are expecting changelog file updates, but there is nothing
+   * to flush from the tree, we exit early. This could happen we using conventional
+   * commits, for example.
+   */
+  const changelogFilesEnabled = checkChangelogFilesEnabled(nxReleaseConfig);
+  if (changelogFilesEnabled && !changes.length) {
     output.warn({
       title: `No changes detected for changelogs`,
       bodyLines: [
@@ -402,6 +416,7 @@ function resolveChangelogRenderer(
 async function generateChangelogForWorkspace(
   tree: Tree,
   args: ChangelogOptions,
+  projectGraph: ProjectGraph,
   nxReleaseConfig: NxReleaseConfig,
   workspaceChangelogVersion: (string | null) | undefined,
   commits: GitCommit[],
@@ -446,11 +461,11 @@ async function generateChangelogForWorkspace(
     releaseTagPattern: nxReleaseConfig.releaseTagPattern,
   });
 
-  // We are either creating/previewing a changelog file, a Github release, or both
+  // We are either creating/previewing a changelog file, a GitHub release, or both
   let logTitle = dryRun ? 'Previewing a' : 'Generating a';
   switch (true) {
     case interpolatedTreePath && config.createRelease === 'github':
-      logTitle += ` Github release and an entry in ${interpolatedTreePath} for ${chalk.white(
+      logTitle += ` GitHub release and an entry in ${interpolatedTreePath} for ${chalk.white(
         releaseVersion.gitTag
       )}`;
       break;
@@ -460,7 +475,7 @@ async function generateChangelogForWorkspace(
       )}`;
       break;
     case config.createRelease === 'github':
-      logTitle += ` Github release for ${chalk.white(releaseVersion.gitTag)}`;
+      logTitle += ` GitHub release for ${chalk.white(releaseVersion.gitTag)}`;
   }
 
   output.log({
@@ -473,6 +488,7 @@ async function generateChangelogForWorkspace(
       : undefined;
 
   let contents = await changelogRenderer({
+    projectGraph,
     commits,
     releaseVersion: releaseVersion.rawVersion,
     project: null,
@@ -499,7 +515,7 @@ async function generateChangelogForWorkspace(
 
   /**
    * The exact logic we use for printing the summary/diff to the user is dependent upon whether they are creating
-   * a changelog file, a Github release, or both.
+   * a changelog file, a GitHub release, or both.
    */
   let printSummary = () => {};
   const noDiffInChangelogMessage = chalk.yellow(
@@ -542,9 +558,9 @@ async function generateChangelogForWorkspace(
   if (config.createRelease === 'github') {
     if (!githubRepoSlug) {
       output.error({
-        title: `Unable to create a Github release because the Github repo slug could not be determined.`,
+        title: `Unable to create a GitHub release because the GitHub repo slug could not be determined.`,
         bodyLines: [
-          `Please ensure you have a valid Github remote configured. You can run \`git remote -v\` to list your current remotes.`,
+          `Please ensure you have a valid GitHub remote configured. You can run \`git remote -v\` to list your current remotes.`,
         ],
       });
       process.exit(1);
@@ -565,9 +581,9 @@ async function generateChangelogForWorkspace(
     } catch (err) {
       if (err.response?.status === 401) {
         output.error({
-          title: `Unable to resolve data via the Github API. You can use any of the following options to resolve this:`,
+          title: `Unable to resolve data via the GitHub API. You can use any of the following options to resolve this:`,
           bodyLines: [
-            '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid Github token with `repo` scope',
+            '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid GitHub token with `repo` scope',
             '- Have an active session via the official gh CLI tool (https://cli.github.com) in your current terminal',
           ],
         });
@@ -638,6 +654,7 @@ async function generateChangelogForWorkspace(
 async function generateChangelogForProjects(
   tree: Tree,
   args: ChangelogOptions,
+  projectGraph: ProjectGraph,
   commits: GitCommit[],
   projectsVersionData: VersionData,
   postGitTasks: PostGitTask[],
@@ -682,11 +699,11 @@ async function generateChangelogForProjects(
       projectName: project.name,
     });
 
-    // We are either creating/previewing a changelog file, a Github release, or both
+    // We are either creating/previewing a changelog file, a GitHub release, or both
     let logTitle = dryRun ? 'Previewing a' : 'Generating a';
     switch (true) {
       case interpolatedTreePath && config.createRelease === 'github':
-        logTitle += ` Github release and an entry in ${interpolatedTreePath} for ${chalk.white(
+        logTitle += ` GitHub release and an entry in ${interpolatedTreePath} for ${chalk.white(
           releaseVersion.gitTag
         )}`;
         break;
@@ -696,7 +713,7 @@ async function generateChangelogForProjects(
         )}`;
         break;
       case config.createRelease === 'github':
-        logTitle += ` Github release for ${chalk.white(releaseVersion.gitTag)}`;
+        logTitle += ` GitHub release for ${chalk.white(releaseVersion.gitTag)}`;
     }
 
     output.log({
@@ -709,6 +726,7 @@ async function generateChangelogForProjects(
         : undefined;
 
     let contents = await changelogRenderer({
+      projectGraph,
       commits,
       releaseVersion: releaseVersion.rawVersion,
       project: project.name,
@@ -742,7 +760,7 @@ async function generateChangelogForProjects(
 
     /**
      * The exact logic we use for printing the summary/diff to the user is dependent upon whether they are creating
-     * a changelog file, a Github release, or both.
+     * a changelog file, a GitHub release, or both.
      */
     let printSummary = () => {};
     const noDiffInChangelogMessage = chalk.yellow(
@@ -792,9 +810,9 @@ async function generateChangelogForProjects(
     if (config.createRelease === 'github') {
       if (!githubRepoSlug) {
         output.error({
-          title: `Unable to create a Github release because the Github repo slug could not be determined.`,
+          title: `Unable to create a GitHub release because the GitHub repo slug could not be determined.`,
           bodyLines: [
-            `Please ensure you have a valid Github remote configured. You can run \`git remote -v\` to list your current remotes.`,
+            `Please ensure you have a valid GitHub remote configured. You can run \`git remote -v\` to list your current remotes.`,
           ],
         });
         process.exit(1);
@@ -815,9 +833,9 @@ async function generateChangelogForProjects(
       } catch (err) {
         if (err.response?.status === 401) {
           output.error({
-            title: `Unable to resolve data via the Github API. You can use any of the following options to resolve this:`,
+            title: `Unable to resolve data via the GitHub API. You can use any of the following options to resolve this:`,
             bodyLines: [
-              '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid Github token with `repo` scope',
+              '- Set the `GITHUB_TOKEN` or `GH_TOKEN` environment variable to a valid GitHub token with `repo` scope',
               '- Have an active session via the official gh CLI tool (https://cli.github.com) in your current terminal',
             ],
           });
@@ -884,4 +902,19 @@ async function generateChangelogForProjects(
 
     printSummary();
   }
+}
+
+function checkChangelogFilesEnabled(nxReleaseConfig: NxReleaseConfig): boolean {
+  if (
+    nxReleaseConfig.changelog.workspaceChangelog &&
+    nxReleaseConfig.changelog.workspaceChangelog.file
+  ) {
+    return true;
+  }
+  for (const releaseGroup of Object.values(nxReleaseConfig.groups)) {
+    if (releaseGroup.changelog && releaseGroup.changelog.file) {
+      return true;
+    }
+  }
+  return false;
 }

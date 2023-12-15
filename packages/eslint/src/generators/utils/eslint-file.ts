@@ -3,10 +3,10 @@ import {
   names,
   offsetFromRoot,
   readJson,
-  Tree,
   updateJson,
 } from '@nx/devkit';
-import { Linter } from 'eslint';
+import type { Tree } from '@nx/devkit';
+import type { Linter } from 'eslint';
 import { useFlatConfig } from '../../utils/flat-config';
 import {
   addBlockToFlatConfigExport,
@@ -22,28 +22,24 @@ import {
 } from './flat-config/ast-utils';
 import ts = require('typescript');
 import { mapFilePath } from './flat-config/path-utils';
+import {
+  baseEsLintConfigFile,
+  baseEsLintFlatConfigFile,
+  ESLINT_CONFIG_FILENAMES,
+} from '../../utils/config-file';
 
-export const eslintConfigFileWhitelist = [
-  '.eslintrc',
-  '.eslintrc.js',
-  '.eslintrc.cjs',
-  '.eslintrc.yaml',
-  '.eslintrc.yml',
-  '.eslintrc.json',
-  'eslint.config.js',
-];
-
-export const baseEsLintConfigFile = '.eslintrc.base.json';
-export const baseEsLintFlatConfigFile = 'eslint.base.config.js';
-
-export function findEslintFile(tree: Tree, projectRoot = ''): string | null {
-  if (projectRoot === '' && tree.exists(baseEsLintConfigFile)) {
+export function findEslintFile(
+  tree: Tree,
+  projectRoot?: string
+): string | null {
+  if (projectRoot === undefined && tree.exists(baseEsLintConfigFile)) {
     return baseEsLintConfigFile;
   }
-  if (projectRoot === '' && tree.exists(baseEsLintFlatConfigFile)) {
+  if (projectRoot === undefined && tree.exists(baseEsLintFlatConfigFile)) {
     return baseEsLintFlatConfigFile;
   }
-  for (const file of eslintConfigFileWhitelist) {
+  projectRoot ??= '';
+  for (const file of ESLINT_CONFIG_FILENAMES) {
     if (tree.exists(joinPathFragments(projectRoot, file))) {
       return file;
     }
@@ -148,7 +144,7 @@ function offsetFilePath(
   tree: Tree
 ): string {
   if (
-    eslintConfigFileWhitelist.some((eslintFile) =>
+    ESLINT_CONFIG_FILENAMES.some((eslintFile) =>
       pathToFile.includes(eslintFile)
     )
   ) {

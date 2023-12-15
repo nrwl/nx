@@ -24,7 +24,7 @@ export function DocViewer({
   const router = useRouter();
   const hideTableOfContent =
     router.asPath.includes('/getting-started/intro') ||
-    router.asPath.includes('/nx-cloud/intro/ci-with-nx') ||
+    router.asPath.includes('/ci/intro/ci-with-nx') ||
     router.asPath.includes('/extending-nx/intro/getting-started') ||
     router.asPath.includes('/nx-api/devkit') ||
     router.asPath.includes('/reference/glossary');
@@ -40,6 +40,7 @@ export function DocViewer({
   const vm = {
     title: metadata['title'] ?? document.name,
     description: metadata['description'] ?? document.description,
+    mediaImage: document.mediaImage,
     content: node,
     relatedContent: renderMarkdown(
       generateRelatedDocumentsTemplate(
@@ -52,30 +53,35 @@ export function DocViewer({
     tableOfContent: collectHeadings(treeNode),
   };
 
+  function getExtension(path: string): string {
+    const splits = path.split('.');
+    return splits[splits.length - 1];
+  }
+
   return (
     <>
       <NextSeo
         title={vm.title + ' | Nx'}
         description={
           vm.description ??
-          'Next generation build system with first class monorepo support and powerful integrations.'
+          'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.'
         }
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: vm.title,
           description:
             vm.description ??
-            'Next generation build system with first class monorepo support and powerful integrations.',
+            'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.',
           images: [
             {
-              url: router.asPath.includes('turbo-and-nx')
-                ? 'https://nx.dev/socials/nx-media-monorepo.jpg'
-                : `https://nx.dev/images/open-graph/${router.asPath
-                    .replace('/', '')
-                    .replace(/\//gi, '-')}.jpg`,
+              url: `https://nx.dev/images/open-graph/${router.asPath
+                .replace('/', '')
+                .replace(/\//gi, '-')}.${
+                vm.mediaImage ? getExtension(vm.mediaImage) : 'jpg'
+              }`,
               width: 1600,
               height: 800,
-              alt: 'Nx: Smart, Fast and Extensible Build System',
+              alt: 'Nx: Smart Monorepos · Fast CI',
               type: 'image/jpeg',
             },
           ],

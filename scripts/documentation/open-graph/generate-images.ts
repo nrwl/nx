@@ -1,6 +1,12 @@
 import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 import { PackageMetadata } from '../../../nx-dev/models-package/src/lib/package.models';
-import { ensureDir, readFile, readJSONSync, writeFileSync } from 'fs-extra';
+import {
+  ensureDir,
+  readFile,
+  readJSONSync,
+  writeFileSync,
+  copyFileSync,
+} from 'fs-extra';
 import { resolve } from 'path';
 
 const mapJson = readJSONSync('./docs/map.json', 'utf8').content;
@@ -19,9 +25,9 @@ const documents: any[] = [
       return item;
     }),
   ...mapJson
-    .find((x) => x.id === 'nx-cloud-documentation')
+    .find((x) => x.id === 'ci')
     ?.['itemList'].map((item) => {
-      item.sidebarId = 'nx-cloud';
+      item.sidebarId = 'ci';
       return item;
     }),
 ].filter(Boolean);
@@ -35,7 +41,12 @@ const targetFolder: string = resolve(
   `./nx-dev/nx-dev/public/images/open-graph`
 );
 
-const data: { title: string; content: string; filename: string }[] = [];
+const data: {
+  title: string;
+  content: string;
+  mediaImage?: string;
+  filename: string;
+}[] = [];
 documents.forEach((category) => {
   data.push({
     title: category.name,
@@ -46,6 +57,7 @@ documents.forEach((category) => {
     data.push({
       title: item.name,
       content: item.description || category.name,
+      mediaImage: item.mediaImage,
       filename: [category.sidebarId, category.id, item.id]
         .filter(Boolean)
         .join('-'),
@@ -54,6 +66,7 @@ documents.forEach((category) => {
       data.push({
         title: subItem.name,
         content: subItem.description || category.name,
+        mediaImage: subItem.mediaImage,
         filename: [category.sidebarId, category.id, item.id, subItem.id]
           .filter(Boolean)
           .join('-'),
@@ -117,7 +130,7 @@ function createOpenGraphImage(
     context.font = 'bold 50px system-ui';
     context.textAlign = 'center';
     context.textBaseline = 'top';
-    context.fillStyle = '#0F172A';
+    context.fillStyle = '#FFFFFF';
     const titleLines = splitLines(context, title.toUpperCase(), 1100);
     titleLines.forEach((line, index) => {
       context.fillText(line, 600, 220 + index * TITLE_LINE_HEIGHT);
@@ -126,7 +139,7 @@ function createOpenGraphImage(
     context.font = 'normal 32px system-ui';
     context.textAlign = 'center';
     context.textBaseline = 'top';
-    context.fillStyle = '#334155';
+    context.fillStyle = '#F8FAFC';
 
     const lines = splitLines(context, content, 1100);
     lines.forEach((line, index) => {
@@ -144,6 +157,19 @@ function createOpenGraphImage(
       canvas.toBuffer('image/jpeg')
     );
   });
+}
+
+function copyImage(
+  backgroundImagePath: string,
+  targetFolder: string,
+  filename: string
+) {
+  const splits = backgroundImagePath.split('.');
+  const extension = splits[splits.length - 1];
+  copyFileSync(
+    backgroundImagePath,
+    resolve(targetFolder, `./${filename}.${extension}`)
+  );
 }
 
 function splitLines(
@@ -180,12 +206,18 @@ console.log(
 );
 ensureDir(targetFolder).then(() =>
   data.map((item) =>
-    createOpenGraphImage(
-      resolve(__dirname, './media.jpg'),
-      targetFolder,
-      item.title,
-      item.content,
-      item.filename
-    )
+    item.mediaImage
+      ? copyImage(
+          resolve(__dirname, '../../../docs/' + item.mediaImage),
+          targetFolder,
+          item.filename
+        )
+      : createOpenGraphImage(
+          resolve(__dirname, './media.jpg'),
+          targetFolder,
+          item.title,
+          item.content,
+          item.filename
+        )
   )
 );

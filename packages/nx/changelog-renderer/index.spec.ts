@@ -1,7 +1,33 @@
 import type { GitCommit } from '../src/command-line/release/utils/git';
 import defaultChangelogRenderer from './index';
 
+jest.mock('../src/project-graph/file-map-utils', () => ({
+  createFileMapUsingProjectGraph: jest.fn().mockImplementation(() => {
+    return Promise.resolve({
+      allWorkspaceFiles: [],
+      fileMap: {
+        nonProjectFiles: [],
+        projectFileMap: {
+          'pkg-a': [
+            {
+              file: 'packages/pkg-a/src/index.ts',
+            },
+          ],
+          'pkg-b': [
+            {
+              file: 'packages/pkg-b/src/index.ts',
+            },
+          ],
+        },
+      },
+    });
+  }),
+}));
+
 describe('defaultChangelogRenderer()', () => {
+  const projectGraph = {
+    nodes: {},
+  } as any;
   const commits: GitCommit[] = [
     {
       message: 'fix: all packages fixed',
@@ -27,7 +53,11 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
-      affectedFiles: [],
+      revertedHashes: [],
+      affectedFiles: [
+        'packages/pkg-a/src/index.ts',
+        'packages/pkg-b/src/index.ts',
+      ],
     },
     {
       message: 'feat(pkg-b): and another new capability',
@@ -53,7 +83,8 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
-      affectedFiles: [],
+      revertedHashes: [],
+      affectedFiles: ['packages/pkg-b/src/index.ts'],
     },
     {
       message: 'feat(pkg-a): new hotness',
@@ -79,7 +110,8 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
-      affectedFiles: [],
+      revertedHashes: [],
+      affectedFiles: ['packages/pkg-a/src/index.ts'],
     },
     {
       message: 'feat(pkg-b): brand new thing',
@@ -105,7 +137,8 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
-      affectedFiles: [],
+      revertedHashes: [],
+      affectedFiles: ['packages/pkg-b/src/index.ts'],
     },
     {
       message: 'fix(pkg-a): squashing bugs',
@@ -131,13 +164,15 @@ describe('defaultChangelogRenderer()', () => {
         },
       ],
       isBreaking: false,
-      affectedFiles: [],
+      revertedHashes: [],
+      affectedFiles: ['packages/pkg-a/src/index.ts'],
     },
   ];
 
   describe('workspaceChangelog', () => {
     it('should generate markdown for all projects by organizing commits by type, then grouped by scope within the type (sorted alphabetically), then chronologically within the scope group', async () => {
       const markdown = await defaultChangelogRenderer({
+        projectGraph,
         commits,
         releaseVersion: 'v1.1.0',
         project: null,
@@ -169,6 +204,7 @@ describe('defaultChangelogRenderer()', () => {
 
     it('should not generate a Thank You section when changelogRenderOptions.includeAuthors is false', async () => {
       const markdown = await defaultChangelogRenderer({
+        projectGraph,
         commits,
         releaseVersion: 'v1.1.0',
         project: null,
@@ -198,6 +234,7 @@ describe('defaultChangelogRenderer()', () => {
   describe('project level configs', () => {
     it('should generate markdown for the given project by organizing commits by type, then chronologically', async () => {
       const otherOpts = {
+        projectGraph,
         commits,
         releaseVersion: 'v1.1.0',
         entryWhenNoChanges: false as const,
@@ -288,6 +325,7 @@ describe('defaultChangelogRenderer()', () => {
   describe('entryWhenNoChanges', () => {
     it('should respect the entryWhenNoChanges option for the workspace changelog', async () => {
       const otherOpts = {
+        projectGraph,
         commits: [],
         releaseVersion: 'v1.1.0',
         project: null, // workspace changelog
@@ -317,6 +355,7 @@ describe('defaultChangelogRenderer()', () => {
 
     it('should respect the entryWhenNoChanges option for project changelogs', async () => {
       const otherOpts = {
+        projectGraph,
         commits: [],
         releaseVersion: 'v1.1.0',
         project: 'pkg-a',
@@ -342,6 +381,162 @@ describe('defaultChangelogRenderer()', () => {
           entryWhenNoChanges: false, // should not create an entry
         })
       ).toMatchInlineSnapshot(`""`);
+    });
+  });
+
+  describe('revert commits', () => {
+    it('should generate a Revert section for the changelog if the reverted commit is not part of the same release', async () => {
+      const commitsWithOnlyRevert: GitCommit[] = [
+        {
+          message:
+            'Revert "fix(release): do not update dependents when they already use "*" (#20607)"',
+          shortHash: '6528e88aa',
+          author: {
+            name: 'James Henry',
+            email: 'jh@example.com',
+          },
+          body: 'This reverts commit 6d68236d467812aba4557a2bc7f667157de80fdb.\n"\n\nM\tpackages/js/src/generators/release-version/release-version.spec.ts\nM\tpackages/js/src/generators/release-version/release-version.ts\n',
+          authors: [
+            {
+              name: 'James Henry',
+              email: 'jh@example.com',
+            },
+          ],
+          description:
+            'Revert "fix(release): do not update dependents when they already use "*" (#20607)"',
+          type: 'revert',
+          scope: 'release',
+          references: [
+            {
+              type: 'pull-request',
+              value: '#20607',
+            },
+            {
+              value: '6528e88aa',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: ['6d68236d467812aba4557a2bc7f667157de80fdb'],
+          affectedFiles: [
+            'packages/js/src/generators/release-version/release-version.spec.ts',
+            'packages/js/src/generators/release-version/release-version.ts',
+          ],
+        },
+      ];
+
+      const markdown = await defaultChangelogRenderer({
+        projectGraph,
+        commits: commitsWithOnlyRevert,
+        releaseVersion: 'v1.1.0',
+        project: null,
+        entryWhenNoChanges: false,
+        changelogRenderOptions: {
+          includeAuthors: true,
+        },
+      });
+
+      expect(markdown).toMatchInlineSnapshot(`
+        "## v1.1.0
+
+
+        ### ⏪ Revert
+
+        - **release:** Revert "fix(release): do not update dependents when they already use "*" (#20607)"
+
+        ### ❤️  Thank You
+
+        - James Henry"
+      `);
+    });
+
+    it('should strip both the original commit and its revert if they are both included in the current range of commits', async () => {
+      const commitsWithRevertAndOriginal: GitCommit[] = [
+        {
+          message:
+            'Revert "fix(release): do not update dependents when they already use "*" (#20607)"',
+          shortHash: '6528e88aa',
+          author: {
+            name: 'James Henry',
+            email: 'jh@example.com',
+          },
+          body: 'This reverts commit 6d68236d467812aba4557a2bc7f667157de80fdb.\n"\n\nM\tpackages/js/src/generators/release-version/release-version.spec.ts\nM\tpackages/js/src/generators/release-version/release-version.ts\n',
+          authors: [
+            {
+              name: 'James Henry',
+              email: 'jh@example.com',
+            },
+          ],
+          description:
+            'Revert "fix(release): do not update dependents when they already use "*" (#20607)"',
+          type: 'revert',
+          scope: 'release',
+          references: [
+            {
+              type: 'pull-request',
+              value: '#20607',
+            },
+            {
+              value: '6528e88aa',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: ['6d68236d467812aba4557a2bc7f667157de80fdb'],
+          affectedFiles: [
+            'packages/js/src/generators/release-version/release-version.spec.ts',
+            'packages/js/src/generators/release-version/release-version.ts',
+          ],
+        },
+        {
+          message:
+            'fix(release): do not update dependents when they already use "*" (#20607)',
+          shortHash: '6d68236d4',
+          author: {
+            name: 'James Henry',
+            email: 'jh@example.com',
+          },
+          body: '"\n\nM\tpackages/js/src/generators/release-version/release-version.spec.ts\nM\tpackages/js/src/generators/release-version/release-version.ts\n',
+          authors: [
+            {
+              name: 'James Henry',
+              email: 'jh@example.com',
+            },
+          ],
+          description: 'do not update dependents when they already use "*"',
+          type: 'fix',
+          scope: 'release',
+          references: [
+            {
+              type: 'pull-request',
+              value: '#20607',
+            },
+            {
+              value: '6d68236d4',
+              type: 'hash',
+            },
+          ],
+          isBreaking: false,
+          revertedHashes: [],
+          affectedFiles: [
+            'packages/js/src/generators/release-version/release-version.spec.ts',
+            'packages/js/src/generators/release-version/release-version.ts',
+          ],
+        },
+      ];
+
+      const markdown = await defaultChangelogRenderer({
+        projectGraph,
+        commits: commitsWithRevertAndOriginal,
+        releaseVersion: 'v1.1.0',
+        project: null,
+        entryWhenNoChanges: false,
+        changelogRenderOptions: {
+          includeAuthors: true,
+        },
+      });
+
+      expect(markdown).toMatchInlineSnapshot(`""`);
     });
   });
 });

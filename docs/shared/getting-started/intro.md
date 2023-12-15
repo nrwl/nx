@@ -5,7 +5,7 @@ Nx is a powerful open-source build system that provides tools and techniques for
 ## Core Features
 
 - **Run Tasks Efficiently**: Nx [runs tasks in parallel](/core-features/run-tasks) and orders the tasks based on the dependencies between them.
-- **Cache Locally & Remotely**: With [local](/core-features/cache-task-results) and [remote caching](/nx-cloud/features/remote-cache), Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
+- **Cache Locally & Remotely**: With [local](/core-features/cache-task-results) and [remote caching](/ci/features/remote-cache), Nx prevents unnecessary re-runs of tasks, saving you valuable dev time.
 - **Automate Dependency Updates**: if you leverage Nx plugins you gain additional features such as [code generation](/core-features/plugin-features/use-code-generators) and tools to [automatically upgrade](core-features/automate-updating-dependencies) your codebase and dependencies.
 - **Make it Your Own**: Nx is highly customizable and extensible. Fine-tune it by [creating your own plugins](/extending-nx/intro/getting-started) and optionally [share them with the community](/extending-nx/tutorials/publish-plugin#publish-your-nx-plugin).
 
@@ -62,7 +62,7 @@ npx create-nx-workspace@latest
 {% link-card title="Next" appearance="small" url="/nx-api/next" icon="nextjs" /%}
 {% link-card title="Nuxt" appearance="small" url="/showcase/example-repos/add-nuxt" icon="nuxt" /%}
 {% link-card title="Nest" appearance="small" url="/nx-api/nest" icon="nestjs" /%}
-{% link-card title="Remix" appearance="small" url="/recipes/react/remix" icon="remix" /%}
+{% link-card title="Remix" appearance="small" url="/nx-api/remix" icon="remix" /%}
 {% link-card title="Expo" appearance="small" url="/nx-api/expo" icon="expo" /%}
 {% link-card title="React Native" appearance="small" url="/nx-api/react-native" icon="react" /%}
 {% link-card title="Fastify" appearance="small" url="/showcase/example-repos/mongo-fastify" icon="fastify" /%}

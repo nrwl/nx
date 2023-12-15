@@ -14,7 +14,7 @@ export function createProjectConfigurationInNewDestination(
   projectConfig.name = schema.newProjectName;
   const isRootProject = projectConfig.root === '.';
 
-  // Subtle bug if project name === path, where the updated name was being overrideen.
+  // Subtle bug if project name === path, where the updated name was being overridden.
   const { name, ...rest } = projectConfig;
 
   // replace old root path with new one
@@ -35,8 +35,14 @@ export function createProjectConfigurationInNewDestination(
       `"${schema.relativeToRootDestination}/src/$2"`
     );
   } else {
+    // There's another issue if project name === path, where the target
+    // string (my-app:build:production) was being replaced
+    // and resulting in my-destination/my-new-name:build:production
+
+    // Change anything but target strings (my-app:build:production).
+    // Target string are going to be updated in the updateBuildTargets function
     newProjectString = newProjectString.replace(
-      new RegExp(projectConfig.root, 'g'),
+      new RegExp(projectConfig.root + '(?!:)', 'g'),
       schema.relativeToRootDestination
     );
   }

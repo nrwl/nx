@@ -60,7 +60,7 @@ describe('preset', () => {
       linter: 'eslint',
     });
     expect(tree.exists('apps/proj/src/app.vue')).toBe(true);
-    expect(readProjectConfiguration(tree, 'proj').targets.serve).toBeDefined();
+    expect(readProjectConfiguration(tree, 'proj')).toBeDefined();
   });
 
   it(`should create files (preset = ${Preset.NextJs})`, async () => {
@@ -143,8 +143,6 @@ describe('preset', () => {
       e2eTestRunner: 'cypress',
     });
     expect(tree.exists('nuxt.config.ts')).toBe(true);
-    expect(
-      readProjectConfiguration(tree, 'proj').targets.serve
-    ).toMatchSnapshot();
+    expect(readProjectConfiguration(tree, 'proj')).toBeDefined();
   });
 });

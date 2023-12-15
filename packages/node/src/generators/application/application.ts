@@ -40,6 +40,7 @@ import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 import { initGenerator } from '../init/init';
 import { setupDockerGenerator } from '../setup-docker/setup-docker';
 import { Schema } from './schema';
+import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -67,7 +68,6 @@ function getWebpackBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
-      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'
@@ -153,10 +153,13 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  project.targets.build =
-    options.bundler === 'esbuild'
-      ? getEsBuildConfig(project, options)
-      : getWebpackBuildConfig(project, options);
+  if (options.bundler === 'esbuild') {
+    project.targets.build = getEsBuildConfig(project, options);
+  } else if (options.bundler === 'webpack') {
+    if (!hasWebpackPlugin(tree)) {
+      project.targets.build = getWebpackBuildConfig(project, options);
+    }
+  }
   project.targets.serve = getServeConfig(options);
 
   addProjectConfiguration(
@@ -168,6 +171,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
 }
 
 function addAppFiles(tree: Tree, options: NormalizedSchema) {
+  const sourceRoot = joinPathFragments(options.appProjectRoot, 'src');
   generateFiles(
     tree,
     join(__dirname, './files/common'),
@@ -182,6 +186,17 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
         tree,
         options.appProjectRoot
       ),
+      webpackPluginOptions: hasWebpackPlugin(tree)
+        ? {
+            outputPath: joinPathFragments(
+              'dist',
+              options.rootProject ? options.name : options.appProjectRoot
+            ),
+            main: './src/main' + (options.js ? '.js' : '.ts'),
+            tsConfig: './tsconfig.app.json',
+            assets: ['./assets'],
+          }
+        : null,
     }
   );
 
@@ -374,6 +389,18 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   const installTask = addProjectDependencies(tree, options);
   tasks.push(installTask);
+
+  if (options.bundler === 'webpack') {
+    const { webpackInitGenerator } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    const webpackInitTask = await webpackInitGenerator(tree, {
+      uiFramework: 'react',
+      skipFormat: true,
+    });
+    tasks.push(webpackInitTask);
+  }
+
   addAppFiles(tree, options);
   addProject(tree, options);
 

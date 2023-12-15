@@ -1,21 +1,27 @@
-import { ExecutorContext } from '@nx/devkit';
-import type { InlineConfig, ViteDevServer } from 'vite';
+import { ExecutorContext, joinPathFragments } from '@nx/devkit';
+import {
+  loadConfigFromFile,
+  type InlineConfig,
+  type ViteDevServer,
+  ServerOptions,
+} from 'vite';
 
 import {
   getNxTargetOptions,
-  getViteBuildOptions,
   getViteServerOptions,
-  getViteSharedConfig,
+  normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
 
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
 import { createBuildableTsConfig } from '../../utils/executor-utils';
+import { relative } from 'path';
 
 export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
+  process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { mergeConfig, createServer } = await (Function(
     'return import("vite")'
@@ -23,7 +29,10 @@ export async function* viteDevServerExecutor(
 
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-
+  const root =
+    projectRoot === '.'
+      ? process.cwd()
+      : relative(context.cwd, joinPathFragments(context.root, projectRoot));
   createBuildableTsConfig(projectRoot, options, context);
 
   // Retrieve the option for the configured buildTarget.
@@ -31,20 +40,33 @@ export async function* viteDevServerExecutor(
     options.buildTarget,
     context
   );
-
-  // Merge the options from the build and dev-serve targets.
-  // The latter takes precedence.
-  const mergedOptions = {
-    ...buildTargetOptions,
-    ...options,
-  };
-
-  // Add the server specific configuration.
-  const serverConfig: InlineConfig = mergeConfig(
-    getViteSharedConfig(mergedOptions, options.clearScreen, context),
+  const viteConfigPath = normalizeViteConfigFilePath(
+    context.root,
+    projectRoot,
+    buildTargetOptions.configFile
+  );
+  const { serverOptions, otherOptions } = await getServerExtraArgs(options);
+  const resolved = await loadConfigFromFile(
     {
-      build: getViteBuildOptions(mergedOptions, context),
-      server: await getViteServerOptions(mergedOptions, context),
+      mode: otherOptions?.mode ?? 'development',
+      command: 'serve',
+    },
+    viteConfigPath
+  );
+
+  const serverConfig: InlineConfig = mergeConfig(
+    {
+      // This should not be needed as it's going to be set in vite.config.ts
+      // but leaving it here in case someone did not migrate correctly
+      root: resolved.config.root ?? root,
+      configFile: viteConfigPath,
+    },
+    {
+      server: {
+        ...(await getViteServerOptions(options, context)),
+        ...serverOptions,
+      },
+      ...otherOptions,
     }
   );
 
@@ -90,3 +112,53 @@ async function runViteDevServer(server: ViteDevServer): Promise<void> {
 }
 
 export default viteDevServerExecutor;
+
+async function getServerExtraArgs(
+  options: ViteDevServerExecutorOptions
+): Promise<{
+  serverOptions: ServerOptions;
+  otherOptions: Record<string, any>;
+}> {
+  // support passing extra args to vite cli
+  const schema = await import('./schema.json');
+  const extraArgs = {};
+  for (const key of Object.keys(options)) {
+    if (!schema.properties[key]) {
+      extraArgs[key] = options[key];
+    }
+  }
+
+  const serverOptions = {} as ServerOptions;
+  const serverSchemaKeys = [
+    'hmr',
+    'warmup',
+    'watch',
+    'middlewareMode',
+    'fs',
+    'origin',
+    'preTransformRequests',
+    'sourcemapIgnoreList',
+    'port',
+    'strictPort',
+    'host',
+    'https',
+    'open',
+    'proxy',
+    'cors',
+    'headers',
+  ];
+
+  const otherOptions = {};
+  for (const key of Object.keys(extraArgs)) {
+    if (serverSchemaKeys.includes(key)) {
+      serverOptions[key] = extraArgs[key];
+    } else {
+      otherOptions[key] = extraArgs[key];
+    }
+  }
+
+  return {
+    serverOptions,
+    otherOptions,
+  };
+}

@@ -2,7 +2,6 @@ import { Tree, getProjects, joinPathFragments } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { ViteBuildExecutorOptions } from '../../executors/build/schema';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { ImportDeclaration } from 'typescript';
 
 export default function update(tree: Tree) {
   const projects = getProjects(tree);
@@ -20,7 +19,7 @@ export default function update(tree: Tree) {
       const configContents = tree.read(config, 'utf-8');
 
       const oldTsConfigPathPlugin =
-        tsquery.query<ImportDeclaration>(
+        tsquery.query(
           configContents,
           'ImportDeclaration:has(StringLiteral[value="vite-tsconfig-paths"])'
         ) ?? [];
@@ -30,7 +29,7 @@ export default function update(tree: Tree) {
       }
 
       const importName =
-        oldTsConfigPathPlugin[0]?.importClause?.name?.text ??
+        oldTsConfigPathPlugin[0]?.['importClause']?.name?.text ??
         'viteTsConfigPaths';
       const updatedContent = tsquery.replace(
         configContents,

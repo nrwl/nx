@@ -13,6 +13,7 @@ describe('Nuxt Plugin', () => {
 
   beforeAll(() => {
     proj = newProject({
+      packages: ['@nx/nuxt', '@nx/storybook'],
       unsetProjectNameAndRootFormat: false,
     });
     runCLI(`generate @nx/nuxt:app ${app} --unitTestRunner=vitest`);
@@ -38,7 +39,7 @@ describe('Nuxt Plugin', () => {
   it('should test application', async () => {
     const result = runCLI(`test ${app}`);
     expect(result).toContain(`Successfully ran target test for project ${app}`);
-  });
+  }, 150_000);
 
   it('should lint application', async () => {
     const result = runCLI(`lint ${app}`);

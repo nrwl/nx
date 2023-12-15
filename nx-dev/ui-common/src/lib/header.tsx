@@ -30,7 +30,7 @@ export function Header(): JSX.Element {
       name: 'Distributed cache & task execution',
       description:
         'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
-      href: '/core-features/distribute-task-execution',
+      href: '/ci/features/distribute-task-execution',
     },
     {
       name: 'Recipes',
@@ -49,10 +49,10 @@ export function Header(): JSX.Element {
       href: '/nx-api',
     },
     {
-      name: 'Nx Cloud',
+      name: 'CI',
       description:
         'Learn everything about remote cache and distributed tasks configuration.',
-      href: '/nx-cloud/intro/ci-with-nx',
+      href: '/ci/intro/ci-with-nx',
     },
   ];
   const flyoutMobileMenu = [

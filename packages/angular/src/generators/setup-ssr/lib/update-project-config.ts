@@ -108,16 +108,14 @@ export function updateProjectConfigForBrowserBuilder(
 
   const nxJson = readNxJson(tree);
   if (
-    nxJson.tasksRunnerOptions?.default &&
+    nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations &&
     !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
       'server'
     )
   ) {
-    nxJson.tasksRunnerOptions.default.options.cacheableOperations = [
-      ...nxJson.tasksRunnerOptions.default.options.cacheableOperations,
-      'server',
-    ];
-    updateNxJson(tree, nxJson);
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
+      'server'
+    );
   }
   nxJson.targetDefaults ??= {};
   nxJson.targetDefaults.server ??= {};

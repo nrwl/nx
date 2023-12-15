@@ -5,6 +5,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -28,7 +29,8 @@ import { join } from 'path';
 
 export async function vitestGenerator(
   tree: Tree,
-  schema: VitestGeneratorSchema
+  schema: VitestGeneratorSchema,
+  hasPlugin = false
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -36,13 +38,21 @@ export async function vitestGenerator(
     tree,
     schema.project
   );
-  let testTarget =
-    schema.testTarget ??
-    findExistingTargetsInProject(targets).validFoundTargetName.test ??
-    'test';
 
-  addOrChangeTestTarget(tree, schema, testTarget);
-
+  const nxJson = readNxJson(tree);
+  const hasPluginCheck = nxJson.plugins?.some(
+    (p) =>
+      (typeof p === 'string'
+        ? p === '@nx/vite/plugin'
+        : p.plugin === '@nx/vite/plugin') || hasPlugin
+  );
+  if (!hasPluginCheck) {
+    const testTarget =
+      schema.testTarget ??
+      findExistingTargetsInProject(targets).validFoundTargetName.test ??
+      'test';
+    addOrChangeTestTarget(tree, schema, testTarget);
+  }
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
     testEnvironment: schema.testEnvironment,
@@ -65,6 +75,7 @@ export async function vitestGenerator(
           ],
           imports: [`import react from '@vitejs/plugin-react'`],
           plugins: ['react()'],
+          coverageProvider: schema.coverageProvider,
         },
         true
       );

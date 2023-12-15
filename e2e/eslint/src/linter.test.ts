@@ -26,7 +26,9 @@ describe('Linter', () => {
     let projScope;
 
     beforeAll(() => {
-      projScope = newProject();
+      projScope = newProject({
+        packages: ['@nx/react', '@nx/js', '@nx/eslint'],
+      });
       runCLI(`generate @nx/react:app ${myapp} --tags=validtag`);
       runCLI(`generate @nx/js:lib ${mylib}`);
     });
@@ -619,7 +621,11 @@ describe('Linter', () => {
   });
 
   describe('Root projects migration', () => {
-    beforeEach(() => newProject());
+    beforeEach(() =>
+      newProject({
+        packages: ['@nx/react', '@nx/js', '@nx/angular', '@nx/node'],
+      })
+    );
     afterEach(() => cleanupProject());
 
     function verifySuccessfulStandaloneSetup(myapp: string) {
@@ -762,6 +768,46 @@ describe('Linter', () => {
       expect(appEslint.overrides[0].extends).toBeUndefined();
       expect(appEslint.overrides[1].extends).toBeUndefined();
       expect(e2eEslint.overrides[0].extends).toBeUndefined();
+    });
+  });
+
+  describe('Project Config v3', () => {
+    let myapp;
+
+    beforeEach(() => {
+      myapp = uniq('myapp');
+      newProject({
+        name: uniq('eslint'),
+        unsetProjectNameAndRootFormat: false,
+        packages: ['@nx/react'],
+      });
+    });
+
+    it('should lint example app', () => {
+      runCLI(
+        `generate @nx/react:app ${myapp}  --directory apps/${myapp} --unitTestRunner=none --bundler=vite --e2eTestRunner=cypress --style=css --no-interactive --projectNameAndRootFormat=as-provided`,
+        { env: { NX_PCV3: 'true' } }
+      );
+
+      let lintResults = runCLI(`lint ${myapp}`);
+      expect(lintResults).toContain(
+        `Successfully ran target lint for project ${myapp}`
+      );
+      lintResults = runCLI(`lint ${myapp}-e2e`);
+      expect(lintResults).toContain(
+        `Successfully ran target lint for project ${myapp}-e2e`
+      );
+
+      const { targets } = readJson(`apps/${myapp}/project.json`);
+      expect(targets.lint).not.toBeDefined();
+
+      const { plugins } = readJson('nx.json');
+      expect(plugins).toContainEqual({
+        plugin: '@nx/eslint/plugin',
+        options: {
+          targetName: 'lint',
+        },
+      });
     });
   });
 });

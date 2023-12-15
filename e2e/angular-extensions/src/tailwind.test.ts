@@ -116,7 +116,7 @@ describe('Tailwind support', () => {
   };
 
   beforeAll(() => {
-    project = newProject();
+    project = newProject({ packages: ['@nx/angular'] });
 
     // Create tailwind config in the workspace root
     createWorkspaceTailwindConfigFile();

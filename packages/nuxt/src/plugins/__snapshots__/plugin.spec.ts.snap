@@ -1,0 +1,119 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
+{
+  "projects": {
+    "my-app": {
+      "root": "my-app",
+      "targets": {
+        "build-something": {
+          "cache": true,
+          "command": "nuxi build",
+          "dependsOn": [
+            "^build-something",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "nuxi",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "{workspaceRoot}/dist/my-app/",
+          ],
+        },
+        "my-serve": {
+          "command": "nuxi dev",
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "test": {
+          "cache": true,
+          "command": "vitest run",
+          "inputs": [
+            "default",
+            "^production",
+            {
+              "externalDependencies": [
+                "vitest",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "{workspaceRoot}/coverage/{projectRoot}",
+          ],
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
+{
+  "projects": {
+    ".": {
+      "root": ".",
+      "targets": {
+        "build": {
+          "cache": true,
+          "command": "nuxi build",
+          "dependsOn": [
+            "^build",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "nuxi",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "dist/my-app/",
+          ],
+        },
+        "serve": {
+          "command": "nuxi dev",
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "test": {
+          "cache": true,
+          "command": "vitest run",
+          "inputs": [
+            "default",
+            "^production",
+            {
+              "externalDependencies": [
+                "vitest",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "{workspaceRoot}/coverage/{projectRoot}",
+          ],
+        },
+      },
+    },
+  },
+}
+`;

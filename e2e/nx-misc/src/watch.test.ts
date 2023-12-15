@@ -44,9 +44,11 @@ describe('Nx Watch', () => {
   });
 
   afterEach(() => {
-    let daemonLog = readFile(join(cacheDirectory, 'd/daemon.log'));
-    const testName = expect.getState().currentTestName;
-    console.log(`${testName} daemon log: \n${daemonLog}`);
+    if (process.env.NX_E2E_OUTPUT_DAEMON_LOGS === 'true') {
+      let daemonLog = readFile(join(cacheDirectory, 'd/daemon.log'));
+      const testName = expect.getState().currentTestName;
+      console.log(`${testName} daemon log: \n${daemonLog}`);
+    }
     runCLI('reset');
   });
 

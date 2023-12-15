@@ -29,6 +29,7 @@ export async function addLinting(
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,
     rootProject: options.rootProject,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
   if (options.linter === Linter.EsLint && isEslintConfigSupported(host)) {
     addExtendsToLintConfig(host, options.appProjectRoot, [

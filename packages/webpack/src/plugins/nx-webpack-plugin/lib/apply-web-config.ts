@@ -35,6 +35,15 @@ export function applyWebConfig(
     useNormalizedEntry?: boolean;
   } = {}
 ): void {
+  if (!process.env['NX_TASK_TARGET_PROJECT']) return;
+
+  // Defaults that was applied from executor schema previously.
+  options.runtimeChunk ??= true; // need this for HMR and other things to work
+  options.extractCss ??= true;
+  options.generateIndexHtml ??= true;
+  options.styles ??= [];
+  options.scripts ??= [];
+
   const plugins: WebpackPluginInstance[] = [];
 
   const stylesOptimization =
