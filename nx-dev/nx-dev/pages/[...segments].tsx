@@ -10,6 +10,7 @@ import { menusApi } from '../lib/menus.api';
 import { useNavToggle } from '../lib/navigation-toggle.effect';
 import { nxDocumentationApi } from '../lib/nx.api';
 import { tagsApi } from '../lib/tags.api';
+import { backlinksApi } from '../lib/backlinks.api';
 import { fetchGithubStarCount } from '../lib/githubStars.api';
 
 export default function NxDocumentation({
@@ -93,12 +94,14 @@ export const getStaticProps: GetStaticProps = async ({
 }) => {
   try {
     const document = nxDocumentationApi.getDocument(params.segments);
+    console.log(`🔥 ${document.id}`);
     return {
       props: {
         document,
         widgetData: {
           githubStarsCount: await fetchGithubStarCount(),
         },
+        // backlinks: backlinksApi.getBacklinks(document.id),
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item

@@ -39,3 +39,10 @@ export interface RelatedDocument {
   name: string;
   path: string;
 }
+
+export interface BacklinkDocument {
+  file: string;
+  id: string;
+  name: string;
+  path: string;
+}
