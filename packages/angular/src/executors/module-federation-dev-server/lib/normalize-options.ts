@@ -11,6 +11,9 @@ export function normalizeOptions(schema: Schema): NormalizedSchema {
     buildTarget ??= (schema as SchemaWithBrowserTarget).browserTarget;
     delete (schema as SchemaWithBrowserTarget).browserTarget;
   }
+  schema.buildLibsFromSource ??= true;
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${schema.buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = `${buildTarget}`;
 
   return {
     ...schema,
