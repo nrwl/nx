@@ -19,7 +19,7 @@ let proj: string;
 
 describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
   });
 
   afterEach(() => cleanupProject());
