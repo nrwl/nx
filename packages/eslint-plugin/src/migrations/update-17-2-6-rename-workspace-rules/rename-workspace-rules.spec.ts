@@ -1,7 +1,7 @@
 import { Tree, readJson, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 import { WORKSPACE_PLUGIN_DIR } from '../../constants';
-import update from './update-17-2-6-rename-workspace-rules';
+import update from './rename-workspace-rules';
 
 const rule1Name = 'test-rule';
 const rule2Name = 'my-rule';
