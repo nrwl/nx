@@ -103,12 +103,6 @@
       "file": "shared/migration/adding-to-monorepo",
       "id": "adding-to-monorepo",
       "path": "/recipes/adopting-nx/adding-to-monorepo"
-    },
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     }
   ],
   "cache-task-results": [
@@ -195,12 +189,6 @@
       "file": "shared/recipes/add-stack/add-astro",
       "id": "add-astro",
       "path": "/showcase/example-repos/add-astro"
-    },
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     },
     {
       "name": "Circle CI with Nx",
@@ -301,12 +289,6 @@
       "path": "/recipes/tips-n-tricks/define-environment-variables"
     },
     {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
-    },
-    {
       "name": "CI with Nx",
       "file": "nx-cloud/intro/ci-with-nx",
       "id": "ci-with-nx",
@@ -405,12 +387,6 @@
       "path": "/recipes/tips-n-tricks/integrated-in-package-based"
     },
     {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
-    },
-    {
       "name": "Getting Started with Plugins",
       "file": "shared/plugins/intro",
       "id": "getting-started",
@@ -471,12 +447,6 @@
       "file": "shared/guides/nx-and-angular-cli",
       "id": "nx-and-angular",
       "path": "/concepts/more-concepts/nx-and-angular"
-    },
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     },
     {
       "name": "Create a Preset",
@@ -605,12 +575,6 @@
       "path": "/recipes/adopting-nx/lerna-and-nx"
     },
     {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
-    },
-    {
       "name": "v1 Nx Plugin API",
       "file": "shared/deprecated/v1-nx-plugin-api",
       "id": "v1-nx-plugin-api",
@@ -707,12 +671,6 @@
       "file": "shared/migration/lerna-and-nx",
       "id": "lerna-and-nx",
       "path": "/recipes/adopting-nx/lerna-and-nx"
-    },
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     },
     {
       "name": "CI with Nx",
@@ -897,12 +855,6 @@
       "file": "shared/reference/project-configuration",
       "id": "project-configuration",
       "path": "/reference/project-configuration"
-    },
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     },
     {
       "name": "Getting Started with Plugins",
@@ -1159,12 +1111,6 @@
       "file": "shared/migration/migration-angular",
       "id": "angular",
       "path": "/recipes/angular/migration/angular"
-    },
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     }
   ],
   "react-monorepo-tutorial": [
@@ -1223,12 +1169,6 @@
       "file": "shared/recipes/deployment/node-server-fly-io",
       "id": "node-server-fly-io",
       "path": "/recipes/node/node-server-fly-io"
-    },
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     },
     {
       "name": "Circle CI with Nx",
@@ -1339,12 +1279,6 @@
       "file": "shared/reference/nx-json",
       "id": "nx-json",
       "path": "/reference/nx-json"
-    },
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     },
     {
       "name": "runtimeCacheInputs",
@@ -1591,12 +1525,6 @@
       "file": "shared/angular-tutorial/angular-monorepo",
       "id": "angular-monorepo-tutorial",
       "path": "/getting-started/tutorials/angular-monorepo-tutorial"
-    },
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     }
   ],
   "folder-structure": [
@@ -2309,12 +2237,6 @@
       "path": "/recipes/adopting-nx/adding-to-existing-project"
     },
     {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
-    },
-    {
       "name": "globalImplicitDependencies",
       "file": "shared/deprecated/global-implicit-dependencies",
       "id": "global-implicit-dependencies",
@@ -2549,12 +2471,6 @@
       "file": "shared/workspace/applications-and-libraries",
       "id": "applications-and-libraries",
       "path": "/concepts/more-concepts/applications-and-libraries"
-    },
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     }
   ],
   "enable-tsc-batch-mode": [
@@ -3103,14 +3019,6 @@
       "file": "shared/core-features/distribute-task-execution",
       "id": "distribute-task-execution",
       "path": "/ci/features/distribute-task-execution"
-    }
-  ],
-  "ci": [
-    {
-      "name": "Glossary",
-      "file": "shared/reference/glossary",
-      "id": "glossary",
-      "path": "/reference/glossary"
     }
   ],
   "workspace-json": [

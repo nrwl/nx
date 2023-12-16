@@ -101,7 +101,6 @@ export const getStaticProps: GetStaticProps = async ({
 }) => {
   try {
     const document = nxDocumentationApi.getDocument(params.segments);
-    console.log(`🔥 ${document.id}`);
     return {
       props: {
         document,

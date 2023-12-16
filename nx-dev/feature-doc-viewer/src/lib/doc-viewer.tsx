@@ -135,10 +135,14 @@ export function DocViewer({
                 { 'xl:max-w-2xl': !hideTableOfContent }
               )}
             >
-              {backlinks.length > 0 && <Backlinks backlinks={backlinks} />}
               <RelatedDocumentsSection
                 relatedCategories={vm.relatedContentData}
               />
+              {backlinks.length > 0 && (
+                <div className="pt-4">
+                  <Backlinks backlinks={backlinks} />
+                </div>
+              )}
             </div>
           </div>
           <div className="flex w-full items-center space-x-2 pt-24 pb-24 sm:px-6 lg:pb-16 xl:px-8">

@@ -181,7 +181,6 @@ function resolveId(path: string, manifests: Manifest[]) {
 
 function generateBacklinks(manifests: Manifest[]) {
   const backlinks: Record<string, BacklinkDocument[]> = {};
-  const linkMap: Record<string, string> = {};
 
   manifests.map((manifest) => {
     for (let key in manifest.records) {
@@ -191,19 +190,10 @@ function generateBacklinks(manifests: Manifest[]) {
       if (
         isDocument(item) &&
         item.id !== 'sitemap' &&
+        item.id !== 'glossary' &&
         item.file &&
         item.file !== ''
       ) {
-        // convert paths into ids
-        // if (backlinks[item.path]) {
-        //   // memorize the path <=> id mapping for next cycles
-        //   linkMap[item.path] = item.id;
-
-        //   // fix current backlinks that use the path instead of the id
-        //   backlinks[item.id] = backlinks[item.path];
-        //   delete backlinks[item.path];
-        // }
-
         const links = extractLinks(item.file);
         links.forEach((link) => {
           // try to resolve the id
