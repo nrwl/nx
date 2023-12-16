@@ -1,4 +1,5 @@
 import {
+  BacklinkDocument,
   categorizeRelatedDocuments,
   ProcessedDocument,
   RelatedDocument,
@@ -10,14 +11,19 @@ import { useRouter } from 'next/router';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { useRef } from 'react';
 import { collectHeadings, TableOfContents } from './table-of-contents';
-import { RelatedDocumentsSection } from './related-documents-section';
+import {
+  Backlinks,
+  RelatedDocumentsSection,
+} from './related-documents-section';
 
 export function DocViewer({
   document,
+  backlinks,
   relatedDocuments,
   widgetData,
 }: {
   document: ProcessedDocument;
+  backlinks: BacklinkDocument[];
   relatedDocuments: RelatedDocument[];
   widgetData: { githubStarsCount: number };
 }): JSX.Element {
@@ -122,7 +128,6 @@ export function DocViewer({
               )}
             </div>
             {/*RELATED CONTENT*/}
-
             <div
               data-document="related"
               className={cx(
@@ -130,6 +135,7 @@ export function DocViewer({
                 { 'xl:max-w-2xl': !hideTableOfContent }
               )}
             >
+              {backlinks.length > 0 && <Backlinks backlinks={backlinks} />}
               <RelatedDocumentsSection
                 relatedCategories={vm.relatedContentData}
               />

@@ -1,6 +1,10 @@
 import { getBasicNxSection } from '@nx/nx-dev/data-access-menu';
 import { DocViewer } from '@nx/nx-dev/feature-doc-viewer';
-import { ProcessedDocument, RelatedDocument } from '@nx/nx-dev/models-document';
+import {
+  BacklinkDocument,
+  ProcessedDocument,
+  RelatedDocument,
+} from '@nx/nx-dev/models-document';
 import { MenuItem } from '@nx/nx-dev/models-menu';
 import { DocumentationHeader, SidebarContainer } from '@nx/nx-dev/ui-common';
 import { GetStaticPaths, GetStaticProps } from 'next';
@@ -16,11 +20,13 @@ import { fetchGithubStarCount } from '../lib/githubStars.api';
 export default function NxDocumentation({
   document,
   menu,
+  backlinks,
   relatedDocuments,
   widgetData,
 }: {
   document: ProcessedDocument;
   menu: MenuItem[];
+  backlinks: BacklinkDocument[];
   relatedDocuments: RelatedDocument[];
   widgetData: { githubStarsCount: number };
 }) {
@@ -67,6 +73,7 @@ export default function NxDocumentation({
         >
           <DocViewer
             document={document}
+            backlinks={backlinks}
             relatedDocuments={relatedDocuments}
             widgetData={widgetData}
           />
@@ -101,7 +108,7 @@ export const getStaticProps: GetStaticProps = async ({
         widgetData: {
           githubStarsCount: await fetchGithubStarCount(),
         },
-        // backlinks: backlinksApi.getBacklinks(document.id),
+        backlinks: backlinksApi.getBackLinks(document.id),
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item

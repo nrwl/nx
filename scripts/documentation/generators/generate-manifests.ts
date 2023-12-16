@@ -160,6 +160,25 @@ export function generateManifests(workspace: string): Promise<void[]> {
   return Promise.all(fileGenerationPromises);
 }
 
+const manifestPathIdMap: Record<string, string> = {};
+
+function resolveId(path: string, manifests: Manifest[]) {
+  if (manifestPathIdMap[path]) return manifestPathIdMap[path];
+
+  for (let i = 0; i < manifests.length; i++) {
+    const manifest = manifests[i];
+
+    for (let key in manifest.records) {
+      const item = manifest.records[key];
+
+      if (isDocument(item) && item.path === path) {
+        manifestPathIdMap[path] = item.id;
+        return item.id;
+      }
+    }
+  }
+}
+
 function generateBacklinks(manifests: Manifest[]) {
   const backlinks: Record<string, BacklinkDocument[]> = {};
   const linkMap: Record<string, string> = {};
@@ -176,19 +195,23 @@ function generateBacklinks(manifests: Manifest[]) {
         item.file !== ''
       ) {
         // convert paths into ids
-        if (backlinks[item.path]) {
-          // memorize the path <=> id mapping for next cycles
-          linkMap[item.path] = item.id;
+        // if (backlinks[item.path]) {
+        //   // memorize the path <=> id mapping for next cycles
+        //   linkMap[item.path] = item.id;
 
-          // fix current backlinks that use the path instead of the id
-          backlinks[item.id] = backlinks[item.path];
-          delete backlinks[item.path];
-        }
+        //   // fix current backlinks that use the path instead of the id
+        //   backlinks[item.id] = backlinks[item.path];
+        //   delete backlinks[item.path];
+        // }
 
         const links = extractLinks(item.file);
         links.forEach((link) => {
           // try to resolve the id
-          const id = linkMap[link] || link;
+          const id = resolveId(link, manifests);
+          if (!id) {
+            console.warn(`Unable to resolve id for ${link} in ${item.file}`);
+            return;
+          }
 
           if (backlinks[id]) {
             // verify there's no duplicate using "item.id"

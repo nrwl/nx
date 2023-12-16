@@ -1,4 +1,7 @@
-import { RelatedDocumentsCategory } from '@nx/nx-dev/models-document';
+import {
+  BacklinkDocument,
+  RelatedDocumentsCategory,
+} from '@nx/nx-dev/models-document';
 import {
   CubeTransparentIcon,
   ArrowRightIcon,
@@ -6,6 +9,7 @@ import {
   LightBulbIcon,
   MagnifyingGlassIcon,
   InformationCircleIcon,
+  LinkIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
@@ -58,6 +62,33 @@ function CategoryBox({ category }: { category: RelatedDocumentsCategory }) {
               <span>{d.name}</span>
               <ArrowRightIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
             </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function Backlinks({ backlinks }: { backlinks: BacklinkDocument[] }) {
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white/60 p-5 dark:border-slate-800/40 dark:bg-slate-800/60">
+      <h4 className="flex items-center mt-0 pb-2 text-xl font-bold">
+        <LinkIcon className="w-6 h-6 mr-2" aria-hidden="true" />
+        Pages Linking Here
+      </h4>
+      <ul className="divide-y divide-slate-300 dark:divide-slate-700 list-none pl-0">
+        {backlinks.map((d) => (
+          <li
+            key={d.id}
+            className="flex justify-between items-center py-1 pl-0 text-sm"
+          >
+            <a
+              href={d.path}
+              className="no-underline hover:underline hover:text-sky-600 dark:hover:text-sky-400 flex-grow flex justify-between items-center"
+            >
+              <span>{d.name}</span>
+              <ArrowRightIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+            </a>
           </li>
         ))}
       </ul>

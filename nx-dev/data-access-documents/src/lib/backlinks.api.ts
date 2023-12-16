@@ -11,7 +11,7 @@ export class BacklinksApi {
     this.manifest = structuredClone(this.backlinks);
   }
 
-  public getBackLinks(path: string): BacklinkDocument[] {
-    return this.manifest[path] || [];
+  public getBackLinks(id: string): BacklinkDocument[] {
+    return this.manifest[id] || [];
   }
 }
