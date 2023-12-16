@@ -26,7 +26,6 @@
     "build-project": "nx build"
   },
   "devDependencies": {
-    "marked": "11.1.0",
     "@actions/core": "^1.10.0",
     "@angular-devkit/architect": "0.1702.0",
     "@angular-devkit/build-angular": "17.2.0",

@@ -138,7 +138,7 @@ export function DocViewer({
               <RelatedDocumentsSection
                 relatedCategories={vm.relatedContentData}
               />
-              {backlinks.length > 0 && (
+              {backlinks && backlinks.length > 0 && (
                 <div className="pt-4">
                   <Backlinks backlinks={backlinks} />
                 </div>

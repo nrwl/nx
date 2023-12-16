@@ -41,6 +41,10 @@
           "type": "string",
           "description": "Path to an alternate open graph image, relative to /docs"
         },
+        "hideBacklinks": {
+          "type": "boolean",
+          "description": "Should backlinks be generated and visualized for this item?"
+        },
         "file": {
           "type": "string",
           "description": "Path to the markdown file"

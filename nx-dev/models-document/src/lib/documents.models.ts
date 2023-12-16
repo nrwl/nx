@@ -14,6 +14,7 @@ export interface DocumentMetadata {
   name: string;
   description: string;
   mediaImage?: string;
+  hideBacklinks?: boolean;
   file: string;
   path: string;
   isExternal: boolean;
@@ -25,6 +26,7 @@ export interface ProcessedDocument {
   content: string;
   description: string;
   mediaImage?: string;
+  hideBacklinks?: boolean;
   filePath: string;
   id: string;
   name: string;

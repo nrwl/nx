@@ -192,14 +192,15 @@ function generateBacklinks(manifests: Manifest[]) {
         item.id !== 'sitemap' &&
         item.id !== 'glossary' &&
         item.file &&
-        item.file !== ''
+        item.file !== '' &&
+        item.hideBacklinks !== true
       ) {
         const links = extractLinks(item.file);
         links.forEach((link) => {
           // try to resolve the id
           const id = resolveId(link, manifests);
           if (!id) {
-            console.warn(`Unable to resolve id for ${link} in ${item.file}`);
+            // console.warn(`Unable to resolve id for "${link}" in ${item.file}`);
             return;
           }
 
@@ -245,7 +246,9 @@ function extractLinks(path: string) {
     while ((match = regex.exec(data)) !== null) {
       // Split the URL part of the markdown link at the '#' and keep only the first part
       const link = match[3].split('#')[0];
-      links.push(link);
+      if (link !== '') {
+        links.push(link);
+      }
     }
 
     return links;

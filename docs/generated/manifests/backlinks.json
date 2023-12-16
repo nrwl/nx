@@ -1,49 +1,5 @@
 {
-  "why-nx": [
-    {
-      "name": "Intro to Nx",
-      "file": "shared/getting-started/intro",
-      "id": "intro",
-      "path": "/getting-started/intro"
-    },
-    {
-      "name": "React Standalone",
-      "file": "shared/react-standalone-tutorial/react-standalone",
-      "id": "react-standalone-tutorial",
-      "path": "/getting-started/tutorials/react-standalone-tutorial"
-    },
-    {
-      "name": "React Monorepo",
-      "file": "shared/react-tutorial/react-monorepo",
-      "id": "react-monorepo-tutorial",
-      "path": "/getting-started/tutorials/react-monorepo-tutorial"
-    },
-    {
-      "name": "Angular Monorepo",
-      "file": "shared/angular-tutorial/angular-monorepo",
-      "id": "angular-monorepo-tutorial",
-      "path": "/getting-started/tutorials/angular-monorepo-tutorial"
-    },
-    {
-      "name": "Vue Standalone",
-      "file": "shared/vue-standalone-tutorial/vue-standalone",
-      "id": "vue-standalone-tutorial",
-      "path": "/getting-started/tutorials/vue-standalone-tutorial"
-    },
-    {
-      "name": "Nx and the Angular CLI",
-      "file": "shared/guides/nx-and-angular-cli",
-      "id": "nx-and-angular",
-      "path": "/concepts/more-concepts/nx-and-angular"
-    }
-  ],
   "run-tasks": [
-    {
-      "name": "Intro to Nx",
-      "file": "shared/getting-started/intro",
-      "id": "intro",
-      "path": "/getting-started/intro"
-    },
     {
       "name": "Installation",
       "file": "shared/getting-started/installation",
@@ -103,378 +59,6 @@
       "file": "shared/migration/adding-to-monorepo",
       "id": "adding-to-monorepo",
       "path": "/recipes/adopting-nx/adding-to-monorepo"
-    }
-  ],
-  "cache-task-results": [
-    {
-      "name": "Intro to Nx",
-      "file": "shared/getting-started/intro",
-      "id": "intro",
-      "path": "/getting-started/intro"
-    },
-    {
-      "name": "Why Nx?",
-      "file": "shared/getting-started/why-nx",
-      "id": "why-nx",
-      "path": "/getting-started/why-nx"
-    },
-    {
-      "name": "React Standalone",
-      "file": "shared/react-standalone-tutorial/react-standalone",
-      "id": "react-standalone-tutorial",
-      "path": "/getting-started/tutorials/react-standalone-tutorial"
-    },
-    {
-      "name": "React Monorepo",
-      "file": "shared/react-tutorial/react-monorepo",
-      "id": "react-monorepo-tutorial",
-      "path": "/getting-started/tutorials/react-monorepo-tutorial"
-    },
-    {
-      "name": "Angular Standalone",
-      "file": "shared/angular-standalone-tutorial/angular-standalone",
-      "id": "angular-standalone-tutorial",
-      "path": "/getting-started/tutorials/angular-standalone-tutorial"
-    },
-    {
-      "name": "Angular Monorepo",
-      "file": "shared/angular-tutorial/angular-monorepo",
-      "id": "angular-monorepo-tutorial",
-      "path": "/getting-started/tutorials/angular-monorepo-tutorial"
-    },
-    {
-      "name": "Vue Standalone",
-      "file": "shared/vue-standalone-tutorial/vue-standalone",
-      "id": "vue-standalone-tutorial",
-      "path": "/getting-started/tutorials/vue-standalone-tutorial"
-    },
-    {
-      "name": "Cache Task Results",
-      "file": "shared/core-features/cache-task-results",
-      "id": "cache-task-results",
-      "path": "/core-features/cache-task-results"
-    },
-    {
-      "name": "How Caching Works",
-      "file": "shared/concepts/how-caching-works",
-      "id": "how-caching-works",
-      "path": "/concepts/how-caching-works"
-    },
-    {
-      "name": "Nx and the Angular CLI",
-      "file": "shared/guides/nx-and-angular-cli",
-      "id": "nx-and-angular",
-      "path": "/concepts/more-concepts/nx-and-angular"
-    },
-    {
-      "name": "Run Root-Level NPM Scripts with Nx",
-      "file": "shared/recipes/running-tasks/root-level-scripts",
-      "id": "root-level-scripts",
-      "path": "/recipes/running-tasks/root-level-scripts"
-    },
-    {
-      "name": "NPM/Yarn/PNPM workspaces",
-      "file": "shared/migration/adding-to-monorepo",
-      "id": "adding-to-monorepo",
-      "path": "/recipes/adopting-nx/adding-to-monorepo"
-    },
-    {
-      "name": "Troubleshoot Cache Misses",
-      "file": "shared/recipes/troubleshoot-cache-misses",
-      "id": "troubleshoot-cache-misses",
-      "path": "/recipes/troubleshooting/troubleshoot-cache-misses"
-    },
-    {
-      "name": "Add an Astro Project",
-      "file": "shared/recipes/add-stack/add-astro",
-      "id": "add-astro",
-      "path": "/showcase/example-repos/add-astro"
-    },
-    {
-      "name": "Circle CI with Nx",
-      "file": "nx-cloud/tutorial/circle",
-      "id": "circle",
-      "path": "/ci/intro/tutorials/circle"
-    },
-    {
-      "name": "GitHub Actions with Nx",
-      "file": "nx-cloud/tutorial/github-actions",
-      "id": "github-actions",
-      "path": "/ci/intro/tutorials/github-actions"
-    },
-    {
-      "name": "Use Remote Caching",
-      "file": "shared/core-features/remote-cache",
-      "id": "remote-cache",
-      "path": "/ci/features/remote-cache"
-    },
-    {
-      "name": "Distribute Task Execution",
-      "file": "shared/core-features/distribute-task-execution",
-      "id": "distribute-task-execution",
-      "path": "/ci/features/distribute-task-execution"
-    },
-    {
-      "name": "Cache Security",
-      "file": "nx-cloud/concepts/cache-security",
-      "id": "cache-security",
-      "path": "/ci/concepts/cache-security"
-    }
-  ],
-  "remote-cache": [
-    {
-      "name": "Intro to Nx",
-      "file": "shared/getting-started/intro",
-      "id": "intro",
-      "path": "/getting-started/intro"
-    },
-    {
-      "name": "React Standalone",
-      "file": "shared/react-standalone-tutorial/react-standalone",
-      "id": "react-standalone-tutorial",
-      "path": "/getting-started/tutorials/react-standalone-tutorial"
-    },
-    {
-      "name": "React Monorepo",
-      "file": "shared/react-tutorial/react-monorepo",
-      "id": "react-monorepo-tutorial",
-      "path": "/getting-started/tutorials/react-monorepo-tutorial"
-    },
-    {
-      "name": "Angular Standalone",
-      "file": "shared/angular-standalone-tutorial/angular-standalone",
-      "id": "angular-standalone-tutorial",
-      "path": "/getting-started/tutorials/angular-standalone-tutorial"
-    },
-    {
-      "name": "Angular Monorepo",
-      "file": "shared/angular-tutorial/angular-monorepo",
-      "id": "angular-monorepo-tutorial",
-      "path": "/getting-started/tutorials/angular-monorepo-tutorial"
-    },
-    {
-      "name": "Vue Standalone",
-      "file": "shared/vue-standalone-tutorial/vue-standalone",
-      "id": "vue-standalone-tutorial",
-      "path": "/getting-started/tutorials/vue-standalone-tutorial"
-    },
-    {
-      "name": "Cache Task Results",
-      "file": "shared/core-features/cache-task-results",
-      "id": "cache-task-results",
-      "path": "/core-features/cache-task-results"
-    },
-    {
-      "name": "Nx and the Angular CLI",
-      "file": "shared/guides/nx-and-angular-cli",
-      "id": "nx-and-angular",
-      "path": "/concepts/more-concepts/nx-and-angular"
-    },
-    {
-      "name": "NPM/Yarn/PNPM workspaces",
-      "file": "shared/migration/adding-to-monorepo",
-      "id": "adding-to-monorepo",
-      "path": "/recipes/adopting-nx/adding-to-monorepo"
-    },
-    {
-      "name": "Migrate From Turborepo",
-      "file": "shared/migration/from-turborepo",
-      "id": "from-turborepo",
-      "path": "/recipes/adopting-nx/from-turborepo"
-    },
-    {
-      "name": "Define Environment Variables",
-      "file": "shared/guides/define-environment-variables",
-      "id": "define-environment-variables",
-      "path": "/recipes/tips-n-tricks/define-environment-variables"
-    },
-    {
-      "name": "CI with Nx",
-      "file": "nx-cloud/intro/ci-with-nx",
-      "id": "ci-with-nx",
-      "path": "/ci/intro/ci-with-nx"
-    },
-    {
-      "name": "Circle CI with Nx",
-      "file": "nx-cloud/tutorial/circle",
-      "id": "circle",
-      "path": "/ci/intro/tutorials/circle"
-    },
-    {
-      "name": "GitHub Actions with Nx",
-      "file": "nx-cloud/tutorial/github-actions",
-      "id": "github-actions",
-      "path": "/ci/intro/tutorials/github-actions"
-    },
-    {
-      "name": "Nx Agents",
-      "file": "nx-cloud/intro/nx-agents",
-      "id": "nx-agents",
-      "path": "/ci/features/nx-agents"
-    },
-    {
-      "name": "The Building Blocks of Fast CI",
-      "file": "nx-cloud/concepts/building-blocks-fast-ci",
-      "id": "building-blocks-fast-ci",
-      "path": "/ci/concepts/building-blocks-fast-ci"
-    },
-    {
-      "name": "Parallelization and Distribution",
-      "file": "nx-cloud/concepts/parallelization-distribution",
-      "id": "parallelization-distribution",
-      "path": "/ci/concepts/parallelization-distribution"
-    },
-    {
-      "name": "Cache Security",
-      "file": "nx-cloud/concepts/cache-security",
-      "id": "cache-security",
-      "path": "/ci/concepts/cache-security"
-    }
-  ],
-  "use-code-generators": [
-    {
-      "name": "Intro to Nx",
-      "file": "shared/getting-started/intro",
-      "id": "intro",
-      "path": "/getting-started/intro"
-    },
-    {
-      "name": "Why Nx?",
-      "file": "shared/getting-started/why-nx",
-      "id": "why-nx",
-      "path": "/getting-started/why-nx"
-    },
-    {
-      "name": "React Standalone",
-      "file": "shared/react-standalone-tutorial/react-standalone",
-      "id": "react-standalone-tutorial",
-      "path": "/getting-started/tutorials/react-standalone-tutorial"
-    },
-    {
-      "name": "React Monorepo",
-      "file": "shared/react-tutorial/react-monorepo",
-      "id": "react-monorepo-tutorial",
-      "path": "/getting-started/tutorials/react-monorepo-tutorial"
-    },
-    {
-      "name": "Angular Monorepo",
-      "file": "shared/angular-tutorial/angular-monorepo",
-      "id": "angular-monorepo-tutorial",
-      "path": "/getting-started/tutorials/angular-monorepo-tutorial"
-    },
-    {
-      "name": "Vue Standalone",
-      "file": "shared/vue-standalone-tutorial/vue-standalone",
-      "id": "vue-standalone-tutorial",
-      "path": "/getting-started/tutorials/vue-standalone-tutorial"
-    },
-    {
-      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
-      "file": "shared/concepts/integrated-vs-package-based",
-      "id": "integrated-vs-package-based",
-      "path": "/concepts/integrated-vs-package-based"
-    },
-    {
-      "name": "Nx and the Angular CLI",
-      "file": "shared/guides/nx-and-angular-cli",
-      "id": "nx-and-angular",
-      "path": "/concepts/more-concepts/nx-and-angular"
-    },
-    {
-      "name": "Add an Integrated Project in a Package-based Repo",
-      "file": "shared/recipes/repo-types/integrated-in-package-based",
-      "id": "integrated-in-package-based",
-      "path": "/recipes/tips-n-tricks/integrated-in-package-based"
-    },
-    {
-      "name": "Getting Started with Plugins",
-      "file": "shared/plugins/intro",
-      "id": "getting-started",
-      "path": "/extending-nx/intro/getting-started"
-    },
-    {
-      "name": "Create a Preset",
-      "file": "shared/recipes/plugins/create-preset",
-      "id": "create-preset",
-      "path": "/extending-nx/recipes/create-preset"
-    }
-  ],
-  "getting-started": [
-    {
-      "name": "Intro to Nx",
-      "file": "shared/getting-started/intro",
-      "id": "intro",
-      "path": "/getting-started/intro"
-    },
-    {
-      "name": "Why Nx?",
-      "file": "shared/getting-started/why-nx",
-      "id": "why-nx",
-      "path": "/getting-started/why-nx"
-    },
-    {
-      "name": "React Standalone",
-      "file": "shared/react-standalone-tutorial/react-standalone",
-      "id": "react-standalone-tutorial",
-      "path": "/getting-started/tutorials/react-standalone-tutorial"
-    },
-    {
-      "name": "React Monorepo",
-      "file": "shared/react-tutorial/react-monorepo",
-      "id": "react-monorepo-tutorial",
-      "path": "/getting-started/tutorials/react-monorepo-tutorial"
-    },
-    {
-      "name": "Angular Standalone",
-      "file": "shared/angular-standalone-tutorial/angular-standalone",
-      "id": "angular-standalone-tutorial",
-      "path": "/getting-started/tutorials/angular-standalone-tutorial"
-    },
-    {
-      "name": "Angular Monorepo",
-      "file": "shared/angular-tutorial/angular-monorepo",
-      "id": "angular-monorepo-tutorial",
-      "path": "/getting-started/tutorials/angular-monorepo-tutorial"
-    },
-    {
-      "name": "Vue Standalone",
-      "file": "shared/vue-standalone-tutorial/vue-standalone",
-      "id": "vue-standalone-tutorial",
-      "path": "/getting-started/tutorials/vue-standalone-tutorial"
-    },
-    {
-      "name": "Nx and the Angular CLI",
-      "file": "shared/guides/nx-and-angular-cli",
-      "id": "nx-and-angular",
-      "path": "/concepts/more-concepts/nx-and-angular"
-    },
-    {
-      "name": "Create a Preset",
-      "file": "shared/recipes/plugins/create-preset",
-      "id": "create-preset",
-      "path": "/extending-nx/recipes/create-preset"
-    }
-  ],
-  "publish-plugin": [
-    {
-      "name": "Intro to Nx",
-      "file": "shared/getting-started/intro",
-      "id": "intro",
-      "path": "/getting-started/intro"
-    },
-    {
-      "name": "Create a Preset",
-      "file": "shared/recipes/plugins/create-preset",
-      "id": "create-preset",
-      "path": "/extending-nx/recipes/create-preset"
-    }
-  ],
-  "core-features": [
-    {
-      "name": "Intro to Nx",
-      "file": "shared/getting-started/intro",
-      "id": "intro",
-      "path": "/getting-started/intro"
     }
   ],
   "adopting-nx": [
@@ -603,6 +187,116 @@
       "file": "shared/using-nx/affected",
       "id": "affected",
       "path": "/ci/features/affected"
+    }
+  ],
+  "cache-task-results": [
+    {
+      "name": "Why Nx?",
+      "file": "shared/getting-started/why-nx",
+      "id": "why-nx",
+      "path": "/getting-started/why-nx"
+    },
+    {
+      "name": "React Standalone",
+      "file": "shared/react-standalone-tutorial/react-standalone",
+      "id": "react-standalone-tutorial",
+      "path": "/getting-started/tutorials/react-standalone-tutorial"
+    },
+    {
+      "name": "React Monorepo",
+      "file": "shared/react-tutorial/react-monorepo",
+      "id": "react-monorepo-tutorial",
+      "path": "/getting-started/tutorials/react-monorepo-tutorial"
+    },
+    {
+      "name": "Angular Standalone",
+      "file": "shared/angular-standalone-tutorial/angular-standalone",
+      "id": "angular-standalone-tutorial",
+      "path": "/getting-started/tutorials/angular-standalone-tutorial"
+    },
+    {
+      "name": "Angular Monorepo",
+      "file": "shared/angular-tutorial/angular-monorepo",
+      "id": "angular-monorepo-tutorial",
+      "path": "/getting-started/tutorials/angular-monorepo-tutorial"
+    },
+    {
+      "name": "Vue Standalone",
+      "file": "shared/vue-standalone-tutorial/vue-standalone",
+      "id": "vue-standalone-tutorial",
+      "path": "/getting-started/tutorials/vue-standalone-tutorial"
+    },
+    {
+      "name": "Cache Task Results",
+      "file": "shared/core-features/cache-task-results",
+      "id": "cache-task-results",
+      "path": "/core-features/cache-task-results"
+    },
+    {
+      "name": "How Caching Works",
+      "file": "shared/concepts/how-caching-works",
+      "id": "how-caching-works",
+      "path": "/concepts/how-caching-works"
+    },
+    {
+      "name": "Nx and the Angular CLI",
+      "file": "shared/guides/nx-and-angular-cli",
+      "id": "nx-and-angular",
+      "path": "/concepts/more-concepts/nx-and-angular"
+    },
+    {
+      "name": "Run Root-Level NPM Scripts with Nx",
+      "file": "shared/recipes/running-tasks/root-level-scripts",
+      "id": "root-level-scripts",
+      "path": "/recipes/running-tasks/root-level-scripts"
+    },
+    {
+      "name": "NPM/Yarn/PNPM workspaces",
+      "file": "shared/migration/adding-to-monorepo",
+      "id": "adding-to-monorepo",
+      "path": "/recipes/adopting-nx/adding-to-monorepo"
+    },
+    {
+      "name": "Troubleshoot Cache Misses",
+      "file": "shared/recipes/troubleshoot-cache-misses",
+      "id": "troubleshoot-cache-misses",
+      "path": "/recipes/troubleshooting/troubleshoot-cache-misses"
+    },
+    {
+      "name": "Add an Astro Project",
+      "file": "shared/recipes/add-stack/add-astro",
+      "id": "add-astro",
+      "path": "/showcase/example-repos/add-astro"
+    },
+    {
+      "name": "Circle CI with Nx",
+      "file": "nx-cloud/tutorial/circle",
+      "id": "circle",
+      "path": "/ci/intro/tutorials/circle"
+    },
+    {
+      "name": "GitHub Actions with Nx",
+      "file": "nx-cloud/tutorial/github-actions",
+      "id": "github-actions",
+      "path": "/ci/intro/tutorials/github-actions"
+    },
+    {
+      "name": "Use Remote Caching",
+      "file": "shared/core-features/remote-cache",
+      "id": "remote-cache",
+      "path": "/ci/features/remote-cache"
+    },
+    {
+      "name": "Distribute Task Execution",
+      "file": "shared/core-features/distribute-task-execution",
+      "id": "distribute-task-execution",
+      "path": "/ci/features/distribute-task-execution"
+    },
+    {
+      "name": "Cache Security",
+      "file": "nx-cloud/concepts/cache-security",
+      "id": "cache-security",
+      "path": "/ci/concepts/cache-security"
     }
   ],
   "distribute-task-execution": [
@@ -751,6 +445,68 @@
       "path": "/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines"
     }
   ],
+  "use-code-generators": [
+    {
+      "name": "Why Nx?",
+      "file": "shared/getting-started/why-nx",
+      "id": "why-nx",
+      "path": "/getting-started/why-nx"
+    },
+    {
+      "name": "React Standalone",
+      "file": "shared/react-standalone-tutorial/react-standalone",
+      "id": "react-standalone-tutorial",
+      "path": "/getting-started/tutorials/react-standalone-tutorial"
+    },
+    {
+      "name": "React Monorepo",
+      "file": "shared/react-tutorial/react-monorepo",
+      "id": "react-monorepo-tutorial",
+      "path": "/getting-started/tutorials/react-monorepo-tutorial"
+    },
+    {
+      "name": "Angular Monorepo",
+      "file": "shared/angular-tutorial/angular-monorepo",
+      "id": "angular-monorepo-tutorial",
+      "path": "/getting-started/tutorials/angular-monorepo-tutorial"
+    },
+    {
+      "name": "Vue Standalone",
+      "file": "shared/vue-standalone-tutorial/vue-standalone",
+      "id": "vue-standalone-tutorial",
+      "path": "/getting-started/tutorials/vue-standalone-tutorial"
+    },
+    {
+      "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
+      "file": "shared/concepts/integrated-vs-package-based",
+      "id": "integrated-vs-package-based",
+      "path": "/concepts/integrated-vs-package-based"
+    },
+    {
+      "name": "Nx and the Angular CLI",
+      "file": "shared/guides/nx-and-angular-cli",
+      "id": "nx-and-angular",
+      "path": "/concepts/more-concepts/nx-and-angular"
+    },
+    {
+      "name": "Add an Integrated Project in a Package-based Repo",
+      "file": "shared/recipes/repo-types/integrated-in-package-based",
+      "id": "integrated-in-package-based",
+      "path": "/recipes/tips-n-tricks/integrated-in-package-based"
+    },
+    {
+      "name": "Getting Started with Plugins",
+      "file": "shared/plugins/intro",
+      "id": "getting-started",
+      "path": "/extending-nx/intro/getting-started"
+    },
+    {
+      "name": "Create a Preset",
+      "file": "shared/recipes/plugins/create-preset",
+      "id": "create-preset",
+      "path": "/extending-nx/recipes/create-preset"
+    }
+  ],
   "automate-updating-dependencies": [
     {
       "name": "Why Nx?",
@@ -861,6 +617,56 @@
       "file": "shared/plugins/intro",
       "id": "getting-started",
       "path": "/extending-nx/intro/getting-started"
+    }
+  ],
+  "getting-started": [
+    {
+      "name": "Why Nx?",
+      "file": "shared/getting-started/why-nx",
+      "id": "why-nx",
+      "path": "/getting-started/why-nx"
+    },
+    {
+      "name": "React Standalone",
+      "file": "shared/react-standalone-tutorial/react-standalone",
+      "id": "react-standalone-tutorial",
+      "path": "/getting-started/tutorials/react-standalone-tutorial"
+    },
+    {
+      "name": "React Monorepo",
+      "file": "shared/react-tutorial/react-monorepo",
+      "id": "react-monorepo-tutorial",
+      "path": "/getting-started/tutorials/react-monorepo-tutorial"
+    },
+    {
+      "name": "Angular Standalone",
+      "file": "shared/angular-standalone-tutorial/angular-standalone",
+      "id": "angular-standalone-tutorial",
+      "path": "/getting-started/tutorials/angular-standalone-tutorial"
+    },
+    {
+      "name": "Angular Monorepo",
+      "file": "shared/angular-tutorial/angular-monorepo",
+      "id": "angular-monorepo-tutorial",
+      "path": "/getting-started/tutorials/angular-monorepo-tutorial"
+    },
+    {
+      "name": "Vue Standalone",
+      "file": "shared/vue-standalone-tutorial/vue-standalone",
+      "id": "vue-standalone-tutorial",
+      "path": "/getting-started/tutorials/vue-standalone-tutorial"
+    },
+    {
+      "name": "Nx and the Angular CLI",
+      "file": "shared/guides/nx-and-angular-cli",
+      "id": "nx-and-angular",
+      "path": "/concepts/more-concepts/nx-and-angular"
+    },
+    {
+      "name": "Create a Preset",
+      "file": "shared/recipes/plugins/create-preset",
+      "id": "create-preset",
+      "path": "/extending-nx/recipes/create-preset"
     }
   ],
   "local-generators": [
@@ -1125,6 +931,38 @@
       "file": "shared/core-tutorial/01-create-blog",
       "id": "01-create-blog",
       "path": "/core-tutorial/01-create-blog"
+    }
+  ],
+  "why-nx": [
+    {
+      "name": "React Standalone",
+      "file": "shared/react-standalone-tutorial/react-standalone",
+      "id": "react-standalone-tutorial",
+      "path": "/getting-started/tutorials/react-standalone-tutorial"
+    },
+    {
+      "name": "React Monorepo",
+      "file": "shared/react-tutorial/react-monorepo",
+      "id": "react-monorepo-tutorial",
+      "path": "/getting-started/tutorials/react-monorepo-tutorial"
+    },
+    {
+      "name": "Angular Monorepo",
+      "file": "shared/angular-tutorial/angular-monorepo",
+      "id": "angular-monorepo-tutorial",
+      "path": "/getting-started/tutorials/angular-monorepo-tutorial"
+    },
+    {
+      "name": "Vue Standalone",
+      "file": "shared/vue-standalone-tutorial/vue-standalone",
+      "id": "vue-standalone-tutorial",
+      "path": "/getting-started/tutorials/vue-standalone-tutorial"
+    },
+    {
+      "name": "Nx and the Angular CLI",
+      "file": "shared/guides/nx-and-angular-cli",
+      "id": "nx-and-angular",
+      "path": "/concepts/more-concepts/nx-and-angular"
     }
   ],
   "task-pipeline-configuration": [
@@ -1465,6 +1303,110 @@
       "file": "shared/react-tutorial/react-monorepo",
       "id": "react-monorepo-tutorial",
       "path": "/getting-started/tutorials/react-monorepo-tutorial"
+    }
+  ],
+  "remote-cache": [
+    {
+      "name": "React Standalone",
+      "file": "shared/react-standalone-tutorial/react-standalone",
+      "id": "react-standalone-tutorial",
+      "path": "/getting-started/tutorials/react-standalone-tutorial"
+    },
+    {
+      "name": "React Monorepo",
+      "file": "shared/react-tutorial/react-monorepo",
+      "id": "react-monorepo-tutorial",
+      "path": "/getting-started/tutorials/react-monorepo-tutorial"
+    },
+    {
+      "name": "Angular Standalone",
+      "file": "shared/angular-standalone-tutorial/angular-standalone",
+      "id": "angular-standalone-tutorial",
+      "path": "/getting-started/tutorials/angular-standalone-tutorial"
+    },
+    {
+      "name": "Angular Monorepo",
+      "file": "shared/angular-tutorial/angular-monorepo",
+      "id": "angular-monorepo-tutorial",
+      "path": "/getting-started/tutorials/angular-monorepo-tutorial"
+    },
+    {
+      "name": "Vue Standalone",
+      "file": "shared/vue-standalone-tutorial/vue-standalone",
+      "id": "vue-standalone-tutorial",
+      "path": "/getting-started/tutorials/vue-standalone-tutorial"
+    },
+    {
+      "name": "Cache Task Results",
+      "file": "shared/core-features/cache-task-results",
+      "id": "cache-task-results",
+      "path": "/core-features/cache-task-results"
+    },
+    {
+      "name": "Nx and the Angular CLI",
+      "file": "shared/guides/nx-and-angular-cli",
+      "id": "nx-and-angular",
+      "path": "/concepts/more-concepts/nx-and-angular"
+    },
+    {
+      "name": "NPM/Yarn/PNPM workspaces",
+      "file": "shared/migration/adding-to-monorepo",
+      "id": "adding-to-monorepo",
+      "path": "/recipes/adopting-nx/adding-to-monorepo"
+    },
+    {
+      "name": "Migrate From Turborepo",
+      "file": "shared/migration/from-turborepo",
+      "id": "from-turborepo",
+      "path": "/recipes/adopting-nx/from-turborepo"
+    },
+    {
+      "name": "Define Environment Variables",
+      "file": "shared/guides/define-environment-variables",
+      "id": "define-environment-variables",
+      "path": "/recipes/tips-n-tricks/define-environment-variables"
+    },
+    {
+      "name": "CI with Nx",
+      "file": "nx-cloud/intro/ci-with-nx",
+      "id": "ci-with-nx",
+      "path": "/ci/intro/ci-with-nx"
+    },
+    {
+      "name": "Circle CI with Nx",
+      "file": "nx-cloud/tutorial/circle",
+      "id": "circle",
+      "path": "/ci/intro/tutorials/circle"
+    },
+    {
+      "name": "GitHub Actions with Nx",
+      "file": "nx-cloud/tutorial/github-actions",
+      "id": "github-actions",
+      "path": "/ci/intro/tutorials/github-actions"
+    },
+    {
+      "name": "Nx Agents",
+      "file": "nx-cloud/intro/nx-agents",
+      "id": "nx-agents",
+      "path": "/ci/features/nx-agents"
+    },
+    {
+      "name": "The Building Blocks of Fast CI",
+      "file": "nx-cloud/concepts/building-blocks-fast-ci",
+      "id": "building-blocks-fast-ci",
+      "path": "/ci/concepts/building-blocks-fast-ci"
+    },
+    {
+      "name": "Parallelization and Distribution",
+      "file": "nx-cloud/concepts/parallelization-distribution",
+      "id": "parallelization-distribution",
+      "path": "/ci/concepts/parallelization-distribution"
+    },
+    {
+      "name": "Cache Security",
+      "file": "nx-cloud/concepts/cache-security",
+      "id": "cache-security",
+      "path": "/ci/concepts/cache-security"
     }
   ],
   "react-standalone-tutorial": [
@@ -3051,6 +2993,14 @@
       "file": "shared/recipes/generators/modifying-files",
       "id": "modifying-files",
       "path": "/extending-nx/recipes/modifying-files"
+    }
+  ],
+  "publish-plugin": [
+    {
+      "name": "Create a Preset",
+      "file": "shared/recipes/plugins/create-preset",
+      "id": "create-preset",
+      "path": "/extending-nx/recipes/create-preset"
     }
   ],
   "create-preset": [

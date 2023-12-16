@@ -9,7 +9,7 @@ import {
   LightBulbIcon,
   MagnifyingGlassIcon,
   InformationCircleIcon,
-  LinkIcon,
+  ArrowUpLeftIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 
@@ -73,21 +73,21 @@ export function Backlinks({ backlinks }: { backlinks: BacklinkDocument[] }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white/60 p-5 dark:border-slate-800/40 dark:bg-slate-800/60">
       <h4 className="flex items-center mt-0 pb-2 text-xl font-bold">
-        <LinkIcon className="w-6 h-6 mr-2" aria-hidden="true" />
+        <ArrowUpLeftIcon className="w-4 h-4 mr-2" aria-hidden="true" />
         Pages Linking Here
       </h4>
-      <ul className="divide-y divide-slate-300 dark:divide-slate-700 list-none pl-0">
+      <ul className="grid grid-cols-3 list-none pl-0 ">
         {backlinks.map((d) => (
           <li
             key={d.id}
-            className="flex justify-between items-center py-1 pl-0 text-sm"
+            className="flex justify-between items-center py-0 pl-1 pr-1 text-sm"
           >
             <a
               href={d.path}
-              className="no-underline hover:underline hover:text-sky-600 dark:hover:text-sky-400 flex-grow flex justify-between items-center"
+              className="px-2 no-underline hover:underline hover:text-sky-600 dark:hover:text-sky-400 flex-grow flex justify-between items-center"
             >
               <span>{d.name}</span>
-              <ArrowRightIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+              {/* <ArrowRightIcon className="w-4 h-4 text-slate-500 dark:text-slate-400" /> */}
             </a>
           </li>
         ))}

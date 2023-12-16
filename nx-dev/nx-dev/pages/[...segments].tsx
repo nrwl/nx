@@ -94,6 +94,7 @@ export const getStaticPaths: GetStaticPaths = () => {
     fallback: 'blocking',
   };
 };
+
 export const getStaticProps: GetStaticProps = async ({
   params,
 }: {
@@ -101,13 +102,19 @@ export const getStaticProps: GetStaticProps = async ({
 }) => {
   try {
     const document = nxDocumentationApi.getDocument(params.segments);
+
+    console.log(document);
+
     return {
       props: {
         document,
         widgetData: {
           githubStarsCount: await fetchGithubStarCount(),
         },
-        backlinks: backlinksApi.getBackLinks(document.id),
+        backlinks:
+          document.hideBacklinks !== true
+            ? backlinksApi.getBackLinks(document.id)
+            : [],
         relatedDocuments: tagsApi
           .getAssociatedItemsFromTags(document.tags)
           .filter((item) => item.path !== '/' + params.segments.join('/')), // Remove currently displayed item
