@@ -120,6 +120,7 @@ describe('nx release', () => {
       dependencyRelationshipLogMatch.length !== 1
     ) {
       // From JamesHenry: explicit error to assist troubleshooting NXC-143
+      // Update: after seeing this error in the wild, it somehow seems to be not finding the dependency relationship sometimes
       throw new Error(
         `
 Error: Expected to find exactly one dependency relationship log line.
@@ -128,7 +129,10 @@ If you are seeing this message then you have been impacted by some currently und
 
 Please report the full nx release version command output below to the Nx team:
 
-${versionOutput}`
+${{
+  versionOutput,
+  pkg2Contents: readFile(`${pkg2}/package.json`),
+}}`
       );
     }
     expect(dependencyRelationshipLogMatch.length).toEqual(1);
