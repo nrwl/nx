@@ -207,8 +207,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
   ) as yargs.Argv<Arguments>;
 
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
+  
+  const normalizedNxVersion = normalizePrefixNxVersion(nxVersion)
+  
   output.log({
-    title: `Creating your v${nxVersion} workspace.`,
+    title: `Creating your ${normalizedNxVersion} workspace.`,
     bodyLines: [
       'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
       `Nx will run "${parsedArgs.packageManager} install" several times. Please wait.`,
@@ -240,6 +243,10 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       title: `Successfully applied preset: ${parsedArgs.preset}`,
     });
   }
+}
+
+function normalizePrefixNxVersion(nxVersion: string) {
+  return nxVersion.startsWith('v') ? nxVersion : `v${nxVersion}`
 }
 
 function normalizeAndWarnOnDeprecatedPreset(
