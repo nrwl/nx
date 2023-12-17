@@ -285,7 +285,8 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
 
   const scope = match.groups.scope || '';
 
-  const isBreaking = Boolean(match.groups.breaking);
+  const isBreaking =
+    Boolean(match.groups.breaking) || commit.body.includes('BREAKING CHANGE:');
   let description = match.groups.description;
 
   // Extract references from message
