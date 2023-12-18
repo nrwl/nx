@@ -3,6 +3,7 @@ import {
   ProjectGraph,
   Tree,
   addProjectConfiguration,
+  formatFiles,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import extractStandaloneConfig from './extract-standalone-config-from-bootstrap';
@@ -11,6 +12,7 @@ let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
+  formatFiles: jest.fn(),
 }));
 
 const TEST_MAIN_FILE = `import { bootstrapApplication } from '@angular/platform-browser';
@@ -56,27 +58,24 @@ describe('extractStandaloneConfigFromBootstrap', () => {
       "import { appConfig } from './app/app.config';
       import { bootstrapApplication } from '@angular/platform-browser';
 
+
       import { AppComponent } from './app/app.component';
 
-      bootstrapApplication(AppComponent, appConfig).catch((err) =>
-        console.error(err)
-      );
-      "
+      bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));"
     `);
     expect(tree.exists('apps/app1/src/app/app.config.ts')).toBeTruthy();
     expect(tree.read('apps/app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig } from '@angular/core';
-      import {
+      "import { ApplicationConfig } from '@angular/core';import {
         provideRouter,
         withEnabledBlockingInitialNavigation,
       } from '@angular/router';
       import { appRoutes } from './app.routes';
-      export const appConfig: ApplicationConfig = {
+              export const appConfig: ApplicationConfig = {
         providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
-      };
-      "
+      }"
     `);
+    expect(formatFiles).toHaveBeenCalled();
   });
 
   it('should extract the config correctly when the main.ts imports bootstrap from bootstrap.ts file', async () => {
@@ -106,35 +105,30 @@ describe('extractStandaloneConfigFromBootstrap', () => {
     await extractStandaloneConfig(tree);
 
     // ASSERT
-    expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-      "import('./bootstrap');
-      "
-    `);
+    expect(tree.read('apps/app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(
+      `"import('./bootstrap');"`
+    );
     expect(tree.read('apps/app1/src/bootstrap.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { appConfig } from './app/app.config';
       import { bootstrapApplication } from '@angular/platform-browser';
 
+
       import { AppComponent } from './app/app.component';
 
-      bootstrapApplication(AppComponent, appConfig).catch((err) =>
-        console.error(err)
-      );
-      "
+      bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));"
     `);
     expect(tree.exists('apps/app1/src/app/app.config.ts')).toBeTruthy();
     expect(tree.read('apps/app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-      "import { ApplicationConfig } from '@angular/core';
-      import {
+      "import { ApplicationConfig } from '@angular/core';import {
         provideRouter,
         withEnabledBlockingInitialNavigation,
       } from '@angular/router';
       import { appRoutes } from './app.routes';
-      export const appConfig: ApplicationConfig = {
+              export const appConfig: ApplicationConfig = {
         providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
-      };
-      "
+      }"
     `);
   });
 

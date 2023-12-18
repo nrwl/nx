@@ -20,6 +20,7 @@ describe('convertDirectiveToScam', () => {
       export: false,
       flat: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -46,7 +47,7 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[projExample]',
+        selector: '[projExample]'
       })
       export class ExampleDirective {
         constructor() {}
@@ -57,7 +58,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -77,6 +79,7 @@ describe('convertDirectiveToScam', () => {
       export: false,
       flat: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -108,7 +111,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -128,6 +132,7 @@ describe('convertDirectiveToScam', () => {
       export: false,
       flat: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -154,7 +159,7 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[projExample]',
+        selector: '[projExample]'
       })
       export class ExampleDirective {
         constructor() {}
@@ -165,7 +170,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -185,6 +191,7 @@ describe('convertDirectiveToScam', () => {
       export: false,
       flat: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -216,7 +223,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -237,6 +245,7 @@ describe('convertDirectiveToScam', () => {
       flat: false,
       path: 'apps/app1/src/app/random',
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -263,7 +272,7 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[projExample]',
+        selector: '[projExample]'
       })
       export class ExampleDirective {
         constructor() {}
@@ -274,7 +283,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -295,6 +305,7 @@ describe('convertDirectiveToScam', () => {
       flat: true,
       path: 'apps/app1/src/app/random',
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -321,7 +332,7 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[projExample]',
+        selector: '[projExample]'
       })
       export class ExampleDirective {
         constructor() {}
@@ -332,7 +343,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 });

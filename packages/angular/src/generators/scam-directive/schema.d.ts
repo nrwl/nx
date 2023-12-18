@@ -9,6 +9,7 @@ export interface Schema {
   prefix?: string;
   selector?: string;
   export?: boolean;
+  skipFormat?: boolean;
   /**
    * @deprecated Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18.
    */

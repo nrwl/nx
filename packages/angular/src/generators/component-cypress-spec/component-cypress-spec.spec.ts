@@ -21,10 +21,11 @@ describe('componentCypressSpec generator', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await generateTestApplication(tree, { name: appName });
+    await generateTestApplication(tree, { name: appName, skipFormat: true });
     await componentGenerator(tree, {
       name: 'test-button',
       project: appName,
+      skipFormat: true,
     });
 
     tree.write(
@@ -59,6 +60,7 @@ export class TestButtonComponent {
       componentPath: `test-button`,
       projectPath: `${appName}/src/app`,
       projectName: appName,
+      skipFormat: true,
     });
 
     expect(storybookUtils.getComponentProps).not.toHaveBeenCalled();
@@ -93,6 +95,7 @@ export class TestButtonComponent {
       componentPath: `test-button`,
       projectPath: `${appName}/src/app`,
       projectName: appName,
+      skipFormat: true,
     });
 
     expect(tree.exists(v9SpecFile)).toBe(true);

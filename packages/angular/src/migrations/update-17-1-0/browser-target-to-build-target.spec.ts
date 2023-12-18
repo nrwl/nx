@@ -6,6 +6,7 @@ import {
   type NxJsonConfiguration,
   type Tree,
 } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration, { executors } from './browser-target-to-build-target';
 
@@ -14,6 +15,9 @@ describe('browser-target-to-build-target migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   it.each(executors)(

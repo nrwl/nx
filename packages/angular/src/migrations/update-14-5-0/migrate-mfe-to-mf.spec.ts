@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-
 import migrateMfeToMf, {
   renameSetupMfeGeneratorUsages,
   replaceExportedMFETypes,
@@ -12,6 +12,9 @@ describe('migrate-mfe-to-mf', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   it('should replace any imports from nrwl/angular/mfe', () => {
