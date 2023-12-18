@@ -154,12 +154,14 @@ describe('Node Applications + webpack', () => {
   it('should support waitUntilTargets for serve target', async () => {
     const nodeApp1 = uniq('nodeapp1');
     const nodeApp2 = uniq('nodeapp2');
+
+    // Set ports to avoid conflicts with other tests that might run in parallel
     runCLI(
-      `generate @nx/node:app ${nodeApp1} --framework=none --no-interactive`
+      `generate @nx/node:app ${nodeApp1} --framework=none --no-interactive --port=4444`
     );
     setMaxWorkers(join('apps', nodeApp1, 'project.json'));
     runCLI(
-      `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive`
+      `generate @nx/node:app ${nodeApp2} --framework=none --no-interactive --port=4445`
     );
     setMaxWorkers(join('apps', nodeApp2, 'project.json'));
     updateJson(join('apps', nodeApp1, 'project.json'), (config) => {
