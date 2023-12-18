@@ -57,7 +57,7 @@ export async function* vitePreviewServerExecutor(
   const { previewOptions, otherOptions } = await getExtraArgs(options);
   const resolved = await loadConfigFromFile(
     {
-      mode: otherOptions?.mode ?? 'production',
+      mode: otherOptions?.mode ?? otherOptionsFromBuild?.mode ?? 'production',
       command: 'build',
     },
     viteConfigPath

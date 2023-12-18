@@ -9,13 +9,13 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/demo6',
   test: {
+    reporters: ['default'],
     globals: true,
     cache: {
       dir: '../node_modules/.vitest',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
     coverage: {
       thresholds: {
         branches: 75,
@@ -37,13 +37,13 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/demo3',
   test: {
+    reporters: ['default'],
     globals: true,
     cache: {
       dir: '../node_modules/.vitest',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
     coverage: {
       thresholds: {
         lines: 100,
@@ -97,13 +97,13 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/demo5',
   test: {
+    reporters: ['default'],
     globals: true,
     cache: {
       dir: '../node_modules/.vitest',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
     coverage: {
       thresholds: {
         lines: 100,
@@ -128,13 +128,13 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/demo2',
   test: {
+    reporters: ['default'],
     globals: true,
     cache: {
       dir: '../node_modules/.vitest',
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/demo2',
       provider: 'v8',
@@ -153,6 +153,7 @@ import viteTsConfigPaths from 'vite-tsconfig-paths';
 export default defineConfig({
   cacheDir: '../../node_modules/.vite/demo',
   test: {
+    reporters: ['default'],
     globals: true,
     cache: {
       dir: '../../node_modules/.vitest',
