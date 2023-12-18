@@ -5,9 +5,7 @@ import { Pipe, PipeTransform } from '@angular/core';
   standalone: true<%}%>
 })
 export class <%= symbolName %> implements PipeTransform {
-
   transform(value: unknown, ...args: unknown[]): unknown {
     return null;
   }
-
 }

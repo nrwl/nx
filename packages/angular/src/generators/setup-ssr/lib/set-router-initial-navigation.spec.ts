@@ -125,7 +125,7 @@ export class AppModule {}
           declarations: [AppComponent, NxWelcomeComponent],
           imports: [
             BrowserModule.withServerTransition({ appId: 'serverApp' }),
-            RouterModule.forRoot(appRoutes, { initialNavigation: "enabledBlocking" }),
+            RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
           ],
           providers: [],
           bootstrap: [AppComponent],
