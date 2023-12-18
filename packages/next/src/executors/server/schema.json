@@ -52,6 +52,10 @@
     "turbo": {
       "type": "boolean",
       "description": "Activate the incremental bundler for Next.js, which is implemented in Rust. Please note, this feature is exclusively available in development mode."
+    },
+    "experimentalHttps": {
+      "type": "boolean",
+      "description": "Enable HTTPS support for the Next.js development server."
     }
   },
   "required": ["buildTarget"],
