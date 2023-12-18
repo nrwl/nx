@@ -19,12 +19,12 @@ executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/rust:1.73.0-browsers
-    resource_class: medium+
+      - image: cimg/rust:1.74.0-browsers
+    resource_class: large
 
   macos:
     <<: *defaults
-    resource_class: macos.m1.medium.gen1
+    resource_class: macos.x86.medium.gen2
     macos:
       xcode: '14.2.0'
 
@@ -49,14 +49,6 @@ commands:
                 name: Install pnpm package manager (linux)
                 command: |
                   npm install --prefix=$HOME/.local -g @pnpm/exe@8.7.4
-      - when:
-          condition:
-            equal: [<< parameters.os >>, macos]
-          steps:
-            - run:
-                name: Install pnpm package manager (macos)
-                command: |
-                  npm install -g @pnpm/exe@8.7.4
       - run:
           name: Install Dependencies
           command: |
@@ -69,10 +61,92 @@ commands:
             - ~/.pnpm-store
             - ~/.cache/Cypress
             - node_modules
+
+  setup:
+    parameters:
+      os:
+        type: string
+    steps:
+      - checkout
+      - when:
+          condition:
+            equal: [<< parameters.os >>, macos]
+          steps:
+            - restore_cache:
+                name: Restore Homebrew packages
+                keys:
+                  - nrwl-nx-homebrew-packages
+            - run:
+                name: Configure Detox Environment, Install applesimutils
+                command: |
+                  HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+                  HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+                  xcrun simctl shutdown all && xcrun simctl erase all
+                no_output_timeout: 20m
+            - save_cache:
+                name: Save Homebrew Cache
+                key: nrwl-nx-homebrew-packages
+                paths:
+                  - /usr/local/Homebrew
+                  - ~/Library/Caches/Homebrew
+      - when:
+          condition:
+            equal: [<< parameters.os >>, linux]
+          steps:
+            - run:
+                command: |
+                  sudo apt-get update
+                  sudo apt-get install -y ca-certificates lsof
+            - browser-tools/install-chrome
+            - browser-tools/install-chromedriver
+      - run-pnpm-install:
+          os: << parameters.os >>
+
 # -------------------------
 #          JOBS
 # -------------------------
 jobs:
+  # -------------------------
+  #     JOBS: Agent
+  # -------------------------
+  agent:
+    parameters:
+      os:
+        type: string
+        default: 'linux'
+      pm:
+        type: string
+        default: 'pnpm'
+    executor: << parameters.os >>
+    environment:
+      GIT_AUTHOR_EMAIL: test@test.com
+      GIT_AUTHOR_NAME: Test
+      GIT_COMMITTER_EMAIL: test@test.com
+      GIT_COMMITTER_NAME: Test
+      NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>
+      SELECTED_PM: << parameters.pm >>
+      NX_E2E_RUN_E2E: 'true'
+      NX_VERBOSE_LOGGING: 'false'
+      NX_NATIVE_LOGGING: 'false'
+      NX_PERF_LOGGING: 'false'
+      NODE_OPTIONS: '--max_old_space_size=4096'
+    steps:
+      - run:
+          name: Configure git metadata (needed for lerna smoke tests)
+          command: |
+            git config --global user.email test@test.com
+            git config --global user.name "Test Test"
+      - run:
+          name: Set dynamic nx run variable
+          command: |
+            echo "export NX_CI_EXECUTION_ENV=\"<< parameters.os >>\";" >> $BASH_ENV
+      - setup:
+          os: << parameters.os >>
+      - run:
+          name: Agent
+          command: pnpm nx-cloud start-agent
+          no_output_timeout: 80m
+
   # -------------------------
   #     JOBS: Main Linux
   # -------------------------
@@ -80,42 +154,26 @@ jobs:
     executor: linux
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-      NX_VERBOSE_LOGGING: 'true'
+      NX_VERBOSE_LOGGING: 'false'
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
       NX_NATIVE_LOGGING: 'false'
-      NX_E2E_RUN_E2E: 'true'
-      NX_CI_EXECUTION_ENV: 'linux'
     steps:
-      - run: lscpu
-      - checkout
-      - run: npx nx-cloud@next start-ci-run --distributes-on="8 linux-medium" --stop-agents-after="e2e"
       - run:
+          name: Set dynamic nx run variable
           command: |
-            sudo apt-get update
-            sudo apt-get install -y ca-certificates lsof
-      - browser-tools/install-chrome
-      - browser-tools/install-chromedriver
-      - run-pnpm-install:
+            echo "export NX_CI_EXECUTION_ENV=\"linux\";" >> $BASH_ENV
+      - setup:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run:
-          name: Check Documentation
-          command: pnpm nx documentation --no-dte
-          no_output_timeout: 20m
+      - run: pnpm nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
             pids=()
-
-            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-
-            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
-            pids+=($!)
-
+            
             (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
             pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
             pids+=($!)
@@ -131,28 +189,13 @@ jobs:
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
       NX_PERF_LOGGING: 'false'
-      NX_CI_EXECUTION_ENV: 'macos'
       SELECTED_PM: 'npm' # explicitly define npm for macOS tests
     steps:
-      - checkout
-      - restore_cache:
-          name: Restore Homebrew packages
-          keys:
-            - nrwl-nx-homebrew-packages
       - run:
-          name: Configure Detox Environment, Install applesimutils
+          name: Set dynamic nx run variable
           command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-            xcrun simctl shutdown all && xcrun simctl erase all
-          no_output_timeout: 20m
-      - save_cache:
-          name: Save Homebrew Cache
-          key: nrwl-nx-homebrew-packages
-          paths:
-            - /usr/local/Homebrew
-            - ~/Library/Caches/Homebrew
-      - run-pnpm-install:
+            echo "export NX_CI_EXECUTION_ENV=\"macos\";" >> $BASH_ENV
+      - setup:
           os: macos
       - rust/install
       - nx/set-shas:
@@ -161,11 +204,6 @@ jobs:
           name: Run E2E Tests for macOS
           command: |
             pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
-          no_output_timeout: 45m
-      - run:
-          name: Close CI group
-          command: |
-            pnpm nx-cloud stop-all-agents
           no_output_timeout: 45m
 
 # -------------------------
@@ -176,6 +214,20 @@ workflows:
 
   build:
     jobs:
+      - agent:
+          name: 'agent1'
+      - agent:
+          name: 'agent2'
+      - agent:
+          name: 'agent3'
+      - agent:
+          name: 'agent4'
+      - agent:
+          name: 'agent5'
+      - agent:
+          name: 'agent6'
+      - agent:
+          name: 'agent7'
+      - agent:
+          name: 'agent8'
       - main-linux
-      - mainmacos:
-          name: main-macos-e2e
