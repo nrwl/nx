@@ -1578,6 +1578,7 @@ describe('lib', () => {
         name: 'app1',
         routing: true,
         standalone: true,
+        skipFormat: true,
       });
 
       // ACT

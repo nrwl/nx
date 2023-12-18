@@ -25,6 +25,7 @@ describe('componentCypressSpec generator', () => {
     await componentGenerator(tree, {
       name: 'test-button',
       project: appName,
+      skipFormat: true,
     });
 
     tree.write(
