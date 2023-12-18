@@ -1,6 +1,6 @@
 launch-templates:
   linux-medium:
-    resource-class: 'docker_linux_amd64/medium+'
+    resource-class: 'docker_linux_amd64/large'
     env:
       CI: 'true'
       GIT_AUTHOR_EMAIL: test@test.com
@@ -15,6 +15,7 @@ launch-templates:
       NX_E2E_RUN_E2E: 'true'
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
       NX_CLOUD_ACCESS_TOKEN: '{{secrets.NX_CLOUD_ACCESS_TOKEN}}'
+      NODE_OPTIONS: '--max_old_space_size=4096'
     init-steps:
       - name: LSCPU
         script: |
