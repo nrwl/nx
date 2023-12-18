@@ -1,4 +1,5 @@
 import { readJson, Tree, writeJson } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateAngularCli, { angularCliVersion } from './update-angular-cli';
 
@@ -7,6 +8,9 @@ describe('update-angular-cli migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   it('should update @angular/cli version when defined as a dev dependency', async () => {

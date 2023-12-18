@@ -1,4 +1,5 @@
 import { Tree, readJson, updateJson } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import replacePackage from './update-16-0-0-add-nx-packages';
 
@@ -6,6 +7,9 @@ describe('update-16-0-0-add-nx-packages', () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
 
     updateJson(tree, 'package.json', (json) => {
       json.devDependencies['@nrwl/angular'] = '16.0.0';
