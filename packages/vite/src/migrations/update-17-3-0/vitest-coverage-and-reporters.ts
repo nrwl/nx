@@ -6,7 +6,7 @@ import {
   joinPathFragments,
 } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
-import { fixCoverage } from './lib/fix-coverage';
+import { fixCoverageAndRerporters } from './lib/fix-coverage-and-reporters';
 
 export default async function fixCoverageThreshold(tree: Tree) {
   const projects = getProjects(tree);
@@ -19,9 +19,7 @@ export default async function fixCoverageThreshold(tree: Tree) {
       return;
     }
     const configContents = tree.read(configPath, 'utf-8') as string;
-
-    const updatedConfigContents = fixCoverage(configContents);
-
+    const updatedConfigContents = fixCoverageAndRerporters(configContents);
     if (updatedConfigContents) {
       tree.write(configPath, updatedConfigContents);
     }

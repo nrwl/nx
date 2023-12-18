@@ -37,10 +37,13 @@ export async function* viteDevServerExecutor(
     projectRoot,
     buildTargetOptions.configFile
   );
-  const { serverOptions, otherOptions } = await getServerExtraArgs(options);
+  const { serverOptions, otherOptions } = await getServerExtraArgs({
+    ...options,
+    ...buildTargetOptions,
+  });
   const resolved = await loadConfigFromFile(
     {
-      mode: otherOptions?.mode ?? 'development',
+      mode: otherOptions?.mode ?? buildTargetOptions?.['mode'] ?? 'development',
       command: 'serve',
     },
     viteConfigPath

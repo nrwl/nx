@@ -1,6 +1,6 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Tree, addProjectConfiguration } from '@nx/devkit';
-import fixCoverageThreshold from './vitest-coverage-threshold';
+import fixCoverageThreshold from './vitest-coverage-and-reporters';
 
 describe('vitest-coverage-threshold migration', () => {
   let tree: Tree;
@@ -110,7 +110,6 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/${name}',
       provider: 'v8',
@@ -150,7 +149,6 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/${name}',
       provider: 'v8',
@@ -235,7 +233,6 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/${name}',
       provider: 'v8',
@@ -278,7 +275,6 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/${name}',
       provider: 'v8',
