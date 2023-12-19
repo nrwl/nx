@@ -41,8 +41,16 @@ export async function loadPlaywrightConfig(
   }
 }
 
+const packageInstallationDirectories = ['node_modules', '.yarn'];
+
 function clearRequireCache() {
-  Object.keys(require.cache).forEach((key) => {
-    delete require.cache[key];
+  Object.keys(require.cache).forEach((key: string) => {
+    // We don't want to clear the require cache of installed packages.
+    // Clearing them can cause some issues when running Nx without the daemon
+    // and may cause issues for other packages that use the module state
+    // in some to store cached information.
+    if (!packageInstallationDirectories.some((dir) => key.includes(dir))) {
+      delete require.cache[key];
+    }
   });
 }

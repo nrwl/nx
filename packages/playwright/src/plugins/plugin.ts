@@ -1,18 +1,25 @@
-import { readdirSync } from 'fs';
-import { basename, dirname, join, relative } from 'path';
+import { existsSync, readdirSync } from 'fs';
+import { dirname, join, relative } from 'path';
 
 import {
+  CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  detectPackageManager,
   joinPathFragments,
+  readJsonFile,
   TargetConfiguration,
+  writeJsonFile,
 } from '@nx/devkit';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import minimatch = require('minimatch');
 import { loadPlaywrightConfig } from '../utils/load-config-file';
+import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { getLockFileName } from '@nx/js';
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -23,6 +30,33 @@ interface NormalizedOptions {
   targetName: string;
   ciTargetName?: string;
 }
+
+const cachePath = join(projectGraphCacheDirectory, 'playwright.hash');
+
+const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
+
+const calculatedTargets: Record<
+  string,
+  Record<string, TargetConfiguration>
+> = {};
+
+function readTargetsCache(): Record<
+  string,
+  Record<string, TargetConfiguration>
+> {
+  return readJsonFile(cachePath);
+}
+
+function writeTargetsToCache(
+  targets: Record<string, Record<string, TargetConfiguration>>
+) {
+  writeJsonFile(cachePath, targets);
+}
+
+export const createDependencies: CreateDependencies = () => {
+  writeTargetsToCache(calculatedTargets);
+  return [];
+};
 
 export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
   '**/playwright.config.{js,ts,cjs,cts,mjs,mts}',
@@ -40,16 +74,26 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
 
     const normalizedOptions = normalizeOptions(options);
 
+    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
+      getLockFileName(detectPackageManager(context.workspaceRoot)),
+    ]);
+
+    const targets =
+      targetsCache[hash] ??
+      (await buildPlaywrightTargets(
+        configFilePath,
+        projectRoot,
+        normalizedOptions,
+        context
+      ));
+
+    calculatedTargets[hash] = targets;
+
     return {
       projects: {
         [projectRoot]: {
           root: projectRoot,
-          targets: await buildPlaywrightTargets(
-            configFilePath,
-            projectRoot,
-            normalizedOptions,
-            context
-          ),
+          targets,
         },
       },
     };
