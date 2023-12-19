@@ -112,7 +112,7 @@ function createArgs(
     const arg = names(key).fileName;
 
     if (Array.isArray(value)) {
-      args.push(`--${arg}=${value.map((v) => v.trim()).join(',')}`);
+      args.push(...value.map((v) => `--${arg}=${v.trim()}`));
     } else if (typeof value === 'boolean') {
       // NOTE: playwright don't accept --arg=false, instead just don't pass the arg.
       if (value) {
