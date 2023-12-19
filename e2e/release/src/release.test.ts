@@ -129,10 +129,14 @@ If you are seeing this message then you have been impacted by some currently und
 
 Please report the full nx release version command output below to the Nx team:
 
-${{
-  versionOutput,
-  pkg2Contents: readFile(`${pkg2}/package.json`),
-}}`
+${JSON.stringify(
+  {
+    versionOutput,
+    pkg2Contents: readFile(`${pkg2}/package.json`),
+  },
+  null,
+  2
+)}`
       );
     }
     expect(dependencyRelationshipLogMatch.length).toEqual(1);
