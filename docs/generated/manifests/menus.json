@@ -1937,6 +1937,23 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nuxt",
+            "path": "/recipes/nuxt",
+            "id": "nuxt",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Deploying Nuxt applications to Vercel",
+                "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+                "id": "deploy-nuxt-to-vercel",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Vite",
             "path": "/recipes/vite",
             "id": "vite",
@@ -3371,6 +3388,31 @@
         "name": "How to configure Next.js plugins",
         "path": "/recipes/next/next-config-setup",
         "id": "next-config-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nuxt",
+        "path": "/recipes/nuxt",
+        "id": "nuxt",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Deploying Nuxt applications to Vercel",
+            "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+            "id": "deploy-nuxt-to-vercel",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deploying Nuxt applications to Vercel",
+        "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+        "id": "deploy-nuxt-to-vercel",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
