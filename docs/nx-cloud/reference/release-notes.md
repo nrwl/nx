@@ -2,10 +2,6 @@
 
 ### 2312.11.7
 
-In our last big release, we announced a completely new UI, rebuilt from the ground up in React. In this release, the frontend team
-has continued that effort and wrapped the React app with the [Remix](https://remix.run/) framework. This is the same technology that powers our public https://cloud.nx.app/
-product. It's faster, it handles resource caching better, and should allow the frontend team to ship features quicker than ever before.
-
 ##### Helm package compatibility
 
 When upgrading to this version and anything above it, you will need to use Helm version 0.12.0+:
@@ -18,14 +14,14 @@ When upgrading to this version and anything above it, you will need to use Helm 
 
 ##### New UI features and improvements
 
-On the UI, we replaced the runs overview with the new CI Pipeline Executions (CIPE in short) overview:
+On the UI, we replaced the runs overview with the new CI Pipeline Executions (CIPE for short) screen:
 
 ![cipe_screen](/nx-cloud/reference/images/cipe-screen.webp)
 
 This screen organises your runs more logically, according to each invocation of your CI pipeline.
 It provides more data around the committer name and commit message and a full analysis of your CIPE once it finished.
 And if you need to run your tasks on multiple environments, you can now switch between them on this page and view the results separately.
-You can check out an example on the [Nx Repo](https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview)
+You can play around with an example on the [Nx Repo](https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview)
 
 There is also a new Analytics screen for your workspaces, to which we'll keep adding new features to better help you optimise your CI pipelines:
 
@@ -37,7 +33,7 @@ Here you can see:
 - historical trends of CIPE average daily count
 - average daily time saved by DTE
 
-Other improvements include:
+Other improvements:
 
 - better overall UI performance (navigating feel much snappier now)
 - improved terminal output rendering
@@ -45,17 +41,17 @@ Other improvements include:
 
 ##### The light runner
 
-NxCloud works by using a local Node runner that wraps your Nx tasks and sends information about them to the NxCloud API.
-Because they work together, sometimes changes to the API required updates to the runner so it can work with them. Workspaces that did not update their local
-runner version in `package.json` would sometimes run into compatibility issues.
+NxCloud works by using a local Node runner that wraps your Nx tasks and sends information about them to the NxCloud API. This is how it knows whether to pull something from the remote cache or run it.
 
-We now bundle the runner as part of the API, and NxCloud will now send you the correct runner code when you first start running Nx commands.
+Because they work together, sometimes changes to the API required updates to this local runner. This led to workspaces that did not update their local
+runner version in `package.json` sometimes running into compatibility issues.
 
+We overhauled this mechanism, and the runner is now bundled as part of the API itself, ensuring you get sent the correct runner code when you first start running Nx commands in your workspace.
 This ensures you will always have the correct local runner version that is compatible with your on-prem NxCloud installation.
 
 We've been testing this out on our Public NxCloud instance and it is now available for on-prem installations as well.
 
-To enable this, make sure you:
+To enable the light runner feature, make sure you:
 
 1. remove `useLightClient: false` from your `nx.json` (if you had it)
 2. If you are on Nx version > 17, you can remove any `nx-cloud` or `@nrwl/nx-cloud` package in your `package.json` and it should just work
@@ -63,12 +59,10 @@ To enable this, make sure you:
 
 ##### Nx Agents
 
-This release is also the first one to support "Nx Agents": fully NxCloud managed CI agents.
+This release is also the first one to support ["Nx Agents"](https://nx.dev/ci/features/nx-agents#managed-agents-seamless-configuration).
 
-See [here](https://nx.dev/ci/features/nx-agents#managed-agents-seamless-configuration) for more info.
-
-This is currently experimental and disabled by default for on-prem users, but we are looking for more workspaces to try it out with
-so please reach out to your friendly DPE or to [cloud-suppport@nrwl.io](cloud-support@nrwl.io) if you are interested!
+While currently experimental and disabled by default for on-prem users, we are looking for more on-prem workspaces to try it out with
+so please reach out to your DPE contact or to [cloud-suppport@nrwl.io](cloud-support@nrwl.io) if you are interested in helping us shape this according to your needs!
 
 ##### Breaking changes - MongoDB migration
 
