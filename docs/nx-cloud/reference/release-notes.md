@@ -16,7 +16,7 @@ When upgrading to this version and anything above it, you will need to use Helm 
 
 On the UI, we replaced the runs overview with the new CI Pipeline Executions (CIPE for short) screen:
 
-![cipe_screen](/nx-cloud/reference/images/cipe-screen.webp)
+![cipe_screen](/nx-cloud/reference/images/cipe_screen.webp)
 
 This screen organises your runs more logically, according to each invocation of your CI pipeline.
 It provides more data around the committer name and commit message and a full analysis of your CIPE once it finished.
@@ -25,7 +25,7 @@ You can play around with an example on the [Nx Repo](https://staging.nx.app/orgs
 
 There is also a new Analytics screen for your workspaces, to which we'll keep adding new features to better help you optimise your CI pipelines:
 
-![analytics_screen](/nx-cloud/reference/images/analytics-screen.webp)
+![analytics_screen](/nx-cloud/reference/images/analytics_screen.webp)
 
 Here you can see:
 
