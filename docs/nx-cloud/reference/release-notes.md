@@ -1,5 +1,76 @@
 # Enterprise Release Notes
 
+### 2312.11.7
+
+In our last big release, we announced a completely new UI, rebuilt from the ground up in React. In this release, the frontend team
+has continued that effort and wrapped the React app with the [Remix](https://remix.run/) framework. This is the same technology that powers our public https://cloud.nx.app/
+product. It's faster, it handles resource caching better, and should allow the frontend team to ship features quicker than ever before.
+
+##### Helm package compatibility
+
+When upgrading to this version and anything above it, you will need to use Helm version 0.12.0+:
+
+| Chart Version | Compatible Images                  |
+|---------------| ---------------------------------- |
+| <= `0.10.11`  | `2306.01.2.patch4` **and earlier** |
+| >= `0.11.0`   | `2308.22.7` **and later**          |
+| >= `0.12.0`   | `2312.11.7` **and later**          |
+
+##### New UI features and improvements
+
+On the UI, we replaced the runs overview with the new CI Pipeline Executions (CIPE in short) overview:
+
+![cipe_screen](/nx-cloud/reference/images/cipe-screen.webp)
+
+This screen organises your runs more logically, according to each invocation of your CI pipeline.
+It provides more data around the committer name and commit message and a full analysis of your CIPE once it finished.
+And if you need to run your tasks on multiple environments, you can now switch between them on this page and view the results separately.
+You can check out an example on the [Nx Repo](https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview)
+
+There is also a new Analytics screen for your workspaces, to which we'll keep adding new features to better help you optimise your CI pipelines:
+
+![analytics_screen](/nx-cloud/reference/images/analytics-screen.webp)
+
+Here you can see:
+- historical trends of CIPE Average duration 
+- historical trends of CIPE average daily count
+- average daily time saved by DTE
+
+Other improvements include:
+- better overall UI performance (navigating feel much snappier now)
+- improved terminal output rendering
+- members can now be invited as admins directly
+
+##### The light runner
+
+NxCloud works by using a local Node runner that wraps your Nx tasks and sends information about them to the NxCloud API. 
+Because they work together, sometimes changes to the API required updates to the runner so it can work with them. Workspaces that did not update their local
+runner version in `package.json` would sometimes run into compatibility issues.
+
+We now bundle the runner as part of the API, and NxCloud will now send you the correct runner code when you first start running Nx commands.
+
+This ensures you will always have the correct local runner version that is compatible with your on-prem NxCloud installation.
+
+We've been testing this out on our Public NxCloud instance and it is now available for on-prem installations as well.
+
+To enable this, make sure you:
+1. remove `useLightClient: false` from your `nx.json` (if you had it)
+2. If you are on Nx version > 17, you can remove any `nx-cloud` or `@nrwl/nx-cloud` package in your `package.json` and it should just work
+3. If you are on Nx version < 17, upgrade to `nx-cloud@16.5.2` or `@nrwl/nx-cloud@16.5.2`. 
+ 
+##### Nx Agents
+
+This release is also the first one to support "Nx Agents": fully NxCloud managed CI agents.
+
+See [here](https://nx.dev/ci/features/nx-agents#managed-agents-seamless-configuration) for more info.
+
+This is currently experimental and disabled by default for on-prem users, but we are looking for more workspaces to try it out with
+so please reach out to your friendly DPE or to [cloud-suppport@nrwl.io](cloud-support@nrwl.io) if you are interested!
+
+##### Breaking changes - MongoDB migration
+
+As a reminder, we now only support MongoDB 6+. If you are running an older version please refer to the upgrade instructions [here](/ci/reference/release-notes#breaking-changes).
+
 ### 2308.22.7.patch7
 
 - Allows the frontend container to be ran with `runAsNonRoot: true`
