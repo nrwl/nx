@@ -59,8 +59,8 @@ export default async function run(
    * We want users to have the option of not specifying the config path, and let
    * eslint automatically resolve the `.eslintrc.json` files in each folder.
    */
-  let eslintConfigPath = options.eslintConfig
-    ? resolve(systemRoot, options.eslintConfig)
+  let eslintConfigPath = normalizedOptions.eslintConfig
+    ? resolve(systemRoot, normalizedOptions.eslintConfig)
     : undefined;
 
   const { eslint, ESLint } = await resolveAndInstantiateESLint(
