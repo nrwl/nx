@@ -31,7 +31,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
         .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
-        // Normalize the version title date
+        // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
