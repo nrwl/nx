@@ -9,7 +9,7 @@ export default async function update(tree: Tree) {
       project.root,
       (o) =>
         o.rules?.['@next/next/no-html-link-for-pages'] &&
-        o.files.includes('**/*.*'),
+        o.files?.includes('**/*.*'),
       (o) => undefined
     );
   });
