@@ -207,7 +207,7 @@ function overrideNeedsCompat(
   override: Linter.ConfigOverride<Linter.RulesRecord>
 ) {
   return (
-    !override.env && !override.extends && !override.plugins && !override.parser
+    override.env || override.extends || override.plugins || override.parser
   );
 }
 
@@ -229,7 +229,12 @@ export function updateOverrideInLintConfig(
     updateJson(tree, fileName, (json: Linter.Config) => {
       const index = json.overrides.findIndex(lookup);
       if (index !== -1) {
-        json.overrides[index] = update(json.overrides[index]);
+        const newOverride = update(json.overrides[index]);
+        if (newOverride) {
+          json.overrides[index] = newOverride;
+        } else {
+          json.overrides.splice(index, 1);
+        }
       }
       return json;
     });
@@ -301,10 +306,9 @@ export function addExtendsToLintConfig(
   if (useFlatConfig(tree)) {
     const fileName = joinPathFragments(root, 'eslint.config.js');
     const pluginExtends = generatePluginExtendsElement(plugins);
-    tree.write(
-      fileName,
-      addBlockToFlatConfigExport(tree.read(fileName, 'utf8'), pluginExtends)
-    );
+    let content = tree.read(fileName, 'utf8');
+    content = addCompatToFlatConfig(content);
+    tree.write(fileName, addBlockToFlatConfigExport(content, pluginExtends));
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');
     updateJson(tree, fileName, (json) => {
