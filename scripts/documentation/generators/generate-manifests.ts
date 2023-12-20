@@ -73,7 +73,7 @@ export function generateManifests(workspace: string): Promise<void[]> {
    * Packages are not Documents and need to be handled in a custom way.
    * @type {{id: string, records: Record<string, ProcessedPackageMetadata>}}
    */
-  const packagesManifest = createPackagesManifest(packages);
+  const packagesManifest = createPackagesManifest(packages, manifests[0]);
 
   /**
    * Add the packages manifest to the manifest collection for simplicity.
@@ -282,7 +282,10 @@ function getDocumentMenus(manifests: DocumentManifest[]): {
   }));
 }
 
-function createPackagesManifest(packages: PackageMetadata[]): {
+function createPackagesManifest(
+  packages: PackageMetadata[],
+  manifest: Manifest
+): {
   id: string;
   records: Record<string, ProcessedPackageMetadata>;
 } {
@@ -298,12 +301,17 @@ function createPackagesManifest(packages: PackageMetadata[]): {
       packageName: p.packageName,
       description: p.description,
       documents: convertToDictionary(
-        p.documents.map((d) =>
-          documentRecurseOperations(
-            d,
-            createDocumentMetadata({ id: p.name, path: 'nx-api/' })
-          )
-        ),
+        [
+          ...p.documents.map((d) =>
+            documentRecurseOperations(
+              d,
+              createDocumentMetadata({ id: p.name, path: 'nx-api/' })
+            )
+          ),
+          ...Object.keys(manifest.records)
+            .filter((path) => path.startsWith(`/recipes/${p.name}/`))
+            .map((path) => manifest.records[path]) as any[],
+        ],
         'path'
       ),
       root: p.root,
