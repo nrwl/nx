@@ -826,6 +826,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Inferred Targets",
+            "path": "/concepts/inferred-targets",
+            "id": "inferred-targets",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
             "path": "/concepts/integrated-vs-package-based",
             "id": "integrated-vs-package-based",
@@ -1050,6 +1058,14 @@
         "name": "What is a Task Pipeline",
         "path": "/concepts/task-pipeline-configuration",
         "id": "task-pipeline-configuration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Inferred Targets",
+        "path": "/concepts/inferred-targets",
+        "id": "inferred-targets",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1765,6 +1781,23 @@
                 "name": "Wait for Tasks to Finish",
                 "path": "/recipes/node/wait-for-tasks",
                 "id": "wait-for-tasks",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "ESLint",
+            "path": "/recipes/eslint",
+            "id": "eslint",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "ESLint Inferred Targets",
+                "path": "/recipes/eslint/eslint-inferred-targets",
+                "id": "eslint-inferred-targets",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3113,6 +3146,31 @@
         "name": "Wait for Tasks to Finish",
         "path": "/recipes/node/wait-for-tasks",
         "id": "wait-for-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "ESLint",
+        "path": "/recipes/eslint",
+        "id": "eslint",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "ESLint Inferred Targets",
+            "path": "/recipes/eslint/eslint-inferred-targets",
+            "id": "eslint-inferred-targets",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "ESLint Inferred Targets",
+        "path": "/recipes/eslint/eslint-inferred-targets",
+        "id": "eslint-inferred-targets",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
