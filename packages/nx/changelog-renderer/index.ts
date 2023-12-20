@@ -49,6 +49,11 @@ export interface DefaultChangelogRenderOptions extends ChangelogRenderOptions {
    * section. Defaults to true.
    */
   includeAuthors?: boolean;
+  /**
+   * Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
+   * Defaults to true.
+   */
+  includeCommitReferences?: boolean;
 }
 
 /**
@@ -141,7 +146,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       for (const scope of scopesSortedAlphabetically) {
         const commits = commitsGroupedByScope[scope];
         for (const commit of commits) {
-          const line = formatCommit(commit, repoSlug);
+          const line = formatCommit(commit, changelogRenderOptions, repoSlug);
           markdownLines.push(line);
           if (commit.isBreaking) {
             const breakingChangeExplanation = extractBreakingChangeExplanation(
@@ -195,7 +200,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
       const commitsInChronologicalOrder = group.reverse();
       for (const commit of commitsInChronologicalOrder) {
-        const line = formatCommit(commit, repoSlug);
+        const line = formatCommit(commit, changelogRenderOptions, repoSlug);
         markdownLines.push(line + '\n');
         if (commit.isBreaking) {
           const breakingChangeExplanation = extractBreakingChangeExplanation(
@@ -310,13 +315,17 @@ function groupBy(items: any[], key: string) {
   return groups;
 }
 
-function formatCommit(commit: GitCommit, repoSlug?: RepoSlug): string {
+function formatCommit(
+  commit: GitCommit,
+  changelogRenderOptions: DefaultChangelogRenderOptions,
+  repoSlug?: RepoSlug
+): string {
   let commitLine =
     '- ' +
     (commit.isBreaking ? '⚠️  ' : '') +
     (commit.scope ? `**${commit.scope.trim()}:** ` : '') +
     commit.description;
-  if (repoSlug) {
+  if (repoSlug && changelogRenderOptions.includeCommitReferences) {
     commitLine += formatReferences(commit.references, repoSlug);
   }
   return commitLine;

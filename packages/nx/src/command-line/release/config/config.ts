@@ -131,6 +131,7 @@ export async function createNxReleaseConfig(
         renderer: 'nx/changelog-renderer',
         renderOptions: {
           includeAuthors: true,
+          includeCommitReferences: true,
         },
       },
       // For projectChangelogs if the user has set any changelog config at all, then use one set of defaults, otherwise default to false for the whole feature
@@ -143,6 +144,7 @@ export async function createNxReleaseConfig(
             renderer: 'nx/changelog-renderer',
             renderOptions: {
               includeAuthors: true,
+              includeCommitReferences: true,
             },
           }
         : false,
@@ -172,6 +174,7 @@ export async function createNxReleaseConfig(
       renderer: 'nx/changelog-renderer',
       renderOptions: {
         includeAuthors: true,
+        includeCommitReferences: true,
       },
     },
     releaseTagPattern:

@@ -73,7 +73,7 @@ describe('nx release', () => {
 
   it('should version and publish multiple related npm packages with zero config', async () => {
     // Normalize git committer information so it is deterministic in snapshots
-    await runCommandAsync(`git config user.email "test@test.com"`);
+    await runCommandAsync(`git config user.email "test-committer@nx.dev"`);
     await runCommandAsync(`git config user.name "Test"`);
     // Create a baseline version tag
     await runCommandAsync(`git tag v0.0.0`);
@@ -82,6 +82,11 @@ describe('nx release', () => {
     createFile('an-awesome-new-thing.js', 'console.log("Hello world!");');
     await runCommandAsync(
       `git add --all && git commit -m "feat: an awesome new feature"`
+    );
+
+    // We need a valid git origin to exist for the commit references to work (and later the test for createRelease)
+    await runCommandAsync(
+      `git remote add origin https://github.com/nrwl/fake-repo.git`
     );
 
     const versionOutput = runCLI(`release version 999.9.9`);
@@ -155,7 +160,7 @@ ${JSON.stringify(
       +
       + ### 🚀 Features
       +
-      + - an awesome new feature
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
       +
       + ### ❤️  Thank You
       +
@@ -170,7 +175,7 @@ ${JSON.stringify(
 
       ### 🚀 Features
 
-      - an awesome new feature
+      - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
 
       ### ❤️  Thank You
 
@@ -663,19 +668,15 @@ ${JSON.stringify(
           projectChangelogs: {
             renderOptions: {
               createRelease: false, // will be overridden by the group
-              // Customize the changelog renderer to not print the Thank You section this time (not overridden by the group)
+              // Customize the changelog renderer to not print the Thank You or commit references section for project changelogs (not overridden by the group)
               includeAuthors: false,
+              includeCommitReferences: false, // commit reference will still be printed in workspace changelog
             },
           },
         },
       };
       return nxJson;
     });
-
-    // We need a valid git origin for the command to work when createRelease is set
-    await runCommandAsync(
-      `git remote add origin https://github.com/nrwl/fake-repo.git`
-    );
 
     // Perform a dry-run this time to show that it works but also prevent making any requests to github within the test
     const changelogDryRunOutput = runCLI(
@@ -692,7 +693,7 @@ ${JSON.stringify(
       +
       + ### 🚀 Features
       +
-      + - an awesome new feature
+      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
       +
       + ### ❤️  Thank You
       +
@@ -711,7 +712,7 @@ ${JSON.stringify(
       +
       + ### 🚀 Features
       +
-      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+      + - an awesome new feature
 
 
       >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
@@ -722,7 +723,7 @@ ${JSON.stringify(
       +
       + ### 🚀 Features
       +
-      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+      + - an awesome new feature
 
 
       >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
@@ -733,7 +734,7 @@ ${JSON.stringify(
       +
       + ### 🚀 Features
       +
-      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
+      + - an awesome new feature
 
 
     `);

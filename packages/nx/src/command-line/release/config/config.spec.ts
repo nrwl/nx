@@ -66,6 +66,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -134,6 +135,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -205,6 +207,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -292,6 +295,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -369,6 +373,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -442,6 +447,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -528,6 +534,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -616,6 +623,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -636,6 +644,7 @@ describe('createNxReleaseConfig()', () => {
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
                     "includeAuthors": true,
+                    "includeCommitReferences": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -700,6 +709,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -778,6 +788,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -858,6 +869,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -951,6 +963,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1022,6 +1035,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1105,6 +1119,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1125,6 +1140,7 @@ describe('createNxReleaseConfig()', () => {
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
                     "includeAuthors": true,
+                    "includeCommitReferences": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1241,6 +1257,7 @@ describe('createNxReleaseConfig()', () => {
             file: './{projectRoot}/custom-path.md',
             renderOptions: {
               includeAuthors: false, // override deeply nested field in user config
+              includeCommitReferences: false, // override deeply nested field in user config
             },
           },
         },
@@ -1264,6 +1281,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "./{projectRoot}/custom-path.md",
                 "renderOptions": {
                   "includeAuthors": false,
+                  "includeCommitReferences": false,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1273,6 +1291,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1293,6 +1312,7 @@ describe('createNxReleaseConfig()', () => {
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
                     "includeAuthors": false,
+                    "includeCommitReferences": false,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1354,6 +1374,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1363,6 +1384,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1383,6 +1405,7 @@ describe('createNxReleaseConfig()', () => {
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
                     "includeAuthors": true,
+                    "includeCommitReferences": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1472,6 +1495,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "./{projectRoot}/custom-path.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1481,6 +1505,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1501,6 +1526,7 @@ describe('createNxReleaseConfig()', () => {
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
                     "includeAuthors": false,
+                    "includeCommitReferences": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1533,6 +1559,7 @@ describe('createNxReleaseConfig()', () => {
                   "file": "./{projectRoot}/a-different-custom-path-at-the-group.md",
                   "renderOptions": {
                     "includeAuthors": true,
+                    "includeCommitReferences": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1607,6 +1634,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1616,6 +1644,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1636,6 +1665,7 @@ describe('createNxReleaseConfig()', () => {
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
                     "includeAuthors": true,
+                    "includeCommitReferences": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1656,6 +1686,7 @@ describe('createNxReleaseConfig()', () => {
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
                     "includeAuthors": true,
+                    "includeCommitReferences": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1985,6 +2016,7 @@ describe('createNxReleaseConfig()', () => {
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
                   "includeAuthors": true,
+                  "includeCommitReferences": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },

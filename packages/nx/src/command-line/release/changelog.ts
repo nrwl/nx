@@ -482,10 +482,7 @@ async function generateChangelogForWorkspace(
     title: logTitle,
   });
 
-  const githubRepoSlug =
-    config.createRelease === 'github'
-      ? getGitHubRepoSlug(gitRemote)
-      : undefined;
+  const githubRepoSlug = getGitHubRepoSlug(gitRemote);
 
   let contents = await changelogRenderer({
     projectGraph,
