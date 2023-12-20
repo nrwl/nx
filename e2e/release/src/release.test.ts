@@ -874,5 +874,42 @@ ${{
         /New version 1101.0.0 written to my-pkg-\d*\/package.json/g
       ).length
     ).toEqual(3);
+
+    // Reset the nx release config to something basic for testing the release command
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          default: {
+            // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
+            projects: ['*', '!@proj/source'],
+            releaseTagPattern: 'xx{version}',
+          },
+        },
+      };
+      return nxJson;
+    });
+
+    const releaseOutput = runCLI(`release 1200.0.0 -y`);
+
+    expect(
+      releaseOutput.match(
+        new RegExp(`Running release version for project: `, 'g')
+      ).length
+    ).toEqual(3);
+
+    expect(
+      releaseOutput.match(
+        new RegExp(`Generating an entry in CHANGELOG\.md for v1200\.0\.0`, 'g')
+      ).length
+    ).toEqual(1);
+
+    expect(
+      releaseOutput.match(
+        new RegExp(
+          `Successfully ran target nx-release-publish for 3 projects`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
   }, 500000);
 });
