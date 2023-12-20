@@ -50,3 +50,9 @@ pnpm install -D @nx/nuxt
 ```shell
 nx g @nx/nuxt:app my-app
 ```
+
+### Deploy a Nuxt app
+
+Once you are ready to deploy your Nuxt application, you have absolute freedom to choose any hosting provider that fits your needs.
+
+We have detailed [how to deploy your Nuxt application to Vercel in a separate guide](/recipes/nuxt/deploy-nuxt-to-vercel).

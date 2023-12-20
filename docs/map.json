@@ -245,6 +245,13 @@
               "file": "shared/core-features/integrate-with-editors"
             },
             {
+              "name": "Manage Releases",
+              "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+              "id": "manage-releases",
+              "tags": ["manage-releases"],
+              "file": "shared/core-features/manage-releases"
+            },
+            {
               "name": "Plugin Features",
               "id": "plugin-features",
               "description": "Learn what is a plugin, the different type of plugins and how to create one.",
@@ -839,6 +846,19 @@
                   "name": "How to configure Next.js plugins",
                   "description": "How to configure Next.js plugins",
                   "file": "shared/packages/next/next-config-setup"
+                }
+              ]
+            },
+            {
+              "name": "Nuxt",
+              "id": "nuxt",
+              "description": "Nuxt related recipes",
+              "itemList": [
+                {
+                  "id": "deploy-nuxt-to-vercel",
+                  "name": "Deploying Nuxt applications to Vercel",
+                  "description": "A detailed guide on how to deploy Nuxt applications from Nx workspaces to Vercel.",
+                  "file": "shared/recipes/deployment/deploy-nuxt-to-vercel"
                 }
               ]
             },

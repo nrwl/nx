@@ -45,6 +45,8 @@ export async function* vitePreviewServerExecutor(
     context
   );
 
+  const { configuration } = parseTargetString(options.buildTarget, context);
+
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
     projectRoot,
@@ -54,7 +56,11 @@ export async function* vitePreviewServerExecutor(
   const { buildOptions, otherOptions: otherOptionsFromBuild } =
     await getBuildExtraArgs(buildTargetOptions);
 
-  const { previewOptions, otherOptions } = await getExtraArgs(options);
+  const { previewOptions, otherOptions } = await getExtraArgs(
+    options,
+    configuration,
+    otherOptionsFromBuild
+  );
   const resolved = await loadConfigFromFile(
     {
       mode: otherOptions?.mode ?? otherOptionsFromBuild?.mode ?? 'production',
@@ -190,7 +196,9 @@ function closeServer(server?: Record<string, any>): Promise<void> {
 export default vitePreviewServerExecutor;
 
 async function getExtraArgs(
-  options: VitePreviewServerExecutorOptions
+  options: VitePreviewServerExecutorOptions,
+  configuration: string | undefined,
+  otherOptionsFromBuildTarget: Record<string, unknown> | undefined
 ): Promise<{
   // vite PreviewOptions
   previewOptions: Record<string, any>;
@@ -217,13 +225,20 @@ async function getExtraArgs(
     'headers',
   ];
 
-  const otherOptions = {};
+  let otherOptions = {};
   for (const key of Object.keys(extraArgs)) {
     if (previewSchemaKeys.includes(key)) {
       previewOptions[key] = extraArgs[key];
     } else {
       otherOptions[key] = extraArgs[key];
     }
+  }
+
+  if (configuration) {
+    otherOptions = {
+      ...otherOptions,
+      ...(otherOptionsFromBuildTarget ?? {}),
+    };
   }
 
   return {

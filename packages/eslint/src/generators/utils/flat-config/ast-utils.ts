@@ -125,7 +125,7 @@ export function replaceOverride(
   content: string,
   root: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
-  update: (
+  update?: (
     override: Linter.ConfigOverride<Linter.RulesRecord>
   ) => Linter.ConfigOverride<Linter.RulesRecord>
 ): string {
@@ -167,12 +167,14 @@ export function replaceOverride(
           length: end - start,
         });
         const updatedData = update(data);
-        mapFilePaths(updatedData);
-        changes.push({
-          type: ChangeType.Insert,
-          index: start,
-          text: JSON.stringify(updatedData, null, 2).slice(2, -2), // remove curly braces and start/end line breaks since we are injecting just properties
-        });
+        if (updatedData) {
+          mapFilePaths(updatedData);
+          changes.push({
+            type: ChangeType.Insert,
+            index: start,
+            text: JSON.stringify(updatedData, null, 2).slice(2, -2), // remove curly braces and start/end line breaks since we are injecting just properties
+          });
+        }
       }
     }
   });

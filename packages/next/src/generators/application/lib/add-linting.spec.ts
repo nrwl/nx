@@ -64,14 +64,6 @@ describe('updateEslint', () => {
         "overrides": [
           {
             "files": [
-              "*.*",
-            ],
-            "rules": {
-              "@next/next/no-html-link-for-pages": "off",
-            },
-          },
-          {
-            "files": [
               "*.ts",
               "*.tsx",
               "*.js",
@@ -132,10 +124,6 @@ describe('updateEslint', () => {
         
 
       module.exports = [
-      {
-          files: ["**/*.*"],
-          rules: { "@next/next/no-html-link-for-pages": "off" }
-      },
           ...baseConfig,
           {
         "files": [

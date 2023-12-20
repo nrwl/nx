@@ -36,6 +36,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 /docs/shared/packages/next/** @nrwl/nx-react-reviewers @nrwl/nx-docs-reviewers
 /packages/react/** @nrwl/nx-react-reviewers
 /e2e/react-core/** @nrwl/nx-react-reviewers
+/e2e/react-module-federation/** @nrwl/nx-react-reviewers @coly010
 /e2e/react-extensions/** @nrwl/nx-react-reviewers
 /packages/next/** @nrwl/nx-react-reviewers
 /e2e/next-core/** @nrwl/nx-react-reviewers

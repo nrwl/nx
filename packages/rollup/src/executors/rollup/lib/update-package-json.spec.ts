@@ -210,4 +210,88 @@ describe('updatePackageJson', () => {
       spy.mockRestore();
     });
   });
+
+  describe('skipTypeField', () => {
+    it('should not include type field if skipTypeField is true', () => {
+      const spy = jest.spyOn(utils, 'writeJsonFile');
+
+      updatePackageJson(
+        {
+          ...commonOptions,
+          format: ['esm'],
+          skipTypeField: true,
+        },
+        {
+          exports: {
+            './foo': './foo.esm.js',
+          },
+        } as unknown as PackageJson
+      );
+
+      expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
+        main: './index.esm.js',
+        module: './index.esm.js',
+        exports: {
+          './foo': './foo.esm.js',
+        },
+      });
+
+      spy.mockRestore();
+    });
+
+    it('should include type field if skipTypeField is undefined', () => {
+      const spy = jest.spyOn(utils, 'writeJsonFile');
+
+      updatePackageJson(
+        {
+          ...commonOptions,
+          format: ['esm'],
+        },
+        {
+          exports: {
+            './foo': './foo.esm.js',
+          },
+        } as unknown as PackageJson
+      );
+
+      expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
+        main: './index.esm.js',
+        module: './index.esm.js',
+        type: 'module',
+        exports: {
+          './foo': './foo.esm.js',
+        },
+      });
+
+      spy.mockRestore();
+    });
+
+    it('should include type field if skipTypeField is false', () => {
+      const spy = jest.spyOn(utils, 'writeJsonFile');
+
+      updatePackageJson(
+        {
+          ...commonOptions,
+          format: ['esm'],
+          skipTypeField: false,
+        },
+        {
+          exports: {
+            './foo': './foo.esm.js',
+          },
+        } as unknown as PackageJson
+      );
+
+      expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
+        main: './index.esm.js',
+        module: './index.esm.js',
+        type: 'module',
+        exports: {
+          './foo': './foo.esm.js',
+        },
+      });
+
+      spy.mockRestore();
+    });
+  });
 });
