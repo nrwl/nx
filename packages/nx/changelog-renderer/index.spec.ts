@@ -206,7 +206,8 @@ describe('defaultChangelogRenderer()', () => {
       const markdown = await defaultChangelogRenderer({
         projectGraph,
         commits,
-        releaseVersion: 'v1.1.0',
+        // Major version, should use single # for generated heading
+        releaseVersion: 'v1.0.0',
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
@@ -214,7 +215,7 @@ describe('defaultChangelogRenderer()', () => {
         },
       });
       expect(markdown).toMatchInlineSnapshot(`
-        "## v1.1.0
+        "# v1.0.0
 
 
         ### 🚀 Features

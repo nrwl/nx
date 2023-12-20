@@ -1,3 +1,4 @@
+import { major } from 'semver';
 import type { GitCommit } from '../src/command-line/release/utils/git';
 import {
   RepoSlug,
@@ -104,7 +105,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       if (entryWhenNoChanges) {
         markdownLines.push(
           '',
-          `## ${releaseVersion}\n\n${entryWhenNoChanges}`,
+          `${createVersionTitle(releaseVersion)}\n\n${entryWhenNoChanges}`,
           ''
         );
       }
@@ -113,7 +114,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
     const typeGroups = groupBy(commits, 'type');
 
-    markdownLines.push('', `## ${releaseVersion}`, '');
+    markdownLines.push('', createVersionTitle(releaseVersion), '');
 
     for (const type of Object.keys(commitTypes)) {
       const group = typeGroups[type];
@@ -170,14 +171,14 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       if (entryWhenNoChanges) {
         markdownLines.push(
           '',
-          `## ${releaseVersion}\n\n${entryWhenNoChanges}`,
+          `${createVersionTitle(releaseVersion)}\n\n${entryWhenNoChanges}`,
           ''
         );
       }
       return markdownLines.join('\n').trim();
     }
 
-    markdownLines.push('', `## ${releaseVersion}`, '');
+    markdownLines.push('', createVersionTitle(releaseVersion), '');
 
     const typeGroups = groupBy(
       // Sort the relevant commits to have the unscoped commits first, before grouping by type
@@ -345,4 +346,13 @@ function extractBreakingChangeExplanation(message: string): string | null {
 
   // Extract and return the breaking change message
   return message.substring(startOfBreakingChange, endOfBreakingChange).trim();
+}
+
+function createVersionTitle(version: string) {
+  // Normalize by removing any leading `v` during comparison
+  const isMajorVersion = `${major(version)}.0.0` === version.replace(/^v/, '');
+  if (isMajorVersion) {
+    return `# ${version}`;
+  }
+  return `## ${version}`;
 }
