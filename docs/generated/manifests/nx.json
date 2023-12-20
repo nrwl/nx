@@ -1127,6 +1127,17 @@
         "tags": ["run-tasks", "use-task-executors"]
       },
       {
+        "id": "inferred-targets",
+        "name": "Inferred Targets",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/inferred-targets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/inferred-targets",
+        "tags": ["use-task-executors", "inferred-targets"]
+      },
+      {
         "id": "integrated-vs-package-based",
         "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
         "description": "",
@@ -1445,6 +1456,17 @@
     "isExternal": false,
     "path": "/concepts/task-pipeline-configuration",
     "tags": ["run-tasks", "use-task-executors"]
+  },
+  "/concepts/inferred-targets": {
+    "id": "inferred-targets",
+    "name": "Inferred Targets",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/inferred-targets",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/inferred-targets",
+    "tags": ["use-task-executors", "inferred-targets"]
   },
   "/concepts/integrated-vs-package-based": {
     "id": "integrated-vs-package-based",
@@ -2427,6 +2449,29 @@
         ],
         "isExternal": false,
         "path": "/recipes/node",
+        "tags": []
+      },
+      {
+        "id": "eslint",
+        "name": "ESLint",
+        "description": "Set of ESLint related recipes.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "eslint-inferred-targets",
+            "name": "ESLint Inferred Targets",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/eslint/eslint-inferred-targets",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/eslint/eslint-inferred-targets",
+            "tags": ["inferred-targets"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/eslint",
         "tags": []
       },
       {
@@ -4225,6 +4270,40 @@
     "isExternal": false,
     "path": "/recipes/node/wait-for-tasks",
     "tags": []
+  },
+  "/recipes/eslint": {
+    "id": "eslint",
+    "name": "ESLint",
+    "description": "Set of ESLint related recipes.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "eslint-inferred-targets",
+        "name": "ESLint Inferred Targets",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/eslint/eslint-inferred-targets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/eslint/eslint-inferred-targets",
+        "tags": ["inferred-targets"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/eslint",
+    "tags": []
+  },
+  "/recipes/eslint/eslint-inferred-targets": {
+    "id": "eslint-inferred-targets",
+    "name": "ESLint Inferred Targets",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/eslint/eslint-inferred-targets",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/eslint/eslint-inferred-targets",
+    "tags": ["inferred-targets"]
   },
   "/recipes/storybook": {
     "id": "storybook",
