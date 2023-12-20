@@ -381,6 +381,7 @@ const recipesUrls = {
     '/recipes/next/next-config-setup',
   '/packages/vite/documents/set-up-vite-manually':
     '/recipes/vite/set-up-vite-manually',
+  '/recipes/vite/set-up-vite-manually': '/recipes/vite/configure-vite',
   '/packages/webpack/documents/webpack-plugins':
     '/recipes/webpack/webpack-plugins',
   '/packages/webpack/documents/webpack-config-setup':
@@ -451,7 +452,7 @@ const nxCloudUrls = {
   '/nx-cloud/concepts/scenarios': '/ci/concepts/cache-security',
   '/nx-cloud/account/encryption': '/ci/recipes/security/encryption',
   '/nx-cloud/concepts/encryption': '/ci/recipes/security/encryption',
-  '/nx-cloud/features/nx-cloud-workflows': '/ci/concepts/nx-agents',
+  '/nx-cloud/features/nx-cloud-workflows': '/ci/features/nx-agents',
   '/ci': '/ci/intro/ci-with-nx',
   '/nx-cloud/:path*': '/ci/:path*',
 };

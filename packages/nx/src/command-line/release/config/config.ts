@@ -11,10 +11,7 @@
  * defaults and user overrides, as well as handling common errors, up front to produce a single, consistent,
  * and easy to consume config object for all the `nx release` command implementations.
  */
-import {
-  NxJsonConfiguration,
-  NxReleaseChangelogConfiguration,
-} from '../../../config/nx-json';
+import { NxJsonConfiguration } from '../../../config/nx-json';
 import { output, type ProjectGraph } from '../../../devkit-exports';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { projectHasTarget } from '../../../utils/project-graph-utils';
@@ -38,7 +35,7 @@ type RemoveTrueFromPropertiesOnEach<T, K extends keyof T[keyof T]> = {
   [U in keyof T]: RemoveTrueFromProperties<T[U], K>;
 };
 
-export const CATCH_ALL_RELEASE_GROUP = '__default__';
+export const IMPLICIT_DEFAULT_RELEASE_GROUP = '__default__';
 
 /**
  * Our source of truth is a deeply required variant of the user-facing config interface, so that command
@@ -49,25 +46,30 @@ export const CATCH_ALL_RELEASE_GROUP = '__default__';
  * it easier to work with (the user could be specifying a single string, and they can also use any valid matcher
  * pattern such as directories and globs).
  */
-export type NxReleaseConfig = DeepRequired<
-  NxJsonConfiguration['release'] & {
-    groups: DeepRequired<
-      RemoveTrueFromPropertiesOnEach<
-        EnsureProjectsArray<NxJsonConfiguration['release']['groups']>,
-        'changelog'
-      >
-    >;
-    // Remove the true shorthand from the changelog config types, it will be normalized to a default object
-    changelog: RemoveTrueFromProperties<
-      DeepRequired<NxJsonConfiguration['release']['changelog']>,
-      'workspaceChangelog' | 'projectChangelogs'
-    >;
-  }
+export type NxReleaseConfig = Omit<
+  DeepRequired<
+    NxJsonConfiguration['release'] & {
+      groups: DeepRequired<
+        RemoveTrueFromPropertiesOnEach<
+          EnsureProjectsArray<NxJsonConfiguration['release']['groups']>,
+          'changelog'
+        >
+      >;
+      // Remove the true shorthand from the changelog config types, it will be normalized to a default object
+      changelog: RemoveTrueFromProperties<
+        DeepRequired<NxJsonConfiguration['release']['changelog']>,
+        'workspaceChangelog' | 'projectChangelogs'
+      >;
+    }
+  >,
+  // projects is just a shorthand for the default group's projects configuration, it does not exist in the final config
+  'projects'
 >;
 
 // We explicitly handle some possible errors in order to provide the best possible DX
 export interface CreateNxReleaseConfigError {
   code:
+    | 'PROJECTS_AND_GROUPS_DEFINED'
     | 'RELEASE_GROUP_MATCHES_NO_PROJECTS'
     | 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE'
     | 'PROJECT_MATCHES_MULTIPLE_GROUPS'
@@ -85,6 +87,16 @@ export async function createNxReleaseConfig(
   error: null | CreateNxReleaseConfigError;
   nxReleaseConfig: NxReleaseConfig | null;
 }> {
+  if (userConfig.projects && userConfig.groups) {
+    return {
+      error: {
+        code: 'PROJECTS_AND_GROUPS_DEFINED',
+        data: {},
+      },
+      nxReleaseConfig: null,
+    };
+  }
+
   const gitDefaults = {
     commit: false,
     commitMessage: '',
@@ -212,23 +224,26 @@ export async function createNxReleaseConfig(
   const rootVersionWithoutGit = { ...rootVersionConfig };
   delete rootVersionWithoutGit.git;
 
-  const allProjects = findMatchingProjects(['*'], projectGraph.nodes).filter(
-    // only include libs by default when the user has no groups config,
-    // because the default implementation assumes npm js packages
-    // and these will usually be libs
-    (project) => projectGraph.nodes[project].type === 'lib'
-  );
   const groups: NxReleaseConfig['groups'] =
     userConfig.groups && Object.keys(userConfig.groups).length
       ? ensureProjectsConfigIsArray(userConfig.groups)
       : /**
-         * No user specified release groups, so we treat all projects as being in one release group
-         * together in which all projects are released in lock step.
+         * No user specified release groups, so we treat all projects (or any any user-defined subset via the top level "projects" property)
+         * as being in one release group together in which the projects are released in lock step.
          */
         {
-          [CATCH_ALL_RELEASE_GROUP]: {
+          [IMPLICIT_DEFAULT_RELEASE_GROUP]: {
             projectsRelationship: GROUP_DEFAULTS.projectsRelationship,
-            projects: allProjects,
+            projects: userConfig.projects
+              ? // user-defined top level "projects" config takes priority if set
+                findMatchingProjects(
+                  ensureArray(userConfig.projects),
+                  projectGraph.nodes
+                )
+              : // default to all library projects in the workspace
+                findMatchingProjects(['*'], projectGraph.nodes).filter(
+                  (project) => projectGraph.nodes[project].type === 'lib'
+                ),
             /**
              * For properties which are overriding config at the root, we use the root level config as the
              * default values to merge with so that the group that matches a specific project will always
@@ -238,7 +253,7 @@ export async function createNxReleaseConfig(
               [GROUP_DEFAULTS.version],
               rootVersionWithoutGit
             ),
-            // If the user has set something custom for releaseTagPattern at the top level, respect it for the catch all default group
+            // If the user has set something custom for releaseTagPattern at the top level, respect it for the implicit default group
             releaseTagPattern:
               userConfig.releaseTagPattern || GROUP_DEFAULTS.releaseTagPattern,
             // Directly inherit the root level config for projectChangelogs, if set
@@ -390,6 +405,18 @@ export async function handleNxReleaseConfigError(
   error: CreateNxReleaseConfigError
 ): Promise<never> {
   switch (error.code) {
+    case 'PROJECTS_AND_GROUPS_DEFINED':
+      {
+        const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+          'release',
+          'projects',
+        ]);
+        output.error({
+          title: `"projects" is not valid when explicitly defining release groups, and everything should be expressed within "groups" in that case. If you are using "groups" then you should remove the "projects" property`,
+          bodyLines: [nxJsonMessage],
+        });
+      }
+      break;
     case 'RELEASE_GROUP_MATCHES_NO_PROJECTS':
       {
         const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
@@ -465,12 +492,14 @@ function ensureProjectsConfigIsArray(
   for (const [groupName, groupConfig] of Object.entries(groups)) {
     result[groupName] = {
       ...groupConfig,
-      projects: Array.isArray(groupConfig.projects)
-        ? groupConfig.projects
-        : [groupConfig.projects],
+      projects: ensureArray(groupConfig.projects),
     };
   }
   return result as NxReleaseConfig['groups'];
+}
+
+function ensureArray(value: string | string[]): string[] {
+  return Array.isArray(value) ? value : [value];
 }
 
 function ensureProjectsHaveTarget(

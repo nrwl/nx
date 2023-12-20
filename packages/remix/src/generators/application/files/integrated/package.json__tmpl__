@@ -1,0 +1,28 @@
+{
+  "private": true,
+  "name": "<%= projectName %>",
+  "description": "",
+  "license": "",
+  "scripts": {},
+  "type": "module",
+  "dependencies": {
+    "@remix-run/node": "<%= remixVersion %>",
+    "@remix-run/react": "<%= remixVersion %>",
+    "@remix-run/serve": "<%= remixVersion %>",
+    "isbot": "<%= isbotVersion %>",
+    "react": "<%= reactVersion %>",
+    "react-dom": "<%= reactDomVersion %>"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "<%= remixVersion %>",
+    "@remix-run/eslint-config": "<%= remixVersion %>",
+    "@types/react": "<%= typesReactVersion %>",
+    "@types/react-dom": "<%= typesReactDomVersion %>",
+    "eslint": "<%= eslintVersion %>",
+    "typescript": "<%= typescriptVersion %>"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "sideEffects": false
+}

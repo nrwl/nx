@@ -17,9 +17,13 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 
 describe('Node Applications + webpack', () => {
-  beforeEach(() => newProject());
+  beforeAll(() =>
+    newProject({
+      packages: ['@nx/node'],
+    })
+  );
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should generate an app using webpack', async () => {
     const app = uniq('nodeapp');

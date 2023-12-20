@@ -30,7 +30,7 @@ describe('Angular Projects', () => {
   let esbuildAppDefaultProjectConfig: string;
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/angular'] });
     runCLI(
       `generate @nx/angular:app ${app1} --no-standalone --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );

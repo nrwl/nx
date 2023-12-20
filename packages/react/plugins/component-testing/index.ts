@@ -200,7 +200,6 @@ function withSchemaDefaults(target: Target, context: ExecutorContext) {
   options.maxWorkers ??= 2;
   options.fileReplacements ??= [];
   options.buildLibsFromSource ??= true;
-  options.generateIndexHtml ??= true;
   return options;
 }
 
@@ -236,7 +235,9 @@ function buildTargetWebpack(
   const {
     resolveUserDefinedWebpackConfig,
   } = require('@nx/webpack/src/utils/webpack/resolve-user-defined-webpack-config');
+  const { composePluginsSync } = require('@nx/webpack/src/utils/config');
   const { withNx } = require('@nx/webpack/src/utils/with-nx');
+  const { withWeb } = require('@nx/webpack/src/utils/with-web');
 
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),
@@ -258,13 +259,24 @@ function buildTargetWebpack(
 
   return async () => {
     customWebpack = await customWebpack;
-    // TODO(jack): Once webpackConfig is always set in @nx/webpack:webpack, we no longer need this default.
-    const defaultWebpack = withNx({
-      ...options,
-      root: workspaceRoot,
-      projectRoot: ctProjectConfig.root,
-      sourceRoot: ctProjectConfig.sourceRoot,
-    });
+    // TODO(v18): Once webpackConfig is always set in @nx/webpack:webpack and isolatedConfig is removed, we no longer need this default.
+    const configure = composePluginsSync(withNx(), withWeb());
+    const defaultWebpack = configure(
+      {},
+      {
+        options: {
+          ...options,
+          // cypress will generate its own index.html from component-index.html
+          generateIndexHtml: false,
+          // causes issues with buildable libraries with ENOENT: no such file or directory, scandir error
+          extractLicenses: false,
+          root: workspaceRoot,
+          projectRoot: ctProjectConfig.root,
+          sourceRoot: ctProjectConfig.sourceRoot,
+        },
+        context,
+      }
+    );
 
     if (customWebpack) {
       return await customWebpack(defaultWebpack, {

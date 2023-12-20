@@ -1,6 +1,6 @@
-# Type alias: Executor<T\>
+# Type alias: Executor\<T\>
 
-Ƭ **Executor**<`T`\>: (`options`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/ExecutorContext)) => `Promise`<{ `success`: `boolean` }\> \| `AsyncIterableIterator`<{ `success`: `boolean` }\>
+Ƭ **Executor**\<`T`\>: (`options`: `T`, `context`: [`ExecutorContext`](../../devkit/documents/ExecutorContext)) => `Promise`\<\{ `success`: `boolean` }\> \| `AsyncIterableIterator`\<\{ `success`: `boolean` }\>
 
 #### Type parameters
 
@@ -10,7 +10,7 @@
 
 #### Type declaration
 
-▸ (`options`, `context`): `Promise`<{ `success`: `boolean` }\> \| `AsyncIterableIterator`<{ `success`: `boolean` }\>
+▸ (`options`, `context`): `Promise`\<\{ `success`: `boolean` }\> \| `AsyncIterableIterator`\<\{ `success`: `boolean` }\>
 
 Implementation of a target of a project
 
@@ -23,4 +23,4 @@ Implementation of a target of a project
 
 ##### Returns
 
-`Promise`<{ `success`: `boolean` }\> \| `AsyncIterableIterator`<{ `success`: `boolean` }\>
+`Promise`\<\{ `success`: `boolean` }\> \| `AsyncIterableIterator`\<\{ `success`: `boolean` }\>

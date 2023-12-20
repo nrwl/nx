@@ -74,7 +74,6 @@ describe('monorepo generator', () => {
 
     // Extracted base config files
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
-    expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
   });
 
   it('should respect nested libraries', async () => {
@@ -140,7 +139,6 @@ describe('monorepo generator', () => {
 
     // Extracted base config files
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
-    expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
     expect(tree.exists('jest.config.ts')).toBeTruthy();
   });
 
@@ -169,7 +167,6 @@ describe('monorepo generator', () => {
 
     // Extracted base config files
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
-    expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
     expect(tree.exists('jest.config.ts')).toBeTruthy();
   });
 });

@@ -313,6 +313,11 @@
         "default": true,
         "x-deprecated": "Automatic configuration of Webpack is deprecated in favor of an explicit 'webpack.config.js' file. This option will be removed in Nx 18. See https://nx.dev/recipes/webpack/webpack-config-setup."
       },
+      "standardWebpackConfigFunction": {
+        "type": "boolean",
+        "description": "Set to true if the webpack config exports a standard webpack function, not an Nx-specific one. See: https://webpack.js.org/configuration/configuration-types/#exporting-a-function",
+        "default": false
+      },
       "extractLicenses": {
         "type": "boolean",
         "description": "Extract all licenses in a separate file, in the case of production builds only."

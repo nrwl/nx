@@ -21,7 +21,9 @@ import { join } from 'path';
 
 describe('Nx Running Tests', () => {
   let proj: string;
-  beforeAll(() => (proj = newProject()));
+  beforeAll(
+    () => (proj = newProject({ packages: ['@nx/js', '@nx/web', '@nx/node'] }))
+  );
   afterAll(() => cleanupProject());
 
   // Ensures that nx.json is restored to its original state after each test

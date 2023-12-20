@@ -15,7 +15,7 @@ import {
 import { join } from 'path';
 
 describe('Extra Nx Misc Tests', () => {
-  beforeAll(() => newProject());
+  beforeAll(() => newProject({ packages: ['@nx/web', '@nx/js', '@nx/react'] }));
   afterAll(() => cleanupProject());
 
   describe('Output Style', () => {

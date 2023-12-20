@@ -1,6 +1,6 @@
 # Function: updateJson
 
-▸ **updateJson**<`T`, `U`\>(`tree`, `path`, `updater`, `options?`): `void`
+▸ **updateJson**\<`T`, `U`\>(`tree`, `path`, `updater`, `options?`): `void`
 
 Updates a JSON value to the file system tree
 

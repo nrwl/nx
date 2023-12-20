@@ -275,7 +275,7 @@ function generateJsonExampleForHelper(
       return inferExample(
         schema,
         (x) => typeof x === 'boolean',
-        () => Example.of(true)
+        () => Example.of(schema.default ?? true)
       );
     } else if (type === 'integer' || type === 'number') {
       return inferExample(

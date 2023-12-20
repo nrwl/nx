@@ -1,6 +1,6 @@
 # Function: serializeJson
 
-▸ **serializeJson**<`T`\>(`input`, `options?`): `string`
+▸ **serializeJson**\<`T`\>(`input`, `options?`): `string`
 
 Serializes the given data to a JSON string.
 By default the JSON string is formatted with a 2 space indentation to be easy readable.

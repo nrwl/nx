@@ -24,6 +24,7 @@ import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
 import { getPackageManagerCommand } from '../../utils/package-manager';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { joinPathFragments } from '../../utils/path';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { getCommandProjects } from '../../commands-runner/get-command-projects';
 
@@ -100,7 +101,12 @@ async function runScriptAsNxTarget(
         NX_PROJECT_NAME: projectGraph.nodes?.[projectName]?.name,
         NX_PROJECT_ROOT_PATH: projectGraph.nodes?.[projectName]?.data?.root,
       },
-      cwd: projectGraph.nodes?.[projectName]?.data?.root ?? workspaceRoot,
+      cwd: projectGraph.nodes?.[projectName]?.data?.root
+        ? joinPathFragments(
+            workspaceRoot,
+            projectGraph.nodes?.[projectName]?.data?.root
+          )
+        : workspaceRoot,
     });
   });
 }

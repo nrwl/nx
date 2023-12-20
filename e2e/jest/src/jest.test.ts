@@ -11,7 +11,7 @@ import {
 
 describe('Jest', () => {
   beforeAll(() => {
-    newProject({ name: uniq('proj-jest') });
+    newProject({ name: uniq('proj-jest'), packages: ['@nx/js', '@nx/node'] });
   });
 
   afterAll(() => cleanupProject());

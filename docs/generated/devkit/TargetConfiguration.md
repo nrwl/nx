@@ -1,4 +1,4 @@
-# Interface: TargetConfiguration<T\>
+# Interface: TargetConfiguration\<T\>
 
 Target's configuration
 

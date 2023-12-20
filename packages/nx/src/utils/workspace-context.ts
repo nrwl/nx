@@ -58,6 +58,14 @@ export function getAllFileDataInContext(workspaceRoot: string) {
   return workspaceContext.allFileData();
 }
 
+export function getFilesInDirectoryUsingContext(
+  workspaceRoot: string,
+  dir: string
+) {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext.getFilesInDirectory(dir);
+}
+
 export function updateProjectFiles(
   projectRootMappings: Record<string, string>,
   rustReferences: NxWorkspaceFilesExternals,

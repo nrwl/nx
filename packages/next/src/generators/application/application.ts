@@ -20,6 +20,7 @@ import { addLinting } from './lib/add-linting';
 import { customServerGenerator } from '../custom-server/custom-server';
 import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
+import { addPlugin } from './lib/add-plugin';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -41,6 +42,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(nextTask);
 
   createApplicationFiles(host, options);
+
   addProject(host, options);
 
   const e2eTask = await addE2e(host, options);

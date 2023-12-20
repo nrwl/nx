@@ -27,7 +27,7 @@ export function app(): express.Express {
   server.engine(
     'html',
     ngExpressEngine({
-      bootstrap,
+      bootstrap
     })
   );
 
@@ -317,24 +317,15 @@ import { AppComponent } from './app.component';
   declarations: [AppComponent],
   imports: [
     BrowserModule,
-    RouterModule.forRoot(
-      [
-        {
-          path: '',
-          loadChildren: () =>
-            import('./remote-entry/entry.module').then(
-              (m) => m.RemoteEntryModule
-            ),
-        },
-      ],
-      { initialNavigation: 'enabledBlocking' }
-    ),
+    RouterModule.forRoot([{
+      path: '',
+      loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)
+    }], { initialNavigation: 'enabledBlocking' }),
   ],
   providers: [],
   bootstrap: [AppComponent],
 })
-export class AppModule {}
-"
+export class AppModule {}"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 2`] = `
@@ -429,10 +420,7 @@ export default AppServerModule;
 "
 `;
 
-exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 5`] = `
-"import('./src/main.server');
-"
-`;
+exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 5`] = `"import('./src/main.server');"`;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 6`] = `
 "import { ModuleFederationConfig } from '@nx/webpack';
@@ -461,7 +449,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 
 @Component({
   selector: 'proj-test-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`,
+  template: \`<proj-nx-welcome></proj-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
 "
@@ -471,12 +459,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-  {
-    path: '',
-    loadChildren: () =>
-      import('./remote-entry/entry.module').then((m) => m.RemoteEntryModule),
-  },
-];
+    { path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule) },];
 "
 `;
 
@@ -484,10 +467,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 "import { Route } from '@angular/router';
 import { RemoteEntryComponent } from './entry.component';
 
-export const remoteRoutes: Route[] = [
-  { path: '', component: RemoteEntryComponent },
-];
-"
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 11`] = `
@@ -524,10 +504,7 @@ exports[`MF Remote App Generator --ssr should generate the correct files when --
 "import { Route } from '@angular/router';
 import { RemoteEntryComponent } from './entry.component';
 
-export const remoteRoutes: Route[] = [
-  { path: '', component: RemoteEntryComponent },
-];
-"
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
 `;
 
 exports[`MF Remote App Generator --ssr should generate the correct files when --typescriptConfiguration=true 13`] = `
@@ -681,7 +658,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
   standalone: true,
   imports: [CommonModule, NxWelcomeComponent],
   selector: 'proj-test-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`,
+  template: \`<proj-nx-welcome></proj-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
 "
@@ -691,12 +668,7 @@ exports[`MF Remote App Generator should generate the a remote setup for standalo
 "import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-  {
-    path: '',
-    loadChildren: () =>
-      import('./remote-entry/entry.routes').then((m) => m.remoteRoutes),
-  },
-];
+    {path: '', loadChildren: () => import('./remote-entry/entry.routes').then(m => m.remoteRoutes)},];
 "
 `;
 
@@ -704,8 +676,5 @@ exports[`MF Remote App Generator should generate the a remote setup for standalo
 "import { Route } from '@angular/router';
 import { RemoteEntryComponent } from './entry.component';
 
-export const remoteRoutes: Route[] = [
-  { path: '', component: RemoteEntryComponent },
-];
-"
+export const remoteRoutes: Route[] = [{ path: '', component: RemoteEntryComponent }];"
 `;

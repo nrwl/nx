@@ -189,7 +189,7 @@ impl HashPlanner {
         external_deps_mapped: &hashbrown::HashMap<&str, Vec<&str>>,
         visited: &mut Box<hashbrown::HashSet<String>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        let project_deps = &self.project_graph.dependencies[&task.target.project]
+        let project_deps = &self.project_graph.dependencies[project_name]
             .iter()
             .map(|d| d.as_str())
             .collect::<Vec<_>>();

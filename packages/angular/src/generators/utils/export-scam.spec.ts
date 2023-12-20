@@ -48,7 +48,7 @@ describe('exportScam', () => {
     // ASSERT
     const entryPointSource = tree.read(`libs/lib1/src/index.ts`, 'utf-8');
     expect(entryPointSource).toMatchInlineSnapshot(
-      `"export * from "./lib/example/example.component";"`
+      `"export * from './lib/example/example.component';"`
     );
   });
 
@@ -75,8 +75,8 @@ describe('exportScam', () => {
     // ASSERT
     const entryPointSource = tree.read(`libs/lib1/src/index.ts`, 'utf-8');
     expect(entryPointSource).toMatchInlineSnapshot(`
-      "export * from "./lib/example/example.component";
-      export * from "./lib/example/example.module";"
+      "export * from './lib/example/example.component';
+      export * from './lib/example/example.module';"
     `);
   });
 
@@ -110,7 +110,7 @@ describe('exportScam', () => {
       'utf-8'
     );
     expect(entryPointSource).toMatchInlineSnapshot(
-      `"export * from "./lib/example/example.component";"`
+      `"export * from './lib/example/example.component';"`
     );
   });
 });

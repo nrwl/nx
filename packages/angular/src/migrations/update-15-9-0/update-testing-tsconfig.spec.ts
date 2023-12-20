@@ -19,6 +19,7 @@ jest.mock('@nx/devkit', () => ({
   createProjectGraphAsync: jest.fn().mockImplementation(async () => {
     return projectGraph;
   }),
+  formatFiles: jest.fn(),
 }));
 describe('Jest+Ng - 15.9.0 - tsconfig updates', () => {
   let tree: Tree;
@@ -75,6 +76,7 @@ async function setup(tree: Tree, name: string) {
     name,
     skipPackageJson: true,
     projectNameAndRootFormat: 'derived',
+    skipFormat: true,
   });
 
   const projectConfig = readProjectConfiguration(tree, name);
@@ -97,6 +99,7 @@ async function setup(tree: Tree, name: string) {
 
   await generateTestLibrary(tree, {
     name: `${name}-lib`,
+    skipFormat: true,
   });
 
   const libConfig = readProjectConfiguration(tree, `${name}-lib`);

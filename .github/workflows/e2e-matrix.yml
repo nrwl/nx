@@ -14,7 +14,7 @@ on:
 env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
 
-permissions: {}
+permissions: { }
 jobs:
   preinstall:
     runs-on: ${{ matrix.os }}
@@ -110,6 +110,7 @@ jobs:
         project:
           - e2e-angular-core
           - e2e-angular-extensions
+          - e2e-angular-module-federation
           - e2e-cypress
           - e2e-detox
           - e2e-esbuild
@@ -125,6 +126,7 @@ jobs:
           - e2e-nx-plugin
           - e2e-nx-run
           - e2e-react-core
+          - e2e-react-module-federation
           - e2e-react-extensions
           - e2e-react-native
           - e2e-web
@@ -150,6 +152,8 @@ jobs:
           - project: e2e-angular-core
             codeowners: 'S04SS457V38'
           - project: e2e-angular-extensions
+            codeowners: 'S04SS457V38'
+          - project: e2e-angular-module-federation
             codeowners: 'S04SS457V38'
           - project: e2e-cypress
             codeowners: 'S04T16BTJJY'
@@ -215,6 +219,8 @@ jobs:
           - node_version: 16
             project: e2e-angular-extensions
           - node_version: 16
+            project: e2e-angular-module-federation
+          - node_version: 16
             project: e2e-cypress
           - node_version: 16
             project: e2e-detox
@@ -242,6 +248,8 @@ jobs:
             project: e2e-lerna-smoke-tests
           - node_version: 16
             project: e2e-react-core
+          - node_version: 16
+            project: e2e-react-module-federation
           - node_version: 16
             project: e2e-react-extensions
           - node_version: 16
@@ -263,6 +271,8 @@ jobs:
           - node_version: 20
             project: e2e-angular-extensions
           - node_version: 20
+            project: e2e-angular-module-federation
+          - node_version: 20
             project: e2e-cypress
           - node_version: 20
             project: e2e-detox
@@ -290,6 +300,8 @@ jobs:
             project: e2e-lerna-smoke-tests
           - node_version: 20
             project: e2e-react-core
+          - node_version: 20
+            project: e2e-react-module-federation
           - node_version: 20
             project: e2e-react-extensions
           - node_version: 20

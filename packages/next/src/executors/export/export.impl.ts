@@ -2,15 +2,9 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
-  workspaceLayout,
+  targetToTargetString,
 } from '@nx/devkit';
 import exportApp from 'next/dist/export';
-import { join, resolve } from 'path';
-import {
-  calculateProjectBuildableDependencies,
-  DependentBuildableProjectNode,
-} from '@nx/js/src/utils/buildable-libs-utils';
-
 import {
   NextBuildBuilderOptions,
   NextExportBuilderOptions,
@@ -20,6 +14,7 @@ import nextTrace = require('next/dist/trace');
 import { platform } from 'os';
 import { execFileSync } from 'child_process';
 import * as chalk from 'chalk';
+import { satisfies } from 'semver';
 
 // platform specific command name
 const pmCmd = platform() === 'win32' ? `npx.cmd` : 'npx';
@@ -40,23 +35,18 @@ export default async function exportExecutor(
   options: NextExportBuilderOptions,
   context: ExecutorContext
 ) {
-  let dependencies: DependentBuildableProjectNode[] = [];
-  if (!options.buildLibsFromSource) {
-    const result = calculateProjectBuildableDependencies(
-      context.taskGraph,
-      context.projectGraph,
-      context.root,
-      context.projectName,
-      'build', // this should be generalized
-      context.configurationName
+  const nextJsVersion = require('next/package.json').version;
+  if (satisfies(nextJsVersion, '>=14.0.0')) {
+    throw new Error(
+      'The export command has been removed in Next.js 14. Please update your Next config to use the output property. Read more: https://nextjs.org/docs/pages/building-your-application/deploying/static-exports'
     );
-    dependencies = result.dependencies;
   }
-
+  // Returns { project: ProjectGraphNode; target: string; configuration?: string;}
   const buildTarget = parseTargetString(options.buildTarget, context);
 
   try {
-    const args = getBuildTargetCommand(options);
+    const buildTargetName = targetToTargetString(buildTarget);
+    const args = getBuildTargetCommand(buildTargetName);
     execFileSync(pmCmd, args, {
       stdio: [0, 1, 2],
     });
@@ -88,7 +78,7 @@ export default async function exportExecutor(
   return { success: true };
 }
 
-function getBuildTargetCommand(options: NextExportBuilderOptions) {
-  const cmd = ['nx', 'run', options.buildTarget];
+function getBuildTargetCommand(buildTarget: string) {
+  const cmd = ['nx', 'run', buildTarget];
   return cmd;
 }

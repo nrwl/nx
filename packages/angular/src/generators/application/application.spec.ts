@@ -477,24 +477,25 @@ describe('app', () => {
     });
   });
 
-  describe('--skipFormat', () => {
-    it('should format files by default', async () => {
-      const spy = jest.spyOn(devkit, 'formatFiles');
+  describe('format files', () => {
+    it('should format files', async () => {
+      const formatFilesSpy = jest.spyOn(devkit, 'formatFiles');
 
-      await generateApp(appTree);
+      await generateApp(appTree, 'my-app', { skipFormat: false });
 
-      expect(spy).toHaveBeenCalled();
-    });
-
-    // Need a better way of determing if the formatFiles function
-    // was called directly from the application generator
-    // and not by a different generator that's used withing this
-    xit('should skip format when set to true', async () => {
-      const spy = jest.spyOn(devkit, 'formatFiles');
-
-      await generateApp(appTree, 'my-app', { skipFormat: true });
-
-      expect(spy).not.toHaveBeenCalled();
+      expect(formatFilesSpy).toHaveBeenCalled();
+      expect(
+        appTree.read('my-app/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('my-app/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('my-app/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 
@@ -1182,7 +1183,7 @@ async function generateApp(
 ) {
   await generateTestApplication(appTree, {
     name,
-    skipFormat: false,
+    skipFormat: true,
     e2eTestRunner: E2eTestRunner.Cypress,
     unitTestRunner: UnitTestRunner.Jest,
     linter: Linter.EsLint,

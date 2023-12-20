@@ -1,0 +1,10 @@
+{
+  "name": "e2e-react-module-federation",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/react-module-federation",
+  "projectType": "application",
+  "targets": {
+    "e2e": {}
+  },
+  "implicitDependencies": ["react", "webpack"]
+}

@@ -1,6 +1,6 @@
 # Function: writeJson
 
-▸ **writeJson**<`T`\>(`tree`, `path`, `value`, `options?`): `void`
+▸ **writeJson**\<`T`\>(`tree`, `path`, `value`, `options?`): `void`
 
 Writes a JSON value to the file system tree
 

@@ -315,7 +315,8 @@ async function downloadAndExtractClientBundle(
         const writeStream = createWriteStream(outputFilePath);
         stream.pipe(writeStream);
 
-        stream.on('end', function () {
+        // Continue the tar stream after the write stream closes
+        writeStream.on('close', () => {
           next();
         });
 

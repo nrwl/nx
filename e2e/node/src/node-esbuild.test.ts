@@ -6,20 +6,21 @@ import {
   promisifiedTreeKill,
   readFile,
   runCLI,
-  runCLIAsync,
   runCommandUntil,
   setMaxWorkers,
-  tmpProjPath,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
-import { execSync } from 'child_process';
 import { join } from 'path';
 
 describe('Node Applications + esbuild', () => {
-  beforeEach(() => newProject());
+  beforeAll(() =>
+    newProject({
+      packages: ['@nx/node'],
+    })
+  );
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should generate an app using esbuild', async () => {
     const app = uniq('nodeapp');

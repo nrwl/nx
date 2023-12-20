@@ -1,7 +1,7 @@
 import type { TSESLint } from '@typescript-eslint/utils';
 import { existsSync } from 'fs';
 import { registerTsProject } from '@nx/js/src/internal';
-import { WORKSPACE_PLUGIN_DIR, WORKSPACE_RULE_NAMESPACE } from './constants';
+import { WORKSPACE_PLUGIN_DIR, WORKSPACE_RULE_PREFIX } from './constants';
 import { join } from 'path';
 
 type ESLintRules = Record<string, TSESLint.RuleModule<string, unknown[]>>;
@@ -25,7 +25,9 @@ export const workspaceRules = ((): ESLintRules => {
     // Apply the namespace to the resolved rules
     const namespacedRules: ESLintRules = {};
     for (const [ruleName, ruleConfig] of Object.entries(rules as ESLintRules)) {
-      namespacedRules[`${WORKSPACE_RULE_NAMESPACE}/${ruleName}`] = ruleConfig;
+      namespacedRules[`${WORKSPACE_RULE_PREFIX}-${ruleName}`] = ruleConfig;
+      // keep the old namespaced rules for backwards compatibility
+      namespacedRules[`${WORKSPACE_RULE_PREFIX}/${ruleName}`] = ruleConfig;
     }
     return namespacedRules;
   } catch (err) {

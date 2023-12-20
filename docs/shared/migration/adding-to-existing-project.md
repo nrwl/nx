@@ -46,7 +46,7 @@ This process adds `nx` to your `package.json` at the root of your workspace:
   ...
   "devDependencies": {
     ...
-    "nx": "15.3.0"
+    "nx": "17.2.0"
   }
 }
 ```
@@ -106,7 +106,7 @@ Here's an example of a `build` and `lint` script being wrapped by Nx:
   },
   "devDependencies": {
     ...
-    "nx": "15.3.0"
+    "nx": "17.2.0"
   }
 }
 ```

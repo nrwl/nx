@@ -9,7 +9,6 @@ import { ProjectGraphBuilder } from '../../project-graph/project-graph-builder';
 import { createTaskGraph } from '../../tasks-runner/create-task-graph';
 import { transformProjectGraphForRust } from '../transform-objects';
 
-
 describe('task planner', () => {
   // disable NX_NATIVE_TASK_HASHER for this test because we need to compare the results of the new planner with the old task hasher
   process.env.NX_NATIVE_TASK_HASHER = 'false';
@@ -23,6 +22,7 @@ describe('task planner', () => {
       paths: {
         '@nx/parent': ['libs/parent/src/index.ts'],
         '@nx/child': ['libs/child/src/index.ts'],
+        '@nx/grandchild': ['libs/grandchild/src/index.ts'],
       },
     },
   });
@@ -188,6 +188,10 @@ describe('task planner', () => {
         { file: '/fileb.ts', hash: 'b.hash' },
         { file: '/fileb.spec.ts', hash: 'b.spec.hash' },
       ],
+      grandchild: [
+        { file: '/filec.ts', hash: 'c.hash' },
+        { file: '/filec.spec.ts', hash: 'c.spec.hash' },
+      ],
     };
 
     const builder = new ProjectGraphBuilder(undefined, projectFileMap);
@@ -209,7 +213,16 @@ describe('task planner', () => {
         targets: { build: { executor: 'none' } },
       },
     });
+    builder.addNode({
+      name: 'grandchild',
+      type: 'lib',
+      data: {
+        root: 'libs/grandchild',
+        targets: { build: { executor: 'none' } },
+      },
+    });
     builder.addStaticDependency('parent', 'child', '/filea.ts');
+    builder.addStaticDependency('child', 'grandchild', '/fileb.ts');
 
     const projectGraph = builder.getUpdatedProjectGraph();
 

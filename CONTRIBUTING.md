@@ -323,6 +323,7 @@ The scope must be one of the following:
 - nx-dev - anything related to docs infrastructure
 - react - anything React specific
 - react-native - anything React Native specific
+- release - anything related to nx release
 - repo - anything related to managing the Nx repo itself
 - storybook - anything Storybook specific
 - testing - anything testing specific (e.g., Jest or Cypress)

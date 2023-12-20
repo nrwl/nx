@@ -1,0 +1,166 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`vitest-coverage-threshold migration should move thresholds in threshold object - has 1 1`] = `
+"/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/demo6',
+  test: {
+    reporters: ['default'],
+    globals: true,
+    cache: {
+      dir: '../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    coverage: {
+      thresholds: {
+        branches: 75,
+      },
+      reportsDirectory: '../coverage/demo6',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
+exports[`vitest-coverage-threshold migration should move thresholds in threshold object - has 2 1`] = `
+"/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/demo3',
+  test: {
+    reporters: ['default'],
+    globals: true,
+    cache: {
+      dir: '../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    coverage: {
+      thresholds: {
+        lines: 100,
+        statements: 100,
+      },
+      reportsDirectory: '../coverage/demo3',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
+exports[`vitest-coverage-threshold migration should move thresholds in threshold object - has 3 1`] = `
+"/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/demo4',
+  test: {
+    globals: true,
+    cache: {
+      dir: '../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      thresholds: {
+        lines: 100,
+        statements: 100,
+
+        branches: 75,
+      },
+      reportsDirectory: '../coverage/demo4',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
+exports[`vitest-coverage-threshold migration should move thresholds in threshold object - has all 1`] = `
+"/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/demo5',
+  test: {
+    reporters: ['default'],
+    globals: true,
+    cache: {
+      dir: '../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    coverage: {
+      thresholds: {
+        lines: 100,
+        statements: 100,
+        functions: 60,
+        branches: 75,
+      },
+      reportsDirectory: '../coverage/demo5',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
+exports[`vitest-coverage-threshold migration should not do anything if coverage but no thresholds 1`] = `
+"/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/demo2',
+  test: {
+    reporters: ['default'],
+    globals: true,
+    cache: {
+      dir: '../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    coverage: {
+      reportsDirectory: '../coverage/demo2',
+      provider: 'v8',
+    },
+  },
+});
+"
+`;
+
+exports[`vitest-coverage-threshold migration should not do anything if no coverage 1`] = `
+"/// <reference types="vitest" />
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import viteTsConfigPaths from 'vite-tsconfig-paths';
+
+export default defineConfig({
+  cacheDir: '../../node_modules/.vite/demo',
+  test: {
+    reporters: ['default'],
+    globals: true,
+    cache: {
+      dir: '../../node_modules/.vitest',
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+  },
+});
+"
+`;

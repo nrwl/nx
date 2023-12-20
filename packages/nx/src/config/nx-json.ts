@@ -139,7 +139,12 @@ export interface NxReleaseGitConfiguration {
  */
 interface NxReleaseConfiguration {
   /**
-   * @note: When no groups are configured at all (the default), all projects in the workspace are treated as
+   * Shorthand for amending the projects which will be included in the implicit default release group (all projects by default).
+   * @note Only one of `projects` or `groups` can be specified, the cannot be used together.
+   */
+  projects?: string[] | string;
+  /**
+   * @note When no projects or groups are configured at all (the default), all projects in the workspace are treated as
    * if they were in a release group together with a fixed relationship.
    */
   groups?: Record<
@@ -218,13 +223,13 @@ interface NxReleaseConfiguration {
   };
   /**
    * Optionally override the git/release tag pattern to use. This field is the source of truth
-   * for changelog generation and release tagging, as well as for conventional-commits parsing.
+   * for changelog generation and release tagging, as well as for conventional commits parsing.
    *
    * It supports interpolating the version as {version} and (if releasing independently or forcing
    * project level version control system releases) the project name as {projectName} within the string.
    *
-   * The default releaseTagPattern for unified releases is: "v{version}"
-   * The default releaseTagPattern for releases at the project level is: "{projectName}@v{version}"
+   * The default releaseTagPattern for fixed/unified releases is: "v{version}"
+   * The default releaseTagPattern for independent releases at the project level is: "{projectName}@v{version}"
    */
   releaseTagPattern?: string;
   /**

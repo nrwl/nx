@@ -29,6 +29,7 @@ export async function addLinting(
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,
     rootProject: options.rootProject,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
   if (options.linter === Linter.EsLint && isEslintConfigSupported(host)) {
     addExtendsToLintConfig(host, options.appProjectRoot, [
@@ -37,19 +38,6 @@ export async function addLinting(
       'next/core-web-vitals',
     ]);
 
-    // Turn off @next/next/no-html-link-for-pages since there is an issue with nextjs throwing linting errors
-    // TODO(nicholas): remove after Vercel updates nextjs linter to only lint ["*.ts", "*.tsx", "*.js", "*.jsx"]
-    addOverrideToLintConfig(
-      host,
-      options.appProjectRoot,
-      {
-        files: ['*.*'],
-        rules: {
-          '@next/next/no-html-link-for-pages': 'off',
-        },
-      },
-      { insertAtTheEnd: false }
-    );
     updateOverrideInLintConfig(
       host,
       options.appProjectRoot,

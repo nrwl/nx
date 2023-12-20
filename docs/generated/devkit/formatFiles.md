@@ -1,6 +1,6 @@
 # Function: formatFiles
 
-▸ **formatFiles**(`tree`): `Promise`<`void`\>
+▸ **formatFiles**(`tree`): `Promise`\<`void`\>
 
 Formats all the created or updated files using Prettier
 
@@ -12,4 +12,4 @@ Formats all the created or updated files using Prettier
 
 #### Returns
 
-`Promise`<`void`\>
+`Promise`\<`void`\>

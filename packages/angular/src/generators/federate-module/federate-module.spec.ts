@@ -77,6 +77,7 @@ describe('federate-module', () => {
       await federateModuleGenerator(tree, {
         ...schema,
         remote: remoteSchema.name,
+        skipFormat: true,
       });
 
       content = tree.read(

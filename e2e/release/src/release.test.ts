@@ -50,6 +50,7 @@ describe('nx release', () => {
   beforeAll(() => {
     newProject({
       unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/js'],
     });
 
     pkg1 = uniq('my-pkg-1');
@@ -111,11 +112,34 @@ describe('nx release', () => {
     ).toEqual(3);
 
     // Only one dependency relationship exists, so this log should only match once
-    expect(
-      versionOutput.match(
-        /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
-      ).length
-    ).toEqual(1);
+    const dependencyRelationshipLogMatch = versionOutput.match(
+      /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
+    );
+    if (
+      !dependencyRelationshipLogMatch ||
+      dependencyRelationshipLogMatch.length !== 1
+    ) {
+      // From JamesHenry: explicit error to assist troubleshooting NXC-143
+      // Update: after seeing this error in the wild, it somehow seems to be not finding the dependency relationship sometimes
+      throw new Error(
+        `
+Error: Expected to find exactly one dependency relationship log line.
+
+If you are seeing this message then you have been impacted by some currently undiagnosed flakiness in the test.
+
+Please report the full nx release version command output below to the Nx team:
+
+${JSON.stringify(
+  {
+    versionOutput,
+    pkg2Contents: readFile(`${pkg2}/package.json`),
+  },
+  null,
+  2
+)}`
+      );
+    }
+    expect(dependencyRelationshipLogMatch.length).toEqual(1);
 
     // Generate a changelog for the new version
     expect(exists('CHANGELOG.md')).toEqual(false);
@@ -854,5 +878,42 @@ describe('nx release', () => {
         /New version 1101.0.0 written to my-pkg-\d*\/package.json/g
       ).length
     ).toEqual(3);
+
+    // Reset the nx release config to something basic for testing the release command
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          default: {
+            // @proj/source will be added as a project by the verdaccio setup, but we aren't versioning or publishing it, so we exclude it here
+            projects: ['*', '!@proj/source'],
+            releaseTagPattern: 'xx{version}',
+          },
+        },
+      };
+      return nxJson;
+    });
+
+    const releaseOutput = runCLI(`release 1200.0.0 -y`);
+
+    expect(
+      releaseOutput.match(
+        new RegExp(`Running release version for project: `, 'g')
+      ).length
+    ).toEqual(3);
+
+    expect(
+      releaseOutput.match(
+        new RegExp(`Generating an entry in CHANGELOG\.md for v1200\.0\.0`, 'g')
+      ).length
+    ).toEqual(1);
+
+    expect(
+      releaseOutput.match(
+        new RegExp(
+          `Successfully ran target nx-release-publish for 3 projects`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
   }, 500000);
 });

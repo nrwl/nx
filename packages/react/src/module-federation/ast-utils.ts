@@ -37,7 +37,7 @@ export function addRemoteToConfig(
     const lastElement =
       arrayExpression.elements[arrayExpression.elements.length - 1];
     return [
-      lastElement
+      lastElement && !arrayExpression.elements.hasTrailingComma
         ? {
             type: ChangeType.Insert,
             index: lastElement.end,

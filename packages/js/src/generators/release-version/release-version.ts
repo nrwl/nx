@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 import * as chalk from 'chalk';
 import { exec } from 'child_process';
-import { CATCH_ALL_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
+import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
 import { getLatestGitTagForPattern } from 'nx/src/command-line/release/utils/git';
 import {
   resolveSemverSpecifierFromConventionalCommits,
@@ -37,10 +37,14 @@ export async function releaseVersionGenerator(
     const versionData: VersionData = {};
 
     // If the user provided a specifier, validate that it is valid semver or a relative semver keyword
-    if (options.specifier && !isValidSemverSpecifier(options.specifier)) {
-      throw new Error(
-        `The given version specifier "${options.specifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`
-      );
+    if (options.specifier) {
+      if (!isValidSemverSpecifier(options.specifier)) {
+        throw new Error(
+          `The given version specifier "${options.specifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`
+        );
+      }
+      // The node semver library classes a leading `v` as valid, but we want to ensure it is not present in the final version
+      options.specifier = options.specifier.replace(/^v/, '');
     }
 
     const projects = options.projects;
@@ -271,7 +275,9 @@ To fix this you will either need to add a package.json file at that location, or
           case 'prompt': {
             // Only add the release group name to the log if it is one set by the user, otherwise it is useless noise
             const maybeLogReleaseGroup = (log: string): string => {
-              if (options.releaseGroup.name === CATCH_ALL_RELEASE_GROUP) {
+              if (
+                options.releaseGroup.name === IMPLICIT_DEFAULT_RELEASE_GROUP
+              ) {
                 return log;
               }
               return `${log} within release group "${options.releaseGroup.name}"`;

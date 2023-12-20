@@ -97,6 +97,8 @@
       "@nx/react-native": ["packages/react-native"],
       "@nx/react-native/*": ["packages/react-native/*"],
       "@nx/react/*": ["packages/react/*"],
+      "@nx/remix": ["packages/remix"],
+      "@nx/remix/*": ["packages/remix/*"],
       "@nx/rollup": ["packages/rollup"],
       "@nx/rollup/*": ["packages/rollup/*"],
       "@nx/storybook": ["packages/storybook"],

@@ -25,12 +25,12 @@ import {
   createBuildableTsConfig,
   validateTypes,
 } from '../../utils/executor-utils';
-import { BuildOptions } from 'vite';
 
 export async function* viteBuildExecutor(
   options: Record<string, any> & ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
+  process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { mergeConfig, build, loadConfigFromFile } = await (Function(
     'return import("vite")'
@@ -49,7 +49,7 @@ export async function* viteBuildExecutor(
       ? process.cwd()
       : relative(context.cwd, joinPathFragments(context.root, projectRoot));
 
-  const { buildOptions, otherOptions } = await getExtraArgs(options);
+  const { buildOptions, otherOptions } = await getBuildExtraArgs(options);
 
   const resolved = await loadConfigFromFile(
     {
@@ -188,8 +188,11 @@ export async function* viteBuildExecutor(
   }
 }
 
-async function getExtraArgs(options: ViteBuildExecutorOptions): Promise<{
-  buildOptions: BuildOptions;
+export async function getBuildExtraArgs(
+  options: ViteBuildExecutorOptions
+): Promise<{
+  // vite BuildOptions
+  buildOptions: Record<string, unknown>;
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
@@ -201,7 +204,7 @@ async function getExtraArgs(options: ViteBuildExecutorOptions): Promise<{
     }
   }
 
-  const buildOptions = {} as BuildOptions;
+  const buildOptions = {};
   const buildSchemaKeys = [
     'target',
     'polyfillModulePreload',

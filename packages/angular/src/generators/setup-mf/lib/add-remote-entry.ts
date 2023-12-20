@@ -35,7 +35,7 @@ export function addRemoteEntry(
     addRoute(
       tree,
       joinPathFragments(appRoot, 'src/app/app.routes.ts'),
-      `{path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule)}`
+      `{ path: '', loadChildren: () => import('./remote-entry/entry.module').then(m => m.RemoteEntryModule) }`
     );
   }
 }

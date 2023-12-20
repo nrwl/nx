@@ -38,10 +38,6 @@ export async function vitestGenerator(
     tree,
     schema.project
   );
-  let testTarget =
-    schema.testTarget ??
-    findExistingTargetsInProject(targets).validFoundTargetName.test ??
-    'test';
 
   const nxJson = readNxJson(tree);
   const hasPluginCheck = nxJson.plugins?.some(

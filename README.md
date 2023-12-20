@@ -1,7 +1,7 @@
 <p style="text-align: center;">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
-    <img alt="Nx - Smart, Fast and Extensible Build System" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+    <img alt="Nx - Smart Monorepos · Fast CI" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
   </picture>
 </p>
 
@@ -19,9 +19,9 @@
 
 <hr>
 
-# Smart, Fast and Extensible Build System
+# Smart Monorepos · Fast CI
 
-Nx is a next generation build system with first class monorepo support and powerful integrations.
+Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.
 
 A few links to help you get started:
 
@@ -32,7 +32,7 @@ A few links to help you get started:
 - [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
 
 <p style="text-align: center;"><a href="https://nx.dev/#learning-materials" target="_blank" rel="noreferrer"><img src="./images/nx-courses-and-videos.svg" 
-width="100%" alt="Nx - Smart, Fast and Extensible Build System"></a></p>
+width="100%" alt="Nx - Smart Monorepos · Fast CI"></a></p>
 
 # Engage with the Core Team and the Community
 

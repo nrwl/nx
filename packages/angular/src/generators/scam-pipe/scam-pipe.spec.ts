@@ -18,6 +18,7 @@ describe('SCAM Pipe Generator', () => {
       project: 'app1',
       inlineScam: true,
       flat: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -30,7 +31,7 @@ describe('SCAM Pipe Generator', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example',
+        name: 'example'
       })
       export class ExamplePipe implements PipeTransform {
         transform(value: unknown, ...args: unknown[]): unknown {
@@ -63,6 +64,7 @@ describe('SCAM Pipe Generator', () => {
       project: 'app1',
       inlineScam: false,
       flat: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -105,6 +107,7 @@ describe('SCAM Pipe Generator', () => {
       path: 'libs/lib1/feature/src/lib',
       inlineScam: false,
       export: true,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -131,8 +134,7 @@ describe('SCAM Pipe Generator', () => {
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
       "export * from './lib/example/example.pipe';
-      export * from './lib/example/example.module';
-      "
+      export * from './lib/example/example.module';"
     `);
   });
 
@@ -153,6 +155,7 @@ describe('SCAM Pipe Generator', () => {
         path: 'apps/app1/src/app/random',
         inlineScam: true,
         flat: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -165,7 +168,7 @@ describe('SCAM Pipe Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Pipe({
-          name: 'example',
+          name: 'example'
         })
         export class ExamplePipe implements PipeTransform {
           transform(value: unknown, ...args: unknown[]): unknown {
@@ -199,6 +202,7 @@ describe('SCAM Pipe Generator', () => {
         path: '/apps/app1/src/app/random',
         inlineScam: true,
         flat: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -211,7 +215,7 @@ describe('SCAM Pipe Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Pipe({
-          name: 'example',
+          name: 'example'
         })
         export class ExamplePipe implements PipeTransform {
           transform(value: unknown, ...args: unknown[]): unknown {
@@ -245,6 +249,7 @@ describe('SCAM Pipe Generator', () => {
           project: 'app1',
           path: 'libs/proj/src/lib/random',
           inlineScam: true,
+          skipFormat: true,
         })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `"The provided directory "libs/proj/src/lib/random" is not under the provided project root "apps/app1". Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory."`

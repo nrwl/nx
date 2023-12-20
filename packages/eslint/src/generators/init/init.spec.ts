@@ -5,9 +5,15 @@ import { lintInitGenerator } from './init';
 
 describe('@nx/eslint:init', () => {
   let tree: Tree;
+  let envV3: string | undefined;
 
   beforeEach(() => {
+    envV3 = process.env.NX_PCV3;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
+  afterEach(() => {
+    process.env.NX_PCV3 = envV3;
   });
 
   it('should generate the global eslint config', async () => {
@@ -85,6 +91,33 @@ describe('@nx/eslint:init', () => {
     ).toEqual({
       cache: true,
     });
+    expect(readJson<NxJsonConfiguration>(tree, 'nx.json').plugins)
+      .toMatchInlineSnapshot(`
+      [
+        {
+          "options": {
+            "targetName": "lint",
+          },
+          "plugin": "@nx/eslint/plugin",
+        },
+      ]
+    `);
+  });
+
+  it('should add @nx/eslint/plugin in subsequent step', async () => {
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.namedInputs ??= {};
+      json.namedInputs.production = ['default'];
+      return json;
+    });
+
+    await lintInitGenerator(tree, {});
+    expect(
+      readJson<NxJsonConfiguration>(tree, 'nx.json').plugins
+    ).not.toBeDefined();
+
+    process.env.NX_PCV3 = 'true';
+    await lintInitGenerator(tree, {});
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json').plugins)
       .toMatchInlineSnapshot(`
       [

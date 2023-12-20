@@ -18,6 +18,7 @@ describe('SCAM Directive Generator', () => {
       project: 'app1',
       inlineScam: true,
       flat: true,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -30,7 +31,7 @@ describe('SCAM Directive Generator', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[projExample]',
+        selector: '[projExample]'
       })
       export class ExampleDirective {
         constructor() {}
@@ -61,6 +62,7 @@ describe('SCAM Directive Generator', () => {
       project: 'app1',
       inlineScam: false,
       flat: true,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -103,6 +105,7 @@ describe('SCAM Directive Generator', () => {
       path: 'libs/lib1/feature/src/lib',
       inlineScam: false,
       export: true,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -129,8 +132,7 @@ describe('SCAM Directive Generator', () => {
     );
     expect(secondaryEntryPointSource).toMatchInlineSnapshot(`
       "export * from './lib/example/example.directive';
-      export * from './lib/example/example.module';
-      "
+      export * from './lib/example/example.module';"
     `);
   });
 
@@ -151,6 +153,7 @@ describe('SCAM Directive Generator', () => {
         path: 'apps/app1/src/app/random',
         inlineScam: true,
         flat: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -163,7 +166,7 @@ describe('SCAM Directive Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Directive({
-          selector: '[projExample]',
+          selector: '[projExample]'
         })
         export class ExampleDirective {
           constructor() {}
@@ -195,6 +198,7 @@ describe('SCAM Directive Generator', () => {
         path: '/apps/app1/src/app/random',
         inlineScam: true,
         flat: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -207,7 +211,7 @@ describe('SCAM Directive Generator', () => {
         import { CommonModule } from '@angular/common';
 
         @Directive({
-          selector: '[projExample]',
+          selector: '[projExample]'
         })
         export class ExampleDirective {
           constructor() {}
@@ -240,6 +244,7 @@ describe('SCAM Directive Generator', () => {
           path: 'libs/proj/src/lib/random',
           inlineScam: true,
           flat: false,
+          skipFormat: true,
         })
       ).rejects.toThrowErrorMatchingInlineSnapshot(
         `"The provided directory "libs/proj/src/lib/random" is not under the provided project root "apps/app1". Please provide a directory that is under the provided project root or use the "as-provided" format and only provide the directory."`

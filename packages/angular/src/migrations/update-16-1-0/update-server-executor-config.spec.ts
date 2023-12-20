@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { addProjectConfiguration, readProjectConfiguration } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './update-server-executor-config';
 
@@ -12,6 +13,9 @@ describe.each([
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   it(`should add 'buildOptimizer: false' to config with 'optimization: false' (${executor})`, async () => {

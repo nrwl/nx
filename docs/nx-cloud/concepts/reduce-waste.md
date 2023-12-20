@@ -1,10 +1,10 @@
-# Reduce Waste in CI
+# Reduce Wasted Time in CI
 
 This article explores two ways that Nx improves the average speed of your CI pipeline - `nx affected` and remote caching. Using the `nx affected` command speeds up the first CI run for a PR and remote caching speeds up every CI run after that. Both `nx affected` and remote caching provide more benefits to repositories with more projects and a flatter project structure.
 
 For this discussion, we'll assume you understand the Nx [mental model](/concepts/mental-model) and have an understanding of both [what the affected command is](/ci/features/affected) and [how caching works](/concepts/how-caching-works).
 
-## Reduce Waste With Affected
+## Reduce Wasted Time With Affected
 
 The `nx affected` command allows you to only run tasks on projects that were affected by a particular PR. This effectively eliminates the wasted time and resources that would have been spent executing tasks on projects that were unrelated to a particular PR.
 
@@ -265,8 +265,8 @@ Note that the 50% chance of any project being modified is an arbitrary number. I
 
 **Stacked:**
 
-ℙa(1) = ℙm(1) + ℙm'(1) _ ℙm(2) + ℙm'(1) _ ℙm'(2) _ ℙm(3) = 0.5 + 0.25 + 0.125 = 0.875  
-ℙa(2) = ℙm(2) + ℙm'(2) _ ℙm(3) = 0.5 + 0.25 = 0.75  
+ℙa(1) = ℙm(1) + ℙm'(1) \* ℙm(2) + ℙm'(1) \* ℙm'(2) \* ℙm(3) = 0.5 + 0.25 + 0.125 = 0.875  
+ℙa(2) = ℙm(2) + ℙm'(2) \* ℙm(3) = 0.5 + 0.25 = 0.75  
 ℙa(3) = ℙm(3) = 0.5 = 0.5
 
 **Expected Number of Affected Projects:**  
@@ -274,8 +274,8 @@ Note that the 50% chance of any project being modified is an arbitrary number. I
 
 **Grouped:**
 
-ℙa(1) = ℙm(1) + ℙm'(1) _ ℙm(3) = 0.5 + 0.25 = 0.75  
-ℙa(2) = ℙm(2) + ℙm'(2) _ ℙm(3) = 0.5 + 0.25 = 0.75  
+ℙa(1) = ℙm(1) + ℙm'(1) \* ℙm(3) = 0.5 + 0.25 = 0.75  
+ℙa(2) = ℙm(2) + ℙm'(2) \* ℙm(3) = 0.5 + 0.25 = 0.75  
 ℙa(3) = ℙm(3) = 0.5 = 0.5
 
 **Expected Number of Affected Projects:**  
@@ -292,7 +292,7 @@ Note that the 50% chance of any project being modified is an arbitrary number. I
 
 {% /disclosure %}
 
-## Reduce Waste with Remote Caching
+## Reduce Wasted Time with Remote Caching
 
 If you use a read/write token on developer machines, CI runs could be dramatically improved because they would be leveraging the work already done on the machine of the developer that pushed the PR. This set up requires you to have full trust in everyone who is capable of viewing the code base, which doesn't make sense for open source projects or for many organizations.
 

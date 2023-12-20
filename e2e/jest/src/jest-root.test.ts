@@ -6,7 +6,7 @@ describe('Jest root projects', () => {
 
   describe('angular', () => {
     beforeAll(() => {
-      newProject();
+      newProject({ packages: ['@nx/angular', '@nx/react'] });
     });
 
     it('should test root level app projects', async () => {

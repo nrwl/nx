@@ -1,5 +1,88 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`lib --bundler=vite should add build and test targets with vite and vitest 1`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+
+## Running unit tests
+
+Run \`nx test my-lib\` to execute the unit tests via [Vitest](https://vitest.dev/).
+"
+`;
+
+exports[`lib --bundler=vite should add build and test targets with vite and vitest 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["vite.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+"
+`;
+
+exports[`lib --bundler=vite should respect unitTestRunner if passed 1`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+"
+`;
+
+exports[`lib --bundler=vite should respect unitTestRunner if passed 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+"
+`;
+
+exports[`lib --bundler=vite should respect unitTestRunner if passed 3`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+
+## Running unit tests
+
+Run \`nx test my-lib\` to execute the unit tests via [Jest](https://jestjs.io).
+"
+`;
+
+exports[`lib --bundler=vite should respect unitTestRunner if passed 4`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+"
+`;
+
 exports[`lib --unit-test-runner jest should generate test configuration with swc and js 1`] = `
 "/* eslint-disable */
 const { readFileSync } = require('fs');

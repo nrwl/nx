@@ -4,7 +4,6 @@ import {
   TargetConfiguration,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { readdirSync } from 'fs';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
 import {
@@ -103,12 +102,6 @@ function buildEslintTargets(
   options: EslintPluginOptions,
   context: CreateNodesContext
 ) {
-  const targetDefaults = readTargetDefaultsForTarget(
-    options.targetName,
-    context.nxJsonConfiguration.targetDefaults,
-    '@nx/eslint:lint'
-  );
-
   const isRootProject = projectRoot === '.';
 
   const targets: Record<string, TargetConfiguration> = {};
@@ -127,8 +120,8 @@ function buildEslintTargets(
 
   targets[options.targetName] = {
     ...baseTargetConfig,
-    cache: targetDefaults?.cache ?? true,
-    inputs: targetDefaults?.inputs ?? [
+    cache: true,
+    inputs: [
       'default',
       ...eslintConfigs.map((config) => `{workspaceRoot}/${config}`),
       '{workspaceRoot}/tools/eslint-rules/**/*',

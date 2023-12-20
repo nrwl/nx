@@ -4,9 +4,11 @@ import {
   GeneratorCallback,
   getPackageManagerCommand,
   output,
+  readNxJson,
   runTasksInSerial,
   Tree,
   updateJson,
+  updateNxJson,
   workspaceRoot,
 } from '@nx/devkit';
 import { InitGeneratorSchema } from './schema';
@@ -56,6 +58,10 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
     );
   }
 
+  if (process.env.NX_PCV3 === 'true') {
+    addPlugin(tree);
+  }
+
   if (!options.skipInstall) {
     tasks.push(() => {
       output.log({
@@ -68,6 +74,27 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function addPlugin(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.plugins ??= [];
+
+  if (
+    !nxJson.plugins.some((p) =>
+      typeof p === 'string'
+        ? p === '@nx/playwright/plugin'
+        : p.plugin === '@nx/playwright/plugin'
+    )
+  ) {
+    nxJson.plugins.push({
+      plugin: '@nx/playwright/plugin',
+      options: {
+        targetName: 'e2e',
+      },
+    });
+    updateNxJson(tree, nxJson);
+  }
 }
 
 export default initGenerator;

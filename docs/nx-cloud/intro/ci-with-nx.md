@@ -5,8 +5,8 @@ When implemented well, continuous integration (CI) allows a team of developers t
 ## Core Features
 
 - Test only the code that might have been [affected](/ci/features/affected) by a PR
-- Improve the average CI time with [remote caching](/ci/features/remote-cache)
-- Improve the worst case CI time with [distributed task execution](/ci/features/distribute-task-execution)
+- Never run the same task on the same code twice with [remote caching](/ci/features/remote-cache)
+- Efficiently [distribute task execution across multiple machines](/ci/features/distribute-task-execution)
 - Quickly troubleshoot errors that occur in CI
 - Create a simple but powerful pipeline configuration that easily scales with your codebase
 
@@ -22,7 +22,7 @@ npx nx connect
 
 {% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/NZF0ZJpgaJM" icon="nxcloud" /%}
 
-{% link-card title="Nx Cloud 3.0 - What is new?" type="video" url="https://youtu.be/cG2hEI5L3qI?si=xVnSLMU2VN1UAEpJ" icon="nxcloud" /%}
+{% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/XLOUFZeqRpM" icon="nxcloud" /%}
 
 {% link-card title="Nx in 10 minutes!" type="video" url="https://youtu.be/-_4WMl-Fn0w" icon="nx" /%}
 {% link-card title="More On Youtube" type="video" url="https://www.youtube.com/@nxdevtools" icon="youtube" /%}

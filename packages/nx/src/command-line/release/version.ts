@@ -58,7 +58,7 @@ export interface ReleaseVersionGeneratorSchema {
   currentVersionResolverMetadata?: Record<string, unknown>;
 }
 
-interface NxReleaseVersionResult {
+export interface NxReleaseVersionResult {
   /**
    * In one specific (and very common) case, an overall workspace version is relevant, for example when there is
    * only a single release group in which all projects have a fixed relationship to each other. In this case, the

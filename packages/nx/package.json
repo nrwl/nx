@@ -134,6 +134,8 @@
       "@nrwl/react-native",
       "@nx/rollup",
       "@nrwl/rollup",
+      "@nx/remix",
+      "@nrwl/remix",
       "@nx/storybook",
       "@nrwl/storybook",
       "@nrwl/tao",

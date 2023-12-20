@@ -166,6 +166,10 @@ export default async function runExecutor(
         !(
           stdoutData.error?.code?.includes('E404') &&
           stdoutData.error?.summary?.includes('no such package available')
+        ) &&
+        !(
+          err.stderr?.toString().includes('E404') &&
+          err.stderr?.toString().includes('no such package available')
         )
       ) {
         console.error(

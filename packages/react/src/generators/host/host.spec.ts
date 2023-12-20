@@ -20,6 +20,7 @@ describe('hostGenerator', () => {
       e2eTestRunner: 'none',
       projectNameAndRootFormat: 'as-provided',
       typescriptConfiguration: false,
+      skipFormat: true,
     });
 
     expect(tree.exists('test/tsconfig.json')).toBeTruthy();
@@ -43,6 +44,7 @@ describe('hostGenerator', () => {
       e2eTestRunner: 'none',
       projectNameAndRootFormat: 'as-provided',
       typescriptConfiguration: true,
+      skipFormat: true,
     });
 
     expect(tree.exists('test/tsconfig.json')).toBeTruthy();
@@ -66,6 +68,7 @@ describe('hostGenerator', () => {
       unitTestRunner: 'none',
       e2eTestRunner: 'none',
       projectNameAndRootFormat: 'as-provided',
+      skipFormat: true,
     });
 
     const packageJson = readJson(tree, 'package.json');

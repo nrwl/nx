@@ -191,7 +191,7 @@ function updateRouterModuleForRootCallExpression(
       )
     : factory.createNodeArray<ObjectLiteralElementLike>();
 
-  const enabledLiteral = factory.createStringLiteral('enabledBlocking');
+  const enabledLiteral = factory.createStringLiteral('enabledBlocking', true);
   const initialNavigationProperty = factory.createPropertyAssignment(
     'initialNavigation',
     enabledLiteral

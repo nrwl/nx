@@ -15,9 +15,9 @@ nx release
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
 
-## Options
+## Shared Options
 
-### dryRun
+### dry-run
 
 Type: `boolean`
 
@@ -56,6 +56,46 @@ Type: `boolean`
 Show version number
 
 ## Subcommands
+
+### Base Command Options
+
+Create a version and release for the workspace, generate a changelog, and optionally publish the packages
+
+```shell
+nx release [specifier]
+```
+
+#### Options
+
+##### help
+
+Type: `boolean`
+
+Show help
+
+##### skip-publish
+
+Type: `boolean`
+
+Skip publishing by automatically answering no to the confirmation prompt for publishing
+
+##### specifier
+
+Type: `string`
+
+Exact version or semver keyword to apply to the selected release group.
+
+##### version
+
+Type: `boolean`
+
+Show version number
+
+##### yes
+
+Type: `boolean`
+
+Automatically answer yes to the confirmation prompt for publishing
 
 ### version
 
@@ -169,6 +209,14 @@ Type: `string`
 
 Custom git commit message to use when committing the changes made by this command. {version} will be dynamically interpolated when performing fixed releases, interpolated tags will be appended to the commit body when performing independent releases.
 
+##### git-remote
+
+Type: `string`
+
+Default: `origin`
+
+Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)
+
 ##### git-tag
 
 Type: `boolean`
@@ -186,14 +234,6 @@ Additional arguments to pass to the `git tag` command invoked behind the scenes
 Type: `string`
 
 Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself.
-
-##### gitRemote
-
-Type: `string`
-
-Default: `origin`
-
-Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)
 
 ##### help
 

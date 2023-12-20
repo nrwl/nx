@@ -44,9 +44,8 @@ export async function cypressComponentConfiguration(
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
-  return () => {
-    installTask();
-  };
+
+  return installTask;
 }
 
 async function addFiles(
@@ -105,7 +104,7 @@ async function addFiles(
         projectConfig.root,
         joinPathFragments(info.moduleFolderPath, info.path)
       );
-      componentTestGenerator(tree, {
+      await componentTestGenerator(tree, {
         project: options.project,
         componentName: info.name,
         componentDir: componentDirFromProjectRoot,

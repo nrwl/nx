@@ -12,6 +12,7 @@ describe('Vue Plugin', () => {
 
   beforeAll(() => {
     proj = newProject({
+      packages: ['@nx/vue'],
       unsetProjectNameAndRootFormat: false,
     });
   });

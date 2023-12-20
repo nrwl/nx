@@ -7,6 +7,7 @@ export interface Schema {
   skipTests?: boolean;
   inlineScam?: boolean;
   export?: boolean;
+  skipFormat?: boolean;
   /**
    * @deprecated Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18.
    */

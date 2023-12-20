@@ -19,7 +19,7 @@ describe('ngAdd generator', () => {
   });
 
   it('should initialize the Angular plugin when in an Nx workspace', async () => {
-    await ngAddGenerator(tree, {});
+    await ngAddGenerator(tree, { skipFormat: true });
 
     expect(initGenerator.angularInitGenerator).toHaveBeenCalled();
     expect(angularCliMigrator.migrateFromAngularCli).not.toHaveBeenCalled();
@@ -28,7 +28,7 @@ describe('ngAdd generator', () => {
   it('should perform a migration when in an Angular CLI workspace', async () => {
     tree.delete('nx.json');
 
-    await ngAddGenerator(tree, {});
+    await ngAddGenerator(tree, { skipFormat: true });
 
     expect(angularCliMigrator.migrateFromAngularCli).toHaveBeenCalled();
     expect(initGenerator.angularInitGenerator).not.toHaveBeenCalled();

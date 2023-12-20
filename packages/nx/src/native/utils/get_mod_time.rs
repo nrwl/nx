@@ -12,7 +12,7 @@ pub fn get_mod_time(metadata: &Metadata) -> i64 {
     metadata.last_write_time() as i64
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 pub fn get_mod_time(metadata: &Metadata) -> i64 {
     use std::os::unix::fs::MetadataExt;
     metadata.mtime()

@@ -30,7 +30,7 @@ describe('Nx Watch', () => {
   let proj2 = uniq('proj2');
   let proj3 = uniq('proj3');
   beforeAll(() => {
-    newProject();
+    newProject({ packages: ['@nx/js'] });
     runCLI(`generate @nx/js:lib ${proj1}`);
     runCLI(`generate @nx/js:lib ${proj2}`);
     runCLI(`generate @nx/js:lib ${proj3}`);

@@ -176,4 +176,5 @@ export class WorkspaceContext {
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
+  getFilesInDirectory(directory: string): Array<string>
 }

@@ -65,7 +65,7 @@ Show information about "my-app" in a human readable format.:
  nx show project my-app --json false
 ```
 
-## Options
+## Shared Options
 
 ### help
 

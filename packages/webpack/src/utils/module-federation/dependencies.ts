@@ -1,6 +1,11 @@
 import type { ProjectGraph } from '@nx/devkit';
 import type { WorkspaceLibrary } from './models';
 import { readTsPathMappings } from './typescript';
+import {
+  getOutputsForTargetAndConfiguration,
+  parseTargetString,
+} from '@nx/devkit';
+import { interpolate } from 'nx/src/tasks-runner/utils';
 
 export function getDependentPackagesForProject(
   projectGraph: ProjectGraph,
@@ -57,12 +62,32 @@ function getLibraryImportPath(
   library: string,
   projectGraph: ProjectGraph
 ): string | undefined {
+  let buildLibsFromSource = true;
+  if (process.env.NX_BUILD_LIBS_FROM_SOURCE) {
+    buildLibsFromSource = process.env.NX_BUILD_LIBS_FROM_SOURCE === 'true';
+  }
+  const libraryNode = projectGraph.nodes[library];
+  let sourceRoots = [libraryNode.data.sourceRoot];
+
+  if (!buildLibsFromSource && process.env.NX_BUILD_TARGET) {
+    const buildTarget = parseTargetString(
+      process.env.NX_BUILD_TARGET,
+      projectGraph
+    );
+    sourceRoots = getOutputsForTargetAndConfiguration(
+      buildTarget,
+      {},
+      libraryNode
+    );
+  }
+
   const tsConfigPathMappings = readTsPathMappings();
 
-  const sourceRoot = projectGraph.nodes[library].data.sourceRoot;
   for (const [key, value] of Object.entries(tsConfigPathMappings)) {
-    if (value.find((path) => path.startsWith(sourceRoot))) {
-      return key;
+    for (const src of sourceRoots) {
+      if (value.find((path) => path.startsWith(src))) {
+        return key;
+      }
     }
   }
 

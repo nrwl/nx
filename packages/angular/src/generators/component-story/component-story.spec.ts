@@ -14,10 +14,11 @@ describe('componentStory generator', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
-    await generateTestLibrary(tree, { name: libName });
+    await generateTestLibrary(tree, { name: libName, skipFormat: true });
     await componentGenerator(tree, {
       name: 'test-button',
       project: libName,
+      skipFormat: true,
     });
 
     tree.write(
@@ -53,6 +54,7 @@ describe('componentStory generator', () => {
       componentName: 'TestButtonComponent',
       componentPath: `src/lib/test-button`,
       projectPath: `${libName}`,
+      skipFormat: true,
     });
 
     expect(storybookUtils.getComponentProps).not.toHaveBeenCalled();
@@ -66,6 +68,7 @@ describe('componentStory generator', () => {
       componentName: 'TestButtonComponent',
       componentPath: `src/lib/test-button`,
       projectPath: `${libName}`,
+      skipFormat: true,
     });
 
     expect(tree.exists(storyFile)).toBe(true);

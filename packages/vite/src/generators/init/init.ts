@@ -22,26 +22,21 @@ export function updateNxJsonSettings(tree: Tree) {
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults['@nx/vite:test'] ??= {};
-  nxJson.targetDefaults['@nx/vite:test'].cache ??= true;
-  nxJson.targetDefaults['@nx/vite:test'].inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-  ];
-  nxJson.targetDefaults['@nx/vite:test'].options ??= {
-    passWithNoTests: true,
-    reporters: ['default'],
-  };
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/vite/plugin'
+      : p.plugin === '@nx/vite/plugin'
+  );
 
-  nxJson.targetDefaults['@nx/vite:build'] ??= {};
-
-  nxJson.targetDefaults['@nx/vite:build'].options ??= {
-    reportCompressedSize: true,
-    commonjsOptions: {
-      transformMixedEsModules: true,
-    },
-  };
+  if (!hasPlugin) {
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults['@nx/vite:test'] ??= {};
+    nxJson.targetDefaults['@nx/vite:test'].cache ??= true;
+    nxJson.targetDefaults['@nx/vite:test'].inputs ??= [
+      'default',
+      productionFileSet ? '^production' : '^default',
+    ];
+  }
 
   updateNxJson(tree, nxJson);
 }

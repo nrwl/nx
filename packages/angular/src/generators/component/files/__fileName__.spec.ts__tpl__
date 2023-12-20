@@ -7,9 +7,8 @@ describe('<%= symbolName %>', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      <%= standalone ? 'imports' : 'declarations' %>: [ <%= symbolName %> ]
-    })
-    .compileComponents();
+      <%= standalone ? 'imports' : 'declarations' %>: [<%= symbolName %>]
+    }).compileComponents();
 
     fixture = TestBed.createComponent(<%= symbolName %>);
     component = fixture.componentInstance;

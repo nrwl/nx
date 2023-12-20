@@ -1433,6 +1433,10 @@
           "version": "~17.0.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/pwa": {
+          "version": "~17.0.0",
+          "alwaysAddToPackageJson": false
+        },
         "@angular/core": {
           "version": "~17.0.0",
           "alwaysAddToPackageJson": true

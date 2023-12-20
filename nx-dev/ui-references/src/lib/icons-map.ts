@@ -22,6 +22,7 @@ export const iconsMap: Record<string, string> = {
   plugin: '/images/icons/nx.svg',
   react: '/images/icons/react.svg',
   'react-native': '/images/icons/react.svg',
+  remix: '/images/icons/remix.svg',
   rollup: '/images/icons/rollup.svg',
   rspack: '/images/icons/rspack.svg',
   storybook: '/images/icons/storybook.svg',
