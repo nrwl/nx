@@ -686,7 +686,7 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
       undefined,
       {
         lintFilePatterns: [],
-        eslintConfig: null,
+        eslintConfig: 'apps/proj/eslint.config.js',
         fix: true,
         cache: true,
         cacheLocation: 'cacheLocation1/proj',
