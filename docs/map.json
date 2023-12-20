@@ -302,6 +302,12 @@
               "file": "shared/concepts/task-pipeline-configuration"
             },
             {
+              "name": "Inferred Targets",
+              "tags": ["use-task-executors", "inferred-targets"],
+              "id": "inferred-targets",
+              "file": "shared/concepts/inferred-targets"
+            },
+            {
               "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
               "tags": ["intro", "repository-types"],
               "id": "integrated-vs-package-based",
@@ -698,6 +704,19 @@
                   "id": "wait-for-tasks",
                   "tags": [],
                   "file": "shared/recipes/node/wait-for-tasks"
+                }
+              ]
+            },
+            {
+              "name": "ESLint",
+              "id": "eslint",
+              "description": "Set of ESLint related recipes.",
+              "itemList": [
+                {
+                  "name": "ESLint Inferred Targets",
+                  "id": "eslint-inferred-targets",
+                  "tags": ["inferred-targets"],
+                  "file": "shared/recipes/eslint/eslint-inferred-targets"
                 }
               ]
             },

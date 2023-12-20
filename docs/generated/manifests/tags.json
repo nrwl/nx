@@ -422,6 +422,13 @@
     },
     {
       "description": "",
+      "file": "shared/concepts/inferred-targets",
+      "id": "inferred-targets",
+      "name": "Inferred Targets",
+      "path": "/concepts/inferred-targets"
+    },
+    {
+      "description": "",
       "file": "shared/guides/module-federation/faster-builds",
       "id": "faster-builds-with-module-federation",
       "name": "Faster Builds with Module Federation",
@@ -591,6 +598,22 @@
       "id": "integrated-vs-package-based",
       "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
       "path": "/concepts/integrated-vs-package-based"
+    }
+  ],
+  "inferred-targets": [
+    {
+      "description": "",
+      "file": "shared/concepts/inferred-targets",
+      "id": "inferred-targets",
+      "name": "Inferred Targets",
+      "path": "/concepts/inferred-targets"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/eslint/eslint-inferred-targets",
+      "id": "eslint-inferred-targets",
+      "name": "ESLint Inferred Targets",
+      "path": "/recipes/eslint/eslint-inferred-targets"
     }
   ],
   "repository-types": [
