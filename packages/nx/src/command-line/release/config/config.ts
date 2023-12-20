@@ -130,8 +130,9 @@ export async function createNxReleaseConfig(
         file: '{workspaceRoot}/CHANGELOG.md',
         renderer: 'nx/changelog-renderer',
         renderOptions: {
-          includeAuthors: true,
-          includeCommitReferences: true,
+          authors: true,
+          commitReferences: true,
+          versionTitleDate: true,
         },
       },
       // For projectChangelogs if the user has set any changelog config at all, then use one set of defaults, otherwise default to false for the whole feature
@@ -143,8 +144,9 @@ export async function createNxReleaseConfig(
               'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
             renderer: 'nx/changelog-renderer',
             renderOptions: {
-              includeAuthors: true,
-              includeCommitReferences: true,
+              authors: true,
+              commitReferences: true,
+              versionTitleDate: true,
             },
           }
         : false,
@@ -173,8 +175,9 @@ export async function createNxReleaseConfig(
       file: '{projectRoot}/CHANGELOG.md',
       renderer: 'nx/changelog-renderer',
       renderOptions: {
-        includeAuthors: true,
-        includeCommitReferences: true,
+        authors: true,
+        commitReferences: true,
+        versionTitleDate: true,
       },
     },
     releaseTagPattern:

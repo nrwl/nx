@@ -48,12 +48,17 @@ export interface DefaultChangelogRenderOptions extends ChangelogRenderOptions {
    * Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You"
    * section. Defaults to true.
    */
-  includeAuthors?: boolean;
+  authors?: boolean;
   /**
    * Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
    * Defaults to true.
    */
-  includeCommitReferences?: boolean;
+  commitReferences?: boolean;
+  /**
+   * Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable
+   * with the default of (YYYY-MM-DD). Defaults to true.
+   */
+  versionTitleDate?: boolean;
 }
 
 /**
@@ -110,7 +115,10 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       if (entryWhenNoChanges) {
         markdownLines.push(
           '',
-          `${createVersionTitle(releaseVersion)}\n\n${entryWhenNoChanges}`,
+          `${createVersionTitle(
+            releaseVersion,
+            changelogRenderOptions
+          )}\n\n${entryWhenNoChanges}`,
           ''
         );
       }
@@ -119,7 +127,11 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
     const typeGroups = groupBy(commits, 'type');
 
-    markdownLines.push('', createVersionTitle(releaseVersion), '');
+    markdownLines.push(
+      '',
+      createVersionTitle(releaseVersion, changelogRenderOptions),
+      ''
+    );
 
     for (const type of Object.keys(commitTypes)) {
       const group = typeGroups[type];
@@ -176,14 +188,21 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       if (entryWhenNoChanges) {
         markdownLines.push(
           '',
-          `${createVersionTitle(releaseVersion)}\n\n${entryWhenNoChanges}`,
+          `${createVersionTitle(
+            releaseVersion,
+            changelogRenderOptions
+          )}\n\n${entryWhenNoChanges}`,
           ''
         );
       }
       return markdownLines.join('\n').trim();
     }
 
-    markdownLines.push('', createVersionTitle(releaseVersion), '');
+    markdownLines.push(
+      '',
+      createVersionTitle(releaseVersion, changelogRenderOptions),
+      ''
+    );
 
     const typeGroups = groupBy(
       // Sort the relevant commits to have the unscoped commits first, before grouping by type
@@ -222,7 +241,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     markdownLines.push('', '#### ⚠️  Breaking Changes', '', ...breakingChanges);
   }
 
-  if (changelogRenderOptions.includeAuthors) {
+  if (changelogRenderOptions.authors) {
     const _authors = new Map<string, { email: Set<string>; github?: string }>();
     for (const commit of commits) {
       if (!commit.author) {
@@ -325,7 +344,7 @@ function formatCommit(
     (commit.isBreaking ? '⚠️  ' : '') +
     (commit.scope ? `**${commit.scope.trim()}:** ` : '') +
     commit.description;
-  if (repoSlug && changelogRenderOptions.includeCommitReferences) {
+  if (repoSlug && changelogRenderOptions.commitReferences) {
     commitLine += formatReferences(commit.references, repoSlug);
   }
   return commitLine;
@@ -357,11 +376,20 @@ function extractBreakingChangeExplanation(message: string): string | null {
   return message.substring(startOfBreakingChange, endOfBreakingChange).trim();
 }
 
-function createVersionTitle(version: string) {
+function createVersionTitle(
+  version: string,
+  changelogRenderOptions: DefaultChangelogRenderOptions
+) {
   // Normalize by removing any leading `v` during comparison
   const isMajorVersion = `${major(version)}.0.0` === version.replace(/^v/, '');
-  if (isMajorVersion) {
-    return `# ${version}`;
+  let maybeDateStr = '';
+  if (changelogRenderOptions.versionTitleDate) {
+    // YYYY-MM-DD
+    const dateStr = new Date().toISOString().slice(0, 10);
+    maybeDateStr = ` (${dateStr})`;
   }
-  return `## ${version}`;
+  if (isMajorVersion) {
+    return `# ${version}${maybeDateStr}`;
+  }
+  return `## ${version}${maybeDateStr}`;
 }

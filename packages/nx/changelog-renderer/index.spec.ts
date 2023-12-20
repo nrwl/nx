@@ -178,7 +178,7 @@ describe('defaultChangelogRenderer()', () => {
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       });
       expect(markdown).toMatchInlineSnapshot(`
@@ -202,7 +202,7 @@ describe('defaultChangelogRenderer()', () => {
         `);
     });
 
-    it('should not generate a Thank You section when changelogRenderOptions.includeAuthors is false', async () => {
+    it('should not generate a Thank You section when changelogRenderOptions.authors is false', async () => {
       const markdown = await defaultChangelogRenderer({
         projectGraph,
         commits,
@@ -211,7 +211,7 @@ describe('defaultChangelogRenderer()', () => {
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
-          includeAuthors: false,
+          authors: false,
         },
       });
       expect(markdown).toMatchInlineSnapshot(`
@@ -240,7 +240,7 @@ describe('defaultChangelogRenderer()', () => {
         releaseVersion: 'v1.1.0',
         entryWhenNoChanges: false as const,
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       };
 
@@ -274,9 +274,9 @@ describe('defaultChangelogRenderer()', () => {
         await defaultChangelogRenderer({
           ...otherOpts,
           project: 'pkg-a',
-          // test that the includeAuthors option is being respected for project changelogs and therefore no Thank You section exists
+          // test that the authors option is being respected for project changelogs and therefore no Thank You section exists
           changelogRenderOptions: {
-            includeAuthors: false,
+            authors: false,
           },
         })
       ).toMatchInlineSnapshot(`
@@ -331,7 +331,7 @@ describe('defaultChangelogRenderer()', () => {
         releaseVersion: 'v1.1.0',
         project: null, // workspace changelog
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       };
 
@@ -361,7 +361,7 @@ describe('defaultChangelogRenderer()', () => {
         releaseVersion: 'v1.1.0',
         project: 'pkg-a',
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       };
 
@@ -433,7 +433,7 @@ describe('defaultChangelogRenderer()', () => {
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       });
 
@@ -533,7 +533,7 @@ describe('defaultChangelogRenderer()', () => {
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       });
 
@@ -578,7 +578,7 @@ describe('defaultChangelogRenderer()', () => {
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       });
 
@@ -639,7 +639,7 @@ describe('defaultChangelogRenderer()', () => {
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       });
 

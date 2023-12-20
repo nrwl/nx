@@ -31,6 +31,8 @@ expect.addSnapshotSerializer({
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
         .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        // Normalize the version title date
+        .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
@@ -89,6 +91,9 @@ describe('nx release', () => {
       `git remote add origin https://github.com/nrwl/fake-repo.git`
     );
 
+    const pkg1ContentsBeforeVersioning = readFile(`${pkg1}/package.json`);
+    const pkg2ContentsBeforeVersioning = readFile(`${pkg2}/package.json`);
+
     const versionOutput = runCLI(`release version 999.9.9`);
 
     /**
@@ -137,7 +142,11 @@ Please report the full nx release version command output below to the Nx team:
 ${JSON.stringify(
   {
     versionOutput,
-    pkg2Contents: readFile(`${pkg2}/package.json`),
+    pkg1Name: pkg1,
+    pkg2Name: pkg2,
+    pkg1ContentsBeforeVersioning,
+    pkg2ContentsBeforeVersioning,
+    pkg2ContentsAfterVersioning: readFile(`${pkg2}/package.json`),
   },
   null,
   2
@@ -155,7 +164,7 @@ ${JSON.stringify(
       >  NX   Generating an entry in CHANGELOG.md for v999.9.9
 
 
-      + ## 999.9.9
+      + ## 999.9.9 (YYYY-MM-DD)
       +
       +
       + ### 🚀 Features
@@ -170,7 +179,7 @@ ${JSON.stringify(
     `);
 
     expect(readFile('CHANGELOG.md')).toMatchInlineSnapshot(`
-      ## 999.9.9
+      ## 999.9.9 (YYYY-MM-DD)
 
 
       ### 🚀 Features
@@ -666,11 +675,12 @@ ${JSON.stringify(
         },
         changelog: {
           projectChangelogs: {
+            createRelease: false, // will be overridden by the group
             renderOptions: {
-              createRelease: false, // will be overridden by the group
               // Customize the changelog renderer to not print the Thank You or commit references section for project changelogs (not overridden by the group)
-              includeAuthors: false,
-              includeCommitReferences: false, // commit reference will still be printed in workspace changelog
+              authors: false,
+              commitReferences: false, // commit reference will still be printed in workspace changelog
+              versionTitleDate: false, // version title date will still be printed in the workspace changelog
             },
           },
         },
@@ -688,7 +698,7 @@ ${JSON.stringify(
 
 
 
-      + ## 1000.0.0-next.0
+      + ## 1000.0.0-next.0 (YYYY-MM-DD)
       +
       +
       + ### 🚀 Features
@@ -699,7 +709,7 @@ ${JSON.stringify(
       +
       + - Test
       +
-      ## 999.9.9
+      ## 999.9.9 (YYYY-MM-DD)
 
 
 

@@ -65,8 +65,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -134,8 +135,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -206,8 +208,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -294,8 +297,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -372,8 +376,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -446,8 +451,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -533,8 +539,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -622,8 +629,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -643,8 +651,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
-                    "includeAuthors": true,
-                    "includeCommitReferences": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -708,8 +717,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -787,8 +797,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -868,8 +879,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -962,8 +974,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1034,8 +1047,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1118,8 +1132,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1139,8 +1154,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
-                    "includeAuthors": true,
-                    "includeCommitReferences": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1256,8 +1272,8 @@ describe('createNxReleaseConfig()', () => {
             // override single field in user config
             file: './{projectRoot}/custom-path.md',
             renderOptions: {
-              includeAuthors: false, // override deeply nested field in user config
-              includeCommitReferences: false, // override deeply nested field in user config
+              authors: false, // override deeply nested field in user config
+              commitReferences: false, // override deeply nested field in user config
             },
           },
         },
@@ -1280,8 +1296,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "./{projectRoot}/custom-path.md",
                 "renderOptions": {
-                  "includeAuthors": false,
-                  "includeCommitReferences": false,
+                  "authors": false,
+                  "commitReferences": false,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1290,8 +1307,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "Custom no changes!",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1311,8 +1329,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
-                    "includeAuthors": false,
-                    "includeCommitReferences": false,
+                    "authors": false,
+                    "commitReferences": false,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1373,8 +1392,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1383,8 +1403,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1404,8 +1425,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
-                    "includeAuthors": true,
-                    "includeCommitReferences": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1450,7 +1472,7 @@ describe('createNxReleaseConfig()', () => {
             // overriding field at the root should be inherited by all groups that do not set their own override
             file: './{projectRoot}/custom-path.md',
             renderOptions: {
-              includeAuthors: true, // should be overridden by group level config
+              authors: true, // should be overridden by group level config
             },
           },
         },
@@ -1460,7 +1482,7 @@ describe('createNxReleaseConfig()', () => {
             changelog: {
               createRelease: 'github', // set field in group config
               renderOptions: {
-                includeAuthors: false, // override deeply nested field in group config
+                authors: false, // override deeply nested field in group config
               },
             },
           },
@@ -1494,8 +1516,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "./{projectRoot}/custom-path.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1504,8 +1527,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1525,8 +1549,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
-                    "includeAuthors": false,
-                    "includeCommitReferences": true,
+                    "authors": false,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1558,8 +1583,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/a-different-custom-path-at-the-group.md",
                   "renderOptions": {
-                    "includeAuthors": true,
-                    "includeCommitReferences": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1633,8 +1659,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1643,8 +1670,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1664,8 +1692,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
-                    "includeAuthors": true,
-                    "includeCommitReferences": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1685,8 +1714,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
-                    "includeAuthors": true,
-                    "includeCommitReferences": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -2015,8 +2045,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
-                  "includeCommitReferences": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
