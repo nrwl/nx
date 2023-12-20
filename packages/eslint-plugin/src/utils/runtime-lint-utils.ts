@@ -465,7 +465,7 @@ export function groupImports(
 /**
  * Checks if source file belongs to a secondary entry point different than the import one
  */
-export function belongsToDifferentNgEntryPointpnpm(
+export function belongsToDifferentNgEntryPoint(
   importExpr: string,
   filePath: string,
   projectRoot: string
