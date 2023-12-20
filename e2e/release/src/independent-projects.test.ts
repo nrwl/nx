@@ -649,4 +649,61 @@ describe('nx release - independent projects', () => {
       `);
     });
   });
+
+  describe('release command', () => {
+    beforeEach(() => {
+      updateJson('nx.json', () => {
+        return {
+          release: {
+            projectsRelationship: 'independent',
+            releaseTagPattern: '{projectName}@v{version}',
+            version: {
+              generatorOptions: {
+                currentVersionResolver: 'git-tag',
+              },
+            },
+            changelog: {
+              projectChangelogs: {},
+            },
+          },
+        };
+      });
+    });
+
+    it('should allow versioning projects independently', async () => {
+      runCommand(`git tag ${pkg1}@v1.2.0`);
+      runCommand(`git tag ${pkg2}@v1.4.0`);
+      runCommand(`git tag ${pkg3}@v1.6.0`);
+
+      const releaseOutput = runCLI(`release patch -y`);
+
+      expect(
+        releaseOutput.match(new RegExp(`New version 1\.2\.1 written`, 'g'))
+          .length
+      ).toEqual(1);
+
+      expect(
+        releaseOutput.match(new RegExp(`New version 1\.4\.1 written`, 'g'))
+          .length
+      ).toEqual(1);
+
+      expect(
+        releaseOutput.match(new RegExp(`New version 1\.6\.1 written`, 'g'))
+          .length
+      ).toEqual(1);
+
+      expect(
+        releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length
+      ).toEqual(3);
+
+      expect(
+        releaseOutput.match(
+          new RegExp(
+            `Successfully ran target nx-release-publish for 3 projects`,
+            'g'
+          )
+        ).length
+      ).toEqual(1);
+    });
+  });
 });
