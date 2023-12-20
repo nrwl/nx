@@ -77,7 +77,7 @@ describe('nx release - independent projects', () => {
     });
 
     // Normalize git committer information so it is deterministic in snapshots
-    runCommand(`git config user.email "test-committer@nx.dev"`);
+    runCommand(`git config user.email "test@test.com"`);
     runCommand(`git config user.name "Test"`);
     // Create a baseline version tag for each project
     runCommand(`git tag ${pkg1}@0.0.0`);

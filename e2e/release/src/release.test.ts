@@ -31,6 +31,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
         .replaceAll(/[a-fA-F0-9]{7}/g, '{COMMIT_SHA}')
+        .replaceAll(/Test @[\w\d]+/g, 'Test @{COMMIT_AUTHOR}')
         // Normalize the version title date.
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
@@ -75,7 +76,7 @@ describe('nx release', () => {
 
   it('should version and publish multiple related npm packages with zero config', async () => {
     // Normalize git committer information so it is deterministic in snapshots
-    await runCommandAsync(`git config user.email "test-committer@nx.dev"`);
+    await runCommandAsync(`git config user.email "test@test.com"`);
     await runCommandAsync(`git config user.name "Test"`);
     // Create a baseline version tag
     await runCommandAsync(`git tag v0.0.0`);
@@ -173,7 +174,7 @@ ${JSON.stringify(
       +
       + ### ❤️  Thank You
       +
-      + - Test
+      + - Test @{COMMIT_AUTHOR}
 
 
     `);
@@ -188,7 +189,7 @@ ${JSON.stringify(
 
       ### ❤️  Thank You
 
-      - Test
+      - Test @{COMMIT_AUTHOR}
     `);
 
     // This is the verdaccio instance that the e2e tests themselves are working from
@@ -707,7 +708,7 @@ ${JSON.stringify(
       +
       + ### ❤️  Thank You
       +
-      + - Test
+      + - Test @{COMMIT_AUTHOR}
       +
       ## 999.9.9 (YYYY-MM-DD)
 
