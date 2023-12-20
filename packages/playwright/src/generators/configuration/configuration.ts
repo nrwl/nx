@@ -1,4 +1,5 @@
 import {
+  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -15,6 +16,7 @@ import * as path from 'path';
 import { ConfigurationGeneratorSchema } from './schema';
 import initGenerator from '../init/init';
 import { addLinterToPlaywrightProject } from '../../utils/add-linter';
+import { typescriptVersion } from '@nx/js/src/utils/versions';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -36,8 +38,17 @@ export async function configurationGenerator(
     ...options,
   });
 
-  addE2eTarget(tree, options);
-  setupE2ETargetDefaults(tree);
+  const hasPlugin = readNxJson(tree).plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/playwright/plugin'
+      : p.plugin === '@nx/playwright/plugin'
+  );
+
+  if (!hasPlugin) {
+    addE2eTarget(tree, options);
+    setupE2ETargetDefaults(tree);
+  }
+
   tasks.push(
     await addLinterToPlaywrightProject(tree, {
       project: options.project,
@@ -51,7 +62,11 @@ export async function configurationGenerator(
   );
 
   if (options.js) {
-    toJS(tree);
+    const { ModuleKind } = ensurePackage(
+      'typescript',
+      typescriptVersion
+    ) as typeof import('typescript');
+    toJS(tree, { extension: '.cjs', module: ModuleKind.CommonJS });
   }
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -93,7 +108,7 @@ Rename or remove the existing e2e target.`);
     outputs: [`{workspaceRoot}/dist/.playwright/${projectConfig.root}`],
     options: {
       config: `${projectConfig.root}/playwright.config.${
-        options.js ? 'js' : 'ts'
+        options.js ? 'cjs' : 'ts'
       }`,
     },
   };
