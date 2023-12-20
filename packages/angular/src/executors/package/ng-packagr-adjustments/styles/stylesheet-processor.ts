@@ -26,7 +26,7 @@ import {
   getTailwindSetup,
   tailwindDirectives,
   TailwindSetup,
-} from '../../../utilities/tailwindcss';
+} from '../../../utilities/ng-packagr/tailwindcss';
 
 const postcss = require('postcss');
 
@@ -309,20 +309,4 @@ function transformSupportedBrowsersToTargets(
   }
 
   return transformed.length ? transformed : undefined;
-}
-
-function customSassImporter(
-  url: string,
-  prev: string
-): { file: string; prev: string } | undefined {
-  // NB: Sass importer should always be sync as otherwise it will cause
-  // sass to go in the async path which is slower.
-  if (url[0] !== '~') {
-    return undefined;
-  }
-
-  return {
-    file: url.slice(1),
-    prev,
-  };
 }
