@@ -480,14 +480,17 @@ export function belongsToDifferentNgEntryPoint(
     return false;
   }
 
-  const importEntryPoint = getEntryPoint(resolvedImportFile, projectRoot);
-  const srcEntryPoint = getEntryPoint(filePath, projectRoot);
+  const importEntryPoint = getAngularEntryPoint(
+    resolvedImportFile,
+    projectRoot
+  );
+  const srcEntryPoint = getAngularEntryPoint(filePath, projectRoot);
 
   // check if the entry point of import expression is different than the source file's entry point
   return importEntryPoint !== srcEntryPoint;
 }
 
-function getEntryPoint(file: string, projectRoot: string): string {
+function getAngularEntryPoint(file: string, projectRoot: string): string {
   let parent = joinPathFragments(file, '../');
   while (parent !== `${projectRoot}/`) {
     // we need to find closest existing ng-package.json
