@@ -46,6 +46,8 @@ export default async function run(
     joinPathFragments(workspaceRoot, 'eslint.config.js')
   );
 
+  // while standard eslint uses by default closest config to the file, if otherwise not specified,
+  // the flat config would always use the root config, so we need to explicitly set it to the local one
   if (hasFlatConfig && !normalizedOptions.eslintConfig) {
     const eslintConfigPath = joinPathFragments(projectRoot, 'eslint.config.js');
     if (existsSync(eslintConfigPath)) {
