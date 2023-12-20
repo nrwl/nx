@@ -19,7 +19,7 @@ On the UI, we replaced the runs overview with the new CI Pipeline Executions (CI
 ![cipe_screen](/nx-cloud/reference/images/cipe_screen.webp)
 
 This screen organises your runs more logically, according to each invocation of your CI pipeline.
-It provides more data around the committer name and commit message and a full analysis of your CIPE once it finished.
+It provides more data around the committer name and commit message and a full analysis of your CIPE once it is completed.
 And if you need to run your tasks on multiple environments, you can now switch between them on this page and view the results separately.
 You can play around with an example on the [Nx Repo](https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview)
 
