@@ -6,7 +6,6 @@ import {
   uniq,
 } from '@nx/e2e/utils';
 
-// TODO: figure out why this test hangs in CI
 describe('Webpack Plugin (PCv3)', () => {
   let originalPcv3: string | undefined;
   beforeAll(() => {
@@ -28,6 +27,7 @@ describe('Webpack Plugin (PCv3)', () => {
 
     expect(() => runCLI(`build ${appName}`)).not.toThrow();
 
+    // TODO: figure out why this test hangs in CI (maybe down to sudo prompt?)
     // if (runE2ETests()) {
     //   runCLI(`e2e ${appName}-e2e --watch=false --verbose`);
     // }
