@@ -142,7 +142,7 @@ describe('nx release', () => {
         )
       );
 
-      // From JamesHenry: explicit warning to assist troubleshooting NXC-143
+      // From JamesHenry: explicit warning to assist troubleshooting NXC-143.
       console.warn(
         `
 WARNING: Expected to find exactly one dependency relationship log line.
