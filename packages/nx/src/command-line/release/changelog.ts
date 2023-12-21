@@ -490,10 +490,7 @@ async function generateChangelogForWorkspace(
     title: logTitle,
   });
 
-  const githubRepoSlug =
-    config.createRelease === 'github'
-      ? getGitHubRepoSlug(gitRemote)
-      : undefined;
+  const githubRepoSlug = getGitHubRepoSlug(gitRemote);
 
   let contents = await changelogRenderer({
     projectGraph,
@@ -892,7 +889,7 @@ async function generateChangelogForProjects(
       if (!dryRun) {
         postGitTasks.push(async (latestCommit) => {
           // Before we can create/update the release we need to ensure the commit exists on the remote
-          await gitPush();
+          await gitPush(gitRemote);
 
           await createOrUpdateGithubRelease(
             githubRequestConfig,
