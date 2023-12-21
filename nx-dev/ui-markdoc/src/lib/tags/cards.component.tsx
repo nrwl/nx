@@ -65,10 +65,6 @@ export function Cards({
   children: ReactNode;
   moreLink?: string;
 }): JSX.Element {
-  const calcCols = (cols: number, size: '' | 'lg' | 'md' | 'sm') => {
-    if (size === '') return `grid-cols-${cols}`;
-    return `${size}:grid-cols-${cols}`;
-  };
   // <div className="mt-8 grid grid-cols-2 lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-4">
   return (
     <div
