@@ -12,6 +12,11 @@ import { menusApi } from '../../../lib/menus.api';
 import { useNavToggle } from '../../../lib/navigation-toggle.effect';
 import { nxPackagesApi } from '../../../lib/packages.api';
 import { tagsApi } from '../../../lib/tags.api';
+import { nxDocumentationApi } from '../../../lib/nx.api';
+
+const convertToDictionary = (arr: any[]) => {
+  return Object.fromEntries(arr.map((a) => [a.id, a]));
+};
 
 export default function Package({
   overview,
@@ -99,13 +104,29 @@ function getData(packageName: string): {
   pkg: ProcessedPackageMetadata;
 } {
   const pkg = nxPackagesApi.getPackage([packageName]);
+  const packageDocuments = {
+    ...nxPackagesApi.getPackageDocuments(packageName),
+    ...convertToDictionary(
+      nxDocumentationApi
+        .getParamsStaticDocumentPaths()
+        .map((x) => x.params.segments)
+        .filter(
+          (segments) =>
+            segments.length >= 3 &&
+            segments[0] === 'recipes' &&
+            segments[1] === packageName
+        )
+        .map((segments) => nxDocumentationApi.getDocumentMetadata(segments))
+    ),
+  };
   const documents = new DocumentsApi({
     id: [packageName, 'documents'].join('-'),
-    manifest: nxPackagesApi.getPackageDocuments(packageName),
+    manifest: packageDocuments,
     prefix: '',
     publicDocsRoot: 'public/documentation',
     tagsApi,
   });
+  pkg.documents = packageDocuments;
 
   let overview = '';
   try {

@@ -301,17 +301,13 @@ function createPackagesManifest(
       packageName: p.packageName,
       description: p.description,
       documents: convertToDictionary(
-        [
-          ...p.documents.map((d) =>
-            documentRecurseOperations(
-              d,
-              createDocumentMetadata({ id: p.name, path: 'nx-api/' })
-            )
-          ),
-          ...Object.keys(manifest.records)
-            .filter((path) => path.startsWith(`/recipes/${p.name}/`))
-            .map((path) => manifest.records[path]) as any[],
-        ],
+        p.documents.map((d) =>
+          documentRecurseOperations(
+            d,
+            createDocumentMetadata({ id: p.name, path: 'nx-api/' })
+          )
+        ),
+
         'path'
       ),
       root: p.root,

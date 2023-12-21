@@ -62,6 +62,15 @@ export class DocumentsApi {
       );
     return Object.keys(this.manifest);
   }
+  getDocumentMetadata(path: string[]): DocumentMetadata {
+    const metadata = this.manifest[this.getManifestKey(path.join('/'))] || null;
+    if (!metadata) {
+      throw new Error(
+        `Metadata not found in manifest with: "${path.join('/')}"`
+      );
+    }
+    return metadata;
+  }
 
   getDocument(path: string[]): ProcessedDocument {
     const document: DocumentMetadata | null =
