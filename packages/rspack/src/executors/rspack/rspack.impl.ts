@@ -1,9 +1,9 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
-import { Stats } from '@rspack/core';
+import { Compiler, MultiCompiler, MultiStats, Stats } from '@rspack/core';
 import { rmSync } from 'fs';
 import * as path from 'path';
-import { createCompiler } from '../../utils/create-compiler';
+import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { RspackExecutorSchema } from './schema';
 import { printDiagnostics, runTypeCheck } from '@nx/js';
@@ -35,9 +35,9 @@ export default async function* runExecutor(
     outfile?: string;
   }>(async ({ next, done }) => {
     if (options.watch) {
-      const watcher= compiler.watch(
+      const watcher = compiler.watch(
         {},
-        async (err, stats: Stats) => {
+        async (err, stats: Stats | MultiStats) => {
           if (err) {
             logger.error(err);
             next({ success: false });
@@ -49,9 +49,7 @@ export default async function* runExecutor(
             return;
           }
 
-          const statsOptions = compiler.options
-            ? compiler.options.stats
-            : undefined;
+					const statsOptions = getStatsOptions(compiler);
           const printedStats = stats.toString(statsOptions);
           // Avoid extra empty line when `stats: 'none'`
           if (printedStats) {
@@ -70,7 +68,7 @@ export default async function* runExecutor(
         });
       });
     } else {
-      compiler.run(async (err, stats: Stats) => {
+      compiler.run(async (err, stats: Stats | MultiStats) => {
         compiler.close(() => {
           if (err) {
             logger.error(err);
@@ -83,9 +81,7 @@ export default async function* runExecutor(
             return;
           }
 
-          const statsOptions = compiler.options
-            ? compiler.options.stats
-            : undefined;
+          const statsOptions = getStatsOptions(compiler);
           const printedStats = stats.toString(statsOptions);
           // Avoid extra empty line when `stats: 'none'`
           if (printedStats) {
@@ -136,4 +132,14 @@ async function executeTypeCheck(
   if (result.errors.length > 0) {
     throw new Error('Found type errors. See above.');
   }
+}
+
+function getStatsOptions(compiler: Compiler | MultiCompiler) {
+  return isMultiCompiler(compiler)
+  ? {
+      children: compiler.compilers.map(compiler => compiler.options ? compiler.options.stats : undefined)
+    }
+  : compiler.options
+  ? compiler.options.stats
+  : undefined;
 }

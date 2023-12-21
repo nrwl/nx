@@ -3,6 +3,7 @@ import {
   ExternalItem,
   ResolveAlias,
   RspackPluginInstance,
+  rspack,
 } from '@rspack/core';
 import { LicenseWebpackPlugin } from 'license-webpack-plugin';
 import * as path from 'path';
@@ -57,6 +58,13 @@ export function withNx(_opts = {}) {
         )
       );
     }
+
+    plugins.push(new rspack.CopyRspackPlugin({
+      patterns: getCopyPatterns(
+        normalizeAssets(options.assets, context.root, sourceRoot)
+      ),
+    }));
+    plugins.push(new rspack.ProgressPlugin())
 
     options.fileReplacements.forEach((item) => {
       alias[item.replace] = item.with;
@@ -121,7 +129,43 @@ export function withNx(_opts = {}) {
         port: 4200,
         hot: true,
       } as any,
-      module: {},
+      module: {
+        rules: [
+          {
+            test: /\.js$/,
+            loader: 'builtin:swc-loader',
+            exclude: /node_modules/,
+            options: {
+              jsc: {
+                parser: {
+                  syntax: 'ecmascript',
+                },
+                externalHelpers: true,
+              },
+            },
+            type: 'javascript/auto',
+          },
+          {
+            test: /\.ts$/,
+            loader: 'builtin:swc-loader',
+            exclude: /node_modules/,
+            options: {
+              jsc: {
+                parser: {
+                  syntax: 'typescript',
+                  decorators: true
+                },
+                transform: {
+                  legacyDecorator: true,
+                  decoratorMetadata: true
+                },
+                externalHelpers: true,
+              },
+            },
+            type: 'javascript/auto',
+          },
+        ]
+      },
       plugins: plugins,
       resolve: {
         // There are some issues resolving workspace libs in a monorepo.
@@ -133,14 +177,6 @@ export function withNx(_opts = {}) {
       infrastructureLogging: {
         debug: false,
       },
-      builtins: {
-        copy: {
-          patterns: getCopyPatterns(
-            normalizeAssets(options.assets, context.root, sourceRoot)
-          ),
-        },
-        progress: {},
-      },
       externals,
       externalsType,
       stats: {
@@ -148,13 +184,6 @@ export function withNx(_opts = {}) {
         preset: 'normal',
       },
     };
-
-    if (options.optimization) {
-      updated.optimization = {
-        ...config.optimization,
-        minimize: true,
-      };
-    }
 
     return updated;
   };

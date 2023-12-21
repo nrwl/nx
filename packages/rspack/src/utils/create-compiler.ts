@@ -1,12 +1,12 @@
 import { ExecutorContext } from '@nx/devkit';
-import { Compiler, createCompiler as _createCompiler } from '@rspack/core';
+import { Compiler, MultiCompiler, rspack } from '@rspack/core';
 import * as path from 'path';
 import { RspackExecutorSchema } from '../executors/rspack/schema';
 
 export async function createCompiler(
   options: RspackExecutorSchema,
   context: ExecutorContext
-): Promise<Compiler> {
+): Promise<Compiler | MultiCompiler> {
   let userDefinedConfig = await import(
     path.join(context.root, options.rspackConfig)
   ).then((x) => x.default || x);
@@ -17,5 +17,9 @@ export async function createCompiler(
 
   const config = await userDefinedConfig({}, { options, context });
 
-  return _createCompiler(config);
+  return rspack(config);
+}
+
+export function isMultiCompiler(compiler: Compiler | MultiCompiler): compiler is MultiCompiler {
+  return 'compilers' in compiler
 }

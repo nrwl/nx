@@ -6,7 +6,7 @@ import {
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { Configuration } from '@rspack/core';
 import { RspackDevServer } from '@rspack/dev-server';
-import { createCompiler } from '../../utils/create-compiler';
+import { createCompiler, isMultiCompiler } from '../../utils/create-compiler';
 import { isMode } from '../../utils/mode-utils';
 import { DevServerExecutorSchema } from './schema';
 type DevServer = Configuration['devServer'];
@@ -25,14 +25,10 @@ export default async function* runExecutor(
     context.projectGraph
   );
 
-  // If I don't typecast, it throws an error
-  // that port does not exist on type DevServer
-  // however, it does exist, since DevServer extends
-  // WebpackDevServer.Configuration which has port
   let devServerConfig: DevServer = {
     port: options.port ?? 4200,
     hot: true,
-  } as DevServer;
+  };
 
   const buildOptions = readTargetOptions<any>(buildTarget, context);
   const compiler = await createCompiler(
@@ -40,17 +36,16 @@ export default async function* runExecutor(
     context
   );
 
+  // Use the first one if it's MultiCompiler
+  // https://webpack.js.org/configuration/dev-server/#root:~:text=Be%20aware%20that%20when%20exporting%20multiple%20configurations%20only%20the%20devServer%20options%20for%20the%20first%20configuration%20will%20be%20taken%20into%20account%20and%20used%20for%20all%20the%20configurations%20in%20the%20array.
+  const firstCompiler = isMultiCompiler(compiler) ? compiler.compilers[0] : compiler;
   devServerConfig = {
     ...devServerConfig,
-    ...compiler.options.devServer,
+    ...firstCompiler.options.devServer,
   };
 
   yield* createAsyncIterable(({ next }) => {
     const server: any = new RspackDevServer(
-      // If I don't typecast, it throws an error
-      // that onListening does not exist on type DevServer
-      // however, it does exist, since DevServer extends
-      // WebpackDevServer.Configuration which has onListening
       {
         ...devServerConfig,
         onListening: (server: any) => {
@@ -59,7 +54,7 @@ export default async function* runExecutor(
             baseUrl: `http://localhost:${options.port ?? 4200}`,
           });
         },
-      } as DevServer,
+      },
 
       compiler
     );
