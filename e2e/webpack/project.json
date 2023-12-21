@@ -4,7 +4,7 @@
   "sourceRoot": "e2e/webpack",
   "projectType": "application",
   "targets": {
-    "TMP_DISABLED__e2e": {}
+    "e2e": {}
   },
   "implicitDependencies": ["webpack"]
 }
