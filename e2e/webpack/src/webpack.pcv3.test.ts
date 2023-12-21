@@ -7,7 +7,7 @@ import {
 } from '@nx/e2e/utils';
 
 // TODO: figure out why this test hangs in CI
-xdescribe('Webpack Plugin (PCv3)', () => {
+describe('Webpack Plugin (PCv3)', () => {
   let originalPcv3: string | undefined;
   beforeAll(() => {
     originalPcv3 = process.env.NX_PCV3;
@@ -28,8 +28,8 @@ xdescribe('Webpack Plugin (PCv3)', () => {
 
     expect(() => runCLI(`build ${appName}`)).not.toThrow();
 
-    if (runE2ETests()) {
-      runCLI(`e2e ${appName}-e2e --watch=false --verbose`);
-    }
+    // if (runE2ETests()) {
+    //   runCLI(`e2e ${appName}-e2e --watch=false --verbose`);
+    // }
   }, 500_000);
 });
