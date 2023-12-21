@@ -496,6 +496,11 @@ export function createOrEditViteConfig(
     ? `${projectRoot}/vitest.config.ts`
     : `${projectRoot}/vite.config.ts`;
 
+  const buildOutDir =
+    projectRoot === '.'
+      ? `./dist/${options.project}`
+      : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
+
   const buildOption = onlyVitest
     ? ''
     : options.includeLib
@@ -503,7 +508,7 @@ export function createOrEditViteConfig(
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
       build: {
-        outDir: '${offsetFromRoot(projectRoot)}dist/${projectRoot}',
+        outDir: '${buildOutDir}',
         reportCompressedSize: true,
         commonjsOptions: {
           transformMixedEsModules: true,
@@ -524,7 +529,7 @@ export function createOrEditViteConfig(
       },`
     : `
     build: {
-      outDir: '${offsetFromRoot(projectRoot)}dist/${projectRoot}',
+      outDir: '${buildOutDir}',
       reportCompressedSize: true,
       commonjsOptions: {
         transformMixedEsModules: true,
@@ -553,6 +558,11 @@ export function createOrEditViteConfig(
     );
   }
 
+  const reportsDirectory =
+    projectRoot === '.'
+      ? `./coverage/${options.project}`
+      : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
+
   const testOption = options.includeVitest
     ? `test: {
     globals: true,
@@ -568,7 +578,7 @@ export function createOrEditViteConfig(
     }
     reporters: ['default'],
     coverage: {
-      reportsDirectory: '${offsetFromRoot(projectRoot)}coverage/${projectRoot}',
+      reportsDirectory: '${reportsDirectory}',
       provider: ${
         options.coverageProvider ? `'${options.coverageProvider}'` : `'v8'`
       },
@@ -618,12 +628,13 @@ export function createOrEditViteConfig(
       viteConfigPath,
       options,
       buildOption,
+      buildOutDir,
       imports,
       plugins,
       testOption,
+      reportsDirectory,
       cacheDir,
       offsetFromRoot(projectRoot),
-      projectRoot,
       projectAlreadyHasViteTargets
     );
     return;
@@ -788,12 +799,13 @@ function handleViteConfigFileExists(
   viteConfigPath: string,
   options: ViteConfigFileOptions,
   buildOption: string,
+  buildOutDir: string,
   imports: string[],
   plugins: string[],
   testOption: string,
+  reportsDirectory: string,
   cacheDir: string,
   offsetFromRoot: string,
-  projectRoot: string,
   projectAlreadyHasViteTargets?: TargetFlags
 ) {
   if (
@@ -820,14 +832,14 @@ function handleViteConfigFileExists(
         rollupOptions: {
           external: options.rollupOptionsExternal ?? [],
         },
-        outDir: `${offsetFromRoot}dist/${projectRoot}`,
+        outDir: buildOutDir,
         reportCompressedSize: true,
         commonjsOptions: {
           transformMixedEsModules: true,
         },
       }
     : {
-        outDir: `${offsetFromRoot}dist/${projectRoot}`,
+        outDir: buildOutDir,
         reportCompressedSize: true,
         commonjsOptions: {
           transformMixedEsModules: true,
@@ -843,7 +855,7 @@ function handleViteConfigFileExists(
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
-      reportsDirectory: `${offsetFromRoot}coverage/${projectRoot}`,
+      reportsDirectory: reportsDirectory,
       provider: `${options.coverageProvider ?? 'v8'}`,
     },
   };
