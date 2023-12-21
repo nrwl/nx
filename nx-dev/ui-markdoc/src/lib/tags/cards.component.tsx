@@ -52,9 +52,9 @@ const lgColsClasses: Record<number, string> = {
 
 export function Cards({
   cols = 2,
-  smCols = 3,
-  mdCols = 4,
-  lgCols = 4,
+  smCols = cols,
+  mdCols = smCols,
+  lgCols = mdCols,
   children,
   moreLink,
 }: {
