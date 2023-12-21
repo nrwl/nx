@@ -1128,7 +1128,7 @@ export default defineConfig({
 
     reporters: ['default'],
     coverage: {
-      reportsDirectory: './coverage/.',
+      reportsDirectory: './coverage/test',
       provider: 'v8',
     },
   },
