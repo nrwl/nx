@@ -109,7 +109,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "{workspaceRoot}/coverage/{projectRoot}",
+            "{projectRoot}/coverage",
           ],
         },
       },

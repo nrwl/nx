@@ -2,10 +2,10 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
-  NxJsonConfiguration,
-  TargetConfiguration,
   detectPackageManager,
+  NxJsonConfiguration,
   readJsonFile,
+  TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
@@ -170,7 +170,12 @@ async function getOutputs(projectRoot, nextConfig) {
     // If nextConfig is an object, directly use its 'distDir' property.
     dir = nextConfig.distDir;
   }
-  return `{workspaceRoot}/${projectRoot}/${dir}`;
+
+  if (projectRoot === '.') {
+    return `{projectRoot}/${dir}`;
+  } else {
+    return `{workspaceRoot}/${projectRoot}/${dir}`;
+  }
 }
 
 function getNextConfig(
