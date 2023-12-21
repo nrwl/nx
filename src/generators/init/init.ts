@@ -9,8 +9,9 @@ import { initGenerator } from '@nx/js';
 import {
   rspackCoreVersion,
   rspackDevServerVersion,
-  rspackLessLoaderVersion,
   rspackPluginMinifyVersion,
+  lessLoaderVersion,
+  rspackPluginReactRefreshVersion,
 } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -30,6 +31,7 @@ export async function rspackInitGenerator(
   const devDependencies = {
     '@rspack/core': rspackCoreVersion,
     '@rspack/plugin-minify': rspackPluginMinifyVersion,
+    '@rspack/plugin-react-refresh': rspackPluginReactRefreshVersion,
   };
 
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -40,7 +42,7 @@ export async function rspackInitGenerator(
   }
 
   if (schema.style === 'less') {
-    devDependencies['@rspack/less-loader'] = rspackLessLoaderVersion;
+    devDependencies['less-loader'] = lessLoaderVersion;
   }
 
   if (schema.framework !== 'none' || schema.devServer) {

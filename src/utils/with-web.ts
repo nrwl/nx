@@ -1,4 +1,4 @@
-import { Configuration, RuleSetRule } from '@rspack/core';
+import { Configuration, RuleSetRule, rspack } from '@rspack/core';
 import * as path from 'path';
 import { SharedConfigContext } from './model';
 
@@ -98,21 +98,17 @@ export function withWeb(opts: WithWebOptions = {}) {
           },
         ].filter((a): a is RuleSetRule => !!a),
       },
-      builtins: {
-        ...config.builtins,
-        html: [
-          ...(config.builtins.html || []),
-          {
-            template: options.indexHtml
-              ? path.join(context.root, options.indexHtml)
-              : path.join(projectRoot, 'src/index.html'),
-          },
-        ],
-        define: {
-          ...config.builtins.define,
+      plugins: [
+        ...config.plugins,
+        new rspack.HtmlRspackPlugin({
+          template: options.indexHtml
+            ? path.join(context.root, options.indexHtml)
+            : path.join(projectRoot, 'src/index.html'),
+        }),
+        new rspack.DefinePlugin({
           'process.env.NODE_ENV': isProd ? "'production'" : "'development'",
-        },
-      },
+        })
+      ],
     };
   };
 }
