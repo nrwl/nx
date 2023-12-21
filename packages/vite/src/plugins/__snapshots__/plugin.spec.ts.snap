@@ -96,7 +96,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "{workspaceRoot}/dist/{projectRoot}",
+            "{projectRoot}/dist",
           ],
         },
         "preview": {
@@ -133,7 +133,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "{workspaceRoot}/coverage/{projectRoot}",
+            "{projectRoot}/coverage",
           ],
         },
       },
