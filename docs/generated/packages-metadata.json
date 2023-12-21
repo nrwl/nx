@@ -680,6 +680,15 @@
     ],
     "generators": [
       {
+        "description": "Set up the ESLint plugin.",
+        "file": "generated/packages/eslint/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/eslint/src/generators/init/schema.json",
+        "path": "eslint/generators/init",
+        "type": "generator"
+      },
+      {
         "description": "Create the Workspace Lint Rules Project.",
         "file": "generated/packages/eslint/generators/workspace-rules-project.json",
         "hidden": true,

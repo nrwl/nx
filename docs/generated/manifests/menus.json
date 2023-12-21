@@ -7262,6 +7262,14 @@
             "name": "generators",
             "children": [
               {
+                "id": "init",
+                "path": "/nx-api/eslint/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "workspace-rules-project",
                 "path": "/nx-api/eslint/generators/workspace-rules-project",
                 "name": "workspace-rules-project",
