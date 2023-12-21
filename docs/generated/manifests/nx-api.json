@@ -691,6 +691,15 @@
       }
     },
     "generators": {
+      "/nx-api/eslint/generators/init": {
+        "description": "Set up the ESLint plugin.",
+        "file": "generated/packages/eslint/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/eslint/src/generators/init/schema.json",
+        "path": "/nx-api/eslint/generators/init",
+        "type": "generator"
+      },
       "/nx-api/eslint/generators/workspace-rules-project": {
         "description": "Create the Workspace Lint Rules Project.",
         "file": "generated/packages/eslint/generators/workspace-rules-project.json",
