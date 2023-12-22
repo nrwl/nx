@@ -2,7 +2,7 @@
 
 As applications grow, builds can become unacceptably slow, which leads to slow CI/CD pipelines and long dev-server
 startup times. This slowness
-decrease team productivity due to long waits for local compilation, and clogged up CI/CD pipelines.
+decreases team productivity due to long waits for local compilation, and clogged up CI/CD pipelines.
 
 Module Federation provides a solution to the scaling problem by allowing a Single Page Application (SPA) to be sliced
 into multiple smaller
@@ -28,6 +28,14 @@ the complexity around Module Federation, it still comes with some downsides:
   feature.
 - Increased orchestration since remotes are independent of each other, shared state may require the host application to
   coordinate it between remotes. For example, sharing Redux state across remotes is more complicated versus a SPA.
+
+{% callout type="note" title="Nx Saves Machine Resources" %}
+As Nx knows the remote applications that your host application depends on, it will serve your remote applications automatically when you serve your host.  
+To prevent dev machines from running out of resources, and allowing for a smoother DX, a technique is employed to build your remote applications first, then
+they will all be served by a single file server (`http-server`).
+
+We have tested this in a workspace that contains 100 remote applications and found that it allows for scaling the DX very well, without causing resource issues.
+{% /callout %}
 
 ## Architectural overview
 
@@ -157,22 +165,22 @@ the `implicitDependencies` configuration.
 
 In the future, Nx may automatically handle this for you.
 
-### `apps/host/webpack.config.js`
+### `apps/host/webpack.config.ts`
 
 The webpack configuration uses an utility function that Nx provides: `withModuleFederation`.
 
 ```javascript
 // For Angular, you'll see `@nx/angular/module-federation`
-const withModuleFederation = require('@nx/react/module-federation');
-const moduleFederationConfig = require('./module-federation.config');
+import { withModuleFederation } from '@nx/react/module-federation';
+import moduleFederationConfig from './module-federation.config';
 
-module.exports = withModuleFederation({
+export default withModuleFederation({
   ...moduleFederationConfig,
 });
 ```
 
 We'll talk about [what `withModuleFederation` does](#what-does-withmodulefederation-do) in a bit, but for now the
-important part of the configuration is the use of `module-federation.config.js` which we will examine next.
+important part of the configuration is the use of `module-federation.config.ts` which we will examine next.
 
 {% callout type="note" title="Extending the Webpack Config" %}
 If you find yourself needing to add additional webpack plugins to your config, you can do so by following the pattern
@@ -180,13 +188,12 @@ below. This example shows how you could use it to add the `LicenseWebpackPlugin`
 any webpack plugins you need.
 
 ```js
-const { withModuleFederation } = require('@nx/angular/module-federation');
-const config = require('./module-federation.config');
-const LicenseWebpackPlugin =
-  require('license-webpack-plugin').LicenseWebpackPlugin;
-const path = require('path');
+import { withModuleFederation } from '@nx/angular/module-federation';
+import config from './module-federation.config';
+import { LicenseWebpackPlugin } from 'license-webpack-plugin';
+import { resolve } from 'path';
 
-module.exports = async (wco) => {
+export default async function (wco) {
   const wmf = await withModuleFederation(config);
   return wmf({
     ...wco,
@@ -200,25 +207,29 @@ module.exports = async (wco) => {
         perChunkOutput: false,
         outputFilename: '3rdpartylicenses.txt',
         skipChildCompilers: true,
-        modulesDirectories: [path.resolve(__dirname, '../../node_modules')],
+        modulesDirectories: [resolve(__dirname, '../../node_modules')],
       }),
     ],
   });
-};
+}
 ```
 
 {% /callout %}
 
-### `apps/host/module-federation.config.js`
+### `apps/host/module-federation.config.ts`
 
-This file is the main configuration for the `host`, and you'll see `module-federation.config.js` for the generated
+This file is the main configuration for the `host`, and you'll see `module-federation.config.ts` for the generated
 remotes as well.
 
 ```javascript
-module.exports = {
+import { ModuleFederationConfig } from '@nx/webpack';
+
+export const config: ModuleFederationConfig = {
   name: 'host',
   remotes: ['shop', 'cart', 'about'],
 };
+
+export default config;
 ```
 
 The required `name` property is the magic to link the host and remotes together. The `host` application references the
@@ -250,8 +261,10 @@ To exclude a library or change its configuration, you can provide
 the `shared: (libraryName, sharedConfig) => sharedConfig` function in your configuration file.
 
 ```javascript
-// module-federation.config.js
-module.exports = {
+// module-federation.config.ts
+import { ModuleFederationConfig } from '@nx/webpack';
+
+export const config: ModuleFederationConfig = {
   name: 'host',
   remotes: ['shop', 'cart', 'about'],
   shared: (name, config) => {
@@ -356,10 +369,10 @@ Next, open up the production webpack configuration file and update the remote UR
 under `http://localhost:3000`.
 
 ```javascript {% fileName="apps/host/webpack.config.prod.js" %}
-const withModuleFederation = require('@nx/react/module-federation');
-const moduleFederationConfig = require('./module-federation.config');
+import { withModuleFederation } from '@nx/react/module-federation';
+import moduleFederationConfig from './module-federation.config';
 
-module.exports = withModuleFederation({
+export default withModuleFederation({
   ...moduleFederationConfig,
   remotes: [
     ['shop', 'http://localhost:3000/shop'],

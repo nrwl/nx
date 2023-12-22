@@ -21,7 +21,7 @@ npx create-nx-workspace@latest
 
 ## Learn Nx
 
-{% cards cols="2" lgCols="6" mdCols="4" smCols="2" %}
+{% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
 
 {% link-card title="Nx in 10 minutes!" type="video" url="https://youtu.be/-_4WMl-Fn0w" icon="nx" /%}
 
@@ -33,7 +33,7 @@ npx create-nx-workspace@latest
 
 {% /cards %}
 
-{% cards cols="2" lgCols="6" mdCols="5" smCols="2" %}
+{% cards cols="2" lgCols="5" mdCols="5" smCols="2" %}
 
 {% link-card title="Package Based Monorepos" type="tutorial" url="/getting-started/tutorials/package-based-repo-tutorial" icon="jsMono" /%}
 

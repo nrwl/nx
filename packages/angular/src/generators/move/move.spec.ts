@@ -37,7 +37,7 @@ describe('@nx/angular:move', () => {
       linter: Linter.EsLint,
       publishable: false,
       simpleName: true,
-      skipFormat: false,
+      skipFormat: true,
       unitTestRunner: UnitTestRunner.Jest,
       standalone: false,
     });
@@ -56,13 +56,18 @@ describe('@nx/angular:move', () => {
       destination: 'mynewlib',
       updateImportPath: true,
       projectNameAndRootFormat: 'as-provided',
+      skipFormat: true,
     });
 
     expect(tree.exists('mynewlib/src/lib/mynewlib.module.ts')).toEqual(true);
   });
 
   it('should update ng-package.json dest property', async () => {
-    await generateTestLibrary(tree, { name: 'mylib2', buildable: true });
+    await generateTestLibrary(tree, {
+      name: 'mylib2',
+      buildable: true,
+      skipFormat: true,
+    });
     addProjectToGraph('mylib2');
 
     await angularMoveGenerator(tree, {
@@ -70,6 +75,7 @@ describe('@nx/angular:move', () => {
       destination: 'mynewlib2',
       updateImportPath: true,
       projectNameAndRootFormat: 'as-provided',
+      skipFormat: true,
     });
 
     const ngPackageJson = readJson(tree, 'mynewlib2/ng-package.json');
@@ -77,10 +83,15 @@ describe('@nx/angular:move', () => {
   });
 
   it('should update secondary entry points readme file', async () => {
-    await generateTestLibrary(tree, { name: 'mylib2', buildable: true });
+    await generateTestLibrary(tree, {
+      name: 'mylib2',
+      buildable: true,
+      skipFormat: true,
+    });
     await librarySecondaryEntryPointGenerator(tree, {
       library: 'mylib2',
       name: 'testing',
+      skipFormat: true,
     });
     addProjectToGraph('mylib2');
 
@@ -90,6 +101,7 @@ describe('@nx/angular:move', () => {
       destination: 'mynewlib2',
       updateImportPath: true,
       projectNameAndRootFormat: 'as-provided',
+      skipFormat: true,
     });
 
     const readme = tree.read('mynewlib2/testing/README.md', 'utf-8');
@@ -109,6 +121,7 @@ describe('@nx/angular:move', () => {
       destination: 'my/lib',
       updateImportPath: true,
       projectNameAndRootFormat: 'as-provided',
+      skipFormat: true,
     });
 
     expect(tree.exists('my/lib/src/lib/my-lib.module.ts')).toBe(true);
@@ -124,7 +137,7 @@ describe('@nx/angular:move', () => {
         linter: Linter.EsLint,
         publishable: false,
         simpleName: true,
-        skipFormat: false,
+        skipFormat: true,
         unitTestRunner: UnitTestRunner.Jest,
       });
       tree.write(
@@ -173,6 +186,7 @@ describe('@nx/angular:move', () => {
         destination: 'shared/my-lib',
         updateImportPath: true,
         projectNameAndRootFormat: 'as-provided',
+        skipFormat: true,
       });
 
       expect(tree.exists('shared/my-lib/src/lib/shared-my-lib.module.ts')).toBe(
@@ -211,6 +225,7 @@ describe('@nx/angular:move', () => {
         destination: 'shared/my-lib',
         updateImportPath: true,
         projectNameAndRootFormat: 'as-provided',
+        skipFormat: true,
       });
 
       const importerFile = tree.read(
@@ -234,6 +249,7 @@ describe('@nx/angular:move', () => {
         destination: 'shared/my-lib',
         updateImportPath: true,
         projectNameAndRootFormat: 'as-provided',
+        skipFormat: true,
       });
 
       const indexFile = tree.read('shared/my-lib/src/index.ts', 'utf-8');
@@ -251,7 +267,7 @@ describe('@nx/angular:move', () => {
         linter: Linter.EsLint,
         publishable: false,
         simpleName: true,
-        skipFormat: false,
+        skipFormat: true,
         unitTestRunner: UnitTestRunner.Jest,
       });
 
@@ -272,6 +288,7 @@ describe('@nx/angular:move', () => {
         destination: 'my-destination',
         updateImportPath: true,
         projectNameAndRootFormat: 'as-provided',
+        skipFormat: true,
       });
 
       expect(
@@ -294,6 +311,7 @@ describe('@nx/angular:move', () => {
         destination: 'my-destination',
         updateImportPath: true,
         projectNameAndRootFormat: 'as-provided',
+        skipFormat: true,
       });
 
       const importerFile = tree.read(
@@ -317,6 +335,7 @@ describe('@nx/angular:move', () => {
         destination: 'my-destination',
         updateImportPath: true,
         projectNameAndRootFormat: 'as-provided',
+        skipFormat: true,
       });
 
       const indexFile = tree.read('my-destination/src/index.ts', 'utf-8');
@@ -334,7 +353,7 @@ describe('@nx/angular:move', () => {
         linter: Linter.EsLint,
         publishable: false,
         simpleName: true,
-        skipFormat: false,
+        skipFormat: true,
         unitTestRunner: UnitTestRunner.Jest,
         standalone: false,
       });
@@ -346,6 +365,7 @@ describe('@nx/angular:move', () => {
         destination: 'my-destination',
         updateImportPath: true,
         projectNameAndRootFormat: 'as-provided',
+        skipFormat: true,
       });
 
       const moduleFile = tree.read(
@@ -361,6 +381,7 @@ describe('@nx/angular:move', () => {
       name: 'mylib2',
       buildable: true,
       standalone: false,
+      skipFormat: true,
     });
     addProjectToGraph('mylib2');
 
@@ -369,6 +390,7 @@ describe('@nx/angular:move', () => {
       destination: 'mynewlib',
       updateImportPath: true,
       projectNameAndRootFormat: 'derived',
+      skipFormat: true,
     });
 
     expect(tree.exists('libs/mynewlib/src/lib/mynewlib.module.ts')).toEqual(

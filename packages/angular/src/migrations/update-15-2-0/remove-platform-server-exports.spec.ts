@@ -1,4 +1,5 @@
 import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import removePlatformServerExports from './remove-platform-server-exports';
@@ -9,6 +10,9 @@ describe('remove-platform-server-exports', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   describe(`Migration to remove '@angular/platform-server' exports`, () => {

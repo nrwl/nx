@@ -1179,6 +1179,8 @@ describe('lib', () => {
         executor: '@nx/vite:test',
       });
       expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
+      expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',
@@ -1210,6 +1212,10 @@ describe('lib', () => {
 
         const project = readProjectConfiguration(tree, 'my-lib');
         expect(project.targets.test?.executor).toEqual(executor);
+        expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
+        expect(
+          tree.read('my-lib/tsconfig.lib.json', 'utf-8')
+        ).toMatchSnapshot();
       }
     );
   });

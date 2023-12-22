@@ -351,6 +351,67 @@ describe('move', () => {
     ]);
   });
 
+  it('should support scoped new project name for libraries', async () => {
+    await libraryGenerator(tree, {
+      name: 'my-lib',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    await moveGenerator(tree, {
+      projectName: 'my-lib',
+      newProjectName: '@proj/shared-my-lib',
+      updateImportPath: true,
+      destination: 'shared/my-lib',
+      projectNameAndRootFormat: 'as-provided',
+    });
+
+    expect(tree.exists('shared/my-lib/package.json')).toBeTruthy();
+    expect(tree.exists('shared/my-lib/tsconfig.lib.json')).toBeTruthy();
+    expect(tree.exists('shared/my-lib/src/index.ts')).toBeTruthy();
+    expect(readProjectConfiguration(tree, '@proj/shared-my-lib'))
+      .toMatchInlineSnapshot(`
+      {
+        "$schema": "../../node_modules/nx/schemas/project-schema.json",
+        "name": "@proj/shared-my-lib",
+        "projectType": "library",
+        "root": "shared/my-lib",
+        "sourceRoot": "shared/my-lib/src",
+        "tags": [],
+        "targets": {
+          "build": {
+            "executor": "@nx/js:tsc",
+            "options": {
+              "assets": [
+                "shared/my-lib/*.md",
+              ],
+              "main": "shared/my-lib/src/index.ts",
+              "outputPath": "dist/shared/my-lib",
+              "tsConfig": "shared/my-lib/tsconfig.lib.json",
+            },
+            "outputs": [
+              "{options.outputPath}",
+            ],
+          },
+          "lint": {
+            "executor": "@nx/eslint:lint",
+            "outputs": [
+              "{options.outputFile}",
+            ],
+          },
+          "test": {
+            "executor": "@nx/jest:jest",
+            "options": {
+              "jestConfig": "shared/my-lib/jest.config.ts",
+            },
+            "outputs": [
+              "{workspaceRoot}/coverage/{projectRoot}",
+            ],
+          },
+        },
+      }
+    `);
+  });
+
   it('should move project correctly when --project-name-and-root-format=derived', async () => {
     await libraryGenerator(tree, {
       name: 'my-lib',

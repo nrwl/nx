@@ -10,19 +10,27 @@ describe('webWorker generator', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: appName });
+    await generateTestApplication(tree, { name: appName, skipFormat: true });
     jest.clearAllMocks();
   });
 
   it('should generate files', async () => {
-    await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
+    await webWorkerGenerator(tree, {
+      name: 'test-worker',
+      project: appName,
+      skipFormat: true,
+    });
 
     expect(tree.exists(`${appName}/tsconfig.worker.json`));
     expect(tree.exists(`${appName}/src/app/test-worker.worker.ts`));
   });
 
   it('should extend from tsconfig.base.json', async () => {
-    await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
+    await webWorkerGenerator(tree, {
+      name: 'test-worker',
+      project: appName,
+      skipFormat: true,
+    });
 
     expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
       '"extends": "../tsconfig.base.json"'
@@ -32,7 +40,11 @@ describe('webWorker generator', () => {
   it('should extend from tsconfig.json when used instead of tsconfig.base.json', async () => {
     tree.rename('tsconfig.base.json', 'tsconfig.json');
 
-    await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
+    await webWorkerGenerator(tree, {
+      name: 'test-worker',
+      project: appName,
+      skipFormat: true,
+    });
 
     expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
       '"extends": "../tsconfig.json"'
@@ -68,23 +80,23 @@ describe('webWorker generator', () => {
       name: 'test-worker',
       project: appName,
       snippet: true,
+      skipFormat: true,
     });
 
     // ASSERT
     expect(tree.read(`${appName}/src/app/test-worker.ts`, 'utf-8'))
       .toMatchInlineSnapshot(`
       "if (typeof Worker !== 'undefined') {
-        // Create a new
-        const worker = new Worker(new URL('./test-worker.worker', import.meta.url));
-        worker.onmessage = ({ data }) => {
-          console.log(\`page got message \${data}\`);
-        };
-        worker.postMessage('hello');
+      // Create a new
+      const worker = new Worker(new URL('./test-worker.worker', import.meta.url));
+      worker.onmessage = ({ data }) => {
+      console.log(\`page got message \${data}\`);
+      };
+      worker.postMessage('hello');
       } else {
-        // Web Workers are not supported in this environment.
-        // You should add a fallback so that your program still executes correctly.
-      }
-      "
+      // Web Workers are not supported in this environment.
+      // You should add a fallback so that your program still executes correctly.
+      }"
     `);
     expect(tree.read(`${appName}/src/app/test-worker.worker.ts`, 'utf-8'))
       .toMatchInlineSnapshot(`

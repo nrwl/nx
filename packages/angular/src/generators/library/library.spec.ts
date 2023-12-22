@@ -37,7 +37,7 @@ describe('lib', () => {
       publishable: false,
       buildable: false,
       linter: Linter.EsLint,
-      skipFormat: false,
+      skipFormat: true,
       unitTestRunner: UnitTestRunner.Jest,
       simpleName: false,
       strict: true,
@@ -151,7 +151,10 @@ describe('lib', () => {
       const moduleFileExists = tree.exists('my-lib/src/lib/my-lib.module.ts');
       expect(moduleFileExists).toBeFalsy();
       const indexApi = tree.read('my-lib/src/index.ts', 'utf-8');
-      expect(indexApi).toMatchInlineSnapshot(`""`);
+      expect(indexApi).toMatchInlineSnapshot(`
+        "
+        "
+      `);
     });
 
     it('should remove "build" target from project.json when a library is not publishable', async () => {
@@ -594,11 +597,17 @@ describe('lib', () => {
       expect(tree.read('my-dir/my-lib/.eslintrc.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
-          "extends": ["../../.eslintrc.json"],
-          "ignorePatterns": ["!**/*"],
+          "extends": [
+            "../../.eslintrc.json"
+          ],
+          "ignorePatterns": [
+            "!**/*"
+          ],
           "overrides": [
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "extends": [
                 "plugin:@nx/angular",
                 "plugin:@angular-eslint/template/process-inline-templates"
@@ -623,12 +632,18 @@ describe('lib', () => {
               }
             },
             {
-              "files": ["*.html"],
-              "extends": ["plugin:@nx/angular-template"],
+              "files": [
+                "*.html"
+              ],
+              "extends": [
+                "plugin:@nx/angular-template"
+              ],
               "rules": {}
             },
             {
-              "files": ["*.json"],
+              "files": [
+                "*.json"
+              ],
               "parser": "jsonc-eslint-parser",
               "rules": {
                 "@nx/dependency-checks": "error"
@@ -721,6 +736,7 @@ describe('lib', () => {
           routing: true,
           lazy: true,
           parent: 'myapp/src/app/app.module.ts',
+          skipFormat: false,
         });
 
         const moduleContents = tree
@@ -737,6 +753,7 @@ describe('lib', () => {
           lazy: true,
           simpleName: true,
           parent: 'myapp/src/app/app.module.ts',
+          skipFormat: false,
         });
 
         const moduleContents2 = tree
@@ -753,6 +770,7 @@ describe('lib', () => {
           lazy: true,
           simpleName: true,
           parent: 'myapp/src/app/app.module.ts',
+          skipFormat: false,
         });
 
         const moduleContents3 = tree
@@ -1477,6 +1495,7 @@ describe('lib', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         routing: true,
+        skipFormat: true,
       });
 
       // ACT
@@ -1501,6 +1520,7 @@ describe('lib', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         routing: true,
+        skipFormat: true,
       });
 
       // ACT
@@ -1527,6 +1547,7 @@ describe('lib', () => {
         name: 'app1',
         routing: true,
         standalone: true,
+        skipFormat: true,
       });
 
       // ACT
@@ -1542,7 +1563,8 @@ describe('lib', () => {
         "import { Route } from '@angular/router';
         import { myLibRoutes } from '@proj/my-lib';
 
-        export const appRoutes: Route[] = [{ path: 'my-lib', children: myLibRoutes }];
+        export const appRoutes: Route[] = [
+            { path: 'my-lib', children: myLibRoutes },];
         "
       `);
     });
@@ -1553,6 +1575,7 @@ describe('lib', () => {
         name: 'app1',
         routing: true,
         standalone: true,
+        skipFormat: true,
       });
 
       // ACT
@@ -1569,11 +1592,7 @@ describe('lib', () => {
         "import { Route } from '@angular/router';
 
         export const appRoutes: Route[] = [
-          {
-            path: 'my-lib',
-            loadChildren: () => import('@proj/my-lib').then((m) => m.myLibRoutes),
-          },
-        ];
+            { path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes) },];
         "
       `);
     });

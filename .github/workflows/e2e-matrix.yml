@@ -126,6 +126,7 @@ jobs:
           - e2e-nx-plugin
           - e2e-nx-run
           - e2e-react-core
+          - e2e-react-module-federation
           - e2e-react-extensions
           - e2e-react-native
           - e2e-web
@@ -248,6 +249,8 @@ jobs:
           - node_version: 16
             project: e2e-react-core
           - node_version: 16
+            project: e2e-react-module-federation
+          - node_version: 16
             project: e2e-react-extensions
           - node_version: 16
             project: e2e-react-native
@@ -297,6 +300,8 @@ jobs:
             project: e2e-lerna-smoke-tests
           - node_version: 20
             project: e2e-react-core
+          - node_version: 20
+            project: e2e-react-module-federation
           - node_version: 20
             project: e2e-react-extensions
           - node_version: 20

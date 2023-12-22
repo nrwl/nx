@@ -23,7 +23,7 @@ describe('lib', () => {
   let defaultSchema: Schema = {
     name: 'my-lib',
     linter: Linter.EsLint,
-    skipFormat: false,
+    skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'jest',
     style: 'css',
@@ -182,7 +182,7 @@ describe('lib', () => {
   });
 
   it('should generate files', async () => {
-    await libraryGenerator(tree, defaultSchema);
+    await libraryGenerator(tree, { ...defaultSchema, skipFormat: false });
     expect(tree.exists('my-lib/package.json')).toBeFalsy();
     expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
     expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();

@@ -345,7 +345,7 @@ export function PluginsTab(): JSX.Element {
                     title="Official plugins are maintained by the Nx Team"
                     className="absolute bottom-3 right-4 rounded-full border border-slate-200 bg-slate-50 px-3 py-0.5 text-xs font-medium capitalize dark:border-slate-700 dark:bg-slate-800"
                   >
-                    Official
+                    Nx Team
                   </span>
                 ) : (
                   <span

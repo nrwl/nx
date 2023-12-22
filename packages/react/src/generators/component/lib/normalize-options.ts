@@ -57,6 +57,9 @@ export async function normalizeOptions(
   options.globalCss = options.globalCss ?? false;
   options.inSourceTests = options.inSourceTests ?? false;
 
+  //TODO (nicholas): Remove when Next page generator is removed
+  options.isNextPage = options.isNextPage ?? false;
+
   return {
     ...options,
     projectName,

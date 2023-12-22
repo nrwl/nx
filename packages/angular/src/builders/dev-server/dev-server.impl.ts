@@ -11,6 +11,7 @@ import {
   parseTargetString,
   readCachedProjectGraph,
   type Target,
+  targetToTargetString,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
@@ -81,6 +82,9 @@ export function executeDevServerBuilder(
     options.buildLibsFromSource ??
     buildTargetOptions.buildLibsFromSource ??
     true;
+
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = options.buildTarget;
 
   let pathToWebpackConfig: string;
   if (buildTargetOptions.customWebpackConfig?.path) {
@@ -251,6 +255,7 @@ const executorToBuilderMap = new Map<string, string>([
   ],
   ['@nx/angular:application', '@angular-devkit/build-angular:application'],
 ]);
+
 function patchBuilderContext(
   context: BuilderContext,
   isUsingEsbuildBuilder: boolean,

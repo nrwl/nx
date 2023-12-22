@@ -1,8 +1,10 @@
 import {
   joinPathFragments,
   normalizePath,
+  parseTargetString,
   ProjectGraph,
   readCachedProjectGraph,
+  targetToTargetString,
 } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
@@ -56,6 +58,9 @@ export function executeWebpackBrowserBuilder(
     indexFileTransformer,
     ...delegateBuilderOptions
   } = options;
+
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = targetToTargetString({ ...context.target });
 
   const pathToWebpackConfig =
     customWebpackConfig?.path &&

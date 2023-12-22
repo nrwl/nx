@@ -438,5 +438,10 @@
     "name": "@simondotm/nx-firebase",
     "description": "Nx plugin to support Firebase Apps and Cloud Functions in Nx workspaces",
     "url": "https://github.com/simondotm/nx-firebase"
+  },
+  {
+    "name": "@gnuechtel/nx-cucumber",
+    "description": "Plugin to use Cucumber within Nx workspaces",
+    "url": "https://gitlab.com/gnuechtel/open-source/-/tree/main/libs/nx-cucumber"
   }
 ]

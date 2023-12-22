@@ -240,21 +240,11 @@ export default App;
         import { defineConfig } from 'vite';
         import react from '@vitejs/plugin-react';
         import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-
+        
         export default defineConfig({
           root: __dirname,
           cacheDir: '../../node_modules/.vite/libs/${lib}',
-          server: {
-            port: 4200,
-            host: 'localhost',
-          },
-          plugins: [
-            react(),
-            nxViteTsPaths()
-          ],
-          build: {
-            outDir: '../../dist/libs/${lib}',
-          },
+          plugins: [react(), nxViteTsPaths()],
           test: {
             globals: true,
             cache: {
@@ -262,15 +252,18 @@ export default App;
             },
             environment: 'jsdom',
             include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+            reporters: ['default'],
             coverage: {
               reportsDirectory: '../../coverage/libs/${lib}',
-              provider: "v8",
+              provider: 'v8',
               enabled: true,
-              lines: 100,
-              statements: 100,
-              functions: 100,
-              branches: 1000,
-            }
+              thresholds: {
+                lines: 100,
+                statements: 100,
+                functions: 100,
+                branches: 1000,
+              }
+            },
           },
         });
         `;

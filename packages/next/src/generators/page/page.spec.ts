@@ -64,8 +64,9 @@ describe('component', () => {
     it('should generate component in app directory', async () => {
       await pageGenerator(tree, {
         name: 'about',
-        project: appRouterProjectName,
+        directory: `${appRouterProjectName}/app/about`,
         style: 'css',
+        nameAndDirectoryFormat: 'as-provided',
       });
 
       expect(

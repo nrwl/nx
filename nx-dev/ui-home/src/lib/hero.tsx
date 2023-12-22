@@ -72,7 +72,7 @@ export function Hero(): JSX.Element {
             <span
               onClick={() => setDisplayBuildSystem(!displayBuildSystem)}
               className={cx(
-                'cursor-pointer hover:underline inline-flex items-center rounded-md bg-slate-50 my-0.5 px-1.5 py-0.5 transition text-md font-medium ring-1 ring-inset ring-slate-500/10 dark:bg-slate-400/10 dark:ring-slate-400/20',
+                'cursor-pointer  hover:underline inline-flex items-center rounded-md hover:bg-slate-50 my-0.5 px-1.5 py-0.5 transition text-md font-medium ring-1 ring-inset ring-slate-500/10 hover:dark:bg-slate-400/10 dark:ring-slate-400/20',
                 displayBuildSystem && 'bg-yellow-500/10 dark:bg-yellow-500/20'
               )}
             >
@@ -96,7 +96,7 @@ export function Hero(): JSX.Element {
             <span
               onClick={() => setDisplayTools(!displayTools)}
               className={cx(
-                'cursor-pointer hover:underline inline-flex items-center rounded-md bg-slate-50 my-0.5 px-1.5 py-0.5 transition text-md font-medium ring-1 ring-inset ring-slate-500/10 dark:bg-slate-400/10 dark:ring-slate-400/20',
+                'cursor-pointer hover:underline inline-flex items-center rounded-md hover:bg-slate-50 my-0.5 px-1.5 py-0.5 transition text-md font-medium ring-1 ring-inset ring-slate-500/10 hover:dark:bg-slate-400/10 dark:ring-slate-400/20',
                 displayTools && 'bg-cyan-500/10 dark:bg-cyan-500/20'
               )}
             >
@@ -121,7 +121,7 @@ export function Hero(): JSX.Element {
             <span
               onClick={() => setDisplayCi(!displayCi)}
               className={cx(
-                'cursor-pointer hover:underline inline-flex items-center rounded-md bg-slate-50 my-0.5 px-1.5 py-0.5 transition text-md font-medium ring-1 ring-inset ring-slate-500/10 dark:bg-slate-400/10 dark:ring-slate-400/20',
+                'cursor-pointer hover:underline inline-flex items-center rounded-md hover:bg-slate-50 my-0.5 px-1.5 py-0.5 transition text-md font-medium ring-1 ring-inset ring-slate-500/10 hover:dark:bg-slate-400/10 dark:ring-slate-400/20',
                 displayCi && 'bg-fuchsia-500/10 dark:bg-fuchsia-500/20'
               )}
             >

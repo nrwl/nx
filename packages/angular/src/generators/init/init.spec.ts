@@ -35,7 +35,7 @@ describe('init', () => {
     await init(tree, {
       unitTestRunner: UnitTestRunner.Jest,
       linter: Linter.EsLint,
-      skipFormat: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -79,7 +79,7 @@ describe('init', () => {
     }));
 
     // ACT
-    await init(tree, {});
+    await init(tree, { skipFormat: true });
 
     // ASSERT
     const { dependencies, devDependencies } = readJson(tree, 'package.json');
@@ -112,7 +112,7 @@ describe('init', () => {
     }));
 
     // ACT
-    await init(tree, {});
+    await init(tree, { skipFormat: true });
 
     // ASSERT
     const { dependencies } = readJson(tree, 'package.json');
@@ -128,7 +128,7 @@ describe('init', () => {
         await init(tree, {
           unitTestRunner: UnitTestRunner.Jest,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         const { devDependencies } = readJson(tree, 'package.json');
@@ -144,7 +144,7 @@ describe('init', () => {
         await init(tree, {
           unitTestRunner: UnitTestRunner.Jest,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         const hasJestConfigFile = tree.exists('jest.config.ts');
@@ -158,7 +158,7 @@ describe('init', () => {
         await init(tree, {
           unitTestRunner: UnitTestRunner.Jest,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -182,7 +182,7 @@ describe('init', () => {
           unitTestRunner: UnitTestRunner.None,
           e2eTestRunner: E2eTestRunner.Playwright,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         expect(ensurePackage).toHaveBeenLastCalledWith(
@@ -197,7 +197,7 @@ describe('init', () => {
           unitTestRunner: UnitTestRunner.None,
           e2eTestRunner: E2eTestRunner.Playwright,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -215,7 +215,7 @@ describe('init', () => {
           unitTestRunner: UnitTestRunner.None,
           e2eTestRunner: E2eTestRunner.Cypress,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         expect(ensurePackage).toHaveBeenLastCalledWith('@nx/cypress', '0.0.1');
@@ -227,7 +227,7 @@ describe('init', () => {
           unitTestRunner: UnitTestRunner.None,
           e2eTestRunner: E2eTestRunner.Cypress,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -247,7 +247,7 @@ describe('init', () => {
         await init(tree, {
           unitTestRunner: UnitTestRunner.None,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -264,7 +264,7 @@ describe('init', () => {
         await init(tree, {
           unitTestRunner: UnitTestRunner.None,
           linter: Linter.None,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -284,7 +284,7 @@ describe('init', () => {
         unitTestRunner: UnitTestRunner.Jest,
         e2eTestRunner: E2eTestRunner.Cypress,
         linter: Linter.EsLint,
-        skipFormat: false,
+        skipFormat: true,
       });
 
       expect(tree.read('.gitignore', 'utf-8')).toContain('.angular');
@@ -305,7 +305,7 @@ bar
         unitTestRunner: UnitTestRunner.Jest,
         e2eTestRunner: E2eTestRunner.Cypress,
         linter: Linter.EsLint,
-        skipFormat: false,
+        skipFormat: true,
       });
 
       const angularEntries = tree
@@ -321,7 +321,7 @@ bar
         unitTestRunner: UnitTestRunner.Jest,
         e2eTestRunner: E2eTestRunner.Cypress,
         linter: Linter.EsLint,
-        skipFormat: false,
+        skipFormat: true,
       });
 
       expect(tree.read('.prettierignore', 'utf-8')).toContain('.angular');
@@ -342,7 +342,7 @@ bar
         unitTestRunner: UnitTestRunner.Jest,
         e2eTestRunner: E2eTestRunner.Cypress,
         linter: Linter.EsLint,
-        skipFormat: false,
+        skipFormat: true,
       });
 
       const angularEntries = tree
@@ -363,7 +363,7 @@ bar
         unitTestRunner: UnitTestRunner.Jest,
         e2eTestRunner: E2eTestRunner.Cypress,
         linter: Linter.EsLint,
-        skipFormat: false,
+        skipFormat: true,
       });
 
       expect(tree.read('.gitignore', 'utf-8')).toContain(
@@ -393,7 +393,7 @@ bar
       await init(tree, {
         unitTestRunner: UnitTestRunner.Jest,
         linter: Linter.EsLint,
-        skipFormat: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -458,7 +458,7 @@ bar
       }));
 
       // ACT
-      await init(tree, {});
+      await init(tree, { skipFormat: true });
 
       // ASSERT
       const { dependencies, devDependencies } = readJson(tree, 'package.json');
@@ -491,7 +491,7 @@ bar
       }));
 
       // ACT
-      await init(tree, {});
+      await init(tree, { skipFormat: true });
 
       // ASSERT
       const { dependencies } = readJson(tree, 'package.json');
@@ -507,7 +507,7 @@ bar
           await init(tree, {
             unitTestRunner: UnitTestRunner.Jest,
             linter: Linter.EsLint,
-            skipFormat: false,
+            skipFormat: true,
           });
 
           const { devDependencies } = readJson(tree, 'package.json');
@@ -525,7 +525,7 @@ bar
           await init(tree, {
             unitTestRunner: UnitTestRunner.Jest,
             linter: Linter.EsLint,
-            skipFormat: false,
+            skipFormat: true,
           });
 
           const hasJestConfigFile = tree.exists('jest.config.ts');
@@ -539,7 +539,7 @@ bar
           await init(tree, {
             unitTestRunner: UnitTestRunner.Jest,
             linter: Linter.EsLint,
-            skipFormat: false,
+            skipFormat: true,
           });
 
           const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -562,7 +562,7 @@ bar
           unitTestRunner: UnitTestRunner.None,
           e2eTestRunner: E2eTestRunner.Playwright,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         expect(ensurePackage).toHaveBeenLastCalledWith(
@@ -577,7 +577,7 @@ bar
           unitTestRunner: UnitTestRunner.None,
           e2eTestRunner: E2eTestRunner.Playwright,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -595,7 +595,7 @@ bar
             unitTestRunner: UnitTestRunner.None,
             e2eTestRunner: E2eTestRunner.Cypress,
             linter: Linter.EsLint,
-            skipFormat: false,
+            skipFormat: true,
           });
           // ASSERT
           expect(ensurePackage).toHaveBeenLastCalledWith(
@@ -610,7 +610,7 @@ bar
             unitTestRunner: UnitTestRunner.None,
             e2eTestRunner: E2eTestRunner.Cypress,
             linter: Linter.EsLint,
-            skipFormat: false,
+            skipFormat: true,
           });
 
           const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -630,7 +630,7 @@ bar
           await init(tree, {
             unitTestRunner: UnitTestRunner.None,
             linter: Linter.EsLint,
-            skipFormat: false,
+            skipFormat: true,
           });
 
           const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -649,7 +649,7 @@ bar
           await init(tree, {
             unitTestRunner: UnitTestRunner.None,
             linter: Linter.None,
-            skipFormat: false,
+            skipFormat: true,
           });
 
           const { generators } = readJson<NxJsonConfiguration>(tree, 'nx.json');
@@ -669,7 +669,7 @@ bar
           unitTestRunner: UnitTestRunner.Jest,
           e2eTestRunner: E2eTestRunner.Cypress,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         expect(tree.read('.gitignore', 'utf-8')).toContain('.angular');
@@ -690,7 +690,7 @@ bar
           unitTestRunner: UnitTestRunner.Jest,
           e2eTestRunner: E2eTestRunner.Cypress,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         const angularEntries = tree
@@ -706,7 +706,7 @@ bar
           unitTestRunner: UnitTestRunner.Jest,
           e2eTestRunner: E2eTestRunner.Cypress,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         expect(tree.read('.prettierignore', 'utf-8')).toContain('.angular');
@@ -727,7 +727,7 @@ bar
           unitTestRunner: UnitTestRunner.Jest,
           e2eTestRunner: E2eTestRunner.Cypress,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         const angularEntries = tree
@@ -748,7 +748,7 @@ bar
           unitTestRunner: UnitTestRunner.Jest,
           e2eTestRunner: E2eTestRunner.Cypress,
           linter: Linter.EsLint,
-          skipFormat: false,
+          skipFormat: true,
         });
 
         expect(tree.read('.gitignore', 'utf-8')).toContain(

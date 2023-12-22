@@ -13,6 +13,7 @@ describe('federate-module', () => {
     remote: 'my-remote',
     path: 'my-remote/src/my-federated-module.ts',
     style: 'css',
+    skipFormat: true,
   };
 
   beforeAll(() => {

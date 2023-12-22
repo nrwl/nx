@@ -37,10 +37,14 @@ export async function releaseVersionGenerator(
     const versionData: VersionData = {};
 
     // If the user provided a specifier, validate that it is valid semver or a relative semver keyword
-    if (options.specifier && !isValidSemverSpecifier(options.specifier)) {
-      throw new Error(
-        `The given version specifier "${options.specifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`
-      );
+    if (options.specifier) {
+      if (!isValidSemverSpecifier(options.specifier)) {
+        throw new Error(
+          `The given version specifier "${options.specifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`
+        );
+      }
+      // The node semver library classes a leading `v` as valid, but we want to ensure it is not present in the final version
+      options.specifier = options.specifier.replace(/^v/, '');
     }
 
     const projects = options.projects;

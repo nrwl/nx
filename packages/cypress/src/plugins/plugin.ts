@@ -19,6 +19,7 @@ import { existsSync, readdirSync } from 'fs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { NX_PLUGIN_OPTIONS } from '../utils/symbols';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
@@ -147,13 +148,14 @@ function buildCypressTargets(
 ) {
   const cypressConfig = getCypressConfig(configFilePath, context);
 
-  const cypressEnv = {
+  const pluginPresetOptions = {
+    ...cypressConfig.e2e?.[NX_PLUGIN_OPTIONS],
     ...cypressConfig.env,
     ...cypressConfig.e2e?.env,
   };
 
   const webServerCommands: Record<string, string> =
-    cypressEnv?.webServerCommands;
+    pluginPresetOptions?.webServerCommands;
 
   const relativeConfigPath = relative(projectRoot, configFilePath);
 
@@ -185,7 +187,7 @@ function buildCypressTargets(
       }
     }
 
-    const ciWebServerCommand: string = cypressEnv?.ciWebServerCommand;
+    const ciWebServerCommand: string = pluginPresetOptions?.ciWebServerCommand;
     if (ciWebServerCommand) {
       const specPatterns = Array.isArray(cypressConfig.e2e.specPattern)
         ? cypressConfig.e2e.specPattern.map((p) => join(projectRoot, p))
@@ -301,11 +303,19 @@ function getInputs(
 /**
  * Load the module after ensuring that the require cache is cleared.
  */
+const packageInstallationDirectories = ['node_modules', '.yarn'];
+
 function load(path: string): any {
   // Clear cache if the path is in the cache
   if (require.cache[path]) {
     for (const k of Object.keys(require.cache)) {
-      delete require.cache[k];
+      // We don't want to clear the require cache of installed packages.
+      // Clearing them can cause some issues when running Nx without the daemon
+      // and may cause issues for other packages that use the module state
+      // in some to store cached information.
+      if (!packageInstallationDirectories.some((dir) => k.includes(dir))) {
+        delete require.cache[k];
+      }
     }
   }
 
