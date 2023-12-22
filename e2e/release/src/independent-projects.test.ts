@@ -30,6 +30,8 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
+        // Normalize the version title date
+        .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
@@ -399,7 +401,7 @@ describe('nx release - independent projects', () => {
         >  NX   Previewing an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-package.1
 
 
-        + ## 999.9.9-package.1
+        + ## 999.9.9-package.1 (YYYY-MM-DD)
         +
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
@@ -420,7 +422,7 @@ describe('nx release - independent projects', () => {
         >  NX   Previewing an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-package.2
 
 
-        + ## 999.9.9-package.2
+        + ## 999.9.9-package.2 (YYYY-MM-DD)
         +
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
@@ -441,7 +443,7 @@ describe('nx release - independent projects', () => {
         >  NX   Previewing an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-package.3
 
 
-        + ## 999.9.9-package.3
+        + ## 999.9.9-package.3 (YYYY-MM-DD)
         +
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
@@ -462,7 +464,7 @@ describe('nx release - independent projects', () => {
 
       expect(readFile(joinPathFragments(pkg1, 'CHANGELOG.md')))
         .toMatchInlineSnapshot(`
-        ## 999.9.9-changelog-git-operations-test.1
+        ## 999.9.9-changelog-git-operations-test.1 (YYYY-MM-DD)
 
         This was a version bump only for {project-name} to align it with other projects, there were no code changes.
       `);
@@ -481,11 +483,11 @@ describe('nx release - independent projects', () => {
         >  NX   Generating an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-changelog-git-operations-test.2
 
 
-        + ## 999.9.9-changelog-git-operations-test.2
+        + ## 999.9.9-changelog-git-operations-test.2 (YYYY-MM-DD)
         +
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
         +
-        ## 999.9.9-changelog-git-operations-test.1
+        ## 999.9.9-changelog-git-operations-test.1 (YYYY-MM-DD)
 
         This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
@@ -522,11 +524,11 @@ describe('nx release - independent projects', () => {
 
       expect(readFile(joinPathFragments(pkg1, 'CHANGELOG.md')))
         .toMatchInlineSnapshot(`
-        ## 999.9.9-changelog-git-operations-test.2
+        ## 999.9.9-changelog-git-operations-test.2 (YYYY-MM-DD)
 
         This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
-        ## 999.9.9-changelog-git-operations-test.1
+        ## 999.9.9-changelog-git-operations-test.1 (YYYY-MM-DD)
 
         This was a version bump only for {project-name} to align it with other projects, there were no code changes.
       `);
@@ -568,11 +570,11 @@ describe('nx release - independent projects', () => {
 
 
 
-        + ## 999.9.9-changelog-git-operations-test.3
+        + ## 999.9.9-changelog-git-operations-test.3 (YYYY-MM-DD)
         +
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
         +
-        ## 999.9.9-changelog-git-operations-test.2
+        ## 999.9.9-changelog-git-operations-test.2 (YYYY-MM-DD)
 
         This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
@@ -580,7 +582,7 @@ describe('nx release - independent projects', () => {
         >  NX   Generating an entry in {project-name}/CHANGELOG.md for {project-name}@999.9.9-changelog-git-operations-test.3
 
 
-        + ## 999.9.9-changelog-git-operations-test.3
+        + ## 999.9.9-changelog-git-operations-test.3 (YYYY-MM-DD)
         +
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
@@ -588,7 +590,7 @@ describe('nx release - independent projects', () => {
         >  NX   Generating an entry in {project-name}/CHANGELOG.md for v999.9.9-changelog-git-operations-test.3
 
 
-        + ## 999.9.9-changelog-git-operations-test.3
+        + ## 999.9.9-changelog-git-operations-test.3 (YYYY-MM-DD)
         +
         + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
@@ -635,15 +637,15 @@ describe('nx release - independent projects', () => {
 
       expect(readFile(joinPathFragments(pkg1, 'CHANGELOG.md')))
         .toMatchInlineSnapshot(`
-        ## 999.9.9-changelog-git-operations-test.3
+        ## 999.9.9-changelog-git-operations-test.3 (YYYY-MM-DD)
 
         This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
-        ## 999.9.9-changelog-git-operations-test.2
+        ## 999.9.9-changelog-git-operations-test.2 (YYYY-MM-DD)
 
         This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
-        ## 999.9.9-changelog-git-operations-test.1
+        ## 999.9.9-changelog-git-operations-test.1 (YYYY-MM-DD)
 
         This was a version bump only for {project-name} to align it with other projects, there were no code changes.
       `);

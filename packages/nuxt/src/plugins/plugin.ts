@@ -232,11 +232,11 @@ function getOutputs(
   buildOutputs: string[];
   testOutputs: string[];
 } {
-  const reportsDirectory =
-    normalizeOutputPath(
-      viteConfig?.['test']?.coverage?.reportsDirectory,
-      projectRoot
-    ) ?? '{workspaceRoot}/coverage/{projectRoot}';
+  const reportsDirectory = normalizeOutputPath(
+    viteConfig?.['test']?.coverage?.reportsDirectory,
+    projectRoot,
+    'coverage'
+  );
 
   let nuxtBuildDir = nuxtConfig?.buildDir;
   if (nuxtConfig?.buildDir && basename(nuxtConfig?.buildDir) === '.nuxt') {
@@ -248,7 +248,7 @@ function getOutputs(
     );
   }
   const buildOutputPath =
-    normalizeOutputPath(nuxtBuildDir, projectRoot) ??
+    normalizeOutputPath(nuxtBuildDir, projectRoot, 'dist') ??
     '{workspaceRoot}/dist/{projectRoot}';
 
   return {
@@ -259,16 +259,24 @@ function getOutputs(
 
 function normalizeOutputPath(
   outputPath: string | undefined,
-  projectRoot: string
+  projectRoot: string,
+  path: 'coverage' | 'dist'
 ): string | undefined {
-  if (!outputPath) return undefined;
-  if (isAbsolute(outputPath)) {
-    return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
-  } else {
-    if (outputPath.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, outputPath));
+  if (!outputPath) {
+    if (projectRoot === '.') {
+      return `{projectRoot}/${path}`;
     } else {
-      return outputPath;
+      return `{workspaceRoot}/${path}/{projectRoot}`;
+    }
+  } else {
+    if (isAbsolute(outputPath)) {
+      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+    } else {
+      if (outputPath.startsWith('..')) {
+        return join('{workspaceRoot}', join(projectRoot, outputPath));
+      } else {
+        return join('{projectRoot}', outputPath);
+      }
     }
   }
 }
