@@ -31,8 +31,8 @@ import {
   isComboDepConstraint,
   isDirectDependency,
   matchImportWithWildcard,
-  onlyLoadChildren,
   stringifyTags,
+  hasStaticImportOfDynamicResource,
 } from '../utils/runtime-lint-utils';
 import { AST_NODE_TYPES, TSESTree } from '@typescript-eslint/utils';
 import { basename, dirname, relative } from 'path';
@@ -562,16 +562,14 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
 
       // if we import a library using loadChildren, we should not import it using es6imports
       if (
-        node.type === AST_NODE_TYPES.ImportDeclaration &&
-        node.importKind !== 'type' &&
         !checkDynamicDependenciesExceptions.some((a) =>
           matchImportWithWildcard(a, imp)
         ) &&
-        onlyLoadChildren(
+        hasStaticImportOfDynamicResource(
+          node,
           projectGraph,
           sourceProject.name,
-          targetProject.name,
-          []
+          targetProject.name
         )
       ) {
         const filesWithLazyImports = findFilesWithDynamicImports(
