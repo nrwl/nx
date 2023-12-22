@@ -39,9 +39,9 @@
       "implementation": "./src/migrations/update-17-2-0/simplify-eslint-patterns"
     },
     "move-options-to-target-defaults": {
-      "version": "17.2.0-beta.13",
+      "version": "17.2.8",
       "description": "Move executor options to target defaults",
-      "implementation": "./src/migrations/update-17-2-0/move-options-to-target-defaults"
+      "implementation": "./src/migrations/update-17-2-8/move-options-to-target-defaults"
     }
   },
   "packageJsonUpdates": {
