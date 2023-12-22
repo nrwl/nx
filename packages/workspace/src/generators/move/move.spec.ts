@@ -394,9 +394,6 @@ describe('move', () => {
           },
           "lint": {
             "executor": "@nx/eslint:lint",
-            "outputs": [
-              "{options.outputFile}",
-            ],
           },
           "test": {
             "executor": "@nx/jest:jest",
