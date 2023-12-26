@@ -371,7 +371,7 @@ jobs:
               | Failed project                 | Node |
               |--------------------------------|------|`;
             failedProjects.forEach(matrix => {
-              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.toString().padEnd(3)} |`
+              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version}  |`
             });
             result += `\`\`\``;
             const message = result.split('\n').map(l => l.trim()).join('\n');
