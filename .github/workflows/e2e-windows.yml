@@ -129,7 +129,9 @@ jobs:
             codeowners: 'S04TNCVEETS'
           - project: e2e-eslint
             codeowners: 'S04SYJGKSCT'
-          - project: e2e-next
+          - project: e2e-next-core
+            codeowners: 'S04TNCNJG5N'
+          - project: e2e-next-extensions
             codeowners: 'S04TNCNJG5N'
           - project: e2e-node
             codeowners: 'S04SJ6HHP0X'
@@ -138,6 +140,8 @@ jobs:
           - project: e2e-nx-misc
             codeowners: 'S04SYHYKGNP'
           - project: e2e-plugin
+            codeowners: 'S04SYHYKGNP'
+          - project: e2e-release
             codeowners: 'S04SYHYKGNP'
           - project: e2e-nx-run
             codeowners: 'S04SYHYKGNP'
@@ -151,9 +155,17 @@ jobs:
             codeowners: 'S04SJ6PL98X'
           - project: e2e-storybook
             codeowners: 'S04SVQ8H0G5'
+          - project: e2e-playwright
+            codeowners: 'S04SVQ8H0G5'
           - project: e2e-storybook-angular
             codeowners: 'S04SVQ8H0G5'
+          - project: e2e-remix
+            codeowners: 'S04SVQ8H0G5'
           - project: e2e-vite
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-vue
+            codeowners: 'S04SJ6PL98X'
+          - project: e2e-nuxt
             codeowners: 'S04SJ6PL98X'
           - project: e2e-webpack
             codeowners: 'S04SJ6PL98X'
@@ -180,9 +192,13 @@ jobs:
           - node_version: 18
             project: e2e-eslint
           - node_version: 18
-            project: e2e-next
+            project: e2e-next-core
+          - node_version: 18
+            project: e2e-next-extensions
           - node_version: 18
             project: e2e-node
+          - node_version: 18
+            project: e2e-nuxt
           - node_version: 18
             project: e2e-nx-init
           - node_version: 18
@@ -190,7 +206,7 @@ jobs:
           - node_version: 18
             project: e2e-plugin
           - node_version: 18
-            project: e2e-lerna-smoke-tests
+            project: e2e-playwright
           - node_version: 18
             project: e2e-react-core
           - node_version: 18
@@ -200,6 +216,8 @@ jobs:
           - node_version: 18
             project: e2e-web
           - node_version: 18
+            project: e2e-remix
+          - node_version: 18
             project: e2e-rollup
           - node_version: 18
             project: e2e-storybook
@@ -207,6 +225,8 @@ jobs:
             project: e2e-storybook-angular
           - node_version: 18
             project: e2e-vite
+          - node_version: 18
+            project: e2e-vue
           - node_version: 18
             project: e2e-webpack
       fail-fast: false
@@ -351,7 +371,7 @@ jobs:
               | Failed project                 | Node |
               |--------------------------------|------|`;
             failedProjects.forEach(matrix => {
-              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version.toString().padEnd(3)} |`
+              result += `\n| ${matrix.project.padEnd(30)} | v${matrix.node_version}  |`
             });
             result += `\`\`\``;
             const message = result.split('\n').map(l => l.trim()).join('\n');
