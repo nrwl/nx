@@ -129,38 +129,6 @@ describe('eslint-utils', () => {
     });
   });
 
-  describe('reportUnusedDisableDirectives', () => {
-    it('should create the ESLint instance with "reportUnusedDisableDirectives" set to the given value for reportUnusedDisableDirectives', async () => {
-      await resolveAndInstantiateESLint(undefined, {
-        reportUnusedDisableDirectives: 'error',
-      } as any).catch(() => {});
-
-      expect(ESLint).toHaveBeenCalledWith({
-        cache: false,
-        cacheLocation: undefined,
-        cacheStrategy: undefined,
-        errorOnUnmatchedPattern: false,
-        fix: false,
-        ignorePath: undefined,
-        overrideConfigFile: undefined,
-        reportUnusedDisableDirectives: 'error',
-        resolvePluginsRelativeTo: undefined,
-        rulePaths: [],
-        useEslintrc: true,
-      });
-    });
-
-    it('should create a ESLint instance with no "reportUnusedDisableDirectives" if it is undefined', async () => {
-      await resolveAndInstantiateESLint(undefined, {} as any);
-
-      expect(ESLint).toHaveBeenCalledWith(
-        expect.objectContaining({
-          reportUnusedDisableDirectives: undefined,
-        })
-      );
-    });
-  });
-
   describe('ESLint Flat Config', () => {
     it('should throw if a non eslint.config.js file is used with ESLint Flat Config', async () => {
       await expect(
