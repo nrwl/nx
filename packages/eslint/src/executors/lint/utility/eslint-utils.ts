@@ -49,8 +49,6 @@ export async function resolveAndInstantiateESLint(
      * not be any html files in the project, so keeping it true would break linting every time
      */
     errorOnUnmatchedPattern: false,
-    reportUnusedDisableDirectives:
-      options.reportUnusedDisableDirectives || undefined,
   };
 
   if (useFlatConfig) {
@@ -67,6 +65,11 @@ export async function resolveAndInstantiateESLint(
     if (options.ignorePath !== undefined) {
       throw new Error(
         'For Flat Config, ESLint removed `ignorePath` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new'
+      );
+    }
+    if (options.reportUnusedDisableDirectives !== undefined) {
+      throw new Error(
+        'For Flat Config, ESLint removed `reportUnusedDisableDirectives` and so it is not supported as an option. See https://eslint.org/docs/latest/use/configure/configuration-files-new'
       );
     }
   } else {
