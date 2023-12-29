@@ -405,6 +405,7 @@
     - [executors](/nx-api/eslint/executors)
       - [lint](/nx-api/eslint/executors/lint)
     - [generators](/nx-api/eslint/generators)
+      - [init](/nx-api/eslint/generators/init)
       - [workspace-rules-project](/nx-api/eslint/generators/workspace-rules-project)
       - [workspace-rule](/nx-api/eslint/generators/workspace-rule)
       - [convert-to-flat-config](/nx-api/eslint/generators/convert-to-flat-config)
