@@ -178,7 +178,7 @@ describe('defaultChangelogRenderer()', () => {
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       });
       expect(markdown).toMatchInlineSnapshot(`
@@ -202,19 +202,20 @@ describe('defaultChangelogRenderer()', () => {
         `);
     });
 
-    it('should not generate a Thank You section when changelogRenderOptions.includeAuthors is false', async () => {
+    it('should not generate a Thank You section when changelogRenderOptions.authors is false', async () => {
       const markdown = await defaultChangelogRenderer({
         projectGraph,
         commits,
-        releaseVersion: 'v1.1.0',
+        // Major version, should use single # for generated heading
+        releaseVersion: 'v1.0.0',
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
-          includeAuthors: false,
+          authors: false,
         },
       });
       expect(markdown).toMatchInlineSnapshot(`
-        "## v1.1.0
+        "# v1.0.0
 
 
         ### 🚀 Features
@@ -239,7 +240,7 @@ describe('defaultChangelogRenderer()', () => {
         releaseVersion: 'v1.1.0',
         entryWhenNoChanges: false as const,
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       };
 
@@ -273,9 +274,9 @@ describe('defaultChangelogRenderer()', () => {
         await defaultChangelogRenderer({
           ...otherOpts,
           project: 'pkg-a',
-          // test that the includeAuthors option is being respected for project changelogs and therefore no Thank You section exists
+          // test that the authors option is being respected for project changelogs and therefore no Thank You section exists
           changelogRenderOptions: {
-            includeAuthors: false,
+            authors: false,
           },
         })
       ).toMatchInlineSnapshot(`
@@ -330,7 +331,7 @@ describe('defaultChangelogRenderer()', () => {
         releaseVersion: 'v1.1.0',
         project: null, // workspace changelog
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       };
 
@@ -360,7 +361,7 @@ describe('defaultChangelogRenderer()', () => {
         releaseVersion: 'v1.1.0',
         project: 'pkg-a',
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       };
 
@@ -432,7 +433,7 @@ describe('defaultChangelogRenderer()', () => {
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       });
 
@@ -532,11 +533,132 @@ describe('defaultChangelogRenderer()', () => {
         project: null,
         entryWhenNoChanges: false,
         changelogRenderOptions: {
-          includeAuthors: true,
+          authors: true,
         },
       });
 
       expect(markdown).toMatchInlineSnapshot(`""`);
+    });
+  });
+
+  describe('breaking changes', () => {
+    it('should work for breaking changes with just the ! and no explanation', async () => {
+      const breakingChangeCommitWithExplanation: GitCommit = {
+        // ! after the type, no BREAKING CHANGE: in the body
+        message: 'feat(WebSocketSubject)!: no longer extends `Subject`.',
+        shortHash: '54f2f6ed1',
+        author: {
+          name: 'James Henry',
+          email: 'jh@example.com',
+        },
+        body:
+          'M\tpackages/rxjs/src/internal/observable/dom/WebSocketSubject.ts\n' +
+          '"',
+        authors: [
+          {
+            name: 'James Henry',
+            email: 'jh@example.com',
+          },
+        ],
+        description: 'no longer extends `Subject`.',
+        type: 'feat',
+        scope: 'WebSocketSubject',
+        references: [{ value: '54f2f6ed1', type: 'hash' }],
+        isBreaking: true,
+        revertedHashes: [],
+        affectedFiles: [
+          'packages/rxjs/src/internal/observable/dom/WebSocketSubject.ts',
+        ],
+      };
+
+      const markdown = await defaultChangelogRenderer({
+        projectGraph,
+        commits: [breakingChangeCommitWithExplanation],
+        releaseVersion: 'v1.1.0',
+        project: null,
+        entryWhenNoChanges: false,
+        changelogRenderOptions: {
+          authors: true,
+        },
+      });
+
+      expect(markdown).toMatchInlineSnapshot(`
+        "## v1.1.0
+
+
+        ### 🚀 Features
+
+        - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
+
+        #### ⚠️  Breaking Changes
+
+        - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
+
+        ### ❤️  Thank You
+
+        - James Henry"
+      `);
+    });
+
+    it('should extract the explanation of a breaking change and render it preferentially', async () => {
+      const breakingChangeCommitWithExplanation: GitCommit = {
+        // No ! after the type, but BREAKING CHANGE: in the body
+        message: 'feat(WebSocketSubject): no longer extends `Subject`.',
+        shortHash: '54f2f6ed1',
+        author: {
+          name: 'James Henry',
+          email: 'jh@example.com',
+        },
+        body:
+          'BREAKING CHANGE: `WebSocketSubject` is no longer `instanceof Subject`. Check for `instanceof WebSocketSubject` instead.\n' +
+          '"\n' +
+          '\n' +
+          'M\tpackages/rxjs/src/internal/observable/dom/WebSocketSubject.ts\n' +
+          '"',
+        authors: [
+          {
+            name: 'James Henry',
+            email: 'jh@example.com',
+          },
+        ],
+        description: 'no longer extends `Subject`.',
+        type: 'feat',
+        scope: 'WebSocketSubject',
+        references: [{ value: '54f2f6ed1', type: 'hash' }],
+        isBreaking: true,
+        revertedHashes: [],
+        affectedFiles: [
+          'packages/rxjs/src/internal/observable/dom/WebSocketSubject.ts',
+        ],
+      };
+
+      const markdown = await defaultChangelogRenderer({
+        projectGraph,
+        commits: [breakingChangeCommitWithExplanation],
+        releaseVersion: 'v1.1.0',
+        project: null,
+        entryWhenNoChanges: false,
+        changelogRenderOptions: {
+          authors: true,
+        },
+      });
+
+      expect(markdown).toMatchInlineSnapshot(`
+        "## v1.1.0
+
+
+        ### 🚀 Features
+
+        - ⚠️  **WebSocketSubject:** no longer extends \`Subject\`.
+
+        #### ⚠️  Breaking Changes
+
+        - **WebSocketSubject:** \`WebSocketSubject\` is no longer \`instanceof Subject\`. Check for \`instanceof WebSocketSubject\` instead.
+
+        ### ❤️  Thank You
+
+        - James Henry"
+      `);
     });
   });
 });

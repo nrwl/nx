@@ -639,6 +639,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Manage Releases",
+            "path": "/core-features/manage-releases",
+            "id": "manage-releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Plugin Features",
             "path": "/core-features/plugin-features",
             "id": "plugin-features",
@@ -726,6 +734,14 @@
         "name": "Integrate with Editors",
         "path": "/core-features/integrate-with-editors",
         "id": "integrate-with-editors",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Manage Releases",
+        "path": "/core-features/manage-releases",
+        "id": "manage-releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1929,6 +1945,23 @@
                 "name": "How to configure Next.js plugins",
                 "path": "/recipes/next/next-config-setup",
                 "id": "next-config-setup",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Nuxt",
+            "path": "/recipes/nuxt",
+            "id": "nuxt",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Deploying Nuxt applications to Vercel",
+                "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+                "id": "deploy-nuxt-to-vercel",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3371,6 +3404,31 @@
         "name": "How to configure Next.js plugins",
         "path": "/recipes/next/next-config-setup",
         "id": "next-config-setup",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nuxt",
+        "path": "/recipes/nuxt",
+        "id": "nuxt",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Deploying Nuxt applications to Vercel",
+            "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+            "id": "deploy-nuxt-to-vercel",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Deploying Nuxt applications to Vercel",
+        "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+        "id": "deploy-nuxt-to-vercel",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -7203,6 +7261,14 @@
             "path": "/nx-api/eslint/generators",
             "name": "generators",
             "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/eslint/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
               {
                 "id": "workspace-rules-project",
                 "path": "/nx-api/eslint/generators/workspace-rules-project",

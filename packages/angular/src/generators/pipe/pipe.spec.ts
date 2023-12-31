@@ -18,7 +18,7 @@ describe('pipe generator', () => {
 
   it('should generate correctly', async () => {
     // ACT
-    await generatePipeWithDefaultOptions(tree);
+    await generatePipeWithDefaultOptions(tree, { skipFormat: false });
 
     // ASSERT
     expect(tree.read('test/src/app/test.pipe.ts', 'utf-8')).toMatchSnapshot();
@@ -63,7 +63,10 @@ describe('pipe generator', () => {
       // ARRANGE
 
       // ACT
-      await generatePipeWithDefaultOptions(tree, { standalone: false });
+      await generatePipeWithDefaultOptions(tree, {
+        standalone: false,
+        skipFormat: false,
+      });
 
       // ASSERT
       expect(tree.read('test/src/app/test.pipe.ts', 'utf-8')).toMatchSnapshot();
@@ -157,13 +160,14 @@ describe('pipe generator', () => {
 function addModule(tree: Tree) {
   tree.write(
     'test/src/app/test.module.ts',
-    `import {NgModule} from "@angular/core";
-    @NgModule({
-      imports: [],
-      declarations: [],
-      exports: []
-    })
-    export class TestModule {}`
+    `import { NgModule } from '@angular/core';
+@NgModule({
+  imports: [],
+  declarations: [],
+  exports: [],
+})
+export class TestModule {}
+`
   );
 }
 
@@ -175,6 +179,7 @@ async function generatePipeWithDefaultOptions(
     name: 'test',
     project: 'test',
     flat: true,
+    skipFormat: true,
     ...overrides,
   });
 }

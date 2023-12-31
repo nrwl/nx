@@ -55,11 +55,13 @@ export default async function* serveExecutor(
 
   const mode = options.dev ? 'dev' : 'start';
   const turbo = options.turbo && options.dev ? '--turbo' : '';
+  const experimentalHttps =
+    options.experimentalHttps && options.dev ? '--experimental-https' : '';
   const nextBin = require.resolve('next/dist/bin/next');
 
   yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
     async ({ done, next, error }) => {
-      const server = fork(nextBin, [mode, ...args, turbo], {
+      const server = fork(nextBin, [mode, ...args, turbo, experimentalHttps], {
         cwd: options.dev ? projectRoot : nextDir,
         stdio: 'inherit',
       });

@@ -221,13 +221,17 @@ function getOutputs(
 } {
   const { build, test } = viteConfig;
 
-  const buildOutputPath =
-    normalizeOutputPath(build?.outDir, projectRoot) ??
-    '{workspaceRoot}/dist/{projectRoot}';
+  const buildOutputPath = normalizeOutputPath(
+    build?.outDir,
+    projectRoot,
+    'dist'
+  );
 
-  const reportsDirectoryPath =
-    normalizeOutputPath(test?.coverage?.reportsDirectory, projectRoot) ??
-    '{workspaceRoot}/coverage/{projectRoot}';
+  const reportsDirectoryPath = normalizeOutputPath(
+    test?.coverage?.reportsDirectory,
+    projectRoot,
+    'coverage'
+  );
 
   return {
     buildOutputs: [buildOutputPath],
@@ -237,16 +241,24 @@ function getOutputs(
 
 function normalizeOutputPath(
   outputPath: string | undefined,
-  projectRoot: string
+  projectRoot: string,
+  path: 'coverage' | 'dist'
 ): string | undefined {
-  if (!outputPath) return undefined;
-  if (isAbsolute(outputPath)) {
-    return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
-  } else {
-    if (outputPath.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, outputPath));
+  if (!outputPath) {
+    if (projectRoot === '.') {
+      return `{projectRoot}/${path}`;
     } else {
-      return outputPath;
+      return `{workspaceRoot}/${path}/{projectRoot}`;
+    }
+  } else {
+    if (isAbsolute(outputPath)) {
+      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+    } else {
+      if (outputPath.startsWith('..')) {
+        return join('{workspaceRoot}', join(projectRoot, outputPath));
+      } else {
+        return join('{projectRoot}', outputPath);
+      }
     }
   }
 }

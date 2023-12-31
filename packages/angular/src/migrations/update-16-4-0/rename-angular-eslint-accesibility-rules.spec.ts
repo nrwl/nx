@@ -1,5 +1,6 @@
 import { Tree, readJson } from '@nx/devkit';
 import { writeJson } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './rename-angular-eslint-accesibility-rules';
 
@@ -8,6 +9,9 @@ describe('rename-angular-eslint-accesibility-rules migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   it('should rename relevant rules keeping their config and handling overrides', async () => {

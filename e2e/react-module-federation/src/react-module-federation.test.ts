@@ -25,45 +25,39 @@ describe('React Module Federation', () => {
 
   beforeAll(() => {
     tree = createTreeWithEmptyWorkspace();
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/react'] });
   });
 
   afterAll(() => cleanupProject());
 
-  it('should generate host and remote apps', async () => {
-    const shell = uniq('shell');
-    const remote1 = uniq('remote1');
-    const remote2 = uniq('remote2');
-    const remote3 = uniq('remote3');
+  describe('Default Configuration', () => {
+    it('should generate host and remote apps', async () => {
+      const shell = uniq('shell');
+      const remote1 = uniq('remote1');
+      const remote2 = uniq('remote2');
+      const remote3 = uniq('remote3');
 
-    runCLI(`generate @nx/react:host ${shell} --style=css --no-interactive`);
-    runCLI(
-      `generate @nx/react:remote ${remote1} --style=css --host=${shell} --no-interactive`
-    );
-    runCLI(
-      `generate @nx/react:remote ${remote2} --style=css --host=${shell} --no-interactive`
-    );
-    runCLI(
-      `generate @nx/react:remote ${remote3} --style=css --host=${shell} --no-interactive`
-    );
+      // Since we are using a single-file server for the remotes
+      const defaultRemotePort = 4201;
 
-    checkFilesExist(`apps/${shell}/module-federation.config.ts`);
-    checkFilesExist(`apps/${remote1}/module-federation.config.ts`);
-    checkFilesExist(`apps/${remote2}/module-federation.config.ts`);
-    checkFilesExist(`apps/${remote3}/module-federation.config.ts`);
+      runCLI(
+        `generate @nx/react:host ${shell} --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --skipFormat`
+      );
 
-    await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
-      combinedOutput: expect.stringContaining('Test Suites: 1 passed, 1 total'),
-    });
+      checkFilesExist(`apps/${shell}/module-federation.config.ts`);
+      checkFilesExist(`apps/${remote1}/module-federation.config.ts`);
+      checkFilesExist(`apps/${remote2}/module-federation.config.ts`);
+      checkFilesExist(`apps/${remote3}/module-federation.config.ts`);
 
-    expect(readPort(shell)).toEqual(4200);
-    expect(readPort(remote1)).toEqual(4201);
-    expect(readPort(remote2)).toEqual(4202);
-    expect(readPort(remote3)).toEqual(4203);
+      await expect(runCLIAsync(`test ${shell}`)).resolves.toMatchObject({
+        combinedOutput: expect.stringContaining(
+          'Test Suites: 1 passed, 1 total'
+        ),
+      });
 
-    updateFile(
-      `apps/${shell}/webpack.config.ts`,
-      stripIndents`
+      updateFile(
+        `apps/${shell}/webpack.config.ts`,
+        stripIndents`
         import { composePlugins, withNx, ModuleFederationConfig } from '@nx/webpack';
         import { withReact } from '@nx/react';
         import { withModuleFederation } from '@nx/react/module-federation';
@@ -74,21 +68,19 @@ describe('React Module Federation', () => {
           ...baseConfig,
               remotes: [
                 '${remote1}',
-                ['${remote2}', 'http://localhost:${readPort(
-        remote2
-      )}/remoteEntry.js'],
-                ['${remote3}', 'http://localhost:${readPort(remote3)}'],
+                ['${remote2}', 'http://localhost:${defaultRemotePort}/${remote2}/remoteEntry.js'],
+                ['${remote3}', 'http://localhost:${defaultRemotePort}/${remote3}/remoteEntry.js'],
               ],
         };
 
         // Nx plugins for webpack to build config object from Nx options and context.
         module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config));
       `
-    );
+      );
 
-    updateFile(
-      `apps/${shell}-e2e/src/integration/app.spec.ts`,
-      stripIndents`
+      updateFile(
+        `apps/${shell}-e2e/src/integration/app.spec.ts`,
+        stripIndents`
         import { getGreeting } from '../support/app.po';
 
         describe('shell app', () => {
@@ -113,133 +105,129 @@ describe('React Module Federation', () => {
           });
         });
       `
-    );
-
-    if (runE2ETests()) {
-      const e2eResultsSwc = await runCommandUntil(
-        `e2e ${shell}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
       );
 
+      if (runE2ETests()) {
+        const e2eResultsSwc = await runCommandUntil(
+          `e2e ${shell}-e2e --no-watch --verbose`,
+          (output) => output.includes('All specs passed!')
+        );
+
+        await killProcessAndPorts(
+          e2eResultsSwc.pid,
+          readPort(shell),
+          defaultRemotePort
+        );
+
+        const e2eResultsTsNode = await runCommandUntil(
+          `e2e ${shell}-e2e --no-watch --verbose`,
+          (output) => output.includes('All specs passed!'),
+          {
+            env: { NX_PREFER_TS_NODE: 'true' },
+          }
+        );
+        await killProcessAndPorts(
+          e2eResultsTsNode.pid,
+          readPort(shell),
+          defaultRemotePort
+        );
+      }
+    }, 500_000);
+
+    it('should generate host and remote apps with ssr', async () => {
+      const shell = uniq('shell');
+      const remote1 = uniq('remote1');
+      const remote2 = uniq('remote2');
+      const remote3 = uniq('remote3');
+
+      await runCLIAsync(
+        `generate @nx/react:host ${shell} --ssr --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --projectNameAndRootFormat=derived --skipFormat`
+      );
+
+      expect(readPort(shell)).toEqual(4200);
+      expect(readPort(remote1)).toEqual(4201);
+      expect(readPort(remote2)).toEqual(4202);
+      expect(readPort(remote3)).toEqual(4203);
+
+      [shell, remote1, remote2, remote3].forEach((app) => {
+        checkFilesExist(
+          `apps/${app}/module-federation.config.ts`,
+          `apps/${app}/module-federation.server.config.ts`
+        );
+        ['build', 'server'].forEach((target) => {
+          ['development', 'production'].forEach(async (configuration) => {
+            const cliOutput = runCLI(`run ${app}:${target}:${configuration}`);
+            expect(cliOutput).toContain('Successfully ran target');
+
+            await killPorts(readPort(app));
+          });
+        });
+      });
+    }, 500_000);
+
+    it('should should support generating host and remote apps with the new name and root format', async () => {
+      const shell = uniq('shell');
+      const remote = uniq('remote');
+
+      runCLI(
+        `generate @nx/react:host ${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+      );
+      runCLI(
+        `generate @nx/react:remote ${remote} --host=${shell} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
+      );
+
+      const shellPort = readPort(shell);
+      const remotePort = readPort(remote);
+
+      // check files are generated without the layout directory ("apps/") and
+      // using the project name as the directory when no directory is provided
+      checkFilesExist(`${shell}/module-federation.config.ts`);
+      checkFilesExist(`${remote}/module-federation.config.ts`);
+
+      // check default generated host is built successfully
+      const buildOutputSwc = runCLI(`run ${shell}:build:development`);
+      expect(buildOutputSwc).toContain('Successfully ran target build');
+
+      const buildOutputTsNode = runCLI(`run ${shell}:build:development`, {
+        env: { NX_PREFER_TS_NODE: 'true' },
+      });
+      expect(buildOutputTsNode).toContain('Successfully ran target build');
+
+      // check serves devRemotes ok
+      const shellProcessSwc = await runCommandUntil(
+        `serve ${shell} --devRemotes=${remote} --verbose`,
+        (output) => {
+          return output.includes(
+            `All remotes started, server ready at http://localhost:${shellPort}`
+          );
+        }
+      );
       await killProcessAndPorts(
-        e2eResultsSwc.pid,
-        readPort(shell),
-        readPort(remote1),
-        readPort(remote2),
-        readPort(remote3)
+        shellProcessSwc.pid,
+        shellPort,
+        remotePort + 1,
+        remotePort
       );
 
-      const e2eResultsTsNode = await runCommandUntil(
-        `e2e ${shell}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!'),
+      const shellProcessTsNode = await runCommandUntil(
+        `serve ${shell} --devRemotes=${remote} --verbose`,
+        (output) => {
+          return output.includes(
+            `All remotes started, server ready at http://localhost:${shellPort}`
+          );
+        },
         {
           env: { NX_PREFER_TS_NODE: 'true' },
         }
       );
       await killProcessAndPorts(
-        e2eResultsTsNode.pid,
-        readPort(shell),
-        readPort(remote1),
-        readPort(remote2),
-        readPort(remote3)
+        shellProcessTsNode.pid,
+        shellPort,
+        remotePort + 1,
+        remotePort
       );
-    }
-  }, 500_000);
-
-  it('should generate host and remote apps with ssr', async () => {
-    const shell = uniq('shell');
-    const remote1 = uniq('remote1');
-    const remote2 = uniq('remote2');
-    const remote3 = uniq('remote3');
-
-    await runCLIAsync(
-      `generate @nx/react:host ${shell} --ssr --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --projectNameAndRootFormat=derived`
-    );
-
-    expect(readPort(shell)).toEqual(4200);
-    expect(readPort(remote1)).toEqual(4201);
-    expect(readPort(remote2)).toEqual(4202);
-    expect(readPort(remote3)).toEqual(4203);
-
-    [shell, remote1, remote2, remote3].forEach((app) => {
-      checkFilesExist(
-        `apps/${app}/module-federation.config.ts`,
-        `apps/${app}/module-federation.server.config.ts`
-      );
-      ['build', 'server'].forEach((target) => {
-        ['development', 'production'].forEach(async (configuration) => {
-          const cliOutput = runCLI(`run ${app}:${target}:${configuration}`);
-          expect(cliOutput).toContain('Successfully ran target');
-
-          await killPorts(readPort(app));
-        });
-      });
-    });
-  }, 500_000);
-
-  it('should should support generating host and remote apps with the new name and root format', async () => {
-    const shell = uniq('shell');
-    const remote = uniq('remote');
-
-    runCLI(
-      `generate @nx/react:host ${shell} --project-name-and-root-format=as-provided --no-interactive`
-    );
-    runCLI(
-      `generate @nx/react:remote ${remote} --host=${shell} --project-name-and-root-format=as-provided --no-interactive`
-    );
-
-    const shellPort = readPort(shell);
-    const remotePort = readPort(remote);
-
-    // check files are generated without the layout directory ("apps/") and
-    // using the project name as the directory when no directory is provided
-    checkFilesExist(`${shell}/module-federation.config.ts`);
-    checkFilesExist(`${remote}/module-federation.config.ts`);
-
-    // check default generated host is built successfully
-    const buildOutputSwc = runCLI(`run ${shell}:build:development`);
-    expect(buildOutputSwc).toContain('Successfully ran target build');
-
-    const buildOutputTsNode = runCLI(`run ${shell}:build:development`, {
-      env: { NX_PREFER_TS_NODE: 'true' },
-    });
-    expect(buildOutputTsNode).toContain('Successfully ran target build');
-
-    // check serves devRemotes ok
-    const shellProcessSwc = await runCommandUntil(
-      `serve ${shell} --devRemotes=${remote} --verbose`,
-      (output) => {
-        return output.includes(
-          `All remotes started, server ready at http://localhost:${shellPort}`
-        );
-      }
-    );
-    await killProcessAndPorts(
-      shellProcessSwc.pid,
-      shellPort,
-      remotePort + 1,
-      remotePort
-    );
-
-    const shellProcessTsNode = await runCommandUntil(
-      `serve ${shell} --devRemotes=${remote} --verbose`,
-      (output) => {
-        return output.includes(
-          `All remotes started, server ready at http://localhost:${shellPort}`
-        );
-      },
-      {
-        env: { NX_PREFER_TS_NODE: 'true' },
-      }
-    );
-    await killProcessAndPorts(
-      shellProcessTsNode.pid,
-      shellPort,
-      remotePort + 1,
-      remotePort
-    );
-  }, 500_000);
-
+    }, 500_000);
+  });
   // Federate Module
   describe('Federate Module', () => {
     let proj: string;
@@ -258,16 +246,16 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       runCLI(
-        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
+        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${remote} --no-interactive`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${remote} --no-interactive --skipFormat`
       );
 
       updateFile(
@@ -359,16 +347,16 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       runCLI(
-        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided`
+        `generate @nx/js:lib ${lib} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       // Federate Module
       runCLI(
-        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --no-interactive`
+        `generate @nx/react:federate-module ${lib}/src/index.ts --name=${module} --remote=${childRemote} --no-interactive --skipFormat`
       );
 
       updateFile(
@@ -463,7 +451,7 @@ describe('React Module Federation', () => {
       const host = uniq('host');
 
       runCLI(
-        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false`
+        `generate @nx/react:host ${host} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --typescriptConfiguration=false --skipFormat`
       );
 
       // Update remote to be loaded via script
@@ -597,11 +585,11 @@ describe('React Module Federation', () => {
       const lib = uniq('lib');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided`
+        `generate @nx/react:host ${shell} --remotes=${remote} --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       runCLI(
-        `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --projectNameAndRootFormat=as-provided`
+        `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --projectNameAndRootFormat=as-provided --skipFormat`
       );
 
       const shellPort = readPort(shell);
@@ -747,7 +735,7 @@ describe('React Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/react:host ${shell} --remotes=${remote} --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
 
       const shellPort = readPort(shell);
@@ -874,7 +862,7 @@ describe('React Module Federation', () => {
   describe('Dynamic Module Federation', () => {
     beforeAll(() => {
       tree = createTreeWithEmptyWorkspace();
-      proj = newProject();
+      proj = newProject({ packages: ['@nx/react'] });
     });
 
     afterAll(() => cleanupProject());
@@ -883,7 +871,7 @@ describe('React Module Federation', () => {
       const remote = uniq('remote');
 
       runCLI(
-        `generate @nx/react:host ${shell} --remotes=${remote} --dynamic=true --project-name-and-root-format=as-provided --no-interactive`
+        `generate @nx/react:host ${shell} --remotes=${remote} --dynamic=true --project-name-and-root-format=as-provided --no-interactive --skipFormat`
       );
 
       // Webpack prod config should not exists when loading dynamic modules

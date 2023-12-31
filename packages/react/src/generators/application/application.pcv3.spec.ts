@@ -65,6 +65,7 @@ describe('react app generator (PCv3)', () => {
       ...schema,
       name: 'my-vite-app',
       bundler: 'vite',
+      skipFormat: true,
     });
     const projects = getProjects(appTree);
     expect(projects.get('my-vite-app').targets.build).toBeUndefined();

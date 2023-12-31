@@ -17,7 +17,9 @@ export async function librarySecondaryEntryPointGenerator(
   addPathMapping(tree, options);
   updateTsConfigIncludedFiles(tree, options);
 
-  await formatFiles(tree);
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 }
 
 export default librarySecondaryEntryPointGenerator;

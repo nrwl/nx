@@ -1,6 +1,5 @@
 import {
   categorizeRelatedDocuments,
-  generateRelatedDocumentsTemplate,
   ProcessedDocument,
   RelatedDocument,
 } from '@nx/nx-dev/models-document';
@@ -11,6 +10,7 @@ import { useRouter } from 'next/router';
 import { cx } from '@nx/nx-dev/ui-primitives';
 import { useRef } from 'react';
 import { collectHeadings, TableOfContents } from './table-of-contents';
+import { RelatedDocumentsSection } from './related-documents-section';
 
 export function DocViewer({
   document,
@@ -42,14 +42,7 @@ export function DocViewer({
     description: metadata['description'] ?? document.description,
     mediaImage: document.mediaImage,
     content: node,
-    relatedContent: renderMarkdown(
-      generateRelatedDocumentsTemplate(
-        categorizeRelatedDocuments(relatedDocuments)
-      ),
-      {
-        filePath: '',
-      }
-    ).node,
+    relatedContentData: categorizeRelatedDocuments(relatedDocuments),
     tableOfContent: collectHeadings(treeNode),
   };
 
@@ -129,11 +122,17 @@ export function DocViewer({
               )}
             </div>
             {/*RELATED CONTENT*/}
+
             <div
               data-document="related"
-              className="prose prose-slate dark:prose-invert max-w-none"
+              className={cx(
+                'pt-8 prose prose-slate dark:prose-invert w-full max-w-none 2xl:max-w-4xl',
+                { 'xl:max-w-2xl': !hideTableOfContent }
+              )}
             >
-              {vm.relatedContent}
+              <RelatedDocumentsSection
+                relatedCategories={vm.relatedContentData}
+              />
             </div>
           </div>
           <div className="flex w-full items-center space-x-2 pt-24 pb-24 sm:px-6 lg:pb-16 xl:px-8">

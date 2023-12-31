@@ -423,8 +423,9 @@ async function generateChangelogForWorkspace(
   postGitTasks: PostGitTask[]
 ) {
   const config = nxReleaseConfig.changelog.workspaceChangelog;
+  const isEnabled = args.workspaceChangelog ?? config;
   // The entire feature is disabled at the workspace level, exit early
-  if (config === false) {
+  if (isEnabled === false) {
     return;
   }
 
@@ -433,7 +434,14 @@ async function generateChangelogForWorkspace(
     return;
   }
 
-  if (!workspaceChangelogVersion) {
+  // The user explicitly passed workspaceChangelog=true but does not have a workspace changelog config in nx.json
+  if (!config) {
+    throw new Error(
+      `Workspace changelog is enabled but no configuration was provided. Please provide a workspaceChangelog object in your nx.json`
+    );
+  }
+
+  if (!workspaceChangelogVersion && args.workspaceChangelog) {
     throw new Error(
       `Workspace changelog is enabled but no overall version was provided. Please provide an explicit version using --version`
     );
@@ -482,10 +490,7 @@ async function generateChangelogForWorkspace(
     title: logTitle,
   });
 
-  const githubRepoSlug =
-    config.createRelease === 'github'
-      ? getGitHubRepoSlug(gitRemote)
-      : undefined;
+  const githubRepoSlug = getGitHubRepoSlug(gitRemote);
 
   let contents = await changelogRenderer({
     projectGraph,
@@ -884,7 +889,7 @@ async function generateChangelogForProjects(
       if (!dryRun) {
         postGitTasks.push(async (latestCommit) => {
           // Before we can create/update the release we need to ensure the commit exists on the remote
-          await gitPush();
+          await gitPush(gitRemote);
 
           await createOrUpdateGithubRelease(
             githubRequestConfig,

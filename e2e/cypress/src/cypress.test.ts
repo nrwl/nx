@@ -1,5 +1,4 @@
 import {
-  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
@@ -19,7 +18,7 @@ describe('Cypress E2E Test runner', () => {
   const myapp = uniq('myapp');
 
   beforeAll(() => {
-    newProject();
+    newProject({ packages: ['@nx/angular', '@nx/next', '@nx/react'] });
     ensureCypressInstallation();
   });
 

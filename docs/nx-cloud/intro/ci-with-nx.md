@@ -18,11 +18,11 @@ npx nx connect
 
 ## Learn about Nx on CI
 
-{% cards cols="2" lgCols="6" mdCols="4" smCols="2" %}
+{% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
 
 {% link-card title="What is Nx Cloud?" type="video" url="https://youtu.be/NZF0ZJpgaJM" icon="nxcloud" /%}
 
-{% link-card title="Nx Cloud 3.0 - What is new?" type="video" url="https://youtu.be/cG2hEI5L3qI?si=xVnSLMU2VN1UAEpJ" icon="nxcloud" /%}
+{% link-card title="E2E Test Auto-Splitting and Distribution" type="video" url="https://youtu.be/XLOUFZeqRpM" icon="nxcloud" /%}
 
 {% link-card title="Nx in 10 minutes!" type="video" url="https://youtu.be/-_4WMl-Fn0w" icon="nx" /%}
 {% link-card title="More On Youtube" type="video" url="https://www.youtube.com/@nxdevtools" icon="youtube" /%}
@@ -47,7 +47,7 @@ npx nx g ci-workflow
 
 ...or choose from our CI recipes with copy & pasteable code:
 
-{% cards cols="3" lgCols="8" mdCols="6" smCols="5"  %}
+{% cards cols="3" lgCols="6" mdCols="6" smCols="5"  %}
 
 {% link-card title="GitHub Actions" url="/ci/recipes/set-up/monorepo-ci-github-actions" icon="github" appearance="small" /%}
 {% link-card title="Circle CI" url="/ci/recipes/set-up/monorepo-ci-circle-ci" icon="circleci" appearance="small" /%}
