@@ -427,8 +427,9 @@ export default function NewYear(): JSX.Element {
             <article id="nx-new-year-tips" className="relative">
               <h3 className="text-xl font-semibold my-8">Nx New Year Tips</h3>
               <p>
-                Each day, during the first two weeks of January, a new card will
-                be unlocked for you to flip.
+                Start 2024 off right with some tips to help you get the most out
+                of Nx. Each day, during the first two weeks of January, a new
+                card will be unlocked for you to flip.
               </p>
 
               <div className="mx-auto items-stretch py-12 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:py-16">
