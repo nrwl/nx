@@ -457,7 +457,7 @@ export default function NewYear(): JSX.Element {
         description="Start off the new year with these tips on how to make the most of Nx."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx Community',
+          title: 'Nx New Year Tips',
           description:
             'Start off the new year with these tips on how to make the most of Nx.',
           images: [
