@@ -52,7 +52,7 @@ export const createDependencies: CreateDependencies = () => {
 };
 
 export const createNodes: CreateNodes<VitePluginOptions> = [
-  '**/vite.config.{js,ts}',
+  '**/{vite,vitest}.config.{js,ts}',
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
     // Do not create a project if package.json and project.json isn't there.
@@ -109,24 +109,26 @@ async function buildViteTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
-  targets[options.buildTargetName] = await buildTarget(
-    options.buildTargetName,
-    namedInputs,
-    buildOutputs,
-    projectRoot
-  );
+  if (!configFilePath.includes('vitest.config')) {
+    targets[options.buildTargetName] = await buildTarget(
+      options.buildTargetName,
+      namedInputs,
+      buildOutputs,
+      projectRoot
+    );
 
-  targets[options.serveTargetName] = serveTarget(projectRoot);
+    targets[options.serveTargetName] = serveTarget(projectRoot);
 
-  targets[options.previewTargetName] = previewTarget(projectRoot);
+    targets[options.previewTargetName] = previewTarget(projectRoot);
+
+    targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
+  }
 
   targets[options.testTargetName] = await testTarget(
     namedInputs,
     testOutputs,
     projectRoot
   );
-
-  targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
 
   return targets;
 }
