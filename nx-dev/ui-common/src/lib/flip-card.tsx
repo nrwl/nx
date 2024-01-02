@@ -20,7 +20,7 @@ export function FlipCard({
   onClick: () => void;
   children: ReactNode;
 }) {
-  const [flipped, setFlipped] = useState(isFlipped);
+  const [flipped, setFlipped] = useState(() => isFlipped);
 
   return (
     <FlipCardContext.Provider value={{ day, onClick }}>
