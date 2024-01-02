@@ -36,9 +36,7 @@
     "@nx/eslint": "file:../eslint",
     "@nx/vue": "file:../vue"
   },
-  "peerDependencies": {
-    "vite": "^5.0.0"
-  },
+  "peerDependencies": {},
   "publishConfig": {
     "access": "public"
   }
