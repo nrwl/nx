@@ -201,7 +201,6 @@ impl TaskHasher {
                     &project.root,
                     file_sets,
                     &self.project_file_map,
-                    &self.workspace_root,
                 )?;
                 trace!(parent: &span, "hash_project_files: {:?}", now.elapsed());
                 hashed_project_files

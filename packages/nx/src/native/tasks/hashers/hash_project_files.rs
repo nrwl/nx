@@ -11,14 +11,7 @@ pub fn hash_project_files(
     project_root: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
-    workspace_root: &str,
 ) -> Result<String> {
-    let project_root = if project_root == "." {
-        workspace_root
-    } else {
-        project_root
-    };
-
     let collected_files = collect_files(project_name, project_root, file_sets, project_file_map)?;
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     for file in collected_files {
@@ -36,7 +29,13 @@ fn collect_files<'a>(
 ) -> Result<Vec<&'a FileData>> {
     let globs = file_sets
         .iter()
-        .map(|f| f.replace("{projectRoot}", project_root))
+        .map(|f| {
+            if project_root == "." {
+                f.replace("{projectRoot}/", "")
+            } else {
+                f.replace("{projectRoot}", project_root)
+            }
+        })
         .collect::<Vec<_>>();
     let now = std::time::Instant::now();
     let glob_set = build_glob_set(&globs)?;
@@ -152,8 +151,7 @@ mod tests {
                 file_data4.clone(),
             ],
         );
-        let hash_result =
-            hash_project_files(proj_name, proj_root, file_sets, &file_map, "test").unwrap();
+        let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
         assert_eq!(
             hash_result,
             hash(&[file_data1.hash.as_bytes(), file_data3.hash.as_bytes()].concat())
@@ -163,6 +161,7 @@ mod tests {
     #[test]
     fn should_hash_projects_with_root_as_dot() {
         let proj_name = "test_project";
+        // having "." as the project root means that this would be a standalone project
         let proj_root = ".";
         let file_sets = &[
             "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)".to_string(),
@@ -194,8 +193,7 @@ mod tests {
                 file_data4.clone(),
             ],
         );
-        let hash_result =
-            hash_project_files(proj_name, proj_root, file_sets, &file_map, "test").unwrap();
+        let hash_result = hash_project_files(proj_name, proj_root, file_sets, &file_map).unwrap();
         assert_eq!(
             hash_result,
             hash(&[file_data1.hash.as_bytes(), file_data3.hash.as_bytes()].concat())
