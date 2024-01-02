@@ -49,7 +49,7 @@ export function FlipCard({
       >
         <div
           className={cx(
-            'relative preserve-3d transition w-full h-full duration-200 content-center rounded-lg border-2 shadow-sm focus-within:ring-offset-2 bg-white/40 dark:bg-slate-800/60',
+            'relative preserve-3d transition w-full h-full duration-200 content-center rounded-lg border-2 shadow-sm focus-within:ring-offset-2 bg-white/60 dark:bg-slate-800/60',
             flipped ? 'my-rotate-y-180 bg-white dark:bg-slate-800' : '',
             isFlippable
               ? flipped
@@ -78,11 +78,11 @@ export function FlipCardBack({ children }: { children: ReactNode }) {
   return (
     <FlipCardContext.Consumer>
       {({ fullDate }) => (
-        <div className="my-rotate-y-180 backface-hidden w-full h-full overflow-scroll rounded-md dark:text-slate-100 text-slate-900 text-3xl dark:bg-white/10 bg-slate-800/20">
-          <span className="absolute top-0 left-0 pt-3 pl-2 text-sm">
+        <div className="my-rotate-y-180 backface-hidden w-full h-full overflow-scroll rounded-md dark:text-slate-100 text-slate-900 text-3xl dark:bg-white/10 bg-slate-800/10">
+          <span className="absolute top-0 left-0 pt-5 pl-4 text-sm">
             {fullDate}
           </span>
-          <div className="px-2 text-sm sm:text-sm md:text-sm lg:text-lg">
+          <div className="p-4 text-sm sm:text-sm md:text-sm lg:text-lg">
             {children}
           </div>
         </div>
