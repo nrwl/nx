@@ -389,4 +389,16 @@ export const examples: Record<string, Example[]> = {
         'Watch all projects (including newly created projects) in the workspace',
     },
   ],
+  add: [
+    {
+      command: 'add @nx/react',
+      description:
+        'Install the latest version of the `@nx/react` package and run its `@nx/react:init` generator',
+    },
+    {
+      command: 'add @nx/react@17.0.0',
+      description:
+        'Install the version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator',
+    },
+  ],
 };
