@@ -19,7 +19,7 @@ interface NewYearTip {
 
 const tips: NewYearTip[] = [
   {
-    day: 1,
+    day: 8,
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold mt-8">What is Nx?</h3>
@@ -46,10 +46,10 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 1st, 2024',
+    fullDate: 'January 8th, 2024',
   },
   {
-    day: 2,
+    day: 9,
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold mt-8">
@@ -78,10 +78,10 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 2nd, 2024',
+    fullDate: 'January 9th, 2024',
   },
   {
-    day: 3,
+    day: 10,
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold mt-8">What is Nx Cloud?</h3>
@@ -117,10 +117,10 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 3rd, 2024',
+    fullDate: 'January 10th, 2024',
   },
   {
-    day: 4,
+    day: 11,
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold my-8">
@@ -149,10 +149,10 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 4th, 2024',
+    fullDate: 'January 11th, 2024',
   },
   {
-    day: 5,
+    day: 12,
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold my-8">Micro Frontends with Nx</h3>
@@ -180,10 +180,10 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 5th, 2024',
+    fullDate: 'January 12th, 2024',
   },
   {
-    day: 8,
+    day: 15,
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold my-8">Explore Example Repos</h3>
@@ -222,10 +222,10 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 8th, 2024',
+    fullDate: 'January 15th, 2024',
   },
   {
-    day: 9,
+    day: 16,
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold my-8">Let's Build a CLI</h3>
@@ -253,10 +253,10 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 9th, 2024',
+    fullDate: 'January 16th, 2024',
   },
   {
-    day: 10,
+    day: 17,
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold my-8">
@@ -297,10 +297,10 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 10th, 2024',
+    fullDate: 'January 17th, 2024',
   },
   {
-    day: 11,
+    day: 18,
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold my-8">Graduating to a Monorepo</h3>
@@ -329,10 +329,10 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 11th, 2024',
+    fullDate: 'January 18th, 2024',
   },
   {
-    day: 12,
+    day: 19,
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold my-8">
@@ -368,7 +368,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 12th, 2024',
+    fullDate: 'January 19th, 2024',
   },
 ];
 
@@ -428,8 +428,7 @@ export default function NewYear(): JSX.Element {
               <h3 className="text-xl font-semibold my-8">Nx New Year Tips</h3>
               <p>
                 Start 2024 off right with some tips to help you get the most out
-                of Nx. Each day, during the first two weeks of January, a new
-                card will be unlocked for you to flip.
+                of Nx. Each day, a new card will be unlocked for you to flip.
               </p>
 
               <div className="mx-auto items-stretch py-12 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:py-16">
