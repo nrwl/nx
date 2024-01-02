@@ -1,42 +1,29 @@
 import {
   FlipCard,
   FlipCardBack,
-  FlipCardBackYoutube,
   Footer,
   Header,
-  Modal,
-  ModalHeader,
-  SectionHeading,
   YouTube,
 } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { frameworkIcons } from '@nx/nx-dev/ui-markdoc';
 import { ReactNode, useEffect, useState } from 'react';
 
 interface NewYearTip {
   day: number;
   cardBack: ReactNode;
-  modalHeader: ReactNode;
-  modalContent: ReactNode;
+  fullDate: string;
 }
 
 const tips: NewYearTip[] = [
   {
     day: 1,
     cardBack: (
-      <FlipCardBackYoutube
-        src="https://www.youtube.com/watch?v=-_4WMl-Fn0w"
-        title="Soo...what is Nx?"
-      ></FlipCardBackYoutube>
-    ),
-    modalHeader: <h3 className="text-xl font-semibold">January 1st, 2024</h3>,
-    modalContent: (
-      <>
-        <SectionHeading as="p" variant="display" className="mt-4">
-          What is Nx?
-        </SectionHeading>
-        <div className="mx-auto my-8 max-w-3xl">
+      <FlipCardBack>
+        <h3 className="text-xl font-semibold mt-8">What is Nx?</h3>
+        <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=-_4WMl-Fn0w"
             title="Soo...what is Nx?"
@@ -57,24 +44,18 @@ const tips: NewYearTip[] = [
             Intro to Nx
           </Link>
         </p>
-      </>
+      </FlipCardBack>
     ),
+    fullDate: 'January 1st, 2024',
   },
   {
     day: 2,
     cardBack: (
-      <FlipCardBackYoutube
-        src="https://www.youtube.com/watch?v=ArmERpNvC8Y"
-        title="Package based vs Integrated Style - Use Nx however it works best for you"
-      ></FlipCardBackYoutube>
-    ),
-    modalHeader: <h3 className="text-xl font-semibold">January 2nd, 2024</h3>,
-    modalContent: (
-      <>
-        <SectionHeading as="p" variant="display" className="mt-4">
+      <FlipCardBack>
+        <h3 className="text-xl font-semibold mt-8">
           Which Style of Workspace is Right for You?
-        </SectionHeading>
-        <div className="mx-auto my-8 max-w-3xl">
+        </h3>
+        <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=ArmERpNvC8Y"
             title="Package based vs Integrated Style - Use Nx however it works best for you"
@@ -95,24 +76,16 @@ const tips: NewYearTip[] = [
             Types of Repos Guide
           </Link>
         </p>
-      </>
+      </FlipCardBack>
     ),
+    fullDate: 'January 2nd, 2024',
   },
   {
     day: 3,
     cardBack: (
-      <FlipCardBackYoutube
-        src="https://www.youtube.com/watch?v=NZF0ZJpgaJM"
-        title="What is Nx Cloud?"
-      ></FlipCardBackYoutube>
-    ),
-    modalHeader: <h3 className="text-xl font-semibold">January 3rd, 2024</h3>,
-    modalContent: (
-      <>
-        <SectionHeading as="p" variant="display" className="mt-4">
-          What is Nx Cloud?
-        </SectionHeading>
-        <div className="mx-auto my-8 max-w-3xl">
+      <FlipCardBack>
+        <h3 className="text-xl font-semibold mt-8">What is Nx Cloud?</h3>
+        <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=NZF0ZJpgaJM"
             title="What is Nx Cloud?"
@@ -142,24 +115,18 @@ const tips: NewYearTip[] = [
             CI with Nx
           </Link>
         </p>
-      </>
+      </FlipCardBack>
     ),
+    fullDate: 'January 3rd, 2024',
   },
   {
     day: 4,
     cardBack: (
-      <FlipCardBackYoutube
-        src="https://youtu.be/VmGCZ77ao_I"
-        title="Add Nx to Any Project"
-      ></FlipCardBackYoutube>
-    ),
-    modalHeader: <h3 className="text-xl font-semibold">January 4th, 2024</h3>,
-    modalContent: (
-      <>
-        <SectionHeading as="p" variant="display" className="my-4">
+      <FlipCardBack>
+        <h3 className="text-xl font-semibold my-8">
           Add Nx to an Existing Project
-        </SectionHeading>
-        <div className="mx-auto my-8 max-w-3xl">
+        </h3>
+        <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/VmGCZ77ao_I"
             title="Add Nx to Any Project"
@@ -180,24 +147,16 @@ const tips: NewYearTip[] = [
             Add Nx to an Existing Project
           </Link>
         </p>
-      </>
+      </FlipCardBack>
     ),
+    fullDate: 'January 4th, 2024',
   },
   {
     day: 5,
     cardBack: (
-      <FlipCardBackYoutube
-        src="https://www.youtube.com/watch?v=dotA6ZSmNL4"
-        title="Superpowered Micro Frontends with Monorepos"
-      ></FlipCardBackYoutube>
-    ),
-    modalHeader: <h3 className="text-xl font-semibold">January 5th, 2024</h3>,
-    modalContent: (
-      <>
-        <SectionHeading as="p" variant="display" className="my-4">
-          Micro Frontends with Nx
-        </SectionHeading>
-        <div className="mx-auto my-8 max-w-3xl">
+      <FlipCardBack>
+        <h3 className="text-xl font-semibold my-8">Micro Frontends with Nx</h3>
+        <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=dotA6ZSmNL4"
             title="Superpowered Micro Frontends with Monorepos"
@@ -219,26 +178,39 @@ const tips: NewYearTip[] = [
             Micro Frontends with Nx
           </Link>
         </p>
-      </>
+      </FlipCardBack>
     ),
+    fullDate: 'January 5th, 2024',
   },
   {
     day: 8,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-center">Explore Example Repos</h3>
-      </FlipCardBack>
-    ),
-    modalHeader: <h3 className="text-xl font-semibold">January 8th, 2024</h3>,
-    modalContent: (
-      <>
-        <SectionHeading as="p" variant="display" className="my-4">
-          Explore Example Repos
-        </SectionHeading>
+        <h3 className="text-xl font-semibold my-8">Explore Example Repos</h3>
         <p className="my-4">
           Nx can work with any technology stack and we have created examples for
           many of them.
         </p>
+        <div className="flex justify-center items-center">
+          <Link
+            href="/getting-started/tutorials/react-standalone-tutorial"
+            className="w-20 h-20 m-4"
+          >
+            {frameworkIcons.react.image}
+          </Link>
+          <Link
+            href="/getting-started/tutorials/angular-standalone-tutorial"
+            className="w-20 h-20 m-4"
+          >
+            {frameworkIcons.angular.image}
+          </Link>
+          <Link
+            href="/getting-started/tutorials/vue-standalone-tutorial"
+            className="w-20 h-20 m-4"
+          >
+            {frameworkIcons.vue.image}
+          </Link>
+        </div>
         <p className="my-4">
           Read more about using{' '}
           <Link
@@ -248,24 +220,16 @@ const tips: NewYearTip[] = [
             Nx with your Favorite Tech
           </Link>
         </p>
-      </>
+      </FlipCardBack>
     ),
+    fullDate: 'January 8th, 2024',
   },
   {
     day: 9,
     cardBack: (
-      <FlipCardBackYoutube
-        src="https://youtu.be/ocllb5KEXZk"
-        title="Build Your Own CLI"
-      ></FlipCardBackYoutube>
-    ),
-    modalHeader: <h3 className="text-xl font-semibold">January 9th, 2024</h3>,
-    modalContent: (
-      <>
-        <SectionHeading as="p" variant="display" className="my-4">
-          Let's Build a CLI
-        </SectionHeading>
-        <div className="mx-auto my-8 max-w-3xl">
+      <FlipCardBack>
+        <h3 className="text-xl font-semibold my-8">Let's Build a CLI</h3>
+        <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/ocllb5KEXZk"
             title="Build Your Own CLI"
@@ -287,24 +251,18 @@ const tips: NewYearTip[] = [
             Build Your Own CLI
           </Link>
         </p>
-      </>
+      </FlipCardBack>
     ),
+    fullDate: 'January 9th, 2024',
   },
   {
     day: 10,
     cardBack: (
-      <FlipCardBackYoutube
-        src="https://youtu.be/XLOUFZeqRpM"
-        title="Victor FIXES Your CI with Nx"
-      ></FlipCardBackYoutube>
-    ),
-    modalHeader: <h3 className="text-xl font-semibold">January 10th, 2024</h3>,
-    modalContent: (
-      <>
-        <SectionHeading as="p" variant="display" className="my-4">
+      <FlipCardBack>
+        <h3 className="text-xl font-semibold my-8">
           Nx Agents: The Next Leap in Distributed Task Execution
-        </SectionHeading>
-        <div className="mx-auto my-8 max-w-3xl">
+        </h3>
+        <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/XLOUFZeqRpM"
             title="Victor FIXES Your CI with Nx"
@@ -337,24 +295,16 @@ const tips: NewYearTip[] = [
             Nx Agents
           </Link>
         </p>
-      </>
+      </FlipCardBack>
     ),
+    fullDate: 'January 10th, 2024',
   },
   {
     day: 11,
     cardBack: (
-      <FlipCardBackYoutube
-        src="https://www.youtube.com/watch?v=ztNpLf2Zl-c"
-        title="Graduating Your Standalone Nx Repo To A Monorepo"
-      ></FlipCardBackYoutube>
-    ),
-    modalHeader: <h3 className="text-xl font-semibold">January 11th, 2024</h3>,
-    modalContent: (
-      <>
-        <SectionHeading as="p" variant="display" className="my-4">
-          Graduating to a Monorepo
-        </SectionHeading>
-        <div className="mx-auto my-8 max-w-3xl">
+      <FlipCardBack>
+        <h3 className="text-xl font-semibold my-8">Graduating to a Monorepo</h3>
+        <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=ztNpLf2Zl-c"
             title="Graduating Your Standalone Nx Repo To A Monorepo"
@@ -377,24 +327,18 @@ const tips: NewYearTip[] = [
           </Link>
           .
         </p>
-      </>
+      </FlipCardBack>
     ),
+    fullDate: 'January 11th, 2024',
   },
   {
     day: 12,
     cardBack: (
-      <FlipCardBackYoutube
-        src="https://youtu.be/Ss6MfcXi0jE"
-        title="Run Code Migrations to Update your Codebase"
-      ></FlipCardBackYoutube>
-    ),
-    modalHeader: <h3 className="text-xl font-semibold">January 12th, 2024</h3>,
-    modalContent: (
-      <>
-        <SectionHeading as="p" variant="display" className="my-4">
+      <FlipCardBack>
+        <h3 className="text-xl font-semibold my-8">
           Keep Your Tooling Up to Date
-        </SectionHeading>
-        <div className="mx-auto my-8 max-w-3xl">
+        </h3>
+        <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/Ss6MfcXi0jE"
             title="Run Code Migrations to Update your Codebase"
@@ -422,8 +366,9 @@ const tips: NewYearTip[] = [
             Automate Updating Dependencies
           </Link>
         </p>
-      </>
+      </FlipCardBack>
     ),
+    fullDate: 'January 12th, 2024',
   },
 ];
 
@@ -432,7 +377,6 @@ export default function NewYear(): JSX.Element {
     new Date().getFullYear() === 2024 ? new Date().getDate() : 0;
   const router = useRouter();
   const [cards, setCards] = useState({});
-  const [currentModal, setCurrentModal] = useState(0);
 
   useEffect(() => {
     const cards = JSON.parse(localStorage.getItem('cards') || '{}');
@@ -480,16 +424,14 @@ export default function NewYear(): JSX.Element {
             id="new-year"
             className="py-18 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
           >
-            <article id="nx-new-year-challenge" className="relative">
-              <SectionHeading as="h1" variant="display" className="my-4">
-                Nx New Year Tips
-              </SectionHeading>
+            <article id="nx-new-year-tips" className="relative">
+              <h3 className="text-xl font-semibold my-8">Nx New Year Tips</h3>
               <p>
                 Each day, during the first two weeks of January, a new card will
                 be unlocked for you to flip.
               </p>
 
-              <div className="mx-auto items-stretch py-12 grid grid-cols-2 gap-8 sm:grid-cols-3 md:grid-cols-5 lg:py-16">
+              <div className="mx-auto items-stretch py-12 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:py-16">
                 {tips.map((tip) => (
                   <FlipCard
                     key={tip.day}
@@ -497,9 +439,7 @@ export default function NewYear(): JSX.Element {
                     onFlip={onFlip}
                     isFlipped={cards[tip.day]}
                     day={tip.day}
-                    onClick={() =>
-                      getIsFlippable(tip.day) && setCurrentModal(tip.day)
-                    }
+                    fullDate={tip.fullDate}
                   >
                     {tip.cardBack}
                   </FlipCard>
@@ -507,19 +447,6 @@ export default function NewYear(): JSX.Element {
               </div>
             </article>
           </div>
-
-          {tips.map((tip) => (
-            <Modal
-              key={tip.day}
-              isOpen={currentModal === tip.day}
-              onClose={() => setCurrentModal(0)}
-            >
-              <ModalHeader onClose={() => setCurrentModal(0)}>
-                {tip.modalHeader}
-              </ModalHeader>
-              <div className="p-6">{tip.modalContent}</div>
-            </Modal>
-          ))}
         </div>
       </main>
       <Footer />
