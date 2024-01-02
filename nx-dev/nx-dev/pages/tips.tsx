@@ -453,13 +453,13 @@ export default function NewYear(): JSX.Element {
   return (
     <>
       <NextSeo
-        title="Nx New Year Tune-Up"
-        description="There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Discord and Twitter"
+        title="Nx New Year Tips"
+        description="Start off the new year with these tips on how to make the most of Nx."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
           title: 'Nx Community',
           description:
-            'There are many ways you can connect with the open-source Nx community. The community is rich and dynamic offering Nx plugins and help on multiple platforms like GitHub, Discord and Twitter',
+            'Start off the new year with these tips on how to make the most of Nx.',
           images: [
             {
               url: 'https://nx.dev/socials/nx-media.png',
@@ -497,7 +497,9 @@ export default function NewYear(): JSX.Element {
                     onFlip={onFlip}
                     isFlipped={cards[tip.day]}
                     day={tip.day}
-                    onClick={() => setCurrentModal(tip.day)}
+                    onClick={() =>
+                      getIsFlippable(tip.day) && setCurrentModal(tip.day)
+                    }
                   >
                     {tip.cardBack}
                   </FlipCard>
