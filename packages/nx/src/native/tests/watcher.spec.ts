@@ -8,7 +8,7 @@ describe('watcher', () => {
     temp = new TempFs('watch-dir');
     temp.createFilesSync({
       '.gitignore': 'node_modules/\n.env.local',
-      '.nxignore': 'app2/\n!.env.*\nbar.txt',
+      '.nxignore': 'app2/\n!.env.*\nboo.txt',
       '.env.local': '',
       'app1/main.js': '',
       'app1/main.css': '',
@@ -165,7 +165,7 @@ describe('watcher', () => {
         expect(
           paths.some(({ path }) => path === 'inner/.env.inner')
         ).toBeTruthy();
-        expect(paths.some(({ path }) => path === 'inner/bar.txt')).toBeFalsy();
+        expect(paths.some(({ path }) => path === 'inner/boo.txt')).toBeFalsy();
         done();
       });
 
