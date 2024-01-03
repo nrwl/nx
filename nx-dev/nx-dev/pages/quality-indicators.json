@@ -306,11 +306,6 @@
     "nxVersion": ">= 16 <= 18",
     "githubStars": 429
   },
-  "@nx-go/nx-go": {
-    "lastPublishedDate": "2023-08-27T11:11:06.599Z",
-    "npmDownloads": 116029,
-    "githubStars": -1
-  },
   "@nx-golang/gin": {
     "lastPublishedDate": "2023-01-04T14:57:24.660Z",
     "npmDownloads": 453,

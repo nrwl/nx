@@ -155,11 +155,6 @@
     "url": "https://github.com/nxext/nx-extensions/tree/master/packages/solid"
   },
   {
-    "name": "@nx-go/nx-go",
-    "description": "Nx plugin to use Go in a Nx workspace",
-    "url": "https://github.com/nx-go/nx-go"
-  },
-  {
     "name": "@nx-golang/gin",
     "description": "Nx plugin to use Go-Gin in a Nx workspace",
     "url": "https://github.com/nx-golang/nx-golang"
