@@ -52,20 +52,20 @@ export async function configurationGenerator(
       `${projectConfig.root}/tsconfig.json`,
       JSON.stringify(
         {
-          extends: '${getRelativePathToRootTsConfig(tree, projectConfig.root)}',
+          extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
           compilerOptions: {
             allowJs: true,
-            outDir: '${offsetFromProjectRoot}dist/out-tsc',
+            outDir: `${offsetFromProjectRoot}dist/out-tsc`,
             module: 'commonjs',
             sourceMap: false,
           },
           include: [
             '**/*.ts',
             '**/*.js',
-            '${offsetFromProjectRoot}playwright.config.ts',
-            '${offsetFromProjectRoot}**/*.spec.ts',
-            '${offsetFromProjectRoot}**/*.spec.js',
-            '${offsetFromProjectRoot}**/*.d.ts',
+            `${offsetFromProjectRoot}playwright.config.ts`,
+            `${offsetFromProjectRoot}**/*.spec.ts`,
+            `${offsetFromProjectRoot}**/*.spec.js`,
+            `${offsetFromProjectRoot}**/*.d.ts`,
           ],
         },
         null,
