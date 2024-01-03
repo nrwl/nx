@@ -8,11 +8,14 @@ describe('watcher', () => {
     temp = new TempFs('watch-dir');
     temp.createFilesSync({
       '.gitignore': 'node_modules/\n.env.local',
-      '.nxignore': 'app2/\n!.env.local',
+      '.nxignore': 'app2/\n!.env.*\nbar.txt',
       '.env.local': '',
       'app1/main.js': '',
       'app1/main.css': '',
       'app2/main.js': '',
+      'inner/.gitignore': '.env.inner',
+      'inner/boo.txt': '',
+      'inner/.env.inner': '',
       'nested-ignore/.gitignore': '*',
       'nested-ignore/file.js': '',
       'node_modules/module/index.js': '',
@@ -153,17 +156,23 @@ describe('watcher', () => {
     });
   }, 10000);
 
-  it('should include files that are negated in nxignore but are ignored in gitignore', async () => {
+  it('prioritize nxignore over gitignores', async () => {
     return new Promise<void>(async (done) => {
       await wait();
       watcher = new Watcher(temp.tempDir);
       watcher.watch((err, paths) => {
         expect(paths.some(({ path }) => path === '.env.local')).toBeTruthy();
+        expect(
+          paths.some(({ path }) => path === 'inner/.env.inner')
+        ).toBeTruthy();
+        expect(paths.some(({ path }) => path === 'inner/bar.txt')).toBeFalsy();
         done();
       });
 
       await wait(2000);
       temp.appendFile('.env.local', 'hello');
+      temp.appendFile('inner/.env.inner', 'hello');
+      temp.appendFile('inner/boo.txt', 'hello');
     });
   }, 15000);
 });

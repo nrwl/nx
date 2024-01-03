@@ -8,6 +8,7 @@ anyhow = "1.0.71"
 colored = "2"
 crossbeam-channel = '0.5'
 dashmap = { version = "5.5.3", features = ["rayon"] }
+dunce = "1"
 fs_extra = "1.3.0"
 globset = "0.4.10"
 hashbrown = { version = "0.14.3", features = ["rayon", "rkyv"] }

@@ -1466,6 +1466,7 @@ dependencies = [
  "colored",
  "crossbeam-channel",
  "dashmap",
+ "dunce",
  "fs_extra",
  "globset",
  "hashbrown 0.14.3",
