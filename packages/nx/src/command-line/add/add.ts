@@ -8,21 +8,29 @@ import {
   getPackageManagerCommand,
   type PackageManagerCommands,
 } from '../../utils/package-manager';
+import { handleErrors } from '../../utils/params';
 import { getPluginCapabilities } from '../../utils/plugins';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { AddOptions } from './command-object';
 
-export async function addHandler(args: AddOptions): Promise<void> {
-  output.addNewline();
+export function addHandler(args: AddOptions): Promise<void> {
+  if (args.verbose) {
+    process.env.NX_VERBOSE_LOGGING = 'true';
+  }
+  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
 
-  const pmc = getPackageManagerCommand();
-  const [pkgName, version] = parsePackageSpecifier(args.packageSpecifier);
+  return handleErrors(isVerbose, async () => {
+    output.addNewline();
 
-  await installPackage(pkgName, version, pmc);
-  await initializePlugin(pkgName, pmc);
+    const pmc = getPackageManagerCommand();
+    const [pkgName, version] = parsePackageSpecifier(args.packageSpecifier);
 
-  output.success({
-    title: `Package ${pkgName} added successfully.`,
+    await installPackage(pkgName, version, pmc);
+    await initializePlugin(pkgName, pmc);
+
+    output.success({
+      title: `Package ${pkgName} added successfully.`,
+    });
   });
 }
 

@@ -398,7 +398,7 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'add @nx/react@17.0.0',
       description:
-        'Install the version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator',
+        'Install version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator',
     },
   ],
 };

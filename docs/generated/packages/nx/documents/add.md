@@ -23,7 +23,7 @@ Install the latest version of the `@nx/react` package and run its `@nx/react:ini
  nx add @nx/react
 ```
 
-Install the version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator:
+Install version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator:
 
 ```shell
  nx add @nx/react@17.0.0
@@ -41,7 +41,13 @@ Show help
 
 Type: `string`
 
-The name of an installed plugin to query
+The package name and optional version (e.g. `@nx/react` or `@nx/react@latest`) to install and initialize
+
+### verbose
+
+Type: `boolean`
+
+Prints additional information about the commands (e.g., stack traces)
 
 ### version
 
