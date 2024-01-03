@@ -46,7 +46,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 8th, 2024',
+    fullDate: 'January 8th',
   },
   {
     day: 9,
@@ -78,7 +78,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 9th, 2024',
+    fullDate: 'January 9th',
   },
   {
     day: 10,
@@ -117,7 +117,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 10th, 2024',
+    fullDate: 'January 10th',
   },
   {
     day: 11,
@@ -149,7 +149,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 11th, 2024',
+    fullDate: 'January 11th',
   },
   {
     day: 12,
@@ -180,7 +180,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 12th, 2024',
+    fullDate: 'January 12th',
   },
   {
     day: 15,
@@ -222,7 +222,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 15th, 2024',
+    fullDate: 'January 15th',
   },
   {
     day: 16,
@@ -253,7 +253,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 16th, 2024',
+    fullDate: 'January 16th',
   },
   {
     day: 17,
@@ -297,7 +297,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 17th, 2024',
+    fullDate: 'January 17th',
   },
   {
     day: 18,
@@ -329,7 +329,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 18th, 2024',
+    fullDate: 'January 18th',
   },
   {
     day: 19,
@@ -368,7 +368,7 @@ const tips: NewYearTip[] = [
         </p>
       </FlipCardBack>
     ),
-    fullDate: 'January 19th, 2024',
+    fullDate: 'January 19th',
   },
 ];
 
@@ -376,6 +376,8 @@ export default function NewYear(): JSX.Element {
   // const currentDay =
   //   new Date().getFullYear() === 2024 ? new Date().getDate() : 0;
   const currentDay = 15;
+  const currentTipIndex = tips.filter((tip) => tip.day <= currentDay).length;
+  const shownTips = tips.slice(0, currentTipIndex + 1);
   const router = useRouter();
   const [cards, setCards] = useState({});
 
@@ -420,20 +422,28 @@ export default function NewYear(): JSX.Element {
       />
       <Header />
       <main id="main" role="main">
-        <div className="w-full pt-10 bg-slate-50 dark:bg-slate-800/40">
+        <div className="w-full py-10 bg-slate-50 dark:bg-slate-800/40">
+          <div
+            id="new-year"
+            className="py-18 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
+          >
+            <article id="nx-new-year-tips-intro" className="relative">
+              <h1 className="text-3xl font-semibold my-8">Nx New Year Tips</h1>
+              <p>
+                Start 2024 off right with some tips to help you get the most out
+                of Nx. Each day, a new card will be unlocked for you to flip.
+              </p>
+            </article>
+          </div>
+        </div>
+        <div className="w-full bg-gradient-to-r from-cyan-500 to-blue-500">
           <div
             id="new-year"
             className="py-18 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
           >
             <article id="nx-new-year-tips" className="relative">
-              <h3 className="text-xl font-semibold my-8">Nx New Year Tips</h3>
-              <p>
-                Start 2024 off right with some tips to help you get the most out
-                of Nx. Each day, a new card will be unlocked for you to flip.
-              </p>
-
               <div className="mx-auto items-stretch py-12 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:py-16">
-                {tips.map((tip) => (
+                {shownTips.map((tip) => (
                   <FlipCard
                     key={tip.day}
                     isFlippable={getIsFlippable(tip.day)}

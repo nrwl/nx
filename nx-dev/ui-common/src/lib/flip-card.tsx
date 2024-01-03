@@ -49,12 +49,12 @@ export function FlipCard({
       >
         <div
           className={cx(
-            'relative preserve-3d transition w-full h-full duration-200 content-center rounded-lg border-2 shadow-sm focus-within:ring-offset-2 bg-white/60 dark:bg-slate-800/60',
+            'relative preserve-3d transition w-full h-full duration-200 content-center rounded-lg border-2 shadow-sm focus-within:ring-offset-2 bg-white/60 dark:bg-slate-800/80',
             flipped ? 'my-rotate-y-180 bg-white dark:bg-slate-800' : '',
             isFlippable
               ? flipped
-                ? 'border-blue-500 dark:border-blue-500/40'
-                : 'border-blue-500 dark:border-blue-500/40 hover:[transform:rotateY(10deg)]'
+                ? 'border-slate-300 dark:border-slate-800'
+                : 'border-slate-300 dark:border-slate-800 hover:[transform:rotateY(10deg)]'
               : 'border-1 border-slate-300 dark:border-slate-800'
           )}
         >
