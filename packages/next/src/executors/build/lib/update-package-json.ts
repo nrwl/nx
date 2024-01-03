@@ -15,7 +15,16 @@ export function updatePackageJson(
   packageJson.dependencies ??= {};
 
   // These are always required for a production Next.js app to run.
-  const requiredPackages = ['react', 'react-dom', 'next', 'typescript'];
+  // sharp is for next/image https://nextjs.org/docs/messages/sharp-missing-in-production
+  // critters is required for experimental optimizing CSS
+  const requiredPackages = [
+    'react',
+    'react-dom',
+    'next',
+    'typescript',
+    'sharp',
+    'critters',
+  ];
   for (const pkg of requiredPackages) {
     const externalNode = context.projectGraph.externalNodes[`npm:${pkg}`];
     if (externalNode) {

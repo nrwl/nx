@@ -27,7 +27,7 @@ import {
   hasBuildExecutor,
   hasNoneOfTheseTags,
   isAbsoluteImportIntoAnotherProject,
-  isAngularSecondaryEntrypoint,
+  belongsToDifferentNgEntryPoint,
   isComboDepConstraint,
   isDirectDependency,
   matchImportWithWildcard,
@@ -365,7 +365,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
         if (
           !allowCircularSelfDependency &&
           !isRelativePath(imp) &&
-          !isAngularSecondaryEntrypoint(
+          !belongsToDifferentNgEntryPoint(
             imp,
             sourceFilePath,
             sourceProject.data.root

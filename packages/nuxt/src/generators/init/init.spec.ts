@@ -32,6 +32,10 @@ describe('init', () => {
           options: { buildTargetName: 'build', serveTargetName: 'serve' },
           plugin: '@nx/nuxt/plugin',
         },
+        {
+          options: { testTargetName: 'test' },
+          plugin: '@nx/vite/plugin',
+        },
       ]);
     });
   });
