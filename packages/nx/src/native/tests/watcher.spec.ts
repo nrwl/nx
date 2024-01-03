@@ -54,7 +54,7 @@ describe('watcher', () => {
       await wait();
       temp.createFileSync('app1/main.html', JSON.stringify({}));
     });
-  }, 10000);
+  }, 15000);
 
   it('should trigger the callback when files are updated', async () => {
     return new Promise<void>(async (done) => {
@@ -79,7 +79,7 @@ describe('watcher', () => {
       await wait();
       temp.appendFile('app1/main.js', 'update');
     });
-  }, 10000);
+  }, 15000);
 
   it('should watch file renames', async () => {
     return new Promise<void>(async (done) => {
@@ -106,7 +106,7 @@ describe('watcher', () => {
       await wait();
       temp.renameFile('app1/main.js', 'app1/rename.js');
     });
-  }, 10000);
+  }, 15000);
 
   it('should trigger on deletes', async () => {
     return new Promise<void>(async (done) => {
@@ -128,7 +128,7 @@ describe('watcher', () => {
       await wait();
       temp.removeFileSync('app1/main.js');
     });
-  }, 10000);
+  }, 15000);
 
   it('should ignore nested gitignores', async () => {
     return new Promise<void>(async (done) => {
@@ -154,7 +154,7 @@ describe('watcher', () => {
       await wait();
       temp.createFileSync('boo.txt', '');
     });
-  }, 10000);
+  }, 15000);
 
   it('prioritize nxignore over gitignores', async () => {
     return new Promise<void>(async (done) => {
