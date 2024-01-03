@@ -49,7 +49,7 @@ export interface NuxtPluginOptions {
 }
 
 export const createNodes: CreateNodes<NuxtPluginOptions> = [
-  '**/nuxt.config.{js,ts}',
+  '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
     // Do not create a project if package.json and project.json isn't there.
