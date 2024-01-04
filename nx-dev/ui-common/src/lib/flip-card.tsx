@@ -78,7 +78,7 @@ export function FlipCardBack({ children }: { children: ReactNode }) {
   return (
     <FlipCardContext.Consumer>
       {({ fullDate }) => (
-        <div className="my-rotate-y-180 backface-hidden w-full h-full overflow-scroll rounded-md dark:text-slate-100 text-slate-900 text-3xl dark:bg-white/10 bg-slate-800/10">
+        <div className="my-rotate-y-180 backface-hidden w-full h-full overflow-hidden rounded-md dark:text-slate-100 text-slate-900 text-3xl dark:bg-slate-800 bg-white">
           <span className="absolute top-0 left-0 pt-5 pl-4 text-sm">
             {fullDate}
           </span>
