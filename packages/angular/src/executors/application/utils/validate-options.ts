@@ -19,6 +19,16 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
   }
 
   if (
+    typeof options.index === 'object' &&
+    options.index.preloadInitial !== undefined &&
+    lt(angularVersion, '17.1.0')
+  ) {
+    throw new Error(
+      `The "index.preloadInitial" option requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`
+    );
+  }
+
+  if (
     options.optimization &&
     typeof options.optimization !== 'boolean' &&
     options.optimization.styles &&
