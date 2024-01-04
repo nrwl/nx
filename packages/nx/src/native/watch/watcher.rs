@@ -1,10 +1,10 @@
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use std::convert::Infallible;
 use std::path::MAIN_SEPARATOR;
 use std::sync::Arc;
 
 use crate::native::watch::types::{EventType, WatchEvent, WatchEventInternal};
+use crate::native::watch::watch_filterer;
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{
     ThreadSafeCallContext, ThreadsafeFunction, ThreadsafeFunctionCallMode,
@@ -13,14 +13,9 @@ use napi::{Env, JsFunction, JsObject};
 use rayon::prelude::*;
 use tracing::trace;
 use tracing_subscriber::EnvFilter;
-use watchexec::action::{Action, Outcome};
-use watchexec::config::{InitConfig, RuntimeConfig};
-use watchexec::event::Tag;
 use watchexec::Watchexec;
-use watchexec_events::{Event, Keyboard, Priority};
+use watchexec_events::{Event, Priority, Tag};
 use watchexec_signals::Signal;
-
-use crate::native::watch::watch_config;
 
 #[napi]
 pub struct Watcher {
@@ -42,26 +37,23 @@ impl Watcher {
         origin: String,
         additional_globs: Option<Vec<String>>,
         use_ignore: Option<bool>,
-    ) -> Result<Watcher> {
-        let watch_exec = Watchexec::new(InitConfig::default(), RuntimeConfig::default())
-            .map_err(anyhow::Error::from)?;
-
+    ) -> Watcher {
         // always have these globs come before the additional globs
         let mut globs = vec![".git/".into(), "node_modules/".into(), ".nx/".into()];
         if let Some(additional_globs) = additional_globs {
             globs.extend(additional_globs);
         }
 
-        Ok(Watcher {
+        Watcher {
             origin: if cfg!(window) {
                 origin.replace('/', "\\")
             } else {
                 origin
             },
-            watch_exec,
+            watch_exec: Arc::new(Watchexec::default()),
             additional_globs: globs,
             use_ignore: use_ignore.unwrap_or(true),
-        })
+        }
     }
 
     #[napi]
@@ -95,98 +87,76 @@ impl Watcher {
         callback_tsfn.unref(&env)?;
 
         let origin = self.origin.clone();
-        let watch_exec = self.watch_exec.clone();
-        let additional_globs = self.additional_globs.clone();
-        let use_ignore = self.use_ignore;
-        let start = async move {
-            let mut runtime = watch_config::create_runtime(
-                &origin,
-                &additional_globs
-                    .iter()
-                    .map(String::as_ref)
-                    .collect::<Vec<_>>(),
-                use_ignore,
-            )
-            .await?;
+        self.watch_exec.config.on_action(move |mut action| {
+            let signals: Vec<Signal> = action.signals().collect();
 
-            runtime.on_action(move |action: Action| {
-                let ok_future = async { Ok::<(), Infallible>(()) };
-                let signals: Vec<Signal> = action.events.iter().flat_map(Event::signals).collect();
+            if signals.contains(&Signal::Terminate) {
+                trace!("terminate - ending watch");
+                action.quit();
+                return action;
+            }
 
-                if signals.contains(&Signal::Terminate) {
-                    trace!("terminate - ending watch");
-                    action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
-                    return ok_future;
-                }
+            if signals.contains(&Signal::Interrupt) {
+                trace!("interrupt - ending watch");
+                action.quit();
+                return action;
+            }
 
-                if signals.contains(&Signal::Interrupt) {
-                    trace!("interrupt - ending watch");
-                    action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
-                    return ok_future;
-                }
+            let mut origin_path = origin.clone();
+            if !origin_path.ends_with(MAIN_SEPARATOR) {
+                origin_path.push(MAIN_SEPARATOR);
+            }
+            trace!(?origin_path);
 
-                let is_keyboard_eof = action
-                    .events
-                    .iter()
-                    .any(|e| e.tags.contains(&Tag::Keyboard(Keyboard::Eof)));
+            let events = action
+                .events
+                .par_iter()
+                .map(|ev| {
+                    let mut watch_event: WatchEventInternal = ev.into();
+                    watch_event.origin = Some(origin_path.clone());
+                    watch_event
+                })
+                .collect::<Vec<WatchEventInternal>>();
 
-                if is_keyboard_eof {
-                    trace!("ending watch");
-                    action.outcome(Outcome::both(Outcome::Stop, Outcome::Exit));
-                    return ok_future;
-                }
+            let mut group_events: HashMap<String, WatchEventInternal> = HashMap::new();
+            for g in events.into_iter() {
+                let path = g.path.display().to_string();
 
-                let mut origin_path = origin.clone();
-                if !origin_path.ends_with(MAIN_SEPARATOR) {
-                    origin_path.push(MAIN_SEPARATOR);
-                }
-                trace!(?origin_path);
-
-                let events = action
-                    .events
-                    .par_iter()
-                    .map(|ev| {
-                        let mut watch_event: WatchEventInternal = ev.into();
-                        watch_event.origin = Some(origin_path.clone());
-                        watch_event
-                    })
-                    .collect::<Vec<WatchEventInternal>>();
-
-                let mut group_events: HashMap<String, WatchEventInternal> = HashMap::new();
-                for g in events.into_iter() {
-                    let path = g.path.display().to_string();
-
-                    // Delete > Create > Modify
-                    match group_events.entry(path) {
-                        // Delete should override anything
-                        Entry::Occupied(mut e) if matches!(g.r#type, EventType::delete) => {
-                            e.insert(g);
-                        }
-                        // Create should override update
-                        Entry::Occupied(mut e)
-                            if matches!(g.r#type, EventType::create)
-                                && matches!(e.get().r#type, EventType::update) =>
-                        {
-                            e.insert(g);
-                        }
-                        Entry::Occupied(_) => {}
-                        // If its empty, insert
-                        Entry::Vacant(e) => {
-                            e.insert(g);
-                        }
+                // Delete > Create > Modify
+                match group_events.entry(path) {
+                    // Delete should override anything
+                    Entry::Occupied(mut e) if matches!(g.r#type, EventType::delete) => {
+                        e.insert(g);
+                    }
+                    // Create should override update
+                    Entry::Occupied(mut e)
+                        if matches!(g.r#type, EventType::create)
+                            && matches!(e.get().r#type, EventType::update) =>
+                    {
+                        e.insert(g);
+                    }
+                    Entry::Occupied(_) => {}
+                    // If its empty, insert
+                    Entry::Vacant(e) => {
+                        e.insert(g);
                     }
                 }
-                callback_tsfn.call(Ok(group_events), ThreadsafeFunctionCallMode::NonBlocking);
+            }
+            callback_tsfn.call(Ok(group_events), ThreadsafeFunctionCallMode::NonBlocking);
 
-                action.outcome(Outcome::Start);
-                ok_future
-            });
+            action
+        });
 
+        let origin = self.origin.clone();
+        let additional_globs = self.additional_globs.clone();
+        let use_ignore = self.use_ignore;
+        let watch_exec = self.watch_exec.clone();
+        let start = async move {
             trace!("configuring watch exec");
-            watch_exec
-                .reconfigure(runtime)
-                .map_err(anyhow::Error::from)?;
-
+            watch_exec.config.pathset([&origin.as_str()]);
+            watch_exec.config.filterer(
+                watch_filterer::create_filter(&origin, &additional_globs, use_ignore).await?,
+            );
             trace!("starting watch exec");
             watch_exec.main().await.map_err(anyhow::Error::from)?.ok();
             Ok(())

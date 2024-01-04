@@ -108,9 +108,11 @@ rust-toolchain @nrwl/nx-native-reviewers
 
 ## Tools
 /docs/generated/packages/cypress/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
+/docs/shared/packages/cypress/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
 /docs/generated/packages/jest/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/jest/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
-/docs/shared/packages/cypress/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
+/docs/generated/packages/playwright/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
+/docs/shared/packages/playwright/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
 /packages/cypress/** @nrwl/nx-testing-tools-reviewers
 /e2e/cypress/** @nrwl/nx-testing-tools-reviewers
 /packages/jest/** @nrwl/nx-testing-tools-reviewers
