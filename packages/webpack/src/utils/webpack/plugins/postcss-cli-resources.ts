@@ -47,7 +47,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
     rebaseRootRelative = false,
     filename,
     loader,
-    publicPath = ''
+    publicPath = '',
   } = options;
   const dedupeSlashes = (url: string) => url.replace(/\/\/+/g, '/');
   const process = async (
@@ -87,7 +87,9 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
           dedupeSlashes(`/${deployUrl}/${inputUrl}`);
       } else {
         // Join together base-href, deploy-url and the original URL.
-        outputUrl = dedupeSlashes(`/${baseHref}/${deployUrl}/${publicPath}/${inputUrl}`);
+        outputUrl = dedupeSlashes(
+          `/${baseHref}/${deployUrl}/${publicPath}/${inputUrl}`
+        );
       }
       resourceCache.set(cacheKey, outputUrl);
       return outputUrl;
