@@ -299,6 +299,14 @@
       "type": "string",
       "description": "Path to the babel configuration file of your project. If not provided, Nx will default to the .babelrc file at the root of your project. See https://babeljs.io/docs/en/config-files",
       "x-completion-type": "file"
+    },
+    "publicPath": {
+      "type": "string",
+      "description": "Set a public path for assets resources with absolute paths."
+    },
+    "rebaseRootRelative": {
+      "type": "string",
+      "description": "Whether to rebase absolute path for assets in postcss cli resources."
     }
   },
   "required": [],
