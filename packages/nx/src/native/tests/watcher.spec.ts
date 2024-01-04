@@ -140,7 +140,7 @@ describe('watcher', () => {
         expect(paths).toMatchInlineSnapshot(`
         [
           {
-            "path": "boo.txt",
+            "path": "bar.txt",
             "type": "create",
           },
         ]
@@ -152,7 +152,7 @@ describe('watcher', () => {
       // should not be triggered
       temp.createFileSync('nested-ignore/hello1.txt', '');
       await wait();
-      temp.createFileSync('boo.txt', '');
+      temp.createFileSync('bar.txt', '');
     });
   }, 15000);
 
