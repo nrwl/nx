@@ -1,16 +1,15 @@
-use anyhow::anyhow;
-use napi::JsFunction;
-use std::sync::Arc;
 use std::{
     collections::HashMap,
-    io::{BufReader, BufWriter, Read, Write},
+    io::{BufReader, Read, Write},
 };
 
-use portable_pty::{Child, CommandBuilder, ExitStatus, NativePtySystem, PtySize, PtySystem};
-use tokio::sync::mpsc::{channel, Receiver, Sender};
-use tokio::sync::Mutex;
-use tracing::instrument::WithSubscriber;
-use tracing::trace;
+use anyhow::anyhow;
+use crossbeam_channel::{unbounded, Receiver};
+use napi::threadsafe_function::ErrorStrategy::{ErrorStrategy, Fatal};
+use napi::threadsafe_function::ThreadsafeFunction;
+use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
+use napi::{Env, JsFunction};
+use portable_pty::{Child, CommandBuilder, NativePtySystem, PtySize, PtySystem};
 
 fn command_builder() -> CommandBuilder {
     if cfg!(target_os = "windows") {
@@ -36,35 +35,19 @@ pub enum ChildProcessMessage {
 #[napi]
 pub struct ChildProcess {
     child: Box<dyn Child + Sync + Send>,
-    // tx: Sender<ChildProcessMessage>,
-    // rx: Receiver<ChildProcessMessage>,
+    rx: Receiver<String>,
 }
 
 #[napi]
 impl ChildProcess {
-    pub fn new(child: Box<dyn Child + Sync + Send>) -> Self {
-        // let (tx, mut rx) = channel(1);
-        //
-        // let child = Arc::new(Mutex::new(child));
-        //
-        // let child_clone = Arc::clone(child);
-        //
-        // tokio::spawn(async move {
-        //     let child = &*child_clone;
-        //
-        //     let status = child.lock().await.wait().unwrap();
-        //
-        //     tx.send(status.exit_code()).await
-        // });
-
-        Self { child }
+    pub fn new(child: Box<dyn Child + Sync + Send>, rx: Receiver<String>) -> Self {
+        Self { child, rx }
     }
     #[napi]
     pub fn kill(&mut self) -> anyhow::Result<()> {
         let mut killer = self.child.clone_killer();
         killer.kill().map_err(anyhow::Error::from)?;
         Ok(())
-        // self.tx.send("kill".to_string()).await
     }
     #[napi]
     pub fn is_alive(&mut self) -> anyhow::Result<bool> {
@@ -77,23 +60,6 @@ impl ChildProcess {
 
     #[napi]
     pub async unsafe fn wait(&mut self) -> napi::Result<u32> {
-        // let (tx, mut rx) = channel(1);
-        //
-        // let child_clone = Arc::clone(&self.child);
-        //
-        // tokio::spawn(async move {
-        //     let child = &*child_clone;
-        //
-        //     let status = child.lock().await.wait().unwrap();
-        //
-        //     tx.send(status.exit_code()).await
-        // });
-        //
-        // rx.recv().await
-        // self.child.kill()
-        // trace!(?command, ?status);
-        // Ok(
-        // )
         let status = self
             .child
             .wait()
@@ -102,14 +68,33 @@ impl ChildProcess {
         Ok(status.exit_code())
     }
 
-    pub fn stdout(&mut self) -> () {}
+    #[napi]
+    pub fn on_output(
+        &mut self,
+        env: Env,
+        #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
+    ) -> napi::Result<()> {
+        let rx = self.rx.clone();
+
+        let mut callback_tsfn: ThreadsafeFunction<String, Fatal> =
+            callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
+
+        callback_tsfn.unref(&env)?;
+
+        std::thread::spawn(move || {
+            while let Ok(content) = rx.recv() {
+                callback_tsfn.call(content, NonBlocking);
+            }
+        });
+
+        Ok(())
+    }
 }
 
 #[napi]
 pub fn run_command(
     command: String,
     command_dir: Option<String>,
-    ready_when: Option<String>,
     js_env: Option<HashMap<String, String>>,
 ) -> napi::Result<ChildProcess> {
     let command_dir = command_dir
@@ -119,8 +104,8 @@ pub fn run_command(
     let pty_system = NativePtySystem::default();
 
     let pair = pty_system.openpty(PtySize {
-        rows: 24,
-        cols: 80,
+        rows: 73,
+        cols: 282,
         pixel_width: 0,
         pixel_height: 0,
     })?;
@@ -141,6 +126,8 @@ pub fn run_command(
     // we don't need it now that we've spawned the child.
     drop(pair.slave);
 
+    let (tx, rx) = unbounded();
+
     let reader = pair.master.try_clone_reader()?;
     let mut stdout = std::io::stdout();
     std::thread::spawn(move || {
@@ -148,42 +135,19 @@ pub fn run_command(
         let mut s = String::new();
         let mut buffer = [0; 8 * 1024];
 
-        while let Ok(n) = reader.read(&mut buffer) {
-            if n == 0 {
-                break;
-            }
-            stdout.write_all(&buffer[..n]).unwrap();
-            stdout.flush().unwrap();
-        }
+        // while let Ok(n) = reader.read(&mut buffer) {
+        //     if n == 0 {
+        //         break;
+        //     }
+        //     let content = String::from_utf8_lossy(&buffer[..n]);
+        //     tx.send(content.to_string()).unwrap();
+        //
+        //     let size = stdout.write_all(&buffer[..n]).unwrap();
+        //     stdout.flush().unwrap();
+        // }
+
+        std::io::copy(&mut reader, &mut stdout).unwrap();
     });
 
-    Ok(ChildProcess::new(child))
-
-    // let mut ready_when_check = false;
-    //
-    // while let Ok(n) = reader.read(&mut buffer).await {
-    //     if n == 0 {
-    //         break;
-    //     }
-    //
-    //     stdout.write_all(&buffer[..n]).await?;
-    //     stdout.flush().await?;
-    //
-    //     if let Some(ready_when) = ready_when.as_ref() {
-    //         let buffer = std::str::from_utf8(&buffer[..n]).unwrap_or("");
-    //         buffer.contains(ready_when);
-    //         ready_when_check = true;
-    //         break;
-    //     }
-    // }
-    //
-    // if ready_when_check {
-    //     return Ok(0);
-    // };
-
-    // Wait for the child to complete
-    // let status = child.wait()?;
-    //
-    // trace!(?command, ?status);
-    // Ok(status.exit_code())
+    Ok(ChildProcess::new(child, rx))
 }
