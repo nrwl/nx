@@ -878,6 +878,12 @@
                   "name": "Deploying Nuxt applications to Vercel",
                   "description": "A detailed guide on how to deploy Nuxt applications from Nx workspaces to Vercel.",
                   "file": "shared/recipes/deployment/deploy-nuxt-to-vercel"
+                },
+                {
+                  "name": "Nuxt Inferred Targets",
+                  "id": "nuxt-inferred-targets",
+                  "tags": ["inferred-targets"],
+                  "file": "shared/recipes/nuxt/nuxt-inferred-targets"
                 }
               ]
             },
@@ -891,6 +897,12 @@
                   "name": "Configure Vite on your Nx workspace",
                   "description": "Configure Vite on your Nx workspace",
                   "file": "shared/packages/vite/configure-vite"
+                },
+                {
+                  "name": "Vite Inferred Targets",
+                  "id": "vite-inferred-targets",
+                  "tags": ["inferred-targets"],
+                  "file": "shared/recipes/vite/vite-inferred-targets"
                 }
               ]
             },

@@ -2737,6 +2737,17 @@
             "isExternal": false,
             "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
             "tags": []
+          },
+          {
+            "id": "nuxt-inferred-targets",
+            "name": "Nuxt Inferred Targets",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nuxt/nuxt-inferred-targets",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nuxt/nuxt-inferred-targets",
+            "tags": ["inferred-targets"]
           }
         ],
         "isExternal": false,
@@ -2760,6 +2771,17 @@
             "isExternal": false,
             "path": "/recipes/vite/configure-vite",
             "tags": []
+          },
+          {
+            "id": "vite-inferred-targets",
+            "name": "Vite Inferred Targets",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/vite/vite-inferred-targets",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/vite/vite-inferred-targets",
+            "tags": ["inferred-targets"]
           }
         ],
         "isExternal": false,
@@ -4766,6 +4788,17 @@
         "isExternal": false,
         "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
         "tags": []
+      },
+      {
+        "id": "nuxt-inferred-targets",
+        "name": "Nuxt Inferred Targets",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nuxt/nuxt-inferred-targets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nuxt/nuxt-inferred-targets",
+        "tags": ["inferred-targets"]
       }
     ],
     "isExternal": false,
@@ -4782,6 +4815,17 @@
     "isExternal": false,
     "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
     "tags": []
+  },
+  "/recipes/nuxt/nuxt-inferred-targets": {
+    "id": "nuxt-inferred-targets",
+    "name": "Nuxt Inferred Targets",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nuxt/nuxt-inferred-targets",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nuxt/nuxt-inferred-targets",
+    "tags": ["inferred-targets"]
   },
   "/recipes/vite": {
     "id": "vite",
@@ -4800,6 +4844,17 @@
         "isExternal": false,
         "path": "/recipes/vite/configure-vite",
         "tags": []
+      },
+      {
+        "id": "vite-inferred-targets",
+        "name": "Vite Inferred Targets",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/vite/vite-inferred-targets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/vite/vite-inferred-targets",
+        "tags": ["inferred-targets"]
       }
     ],
     "isExternal": false,
@@ -4816,6 +4871,17 @@
     "isExternal": false,
     "path": "/recipes/vite/configure-vite",
     "tags": []
+  },
+  "/recipes/vite/vite-inferred-targets": {
+    "id": "vite-inferred-targets",
+    "name": "Vite Inferred Targets",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/vite/vite-inferred-targets",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/vite/vite-inferred-targets",
+    "tags": ["inferred-targets"]
   },
   "/recipes/webpack": {
     "id": "webpack",
