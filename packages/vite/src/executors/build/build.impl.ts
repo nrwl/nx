@@ -199,7 +199,7 @@ export async function getBuildExtraArgs(
   const schema = await import('./schema.json');
   const extraArgs = {};
   for (const key of Object.keys(options)) {
-    if (!schema.properties[key]) {
+    if (schema.properties[key]) {
       extraArgs[key] = options[key];
     }
   }
