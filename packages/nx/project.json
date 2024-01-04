@@ -20,7 +20,7 @@
       }
     },
     "test-command": {
-      "command": "node -p 'process.stdout.isTTY'"
+      "command": "npx jest packages/nx/src/migrations --maxWorkers 10"
     },
     "copy-native-package-directories": {
       "command": "node scripts/copy.js build/packages/nx/native-packages/* build/packages"

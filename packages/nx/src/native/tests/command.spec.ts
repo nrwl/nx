@@ -21,14 +21,13 @@ describe('runCommand', () => {
     expect(childProcess.isAlive()).toEqual(false);
   }, 1000);
 
-  // it('should emit ipc events', () => {
-  //   const childProcess = runCommand(
-  //     'node -e "process.send({ msg: 0 })"',
-  //     process.cwd()
-  //   );
-  //
-  //   childProcess.onMessage((msg) => {
-  //     expect(msg).toEqual({ msg: 0 });
-  //   });
-  // });
+  it('should subscribe to output', async () => {
+    const childProcess = runCommand('echo "hello world"', process.cwd());
+
+    childProcess.onOutput((output) => {
+      expect(output.trim()).toEqual('hello world');
+    });
+
+    await childProcess.wait();
+  });
 });

@@ -215,8 +215,17 @@ async function createProcess(
 ): Promise<boolean> {
   env = processEnv(color, cwd, env);
   if (process.env.NX_NATIVE_COMMAND_RUNNER == 'true') {
-    const cp = runCommand(commandConfig.command, cwd, readyWhen, env);
-    return (await cp.wait()) === 0;
+    const cp = runCommand(commandConfig.command, cwd, env);
+
+    return new Promise((res) => {
+      cp.onOutput((output) => {
+        if (readyWhen && output.indexOf(readyWhen) > -1) {
+          res(true);
+        }
+      });
+
+      cp.wait().then((code) => res(code === 0));
+    });
   }
 
   return nodeProcess(commandConfig, color, cwd, env, readyWhen);
