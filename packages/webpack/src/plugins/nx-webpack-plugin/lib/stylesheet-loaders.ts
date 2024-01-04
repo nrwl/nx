@@ -129,7 +129,7 @@ function postcssOptionsCreator(
               loader,
               filename: `[name]${hashFormat.file}.[ext]`,
               publicPath: options.publicPath,
-              rebaseRootRelative: options.rebaseRootRelative
+              rebaseRootRelative: options.rebaseRootRelative,
             }),
             autoprefixer(),
           ]),
