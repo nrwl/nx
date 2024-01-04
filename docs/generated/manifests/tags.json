@@ -614,6 +614,20 @@
       "id": "eslint-inferred-targets",
       "name": "ESLint Inferred Targets",
       "path": "/recipes/eslint/eslint-inferred-targets"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nuxt/nuxt-inferred-targets",
+      "id": "nuxt-inferred-targets",
+      "name": "Nuxt Inferred Targets",
+      "path": "/recipes/nuxt/nuxt-inferred-targets"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/vite/vite-inferred-targets",
+      "id": "vite-inferred-targets",
+      "name": "Vite Inferred Targets",
+      "path": "/recipes/vite/vite-inferred-targets"
     }
   ],
   "repository-types": [
