@@ -201,7 +201,7 @@ async function runSerially(
   return true;
 }
 
-function createProcess(
+async function createProcess(
   commandConfig: {
     command: string;
     color?: string;
@@ -215,11 +215,8 @@ function createProcess(
 ): Promise<boolean> {
   env = processEnv(color, cwd, env);
   if (process.env.NX_NATIVE_COMMAND_RUNNER == 'true') {
-    return runCommand(commandConfig.command, cwd, readyWhen, env).then(
-      (code) => {
-        return code === 0;
-      }
-    );
+    const cp = runCommand(commandConfig.command, cwd, readyWhen, env);
+    return (await cp.wait()) === 0;
   }
 
   return nodeProcess(commandConfig, color, cwd, env, readyWhen);
