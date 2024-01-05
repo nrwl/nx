@@ -19,7 +19,7 @@ exports[`lib --bundler=vite should add build and test targets with vite and vite
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../dist/out-tsc",
+    "outDir": "../dist/my-lib",
     "declaration": true,
     "types": ["node", "vite/client"]
   },
@@ -44,7 +44,7 @@ exports[`lib --bundler=vite should respect unitTestRunner if passed 2`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../dist/out-tsc",
+    "outDir": "../dist/my-lib",
     "declaration": true,
     "types": ["node", "vite/client"]
   },
@@ -73,7 +73,7 @@ exports[`lib --bundler=vite should respect unitTestRunner if passed 4`] = `
 "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../dist/out-tsc",
+    "outDir": "../dist/my-lib",
     "declaration": true,
     "types": ["node", "vite/client"]
   },
