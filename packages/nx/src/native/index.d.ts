@@ -139,6 +139,7 @@ export interface FileMap {
   projectFileMap: ProjectFiles
   nonProjectFiles: Array<FileData>
 }
+export function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
 export class ImportResult {
   file: string
   sourceProject: string

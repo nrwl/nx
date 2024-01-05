@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::*;
-use tracing::trace;
+use tracing::{trace, trace_span};
 
 use crate::native::glob::build_glob_set;
 use crate::native::types::FileData;
@@ -12,7 +12,9 @@ pub fn hash_project_files(
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
 ) -> Result<String> {
+    let _span = trace_span!("hash_project_files", project_name).entered();
     let collected_files = collect_files(project_name, project_root, file_sets, project_file_map)?;
+    trace!("collected_files: {:?}", collected_files.len());
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
     for file in collected_files {
         hasher.update(file.hash.as_bytes());
@@ -39,11 +41,12 @@ fn collect_files<'a>(
         .collect::<Vec<_>>();
     let now = std::time::Instant::now();
     let glob_set = build_glob_set(&globs)?;
-    trace!("build_glob_set for {}: {:?}", project_name, now.elapsed());
+    trace!("build_glob_set for {:?}", now.elapsed());
 
     project_file_map.get(project_name).map_or_else(
         || Err(anyhow!("project {} not found", project_name)),
         |files| {
+            trace!("files: {:?}", files.len());
             let now = std::time::Instant::now();
             let hashes = files
                 .iter()
