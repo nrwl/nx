@@ -35,7 +35,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             <span className="font-medium">Stay in the flow!</span> Augment your
             editor with Nx Console, a dedicated extension available for{' '}
             <Link
-              href="/core-features/integrate-with-editors"
+              href="/features/integrate-with-editors"
               title="Install VSCode's native extension for Nx"
               className="font-medium text-blue-500 dark:text-sky-500"
             >
@@ -43,7 +43,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             </Link>{' '}
             ,{' '}
             <Link
-              href="/core-features/integrate-with-editors"
+              href="/features/integrate-with-editors"
               className="font-medium text-blue-500 dark:text-sky-500"
               title="Install JetBrains' native plugin for Nx"
             >
@@ -51,7 +51,7 @@ export function ExtensibleAndIntegrated(): JSX.Element {
             </Link>{' '}
             and{' '}
             <Link
-              href="/core-features/integrate-with-editors#neovim"
+              href="/features/integrate-with-editors#neovim"
               className="font-medium text-blue-500 dark:text-sky-500"
             >
               Neovim

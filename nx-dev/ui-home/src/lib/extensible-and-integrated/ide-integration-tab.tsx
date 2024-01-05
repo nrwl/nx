@@ -33,7 +33,7 @@ export function IdeIntegrationTab(): JSX.Element {
       icon: <SparklesIcon className="h-5 w-5" />,
       description:
         'The Nx team is obsessed with providing the best possible DX. Nx Console is the culmination of that. Carefully crafted, in constant evolution, always in search of making the life of developers easier.',
-      link: '/core-features/integrate-with-editors',
+      link: '/features/integrate-with-editors',
     },
   ];
   return (

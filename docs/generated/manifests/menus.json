@@ -569,14 +569,14 @@
         "disableCollapsible": false
       },
       {
-        "name": "Core Features",
-        "path": "/core-features",
-        "id": "core-features",
+        "name": "Features",
+        "path": "/features",
+        "id": "features",
         "isExternal": false,
         "children": [
           {
             "name": "Run Tasks",
-            "path": "/core-features/run-tasks",
+            "path": "/features/run-tasks",
             "id": "run-tasks",
             "isExternal": false,
             "children": [],
@@ -584,31 +584,15 @@
           },
           {
             "name": "Cache Task Results",
-            "path": "/core-features/cache-task-results",
+            "path": "/features/cache-task-results",
             "id": "cache-task-results",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Use Remote Caching",
-            "path": "/ci/features/remote-cache",
-            "id": "remote-cache",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Distribute Task Execution",
-            "path": "/ci/features/distribute-task-execution",
-            "id": "distribute-task-execution",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Explore the Graph",
-            "path": "/core-features/explore-graph",
+            "path": "/features/explore-graph",
             "id": "explore-graph",
             "isExternal": false,
             "children": [],
@@ -616,7 +600,7 @@
           },
           {
             "name": "Automate Updating Dependencies",
-            "path": "/core-features/automate-updating-dependencies",
+            "path": "/features/automate-updating-dependencies",
             "id": "automate-updating-dependencies",
             "isExternal": false,
             "children": [],
@@ -624,7 +608,7 @@
           },
           {
             "name": "Enforce Module Boundaries",
-            "path": "/core-features/enforce-module-boundaries",
+            "path": "/features/enforce-module-boundaries",
             "id": "enforce-module-boundaries",
             "isExternal": false,
             "children": [],
@@ -632,7 +616,7 @@
           },
           {
             "name": "Integrate with Editors",
-            "path": "/core-features/integrate-with-editors",
+            "path": "/features/integrate-with-editors",
             "id": "integrate-with-editors",
             "isExternal": false,
             "children": [],
@@ -640,35 +624,26 @@
           },
           {
             "name": "Manage Releases",
-            "path": "/core-features/manage-releases",
+            "path": "/features/manage-releases",
             "id": "manage-releases",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Plugin Features",
-            "path": "/core-features/plugin-features",
-            "id": "plugin-features",
+            "name": "Enhance Tooling",
+            "path": "/features/enhance-tooling",
+            "id": "enhance-tooling",
             "isExternal": false,
-            "children": [
-              {
-                "name": "Use Task Executors",
-                "path": "/core-features/plugin-features/use-task-executors",
-                "id": "use-task-executors",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Use Code Generators",
-                "path": "/core-features/plugin-features/use-code-generators",
-                "id": "use-code-generators",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Generate Code",
+            "path": "/features/generate-code",
+            "id": "generate-code",
+            "isExternal": false,
+            "children": [],
             "disableCollapsible": false
           }
         ],
@@ -676,7 +651,7 @@
       },
       {
         "name": "Run Tasks",
-        "path": "/core-features/run-tasks",
+        "path": "/features/run-tasks",
         "id": "run-tasks",
         "isExternal": false,
         "children": [],
@@ -684,31 +659,15 @@
       },
       {
         "name": "Cache Task Results",
-        "path": "/core-features/cache-task-results",
+        "path": "/features/cache-task-results",
         "id": "cache-task-results",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Use Remote Caching",
-        "path": "/ci/features/remote-cache",
-        "id": "remote-cache",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Distribute Task Execution",
-        "path": "/ci/features/distribute-task-execution",
-        "id": "distribute-task-execution",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Explore the Graph",
-        "path": "/core-features/explore-graph",
+        "path": "/features/explore-graph",
         "id": "explore-graph",
         "isExternal": false,
         "children": [],
@@ -716,7 +675,7 @@
       },
       {
         "name": "Automate Updating Dependencies",
-        "path": "/core-features/automate-updating-dependencies",
+        "path": "/features/automate-updating-dependencies",
         "id": "automate-updating-dependencies",
         "isExternal": false,
         "children": [],
@@ -724,7 +683,7 @@
       },
       {
         "name": "Enforce Module Boundaries",
-        "path": "/core-features/enforce-module-boundaries",
+        "path": "/features/enforce-module-boundaries",
         "id": "enforce-module-boundaries",
         "isExternal": false,
         "children": [],
@@ -732,7 +691,7 @@
       },
       {
         "name": "Integrate with Editors",
-        "path": "/core-features/integrate-with-editors",
+        "path": "/features/integrate-with-editors",
         "id": "integrate-with-editors",
         "isExternal": false,
         "children": [],
@@ -740,49 +699,24 @@
       },
       {
         "name": "Manage Releases",
-        "path": "/core-features/manage-releases",
+        "path": "/features/manage-releases",
         "id": "manage-releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Plugin Features",
-        "path": "/core-features/plugin-features",
-        "id": "plugin-features",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Use Task Executors",
-            "path": "/core-features/plugin-features/use-task-executors",
-            "id": "use-task-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Use Code Generators",
-            "path": "/core-features/plugin-features/use-code-generators",
-            "id": "use-code-generators",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Use Task Executors",
-        "path": "/core-features/plugin-features/use-task-executors",
-        "id": "use-task-executors",
+        "name": "Enhance Tooling",
+        "path": "/features/enhance-tooling",
+        "id": "enhance-tooling",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Use Code Generators",
-        "path": "/core-features/plugin-features/use-code-generators",
-        "id": "use-code-generators",
+        "name": "Generate Code",
+        "path": "/features/generate-code",
+        "id": "generate-code",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

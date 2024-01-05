@@ -775,9 +775,9 @@
     "path": "/node-server-tutorial/6-summary",
     "tags": []
   },
-  "/core-features": {
-    "id": "core-features",
-    "name": "Core Features",
+  "/features": {
+    "id": "features",
+    "name": "Features",
     "description": "Learn the core features of Nx with in depth guides.",
     "mediaImage": "",
     "file": "",
@@ -787,10 +787,10 @@
         "name": "Run Tasks",
         "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
         "mediaImage": "",
-        "file": "shared/core-features/run-tasks",
+        "file": "shared/features/run-tasks",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/run-tasks",
+        "path": "/features/run-tasks",
         "tags": ["run-tasks", "cache-task-results"]
       },
       {
@@ -798,43 +798,21 @@
         "name": "Cache Task Results",
         "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
         "mediaImage": "",
-        "file": "shared/core-features/cache-task-results",
+        "file": "shared/features/cache-task-results",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/cache-task-results",
+        "path": "/features/cache-task-results",
         "tags": ["cache-task-results"]
-      },
-      {
-        "id": "remote-cache",
-        "name": "Use Remote Caching",
-        "description": "",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": true,
-        "path": "/ci/features/remote-cache",
-        "tags": []
-      },
-      {
-        "id": "distribute-task-execution",
-        "name": "Distribute Task Execution",
-        "description": "",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [],
-        "isExternal": true,
-        "path": "/ci/features/distribute-task-execution",
-        "tags": []
       },
       {
         "id": "explore-graph",
         "name": "Explore the Graph",
         "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
         "mediaImage": "",
-        "file": "shared/core-features/explore-graph",
+        "file": "shared/features/explore-graph",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/explore-graph",
+        "path": "/features/explore-graph",
         "tags": ["explore-graph"]
       },
       {
@@ -842,10 +820,10 @@
         "name": "Automate Updating Dependencies",
         "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
         "mediaImage": "",
-        "file": "shared/core-features/automate-updating-dependencies",
+        "file": "shared/features/automate-updating-dependencies",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/automate-updating-dependencies",
+        "path": "/features/automate-updating-dependencies",
         "tags": ["automate-updating-dependencies"]
       },
       {
@@ -853,10 +831,10 @@
         "name": "Enforce Module Boundaries",
         "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
         "mediaImage": "",
-        "file": "shared/core-features/enforce-module-boundaries",
+        "file": "shared/features/enforce-module-boundaries",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/enforce-module-boundaries",
+        "path": "/features/enforce-module-boundaries",
         "tags": ["enforce-module-boundaries"]
       },
       {
@@ -864,10 +842,10 @@
         "name": "Integrate with Editors",
         "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
         "mediaImage": "",
-        "file": "shared/core-features/integrate-with-editors",
+        "file": "shared/features/integrate-with-editors",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/integrate-with-editors",
+        "path": "/features/integrate-with-editors",
         "tags": ["integrate-with-editors"]
       },
       {
@@ -875,205 +853,137 @@
         "name": "Manage Releases",
         "description": "Learn how Nx provides tools to help you manage releasing your projects.",
         "mediaImage": "",
-        "file": "shared/core-features/manage-releases",
+        "file": "shared/features/manage-releases",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/manage-releases",
+        "path": "/features/manage-releases",
         "tags": ["manage-releases"]
       },
       {
-        "id": "plugin-features",
-        "name": "Plugin Features",
-        "description": "Learn what is a plugin, the different type of plugins and how to create one.",
+        "id": "enhance-tooling",
+        "name": "Enhance Tooling",
+        "description": "",
         "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "use-task-executors",
-            "name": "Use Task Executors",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/plugin-features/use-task-executors",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/core-features/plugin-features/use-task-executors",
-            "tags": ["use-task-executors"]
-          },
-          {
-            "id": "use-code-generators",
-            "name": "Use Code Generators",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/plugin-features/use-code-generators",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/core-features/plugin-features/use-code-generators",
-            "tags": ["use-code-generators"]
-          }
-        ],
+        "file": "shared/features/enhance-tooling",
+        "itemList": [],
         "isExternal": false,
-        "path": "/core-features/plugin-features",
-        "tags": []
+        "path": "/features/enhance-tooling",
+        "tags": ["enhance-tooling"]
+      },
+      {
+        "id": "generate-code",
+        "name": "Generate Code",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/features/generate-code",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/generate-code",
+        "tags": ["generate-code"]
       }
     ],
     "isExternal": false,
-    "path": "/core-features",
+    "path": "/features",
     "tags": []
   },
-  "/core-features/run-tasks": {
+  "/features/run-tasks": {
     "id": "run-tasks",
     "name": "Run Tasks",
     "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
     "mediaImage": "",
-    "file": "shared/core-features/run-tasks",
+    "file": "shared/features/run-tasks",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/run-tasks",
+    "path": "/features/run-tasks",
     "tags": ["run-tasks", "cache-task-results"]
   },
-  "/core-features/cache-task-results": {
+  "/features/cache-task-results": {
     "id": "cache-task-results",
     "name": "Cache Task Results",
     "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
     "mediaImage": "",
-    "file": "shared/core-features/cache-task-results",
+    "file": "shared/features/cache-task-results",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/cache-task-results",
+    "path": "/features/cache-task-results",
     "tags": ["cache-task-results"]
   },
-  "/ci/features/remote-cache": {
-    "id": "remote-cache",
-    "name": "Use Remote Caching",
-    "description": "",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": true,
-    "path": "/ci/features/remote-cache",
-    "tags": []
-  },
-  "/ci/features/distribute-task-execution": {
-    "id": "distribute-task-execution",
-    "name": "Distribute Task Execution",
-    "description": "",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [],
-    "isExternal": true,
-    "path": "/ci/features/distribute-task-execution",
-    "tags": []
-  },
-  "/core-features/explore-graph": {
+  "/features/explore-graph": {
     "id": "explore-graph",
     "name": "Explore the Graph",
     "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
     "mediaImage": "",
-    "file": "shared/core-features/explore-graph",
+    "file": "shared/features/explore-graph",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/explore-graph",
+    "path": "/features/explore-graph",
     "tags": ["explore-graph"]
   },
-  "/core-features/automate-updating-dependencies": {
+  "/features/automate-updating-dependencies": {
     "id": "automate-updating-dependencies",
     "name": "Automate Updating Dependencies",
     "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
     "mediaImage": "",
-    "file": "shared/core-features/automate-updating-dependencies",
+    "file": "shared/features/automate-updating-dependencies",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/automate-updating-dependencies",
+    "path": "/features/automate-updating-dependencies",
     "tags": ["automate-updating-dependencies"]
   },
-  "/core-features/enforce-module-boundaries": {
+  "/features/enforce-module-boundaries": {
     "id": "enforce-module-boundaries",
     "name": "Enforce Module Boundaries",
     "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
     "mediaImage": "",
-    "file": "shared/core-features/enforce-module-boundaries",
+    "file": "shared/features/enforce-module-boundaries",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/enforce-module-boundaries",
+    "path": "/features/enforce-module-boundaries",
     "tags": ["enforce-module-boundaries"]
   },
-  "/core-features/integrate-with-editors": {
+  "/features/integrate-with-editors": {
     "id": "integrate-with-editors",
     "name": "Integrate with Editors",
     "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
     "mediaImage": "",
-    "file": "shared/core-features/integrate-with-editors",
+    "file": "shared/features/integrate-with-editors",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/integrate-with-editors",
+    "path": "/features/integrate-with-editors",
     "tags": ["integrate-with-editors"]
   },
-  "/core-features/manage-releases": {
+  "/features/manage-releases": {
     "id": "manage-releases",
     "name": "Manage Releases",
     "description": "Learn how Nx provides tools to help you manage releasing your projects.",
     "mediaImage": "",
-    "file": "shared/core-features/manage-releases",
+    "file": "shared/features/manage-releases",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/manage-releases",
+    "path": "/features/manage-releases",
     "tags": ["manage-releases"]
   },
-  "/core-features/plugin-features": {
-    "id": "plugin-features",
-    "name": "Plugin Features",
-    "description": "Learn what is a plugin, the different type of plugins and how to create one.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "use-task-executors",
-        "name": "Use Task Executors",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/plugin-features/use-task-executors",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/plugin-features/use-task-executors",
-        "tags": ["use-task-executors"]
-      },
-      {
-        "id": "use-code-generators",
-        "name": "Use Code Generators",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/plugin-features/use-code-generators",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/core-features/plugin-features/use-code-generators",
-        "tags": ["use-code-generators"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/core-features/plugin-features",
-    "tags": []
-  },
-  "/core-features/plugin-features/use-task-executors": {
-    "id": "use-task-executors",
-    "name": "Use Task Executors",
+  "/features/enhance-tooling": {
+    "id": "enhance-tooling",
+    "name": "Enhance Tooling",
     "description": "",
     "mediaImage": "",
-    "file": "shared/plugin-features/use-task-executors",
+    "file": "shared/features/enhance-tooling",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/plugin-features/use-task-executors",
-    "tags": ["use-task-executors"]
+    "path": "/features/enhance-tooling",
+    "tags": ["enhance-tooling"]
   },
-  "/core-features/plugin-features/use-code-generators": {
-    "id": "use-code-generators",
-    "name": "Use Code Generators",
+  "/features/generate-code": {
+    "id": "generate-code",
+    "name": "Generate Code",
     "description": "",
     "mediaImage": "",
-    "file": "shared/plugin-features/use-code-generators",
+    "file": "shared/features/generate-code",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/plugin-features/use-code-generators",
-    "tags": ["use-code-generators"]
+    "path": "/features/generate-code",
+    "tags": ["generate-code"]
   },
   "/concepts": {
     "id": "concepts",
@@ -1124,7 +1034,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/task-pipeline-configuration",
-        "tags": ["run-tasks", "use-task-executors"]
+        "tags": ["run-tasks", "enhance-tooling"]
       },
       {
         "id": "inferred-targets",
@@ -1135,7 +1045,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/inferred-targets",
-        "tags": ["use-task-executors", "inferred-targets"]
+        "tags": ["enhance-tooling", "inferred-targets"]
       },
       {
         "id": "integrated-vs-package-based",
@@ -1175,12 +1085,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/module-federation/faster-builds-with-module-federation",
-            "tags": [
-              "use-task-executors",
-              "module-federation",
-              "angular",
-              "react"
-            ]
+            "tags": ["enhance-tooling", "module-federation", "angular", "react"]
           },
           {
             "id": "micro-frontend-architecture",
@@ -1225,7 +1130,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/incremental-builds",
-            "tags": ["use-task-executors"]
+            "tags": ["enhance-tooling"]
           },
           {
             "id": "illustrated-dte",
@@ -1291,7 +1196,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-            "tags": ["enforce-module-boundaries", "use-code-generators"]
+            "tags": ["enforce-module-boundaries", "generate-code"]
           },
           {
             "id": "nx-daemon",
@@ -1455,7 +1360,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/task-pipeline-configuration",
-    "tags": ["run-tasks", "use-task-executors"]
+    "tags": ["run-tasks", "enhance-tooling"]
   },
   "/concepts/inferred-targets": {
     "id": "inferred-targets",
@@ -1466,7 +1371,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/inferred-targets",
-    "tags": ["use-task-executors", "inferred-targets"]
+    "tags": ["enhance-tooling", "inferred-targets"]
   },
   "/concepts/integrated-vs-package-based": {
     "id": "integrated-vs-package-based",
@@ -1506,7 +1411,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/module-federation/faster-builds-with-module-federation",
-        "tags": ["use-task-executors", "module-federation", "angular", "react"]
+        "tags": ["enhance-tooling", "module-federation", "angular", "react"]
       },
       {
         "id": "micro-frontend-architecture",
@@ -1555,7 +1460,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/module-federation/faster-builds-with-module-federation",
-    "tags": ["use-task-executors", "module-federation", "angular", "react"]
+    "tags": ["enhance-tooling", "module-federation", "angular", "react"]
   },
   "/concepts/module-federation/micro-frontend-architecture": {
     "id": "micro-frontend-architecture",
@@ -1595,7 +1500,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/incremental-builds",
-        "tags": ["use-task-executors"]
+        "tags": ["enhance-tooling"]
       },
       {
         "id": "illustrated-dte",
@@ -1661,7 +1566,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-        "tags": ["enforce-module-boundaries", "use-code-generators"]
+        "tags": ["enforce-module-boundaries", "generate-code"]
       },
       {
         "id": "nx-daemon",
@@ -1787,7 +1692,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/incremental-builds",
-    "tags": ["use-task-executors"]
+    "tags": ["enhance-tooling"]
   },
   "/concepts/more-concepts/illustrated-dte": {
     "id": "illustrated-dte",
@@ -1853,7 +1758,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/monorepo-nx-enterprise",
-    "tags": ["enforce-module-boundaries", "use-code-generators"]
+    "tags": ["enforce-module-boundaries", "generate-code"]
   },
   "/concepts/more-concepts/nx-daemon": {
     "id": "nx-daemon",
@@ -2021,7 +1926,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/running-tasks/run-commands-executor",
-            "tags": ["run-tasks", "use-task-executors"]
+            "tags": ["run-tasks", "enhance-tooling"]
           },
           {
             "id": "run-tasks-in-parallel",
@@ -2243,7 +2148,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/react/module-federation-with-ssr",
-            "tags": ["use-task-executors", "module-federation", "react"]
+            "tags": ["enhance-tooling", "module-federation", "react"]
           },
           {
             "id": "deploy-nextjs-to-vercel",
@@ -2355,7 +2260,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/angular/module-federation-with-ssr",
-            "tags": ["use-task-executors", "module-federation", "angular"]
+            "tags": ["enhance-tooling", "module-federation", "angular"]
           },
           {
             "id": "dynamic-module-federation-with-angular",
@@ -2366,7 +2271,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/angular/dynamic-module-federation-with-angular",
-            "tags": ["use-task-executors", "module-federation", "angular"]
+            "tags": ["enhance-tooling", "module-federation", "angular"]
           },
           {
             "id": "setup-incremental-builds-angular",
@@ -3238,7 +3143,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/troubleshooting/performance-profiling",
-            "tags": ["use-task-executors", "environment-variables"]
+            "tags": ["enhance-tooling", "environment-variables"]
           }
         ],
         "isExternal": false,
@@ -3411,7 +3316,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/running-tasks/run-commands-executor",
-        "tags": ["run-tasks", "use-task-executors"]
+        "tags": ["run-tasks", "enhance-tooling"]
       },
       {
         "id": "run-tasks-in-parallel",
@@ -3504,7 +3409,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/running-tasks/run-commands-executor",
-    "tags": ["run-tasks", "use-task-executors"]
+    "tags": ["run-tasks", "enhance-tooling"]
   },
   "/recipes/running-tasks/run-tasks-in-parallel": {
     "id": "run-tasks-in-parallel",
@@ -3787,7 +3692,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/react/module-federation-with-ssr",
-        "tags": ["use-task-executors", "module-federation", "react"]
+        "tags": ["enhance-tooling", "module-federation", "react"]
       },
       {
         "id": "deploy-nextjs-to-vercel",
@@ -3891,7 +3796,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/react/module-federation-with-ssr",
-    "tags": ["use-task-executors", "module-federation", "react"]
+    "tags": ["enhance-tooling", "module-federation", "react"]
   },
   "/recipes/react/deploy-nextjs-to-vercel": {
     "id": "deploy-nextjs-to-vercel",
@@ -3998,7 +3903,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/angular/module-federation-with-ssr",
-        "tags": ["use-task-executors", "module-federation", "angular"]
+        "tags": ["enhance-tooling", "module-federation", "angular"]
       },
       {
         "id": "dynamic-module-federation-with-angular",
@@ -4009,7 +3914,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/angular/dynamic-module-federation-with-angular",
-        "tags": ["use-task-executors", "module-federation", "angular"]
+        "tags": ["enhance-tooling", "module-federation", "angular"]
       },
       {
         "id": "setup-incremental-builds-angular",
@@ -4158,7 +4063,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/module-federation-with-ssr",
-    "tags": ["use-task-executors", "module-federation", "angular"]
+    "tags": ["enhance-tooling", "module-federation", "angular"]
   },
   "/recipes/angular/dynamic-module-federation-with-angular": {
     "id": "dynamic-module-federation-with-angular",
@@ -4169,7 +4074,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/dynamic-module-federation-with-angular",
-    "tags": ["use-task-executors", "module-federation", "angular"]
+    "tags": ["enhance-tooling", "module-federation", "angular"]
   },
   "/recipes/angular/setup-incremental-builds-angular": {
     "id": "setup-incremental-builds-angular",
@@ -5674,7 +5579,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/troubleshooting/performance-profiling",
-        "tags": ["use-task-executors", "environment-variables"]
+        "tags": ["enhance-tooling", "environment-variables"]
       }
     ],
     "isExternal": false,
@@ -5734,7 +5639,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/troubleshooting/performance-profiling",
-    "tags": ["use-task-executors", "environment-variables"]
+    "tags": ["enhance-tooling", "environment-variables"]
   },
   "/recipes/nx-console": {
     "id": "nx-console",
@@ -6727,7 +6632,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/reference/project-configuration",
-        "tags": ["use-task-executors"]
+        "tags": ["enhance-tooling"]
       },
       {
         "id": "nxignore",
@@ -6798,7 +6703,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/project-configuration",
-    "tags": ["use-task-executors"]
+    "tags": ["enhance-tooling"]
   },
   "/reference/nxignore": {
     "id": "nxignore",
@@ -7369,7 +7274,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "/reference/nx-json#generators",
-        "tags": ["use-code-generators"]
+        "tags": ["generate-code"]
       },
       {
         "id": "sitemap",
@@ -7451,7 +7356,7 @@
     "itemList": [],
     "isExternal": true,
     "path": "/reference/nx-json#generators",
-    "tags": ["use-code-generators"]
+    "tags": ["generate-code"]
   },
   "/see-also/sitemap": {
     "id": "sitemap",

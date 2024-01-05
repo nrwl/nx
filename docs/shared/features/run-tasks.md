@@ -102,7 +102,7 @@ Learn more about the affected command [here](/ci/features/affected).
 
 It is pretty common to have dependencies between tasks, requiring one task to be run before another. For example, you might want to run the `build` target on the `header` project before running the `build` target on the `app` project.
 
-Nx is already able to automatically understand the dependencies between projects (see [project graph](/core-features/explore-graph)).
+Nx is already able to automatically understand the dependencies between projects (see [project graph](/features/explore-graph)).
 
 {% graph height="450px" %}
 

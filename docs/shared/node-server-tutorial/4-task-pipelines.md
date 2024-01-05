@@ -112,7 +112,7 @@ Build at: 2022-11-30T16:44:43.171Z - Hash: 9850ece7cc7c6b7c - Time: 6527ms
 
 This time the build only took 13 ms. Also, if you delete the `dist` folder and run the command again, the build output will be recreated.
 
-{% card title="More Task Caching Details" description="See the documentation for more information on caching." url="/core-features/cache-task-results" /%}
+{% card title="More Task Caching Details" description="See the documentation for more information on caching." url="/features/cache-task-results" /%}
 
 ## Cache Inputs and Outputs
 

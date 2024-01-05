@@ -1,14 +1,48 @@
-# Use Task Executors
+# Enhance Tooling
 
-Executors perform actions on your code. This can include building, linting, testing, serving and many other actions.
+Nx is able to enhance your existing tooling in a non-intrusive way so that, without modifying your tooling set-up, Nx can add:
 
-There are two main differences between an executor and a shell script or an npm script:
+- [Fully configured caching](/features/cache-task-results)
+- [Task pipelines](/concepts/task-pipeline-configuration)
+- [Task distribution](/ci/features/distribute-task-execution)
 
-1. Executors encourage a consistent methodology for performing similar actions on unrelated projects. i.e. A developer switching between teams can be confident that `nx build project2` will build `project2` with the default settings, just like `nx build project1` built `project1`.
-2. Nx can leverage this consistency to run the same target across multiple projects. i.e. `nx affected -t test` will run the `test` executor associated with the `test` target on every project that is affected by the current code change.
-3. Executors provide metadata to define the available options. This metadata allows the Nx CLI to show prompts in the terminal and Nx Console to generate a GUI for the executor.
+This works for any tool for which there exists an [official plugin](/plugin-registry).
 
-## Executor definitions
+## Setup
+
+The following command will make Nx detect your tooling and set up the appropriate plugins:
+
+```shell
+nx init
+```
+
+This command will detect the presence of any tooling for which Nx has an [official plugin](/plugin-registry) and give you the option to install the plugin. The installed plugin will be added to your `package.json` file and an entry will be added to the `plugins` array in the `nx.json` file.
+
+## Usage
+
+The installed plugin will [infer Nx targets](/concepts/inferred-targets) for you based on the presence of configuration files in your projects. You can invoke your existing tooling with a command like this.
+
+{% side-by-side %}
+
+```shell
+nx build my-project
+```
+
+```shell
+cd my-project && nx build
+```
+
+{% /side-by-side %}
+
+{% callout type="note" title="Configurable target names" %}
+`build` and `test` can be any strings you choose. For the sake of consistency, we make `test` run unit tests for every project and `build` produce compiled code for the projects which can be built.
+{% /callout %}
+
+## Types of Targets
+
+Nx targets can be [inferred from tooling configuration files](/concepts/inferred-targets), created from existing `package.json` scripts, or defined in a `project.json` file. Nx will merge all three sources together to determine the targets for a particular project.
+
+## Modifying the Inferred Target
 
 Executors are associated with specific targets in a project's `project.json` file.
 
@@ -43,10 +77,6 @@ Executors are associated with specific targets in a project's `project.json` fil
 ```
 
 Each project has targets configured to run an executor with a specific set of options. In this snippet, `cart` has two targets defined - `build` and `test`.
-
-{% callout type="note" title="More details" %}
-`build` and `test` can be any strings you choose. For the sake of consistency, we make `test` run unit tests for every project and `build` produce compiled code for the projects which can be built.
-{% /callout %}
 
 Each executor definition has an `executor` property and, optionally, an `options` and a `configurations` property.
 
@@ -104,7 +134,7 @@ If defining a new target that needs to run a single shell command, there is a sh
 
 For more info, see the [run-commands documentation](/nx-api/nx/executors/run-commands)
 
-## Use Executor Configurations
+## Use Task Configurations
 
 The `configurations` property provides extra sets of values that will be merged into the options map.
 

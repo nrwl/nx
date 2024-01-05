@@ -32,7 +32,7 @@ The starting point of any non-trivial monorepo management tool is to be able to 
 
 - Turborepo only analyzes package.json files to understand how projects relate to each other. Built-in Nx plugins also analyze package.json files but in addition they analyze JS/TS files, so you don't have to have bogus package.json files (that you don’t use for the purposes of installing packages or publishing) in your repo. There are plugins for Nx that do that for other languages (e.g., Golang, .Net).
 - Since the computation of the project graph can take a lot of time for complex workspaces, both Nx and Turborepo have a daemon process to create the graph in the background.
-- **Nx has [module boundary rules](/core-features/enforce-module-boundaries), which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have project boundary rules. **Project boundary rules prevent the monorepo from becoming a “big ball of mud”.**
+- **Nx has [module boundary rules](/features/enforce-module-boundaries), which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have project boundary rules. **Project boundary rules prevent the monorepo from becoming a “big ball of mud”.**
 
 #### 3. Project graph visualization
 
@@ -89,7 +89,7 @@ If you want to learn more, check out our article on [Distributing CI - Binning a
 
 All the available Nx commands can be executed via the command line. But as your monorepo grows, with multiple teams and hundreds of projects, even just finding the project to run a command against can sometimes be difficult. Having a high quality IDE integration can be a time saver there.
 
-- Nx has [VSCode](/core-features/integrate-with-editors) and WebStorm/Intellij plugins.
+- Nx has [VSCode](/features/integrate-with-editors) and WebStorm/Intellij plugins.
 - Turborepo doesn’t have any plugins, and the maintainer has indicated there's no intention to provide editor support.
 
 Learn more [by watching this Egghead lesson](https://egghead.io/lessons/javascript-generate-new-projects-for-nx-with-nx-console).

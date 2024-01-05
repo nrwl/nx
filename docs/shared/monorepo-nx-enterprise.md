@@ -148,7 +148,7 @@ For a large organization it's crucial to establish how projects can depend on ea
   feature libraries.
 
 Nx provides a feature called tags that can be used to codify and statically-enforce these rules. Read more about
-tags [here](/core-features/enforce-module-boundaries).
+tags [here](/features/enforce-module-boundaries).
 
 ## Code Ownership
 

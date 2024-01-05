@@ -282,7 +282,7 @@ terminal `nx run-many -t test --parallel=5`.
 
 The `release` property in `nx.json` configures the `nx release` command. It is an optional property, as `nx release` is capable of working with zero config, but when present it is used to configure the versioning, changelog, and publishing phases of the release process.
 
-For more information on how `nx release` works, see [manage releases](/core-features/manage-releases).
+For more information on how `nx release` works, see [manage releases](/features/manage-releases).
 
 The full list of configuration options available for `"release"` can be found here: [https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts](https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts) under `NxReleaseConfiguration`.
 

@@ -135,7 +135,7 @@ If you want to ignore the cache (both reads and writes), use the `--skip-nx-cach
 nx build header --skip-nx-cache
 ```
 
-Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached targets](/core-features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/ci/features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
+Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached targets](/features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/ci/features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
 
 ## Clear the Local Cache
 

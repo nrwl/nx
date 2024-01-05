@@ -2,10 +2,10 @@
   "run-tasks": [
     {
       "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
-      "file": "shared/core-features/run-tasks",
+      "file": "shared/features/run-tasks",
       "id": "run-tasks",
       "name": "Run Tasks",
-      "path": "/core-features/run-tasks"
+      "path": "/features/run-tasks"
     },
     {
       "description": "",
@@ -88,17 +88,17 @@
   "cache-task-results": [
     {
       "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
-      "file": "shared/core-features/run-tasks",
+      "file": "shared/features/run-tasks",
       "id": "run-tasks",
       "name": "Run Tasks",
-      "path": "/core-features/run-tasks"
+      "path": "/features/run-tasks"
     },
     {
       "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
-      "file": "shared/core-features/cache-task-results",
+      "file": "shared/features/cache-task-results",
       "id": "cache-task-results",
       "name": "Cache Task Results",
-      "path": "/core-features/cache-task-results"
+      "path": "/features/cache-task-results"
     },
     {
       "description": "",
@@ -174,10 +174,10 @@
   "explore-graph": [
     {
       "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
-      "file": "shared/core-features/explore-graph",
+      "file": "shared/features/explore-graph",
       "id": "explore-graph",
       "name": "Explore the Graph",
-      "path": "/core-features/explore-graph"
+      "path": "/features/explore-graph"
     },
     {
       "description": "",
@@ -218,10 +218,10 @@
   "automate-updating-dependencies": [
     {
       "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
-      "file": "shared/core-features/automate-updating-dependencies",
+      "file": "shared/features/automate-updating-dependencies",
       "id": "automate-updating-dependencies",
       "name": "Automate Updating Dependencies",
-      "path": "/core-features/automate-updating-dependencies"
+      "path": "/features/automate-updating-dependencies"
     },
     {
       "description": "",
@@ -248,10 +248,10 @@
   "enforce-module-boundaries": [
     {
       "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
-      "file": "shared/core-features/enforce-module-boundaries",
+      "file": "shared/features/enforce-module-boundaries",
       "id": "enforce-module-boundaries",
       "name": "Enforce Module Boundaries",
-      "path": "/core-features/enforce-module-boundaries"
+      "path": "/features/enforce-module-boundaries"
     },
     {
       "description": "",
@@ -341,10 +341,10 @@
   "integrate-with-editors": [
     {
       "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
-      "file": "shared/core-features/integrate-with-editors",
+      "file": "shared/features/integrate-with-editors",
       "id": "integrate-with-editors",
       "name": "Integrate with Editors",
-      "path": "/core-features/integrate-with-editors"
+      "path": "/features/integrate-with-editors"
     },
     {
       "description": "",
@@ -399,19 +399,19 @@
   "manage-releases": [
     {
       "description": "Learn how Nx provides tools to help you manage releasing your projects.",
-      "file": "shared/core-features/manage-releases",
+      "file": "shared/features/manage-releases",
       "id": "manage-releases",
       "name": "Manage Releases",
-      "path": "/core-features/manage-releases"
+      "path": "/features/manage-releases"
     }
   ],
-  "use-task-executors": [
+  "enhance-tooling": [
     {
       "description": "",
-      "file": "shared/plugin-features/use-task-executors",
-      "id": "use-task-executors",
-      "name": "Use Task Executors",
-      "path": "/core-features/plugin-features/use-task-executors"
+      "file": "shared/features/enhance-tooling",
+      "id": "enhance-tooling",
+      "name": "Enhance Tooling",
+      "path": "/features/enhance-tooling"
     },
     {
       "description": "",
@@ -519,13 +519,13 @@
       "path": "/nx-api/nx/documents/affected"
     }
   ],
-  "use-code-generators": [
+  "generate-code": [
     {
       "description": "",
-      "file": "shared/plugin-features/use-code-generators",
-      "id": "use-code-generators",
-      "name": "Use Code Generators",
-      "path": "/core-features/plugin-features/use-code-generators"
+      "file": "shared/features/generate-code",
+      "id": "generate-code",
+      "name": "Generate Code",
+      "path": "/features/generate-code"
     },
     {
       "description": "",
@@ -774,7 +774,7 @@
     },
     {
       "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
-      "file": "shared/core-features/distribute-task-execution",
+      "file": "shared/features/distribute-task-execution",
       "id": "distribute-task-execution",
       "name": "Distribute Task Execution",
       "path": "/ci/features/distribute-task-execution"
@@ -1203,7 +1203,7 @@
   "remote-cache": [
     {
       "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-      "file": "shared/core-features/remote-cache",
+      "file": "shared/features/remote-cache",
       "id": "remote-cache",
       "name": "Use Remote Caching",
       "path": "/ci/features/remote-cache"
