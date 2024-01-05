@@ -22,7 +22,8 @@ const tips: NewYearTip[] = [
     day: 8,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-xl font-semibold mt-8">What is Nx?</h3>
+        <h3 className="text-xl font-semibold">What is Nx?</h3>
+        <span className="pt-5 text-sm">January 8th</span>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=-_4WMl-Fn0w"
@@ -52,9 +53,10 @@ const tips: NewYearTip[] = [
     day: 9,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-xl font-semibold mt-8">
+        <h3 className="text-xl font-semibold">
           Which Style of Workspace is Right for You?
         </h3>
+        <span className="pt-5 text-sm">January 9th</span>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=ArmERpNvC8Y"
@@ -84,7 +86,8 @@ const tips: NewYearTip[] = [
     day: 10,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-xl font-semibold mt-8">What is Nx Cloud?</h3>
+        <h3 className="text-xl font-semibold">What is Nx Cloud?</h3>
+        <span className="pt-5 text-sm">January 10th</span>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=NZF0ZJpgaJM"
@@ -123,9 +126,8 @@ const tips: NewYearTip[] = [
     day: 11,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-xl font-semibold my-8">
-          Add Nx to an Existing Project
-        </h3>
+        <h3 className="text-xl font-semibold">Add Nx to an Existing Project</h3>
+        <span className="pt-5 text-sm">January 11th</span>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/VmGCZ77ao_I"
@@ -155,7 +157,8 @@ const tips: NewYearTip[] = [
     day: 12,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-xl font-semibold my-8">Micro Frontends with Nx</h3>
+        <h3 className="text-xl font-semibold">Micro Frontends with Nx</h3>
+        <span className="pt-5 text-sm">January 12th</span>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=dotA6ZSmNL4"
@@ -186,7 +189,8 @@ const tips: NewYearTip[] = [
     day: 15,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-xl font-semibold my-8">Explore Example Repos</h3>
+        <h3 className="text-xl font-semibold">Explore Example Repos</h3>
+        <span className="pt-5 text-sm">January 15th</span>
         <p className="my-4">
           Nx can work with any technology stack and we have created examples for
           many of them.
@@ -228,7 +232,8 @@ const tips: NewYearTip[] = [
     day: 16,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-xl font-semibold my-8">Let's Build a CLI</h3>
+        <h3 className="text-xl font-semibold">Let's Build a CLI</h3>
+        <span className="pt-5 text-sm">January 16th</span>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/ocllb5KEXZk"
@@ -259,9 +264,10 @@ const tips: NewYearTip[] = [
     day: 17,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-xl font-semibold my-8">
+        <h3 className="text-xl font-semibold">
           Nx Agents: The Next Leap in Distributed Task Execution
         </h3>
+        <span className="pt-5 text-sm">January 17th</span>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/XLOUFZeqRpM"
@@ -303,7 +309,8 @@ const tips: NewYearTip[] = [
     day: 18,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-xl font-semibold my-8">Graduating to a Monorepo</h3>
+        <h3 className="text-xl font-semibold">Graduating to a Monorepo</h3>
+        <span className="pt-5 text-sm">January 18th</span>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=ztNpLf2Zl-c"
@@ -335,9 +342,8 @@ const tips: NewYearTip[] = [
     day: 19,
     cardBack: (
       <FlipCardBack>
-        <h3 className="text-xl font-semibold my-8">
-          Keep Your Tooling Up to Date
-        </h3>
+        <h3 className="text-xl font-semibold">Keep Your Tooling Up to Date</h3>
+        <span className="pt-5 text-sm">January 19th</span>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/Ss6MfcXi0jE"
@@ -373,9 +379,8 @@ const tips: NewYearTip[] = [
 ];
 
 export default function NewYear(): JSX.Element {
-  // const currentDay =
-  //   new Date().getFullYear() === 2024 ? new Date().getDate() : 0;
-  const currentDay = 15;
+  const currentDay =
+    new Date().getFullYear() === 2024 ? new Date().getDate() : 0;
   const currentTipIndex = tips.filter((tip) => tip.day <= currentDay).length;
   const shownTips = tips.slice(0, currentTipIndex + 1);
   const router = useRouter();
@@ -432,6 +437,14 @@ export default function NewYear(): JSX.Element {
               <p>
                 Start 2024 off right with some tips to help you get the most out
                 of Nx. Each day, a new card will be unlocked for you to flip.
+                You can{' '}
+                <a
+                  className="underline text-slate-900 dark:text-slate-100"
+                  href="https://share.hsforms.com/1cShEClnQRIuu5w-1cLalZw1n3n7"
+                >
+                  sign up to receive an email
+                </a>{' '}
+                each day as new tips are released.
               </p>
             </article>
           </div>
@@ -442,7 +455,7 @@ export default function NewYear(): JSX.Element {
             className="py-18 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
           >
             <article id="nx-new-year-tips" className="relative">
-              <div className="mx-auto items-stretch py-12 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:py-16">
+              <div className="mx-auto items-stretch py-12 grid grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:py-16 dark:text-slate-100">
                 {shownTips.map((tip) => (
                   <FlipCard
                     key={tip.day}
