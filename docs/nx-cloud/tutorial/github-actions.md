@@ -284,7 +284,9 @@ jobs:
             ~/.cache/Cypress # needed for the Cypress binary
           key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
       - uses: nrwl/nx-set-shas@v3
+      - name: Track branch
       # This line is needed for nx affected to work when CI is running on a PR
+      if: github.event_name == 'pull_request'
       - run: git branch --track main origin/main
       - run: pnpm nx affected -t lint,test,build --parallel=3 --configuration=ci
       - run: pnpm nx affected -t e2e --parallel=1
