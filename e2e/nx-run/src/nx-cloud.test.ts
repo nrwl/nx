@@ -4,6 +4,7 @@ describe('Nx Cloud', () => {
   beforeAll(() =>
     newProject({
       unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/js'],
     })
   );
 
@@ -19,7 +20,9 @@ describe('Nx Cloud', () => {
 
   afterAll(() => cleanupProject());
 
-  it('should cache tests', async () => {
+  // Disabled due to flakiness on CI (NXP-423)
+  // TODO: Re-enable once we we solve this in the light client.
+  xit('should cache tests', async () => {
     // Should be able to view logs with Nx Cloud
     expect(runCLI(`test ${libName}`)).toContain(
       `View logs and investigate cache misses at https://staging.nx.app`

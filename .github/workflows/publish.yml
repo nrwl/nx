@@ -162,10 +162,10 @@ jobs:
      timeout-minutes: 45
      steps:
        - uses: actions/checkout@v4
-         if: ${{ !contains(github.ref, '-') && github.event_name != 'schedule' }}
+         if: ${{ github.event_name != 'schedule' }}
        - name: Build
          id: build
-         if: ${{ !contains(github.ref, '-') && github.event_name != 'schedule' }}
+         if: ${{ github.event_name != 'schedule' }}
          uses: cross-platform-actions/action@v0.21.1
          env:
            DEBUG: napi:*
@@ -206,7 +206,7 @@ jobs:
              killall node || true
              echo "COMPLETE"
        - name: Upload artifact
-         if: ${{ !contains(github.ref, '-') && github.event_name != 'schedule' }}
+         if: ${{ github.event_name != 'schedule' }}
          uses: actions/upload-artifact@v3
          with:
            name: bindings-freebsd
@@ -219,6 +219,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: write
     needs:
       - build-freebsd
       - build

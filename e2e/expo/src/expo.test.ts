@@ -23,7 +23,7 @@ describe('expo', () => {
   let libName = uniq('lib');
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/expo'] });
     // we create empty preset above which skips creation of `production` named input
     updateJson('nx.json', (nxJson) => {
       nxJson.namedInputs = {

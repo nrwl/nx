@@ -1,3 +1,4 @@
+import { major } from 'semver';
 import type { GitCommit } from '../src/command-line/release/utils/git';
 import {
   RepoSlug,
@@ -47,7 +48,17 @@ export interface DefaultChangelogRenderOptions extends ChangelogRenderOptions {
    * Whether or not the commit authors should be added to the bottom of the changelog in a "Thank You"
    * section. Defaults to true.
    */
-  includeAuthors?: boolean;
+  authors?: boolean;
+  /**
+   * Whether or not the commit references (such as commit and/or PR links) should be included in the changelog.
+   * Defaults to true.
+   */
+  commitReferences?: boolean;
+  /**
+   * Whether or not to include the date in the version title. It can be set to false to disable it, or true to enable
+   * with the default of (YYYY-MM-DD). Defaults to true.
+   */
+  versionTitleDate?: boolean;
 }
 
 /**
@@ -79,7 +90,23 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     test: { title: '✅ Tests' },
     style: { title: '🎨 Styles' },
     ci: { title: '🤖 CI' },
+    revert: { title: '⏪ Revert' },
   };
+
+  // If the current range of commits contains both a commit and its revert, we strip them both from the final list
+  for (const commit of commits) {
+    if (commit.type === 'revert') {
+      for (const revertedHash of commit.revertedHashes) {
+        const revertedCommit = commits.find((c) =>
+          revertedHash.startsWith(c.shortHash)
+        );
+        if (revertedCommit) {
+          commits.splice(commits.indexOf(revertedCommit), 1);
+          commits.splice(commits.indexOf(commit), 1);
+        }
+      }
+    }
+  }
 
   // workspace root level changelog
   if (project === null) {
@@ -88,7 +115,10 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       if (entryWhenNoChanges) {
         markdownLines.push(
           '',
-          `## ${releaseVersion}\n\n${entryWhenNoChanges}`,
+          `${createVersionTitle(
+            releaseVersion,
+            changelogRenderOptions
+          )}\n\n${entryWhenNoChanges}`,
           ''
         );
       }
@@ -97,7 +127,11 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
     const typeGroups = groupBy(commits, 'type');
 
-    markdownLines.push('', `## ${releaseVersion}`, '');
+    markdownLines.push(
+      '',
+      createVersionTitle(releaseVersion, changelogRenderOptions),
+      ''
+    );
 
     for (const type of Object.keys(commitTypes)) {
       const group = typeGroups[type];
@@ -124,10 +158,19 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       for (const scope of scopesSortedAlphabetically) {
         const commits = commitsGroupedByScope[scope];
         for (const commit of commits) {
-          const line = formatCommit(commit, repoSlug);
+          const line = formatCommit(commit, changelogRenderOptions, repoSlug);
           markdownLines.push(line);
           if (commit.isBreaking) {
-            breakingChanges.push(line);
+            const breakingChangeExplanation = extractBreakingChangeExplanation(
+              commit.body
+            );
+            breakingChanges.push(
+              breakingChangeExplanation
+                ? `- ${
+                    commit.scope ? `**${commit.scope.trim()}:** ` : ''
+                  }${breakingChangeExplanation}`
+                : line
+            );
           }
         }
       }
@@ -145,14 +188,21 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
       if (entryWhenNoChanges) {
         markdownLines.push(
           '',
-          `## ${releaseVersion}\n\n${entryWhenNoChanges}`,
+          `${createVersionTitle(
+            releaseVersion,
+            changelogRenderOptions
+          )}\n\n${entryWhenNoChanges}`,
           ''
         );
       }
       return markdownLines.join('\n').trim();
     }
 
-    markdownLines.push('', `## ${releaseVersion}`, '');
+    markdownLines.push(
+      '',
+      createVersionTitle(releaseVersion, changelogRenderOptions),
+      ''
+    );
 
     const typeGroups = groupBy(
       // Sort the relevant commits to have the unscoped commits first, before grouping by type
@@ -169,10 +219,19 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
       const commitsInChronologicalOrder = group.reverse();
       for (const commit of commitsInChronologicalOrder) {
-        const line = formatCommit(commit, repoSlug);
+        const line = formatCommit(commit, changelogRenderOptions, repoSlug);
         markdownLines.push(line + '\n');
         if (commit.isBreaking) {
-          breakingChanges.push(line);
+          const breakingChangeExplanation = extractBreakingChangeExplanation(
+            commit.body
+          );
+          breakingChanges.push(
+            breakingChangeExplanation
+              ? `- ${
+                  commit.scope ? `**${commit.scope.trim()}:** ` : ''
+                }${breakingChangeExplanation}`
+              : line
+          );
         }
       }
     }
@@ -182,7 +241,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     markdownLines.push('', '#### ⚠️  Breaking Changes', '', ...breakingChanges);
   }
 
-  if (changelogRenderOptions.includeAuthors) {
+  if (changelogRenderOptions.authors) {
     const _authors = new Map<string, { email: Set<string>; github?: string }>();
     for (const commit of commits) {
       if (!commit.author) {
@@ -275,14 +334,62 @@ function groupBy(items: any[], key: string) {
   return groups;
 }
 
-function formatCommit(commit: GitCommit, repoSlug?: RepoSlug): string {
+function formatCommit(
+  commit: GitCommit,
+  changelogRenderOptions: DefaultChangelogRenderOptions,
+  repoSlug?: RepoSlug
+): string {
   let commitLine =
     '- ' +
-    (commit.scope ? `**${commit.scope.trim()}:** ` : '') +
     (commit.isBreaking ? '⚠️  ' : '') +
+    (commit.scope ? `**${commit.scope.trim()}:** ` : '') +
     commit.description;
-  if (repoSlug) {
+  if (repoSlug && changelogRenderOptions.commitReferences) {
     commitLine += formatReferences(commit.references, repoSlug);
   }
   return commitLine;
+}
+
+/**
+ * It is common to add further information about a breaking change in the commit body,
+ * and it is naturally that information that should be included in the BREAKING CHANGES
+ * section of changelog, rather than repeating the commit title/description.
+ */
+function extractBreakingChangeExplanation(message: string): string | null {
+  const breakingChangeIdentifier = 'BREAKING CHANGE:';
+  const startIndex = message.indexOf(breakingChangeIdentifier);
+
+  if (startIndex === -1) {
+    // "BREAKING CHANGE:" not found in the message
+    return null;
+  }
+
+  const startOfBreakingChange = startIndex + breakingChangeIdentifier.length;
+  const endOfBreakingChange = message.indexOf('\n', startOfBreakingChange);
+
+  if (endOfBreakingChange === -1) {
+    // No newline character found, extract till the end of the message
+    return message.substring(startOfBreakingChange).trim();
+  }
+
+  // Extract and return the breaking change message
+  return message.substring(startOfBreakingChange, endOfBreakingChange).trim();
+}
+
+function createVersionTitle(
+  version: string,
+  changelogRenderOptions: DefaultChangelogRenderOptions
+) {
+  // Normalize by removing any leading `v` during comparison
+  const isMajorVersion = `${major(version)}.0.0` === version.replace(/^v/, '');
+  let maybeDateStr = '';
+  if (changelogRenderOptions.versionTitleDate) {
+    // YYYY-MM-DD
+    const dateStr = new Date().toISOString().slice(0, 10);
+    maybeDateStr = ` (${dateStr})`;
+  }
+  if (isMajorVersion) {
+    return `# ${version}${maybeDateStr}`;
+  }
+  return `## ${version}${maybeDateStr}`;
 }

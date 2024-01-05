@@ -80,5 +80,6 @@ function getNgModuleDeclaration(directiveClassName: string): string {
   declarations: [${directiveClassName}],
   exports: [${directiveClassName}],
 })
-export class ${directiveClassName}Module {}`;
+export class ${directiveClassName}Module {}
+`;
 }

@@ -1,5 +1,6 @@
 import { assertMinimumCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
+  formatFiles,
   generateFiles,
   joinPathFragments,
   readProjectConfiguration,
@@ -11,7 +12,7 @@ import {
 } from '../utils/storybook-ast/storybook-inputs';
 import { ComponentTestSchema } from './schema';
 
-export function componentTestGenerator(
+export async function componentTestGenerator(
   tree: Tree,
   options: ComponentTestSchema
 ) {
@@ -47,6 +48,10 @@ export function componentTestGenerator(
         tpl: '',
       }
     );
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 }
 

@@ -62,6 +62,11 @@ pub(super) fn get_files(
         }
     }
 
+    global_files.par_sort();
+    for (_, project_files) in project_file_map.iter_mut() {
+        project_files.par_sort();
+    }
+
     let project_files_external = External::new(project_file_map.clone());
     let global_files_external = External::new(global_files.clone());
     let all_workspace_files = External::new(files);

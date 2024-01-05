@@ -107,6 +107,22 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
     NxGlobSetBuilder::new(&result)?.build()
 }
 
+pub(crate) fn contains_glob_pattern(value: &str) -> bool {
+    value.contains('!')
+        || value.contains('?')
+        || value.contains('@')
+        || value.contains('+')
+        || value.contains('*')
+        || value.contains('|')
+        || value.contains(',')
+        || value.contains('{')
+        || value.contains('}')
+        || value.contains('[')
+        || value.contains(']')
+        || value.contains('(')
+        || value.contains(')')
+}
+
 #[cfg(test)]
 mod test {
     use super::*;

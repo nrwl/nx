@@ -1,5 +1,4 @@
 import { ButtonLink } from '@nx/nx-dev/ui-common';
-import React from 'react';
 
 export function GettingStarted(): JSX.Element {
   return (

@@ -77,5 +77,6 @@ function getNgModuleDeclaration(pipeClassName: string): string {
   declarations: [${pipeClassName}],
   exports: [${pipeClassName}],
 })
-export class ${pipeClassName}Module {}`;
+export class ${pipeClassName}Module {}
+`;
 }

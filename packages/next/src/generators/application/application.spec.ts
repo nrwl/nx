@@ -6,6 +6,7 @@ import {
   Tree,
 } from '@nx/devkit';
 
+import { Schema } from './schema';
 import { applicationGenerator } from './application';
 
 describe('app', () => {
@@ -627,14 +628,6 @@ describe('app', () => {
             "overrides": [
               {
                 "files": [
-                  "*.*",
-                ],
-                "rules": {
-                  "@next/next/no-html-link-for-pages": "off",
-                },
-              },
-              {
-                "files": [
                   "*.ts",
                   "*.tsx",
                   "*.js",
@@ -728,6 +721,48 @@ describe('app', () => {
       expect(tsConfigApp.include).toContain('**/*.js');
       expect(tsConfigApp.exclude).not.toContain('**/*.spec.js');
     });
+  });
+});
+
+describe('app with Project Configuration V3 enabeled', () => {
+  let tree: Tree;
+  let originalPVC3;
+
+  const schema: Schema = {
+    name: 'app',
+    appDir: true,
+    unitTestRunner: 'jest',
+    style: 'css',
+    e2eTestRunner: 'cypress',
+    projectNameAndRootFormat: 'as-provided',
+  };
+
+  beforeAll(() => {
+    tree = createTreeWithEmptyWorkspace();
+    originalPVC3 = process.env['NX_PCV3'];
+    process.env['NX_PCV3'] = 'true';
+  });
+
+  afterAll(() => {
+    if (originalPVC3) {
+      process.env['NX_PCV3'] = originalPVC3;
+    } else {
+      delete process.env['NX_PCV3'];
+    }
+  });
+
+  it('should not generate build serve and export targets', async () => {
+    const name = uniq();
+
+    await applicationGenerator(tree, {
+      ...schema,
+      name,
+    });
+
+    const projectConfiguration = readProjectConfiguration(tree, name);
+    expect(projectConfiguration.targets.build).toBeUndefined();
+    expect(projectConfiguration.targets.serve).toBeUndefined();
+    expect(projectConfiguration.targets.export).toBeUndefined();
   });
 });
 

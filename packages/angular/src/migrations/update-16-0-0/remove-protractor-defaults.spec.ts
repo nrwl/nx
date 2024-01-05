@@ -4,10 +4,17 @@ import {
   readProjectConfiguration,
   updateNxJson,
 } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import removeProtractorDefaults from './remove-protractor-defaults';
 
 describe('removeProtractorDefaults', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
+  });
+
   it('should remove protractor as default unit test runner from nx.json when exists', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();

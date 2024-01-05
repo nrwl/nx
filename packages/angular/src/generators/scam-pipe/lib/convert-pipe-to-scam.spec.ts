@@ -20,6 +20,7 @@ describe('convertPipeToScam', () => {
       export: false,
       flat: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -46,7 +47,7 @@ describe('convertPipeToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example',
+        name: 'example'
       })
       export class ExamplePipe implements PipeTransform {
         transform(value: unknown, ...args: unknown[]): unknown {
@@ -59,7 +60,8 @@ describe('convertPipeToScam', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
   });
 
@@ -78,6 +80,7 @@ describe('convertPipeToScam', () => {
       skipImport: true,
       export: false,
       flat: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -109,7 +112,8 @@ describe('convertPipeToScam', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
   });
 
@@ -129,6 +133,7 @@ describe('convertPipeToScam', () => {
       export: false,
       flat: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -152,7 +157,7 @@ describe('convertPipeToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example',
+        name: 'example'
       })
       export class ExamplePipe implements PipeTransform {
         transform(value: unknown, ...args: unknown[]): unknown {
@@ -165,7 +170,8 @@ describe('convertPipeToScam', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
   });
 
@@ -185,6 +191,7 @@ describe('convertPipeToScam', () => {
       export: false,
       flat: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -216,7 +223,8 @@ describe('convertPipeToScam', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
   });
 
@@ -237,6 +245,7 @@ describe('convertPipeToScam', () => {
       flat: false,
       path: 'apps/app1/src/app/random',
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -263,7 +272,7 @@ describe('convertPipeToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example',
+        name: 'example'
       })
       export class ExamplePipe implements PipeTransform {
         transform(value: unknown, ...args: unknown[]): unknown {
@@ -276,7 +285,8 @@ describe('convertPipeToScam', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
   });
 
@@ -297,6 +307,7 @@ describe('convertPipeToScam', () => {
       flat: true,
       path: 'apps/app1/src/app/random',
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -323,7 +334,7 @@ describe('convertPipeToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Pipe({
-        name: 'example',
+        name: 'example'
       })
       export class ExamplePipe implements PipeTransform {
         transform(value: unknown, ...args: unknown[]): unknown {
@@ -336,7 +347,8 @@ describe('convertPipeToScam', () => {
         declarations: [ExamplePipe],
         exports: [ExamplePipe],
       })
-      export class ExamplePipeModule {}"
+      export class ExamplePipeModule {}
+      "
     `);
   });
 });

@@ -4,6 +4,7 @@ import {
   addImportToFlatConfig,
   addPluginsToExportsBlock,
   createNodeList,
+  generateAst,
   generateFlatOverride,
   stringifyNodeList,
 } from '../utils/flat-config/ast-utils';
@@ -121,6 +122,13 @@ export const getGlobalFlatEslintConfiguration = (
       generateFlatOverride(jestOverride)
     );
   }
+  // add ignore for .nx folder
+  content = addBlockToFlatConfigExport(
+    content,
+    generateAst({
+      ignores: ['.nx'],
+    })
+  );
 
   return content;
 };

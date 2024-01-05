@@ -22,19 +22,13 @@ export default async function run(
   process.chdir(systemRoot);
 
   const projectName = context.projectName || '<???>';
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   const printInfo = options.format && !options.silent;
 
   if (printInfo) {
     console.info(`\nLinting ${JSON.stringify(projectName)}...`);
   }
-
-  /**
-   * We want users to have the option of not specifying the config path, and let
-   * eslint automatically resolve the `.eslintrc.json` files in each folder.
-   */
-  let eslintConfigPath = options.eslintConfig
-    ? resolve(systemRoot, options.eslintConfig)
-    : undefined;
 
   options.cacheLocation = options.cacheLocation
     ? joinPathFragments(options.cacheLocation, projectName)
@@ -51,6 +45,23 @@ export default async function run(
   const hasFlatConfig = existsSync(
     joinPathFragments(workspaceRoot, 'eslint.config.js')
   );
+
+  // while standard eslint uses by default closest config to the file, if otherwise not specified,
+  // the flat config would always use the root config, so we need to explicitly set it to the local one
+  if (hasFlatConfig && !normalizedOptions.eslintConfig) {
+    const eslintConfigPath = joinPathFragments(projectRoot, 'eslint.config.js');
+    if (existsSync(eslintConfigPath)) {
+      normalizedOptions.eslintConfig = eslintConfigPath;
+    }
+  }
+
+  /**
+   * We want users to have the option of not specifying the config path, and let
+   * eslint automatically resolve the `.eslintrc.json` files in each folder.
+   */
+  let eslintConfigPath = normalizedOptions.eslintConfig
+    ? resolve(systemRoot, normalizedOptions.eslintConfig)
+    : undefined;
 
   const { eslint, ESLint } = await resolveAndInstantiateESLint(
     eslintConfigPath,
@@ -89,8 +100,7 @@ export default async function run(
     (pattern) => {
       return interpolate(pattern, {
         workspaceRoot: '',
-        projectRoot:
-          context.projectsConfigurations.projects[context.projectName].root,
+        projectRoot,
         projectName: context.projectName,
       });
     }

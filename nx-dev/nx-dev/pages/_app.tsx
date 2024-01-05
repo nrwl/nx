@@ -22,19 +22,19 @@ export default function CustomApp({
   return (
     <>
       <DefaultSeo
-        title="Nx: Smart, Fast and Extensible Build System"
-        description="Next generation build system with first class monorepo support and powerful integrations."
+        title="Nx: Smart Monorepos · Fast CI"
+        description="Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx: Smart, Fast and Extensible Build System',
+          title: 'Nx: Smart Monorepos · Fast CI',
           description:
-            'Next generation build system with first class monorepo support and powerful integrations.',
+            'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart, Fast and Extensible Build System',
+              alt: 'Nx: Smart Monorepos · Fast CI',
               type: 'image/jpeg',
             },
           ],

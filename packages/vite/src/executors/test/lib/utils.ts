@@ -7,7 +7,6 @@ import {
 import { VitestExecutorOptions } from '../schema';
 import { normalizeViteConfigFilePath } from '../../../utils/options-utils';
 import { relative } from 'path';
-import { NxReporter } from './nx-reporter';
 
 export async function getOptions(
   options: VitestExecutorOptions,
@@ -76,12 +75,9 @@ export async function getExtraArgs(
   options: VitestExecutorOptions
 ): Promise<Record<string, any>> {
   // support passing extra args to vite cli
-  const schema = await import('../schema.json');
   const extraArgs: Record<string, any> = {};
   for (const key of Object.keys(options)) {
-    if (!schema.properties[key]) {
-      extraArgs[key] = options[key];
-    }
+    extraArgs[key] = options[key];
   }
 
   return extraArgs;

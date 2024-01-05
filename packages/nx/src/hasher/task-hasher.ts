@@ -168,7 +168,7 @@ export class InProcessTaskHasher implements TaskHasher {
           this.projectGraph,
           {
             selectivelyHashTsConfig:
-              this.options.selectivelyHashTsConfig ?? false,
+              this.options?.selectivelyHashTsConfig ?? false,
           }
         )
       : new NativeTaskHasherImpl(
@@ -178,7 +178,7 @@ export class InProcessTaskHasher implements TaskHasher {
           this.externalRustReferences,
           {
             selectivelyHashTsConfig:
-              this.options.selectivelyHashTsConfig ?? false,
+              this.options?.selectivelyHashTsConfig ?? false,
           }
         );
   }

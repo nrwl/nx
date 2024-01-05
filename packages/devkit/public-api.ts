@@ -21,7 +21,7 @@ export { generateFiles } from './src/generators/generate-files';
 /**
  * @category Generators
  */
-export { toJS } from './src/generators/to-js';
+export { toJS, ToJSOptions } from './src/generators/to-js';
 
 /**
  * @category Generators

@@ -21,7 +21,7 @@ describe('SuperUsersEffects', () => {
       providers: [
         SuperUsersEffects,
         provideMockActions(() => actions),
-        provideMockStore(),
+        provideMockStore()
       ],
     });
 
@@ -32,9 +32,7 @@ describe('SuperUsersEffects', () => {
     it('should work', () => {
       actions = hot('-a-|', { a: SuperUsersActions.initSuperUsers() });
 
-      const expected = hot('-a-|', {
-        a: SuperUsersActions.loadSuperUsersSuccess({ superUsers: [] }),
-      });
+      const expected = hot('-a-|', { a: SuperUsersActions.loadSuperUsersSuccess({ superUsers: [] }) });
 
       expect(effects.init$).toBeObservable(expected);
     });
@@ -58,7 +56,7 @@ import {
   SUPER_USERS_FEATURE_KEY,
   SuperUsersState,
   initialSuperUsersState,
-  superUsersReducer,
+  superUsersReducer
 } from './super-users.reducer';
 import * as SuperUsersSelectors from './super-users.selectors';
 
@@ -71,7 +69,7 @@ describe('SuperUsersFacade', () => {
   let store: Store<TestSchema>;
   const createSuperUsersEntity = (id: string, name = ''): SuperUsersEntity => ({
     id,
-    name: name || \`name-\${id}\`,
+    name: name || \`name-\${id}\`
   });
 
   describe('used in NgModule', () => {
@@ -79,9 +77,9 @@ describe('SuperUsersFacade', () => {
       @NgModule({
         imports: [
           StoreModule.forFeature(SUPER_USERS_FEATURE_KEY, superUsersReducer),
-          EffectsModule.forFeature([SuperUsersEffects]),
+          EffectsModule.forFeature([SuperUsersEffects])
         ],
-        providers: [SuperUsersFacade],
+        providers: [SuperUsersFacade]
       })
       class CustomFeatureModule {}
 
@@ -90,7 +88,7 @@ describe('SuperUsersFacade', () => {
           StoreModule.forRoot({}),
           EffectsModule.forRoot([]),
           CustomFeatureModule,
-        ],
+        ]
       })
       class RootModule {}
       TestBed.configureTestingModule({ imports: [RootModule] });
@@ -128,13 +126,11 @@ describe('SuperUsersFacade', () => {
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
 
-      store.dispatch(
-        SuperUsersActions.loadSuperUsersSuccess({
-          superUsers: [
-            createSuperUsersEntity('AAA'),
-            createSuperUsersEntity('BBB'),
-          ],
-        })
+      store.dispatch(SuperUsersActions.loadSuperUsersSuccess({
+        superUsers: [
+          createSuperUsersEntity('AAA'),
+          createSuperUsersEntity('BBB')
+        ]})
       );
 
       list = await readFirst(facade.allSuperUsers$);
@@ -153,30 +149,23 @@ exports[`ngrx NgModule Syntax generated unit tests should generate specs for the
 
 import * as SuperUsersActions from './super-users.actions';
 import { SuperUsersEntity } from './super-users.models';
-import {
-  SuperUsersState,
-  initialSuperUsersState,
-  superUsersReducer,
-} from './super-users.reducer';
+import { SuperUsersState, initialSuperUsersState, superUsersReducer } from './super-users.reducer';
 
 describe('SuperUsers Reducer', () => {
   const createSuperUsersEntity = (id: string, name = ''): SuperUsersEntity => ({
     id,
-    name: name || \`name-\${id}\`,
+    name: name || \`name-\${id}\`
   });
 
   describe('valid SuperUsers actions', () => {
     it('loadSuperUsersSuccess should return the list of known SuperUsers', () => {
       const superUsers = [
         createSuperUsersEntity('PRODUCT-AAA'),
-        createSuperUsersEntity('PRODUCT-zzz'),
+        createSuperUsersEntity('PRODUCT-zzz')
       ];
       const action = SuperUsersActions.loadSuperUsersSuccess({ superUsers });
 
-      const result: SuperUsersState = superUsersReducer(
-        initialSuperUsersState,
-        action
-      );
+      const result: SuperUsersState = superUsersReducer(initialSuperUsersState, action);
 
       expect(result.loaded).toBe(true);
       expect(result.ids.length).toBe(2);
@@ -198,39 +187,31 @@ describe('SuperUsers Reducer', () => {
 
 exports[`ngrx NgModule Syntax generated unit tests should generate specs for the ngrx selectors 1`] = `
 "import { SuperUsersEntity } from './super-users.models';
-import {
-  superUsersAdapter,
-  SuperUsersPartialState,
-  initialSuperUsersState,
-} from './super-users.reducer';
+import { superUsersAdapter, SuperUsersPartialState, initialSuperUsersState } from './super-users.reducer';
 import * as SuperUsersSelectors from './super-users.selectors';
 
 describe('SuperUsers Selectors', () => {
   const ERROR_MSG = 'No Error Available';
   const getSuperUsersId = (it: SuperUsersEntity) => it.id;
-  const createSuperUsersEntity = (id: string, name = '') =>
-    ({
-      id,
-      name: name || \`name-\${id}\`,
-    } as SuperUsersEntity);
+  const createSuperUsersEntity = (id: string, name = '') => ({
+    id,
+    name: name || \`name-\${id}\`
+  }) as SuperUsersEntity;
 
   let state: SuperUsersPartialState;
 
   beforeEach(() => {
     state = {
-      superUsers: superUsersAdapter.setAll(
-        [
-          createSuperUsersEntity('PRODUCT-AAA'),
-          createSuperUsersEntity('PRODUCT-BBB'),
-          createSuperUsersEntity('PRODUCT-CCC'),
-        ],
-        {
-          ...initialSuperUsersState,
-          selectedId: 'PRODUCT-BBB',
-          error: ERROR_MSG,
-          loaded: true,
-        }
-      ),
+      superUsers: superUsersAdapter.setAll([
+        createSuperUsersEntity('PRODUCT-AAA'),
+        createSuperUsersEntity('PRODUCT-BBB'),
+        createSuperUsersEntity('PRODUCT-CCC')
+      ], {
+        ...initialSuperUsersState,
+        selectedId: 'PRODUCT-BBB',
+        error: ERROR_MSG,
+        loaded: true
+      })
     };
   });
 
@@ -244,9 +225,7 @@ describe('SuperUsers Selectors', () => {
     });
 
     it('selectEntity() should return the selected Entity', () => {
-      const result = SuperUsersSelectors.selectEntity(
-        state
-      ) as SuperUsersEntity;
+      const result = SuperUsersSelectors.selectEntity(state) as SuperUsersEntity;
       const selId = getSuperUsersId(result);
 
       expect(selId).toBe('PRODUCT-BBB');
@@ -279,25 +258,15 @@ import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
 @NgModule({
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot([]),
-    StoreModule.forRoot(
-      {},
-      {
-        metaReducers: [],
-        runtimeChecks: {
-          strictActionImmutability: true,
-          strictStateImmutability: true,
-        },
+  imports: [BrowserModule, RouterModule.forRoot([]), StoreModule.forRoot({}, {
+      metaReducers: [],
+      runtimeChecks: {
+        strictActionImmutability: true,
+        strictStateImmutability: true
       }
-    ),
-    EffectsModule.forRoot([UsersEffects]),
-    StoreRouterConnectingModule.forRoot(),
-    StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
-  ],
+    }), EffectsModule.forRoot([UsersEffects]), StoreRouterConnectingModule.forRoot(), StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer)],
   declarations: [AppComponent],
-  bootstrap: [AppComponent],
+  bootstrap: [AppComponent]
 })
 export class AppModule {}
 "
@@ -314,25 +283,15 @@ import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
 @NgModule({
-  imports: [
-    BrowserModule,
-    RouterModule.forRoot([]),
-    StoreModule.forRoot(
-      {},
-      {
-        metaReducers: [],
-        runtimeChecks: {
-          strictActionImmutability: true,
-          strictStateImmutability: true,
-        },
+  imports: [BrowserModule, RouterModule.forRoot([]), StoreModule.forRoot({}, {
+      metaReducers: [],
+      runtimeChecks: {
+        strictActionImmutability: true,
+        strictStateImmutability: true
       }
-    ),
-    EffectsModule.forRoot([UsersEffects]),
-    StoreRouterConnectingModule.forRoot(),
-    StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
-  ],
+    }), EffectsModule.forRoot([UsersEffects]), StoreRouterConnectingModule.forRoot(), StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer)],
   declarations: [AppComponent],
-  bootstrap: [AppComponent],
+  bootstrap: [AppComponent]
 })
 export class AppModule {}
 "
@@ -347,26 +306,183 @@ import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreRouterConnectingModule } from '@ngrx/router-store';
 @NgModule({
+  imports: [BrowserModule, RouterModule.forRoot([]), StoreModule.forRoot({}, {
+      metaReducers: [],
+      runtimeChecks: {
+        strictActionImmutability: true,
+        strictStateImmutability: true
+      }
+    }), EffectsModule.forRoot([]), StoreRouterConnectingModule.forRoot()],
+  declarations: [AppComponent],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+"
+`;
+
+exports[`ngrx NgModule Syntax should format files 1`] = `
+"import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import * as fromUsers from './+state/users.reducer';
+import { UsersEffects } from './+state/users.effects';
+@NgModule({
   imports: [
     BrowserModule,
     RouterModule.forRoot([]),
-    StoreModule.forRoot(
-      {},
-      {
-        metaReducers: [],
-        runtimeChecks: {
-          strictActionImmutability: true,
-          strictStateImmutability: true,
-        },
-      }
-    ),
-    EffectsModule.forRoot([]),
-    StoreRouterConnectingModule.forRoot(),
+    StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
+    EffectsModule.forFeature([UsersEffects]),
   ],
   declarations: [AppComponent],
   bootstrap: [AppComponent],
 })
 export class AppModule {}
+"
+`;
+
+exports[`ngrx NgModule Syntax should format files 2`] = `
+"import { createAction, props } from '@ngrx/store';
+import { UsersEntity } from './users.models';
+
+export const initUsers = createAction('[Users Page] Init');
+
+export const loadUsersSuccess = createAction(
+  '[Users/API] Load Users Success',
+  props<{ users: UsersEntity[] }>()
+);
+
+export const loadUsersFailure = createAction(
+  '[Users/API] Load Users Failure',
+  props<{ error: any }>()
+);
+"
+`;
+
+exports[`ngrx NgModule Syntax should format files 3`] = `
+"import { Injectable, inject } from '@angular/core';
+import { createEffect, Actions, ofType } from '@ngrx/effects';
+import { switchMap, catchError, of } from 'rxjs';
+import * as UsersActions from './users.actions';
+import * as UsersFeature from './users.reducer';
+
+@Injectable()
+export class UsersEffects {
+  private actions$ = inject(Actions);
+
+  init$ = createEffect(() =>
+    this.actions$.pipe(
+      ofType(UsersActions.initUsers),
+      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+      catchError((error) => {
+        console.error('Error', error);
+        return of(UsersActions.loadUsersFailure({ error }));
+      })
+    )
+  );
+}
+"
+`;
+
+exports[`ngrx NgModule Syntax should format files 4`] = `
+"/**
+ * Interface for the 'Users' data
+ */
+export interface UsersEntity {
+  id: string | number; // Primary ID
+  name: string;
+}
+"
+`;
+
+exports[`ngrx NgModule Syntax should format files 5`] = `
+"import { EntityState, EntityAdapter, createEntityAdapter } from '@ngrx/entity';
+import { createReducer, on, Action } from '@ngrx/store';
+
+import * as UsersActions from './users.actions';
+import { UsersEntity } from './users.models';
+
+export const USERS_FEATURE_KEY = 'users';
+
+export interface UsersState extends EntityState<UsersEntity> {
+  selectedId?: string | number; // which Users record has been selected
+  loaded: boolean; // has the Users list been loaded
+  error?: string | null; // last known error (if any)
+}
+
+export interface UsersPartialState {
+  readonly [USERS_FEATURE_KEY]: UsersState;
+}
+
+export const usersAdapter: EntityAdapter<UsersEntity> =
+  createEntityAdapter<UsersEntity>();
+
+export const initialUsersState: UsersState = usersAdapter.getInitialState({
+  // set initial required properties
+  loaded: false,
+});
+
+const reducer = createReducer(
+  initialUsersState,
+  on(UsersActions.initUsers, (state) => ({
+    ...state,
+    loaded: false,
+    error: null,
+  })),
+  on(UsersActions.loadUsersSuccess, (state, { users }) =>
+    usersAdapter.setAll(users, { ...state, loaded: true })
+  ),
+  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error }))
+);
+
+export function usersReducer(state: UsersState | undefined, action: Action) {
+  return reducer(state, action);
+}
+"
+`;
+
+exports[`ngrx NgModule Syntax should format files 6`] = `
+"import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
+
+// Lookup the 'Users' feature state managed by NgRx
+export const selectUsersState =
+  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+
+const { selectAll, selectEntities } = usersAdapter.getSelectors();
+
+export const selectUsersLoaded = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.loaded
+);
+
+export const selectUsersError = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.error
+);
+
+export const selectAllUsers = createSelector(
+  selectUsersState,
+  (state: UsersState) => selectAll(state)
+);
+
+export const selectUsersEntities = createSelector(
+  selectUsersState,
+  (state: UsersState) => selectEntities(state)
+);
+
+export const selectSelectedId = createSelector(
+  selectUsersState,
+  (state: UsersState) => state.selectedId
+);
+
+export const selectEntity = createSelector(
+  selectUsersEntities,
+  selectSelectedId,
+  (entities, selectedId) => (selectedId ? entities[selectedId] : undefined)
+);
 "
 `;
 
@@ -385,7 +501,9 @@ exports[`ngrx NgModule Syntax should generate the ngrx actions 1`] = `
 "import { createAction, props } from '@ngrx/store';
 import { UsersEntity } from './users.models';
 
-export const initUsers = createAction('[Users Page] Init');
+export const initUsers = createAction(
+  '[Users Page] Init'
+);
 
 export const loadUsersSuccess = createAction(
   '[Users/API] Load Users Success',
@@ -410,16 +528,15 @@ import * as UsersFeature from './users.reducer';
 export class UsersEffects {
   private actions$ = inject(Actions);
 
-  init$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(UsersActions.initUsers),
-      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
-      catchError((error) => {
+  init$ = createEffect(() => this.actions$.pipe(
+    ofType(UsersActions.initUsers),
+    switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+    catchError((error) => {
         console.error('Error', error);
         return of(UsersActions.loadUsersFailure({ error }));
-      })
+      }
     )
-  );
+  ));
 }
 "
 `;
@@ -474,25 +591,24 @@ export interface UsersPartialState {
   readonly [USERS_FEATURE_KEY]: UsersState;
 }
 
-export const usersAdapter: EntityAdapter<UsersEntity> =
-  createEntityAdapter<UsersEntity>();
+export const usersAdapter: EntityAdapter<UsersEntity> = createEntityAdapter<UsersEntity>();
 
 export const initialUsersState: UsersState = usersAdapter.getInitialState({
   // set initial required properties
-  loaded: false,
+  loaded: false
 });
 
 const reducer = createReducer(
   initialUsersState,
-  on(UsersActions.initUsers, (state) => ({
-    ...state,
-    loaded: false,
-    error: null,
-  })),
-  on(UsersActions.loadUsersSuccess, (state, { users }) =>
-    usersAdapter.setAll(users, { ...state, loaded: true })
+  on(UsersActions.initUsers,
+    state => ({ ...state, loaded: false, error: null })
   ),
-  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error }))
+  on(UsersActions.loadUsersSuccess,
+    (state, { users }) => usersAdapter.setAll(users, { ...state, loaded: true })
+  ),
+  on(UsersActions.loadUsersFailure,
+    (state, { error }) => ({ ...state, error })
+  ),
 );
 
 export function usersReducer(state: UsersState | undefined, action: Action) {
@@ -506,8 +622,7 @@ exports[`ngrx NgModule Syntax should generate the ngrx selectors 1`] = `
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
 // Lookup the 'Users' feature state managed by NgRx
-export const selectUsersState =
-  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+export const selectUsersState = createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
 
 const { selectAll, selectEntities } = usersAdapter.getSelectors();
 
@@ -552,7 +667,7 @@ import { AppComponent } from './app.component';
 @NgModule({
   imports: [BrowserModule, RouterModule.forRoot([])],
   declarations: [AppComponent],
-  bootstrap: [AppComponent],
+  bootstrap: [AppComponent]
 })
 export class AppModule {}
 "
@@ -570,7 +685,6 @@ export * from './lib/+state/super-users.facade';
 export * from './lib/+state/super-users.models';
 
 export { SuperUsersActions, SuperUsersFeature, SuperUsersSelectors };
-
 export * from './lib/flights.module';
 "
 `;
@@ -580,7 +694,6 @@ exports[`ngrx NgModule Syntax should update the entry point file with no facade 
 export * from './lib/+state/super-users.selectors';
 export * from './lib/+state/super-users.reducer';
 export * from './lib/+state/super-users.actions';
-
 export * from './lib/flights.module';
 "
 `;
@@ -591,7 +704,6 @@ export * from './lib/+state/super-users.models';
 export * from './lib/+state/super-users.selectors';
 export * from './lib/+state/super-users.reducer';
 export * from './lib/+state/super-users.actions';
-
 export * from './lib/flights.module';
 "
 `;
@@ -603,16 +715,8 @@ import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
-export const appRoutes: Routes = [
-  {
-    path: 'home',
-    component: NxWelcomeComponent,
-    providers: [
-      provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
-      provideEffects(UsersEffects),
-    ],
-  },
-];
+
+export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
 "
 `;
 
@@ -623,16 +727,8 @@ import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
-export const appRoutes: Routes = [
-  {
-    path: '',
-    component: NxWelcomeComponent,
-    providers: [
-      provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
-      provideEffects(UsersEffects),
-    ],
-  },
-];
+
+export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
 "
 `;
 
@@ -643,16 +739,8 @@ import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
-export const appRoutes: Routes = [
-  {
-    path: '',
-    component: NxWelcomeComponent,
-    providers: [
-      provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
-      provideEffects(UsersEffects),
-    ],
-  },
-];
+
+export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent , providers: [provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
 "
 `;
 
@@ -677,13 +765,7 @@ import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideEffects(UsersEffects),
-    provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
-    provideEffects(),
-    provideStore(),
-    provideRouter(appRoutes),
-  ],
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),provideRouter(appRoutes) ]
 };
 "
 `;
@@ -707,7 +789,7 @@ import { provideStore, provideState } from '@ngrx/store';
 import { provideEffects } from '@ngrx/effects';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideEffects(), provideStore(), provideRouter(appRoutes)],
+  providers: [provideEffects(),provideStore(),provideRouter(appRoutes) ]
 };
 "
 `;
@@ -734,14 +816,7 @@ import { UsersEffects } from './+state/users.effects';
 import { UsersFacade } from './+state/users.facade';
 
 export const appConfig: ApplicationConfig = {
-  providers: [
-    provideEffects(UsersEffects),
-    provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
-    provideEffects(),
-    provideStore(),
-    UsersFacade,
-    provideRouter(appRoutes),
-  ],
+  providers: [provideEffects(UsersEffects),provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),provideEffects(),provideStore(),UsersFacade,provideRouter(appRoutes) ]
 };
 "
 `;
@@ -754,17 +829,8 @@ import { provideEffects } from '@ngrx/effects';
 import * as fromUsers from './+state/users.reducer';
 import { UsersEffects } from './+state/users.effects';
 import { UsersFacade } from './+state/users.facade';
-export const appRoutes: Routes = [
-  {
-    path: '',
-    component: NxWelcomeComponent,
-    providers: [
-      UsersFacade,
-      provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
-      provideEffects(UsersEffects),
-    ],
-  },
-];
+
+export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent , providers: [UsersFacade, provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}];
 "
 `;
 
@@ -780,16 +846,15 @@ import * as UsersFeature from './users.reducer';
 export class UsersEffects {
   private actions$ = inject(Actions);
 
-  init$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(UsersActions.initUsers),
-      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
-      catchError((error) => {
+  init$ = createEffect(() => this.actions$.pipe(
+    ofType(UsersActions.initUsers),
+    switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+    catchError((error) => {
         console.error('Error', error);
         return of(UsersActions.loadUsersFailure({ error }));
-      })
+      }
     )
-  );
+  ));
 }
 "
 `;

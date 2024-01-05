@@ -16,6 +16,7 @@ jest.mock('@nx/devkit', () => ({
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),
+  formatFiles: jest.fn(),
 }));
 
 describe('switchToJasmineMarbles', () => {

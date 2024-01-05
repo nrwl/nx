@@ -9,8 +9,11 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
         "build-something": {
           "cache": true,
           "command": "nuxi build",
+          "dependsOn": [
+            "^build-something",
+          ],
           "inputs": [
-            "default",
+            "production",
             "^production",
             {
               "externalDependencies": [
@@ -22,7 +25,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "cwd": "my-app",
           },
           "outputs": [
-            "{options.outputPath}",
+            "{workspaceRoot}/dist/my-app/",
           ],
         },
         "my-serve": {
@@ -30,26 +33,6 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
           "options": {
             "cwd": "my-app",
           },
-        },
-        "test": {
-          "cache": true,
-          "command": "vitest run",
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": [
-                "vitest",
-              ],
-            },
-          ],
-          "options": {
-            "cwd": "my-app",
-          },
-          "outputs": [
-            "{options.reportsDirectory}",
-            "{workspaceRoot}/coverage/my-app",
-          ],
         },
       },
     },
@@ -66,8 +49,11 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
         "build": {
           "cache": true,
           "command": "nuxi build",
+          "dependsOn": [
+            "^build",
+          ],
           "inputs": [
-            "default",
+            "production",
             "^production",
             {
               "externalDependencies": [
@@ -79,7 +65,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "{options.outputPath}",
+            "dist/my-app/",
           ],
         },
         "serve": {
@@ -87,26 +73,6 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
           "options": {
             "cwd": ".",
           },
-        },
-        "test": {
-          "cache": true,
-          "command": "vitest run",
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": [
-                "vitest",
-              ],
-            },
-          ],
-          "options": {
-            "cwd": ".",
-          },
-          "outputs": [
-            "{options.reportsDirectory}",
-            "{projectRoot}/coverage",
-          ],
         },
       },
     },

@@ -20,7 +20,9 @@ async function loadEnvVars(path?: string) {
   }
 }
 
-export type Json = { [k: string]: any };
+export type Json = {
+  [k: string]: any;
+};
 
 export interface RunCommandsOptions extends Json {
   command?: string;
@@ -65,13 +67,17 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
     command: string;
     forwardAllArgs?: boolean;
   }[];
-  parsedArgs: { [k: string]: any };
+  parsedArgs: {
+    [k: string]: any;
+  };
 }
 
 export default async function (
   options: RunCommandsOptions,
   context: ExecutorContext
-): Promise<{ success: boolean }> {
+): Promise<{
+  success: boolean;
+}> {
   await loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
@@ -215,7 +221,7 @@ function createProcess(
     /**
      * Ensure the child process is killed when the parent exits
      */
-    const processExitListener = (signal?: number | NodeJS.Signals) => () =>
+    const processExitListener = (signal?: number | NodeJS.Signals) =>
       childProcess.kill(signal);
 
     process.on('exit', processExitListener);

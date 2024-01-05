@@ -89,38 +89,54 @@ main();
 // Publish date (and github directory, readme content)
 // i.e. https://registry.npmjs.org/@nxkit/playwright
 async function getNpmData(plugin: PluginRegistry, skipNxVersion = false) {
-  const { data } = await axios.get(`https://registry.npmjs.org/${plugin.name}`);
-  const lastPublishedDate = data.time[data['dist-tags'].latest];
-  const nxVersion = skipNxVersion || (await getNxVersion(data));
-  if (!data.repository) {
-    console.warn('- No repository defined in package.json!');
-    return { lastPublishedDate, nxVersion, githubRepo: '' };
+  try {
+    const { data } = await axios.get(
+      `https://registry.npmjs.org/${plugin.name}`
+    );
+    const lastPublishedDate = data.time[data['dist-tags'].latest];
+    const nxVersion = skipNxVersion || (await getNxVersion(data));
+    if (!data.repository) {
+      console.warn('- No repository defined in package.json!');
+      return { lastPublishedDate, nxVersion, githubRepo: '' };
+    }
+    const url: String = data.repository.url;
+    const indexOfTree = url.indexOf('/tree/');
+    const githubRepo = url
+      .slice(0, indexOfTree === -1 ? undefined : indexOfTree)
+      .slice(0, url.indexOf('#') === -1 ? undefined : url.indexOf('#'))
+      .slice(url.indexOf('github.com/') + 11)
+      .replace('.git', '');
+    return {
+      lastPublishedDate,
+      githubRepo,
+      nxVersion,
+      // readmeContent: plugin.name
+    };
+  } catch (ex) {
+    console.warn('Failed to load npm data for ' + plugin.name, ex);
+    return {
+      lastPublishedData: '',
+      githubRepo: '',
+      nxVersion: '',
+    };
   }
-  const url: String = data.repository.url;
-  const indexOfTree = url.indexOf('/tree/');
-  const githubRepo = url
-    .slice(0, indexOfTree === -1 ? undefined : indexOfTree)
-    .slice(0, url.indexOf('#') === -1 ? undefined : url.indexOf('#'))
-    .slice(url.indexOf('github.com/') + 11)
-    .replace('.git', '');
-  return {
-    lastPublishedDate,
-    githubRepo,
-    nxVersion,
-    // readmeContent: plugin.name
-  };
 }
 
 // Download count
 // i.e. https://api.npmjs.org/downloads/point/2023-06-01:2023-07-01/@nxkit/playwright
 async function getNpmDownloads(plugin: PluginRegistry) {
   const lastMonth = getLastMonth();
-  const { data } = await axios.get(
-    `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
-      lastMonth
-    )}/${plugin.name}`
-  );
-  return data.downloads;
+  try {
+    const { data } = await axios.get(
+      `https://api.npmjs.org/downloads/point/${stringifyIntervalForUrl(
+        lastMonth
+      )}/${plugin.name}`
+    );
+    return data.downloads;
+  } catch (ex) {
+    console.warn('Failed to load npm downloads for ' + plugin.name, ex);
+    return 0;
+  }
 }
 
 export function getLastMonth() {

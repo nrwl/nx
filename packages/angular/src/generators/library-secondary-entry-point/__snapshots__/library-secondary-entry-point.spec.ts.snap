@@ -5,6 +5,22 @@ exports[`librarySecondaryEntryPoint generator --skipModule should not generate a
 "
 `;
 
+exports[`librarySecondaryEntryPoint generator should format files 1`] = `
+"export * from './lib/testing.module';
+"
+`;
+
+exports[`librarySecondaryEntryPoint generator should format files 2`] = `
+"import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@NgModule({
+  imports: [CommonModule],
+})
+export class TestingModule {}
+"
+`;
+
 exports[`librarySecondaryEntryPoint generator should generate files for the secondary entry point 1`] = `
 "export * from './lib/testing.module';
 "

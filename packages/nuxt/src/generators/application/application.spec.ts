@@ -40,7 +40,7 @@ describe('app', () => {
         ).toMatchSnapshot();
         expect(tree.read('my-app/tsconfig.json', 'utf-8')).toMatchSnapshot();
         const packageJson = readJson(tree, 'package.json');
-        expect(packageJson.devDependencies['vitest']).toEqual('~0.34.6');
+        expect(packageJson.devDependencies['vitest']).toEqual('^1.0.4');
       });
 
       it('should configure tsconfig and project.json correctly', () => {
@@ -124,8 +124,7 @@ describe('app', () => {
         const projectConfi = readProjectConfiguration(tree, name);
         expect(projectConfi.targets.build).toBeUndefined();
         expect(projectConfi.targets.serve).toBeUndefined();
-        // TODO(katerina): Enable once `@nx/vite/plugin` is released
-        // expect(projectConfi.targets.test).toBeUndefined();
+        expect(projectConfi.targets.test).toBeUndefined();
       });
     });
   });

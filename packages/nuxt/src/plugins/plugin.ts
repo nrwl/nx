@@ -2,16 +2,15 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
-  TargetConfiguration,
   detectPackageManager,
   joinPathFragments,
-  offsetFromRoot,
   readJsonFile,
+  TargetConfiguration,
+  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { basename, dirname, join } from 'path';
+import { basename, dirname, isAbsolute, join, relative } from 'path';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
@@ -47,11 +46,10 @@ export const createDependencies: CreateDependencies = () => {
 export interface NuxtPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
-  testTargetName?: string;
 }
 
 export const createNodes: CreateNodes<NuxtPluginOptions> = [
-  '**/nuxt.config.{js,ts}',
+  '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
     // Do not create a project if package.json and project.json isn't there.
@@ -95,74 +93,52 @@ async function buildNuxtTargets(
     buildDir: string;
   } = await getInfoFromNuxtConfig(configFilePath, context, projectRoot);
 
-  const { buildOutputs, testOutputs } = getOutputs(projectRoot, nuxtConfig);
+  const { buildOutputs } = getOutputs(
+    nuxtConfig,
+
+    projectRoot
+  );
 
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration> = {};
 
   targets[options.buildTargetName] = buildTarget(
-    context,
+    options.buildTargetName,
     namedInputs,
     buildOutputs,
-    projectRoot,
-    options
+    projectRoot
   );
 
   targets[options.serveTargetName] = serveTarget(projectRoot);
-
-  targets[options.testTargetName] = testTarget(
-    context,
-    namedInputs,
-    testOutputs,
-    options,
-    projectRoot
-  );
 
   return targets;
 }
 
 function buildTarget(
-  context: CreateNodesContext,
+  buildTargetName: string,
   namedInputs: {
     [inputName: string]: any[];
   },
   buildOutputs: string[],
-  projectRoot: string,
-  options: NuxtPluginOptions
+  projectRoot: string
 ) {
-  const targetDefaults = readTargetDefaultsForTarget(
-    options.buildTargetName,
-    context.nxJsonConfiguration.targetDefaults
-  );
-
-  const targetConfig: TargetConfiguration = {
+  return {
     command: `nuxi build`,
-    options: {
-      cwd: projectRoot,
-    },
-  };
-
-  if (targetDefaults?.outputs === undefined) {
-    targetConfig.outputs = buildOutputs;
-  }
-
-  if (targetDefaults?.cache === undefined) {
-    targetConfig.cache = true;
-  }
-
-  if (targetDefaults?.inputs === undefined) {
-    targetConfig.inputs = [
+    options: { cwd: projectRoot },
+    cache: true,
+    dependsOn: [`^${buildTargetName}`],
+    inputs: [
       ...('production' in namedInputs
-        ? ['default', '^production']
+        ? ['production', '^production']
         : ['default', '^default']),
 
       {
         externalDependencies: ['nuxi'],
       },
-    ];
-  }
-  return targetConfig;
+    ],
+    outputs: buildOutputs,
+  };
 }
 
 function serveTarget(projectRoot: string) {
@@ -176,50 +152,6 @@ function serveTarget(projectRoot: string) {
   return targetConfig;
 }
 
-function testTarget(
-  context: CreateNodesContext,
-  namedInputs: {
-    [inputName: string]: any[];
-  },
-  outputs: string[],
-  options: NuxtPluginOptions,
-  projectRoot: string
-) {
-  const targetDefaults = readTargetDefaultsForTarget(
-    options.testTargetName,
-    context.nxJsonConfiguration.targetDefaults
-  );
-
-  const targetConfig: TargetConfiguration = {
-    command: `vitest run`,
-    options: {
-      cwd: projectRoot,
-    },
-  };
-
-  if (targetDefaults?.outputs === undefined) {
-    targetConfig.outputs = outputs;
-  }
-
-  if (targetDefaults?.cache === undefined) {
-    targetConfig.cache = true;
-  }
-
-  if (targetDefaults?.inputs === undefined) {
-    targetConfig.inputs = [
-      ...('production' in namedInputs
-        ? ['default', '^production']
-        : ['default', '^default']),
-
-      {
-        externalDependencies: ['vitest'],
-      },
-    ];
-  }
-
-  return targetConfig;
-}
-
 async function getInfoFromNuxtConfig(
   configFilePath: string,
   context: CreateNodesContext,
@@ -228,65 +160,67 @@ async function getInfoFromNuxtConfig(
   buildDir: string;
 }> {
   const { loadNuxtConfig } = await loadNuxtKitDynamicImport();
+
   const config = await loadNuxtConfig({
     cwd: joinPathFragments(context.workspaceRoot, projectRoot),
     configFile: basename(configFilePath),
   });
 
   return {
-    // to preserve only the relative path from the workspace root
-    // because nuxt automatically prepends the rootDir to buildDir
-    buildDir: config?.buildDir?.replace(config?.rootDir, ''),
+    buildDir: config?.buildDir,
   };
 }
 
 function getOutputs(
-  projectRoot: string,
-  nuxtConfig: {
-    buildDir: string;
-  }
+  nuxtConfig: { buildDir: string },
+  projectRoot: string
 ): {
   buildOutputs: string[];
-  outputPath: string;
-  testOutputs: string[];
-  reportsDirectory: string;
 } {
-  const buildOutputs = ['{options.outputPath}'];
-  const testOutputs = ['{options.reportsDirectory}'];
-
-  function getOutput(path: string, projectRoot: string): string {
-    if (path.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, path));
-    } else {
-      return join('{projectRoot}', path);
-    }
-  }
-
-  let distPath = undefined;
+  let nuxtBuildDir = nuxtConfig?.buildDir;
   if (nuxtConfig?.buildDir && basename(nuxtConfig?.buildDir) === '.nuxt') {
     // buildDir will most probably be `../dist/my-app/.nuxt`
     // we want the "general" outputPath to be `../dist/my-app`
-    distPath = nuxtConfig.buildDir.replace(basename(nuxtConfig.buildDir), '');
-    buildOutputs.push(getOutput(distPath, projectRoot));
+    nuxtBuildDir = nuxtConfig.buildDir.replace(
+      basename(nuxtConfig.buildDir),
+      ''
+    );
   }
+  const buildOutputPath =
+    normalizeOutputPath(nuxtBuildDir, projectRoot) ??
+    '{workspaceRoot}/dist/{projectRoot}';
 
-  const outputPath = distPath ?? joinPathFragments('dist', projectRoot);
+  return {
+    buildOutputs: [buildOutputPath],
+  };
+}
 
-  const reportsDirectory = joinPathFragments(
-    offsetFromRoot(projectRoot),
-    'coverage',
-    projectRoot
-  );
-
-  testOutputs.push(getOutput(reportsDirectory, projectRoot));
-
-  return { buildOutputs, outputPath, testOutputs, reportsDirectory };
+function normalizeOutputPath(
+  outputPath: string | undefined,
+  projectRoot: string
+): string | undefined {
+  if (!outputPath) {
+    if (projectRoot === '.') {
+      return `{projectRoot}/dist`;
+    } else {
+      return `{workspaceRoot}/dist/{projectRoot}`;
+    }
+  } else {
+    if (isAbsolute(outputPath)) {
+      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+    } else {
+      if (outputPath.startsWith('..')) {
+        return join('{workspaceRoot}', join(projectRoot, outputPath));
+      } else {
+        return join('{projectRoot}', outputPath);
+      }
+    }
+  }
 }
 
 function normalizeOptions(options: NuxtPluginOptions): NuxtPluginOptions {
   options ??= {};
   options.buildTargetName ??= 'build';
   options.serveTargetName ??= 'serve';
-  options.testTargetName ??= 'test';
   return options;
 }

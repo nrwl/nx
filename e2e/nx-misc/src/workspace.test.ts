@@ -19,13 +19,12 @@ let proj: string;
 
 describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
   });
 
   afterEach(() => cleanupProject());
 
-  // TODO: troubleshoot and reenable this test
-  xit('should convert a standalone project to a monorepo', async () => {
+  it('should convert a standalone project to a monorepo', async () => {
     const reactApp = uniq('reactapp');
     runCLI(
       `generate @nx/react:app ${reactApp} --rootProject=true --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --no-interactive`

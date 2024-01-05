@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   ensurePackage,
   GeneratorCallback,
+  readNxJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -18,6 +19,7 @@ import {
 } from '../../utils/versions';
 import { InitSchema } from './schema';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
+import { addPlugin } from './lib/add-plugin';
 
 function updateDependencies(host: Tree) {
   return addDependenciesToPackageJson(
@@ -85,6 +87,9 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   }
 
   addGitIgnoreEntry(host);
+  if (process.env.NX_PCV3 === 'true') {
+    addPlugin(host);
+  }
 
   return runTasksInSerial(...tasks);
 }

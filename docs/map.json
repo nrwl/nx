@@ -245,6 +245,13 @@
               "file": "shared/core-features/integrate-with-editors"
             },
             {
+              "name": "Manage Releases",
+              "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+              "id": "manage-releases",
+              "tags": ["manage-releases"],
+              "file": "shared/core-features/manage-releases"
+            },
+            {
               "name": "Plugin Features",
               "id": "plugin-features",
               "description": "Learn what is a plugin, the different type of plugins and how to create one.",
@@ -354,6 +361,7 @@
                 {
                   "name": "Nx and Turborepo",
                   "id": "turbo-and-nx",
+                  "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
                   "file": "shared/guides/turbo-and-nx"
                 },
                 {
@@ -842,15 +850,28 @@
               ]
             },
             {
+              "name": "Nuxt",
+              "id": "nuxt",
+              "description": "Nuxt related recipes",
+              "itemList": [
+                {
+                  "id": "deploy-nuxt-to-vercel",
+                  "name": "Deploying Nuxt applications to Vercel",
+                  "description": "A detailed guide on how to deploy Nuxt applications from Nx workspaces to Vercel.",
+                  "file": "shared/recipes/deployment/deploy-nuxt-to-vercel"
+                }
+              ]
+            },
+            {
               "name": "Vite",
               "id": "vite",
               "description": "Vite related recipes",
               "itemList": [
                 {
-                  "id": "set-up-vite-manually",
-                  "name": "Manually set up your project to use Vite.js",
-                  "description": "Manually set up your project to use Vite.js",
-                  "file": "shared/packages/vite/set-up-vite-manually"
+                  "id": "configure-vite",
+                  "name": "Configure Vite on your Nx workspace",
+                  "description": "Configure Vite on your Nx workspace",
+                  "file": "shared/packages/vite/configure-vite"
                 }
               ]
             },
@@ -1702,7 +1723,13 @@
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
             {
-              "name": "Reduce Waste in CI",
+              "name": "The Building Blocks of Fast CI",
+              "tags": [],
+              "id": "building-blocks-fast-ci",
+              "file": "nx-cloud/concepts/building-blocks-fast-ci"
+            },
+            {
+              "name": "Reduce Wasted Time in CI",
               "tags": [],
               "id": "reduce-waste",
               "file": "nx-cloud/concepts/reduce-waste"
@@ -2380,6 +2407,19 @@
               "name": "Overview",
               "path": "/nx-api/next",
               "file": "shared/packages/next/plugin-overview"
+            }
+          ]
+        },
+        {
+          "name": "remix",
+          "id": "remix",
+          "description": "Remix package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "name": "Overview",
+              "path": "/nx-api/remix",
+              "file": "shared/packages/remix/remix-plugin"
             }
           ]
         },

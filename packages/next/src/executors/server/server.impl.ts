@@ -24,12 +24,12 @@ export default async function* serveExecutor(
   }
 
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
-    parseTargetString(options.buildTarget, context.projectGraph),
+    parseTargetString(options.buildTarget, context),
     context
   );
   const projectRoot = context.workspace.projects[context.projectName].root;
 
-  const { port, keepAliveTimeout, hostname } = options;
+  const { keepAliveTimeout, hostname } = options;
 
   // This is required for the default custom server to work. See the @nx/next:app generator.
   process.env.NX_NEXT_DIR = projectRoot;
@@ -42,9 +42,10 @@ export default async function* serveExecutor(
     : 'production';
 
   // Setting port that the custom server should use.
-  process.env.PORT = `${options.port}`;
+  process.env.PORT = options.port ? `${options.port}` : process.env.PORT;
+  options.port = parseInt(process.env.PORT);
 
-  const args = createCliOptions({ port, hostname });
+  const args = createCliOptions({ port: options.port, hostname });
 
   if (keepAliveTimeout && !options.dev) {
     args.push(`--keepAliveTimeout=${keepAliveTimeout}`);
@@ -54,11 +55,13 @@ export default async function* serveExecutor(
 
   const mode = options.dev ? 'dev' : 'start';
   const turbo = options.turbo && options.dev ? '--turbo' : '';
+  const experimentalHttps =
+    options.experimentalHttps && options.dev ? '--experimental-https' : '';
   const nextBin = require.resolve('next/dist/bin/next');
 
   yield* createAsyncIterable<{ success: boolean; baseUrl: string }>(
     async ({ done, next, error }) => {
-      const server = fork(nextBin, [mode, ...args, turbo], {
+      const server = fork(nextBin, [mode, ...args, turbo, experimentalHttps], {
         cwd: options.dev ? projectRoot : nextDir,
         stdio: 'inherit',
       });
@@ -81,11 +84,11 @@ export default async function* serveExecutor(
       process.on('SIGTERM', () => killServer());
       process.on('SIGHUP', () => killServer());
 
-      await waitForPortOpen(port, { host: options.hostname });
+      await waitForPortOpen(options.port, { host: options.hostname });
 
       next({
         success: true,
-        baseUrl: `http://${options.hostname ?? 'localhost'}:${port}`,
+        baseUrl: `http://${options.hostname ?? 'localhost'}:${options.port}`,
       });
     }
   );

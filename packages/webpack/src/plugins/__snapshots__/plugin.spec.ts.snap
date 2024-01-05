@@ -1,0 +1,53 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/webpack/plugin should create nodes 1`] = `
+{
+  "projects": {
+    "my-app": {
+      "projectType": "application",
+      "targets": {
+        "build-something": {
+          "cache": true,
+          "command": "webpack-cli -c webpack.config.js --node-env=production",
+          "dependsOn": [
+            "^build-something",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "webpack-cli",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "dist/foo",
+          ],
+        },
+        "my-serve": {
+          "command": "webpack-cli serve -c webpack.config.js --node-env=development",
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "preview-site": {
+          "command": "webpack-cli serve -c webpack.config.js --node-env=production",
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "build-something",
+          },
+        },
+      },
+    },
+  },
+}
+`;

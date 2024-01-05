@@ -1433,6 +1433,10 @@
           "version": "~17.0.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/pwa": {
+          "version": "~17.0.0",
+          "alwaysAddToPackageJson": false
+        },
         "@angular/core": {
           "version": "~17.0.0",
           "alwaysAddToPackageJson": true
@@ -1520,6 +1524,15 @@
       "packages": {
         "@ngrx/store": {
           "version": "~17.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.3.0": {
+      "version": "17.3.0-beta.3",
+      "packages": {
+        "@types/node": {
+          "version": "18.16.9",
           "alwaysAddToPackageJson": false
         }
       }

@@ -40,6 +40,11 @@
     "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-aws-cdk"
   },
   {
+    "name": "@routineless/nx-aws-cdk",
+    "description": "Nx plugin to generate and manage aws cdk app and lambdas.",
+    "url": "https://github.com/KozelAnatoliy/routineless/tree/main/packages/nx-aws-cdk"
+  },
+  {
     "name": "@berenddeboer/nx-sst",
     "description": "Nx plugin to generate an SST stack and execute all SST commands.",
     "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-sst"
@@ -433,5 +438,10 @@
     "name": "@simondotm/nx-firebase",
     "description": "Nx plugin to support Firebase Apps and Cloud Functions in Nx workspaces",
     "url": "https://github.com/simondotm/nx-firebase"
+  },
+  {
+    "name": "@gnuechtel/nx-cucumber",
+    "description": "Plugin to use Cucumber within Nx workspaces",
+    "url": "https://gitlab.com/gnuechtel/open-source/-/tree/main/libs/nx-cucumber"
   }
 ]

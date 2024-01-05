@@ -8,7 +8,7 @@ describe('init', () => {
   let schema: InitSchema = {
     unitTestRunner: 'jest',
     e2eTestRunner: 'cypress',
-    skipFormat: false,
+    skipFormat: true,
   };
 
   beforeEach(() => {

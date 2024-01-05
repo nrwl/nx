@@ -40,6 +40,9 @@ export interface CypressE2EConfigSchema {
   port?: number | 'cypress-auto';
   jsx?: boolean;
   rootProject?: boolean;
+
+  webServerCommands?: Record<string, string>;
+  ciWebServerCommand?: string;
 }
 
 type NormalizedSchema = ReturnType<typeof normalizeOptions>;
@@ -166,9 +169,12 @@ async function addFiles(
     const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
     let webServerCommands: Record<string, string>;
 
-    let ciDevServerTarget: string;
+    let ciWebServerCommand: string;
 
-    if (hasPlugin && options.devServerTarget) {
+    if (hasPlugin && options.webServerCommands && options.ciWebServerCommand) {
+      webServerCommands = options.webServerCommands;
+      ciWebServerCommand = options.ciWebServerCommand;
+    } else if (hasPlugin && options.devServerTarget) {
       webServerCommands = {};
 
       webServerCommands.default = 'nx run ' + options.devServerTarget;
@@ -192,7 +198,7 @@ async function addFiles(
       }
       // Add ci/static e2e target if serve target is found
       if (devServerProjectConfig.targets?.['serve-static']) {
-        ciDevServerTarget = `nx run ${parsedTarget.project}:serve-static`;
+        ciWebServerCommand = `nx run ${parsedTarget.project}:serve-static`;
       }
     }
     const updatedCyConfig = await addDefaultE2EConfig(
@@ -201,7 +207,7 @@ async function addFiles(
         cypressDir: options.directory,
         bundler: options.bundler === 'vite' ? 'vite' : undefined,
         webServerCommands,
-        ciWebServerCommand: ciDevServerTarget,
+        ciWebServerCommand: ciWebServerCommand,
       },
       options.baseUrl
     );
