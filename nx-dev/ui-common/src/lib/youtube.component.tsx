@@ -23,7 +23,7 @@ export const youtube: Schema = {
   },
 };
 
-function computeEmbedURL(youtubeURL: string) {
+export function computeEmbedURL(youtubeURL: string) {
   let match;
 
   if (youtubeURL.indexOf('embed') > -1) {
