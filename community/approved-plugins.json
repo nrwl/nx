@@ -443,5 +443,10 @@
     "name": "@gnuechtel/nx-cucumber",
     "description": "Plugin to use Cucumber within Nx workspaces",
     "url": "https://gitlab.com/gnuechtel/open-source/-/tree/main/libs/nx-cucumber"
+  },
+  {
+    "name": "@analogjs/platform",
+    "description": "Official plugin to add Analog to your Nx monorepo.",
+    "url": "https://analogjs.org/docs/integrations/nx"
   }
 ]
