@@ -427,13 +427,15 @@ export default function NewYear(): JSX.Element {
       />
       <Header />
       <main id="main" role="main">
-        <div className="w-full py-10 bg-slate-50 dark:bg-slate-800/40">
+        <div className="w-full py-10 bg-slate-50 dark:bg-slate-800/40 dark:text-slate-300">
           <div
             id="new-year"
             className="py-18 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
           >
             <article id="nx-new-year-tips-intro" className="relative">
-              <h1 className="text-3xl font-semibold my-8">Nx New Year Tips</h1>
+              <h1 className="text-3xl font-semibold my-8 dark:text-white">
+                Nx New Year Tips
+              </h1>
               <p>
                 Start 2024 off right with some tips to help you get the most out
                 of Nx. Each day, a new card will be unlocked for you to flip.
