@@ -8,6 +8,8 @@ import {
   directoryExists,
   readJson,
   updateFile,
+  removeFile,
+  createFile,
 } from 'e2e/utils';
 
 describe('@nx/next/plugin', () => {
@@ -49,6 +51,24 @@ describe('@nx/next/plugin', () => {
     // check build output for PCV3 artifacts (e.g. .next directory) are inside the project directory
     directoryExists(`${appName}/.next`);
 
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+  }, 200_000);
+
+  it('should build the app with .mjs config file', async () => {
+    createFile(
+      `${appName}/next.config.mjs`,
+      `
+      export default {
+        reactStrictMode: true,
+      };
+      `
+    );
+
+    removeFile(`${appName}/next.config.js`);
+
+    const result = runCLI(`build ${appName}`);
     expect(result).toContain(
       `Successfully ran target build for project ${appName}`
     );
