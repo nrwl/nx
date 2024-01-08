@@ -51,7 +51,7 @@ nx build my-project --outputPath=some/other/path
 ```
 
 {% callout type="note" title="Configurable target names" %}
-`build` and `test` can be any strings you choose. For the sake of consistency, we make `test` run unit tests for every project and `build` produce compiled code for the projects which can be built.
+`build` in these examples can be any strings you choose. For the sake of consistency, we make `test` run unit tests for every project and `build` produce compiled code for the projects which can be built.
 {% /callout %}
 
 ## Types of Targets
@@ -62,7 +62,9 @@ Read the [Project Configuration docs](/reference/project-configuration) to see a
 
 ## Modifying the Target Options
 
-Any changes to the way the tool itself works should be done in the tool-specific config file. If there are nx-specific settings that need to be changed for a specific project, you can set that specific value in the `package.json` or `project.json` file for that project. For instance, if you need to set the `outputs` for the `build` target, you can define them like this:
+Any changes to the way the tool itself works should be done in the tool-specific config file. If there are nx-specific settings that need to be changed for a project, you can set that value in the `package.json` or `project.json` file for that project.
+
+For instance, if you need to set the `outputs` for the `build` target, you can define them like this:
 
 {% tabs %}
 {% tab label="package.json" %}
