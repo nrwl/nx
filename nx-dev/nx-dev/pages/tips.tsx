@@ -23,7 +23,7 @@ const tips: NewYearTip[] = [
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold">What is Nx?</h3>
-        <p className="pt-5 text-sm">January 8th</p>
+        <p className="pt-1 text-sm dark:text-blue-300">January 8th</p>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=-_4WMl-Fn0w"
@@ -56,7 +56,7 @@ const tips: NewYearTip[] = [
         <h3 className="text-xl font-semibold">
           Which Style of Workspace is Right for You?
         </h3>
-        <p className="pt-5 text-sm">January 9th</p>
+        <p className="pt-1 text-sm dark:text-blue-300">January 9th</p>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=ArmERpNvC8Y"
@@ -87,7 +87,7 @@ const tips: NewYearTip[] = [
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold">What is Nx Cloud?</h3>
-        <p className="pt-5 text-sm">January 10th</p>
+        <p className="pt-1 text-sm dark:text-blue-300">January 10th</p>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=NZF0ZJpgaJM"
@@ -127,7 +127,7 @@ const tips: NewYearTip[] = [
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold">Add Nx to an Existing Project</h3>
-        <p className="pt-5 text-sm">January 11th</p>
+        <p className="pt-1 text-sm dark:text-blue-300">January 11th</p>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/VmGCZ77ao_I"
@@ -158,7 +158,7 @@ const tips: NewYearTip[] = [
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold">Micro Frontends with Nx</h3>
-        <p className="pt-5 text-sm">January 12th</p>
+        <p className="pt-1 text-sm dark:text-blue-300">January 12th</p>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=dotA6ZSmNL4"
@@ -190,7 +190,7 @@ const tips: NewYearTip[] = [
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold">Explore Example Repos</h3>
-        <p className="pt-5 text-sm">January 15th</p>
+        <p className="pt-1 text-sm dark:text-blue-300">January 15th</p>
         <p className="my-4">
           Nx can work with any technology stack and we have created examples for
           many of them.
@@ -198,19 +198,19 @@ const tips: NewYearTip[] = [
         <div className="flex justify-center items-center">
           <Link
             href="/getting-started/tutorials/react-standalone-tutorial"
-            className="w-20 h-20 m-4"
+            className="w-20 m-4"
           >
             {frameworkIcons.react.image}
           </Link>
           <Link
             href="/getting-started/tutorials/angular-standalone-tutorial"
-            className="w-20 h-20 m-4"
+            className="w-20 m-4"
           >
             {frameworkIcons.angular.image}
           </Link>
           <Link
             href="/getting-started/tutorials/vue-standalone-tutorial"
-            className="w-20 h-20 m-4"
+            className="w-20 m-4"
           >
             {frameworkIcons.vue.image}
           </Link>
@@ -233,7 +233,7 @@ const tips: NewYearTip[] = [
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold">Let's Build a CLI</h3>
-        <p className="pt-5 text-sm">January 16th</p>
+        <p className="pt-1 text-sm dark:text-blue-300">January 16th</p>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/ocllb5KEXZk"
@@ -267,7 +267,7 @@ const tips: NewYearTip[] = [
         <h3 className="text-xl font-semibold">
           Nx Agents: The Next Leap in Distributed Task Execution
         </h3>
-        <p className="pt-5 text-sm">January 17th</p>
+        <p className="pt-1 text-sm">January 17th</p>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/XLOUFZeqRpM"
@@ -310,7 +310,7 @@ const tips: NewYearTip[] = [
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold">Graduating to a Monorepo</h3>
-        <p className="pt-5 text-sm">January 18th</p>
+        <p className="pt-1 text-sm">January 18th</p>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://www.youtube.com/watch?v=ztNpLf2Zl-c"
@@ -343,7 +343,7 @@ const tips: NewYearTip[] = [
     cardBack: (
       <FlipCardBack>
         <h3 className="text-xl font-semibold">Keep Your Tooling Up to Date</h3>
-        <p className="pt-5 text-sm">January 19th</p>
+        <p className="pt-1 text-sm">January 19th</p>
         <div className="mx-auto my-4 max-w-3xl">
           <YouTube
             src="https://youtu.be/Ss6MfcXi0jE"
@@ -449,7 +449,7 @@ export default function NewYear(): JSX.Element {
             </article>
           </div>
         </div>
-        <div className="w-full bg-gradient-to-r from-cyan-500 to-blue-500">
+        <div className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 dark:from-cyan-800 dark:to-blue-800">
           <div
             id="new-year"
             className="py-18 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8"
