@@ -91,15 +91,25 @@ impl ChildProcess {
     }
 }
 
+fn get_directory(command_dir: Option<String>) -> anyhow::Result<String> {
+    if let Some(command_dir) = command_dir {
+        Ok(command_dir)
+    } else {
+        std::env::current_dir()
+            .map(|v| v.to_string_lossy().to_string())
+            .map_err(|_| {
+                anyhow!("failed to get current directory, please specify command_dir explicitly")
+            })
+    }
+}
+
 #[napi]
 pub fn run_command(
     command: String,
     command_dir: Option<String>,
     js_env: Option<HashMap<String, String>>,
 ) -> napi::Result<ChildProcess> {
-    let command_dir = command_dir
-        .ok_or_else(std::env::current_dir)
-        .map_err(|_| anyhow!("failed to get current directory"))?;
+    let command_dir = get_directory(command_dir)?;
 
     let pty_system = NativePtySystem::default();
 
@@ -132,21 +142,18 @@ pub fn run_command(
     let mut stdout = std::io::stdout();
     std::thread::spawn(move || {
         let mut reader = BufReader::new(reader);
-        let mut s = String::new();
         let mut buffer = [0; 8 * 1024];
 
-        // while let Ok(n) = reader.read(&mut buffer) {
-        //     if n == 0 {
-        //         break;
-        //     }
-        //     let content = String::from_utf8_lossy(&buffer[..n]);
-        //     tx.send(content.to_string()).unwrap();
-        //
-        //     let size = stdout.write_all(&buffer[..n]).unwrap();
-        //     stdout.flush().unwrap();
-        // }
+        while let Ok(n) = reader.read(&mut buffer) {
+            if n == 0 {
+                break;
+            }
+            let content = String::from_utf8_lossy(&buffer[..n]);
+            tx.send(content.to_string()).unwrap();
 
-        std::io::copy(&mut reader, &mut stdout).unwrap();
+            stdout.write_all(&buffer[..n]).unwrap();
+            stdout.flush().unwrap();
+        }
     });
 
     Ok(ChildProcess::new(child, rx))
