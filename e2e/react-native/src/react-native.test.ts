@@ -101,8 +101,9 @@ describe('react native', () => {
         `start ${appName} --interactive=false --port=${port}`,
         (output) => {
           return (
-            output.includes(`Packager is ready at http://localhost::${port}`) ||
-            output.includes('Starting JS server...')
+            output.includes(`http://localhost:${port}`) ||
+            output.includes('Starting JS server...') ||
+            output.includes('Welcome to Metro')
           );
         }
       );

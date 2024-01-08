@@ -3,9 +3,11 @@ import {
   detectPackageManager,
   formatFiles,
   GeneratorCallback,
+  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
+  updateNxJson,
 } from '@nx/devkit';
 import { Schema } from './schema';
 
@@ -39,6 +41,7 @@ import {
 } from '../../utils/versions';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
+import { ReactNativePluginOptions } from '../../../plugins/plugin';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
@@ -69,6 +72,10 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(detoxTask);
+  }
+
+  if (process.env.NX_PCV3 === 'true') {
+    addPlugin(host);
   }
 
   if (!schema.skipFormat) {
@@ -121,6 +128,34 @@ export function updateDependencies(host: Tree) {
 
 function moveDependency(host: Tree) {
   return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
+}
+
+function addPlugin(host: Tree) {
+  const nxJson = readNxJson(host);
+  nxJson.plugins ??= [];
+
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/react-native/plugin'
+        : plugin.plugin === '@nx/react-native/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/react-native/plugin',
+    options: {
+      startTargetName: 'start',
+      bundleTargetName: 'bundle',
+      runIosTargetName: 'run-ios',
+      runAndroidTargetName: 'run-android',
+      buildIosTargetName: 'build-ios',
+      buildAndroidTargetName: 'build-android',
+    } as ReactNativePluginOptions,
+  });
+  updateNxJson(host, nxJson);
 }
 
 export default reactNativeInitGenerator;
