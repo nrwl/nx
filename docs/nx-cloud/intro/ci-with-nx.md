@@ -5,7 +5,7 @@ When implemented well, continuous integration (CI) allows a team of developers t
 ## Core Features
 
 - Test only the code that might have been [affected](/ci/features/affected) by a PR
-- Never run the same task on the same code twice with [remote caching](/ci/features/remote-cache)
+- Never run the same task on the same code twice with [remote replay](/ci/features/remote-replay)
 - Efficiently [distribute task execution across multiple machines](/ci/features/distribute-task-execution)
 - Quickly troubleshoot errors that occur in CI
 - Create a simple but powerful pipeline configuration that easily scales with your codebase

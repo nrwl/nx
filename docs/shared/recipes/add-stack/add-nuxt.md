@@ -9,8 +9,8 @@ The code for this example is available on GitHub:
 Because we are not using an Nx plugin for Nuxt, there are few items we'll have to configure manually. We'll have to configure our own build system. There are no pre-created Nuxt-specific code generators. And we'll have to take care of updating any framework dependencies as needed.
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
-{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/ci/features/remote-cache" %}✅ Remote Caching{% /pill %}
+{% pill url="/core-features/replay-task-results" %}✅ Replay Task Results{% /pill %}
+{% pill url="/ci/features/remote-replay" %}✅ Remote Replay{% /pill %}
 {% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
 {% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}

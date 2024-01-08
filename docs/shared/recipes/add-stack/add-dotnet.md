@@ -5,8 +5,8 @@
 Because we are using an Nx plugin for .NET, all the features of Nx are available.
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
-{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
+{% pill url="/core-features/replay-task-results" %}✅ Replay Task Results{% /pill %}
+{% pill url="/ci/features/remote-replay" %}✅ Use Remote Replay{% /pill %}
 {% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
 {% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}

@@ -112,7 +112,7 @@ jobs:
 
 ## Automatic Task Splitting
 
-Imagine you're working on an end-to-end (e2e) project using tools like Cypress or Playwright. Traditionally, to make the most of features like [affected](/ci/features/affected), [caching](/ci/features/remote-cache), and [distribution](/ci/features/distribute-task-execution), you'd need to divide your project into smaller parts. But this approach can often be cumbersome and less efficient for developers.
+Imagine you're working on an end-to-end (e2e) project using tools like Cypress or Playwright. Traditionally, to make the most of features like [affected](/ci/features/affected), [replay](/ci/features/remote-replay), and [distribution](/ci/features/distribute-task-execution), you'd need to divide your project into smaller parts. But this approach can often be cumbersome and less efficient for developers.
 
 Nx is on the verge of introducing a game-changing feature that enables dynamic target definitions for projects (more details to come). Paired with Nx Agents, this innovation allows you to distribute e2e tests at the file level across various agents.
 

@@ -191,22 +191,22 @@
             {
               "name": "Run Tasks",
               "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
-              "tags": ["run-tasks", "cache-task-results"],
+              "tags": ["run-tasks", "replay-task-results"],
               "id": "run-tasks",
               "file": "shared/core-features/run-tasks"
             },
             {
-              "name": "Cache Task Results",
+              "name": "Replay Task Results",
               "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
-              "id": "cache-task-results",
-              "tags": ["cache-task-results"],
-              "file": "shared/core-features/cache-task-results"
+              "id": "replay-task-results",
+              "tags": ["replay-task-results"],
+              "file": "shared/core-features/replay-task-results"
             },
             {
-              "name": "Use Remote Caching",
-              "id": "remote-cache",
+              "name": "Use Remote Replay",
+              "id": "remote-replay",
               "file": "",
-              "path": "/ci/features/remote-cache",
+              "path": "/ci/features/remote-replay",
               "isExternal": true
             },
             {
@@ -285,7 +285,7 @@
             },
             {
               "name": "How Caching Works",
-              "tags": ["cache-task-results"],
+              "tags": ["replay-task-results"],
               "id": "how-caching-works",
               "file": "shared/concepts/how-caching-works"
             },
@@ -458,7 +458,7 @@
                 {
                   "name": "Fine-tuning Caching with Inputs",
                   "id": "customizing-inputs",
-                  "tags": ["run-tasks", "cache-task-results"],
+                  "tags": ["run-tasks", "replay-task-results"],
                   "file": "shared/recipes/running-tasks/customizing-inputs"
                 },
                 {
@@ -1097,7 +1097,7 @@
                 {
                   "name": "Troubleshoot Cache Misses",
                   "id": "troubleshoot-cache-misses",
-                  "tags": ["cache-task-results"],
+                  "tags": ["replay-task-results"],
                   "file": "shared/recipes/troubleshoot-cache-misses"
                 },
                 {
@@ -1472,7 +1472,7 @@
               "name": "CI Documentation",
               "id": "ci",
               "file": "",
-              "tags": ["cache-task-results", "distribute-task-execution"],
+              "tags": ["replay-task-results", "distribute-task-execution"],
               "path": "/ci/intro/ci-with-nx",
               "isExternal": true
             },
@@ -1480,7 +1480,7 @@
               "name": "Nx Cloud Main Site",
               "id": "nx-cloud-main-site",
               "file": "",
-              "tags": ["cache-task-results", "distribute-task-execution"],
+              "tags": ["replay-task-results", "distribute-task-execution"],
               "path": "https://nx.app",
               "isExternal": true
             },
@@ -1488,7 +1488,7 @@
               "name": "--skip-nx-cache flag",
               "id": "skip-nx-cache-flag",
               "file": "",
-              "tags": ["cache-task-results"],
+              "tags": ["replay-task-results"],
               "path": "/nx-api/nx/documents/affected#skip-nx-cache",
               "isExternal": true
             },
@@ -1496,7 +1496,7 @@
               "name": "tasks-runner-options property",
               "id": "tasks-runner-options-property",
               "file": "",
-              "tags": ["cache-task-results"],
+              "tags": ["replay-task-results"],
               "path": "/reference/nx-json#tasks-runner-options",
               "isExternal": true
             },
@@ -1504,7 +1504,7 @@
               "name": "nx.json reference: inputs and namedInputs",
               "id": "nxjson-inputs",
               "file": "",
-              "tags": ["cache-task-results"],
+              "tags": ["replay-task-results"],
               "path": "/reference/nx-json#inputs-&-namedinputs",
               "isExternal": true
             },
@@ -1512,7 +1512,7 @@
               "name": "Project Configuration reference: inputs and namedInputs",
               "id": "project-config-inputs",
               "file": "",
-              "tags": ["cache-task-results"],
+              "tags": ["replay-task-results"],
               "path": "/reference/project-configuration#inputs-&-namedinputs",
               "isExternal": true
             },
@@ -1684,11 +1684,11 @@
           "description": "Features of Nx and Nx Cloud that improve CI",
           "itemList": [
             {
-              "name": "Use Remote Caching",
+              "name": "Use Remote Replay",
               "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-              "id": "remote-cache",
-              "tags": ["remote-cache"],
-              "file": "shared/core-features/remote-cache"
+              "id": "remote-replay",
+              "tags": ["remote-replay"],
+              "file": "shared/core-features/remote-replay"
             },
             {
               "name": "Run Only Tasks Affected by a PR",
@@ -2038,13 +2038,13 @@
             {
               "name": "connect-to-nx-cloud",
               "id": "connect-to-nx-cloud",
-              "tags": ["cache-task-results", "distribute-task-execution"],
+              "tags": ["replay-task-results", "distribute-task-execution"],
               "file": "generated/cli/connect"
             },
             {
               "name": "reset",
               "id": "reset",
-              "tags": ["cache-task-results"],
+              "tags": ["replay-task-results"],
               "file": "generated/cli/reset"
             },
             {

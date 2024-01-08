@@ -24,7 +24,7 @@ Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI
 
 Advantages of Nx over the Angular CLI:
 
-- [Cache any target](/core-features/cache-task-results)
+- [Cache any target](/core-features/replay-task-results)
 - [Run only tasks affected by a code change](/ci/features/affected)
 - [Split a large angular.json into multiple project.json files](/concepts/more-concepts/nx-and-angular#projectjson-vs-angularjson)
 - [Integrate with modern tools](/concepts/more-concepts/nx-and-angular#integrating-with-modern-tools)
@@ -624,7 +624,7 @@ nx run-many -t test lint e2e
 
 ### Caching
 
-One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
+One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/replay-task-results).
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
@@ -642,7 +642,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
    Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/replay-task-results).
 
 ### Testing Affected Projects
 
@@ -981,7 +981,7 @@ Learn more about how to [enforce module boundaries](/core-features/enforce-modul
 
 ## Setting Up CI
 
-Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Cloud's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Cloud's distributed task execution.
+Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Cloud's [remote replay](/ci/features/remote-replay). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Cloud's distributed task execution.
 
 To set up Nx Cloud run:
 
@@ -1013,7 +1013,7 @@ Here's some more things you can dive into next:
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-angular)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/ci/features/remote-cache)
+- [Speed up CI: Use remote replay](/ci/features/remote-replay)
 - [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you

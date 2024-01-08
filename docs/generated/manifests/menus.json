@@ -583,17 +583,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Cache Task Results",
-            "path": "/core-features/cache-task-results",
-            "id": "cache-task-results",
+            "name": "Replay Task Results",
+            "path": "/core-features/replay-task-results",
+            "id": "replay-task-results",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Use Remote Caching",
-            "path": "/ci/features/remote-cache",
-            "id": "remote-cache",
+            "name": "Use Remote Replay",
+            "path": "/ci/features/remote-replay",
+            "id": "remote-replay",
             "isExternal": true,
             "children": [],
             "disableCollapsible": false
@@ -683,17 +683,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Cache Task Results",
-        "path": "/core-features/cache-task-results",
-        "id": "cache-task-results",
+        "name": "Replay Task Results",
+        "path": "/core-features/replay-task-results",
+        "id": "replay-task-results",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Use Remote Caching",
-        "path": "/ci/features/remote-cache",
-        "id": "remote-cache",
+        "name": "Use Remote Replay",
+        "path": "/ci/features/remote-replay",
+        "id": "remote-replay",
         "isExternal": true,
         "children": [],
         "disableCollapsible": false
@@ -5675,9 +5675,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Use Remote Caching",
-            "path": "/ci/features/remote-cache",
-            "id": "remote-cache",
+            "name": "Use Remote Replay",
+            "path": "/ci/features/remote-replay",
+            "id": "remote-replay",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5718,9 +5718,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Use Remote Caching",
-        "path": "/ci/features/remote-cache",
-        "id": "remote-cache",
+        "name": "Use Remote Replay",
+        "path": "/ci/features/remote-replay",
+        "id": "remote-replay",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

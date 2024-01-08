@@ -190,7 +190,7 @@ jobs:
       - run: pnpm nx build cart
 ```
 
-The `restore_cache` and `save_cache` steps are using a hash key that is created from the contents of the `pnpm-lock.yaml` file. This way if the `pnpm-lock.yaml` file remains the same, the next CI pipeline can pull from the cache instead of downloading `node_modules` again. This is similar to the way [Nx hashes input files to cache the results of tasks](/core-features/cache-task-results).
+The `restore_cache` and `save_cache` steps are using a hash key that is created from the contents of the `pnpm-lock.yaml` file. This way if the `pnpm-lock.yaml` file remains the same, the next CI pipeline can pull from the cache instead of downloading `node_modules` again. This is similar to the way [Nx hashes input files to cache the results of tasks](/core-features/replay-task-results).
 
 Create a new branch with these changes and submit a PR to your repo to test them. Merge your PR into the `main` branch when you're ready to move to the next section.
 
@@ -309,9 +309,9 @@ When you check the CI logs for this PR, you'll notice that no tasks were run by 
 
 Merge your PR into the `main` branch when you're ready to move to the next section.
 
-## Enable Remote Caching on GitHub Actions
+## Enable Remote Replay on GitHub Actions
 
-Reducing the number of tasks to run via [affected commands](/ci/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/core-features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. The [Nx Cloud remote cache](/ci/features/remote-cache) can eliminate that waste for you.
+Reducing the number of tasks to run via [affected commands](/ci/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/core-features/replay-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. [Nx Cloud remote replay](/ci/features/remote-replay) can eliminate that waste for you.
 
 ```{% command="pnpm nx connect" %}
 ✔ Enable distributed caching to make your CI faster · Yes

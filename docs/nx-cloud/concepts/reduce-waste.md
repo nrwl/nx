@@ -292,13 +292,13 @@ Note that the 50% chance of any project being modified is an arbitrary number. I
 
 {% /disclosure %}
 
-## Reduce Wasted Time with Remote Caching
+## Reduce Wasted Time with Remote Replay
 
 If you use a read/write token on developer machines, CI runs could be dramatically improved because they would be leveraging the work already done on the machine of the developer that pushed the PR. This set up requires you to have full trust in everyone who is capable of viewing the code base, which doesn't make sense for open source projects or for many organizations.
 
 Remote caching is still valuable when only the CI pipelines have a read/write token.
 
-### Remote Caching Begins Helping on the Second CI Run for a Pipeline
+### Remote Replay Begins Helping on the Second CI Run for a Pipeline
 
 The first time CI runs for a particular PR, affected is doing most of the work to speed up your CI run. It is rare for a task to be cached on the first run. However, if the PR doesn't pass in CI, or if you need to make a change for some reason, subsequent runs of that same PR will be able to reuse cached tasks for you.
 

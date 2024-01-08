@@ -46,7 +46,7 @@ Create a new Angular application with the following command:
 You get asked a few questions that help Nx preconfigure your new Angular application. These include
 
 - Angular specific questions, such as which bundler to use, whether to enable server-side rendering and which stylesheet format to use
-- General Nx questions, such as whether to enable distributed caching with Nx Cloud. Nx comes with built-in [local caching](/core-features/cache-task-results). If you want to benefit from this cache in CI, you can enable [distributed caching](/ci/features/remote-cache) which will set up [Nx Cloud](https://nx.app). This is also a prerequisite for enabling [distributed task execution](/ci/features/distribute-task-execution).
+- General Nx questions, such as whether to enable distributed caching with Nx Cloud. Nx comes with built-in [local caching](/core-features/replay-task-results). If you want to benefit from this cache in CI, you can enable [remote replay](/ci/features/remote-replay) which will set up [Nx Cloud](https://nx.app). This is also a prerequisite for enabling [distributed task execution](/ci/features/distribute-task-execution).
 
 For the sake of this tutorial, let's respond to all the questions with the default response.
 
@@ -104,7 +104,7 @@ Compared to the Angular CLI, you might notice the addition of an `nx.json` file 
 
 | File           | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nx.json`      | This is where we can fine-tune how Nx works, define the [cacheable operations](/core-features/cache-task-results), our [task pipelines](/concepts/task-pipeline-configuration) as well as defaults for the Nx generators. Find more details in [the reference docs](/reference/nx-json).                                                                                                                                                                                                                                |
+| `nx.json`      | This is where we can fine-tune how Nx works, define the [cacheable operations](/core-features/replay-task-results), our [task pipelines](/concepts/task-pipeline-configuration) as well as defaults for the Nx generators. Find more details in [the reference docs](/reference/nx-json).                                                                                                                                                                                                                               |
 | `project.json` | Nx uses this file to define targets that can be run, similar to how the Angular CLI uses the `angular.json` file. If you're familiar with the Angular CLI you should have no difficulty navigating the `project.json` file. If you're curious how the two compare, you can learn more in [the Nx and Angular CLI comparision article](/concepts/more-concepts/nx-and-angular). The [project-configuration documentation page](/reference/project-configuration) has more details on how to use the `project.json` file. |
 
 ## Serving the App
@@ -215,7 +215,7 @@ More conveniently, we can also run them in parallel using the following syntax:
 
 {% video-link link="https://youtu.be/ZAO0yXupIIE?t=443" /%}
 
-One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
+One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/replay-task-results).
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
@@ -233,7 +233,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
    Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
 ```
 
-Not all tasks might be cacheable though. You can configure the `cache` properties in the targets under `targetDefaults` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+Not all tasks might be cacheable though. You can configure the `cache` properties in the targets under `targetDefaults` in the `nx.json` file. You can also [learn more about how caching works](/core-features/replay-task-results).
 
 ## Creating New Components
 
@@ -830,7 +830,7 @@ Here's some more things you can dive into next:
 - Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects) or [add Storybook to your UI library](/recipes/storybook/overview-angular)
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/ci/features/remote-cache)
+- [Speed up CI: Use remote replay](/ci/features/remote-replay)
 - [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you

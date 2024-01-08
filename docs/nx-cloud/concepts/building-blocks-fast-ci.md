@@ -14,7 +14,7 @@ Because Nx plugins have a consistent interface for how they are invoked and how 
 
 In a monorepo, most PRs do not affect the entire codebase, so there's no need to run every test in CI for that PR. Nx provides the [`nx affected`](/ci/features/affected) command to make sure that only the tests that need to be executed are run for a particular PR.
 
-Even if a particular project was affected by a PR, this could be the third time this same PR was run through CI and the build for this project was already run for this same exact set of files twice before. If you enable [remote caching](/ci/features/remote-cache), you can make sure that you never run the same command on the same code twice.
+Even if a particular project was affected by a PR, this could be the third time this same PR was run through CI and the build for this project was already run for this same exact set of files twice before. If you enable [remote replay](/ci/features/remote-replay), you can make sure that you never run the same command on the same code twice.
 
 For a more detailed analysis of how these features reduce wasted time in different scenarios, read the [Reduce Wasted Time in CI guide](/ci/concepts/reduce-waste)
 
@@ -22,7 +22,7 @@ For a more detailed analysis of how these features reduce wasted time in differe
 
 Every time you use Nx to run a task, Nx will attempt to run the task and all its dependent tasks in parallel in the most efficient way possible. Because Nx knows about [task pipelines](/concepts/task-pipeline-configuration), it can run all the prerequisite tasks first. Nx will automatically run tasks in parallel processes up to the limit defined in the `parallel` property in `nx.json`.
 
-There's a limit to how many tasks can be run in parallel on the same machine, but the logic that Nx uses to assign tasks to parallel processes can also be used by Nx Cloud to efficiently [distribute tasks across multiple agent machines](/ci/features/distribute-task-execution). Once those tasks are run, the [remote cache](/ci/features/remote-cache) is used to replay those task results on the main machine. After the pipeline is finished, it looks like all the tasks were run on a single machine - but much faster than a single machine could do it.
+There's a limit to how many tasks can be run in parallel on the same machine, but the logic that Nx uses to assign tasks to parallel processes can also be used by Nx Cloud to efficiently [distribute tasks across multiple agent machines](/ci/features/distribute-task-execution). Once those tasks are run, [remote replay](/ci/features/remote-replay) is used to replay those task results on the main machine. After the pipeline is finished, it looks like all the tasks were run on a single machine - but much faster than a single machine could do it.
 
 For a detailed analysis of different strategies for running tasks concurrently, read the [Parallelization and Distribution guide](/ci/concepts/parallelization-distribution)
 

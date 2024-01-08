@@ -1,12 +1,12 @@
-# Use Remote Caching
+# Use Remote Replay
 
-By default Nx [caches task computations locally](/core-features/cache-task-results). However, to benefit from the cache across your team and in particular on CI, the computation cache can also be distributed across multiple machines. Nx Cloud is an app that provides a fast and zero-config implementation of distributed caching. It is a commercial add-on to Nx, is completely free for OSS projects and comes with generous plans for startups and dedicated offerings for enterprise customers ([read more here](https://nx.app/pricing)).
+By default Nx [caches task computations locally](/core-features/replay-task-results). However, to benefit from the cache across your team and in particular on CI, the computation cache can also be distributed across multiple machines. Nx Cloud is an app that provides a fast and zero-config implementation of distributed caching. It is a commercial add-on to Nx, is completely free for OSS projects and comes with generous plans for startups and dedicated offerings for enterprise customers ([read more here](https://nx.app/pricing)).
 
 ![Diagram showing Teika sharing his cache with CI, Kimiko and James](/shared/images/dte/distributed-caching.svg)
 
 In this diagram, Teika runs the build once on his machine, then CI, Kimiko and James can use the cached artifact from Teika instead of re-executing the same work.
 
-## Setup Remote Caching with Nx Cloud
+## Setup Remote Replay Cache with Nx Cloud
 
 To enable remote caching for your Nx workspace run the following command:
 

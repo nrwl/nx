@@ -199,4 +199,4 @@ npx nx build footer
 
 Learn more about how to configure caching, where the cache is stored, how to reset it and more.
 
-- [Cache Task Results](/core-features/cache-task-results)
+- [Replay Task Results](/core-features/replay-task-results)

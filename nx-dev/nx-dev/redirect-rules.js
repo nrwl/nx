@@ -422,7 +422,8 @@ const nxCloudUrls = {
     '/nx-cloud/recipes/source-control-integration/bitbucket-cloud',
   '/nx-cloud/set-up/gitlab':
     '/nx-cloud/recipes/source-control-integration/gitlab',
-  '/core-features/remote-cache': '/ci/features/remote-cache',
+  '/core-features/remote-cache': '/ci/features/remote-replay',
+  '/ci/features/remote-cache': '/ci/features/remote-replay',
   '/core-features/distribute-task-execution':
     '/nx-cloud/features/distribute-task-execution',
   '/concepts/affected': '/ci/features/affected',
@@ -949,7 +950,9 @@ const latestRecipesRefactoring = {
 };
 
 const coreFeatureAndConceptsRefactoring = {
-  '/core-features/share-your-cache': '/core-features/remote-cache',
+  '/core-features/share-your-cache': '/core-features/remote-replay',
+  '/core-features/remote-cache': '/ci/features/remote-replay',
+  '/core-features/cache-task-results': '/core-features/replay-task-results',
   '/concepts/more-concepts/customizing-inputs':
     '/recipes/running-tasks/customizing-inputs',
   '/recipes/tips-n-tricks/root-level-scripts':

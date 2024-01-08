@@ -8,8 +8,8 @@ Nx has first-class support for [package-based monorepos](/getting-started/tutori
 
 - fast [task scheduling](/core-features/run-tasks)
 - support for [task pipelines](/concepts/task-pipeline-configuration)
-- [caching](/core-features/cache-task-results)
-- optionally [remote caching with Nx Cloud](/ci/features/remote-cache)
+- [caching](/core-features/replay-task-results)
+- optionally [remote replay with Nx Cloud](/ci/features/remote-replay)
 - optionally [distributed task execution with Nx Cloud](/ci/features/distribute-task-execution)
 
 This is a low-impact operation because all that needs to be done is to install the `nx` package at the root level and add an `nx.json` for configuring caching and task pipelines.
@@ -115,7 +115,7 @@ This allows for incrementally adopting Nx in your existing workspace.
 
 {% cards %}
 
-{% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="/core-features/cache-task-results" /%}
+{% card title="Replay Task Results" description="Learn more about how caching works" type="documentation" url="/core-features/replay-task-results" /%}
 
 {% card title="Task Pipeline Configuration" description="Learn more about how to setup task dependencies" type="documentation" url="/concepts/task-pipeline-configuration" /%}
 

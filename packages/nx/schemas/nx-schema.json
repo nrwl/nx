@@ -378,7 +378,7 @@
             },
             "skipNxCache": {
               "type": "boolean",
-              "description": "Defines whether the Nx Cache should be skipped."
+              "description": "Defines whether the Nx Replay cache should be skipped."
             },
             "encryptionKey": {
               "type": "string",

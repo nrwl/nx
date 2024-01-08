@@ -1753,7 +1753,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/connect-to-nx-cloud",
-        "tags": ["cache-task-results", "distribute-task-execution"],
+        "tags": ["replay-task-results", "distribute-task-execution"],
         "originalFilePath": "generated/cli/connect"
       },
       "/nx-api/nx/documents/reset": {
@@ -1764,7 +1764,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/reset",
-        "tags": ["cache-task-results"],
+        "tags": ["replay-task-results"],
         "originalFilePath": "generated/cli/reset"
       },
       "/nx-api/nx/documents/repair": {

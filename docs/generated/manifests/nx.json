@@ -791,28 +791,28 @@
         "itemList": [],
         "isExternal": false,
         "path": "/core-features/run-tasks",
-        "tags": ["run-tasks", "cache-task-results"]
+        "tags": ["run-tasks", "replay-task-results"]
       },
       {
-        "id": "cache-task-results",
-        "name": "Cache Task Results",
+        "id": "replay-task-results",
+        "name": "Replay Task Results",
         "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
         "mediaImage": "",
-        "file": "shared/core-features/cache-task-results",
+        "file": "shared/core-features/replay-task-results",
         "itemList": [],
         "isExternal": false,
-        "path": "/core-features/cache-task-results",
-        "tags": ["cache-task-results"]
+        "path": "/core-features/replay-task-results",
+        "tags": ["replay-task-results"]
       },
       {
-        "id": "remote-cache",
-        "name": "Use Remote Caching",
+        "id": "remote-replay",
+        "name": "Use Remote Replay",
         "description": "",
         "mediaImage": "",
         "file": "",
         "itemList": [],
         "isExternal": true,
-        "path": "/ci/features/remote-cache",
+        "path": "/ci/features/remote-replay",
         "tags": []
       },
       {
@@ -929,28 +929,28 @@
     "itemList": [],
     "isExternal": false,
     "path": "/core-features/run-tasks",
-    "tags": ["run-tasks", "cache-task-results"]
+    "tags": ["run-tasks", "replay-task-results"]
   },
-  "/core-features/cache-task-results": {
-    "id": "cache-task-results",
-    "name": "Cache Task Results",
+  "/core-features/replay-task-results": {
+    "id": "replay-task-results",
+    "name": "Replay Task Results",
     "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
     "mediaImage": "",
-    "file": "shared/core-features/cache-task-results",
+    "file": "shared/core-features/replay-task-results",
     "itemList": [],
     "isExternal": false,
-    "path": "/core-features/cache-task-results",
-    "tags": ["cache-task-results"]
+    "path": "/core-features/replay-task-results",
+    "tags": ["replay-task-results"]
   },
-  "/ci/features/remote-cache": {
-    "id": "remote-cache",
-    "name": "Use Remote Caching",
+  "/ci/features/remote-replay": {
+    "id": "remote-replay",
+    "name": "Use Remote Replay",
     "description": "",
     "mediaImage": "",
     "file": "",
     "itemList": [],
     "isExternal": true,
-    "path": "/ci/features/remote-cache",
+    "path": "/ci/features/remote-replay",
     "tags": []
   },
   "/ci/features/distribute-task-execution": {
@@ -1102,7 +1102,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/how-caching-works",
-        "tags": ["cache-task-results"]
+        "tags": ["replay-task-results"]
       },
       {
         "id": "types-of-configuration",
@@ -1422,7 +1422,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/how-caching-works",
-    "tags": ["cache-task-results"]
+    "tags": ["replay-task-results"]
   },
   "/concepts/types-of-configuration": {
     "id": "types-of-configuration",
@@ -1966,7 +1966,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/running-tasks/customizing-inputs",
-            "tags": ["run-tasks", "cache-task-results"]
+            "tags": ["run-tasks", "replay-task-results"]
           },
           {
             "id": "defining-task-pipeline",
@@ -3138,7 +3138,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-            "tags": ["cache-task-results"]
+            "tags": ["replay-task-results"]
           },
           {
             "id": "unknown-local-cache",
@@ -3300,7 +3300,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/running-tasks/customizing-inputs",
-        "tags": ["run-tasks", "cache-task-results"]
+        "tags": ["run-tasks", "replay-task-results"]
       },
       {
         "id": "defining-task-pipeline",
@@ -3393,7 +3393,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/running-tasks/customizing-inputs",
-    "tags": ["run-tasks", "cache-task-results"]
+    "tags": ["run-tasks", "replay-task-results"]
   },
   "/recipes/running-tasks/defining-task-pipeline": {
     "id": "defining-task-pipeline",
@@ -5474,7 +5474,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-        "tags": ["cache-task-results"]
+        "tags": ["replay-task-results"]
       },
       {
         "id": "unknown-local-cache",
@@ -5534,7 +5534,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/troubleshooting/troubleshoot-cache-misses",
-    "tags": ["cache-task-results"]
+    "tags": ["replay-task-results"]
   },
   "/recipes/troubleshooting/unknown-local-cache": {
     "id": "unknown-local-cache",
@@ -7125,7 +7125,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "/ci/intro/ci-with-nx",
-        "tags": ["cache-task-results", "distribute-task-execution"]
+        "tags": ["replay-task-results", "distribute-task-execution"]
       },
       {
         "id": "nx-cloud-main-site",
@@ -7136,7 +7136,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "https://nx.app",
-        "tags": ["cache-task-results", "distribute-task-execution"]
+        "tags": ["replay-task-results", "distribute-task-execution"]
       },
       {
         "id": "skip-nx-cache-flag",
@@ -7147,7 +7147,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "/nx-api/nx/documents/affected#skip-nx-cache",
-        "tags": ["cache-task-results"]
+        "tags": ["replay-task-results"]
       },
       {
         "id": "tasks-runner-options-property",
@@ -7158,7 +7158,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "/reference/nx-json#tasks-runner-options",
-        "tags": ["cache-task-results"]
+        "tags": ["replay-task-results"]
       },
       {
         "id": "nxjson-inputs",
@@ -7169,7 +7169,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "/reference/nx-json#inputs-&-namedinputs",
-        "tags": ["cache-task-results"]
+        "tags": ["replay-task-results"]
       },
       {
         "id": "project-config-inputs",
@@ -7180,7 +7180,7 @@
         "itemList": [],
         "isExternal": true,
         "path": "/reference/project-configuration#inputs-&-namedinputs",
-        "tags": ["cache-task-results"]
+        "tags": ["replay-task-results"]
       },
       {
         "id": "nxjson-generator-defaults",
@@ -7218,7 +7218,7 @@
     "itemList": [],
     "isExternal": true,
     "path": "/ci/intro/ci-with-nx",
-    "tags": ["cache-task-results", "distribute-task-execution"]
+    "tags": ["replay-task-results", "distribute-task-execution"]
   },
   "/nx-api/nx/documents/affected#skip-nx-cache": {
     "id": "skip-nx-cache-flag",
@@ -7229,7 +7229,7 @@
     "itemList": [],
     "isExternal": true,
     "path": "/nx-api/nx/documents/affected#skip-nx-cache",
-    "tags": ["cache-task-results"]
+    "tags": ["replay-task-results"]
   },
   "/reference/nx-json#tasks-runner-options": {
     "id": "tasks-runner-options-property",
@@ -7240,7 +7240,7 @@
     "itemList": [],
     "isExternal": true,
     "path": "/reference/nx-json#tasks-runner-options",
-    "tags": ["cache-task-results"]
+    "tags": ["replay-task-results"]
   },
   "/reference/nx-json#inputs-&-namedinputs": {
     "id": "nxjson-inputs",
@@ -7251,7 +7251,7 @@
     "itemList": [],
     "isExternal": true,
     "path": "/reference/nx-json#inputs-&-namedinputs",
-    "tags": ["cache-task-results"]
+    "tags": ["replay-task-results"]
   },
   "/reference/project-configuration#inputs-&-namedinputs": {
     "id": "project-config-inputs",
@@ -7262,7 +7262,7 @@
     "itemList": [],
     "isExternal": true,
     "path": "/reference/project-configuration#inputs-&-namedinputs",
-    "tags": ["cache-task-results"]
+    "tags": ["replay-task-results"]
   },
   "/reference/nx-json#generators": {
     "id": "nxjson-generator-defaults",

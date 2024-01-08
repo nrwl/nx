@@ -1,8 +1,8 @@
-# Cache Task Results
+# Replay Task Results
 
 It's costly to rebuild and retest the same code over and over again. Nx has the most sophisticated and battle-tested computation caching system to make sure it never rebuilds the same code twice. It knows when the task you are about to run, has been executed before, so it can use the cache to restore the results of running that task.
 
-If you want to learn more about the conceptual model behind Nx's caching, read [How Caching Works](/concepts/how-caching-works).
+If you want to learn more about the conceptual model behind Nx Replay's caching, read [How Caching Works](/concepts/how-caching-works).
 
 ## Define Cacheable Tasks
 
@@ -117,15 +117,15 @@ Learn more [about configuring inputs including `namedInputs`](/recipes/running-t
 
 The cache is stored in `.nx/cache` by default. You can also [change where the cache](/recipes/running-tasks/change-cache-location) is stored if you want.
 
-## Enable Remote Caching
+## Enable Remote Replay
 
-You can enable remote caching by connecting to [Nx Cloud](/ci/features/remote-cache). To connect Nx to Nx Cloud run the following command:
+You can enable remote caching by connecting to [Nx Cloud](/ci/features/remote-replay). To connect Nx to Nx Cloud run the following command:
 
 ```shell
 npx nx connect
 ```
 
-Learn more about [remote caching](/ci/features/remote-cache).
+Learn more about [remote replay](/ci/features/remote-replay).
 
 ## Turn off or Skip the Cache
 
@@ -135,7 +135,7 @@ If you want to ignore the cache (both reads and writes), use the `--skip-nx-cach
 nx build header --skip-nx-cache
 ```
 
-Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached targets](/core-features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/ci/features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
+Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached targets](/core-features/replay-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/ci/features/remote-replay#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
 
 ## Clear the Local Cache
 

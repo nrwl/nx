@@ -20,13 +20,13 @@ A [library](#library) that has a `build` [target](#target). Some libraries can b
 
 A mechanism for saving the output of a calculation so it can be replayed later without actually performing the calculation again.
 
-> See: [Cache Task Results](/core-features/cache-task-results)
+> See: [Replay Task Results](/core-features/replay-task-results)
 
 ### Cache Hit
 
 When the [cache inputs](#cache-inputs) for a [task](#task) match an existing entry in the [cache](#cache) and the [cache outputs](#cache-outputs) can be replayed without actually running the task.
 
-> See: [Cache Task Results](/core-features/cache-task-results)
+> See: [Replay Task Results](/core-features/replay-task-results)
 
 ### Cache Inputs
 
@@ -38,7 +38,7 @@ Everything that might change the output of a [task](#task). This may include sou
 
 When the [cache inputs](#cache-inputs) for a [task](#task) do not match an existing entry in the [cache](#cache) and the task needs to be executed.
 
-> See: [Cache Task Results](/core-features/cache-task-results)
+> See: [Replay Task Results](/core-features/replay-task-results)
 
 ### Cache Outputs
 
@@ -62,7 +62,7 @@ A set of preconfigured options for a [target](#target) that should be enabled al
 
 A [cache](#cache) that can be shared between all developers using the repo and the CI system.
 
-> See: [Share Your Cache](/ci/features/remote-cache)
+> See: [Use Remote Replay](/ci/features/remote-replay)
 
 ### Distributed Task Execution
 
