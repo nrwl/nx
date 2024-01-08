@@ -398,7 +398,7 @@ async function runSchematic(
       })
       .toPromise();
   } catch (e) {
-    console.log(e);
+    console.error(e);
     throw e;
   }
   if (!record.error) {
@@ -470,8 +470,8 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         );
       }),
       catchError((err) => {
-        console.log('Unable to read angular.json');
-        console.log(err);
+        console.error('Unable to read angular.json');
+        console.error(err);
         process.exit(1);
       })
     );
@@ -638,8 +638,8 @@ export class NxScopedHostForBuilders extends NxScopedHost {
         return workspaceConfig;
       }),
       catchError((err) => {
-        console.log('Unable to read angular.json');
-        console.log(err);
+        console.error('Unable to read angular.json');
+        console.error(err);
         process.exit(1);
       })
     );
