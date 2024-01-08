@@ -991,7 +991,7 @@ ${JSON.stringify(
     await runCommandAsync(`git add ${pkg3}/package.json`);
     await runCommandAsync(`git commit -m "feat(${pkg3}): new feat 3"`);
 
-    // set 1400.1.0 as the latest version for group2
+    // set 1300.1.0 as the latest version for group2
     const releaseOutput2 = runCLI(`release version --group=group2`);
     expect(
       releaseOutput2.match(
@@ -1002,7 +1002,7 @@ ${JSON.stringify(
       ).length
     ).toEqual(1);
     expect(
-      releaseOutput2.match(new RegExp(`New version 1400\.1\.0 written to`, 'g'))
+      releaseOutput2.match(new RegExp(`New version 1300\.1\.0 written to`, 'g'))
         .length
     ).toEqual(2);
 
@@ -1045,7 +1045,7 @@ ${JSON.stringify(
     ).toEqual(1);
     expect(
       releaseOutput3.match(
-        new RegExp(`New version 1400\\.1\\.1 written to`, 'g')
+        new RegExp(`New version 1300\\.1\\.1 written to`, 'g')
       ).length
     ).toEqual(2);
     expect(
