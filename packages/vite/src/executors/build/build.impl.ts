@@ -242,6 +242,8 @@ export async function getBuildExtraArgs(
     }
   }
 
+  buildOptions['watch'] = options.watch ?? undefined;
+
   return {
     buildOptions,
     otherOptions,
