@@ -26,14 +26,11 @@ export function FlipCard({
   onClick?: () => void;
   children: ReactNode;
 }) {
-  const [flipped, setFlipped] = useState(() => isFlipped);
-
   return (
     <FlipCardContext.Provider value={{ fullDate: fullDate || '', onClick }}>
       <span
         onClick={(event) => {
-          if (isFlippable && !flipped) {
-            setFlipped(true);
+          if (isFlippable && !isFlipped) {
             onFlip && onFlip(day, true);
             event.preventDefault();
           } else {
@@ -42,15 +39,17 @@ export function FlipCard({
         }}
         className={cx(
           'block group perspective',
-          isFlippable && !flipped ? 'cursor-pointer' : 'cursor-default'
+          isFlippable && !isFlipped ? 'cursor-pointer' : 'cursor-default'
         )}
       >
         <div
           className={cx(
             'relative preserve-3d transition w-full h-full duration-200 content-center rounded-lg border-2 shadow-sm focus-within:ring-offset-2 bg-white/60 dark:bg-slate-800/90',
-            flipped ? 'my-rotate-y-180 bg-white dark:bg-slate-800' : '',
+            isFlippable && isFlipped
+              ? 'my-rotate-y-180 bg-white dark:bg-slate-800'
+              : '',
             isFlippable
-              ? flipped
+              ? isFlipped
                 ? 'border-blue-400 dark:border-slate-800'
                 : 'border-blue-400 dark:border-slate-800 hover:[transform:rotateY(10deg)]'
               : 'border-1 border-slate-300 dark:border-slate-800'
