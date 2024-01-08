@@ -458,6 +458,12 @@
                   "file": "shared/recipes/running-tasks/change-cache-location"
                 },
                 {
+                  "name": "Executors and Configurations",
+                  "id": "executors-and-configurations",
+                  "tags": ["run-tasks", "enhance-tooling"],
+                  "file": "shared/recipes/running-tasks/executors-and-configurations"
+                },
+                {
                   "name": "Running Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks", "enhance-tooling"],

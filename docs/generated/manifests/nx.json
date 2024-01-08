@@ -1918,6 +1918,17 @@
             "tags": []
           },
           {
+            "id": "executors-and-configurations",
+            "name": "Executors and Configurations",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/executors-and-configurations",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/executors-and-configurations",
+            "tags": ["run-tasks", "enhance-tooling"]
+          },
+          {
             "id": "run-commands-executor",
             "name": "Running Custom Commands",
             "description": "",
@@ -3308,6 +3319,17 @@
         "tags": []
       },
       {
+        "id": "executors-and-configurations",
+        "name": "Executors and Configurations",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/executors-and-configurations",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/executors-and-configurations",
+        "tags": ["run-tasks", "enhance-tooling"]
+      },
+      {
         "id": "run-commands-executor",
         "name": "Running Custom Commands",
         "description": "",
@@ -3399,6 +3421,17 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/change-cache-location",
     "tags": []
+  },
+  "/recipes/running-tasks/executors-and-configurations": {
+    "id": "executors-and-configurations",
+    "name": "Executors and Configurations",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/executors-and-configurations",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/executors-and-configurations",
+    "tags": ["run-tasks", "enhance-tooling"]
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",

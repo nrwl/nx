@@ -30,6 +30,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/running-tasks/executors-and-configurations",
+      "id": "executors-and-configurations",
+      "name": "Executors and Configurations",
+      "path": "/recipes/running-tasks/executors-and-configurations"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/running-tasks/running-custom-commands",
       "id": "run-commands-executor",
       "name": "Running Custom Commands",
@@ -440,6 +447,13 @@
       "id": "incremental-builds",
       "name": "Incremental Builds",
       "path": "/concepts/more-concepts/incremental-builds"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/executors-and-configurations",
+      "id": "executors-and-configurations",
+      "name": "Executors and Configurations",
+      "path": "/recipes/running-tasks/executors-and-configurations"
     },
     {
       "description": "",

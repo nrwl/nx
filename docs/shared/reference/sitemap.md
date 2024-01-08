@@ -78,6 +78,7 @@
       - [Fine-tuning Caching with Inputs](/recipes/running-tasks/customizing-inputs)
       - [Defining a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)
       - [Change Cache Location](/recipes/running-tasks/change-cache-location)
+      - [Executors and Configurations](/recipes/running-tasks/executors-and-configurations)
       - [Running Custom Commands](/recipes/running-tasks/run-commands-executor)
       - [Run Tasks in Parallel](/recipes/running-tasks/run-tasks-in-parallel)
       - [Run Root-Level NPM Scripts with Nx](/recipes/running-tasks/root-level-scripts)
