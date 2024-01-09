@@ -23,7 +23,7 @@
 1. At this point, your instance will have a public IP accessible from the browser.
    - You can consider this IP the URL of Nx Cloud, and proceed with the below steps and all will work fine!
 2. You might want, however, to add a Load Balancer in front of the instance, with an explicit domain (e.g. https://my-nxcloud.my-org.com).
-   - This is strongly recommended because you will be able to upgrade/restart/re-configure your N xCloud EC2 instance while keeping the Nx Cloud URL static.
+   - This is strongly recommended because you will be able to upgrade/restart/re-configure your Nx Cloud EC2 instance while keeping the Nx Cloud URL static.
    - Create an [application load balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-application-load-balancer.html)
    - You will need to create a certificate for your domain to assign to the LB
    - And you will need to target your EC2 instance from the LB
