@@ -169,6 +169,28 @@ export async function releaseVersion(
 
     printAndFlushChanges(tree, !!args.dryRun);
 
+    const changedFiles = tree.listChanges().map((f) => f.path);
+
+    // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
+    if (!changedFiles.length) {
+      return {
+        // An overall workspace version cannot be relevant when filtering to independent projects
+        workspaceVersion: undefined,
+        projectsVersionData: versionData,
+      };
+    }
+
+    if (args.stageChanges) {
+      output.logSingleLine(
+        `Staging changed files with git because --stage-changes was set`
+      );
+      await gitAdd({
+        changedFiles,
+        dryRun: args.dryRun,
+        verbose: args.verbose,
+      });
+    }
+
     if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
       await commitChanges(
         tree.listChanges().map((f) => f.path),
