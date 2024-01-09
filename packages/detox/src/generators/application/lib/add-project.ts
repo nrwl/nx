@@ -1,4 +1,9 @@
-import { addProjectConfiguration, TargetConfiguration, Tree } from '@nx/devkit';
+import {
+  addProjectConfiguration,
+  readNxJson,
+  TargetConfiguration,
+  Tree,
+} from '@nx/devkit';
 import {
   expoBuildTarget,
   expoTestTarget,
@@ -8,11 +13,18 @@ import {
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
+  const nxJson = readNxJson(host);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/detox/plugin'
+      : p.plugin === '@nx/detox/plugin'
+  );
+
   addProjectConfiguration(host, options.e2eProjectName, {
     root: options.e2eProjectRoot,
     sourceRoot: `${options.e2eProjectRoot}/src`,
     projectType: 'application',
-    targets: { ...getTargets(options) },
+    targets: hasPlugin ? {} : getTargets(options),
     tags: [],
     implicitDependencies: [options.appProject],
   });

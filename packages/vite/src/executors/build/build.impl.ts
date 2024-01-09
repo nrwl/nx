@@ -23,6 +23,7 @@ import { relative, resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   createBuildableTsConfig,
+  loadViteDynamicImport,
   validateTypes,
 } from '../../utils/executor-utils';
 
@@ -32,9 +33,8 @@ export async function* viteBuildExecutor(
 ) {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, build, loadConfigFromFile } = await (Function(
-    'return import("vite")'
-  )() as Promise<typeof import('vite')>);
+  const { mergeConfig, build, loadConfigFromFile } =
+    await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   createBuildableTsConfig(projectRoot, options, context);
