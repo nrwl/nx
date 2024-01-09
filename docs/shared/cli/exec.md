@@ -10,7 +10,7 @@ description: 'Executes any command as if it was a target on the project'
 
 ## Usage
 
-In package.json, add a script with `nx exec` will run the command as it is a target only for that project:
+In package.json, adding a script with `nx exec` will run the command as if it is a target that project:
 
 ```json
 {
@@ -24,7 +24,7 @@ In package.json, add a script with `nx exec` will run the command as it is a tar
 
 It will run the command for `myorg`.
 
-In terminal, `nx exec` will run the command for all projects in the workspace:
+When run from the terminal, `nx exec` will run the command for all projects in the workspace:
 
 ```
 nx exec -- <command> [..args] # runs the command in all projects
@@ -63,7 +63,7 @@ The name of the current project is available through the environment variable $N
 nx exec -- echo \$NX_PROJECT_NAME
 ```
 
-The location of current project is availabe through the environment varaible $NX_PROJECT_ROOT_PATH:
+The location of current project is available through the environment variable $NX_PROJECT_ROOT_PATH:
 
 ```
 nx exec -- echo \$NX_PROJECT_ROOT_PATH
