@@ -75,9 +75,6 @@ describe('@nx/eslint:lint-project', () => {
     expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
       {
         "executor": "@nx/eslint:lint",
-        "outputs": [
-          "{options.outputFile}",
-        ],
       }
     `);
   });
@@ -100,9 +97,6 @@ describe('@nx/eslint:lint-project', () => {
             "libs/test-lib/src/**/*.ts",
           ],
         },
-        "outputs": [
-          "{options.outputFile}",
-        ],
       }
     `);
   });
@@ -149,9 +143,6 @@ describe('@nx/eslint:lint-project', () => {
     expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
       {
         "executor": "@nx/eslint:lint",
-        "outputs": [
-          "{options.outputFile}",
-        ],
       }
     `);
   });
@@ -175,9 +166,6 @@ describe('@nx/eslint:lint-project', () => {
             "{projectRoot}/package.json",
           ],
         },
-        "outputs": [
-          "{options.outputFile}",
-        ],
       }
     `);
   });

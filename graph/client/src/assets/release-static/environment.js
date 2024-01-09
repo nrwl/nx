@@ -139,7 +139,6 @@ window.projectGraphResponse = {
                 'libs/products/product-detail-page/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
@@ -261,7 +260,6 @@ window.projectGraphResponse = {
                 'libs/shared/product/state/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
@@ -329,7 +327,6 @@ window.projectGraphResponse = {
                 'libs/shared/product/types/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
         },
@@ -393,7 +390,6 @@ window.projectGraphResponse = {
                 'libs/shared/product/data/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
         },
@@ -498,7 +494,6 @@ window.projectGraphResponse = {
                 'libs/products/home-page/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
@@ -616,7 +611,6 @@ window.projectGraphResponse = {
                 'libs/shared/cart/state/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
@@ -702,7 +696,6 @@ window.projectGraphResponse = {
                 'libs/shared/product/ui/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
@@ -766,7 +759,6 @@ window.projectGraphResponse = {
                 'libs/shared/e2e-utils/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
         },
@@ -846,7 +838,6 @@ window.projectGraphResponse = {
                 'libs/cart/cart-page/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
@@ -987,7 +978,6 @@ window.projectGraphResponse = {
                 'libs/shared/header/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
@@ -1055,7 +1045,6 @@ window.projectGraphResponse = {
                 'libs/shared/jsxify/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
         },
@@ -1154,7 +1143,6 @@ window.projectGraphResponse = {
             options: {
               lintFilePatterns: ['apps/products-e2e/**/*.{js,ts}'],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
         },
@@ -1226,7 +1214,6 @@ window.projectGraphResponse = {
             options: {
               lintFilePatterns: ['apps/cart-e2e/**/*.{ts,tsx,js,jsx}'],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
         },
@@ -1432,7 +1419,6 @@ window.projectGraphResponse = {
                 'apps/products/src/**/*.html',
               ],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {
@@ -1637,7 +1623,6 @@ window.projectGraphResponse = {
             options: {
               lintFilePatterns: ['apps/cart/**/*.{ts,tsx,js,jsx}'],
             },
-            outputs: ['{options.outputFile}'],
             inputs: ['default', '{workspaceRoot}/.eslintrc.json'],
           },
           test: {

@@ -35,7 +35,6 @@ describe('lib', () => {
       expect(projectConfiguration.targets.build).toBeUndefined();
       expect(projectConfiguration.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
       });
       expect(projectConfiguration.tags).toEqual(['one', 'two']);
     });
@@ -156,7 +155,6 @@ describe('lib', () => {
       expect(projectConfiguration.root).toEqual('my-dir');
       expect(projectConfiguration.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
       });
     });
 
@@ -235,7 +233,6 @@ describe('lib', () => {
       expect(projectConfiguration.targets.test).toBeUndefined();
       expect(projectConfiguration.targets.lint).toMatchObject({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
       });
     });
 

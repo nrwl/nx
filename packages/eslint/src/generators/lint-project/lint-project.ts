@@ -91,7 +91,6 @@ export async function lintProjectGenerator(
   } else {
     projectConfig.targets['lint'] = {
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
     };
 
     if (lintFilePatterns && lintFilePatterns.length) {

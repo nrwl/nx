@@ -70,8 +70,7 @@ exports[`app generated files content - as-provided general application should co
   "sourceRoot": "my-app/src",
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
+      "executor": "@nx/eslint:lint"
     }
   }
 }
