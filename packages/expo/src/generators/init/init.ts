@@ -2,9 +2,11 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
+  readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
+  updateNxJson,
 } from '@nx/devkit';
 import { Schema } from './schema';
 import {
@@ -29,6 +31,7 @@ import {
   testingLibraryReactNativeVersion,
   typesReactVersion,
 } from '../../utils/versions';
+import { ExpoPluginOptions } from '../../../plugins/plugin';
 
 import { jestInitGenerator } from '@nx/jest';
 import { detoxInitGenerator } from '@nx/detox';
@@ -66,6 +69,10 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
       skipFormat: true,
     });
     tasks.push(detoxTask);
+  }
+
+  if (process.env.NX_PCV3 === 'true') {
+    addPlugin(host);
   }
 
   if (!schema.skipFormat) {
@@ -108,6 +115,37 @@ export function updateDependencies(host: Tree) {
 
 function moveDependency(host: Tree) {
   return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
+}
+
+function addPlugin(host: Tree) {
+  const nxJson = readNxJson(host);
+  nxJson.plugins ??= [];
+
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/expo/plugin'
+        : plugin.plugin === '@nx/expo/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/expo/plugin',
+    options: {
+      startTargetName: 'start',
+      runIosTargetName: 'run-ios',
+      runAndroidTargetName: 'run-android',
+      exportTargetName: 'export',
+      exportWebTargetName: 'export-web',
+      prebuildTargetName: 'prebuild',
+      installTargetName: 'install',
+      buildTargetName: 'build',
+      submitTargetName: 'submit',
+    } as ExpoPluginOptions,
+  });
+  updateNxJson(host, nxJson);
 }
 
 export default expoInitGenerator;

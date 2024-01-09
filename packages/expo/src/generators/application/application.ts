@@ -34,10 +34,11 @@ export async function expoApplicationGeneratorInternal(
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(host, schema);
 
+  const initTask = await initGenerator(host, { ...options, skipFormat: true });
+
   createApplicationFiles(host, options);
   addProject(host, options);
 
-  const initTask = await initGenerator(host, { ...options, skipFormat: true });
   const lintTask = await addLinting(host, {
     ...options,
     projectRoot: options.appProjectRoot,
