@@ -37,7 +37,6 @@ pub struct ChildProcess {
     child: Box<dyn Child + Sync + Send>,
     rx: Receiver<String>,
 }
-
 #[napi]
 impl ChildProcess {
     pub fn new(child: Box<dyn Child + Sync + Send>, rx: Receiver<String>) -> Self {
@@ -90,6 +89,64 @@ impl ChildProcess {
         Ok(())
     }
 }
+
+// #[napi]
+// pub struct ChildProcessWithIPC {
+//     child_process: ChildProcess,
+//
+//     subscriber: zmq::Socket,
+//     publisher: zmq::Socket,
+// }
+//
+// #[napi]
+// impl ChildProcessWithIPC {
+//     fn from(child_process: ChildProcess) -> Self {
+//         let ctx = zmq::Context::new();
+//
+//         // let publisher_address =
+//         let publisher = ctx.socket(zmq::PUB).unwrap();
+//         //
+//         //
+//         // publisher.connect();
+//
+//         let subscriber = ctx.socket(zmq::SUB).unwrap();
+//         subscriber.connect(&publisher_address).unwrap();
+//
+//         Self {
+//             child_process,
+//             publisher,
+//             subscriber,
+//         }
+//     }
+//     #[napi]
+//     pub fn kill(&mut self) -> anyhow::Result<()> {
+//         self.child_process.kill()
+//     }
+//
+//     #[napi]
+//     pub fn is_alive(&mut self) -> anyhow::Result<bool> {
+//         self.child_process.is_alive()
+//     }
+//
+//     #[napi]
+//     pub async unsafe fn wait(&mut self) -> napi::Result<u32> {
+//         self.child_process.wait().await
+//     }
+//
+//     #[napi]
+//     pub fn on_output(
+//         &mut self,
+//         env: Env,
+//         #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
+//     ) -> napi::Result<()> {
+//         self.child_process.on_output(env, callback)
+//     }
+//
+//     #[napi]
+//     pub fn on_message(&self, callback: JsFunction) -> anyhow::Result<()> {
+//         Ok(())
+//     }
+// }
 
 fn get_directory(command_dir: Option<String>) -> anyhow::Result<String> {
     if let Some(command_dir) = command_dir {
@@ -157,4 +214,20 @@ pub fn run_command(
     });
 
     Ok(ChildProcess::new(child, rx))
+}
+
+#[napi]
+pub fn nx_fork(
+    fork_script: String,
+    psudo_ipc_path: String,
+    command_dir: Option<String>,
+    js_env: Option<HashMap<String, String>>,
+) -> napi::Result<ChildProcess> {
+    let child_process = run_command(
+        format!("node {} {}", fork_script, psudo_ipc_path),
+        command_dir,
+        js_env,
+    )?;
+
+    Ok(child_process)
 }

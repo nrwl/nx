@@ -43,6 +43,7 @@ swc_common = "0.31.16"
 swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"
 swc_ecma_ast = "0.107.0"
+zmq = "0.10"
 
 [lib]
 crate-type = ['cdylib']

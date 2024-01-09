@@ -66,6 +66,9 @@ export class TaskOrchestrator {
   ) {}
 
   async run() {
+    // Init the ForkedProcessTaskRunner
+    await this.forkedProcessTaskRunner.init();
+
     // initial scheduling
     await this.scheduleNextTasks();
 
@@ -88,6 +91,7 @@ export class TaskOrchestrator {
       'task-execution:start',
       'task-execution:end'
     );
+    this.forkedProcessTaskRunner.destroy();
     this.cache.removeOldCacheRecords();
 
     return this.completedTasks;
@@ -398,25 +402,36 @@ export class TaskOrchestrator {
   ) {
     try {
       // execution
-      const { code, terminalOutput } = pipeOutput
-        ? await this.forkedProcessTaskRunner.forkProcessPipeOutputCapture(
-            task,
-            {
-              temporaryOutputPath,
-              streamOutput,
-              taskGraph: this.taskGraph,
-              env,
-            }
-          )
-        : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
-            task,
-            {
-              temporaryOutputPath,
-              streamOutput,
-              taskGraph: this.taskGraph,
-              env,
-            }
-          );
+      const { code, terminalOutput } =
+        process.env.NX_NATIVE_COMMAND_RUNNER === 'true'
+          ? await this.forkedProcessTaskRunner.forkProcessUsingNativeChildProcess(
+              task,
+              {
+                temporaryOutputPath,
+                streamOutput,
+                taskGraph: this.taskGraph,
+                env,
+              }
+            )
+          : pipeOutput
+          ? await this.forkedProcessTaskRunner.forkProcessPipeOutputCapture(
+              task,
+              {
+                temporaryOutputPath,
+                streamOutput,
+                taskGraph: this.taskGraph,
+                env,
+              }
+            )
+          : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
+              task,
+              {
+                temporaryOutputPath,
+                streamOutput,
+                taskGraph: this.taskGraph,
+                env,
+              }
+            );
 
       return {
         code,

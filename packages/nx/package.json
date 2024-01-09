@@ -41,6 +41,7 @@
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
     "cliui": "^8.0.1",
+    "detect-port": "^1.5.1",
     "dotenv": "~16.3.1",
     "dotenv-expand": "~10.0.0",
     "enquirer": "~2.3.6",

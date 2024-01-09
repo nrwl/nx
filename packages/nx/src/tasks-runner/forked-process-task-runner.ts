@@ -15,6 +15,10 @@ import {
 import { stripIndents } from '../utils/strip-indents';
 import { Task, TaskGraph } from '../config/task-graph';
 import { Transform } from 'stream';
+import { ChildProcess as NativeChildProcess, nxFork } from '../native';
+import { PsuedoIPC } from './psuedo-ipc';
+
+const forkScript = join(__dirname, './fork.js');
 
 const workerPath = join(__dirname, './batch/run-batch.js');
 
@@ -22,10 +26,23 @@ export class ForkedProcessTaskRunner {
   cliPath = getCliPath();
 
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
-  private processes = new Set<ChildProcess>();
+  private processes = new Set<ChildProcess | NativeChildProcess>();
+
+  private psuedoIPCPath = join(
+    __dirname,
+    'fork-messengers',
+    process.pid.toString()
+  );
+
+  private psuedoIPC = new PsuedoIPC(this.psuedoIPCPath);
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {
     this.setupProcessEventListeners();
+  }
+
+  async init() {
+    // await this.publisher.init();
+    // this.subscriber.on('message', process.send(msg));
   }
 
   // TODO: vsavkin delegate terminal output printing
@@ -104,6 +121,42 @@ export class ForkedProcessTaskRunner {
       } catch (e) {
         rej(e);
       }
+    });
+  }
+
+  public forkProcessUsingNativeChildProcess(
+    task: Task,
+    {
+      temporaryOutputPath,
+      streamOutput,
+      taskGraph,
+      env,
+    }: {
+      temporaryOutputPath: string;
+      streamOutput: boolean;
+      taskGraph: TaskGraph;
+      env: NodeJS.ProcessEnv;
+    }
+  ): Promise<{ code: number; terminalOutput: string }> {
+    return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
+      const args = getPrintableCommandArgsForTask(task);
+      if (streamOutput) {
+        output.logCommand(args.join(' '));
+        output.addNewline();
+      }
+
+      const p = nxFork(forkScript, this.psuedoIPCPath, process.cwd(), env);
+      this.processes.add(p);
+
+      // This needs to be figured out
+      // p.onMessage((message) => {});
+
+      // Re-emit any messages from the task process
+      // p.on('message', (message) => {
+      //   if (process.send) {
+      //     process.send(message);
+      //   }
+      // });
     });
   }
 
@@ -296,10 +349,17 @@ export class ForkedProcessTaskRunner {
   }
 
   private setupProcessEventListeners() {
+    this.psuedoIPC.onMessageFromChildren((message: Serializable) => {
+      process.send(message);
+    });
+
     // When the nx process gets a message, it will be sent into the task's process
     process.on('message', (message: Serializable) => {
+      // this.publisher.publish(message.toString());
+      this.psuedoIPC.sendMessageToChildren(message);
+
       this.processes.forEach((p) => {
-        if (p.connected) {
+        if ('connected' in p && p.connected) {
           p.send(message);
         }
       });
@@ -308,14 +368,14 @@ export class ForkedProcessTaskRunner {
     // Terminate any task processes on exit
     process.on('exit', () => {
       this.processes.forEach((p) => {
-        if (p.connected) {
+        if ('connected' in p ? p.connected : p.isAlive()) {
           p.kill();
         }
       });
     });
     process.on('SIGINT', () => {
       this.processes.forEach((p) => {
-        if (p.connected) {
+        if ('connected' in p ? p.connected : p.isAlive()) {
           p.kill('SIGTERM');
         }
       });
@@ -324,7 +384,7 @@ export class ForkedProcessTaskRunner {
     });
     process.on('SIGTERM', () => {
       this.processes.forEach((p) => {
-        if (p.connected) {
+        if ('connected' in p ? p.connected : p.isAlive()) {
           p.kill('SIGTERM');
         }
       });
@@ -333,13 +393,17 @@ export class ForkedProcessTaskRunner {
     });
     process.on('SIGHUP', () => {
       this.processes.forEach((p) => {
-        if (p.connected) {
+        if ('connected' in p ? p.connected : p.isAlive()) {
           p.kill('SIGTERM');
         }
       });
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });
+  }
+
+  destroy() {
+    this.psuedoIPC.close();
   }
 }
 

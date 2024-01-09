@@ -22,6 +22,7 @@ export function getFilesForOutputs(directory: string, entries: Array<string>): A
 export function remove(src: string): void
 export function copy(src: string, dest: string): void
 export function runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null): ChildProcess
+export function nxFork(forkScript: string, psudoIpcPath: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null): ChildProcess
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): string | null
 export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
