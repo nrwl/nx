@@ -14,9 +14,9 @@ import {
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task, TaskGraph } from '../config/task-graph';
-import { Transform } from 'stream';
+import { Readable, Transform } from 'stream';
 import { ChildProcess as NativeChildProcess, nxFork } from '../native';
-import { PsuedoIPC } from './psuedo-ipc';
+import { PsuedoIPCServer } from './psuedo-ipc';
 import { FORKED_PROCESS_OS_SOCKET_PATH } from '../daemon/socket-utils';
 
 const forkScript = join(__dirname, './fork.js');
@@ -31,7 +31,7 @@ export class ForkedProcessTaskRunner {
 
   private psuedoIPCPath = FORKED_PROCESS_OS_SOCKET_PATH(process.pid.toString());
 
-  private psuedoIPC = new PsuedoIPC(this.psuedoIPCPath, true);
+  private psuedoIPC = new PsuedoIPCServer(this.psuedoIPCPath);
 
   constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
@@ -133,20 +133,34 @@ export class ForkedProcessTaskRunner {
       env: NodeJS.ProcessEnv;
     }
   ): Promise<{ code: number; terminalOutput: string }> {
+    const shouldPrefix =
+      streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
+
+    if (shouldPrefix || !process.stdout.isTTY) {
+      return this.forkProcessWithPrefixAndNotTTY(task, {
+        temporaryOutputPath,
+        streamOutput,
+        taskGraph,
+        env,
+      });
+    }
     const args = getPrintableCommandArgsForTask(task);
     if (streamOutput) {
       output.logCommand(args.join(' '));
       output.addNewline();
     }
 
-    let childId = task.id;
+    const childId = task.id;
     const p = nxFork(
       childId,
       forkScript,
       this.psuedoIPCPath,
       process.cwd(),
-      env
+      env,
+      !streamOutput
     );
+
+    await this.psuedoIPC.waitForChildReady(childId);
 
     this.psuedoIPC.sendMessageToChild(childId, {
       targetDescription: task.target,
@@ -169,6 +183,28 @@ export class ForkedProcessTaskRunner {
   }
 
   public forkProcessPipeOutputCapture(
+    task: Task,
+    {
+      streamOutput,
+      temporaryOutputPath,
+      taskGraph,
+      env,
+    }: {
+      streamOutput: boolean;
+      temporaryOutputPath: string;
+      taskGraph: TaskGraph;
+      env: NodeJS.ProcessEnv;
+    }
+  ) {
+    return this.forkProcessWithPrefixAndNotTTY(task, {
+      streamOutput,
+      temporaryOutputPath,
+      taskGraph,
+      env,
+    });
+  }
+
+  private forkProcessWithPrefixAndNotTTY(
     task: Task,
     {
       streamOutput,

@@ -403,7 +403,7 @@ export class TaskOrchestrator {
     try {
       // execution
       const { code, terminalOutput } =
-        process.env.NX_NATIVE_COMMAND_RUNNER === 'true'
+        process.env.NX_NATIVE_COMMAND_RUNNER !== 'false'
           ? await this.forkedProcessTaskRunner.forkProcessUsingNativeChildProcess(
               task,
               {

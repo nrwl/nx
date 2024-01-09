@@ -1,48 +1,68 @@
+/**
+ * Node IPC is specific to Node, but when spawning child processes in Rust, it won't have IPC.
+ *
+ * Thus, this is a wrapper which is spawned by Rust, which will create a Node IPC channel and pipe it to a ZeroMQ Channel
+ *
+ * Main Nx Process
+ *   * Calls Rust Fork Function
+ *     * `node fork.js`
+ *     * Create a Rust - Node.js Agnostic Channel aka Psuedo IPC Channel
+ *     * This returns RustChildProcess
+ *         * RustChildProcess.onMessage(msg => ());
+ *         * psuedo_ipc_channel.on_message() => tx.send(msg);
+ *   * Node.js Fork Wrapper (fork.js)
+ *     * fork(run-command.js) with `inherit` and `ipc`
+ *         * This will create a Node IPC Channel
+ *     * channel = getPsuedoIpcChannel(process.env.NX_IPC_CHANNEL_ID)
+ *     * forkChildProcess.on('message', writeToPsuedoIpcChannel)
+ */
+
 import { connect, Server, Socket } from 'net';
 import { consumeMessagesFromSocket } from '../utils/consume-messages-from-socket';
 import { Serializable } from 'child_process';
 
 export interface PsuedoIPCMessage {
-  type: 'TO_CHILDREN_FROM_PARENT' | 'TO_PARENT_FROM_CHILDREN';
+  type: 'TO_CHILDREN_FROM_PARENT' | 'TO_PARENT_FROM_CHILDREN' | 'CHILD_READY';
   id: string | undefined;
   message: Serializable;
 }
 
-export class PsuedoIPC {
-  sockets = new Set<Socket>();
-  server: Server | undefined;
-  parentSocket: Socket | undefined;
+export class PsuedoIPCServer {
+  private sockets = new Set<Socket>();
+  private server: Server | undefined;
 
-  childMessages: {
+  private childMessages: {
     onMessage: (message: Serializable) => void;
     onClose?: () => void;
     onError?: (err: Error) => void;
   }[] = [];
 
-  constructor(private path: string, private isParent: boolean) {}
+  constructor(private path: string) {}
 
   init(): Promise<void> {
     return new Promise((res) => {
-      if (this.isParent) {
-        this.server = new Server((socket) => {
-          console.log('client connected');
-          this.sockets.add(socket);
-          this._registerChildMessages(socket);
-          socket.on('close', () => {
-            this.sockets.delete(socket);
-          });
+      this.server = new Server((socket) => {
+        this.sockets.add(socket);
+        this.registerChildMessages(socket);
+        socket.on('close', () => {
+          this.sockets.delete(socket);
         });
-        this.server.listen(this.path, () => {
-          res();
-        });
-      } else {
-        this.parentSocket = connect(this.path);
+      });
+      this.server.listen(this.path, () => {
         res();
-      }
+      });
     });
   }
 
-  private _registerChildMessages(socket: Socket) {
+  private childReadyMap = new Map<string, () => void>();
+
+  async waitForChildReady(childId: string) {
+    return new Promise<void>((res) => {
+      this.childReadyMap.set(childId, res);
+    });
+  }
+
+  private registerChildMessages(socket: Socket) {
     socket.on(
       'data',
       consumeMessagesFromSocket(async (rawMessage) => {
@@ -50,6 +70,13 @@ export class PsuedoIPC {
         if (type === 'TO_PARENT_FROM_CHILDREN') {
           for (const childMessage of this.childMessages) {
             childMessage.onMessage(message);
+          }
+        } else if (type === 'CHILD_READY') {
+          const childId = message as string;
+          if (this.childReadyMap.has(childId)) {
+            this.childReadyMap.get(childId)();
+          } else {
+            throw new Error('What happened?');
           }
         }
       })
@@ -85,43 +112,6 @@ export class PsuedoIPC {
       socket.write(String.fromCodePoint(4));
     });
   }
-
-  sendMessageToParent(message: Serializable) {
-    this.sockets.forEach((socket) => {
-      socket.write(
-        JSON.stringify({ type: 'TO_PARENT_FROM_CHILDREN', message })
-      );
-      // send EOT to indicate that the message has been fully written
-      socket.write(String.fromCodePoint(4));
-    });
-  }
-
-  onMessageFromParent(
-    forkId: string,
-    onMessage: (message: Serializable) => void,
-    onClose: () => void = () => {},
-    onError: (err: Error) => void = (err) => {}
-  ) {
-    this.parentSocket.on(
-      'data',
-      consumeMessagesFromSocket(async (rawMessage) => {
-        const { id, type, message }: PsuedoIPCMessage = JSON.parse(rawMessage);
-        if (type === 'TO_CHILDREN_FROM_PARENT') {
-          if (id && id === forkId) {
-            onMessage(message);
-          } else if (id === undefined) {
-            onMessage(message);
-          }
-        }
-      })
-    );
-
-    this.parentSocket.on('close', onClose);
-    this.parentSocket.on('error', onError);
-
-    return this;
-  }
-
   onMessageFromChildren(
     onMessage: (message: Serializable) => void,
     onClose: () => void = () => {},
@@ -137,6 +127,58 @@ export class PsuedoIPC {
   close() {
     this.server?.close();
     this.sockets.forEach((s) => s.destroy());
-    this.parentSocket?.destroy();
+  }
+}
+
+export class PsuedoIPCClient {
+  private socket: Socket | undefined = connect(this.path);
+
+  constructor(private path: string) {}
+  sendMessageToParent(message: Serializable) {
+    this.socket.write(
+      JSON.stringify({ type: 'TO_PARENT_FROM_CHILDREN', message })
+    );
+    // send EOT to indicate that the message has been fully written
+    this.socket.write(String.fromCodePoint(4));
+  }
+
+  notifyChildIsReady(id: string) {
+    this.socket.write(
+      JSON.stringify({
+        type: 'CHILD_READY',
+        message: id,
+      } as PsuedoIPCMessage)
+    );
+    // send EOT to indicate that the message has been fully written
+    this.socket.write(String.fromCodePoint(4));
+  }
+
+  onMessageFromParent(
+    forkId: string,
+    onMessage: (message: Serializable) => void,
+    onClose: () => void = () => {},
+    onError: (err: Error) => void = (err) => {}
+  ) {
+    this.socket.on(
+      'data',
+      consumeMessagesFromSocket(async (rawMessage) => {
+        const { id, type, message }: PsuedoIPCMessage = JSON.parse(rawMessage);
+        if (type === 'TO_CHILDREN_FROM_PARENT') {
+          if (id && id === forkId) {
+            onMessage(message);
+          } else if (id === undefined) {
+            onMessage(message);
+          }
+        }
+      })
+    );
+
+    this.socket.on('close', onClose);
+    this.socket.on('error', onError);
+
+    return this;
+  }
+  close() {
+    this.socket?.destroy();
   }
 }

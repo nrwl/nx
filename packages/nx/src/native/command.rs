@@ -165,8 +165,11 @@ pub fn run_command(
     command: String,
     command_dir: Option<String>,
     js_env: Option<HashMap<String, String>>,
+    quiet: Option<bool>,
 ) -> napi::Result<ChildProcess> {
     let command_dir = get_directory(command_dir)?;
+
+    let quiet = quiet.unwrap_or(false);
 
     let pty_system = NativePtySystem::default();
 
@@ -187,7 +190,7 @@ pub fn run_command(
         }
     }
 
-    let mut child = pair.slave.spawn_command(cmd)?;
+    let child = pair.slave.spawn_command(cmd)?;
 
     // Release any handles owned by the slave
     // we don't need it now that we've spawned the child.
@@ -208,8 +211,10 @@ pub fn run_command(
             let content = String::from_utf8_lossy(&buffer[..n]);
             tx.send(content.to_string()).unwrap();
 
-            stdout.write_all(&buffer[..n]).unwrap();
-            stdout.flush().unwrap();
+            if (!quiet) {
+                stdout.write_all(&buffer[..n]).unwrap();
+                stdout.flush().unwrap();
+            }
         }
     });
 
@@ -223,11 +228,13 @@ pub fn nx_fork(
     psuedo_ipc_path: String,
     command_dir: Option<String>,
     js_env: Option<HashMap<String, String>>,
+    quiet: bool,
 ) -> napi::Result<ChildProcess> {
     let child_process = run_command(
         format!("node {} {} {}", fork_script, psuedo_ipc_path, id),
         command_dir,
         js_env,
+        Some(quiet),
     )?;
 
     Ok(child_process)
