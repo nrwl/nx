@@ -1906,6 +1906,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Storybook Inferred Targets",
+                "path": "/recipes/storybook/storybook-inferred-targets",
+                "id": "storybook-inferred-targets",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -1998,6 +2006,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Nuxt Inferred Targets",
+                "path": "/recipes/nuxt/nuxt-inferred-targets",
+                "id": "nuxt-inferred-targets",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -2012,6 +2028,14 @@
                 "name": "Configure Vite on your Nx workspace",
                 "path": "/recipes/vite/configure-vite",
                 "id": "configure-vite",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Vite Inferred Targets",
+                "path": "/recipes/vite/vite-inferred-targets",
+                "id": "vite-inferred-targets",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3243,6 +3267,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Storybook Inferred Targets",
+            "path": "/recipes/storybook/storybook-inferred-targets",
+            "id": "storybook-inferred-targets",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3339,6 +3371,14 @@
         "name": "Angular: Configuring styles and preprocessor options",
         "path": "/recipes/storybook/angular-configuring-styles",
         "id": "angular-configuring-styles",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Storybook Inferred Targets",
+        "path": "/recipes/storybook/storybook-inferred-targets",
+        "id": "storybook-inferred-targets",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3479,6 +3519,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Nuxt Inferred Targets",
+            "path": "/recipes/nuxt/nuxt-inferred-targets",
+            "id": "nuxt-inferred-targets",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3487,6 +3535,14 @@
         "name": "Deploying Nuxt applications to Vercel",
         "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
         "id": "deploy-nuxt-to-vercel",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nuxt Inferred Targets",
+        "path": "/recipes/nuxt/nuxt-inferred-targets",
+        "id": "nuxt-inferred-targets",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3504,6 +3560,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Vite Inferred Targets",
+            "path": "/recipes/vite/vite-inferred-targets",
+            "id": "vite-inferred-targets",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3512,6 +3576,14 @@
         "name": "Configure Vite on your Nx workspace",
         "path": "/recipes/vite/configure-vite",
         "id": "configure-vite",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Vite Inferred Targets",
+        "path": "/recipes/vite/vite-inferred-targets",
+        "id": "vite-inferred-targets",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
