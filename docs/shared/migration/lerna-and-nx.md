@@ -102,7 +102,7 @@ Nx works even without `nx.json` but to configure some more details such as the `
 Having done these steps, you can now keep using your Lerna repository as you did before. All the commands will work in a backwards compatible way but will be a lot faster. [Read our blog post for some benchmarks](https://blog.nrwl.io/lerna-used-to-walk-now-it-can-fly-eab7a0fe7700?source=friends_link&sk=6c827ec7c9adfc1c760ff2e3f3e05cc7).
 
 {% callout type="note" title="Enable remote caching?" %}
-This does not include distributed caching or distributed task execution powered by Nx Cloud. But you can easily add support for it if wanted. All that's required is `npx nx connect-to-nx-cloud`.
+This does not include remote caching or distributed task execution powered by Nx Cloud. But you can easily add support for it if wanted. All that's required is `npx nx connect-to-nx-cloud`.
 {% /callout %}
 
 ### Switch to the Nx native commands in your Lerna workspace

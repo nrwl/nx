@@ -4,7 +4,7 @@ import { parseCSV } from '../yargs-utils/shared-options';
 export const yargsInitCommand: CommandModule = {
   command: 'init',
   describe:
-    'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up distributed caching. For more info, check https://nx.dev/recipes/adopting-nx.',
+    'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up remote caching. For more info, check https://nx.dev/recipes/adopting-nx.',
   builder: (yargs) => withInitOptions(yargs),
   handler: async (args: any) => {
     await (await import('./init')).initHandler(args);
@@ -16,7 +16,7 @@ function withInitOptions(yargs: Argv) {
   return yargs
     .option('nxCloud', {
       type: 'boolean',
-      description: 'Set up distributed caching with Nx Cloud.',
+      description: 'Set up remote caching with Nx Cloud.',
     })
     .option('interactive', {
       describe: 'When false disables interactive input prompts for options.',

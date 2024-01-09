@@ -123,7 +123,7 @@ Enable the App Router for Next.js
 
 Type: `boolean`
 
-Enable distributed caching to make your CI faster
+Enable remote caching to make your CI faster
 
 ### packageManager
 

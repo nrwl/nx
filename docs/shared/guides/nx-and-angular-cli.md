@@ -43,7 +43,7 @@ Here's a quick side-by-side overview comparing the features between the Angular 
 | [Running Tasks in Parallel](/recipes/running-tasks/run-tasks-in-parallel)                                  | ❌              | ✅            |
 | Building, Testing [Only What is Affected](/core-features/run-tasks#run-tasks-on-projects-affected-by-a-pr) | ❌              | ✅            |
 | [Local Caching](/core-features/cache-task-results)                                                         | ❌\*\*          | ✅            |
-| [Distributed Caching](/ci/features/remote-cache)                                                           | ❌              | ✅            |
+| [Remote Caching](/ci/features/remote-cache)                                                                | ❌              | ✅            |
 | [Distributed Task Execution on CI](/ci/features/distribute-task-execution)                                 | ❌              | ✅            |
 | Custom Hashers                                                                                             | ❌              | ✅            |
 | [Extensible Plugin System](/extending-nx/intro/getting-started)                                            | ❌              | ✅            |

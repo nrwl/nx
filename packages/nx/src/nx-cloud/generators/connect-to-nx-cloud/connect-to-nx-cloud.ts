@@ -79,7 +79,7 @@ function printSuccessMessage(url: string) {
   } catch (e) {}
 
   output.note({
-    title: `Distributed caching via Nx Cloud has been enabled`,
+    title: `Remote caching via Nx Cloud has been enabled`,
     bodyLines: [
       `In addition to the caching, Nx Cloud provides config-free distributed execution,`,
       `UI for viewing complex runs and GitHub integration. Learn more at https://nx.app`,
