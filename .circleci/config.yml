@@ -87,9 +87,8 @@ jobs:
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
     steps:
-      - run: lscpu
       - checkout
-      - run: npx nx-cloud@next start-ci-run --distributes-on="8 linux-medium" --stop-agents-after="e2e"
+      - run: npx nx-cloud@next start-ci-run --distributes-on="8 linux-medium" --stop-agents-after="e2e" --with-env-vars="auto"
       - run:
           command: |
             sudo apt-get update
@@ -161,11 +160,6 @@ jobs:
           name: Run E2E Tests for macOS
           command: |
             pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
-          no_output_timeout: 45m
-      - run:
-          name: Close CI group
-          command: |
-            pnpm nx-cloud stop-all-agents
           no_output_timeout: 45m
 
 # -------------------------
