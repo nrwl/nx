@@ -58,7 +58,6 @@ export async function release(
     ...args,
     // if enabled, committing and tagging will be handled by the changelog
     // command, so we should only stage the changes in the version command
-    stageChanges: nxReleaseConfig.git?.commit,
     gitCommit: false,
     gitTag: false,
   });

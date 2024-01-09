@@ -76,12 +76,9 @@ export function createCommitMessageValues(
   releaseGroups: ReleaseGroupWithName[],
   releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>,
   versionData: VersionData,
-  userCommitMessage?: string
+  commitMessage: string
 ): string[] {
-  const defaultCommitMessage = `chore(release): publish {version}`;
-  const commitMessageValues = userCommitMessage
-    ? [userCommitMessage]
-    : [defaultCommitMessage];
+  const commitMessageValues = [commitMessage];
 
   if (releaseGroups.length === 0) {
     return commitMessageValues;
@@ -115,7 +112,7 @@ export function createCommitMessageValues(
   if (
     releaseGroups.length === 1 &&
     releaseGroups[0].projectsRelationship === 'independent' &&
-    userCommitMessage?.includes('{projectName}')
+    commitMessage?.includes('{projectName}')
   ) {
     const releaseGroup = releaseGroups[0];
     const releaseGroupProjectNames = Array.from(

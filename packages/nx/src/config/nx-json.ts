@@ -219,7 +219,12 @@ interface NxReleaseConfiguration {
     /**
      * Enable or override configuration for git operations as part of the version subcommand
      */
-    git?: NxReleaseGitConfiguration;
+    git?: NxReleaseGitConfiguration & {
+      /**
+       * Whether or not to stage the changes made by this command. Useful when combining the version command with changelog generation.
+       */
+      stageChanges?: boolean;
+    };
   };
   /**
    * Optionally override the git/release tag pattern to use. This field is the source of truth

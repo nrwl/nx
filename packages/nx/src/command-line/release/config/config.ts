@@ -99,11 +99,20 @@ export async function createNxReleaseConfig(
 
   const gitDefaults = {
     commit: false,
-    commitMessage: '',
+    commitMessage: 'chore(release): publish {version}',
     commitArgs: '',
     tag: false,
     tagMessage: '',
     tagArgs: '',
+  };
+  const versionGitDefaults: NxReleaseConfig['version']['git'] = {
+    ...gitDefaults,
+    stageChanges: true,
+  };
+  const changelogGitDefaults = {
+    ...gitDefaults,
+    commit: true,
+    tag: true,
   };
 
   const defaultFixedReleaseTagPattern = 'v{version}';
@@ -117,12 +126,12 @@ export async function createNxReleaseConfig(
     projectsRelationship: workspaceProjectsRelationship,
     git: gitDefaults,
     version: {
-      git: gitDefaults,
+      git: versionGitDefaults,
       generator: '@nx/js:release-version',
       generatorOptions: {},
     },
     changelog: {
-      git: gitDefaults,
+      git: changelogGitDefaults,
       workspaceChangelog: {
         createRelease: false,
         entryWhenNoChanges:

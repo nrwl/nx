@@ -120,7 +120,7 @@ export async function releaseVersion(
   const tree = new FsTree(workspaceRoot, args.verbose);
 
   const versionData: VersionData = {};
-  const userCommitMessage: string | undefined =
+  const commitMessage: string | undefined =
     args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
 
   if (args.projects?.length) {
@@ -180,10 +180,8 @@ export async function releaseVersion(
       };
     }
 
-    if (args.stageChanges) {
-      output.logSingleLine(
-        `Staging changed files with git because --stage-changes was set`
-      );
+    if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
+      output.logSingleLine(`Staging changed files with git`);
       await gitAdd({
         changedFiles,
         dryRun: args.dryRun,
@@ -200,7 +198,7 @@ export async function releaseVersion(
           releaseGroups,
           releaseGroupToFilteredProjects,
           versionData,
-          userCommitMessage
+          commitMessage
         ),
         args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
       );
@@ -294,10 +292,8 @@ export async function releaseVersion(
     };
   }
 
-  if (args.stageChanges) {
-    output.logSingleLine(
-      `Staging changed files with git because --stage-changes was set`
-    );
+  if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
+    output.logSingleLine(`Staging changed files with git`);
     await gitAdd({
       changedFiles,
       dryRun: args.dryRun,
@@ -314,7 +310,7 @@ export async function releaseVersion(
         releaseGroups,
         releaseGroupToFilteredProjects,
         versionData,
-        userCommitMessage
+        commitMessage
       ),
       args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
     );
