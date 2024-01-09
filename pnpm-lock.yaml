@@ -965,9 +965,6 @@ devDependencies:
   yargs-parser:
     specifier: 21.1.1
     version: 21.1.1
-  zeromq:
-    specifier: ^5.2.0
-    version: 5.3.1
 
 packages:
 
@@ -22100,10 +22097,6 @@ packages:
       thenify-all: 1.6.0
     dev: false
 
-  /nan@2.17.0:
-    resolution: {integrity: sha512-2ZTgtl0nJsO0KQCjEpxcIr5D+Yv90plTitZt9JBfQvVJDS5seMl3FOvsh3+9CoYWXf/1l5OaZzzF6nDm4cagaQ==}
-    dev: true
-
   /nanoid@3.3.6:
     resolution: {integrity: sha512-BGcqMMJuToF7i1rt+2PWSNVnWIkGCU78jBG3RxO/bZlnZPK2Cmi2QaffxGO/2RvWi9sL+FAiRiXMgsyxQ1DIDA==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
@@ -30027,15 +30020,6 @@ packages:
   /yocto-queue@1.0.0:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
-    dev: true
-
-  /zeromq@5.3.1:
-    resolution: {integrity: sha512-4WDF9bNWWXe8OAI319bVw5dmG4BklEk8wzFGwRQxEzKb+0mgDU5J/jtyZPo0BEusVIU1+3mRQIEdT5LtQn+aAw==}
-    engines: {node: '>=6.0'}
-    requiresBuild: true
-    dependencies:
-      nan: 2.17.0
-      node-gyp-build: 4.5.0
     dev: true
 
   /zone.js@0.14.0:

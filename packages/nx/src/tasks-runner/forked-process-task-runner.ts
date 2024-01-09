@@ -17,6 +17,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { Transform } from 'stream';
 import { ChildProcess as NativeChildProcess, nxFork } from '../native';
 import { PsuedoIPC } from './psuedo-ipc';
+import { FORKED_PROCESS_OS_SOCKET_PATH } from '../daemon/socket-utils';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -28,21 +29,15 @@ export class ForkedProcessTaskRunner {
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
   private processes = new Set<ChildProcess | NativeChildProcess>();
 
-  private psuedoIPCPath = join(
-    __dirname,
-    'fork-messengers',
-    process.pid.toString()
-  );
+  private psuedoIPCPath = FORKED_PROCESS_OS_SOCKET_PATH(process.pid.toString());
 
-  private psuedoIPC = new PsuedoIPC(this.psuedoIPCPath);
+  private psuedoIPC = new PsuedoIPC(this.psuedoIPCPath, true);
 
-  constructor(private readonly options: DefaultTasksRunnerOptions) {
-    this.setupProcessEventListeners();
-  }
+  constructor(private readonly options: DefaultTasksRunnerOptions) {}
 
   async init() {
-    // await this.publisher.init();
-    // this.subscriber.on('message', process.send(msg));
+    await this.psuedoIPC.init();
+    this.setupProcessEventListeners();
   }
 
   // TODO: vsavkin delegate terminal output printing
@@ -124,7 +119,7 @@ export class ForkedProcessTaskRunner {
     });
   }
 
-  public forkProcessUsingNativeChildProcess(
+  public async forkProcessUsingNativeChildProcess(
     task: Task,
     {
       temporaryOutputPath,
@@ -138,26 +133,39 @@ export class ForkedProcessTaskRunner {
       env: NodeJS.ProcessEnv;
     }
   ): Promise<{ code: number; terminalOutput: string }> {
-    return new Promise<{ code: number; terminalOutput: string }>((res, rej) => {
-      const args = getPrintableCommandArgsForTask(task);
-      if (streamOutput) {
-        output.logCommand(args.join(' '));
-        output.addNewline();
-      }
+    const args = getPrintableCommandArgsForTask(task);
+    if (streamOutput) {
+      output.logCommand(args.join(' '));
+      output.addNewline();
+    }
 
-      const p = nxFork(forkScript, this.psuedoIPCPath, process.cwd(), env);
-      this.processes.add(p);
+    let childId = task.id;
+    const p = nxFork(
+      childId,
+      forkScript,
+      this.psuedoIPCPath,
+      process.cwd(),
+      env
+    );
 
-      // This needs to be figured out
-      // p.onMessage((message) => {});
-
-      // Re-emit any messages from the task process
-      // p.on('message', (message) => {
-      //   if (process.send) {
-      //     process.send(message);
-      //   }
-      // });
+    this.psuedoIPC.sendMessageToChild(childId, {
+      targetDescription: task.target,
+      overrides: task.overrides,
+      taskGraph,
+      isVerbose: this.verbose,
     });
+    this.processes.add(p);
+
+    let terminalOutput = '';
+    p.onOutput((msg) => {
+      terminalOutput += msg;
+    });
+    const code = await p.wait();
+
+    return {
+      code,
+      terminalOutput,
+    };
   }
 
   public forkProcessPipeOutputCapture(

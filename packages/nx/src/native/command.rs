@@ -218,13 +218,14 @@ pub fn run_command(
 
 #[napi]
 pub fn nx_fork(
+    id: String,
     fork_script: String,
-    psudo_ipc_path: String,
+    psuedo_ipc_path: String,
     command_dir: Option<String>,
     js_env: Option<HashMap<String, String>>,
 ) -> napi::Result<ChildProcess> {
     let child_process = run_command(
-        format!("node {} {}", fork_script, psudo_ipc_path),
+        format!("node {} {} {}", fork_script, psuedo_ipc_path, id),
         command_dir,
         js_env,
     )?;

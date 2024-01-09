@@ -21,9 +21,10 @@ import { fork, Serializable } from 'child_process';
 
 // import { socket } from 'zeromq';
 import { join } from 'path';
-import { PsuedoIPC } from './psuedo-ipc';
+import { PsuedoIPC, PsuedoIPCMessage } from './psuedo-ipc';
 
 const psuedoIPCPath = process.argv[2];
+const forkId = process.argv[3];
 
 const script = join(__dirname, '../../bin/run-executor.js');
 
@@ -34,14 +35,21 @@ const childProcess = fork(script, {
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
 });
 
-const psuedoIPC = new PsuedoIPC(psuedoIPCPath);
+const psuedoIPC = new PsuedoIPC(psuedoIPCPath, false);
 
-psuedoIPC.onMessageFromParent((message) => {
-  childProcess.send(message);
+psuedoIPC.init().then(() => {
+  psuedoIPC.onMessageFromParent(forkId, (message) => {
+    childProcess.send(message);
+  });
+
+  process.on('message', (message: Serializable) => {
+    psuedoIPC.sendMessageToParent(message);
+  });
 });
 
-process.on('message', (message: Serializable) => {
-  psuedoIPC.sendMessageToParent(message);
+childProcess.on('exit', (code) => {
+  psuedoIPC.close();
+  process.exit(code);
 });
 
 // const subscriber = socket('sub');
