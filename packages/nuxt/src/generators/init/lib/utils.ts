@@ -28,6 +28,7 @@ export function updateDependencies(host: Tree, schema: InitSchema) {
     '@nuxt/devtools': nuxtDevtoolsVersion,
     '@nuxt/kit': nuxtVersion,
     '@nuxt/ui-templates': nuxtUiTemplatesVersion,
+    nuxi: nuxtVersion,
     nuxt: nuxtVersion,
     h3: h3Version,
     vue: vueVersion,
