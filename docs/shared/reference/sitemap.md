@@ -133,6 +133,7 @@
       - [Setting up Storybook Composition with Nx](/recipes/storybook/storybook-composition-setup)
       - [Angular: Set up Compodoc for Storybook on Nx](/recipes/storybook/angular-storybook-compodoc)
       - [Angular: Configuring styles and preprocessor options](/recipes/storybook/angular-configuring-styles)
+      - [Storybook Inferred Targets](/recipes/storybook/storybook-inferred-targets)
     - [Cypress](/recipes/cypress)
       - [Component Testing](/recipes/cypress/cypress-component-testing)
       - [Cypress v11 Migration Guide](/recipes/cypress/cypress-v11-migration)

@@ -2612,6 +2612,17 @@
             "isExternal": false,
             "path": "/recipes/storybook/angular-configuring-styles",
             "tags": ["storybook"]
+          },
+          {
+            "id": "storybook-inferred-targets",
+            "name": "Storybook Inferred Targets",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/storybook/storybook-inferred-targets",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/storybook/storybook-inferred-targets",
+            "tags": ["inferred-targets"]
           }
         ],
         "isExternal": false,
@@ -4465,6 +4476,17 @@
         "isExternal": false,
         "path": "/recipes/storybook/angular-configuring-styles",
         "tags": ["storybook"]
+      },
+      {
+        "id": "storybook-inferred-targets",
+        "name": "Storybook Inferred Targets",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/storybook/storybook-inferred-targets",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/storybook/storybook-inferred-targets",
+        "tags": ["inferred-targets"]
       }
     ],
     "isExternal": false,
@@ -4602,6 +4624,17 @@
     "isExternal": false,
     "path": "/recipes/storybook/angular-configuring-styles",
     "tags": ["storybook"]
+  },
+  "/recipes/storybook/storybook-inferred-targets": {
+    "id": "storybook-inferred-targets",
+    "name": "Storybook Inferred Targets",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/storybook/storybook-inferred-targets",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/storybook/storybook-inferred-targets",
+    "tags": ["inferred-targets"]
   },
   "/recipes/cypress": {
     "id": "cypress",

@@ -1906,6 +1906,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Storybook Inferred Targets",
+                "path": "/recipes/storybook/storybook-inferred-targets",
+                "id": "storybook-inferred-targets",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -3259,6 +3267,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Storybook Inferred Targets",
+            "path": "/recipes/storybook/storybook-inferred-targets",
+            "id": "storybook-inferred-targets",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3355,6 +3371,14 @@
         "name": "Angular: Configuring styles and preprocessor options",
         "path": "/recipes/storybook/angular-configuring-styles",
         "id": "angular-configuring-styles",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Storybook Inferred Targets",
+        "path": "/recipes/storybook/storybook-inferred-targets",
+        "id": "storybook-inferred-targets",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

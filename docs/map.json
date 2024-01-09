@@ -808,6 +808,12 @@
                   "tags": ["storybook"],
                   "description": "This document explains how to configure styles and preprocessor options in Angular projects with a Storybook configuration.",
                   "file": "shared/recipes/storybook/angular-configuring-styles"
+                },
+                {
+                  "name": "Storybook Inferred Targets",
+                  "id": "storybook-inferred-targets",
+                  "tags": ["inferred-targets"],
+                  "file": "shared/recipes/storybook/storybook-inferred-targets"
                 }
               ]
             },
