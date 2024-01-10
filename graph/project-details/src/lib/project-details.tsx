@@ -123,22 +123,22 @@ export function ProjectDetails({
   );
 }
 
-function sortObjectWithTargetsFirst(obj: any) {
-  let sortedObj: any = {};
+// function sortObjectWithTargetsFirst(obj: any) {
+//   let sortedObj: any = {};
 
-  // If 'targets' exists, set it as the first property
-  if (obj.hasOwnProperty('targets')) {
-    sortedObj.targets = obj.targets;
-  }
+//   // If 'targets' exists, set it as the first property
+//   if (obj.hasOwnProperty('targets')) {
+//     sortedObj.targets = obj.targets;
+//   }
 
-  // Copy the rest of the properties
-  for (let key in obj) {
-    if (key !== 'targets') {
-      sortedObj[key] = obj[key];
-    }
-  }
+//   // Copy the rest of the properties
+//   for (let key in obj) {
+//     if (key !== 'targets') {
+//       sortedObj[key] = obj[key];
+//     }
+//   }
 
-  return sortedObj;
-}
+//   return sortedObj;
+// }
 
 export default ProjectDetails;

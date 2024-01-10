@@ -106,13 +106,6 @@ function PropertyValueRenderer(props: PropertValueRendererProps) {
   }
 }
 
-type PropertyKeyRendererProps = PropertyRendererProps;
-function PropertyKeyRenderer(props: PropertyKeyRendererProps) {}
-
-function isPrimitive(value: any): boolean {
-  return !Array.isArray(value) && typeof value !== 'object';
-}
-
 function renderOpening(value: any): string {
   return Array.isArray(value) && value.length
     ? '['
