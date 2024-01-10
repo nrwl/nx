@@ -101,7 +101,7 @@ async function buildViteTargets(
     configFilePath
   );
 
-  const { buildOutputs, testOutputs } = getOutputs(
+  const { buildOutputs, testOutputs, hasTest } = getOutputs(
     viteConfig?.config,
     projectRoot
   );
@@ -110,6 +110,7 @@ async function buildViteTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  // If file is not vitest.config, create targets for build, serve, preview and serve-static
   if (!configFilePath.includes('vitest.config')) {
     targets[options.buildTargetName] = await buildTarget(
       options.buildTargetName,
@@ -125,11 +126,14 @@ async function buildViteTargets(
     targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
   }
 
-  targets[options.testTargetName] = await testTarget(
-    namedInputs,
-    testOutputs,
-    projectRoot
-  );
+  // if file is vitest.config or vite.config has definition for test, create target for test
+  if (configFilePath.includes('vitest.config') || hasTest) {
+    targets[options.testTargetName] = await testTarget(
+      namedInputs,
+      testOutputs,
+      projectRoot
+    );
+  }
 
   return targets;
 }
@@ -221,6 +225,7 @@ function getOutputs(
 ): {
   buildOutputs: string[];
   testOutputs: string[];
+  hasTest: boolean;
 } {
   const { build, test } = viteConfig;
 
@@ -239,6 +244,7 @@ function getOutputs(
   return {
     buildOutputs: [buildOutputPath],
     testOutputs: [reportsDirectoryPath],
+    hasTest: !!test,
   };
 }
 
