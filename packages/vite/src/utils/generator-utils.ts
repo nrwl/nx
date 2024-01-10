@@ -212,9 +212,6 @@ export function addOrChangeBuildTarget(
   project.targets ??= {};
 
   if (project.targets[target]) {
-    buildOptions.fileReplacements =
-      project.targets[target].options?.fileReplacements;
-
     if (project.targets[target].executor === '@nxext/vite:build') {
       buildOptions['base'] = project.targets[target].options?.baseHref;
       buildOptions['sourcemap'] = project.targets[target].options?.sourcemaps;
