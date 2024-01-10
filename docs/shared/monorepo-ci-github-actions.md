@@ -174,7 +174,7 @@ jobs:
           }
 
           # list of commands to be run on main has env flag NX_CLOUD_DISTRIBUTED_EXECUTION set to false
-          NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx-cloud record -- run_command "npx nx format:check"
+          run_command "NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx-cloud record -- npx nx format:check"
 
           # list of commands to be run on agents
           run_command "npx nx affected -t lint,test,build --parallel=3"
@@ -186,7 +186,7 @@ jobs:
             fi
           done
 
-          exit 0 # exist with success status if a all processes complete successfully
+          exit 0 # exits with success status if a all processes complete successfully
 
   agents:
     name: Agent ${{ matrix.agent }}
