@@ -87,6 +87,112 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
     });
   });
 
+  describe('stageChanges', () => {
+    it('should set version.stageChanges to false if committing is not explicitly enabled', () => {
+      writeJson(tree, 'nx.json', {
+        release: {},
+      });
+
+      nxReleaseGitOperationsExplicitOptOut(tree);
+
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.release).toEqual({
+        git: {
+          commit: false,
+          tag: false,
+        },
+        version: {
+          git: {
+            stageChanges: false,
+          },
+        },
+      });
+    });
+
+    it('should not set version.stageChanges if committing is enabled globally', () => {
+      writeJson(tree, 'nx.json', {
+        release: {
+          git: {
+            commit: true,
+            tag: false,
+          },
+        },
+      });
+
+      nxReleaseGitOperationsExplicitOptOut(tree);
+
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.release).toEqual({
+        git: {
+          commit: true,
+          tag: false,
+        },
+      });
+    });
+
+    it('should not set version.stageChanges if committing is enabled in version', () => {
+      writeJson(tree, 'nx.json', {
+        release: {
+          git: {
+            commit: false,
+            tag: false,
+          },
+          version: {
+            git: {
+              commit: true,
+            },
+          },
+        },
+      });
+
+      nxReleaseGitOperationsExplicitOptOut(tree);
+
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.release).toEqual({
+        git: {
+          commit: false,
+          tag: false,
+        },
+        version: {
+          git: {
+            commit: true,
+          },
+        },
+      });
+    });
+
+    it('should not set version.stageChanges if committing is enabled in changelog', () => {
+      writeJson(tree, 'nx.json', {
+        release: {
+          git: {
+            commit: false,
+            tag: false,
+          },
+          changelog: {
+            git: {
+              commit: true,
+            },
+          },
+        },
+      });
+
+      nxReleaseGitOperationsExplicitOptOut(tree);
+
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.release).toEqual({
+        git: {
+          commit: false,
+          tag: false,
+        },
+        changelog: {
+          git: {
+            commit: true,
+          },
+        },
+      });
+    });
+  });
+
   describe('consolidation', () => {
     it('should consolidate version.git and changelog.git if they both exist and have matching true values', () => {
       writeJson<NxJsonConfiguration>(tree, 'nx.json', {
@@ -150,6 +256,11 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
         git: {
           commit: false,
           tag: false,
+        },
+        version: {
+          git: {
+            stageChanges: false,
+          },
         },
       });
     });

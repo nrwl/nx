@@ -48,6 +48,21 @@ export default function nxReleaseGitOperationsExplicitOptOut(tree: Tree) {
       delete nxJson.release.changelog.git.tag;
     }
 
+    // Opt out of staging changes in version if committing is not configured
+    if (
+      !nxJson.release.git.commit &&
+      !nxJson.release.version?.git?.commit &&
+      !nxJson.release.changelog?.git?.commit
+    ) {
+      nxJson.release.version = {
+        ...nxJson.release.version,
+        git: {
+          ...nxJson.release.version?.git,
+          stageChanges: false,
+        },
+      };
+    }
+
     // Ensure that we don't leave any empty object properties in their config
     removeIfEmpty(nxJson.release.version, 'git');
     removeIfEmpty(nxJson.release.changelog, 'git');
