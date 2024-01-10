@@ -1,6 +1,5 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
 jest.mock('vite', () => ({
   loadConfigFromFile: jest.fn().mockImplementation(() => {
@@ -9,6 +8,16 @@ jest.mock('vite', () => ({
       config: {},
       dependencies: [],
     });
+  }),
+}));
+
+jest.mock('../utils/executor-utils', () => ({
+  loadViteDynamicImport: jest.fn().mockResolvedValue({
+    loadConfigFromFile: jest.fn().mockResolvedValue({
+      path: 'vitest.config.ts',
+      config: {},
+      dependencies: [],
+    }),
   }),
 }));
 

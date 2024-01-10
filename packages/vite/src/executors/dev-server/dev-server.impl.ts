@@ -10,7 +10,10 @@ import {
 } from '../../utils/options-utils';
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
-import { createBuildableTsConfig } from '../../utils/executor-utils';
+import {
+  createBuildableTsConfig,
+  loadViteDynamicImport,
+} from '../../utils/executor-utils';
 import { relative } from 'path';
 import { getBuildExtraArgs } from '../build/build.impl';
 
@@ -20,9 +23,8 @@ export async function* viteDevServerExecutor(
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, createServer, loadConfigFromFile } = await (Function(
-    'return import("vite")'
-  )() as Promise<typeof import('vite')>);
+  const { mergeConfig, createServer, loadConfigFromFile } =
+    await loadViteDynamicImport();
 
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;

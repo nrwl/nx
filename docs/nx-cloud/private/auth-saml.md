@@ -1,6 +1,6 @@
 # SAML Auth
 
-SAML support for NxCloud is an addon for Nx Enterprise contracts and requires an unlock key. Please [get in touch](mailto:cloud-support@nrwl.io)
+SAML support for Nx Cloud is an addon for Nx Enterprise contracts and requires an unlock key. Please [get in touch](mailto:cloud-support@nrwl.io)
 if you are interested.
 
 ### Jump To
@@ -55,7 +55,7 @@ if you are interested.
 
     1. **“Namespace”** needs to be blank
     2. **“Name:”** needs to be “email”
-    3. See screenshot below. This is an important step, because NxCloud will expect the “email” property on each profile that logs in.
+    3. See screenshot below. This is an important step, because Nx Cloud will expect the “email” property on each profile that logs in.
 
     ![Step 11](/nx-cloud/private/images/saml/azure_11.png)
 
@@ -70,7 +70,7 @@ if you are interested.
 
     ![Step 13](/nx-cloud/private/images/saml/azure_13.png)
 
-14. Then add these two env vars to your NxCloud cluster secrets (see [Helm config](#helm-config) below):
+14. Then add these two env vars to your Nx Cloud cluster secrets (see [Helm config](#helm-config) below):
     1. `SAML_CERT=<your-cert-string-from-above>`
     2. `SAML_ENTRY_POINT=<your-login-url-from-above>`
 
@@ -88,7 +88,7 @@ if you are interested.
 
 3. On the Next page, configure it as below:
 
-   1. The Single Sign On URL needs to point to your NxCloud instance URL and ends with `/auth/saml/callback`
+   1. The Single Sign On URL needs to point to your Nx Cloud instance URL and ends with `/auth/saml/callback`
    2. The Audience should be `nx-private-cloud`
 
    ![Okta 4](/nx-cloud/private/images/saml/okta_4.png)
@@ -98,9 +98,9 @@ if you are interested.
    ![Okta 5](/nx-cloud/private/images/saml/okta_5.png)
 
 5. Click “Next”, and select the first option on the next screen.
-6. Go to the assignments tab and assign the users that can login to the NxCloud WebApp:
+6. Go to the assignments tab and assign the users that can login to the Nx Cloud WebApp:
 
-   1. **Note:** This just gives them permission to use the NxCloud web app with their own workspace. Users will still need to be invited manually through the web app to your main workspace.
+   1. **Note:** This just gives them permission to use the Nx Cloud web app with their own workspace. Users will still need to be invited manually through the web app to your main workspace.
 
    ![Okta 6](/nx-cloud/private/images/saml/okta_6.png)
 
@@ -136,7 +136,7 @@ if you are interested.
 
 ## Helm config
 
-If you are using [Helm to deploy NxCloud](https://github.com/nrwl/nx-cloud-helm) you
+If you are using [Helm to deploy Nx Cloud](https://github.com/nrwl/nx-cloud-helm) you
 will need to configure the below two values, as well as make the `SAML_CERT` and `SAML_ENTRY_POINT`
 env vars as secrets:
 

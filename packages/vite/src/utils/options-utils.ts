@@ -7,6 +7,7 @@ import {
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
+import { loadViteDynamicImport } from './executor-utils';
 
 /**
  * Returns the path to the vite config file or undefined when not found.
@@ -91,9 +92,7 @@ export async function getViteServerOptions(
 ): Promise<Record<string, unknown>> {
   // returns vite ServerOptions
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { searchForWorkspaceRoot } = await (Function(
-    'return import("vite")'
-  )() as Promise<typeof import('vite')>);
+  const { searchForWorkspaceRoot } = await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   const serverOptions: Record<string, unknown> = {

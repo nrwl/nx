@@ -42,15 +42,7 @@ export async function connectToNxCloudIfExplicitlyAsked(
   }
 }
 
-export interface ConnectToNxCloudOptions {
-  interactive: boolean;
-  promptOverride?: string;
-}
-
-export async function connectToNxCloudCommand({
-  promptOverride,
-  interactive,
-}: ConnectToNxCloudOptions): Promise<boolean> {
+export async function connectToNxCloudCommand(): Promise<boolean> {
   const nxJson = readNxJson();
   if (isNxCloudUsed(nxJson)) {
     output.log({
@@ -68,15 +60,13 @@ export async function connectToNxCloudCommand({
     return false;
   }
 
-  const res = interactive ? await connectToNxCloudPrompt(promptOverride) : true;
-  if (!res) return false;
   runNxSync(`g nx:connect-to-nx-cloud --quiet --no-interactive`, {
     stdio: [0, 1, 2],
   });
   return true;
 }
 
-async function connectToNxCloudPrompt(prompt?: string) {
+export async function connectToNxCloudPrompt(prompt?: string) {
   return await (
     await import('enquirer')
   )

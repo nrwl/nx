@@ -199,5 +199,6 @@
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "cacheDirectory": "/tmp/nx-cache"
+  "cacheDirectory": "/tmp/nx-cache",
+  "bust": 2
 }

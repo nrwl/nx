@@ -5,7 +5,7 @@ export function Footer(): JSX.Element {
   const navigation = {
     solutions: [
       { name: 'Nx', href: 'https://nx.dev' },
-      { name: 'NxCloud', href: 'https://nx.app/?utm_source=nx.dev' },
+      { name: 'Nx Cloud', href: 'https://nx.app/?utm_source=nx.dev' },
     ],
     resources: [
       { name: 'Blog', href: 'https://blog.nrwl.io/?utm_source=nx.dev' },

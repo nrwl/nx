@@ -707,5 +707,109 @@ describe('nx release - independent projects', () => {
         ).length
       ).toEqual(1);
     });
+
+    it('should allow versioning projects independently with conventional commits', async () => {
+      updateJson('nx.json', () => {
+        return {
+          release: {
+            projectsRelationship: 'independent',
+            releaseTagPattern: '{projectName}@v{version}',
+            version: {
+              generatorOptions: {
+                // added specifierSource to ensure conventional commits are used
+                specifierSource: 'conventional-commits',
+                currentVersionResolver: 'git-tag',
+              },
+            },
+            changelog: {
+              projectChangelogs: {},
+            },
+          },
+        };
+      });
+
+      runCommand(`git tag ${pkg1}@v1.3.0`);
+      runCommand(`git tag ${pkg2}@v1.5.0`);
+      runCommand(`git tag ${pkg3}@v1.7.0`);
+
+      // update my-pkg-1 with a feature commit
+      updateJson(`${pkg1}/package.json`, (json) => ({
+        ...json,
+        license: 'MIT',
+      }));
+      runCommand(`git add ${pkg1}/package.json`);
+      runCommand(`git commit -m "feat(${pkg1}): new feature 1"`);
+
+      // update my-pkg-3 with a feature commit
+      updateJson(`${pkg3}/package.json`, (json) => ({
+        ...json,
+        license: 'GNU GPLv3',
+      }));
+      runCommand(`git add ${pkg3}/package.json`);
+      runCommand(`git commit -m "feat(${pkg3}): new feat 3"`);
+
+      // set 1.8.0 as the current version for package 3
+      runCommand(`git tag ${pkg3}@v1.8.0`);
+
+      // update my-pkg-3 with a fix commit
+      updateJson(`${pkg3}/package.json`, (json) => ({
+        ...json,
+        license: 'MIT',
+      }));
+      runCommand(`git add ${pkg3}/package.json`);
+      runCommand(`git commit -m "fix(${pkg3}): new fix 3"`);
+
+      const releaseOutput = runCLI(`release -y`);
+
+      expect(
+        releaseOutput.match(
+          new RegExp(
+            `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
+            'g'
+          )
+        ).length
+      ).toEqual(1);
+      expect(
+        releaseOutput.match(
+          new RegExp(`New version 1\\.4\\.0 written to my-pkg-1\\d*`, 'g')
+        ).length
+      ).toEqual(1);
+      expect(
+        releaseOutput.match(
+          new RegExp(`- \\*\\*${pkg1}:\\*\\* new feature 1`, 'g')
+        ).length
+      ).toEqual(1);
+
+      expect(
+        releaseOutput.match(
+          new RegExp(
+            `Resolved the specifier as "patch" using git history and the conventional commits standard.`,
+            'g'
+          )
+        ).length
+      ).toEqual(1);
+      expect(
+        releaseOutput.match(
+          new RegExp(`New version 1\\.8\\.1 written to my-pkg-3\\d*`, 'g')
+        ).length
+      ).toEqual(1);
+      expect(
+        releaseOutput.match(new RegExp(`- \\*\\*${pkg3}:\\*\\* new fix 3`, 'g'))
+          .length
+      ).toEqual(1);
+
+      expect(
+        releaseOutput.match(new RegExp(`Generating an entry in `, 'g')).length
+      ).toEqual(2);
+
+      expect(
+        releaseOutput.match(
+          new RegExp(
+            `Successfully ran target nx-release-publish for 3 projects`,
+            'g'
+          )
+        ).length
+      ).toEqual(1);
+    });
   });
 });

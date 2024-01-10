@@ -940,5 +940,123 @@ ${JSON.stringify(
         )
       ).length
     ).toEqual(1);
+
+    // define two release groups that are released separately to ensure the --from ref is selected correctly
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          group1: {
+            projects: [pkg1],
+            releaseTagPattern: 'xx-{version}',
+          },
+          group2: {
+            projects: [pkg2, pkg3],
+            releaseTagPattern: 'zz-{version}',
+          },
+        },
+        git: {
+          commit: true,
+          commitMessage: 'chore(release): release {version}',
+          tag: true,
+        },
+        version: {
+          generatorOptions: {
+            specifierSource: 'conventional-commits',
+            currentVersionResolver: 'git-tag',
+          },
+        },
+        changelog: {
+          projectChangelogs: {},
+        },
+      };
+      return nxJson;
+    });
+
+    await runCommandAsync(`git tag zz-1300.0.0`);
+    await runCommandAsync(`git tag xx-1400.0.0`);
+
+    // update my-pkg-1 with a feature commit
+    updateJson(`${pkg1}/package.json`, (json) => ({
+      ...json,
+      license: 'MIT',
+    }));
+    await runCommandAsync(`git add ${pkg1}/package.json`);
+    await runCommandAsync(`git commit -m "feat(${pkg1}): new feature 1"`);
+
+    // update my-pkg-3 with a feature commit
+    updateJson(`${pkg3}/package.json`, (json) => ({
+      ...json,
+      license: 'GNU GPLv3',
+    }));
+    await runCommandAsync(`git add ${pkg3}/package.json`);
+    await runCommandAsync(`git commit -m "feat(${pkg3}): new feat 3"`);
+
+    // set 1300.1.0 as the latest version for group2
+    const releaseOutput2 = runCLI(`release version --group=group2`);
+    expect(
+      releaseOutput2.match(
+        new RegExp(
+          `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+    expect(
+      releaseOutput2.match(new RegExp(`New version 1300\.1\.0 written to`, 'g'))
+        .length
+    ).toEqual(2);
+
+    // update my-pkg-3 with a fix commit
+    updateJson(`${pkg3}/package.json`, (json) => ({
+      ...json,
+      license: 'MIT',
+    }));
+    await runCommandAsync(`git add ${pkg3}/package.json`);
+    await runCommandAsync(`git commit -m "fix(${pkg3}): new fix 2"`);
+
+    const releaseOutput3 = runCLI(`release -y`);
+
+    expect(
+      releaseOutput3.match(
+        new RegExp(
+          `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+    expect(
+      releaseOutput3.match(
+        new RegExp(`New version 1400\\.1\\.0 written to`, 'g')
+      ).length
+    ).toEqual(1);
+    expect(
+      releaseOutput3.match(
+        new RegExp(`- \\*\\*${pkg1}:\\*\\* new feature 1`, 'g')
+      ).length
+    ).toEqual(1);
+
+    expect(
+      releaseOutput3.match(
+        new RegExp(
+          `Resolved the specifier as "patch" using git history and the conventional commits standard.`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+    expect(
+      releaseOutput3.match(
+        new RegExp(`New version 1300\\.1\\.1 written to`, 'g')
+      ).length
+    ).toEqual(2);
+    expect(
+      releaseOutput3.match(new RegExp(`- \\*\\*${pkg3}:\\*\\* new fix 2`, 'g'))
+        .length
+    ).toEqual(1);
+
+    expect(
+      releaseOutput3.match(
+        new RegExp(`Successfully ran target nx-release-publish for`, 'g')
+      ).length
+    ).toEqual(2);
   }, 500000);
 });

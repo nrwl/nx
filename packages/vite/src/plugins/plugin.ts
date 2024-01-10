@@ -11,11 +11,11 @@ import {
 } from '@nx/devkit';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { loadConfigFromFile, UserConfig } from 'vite';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
+import { loadViteDynamicImport } from '../utils/executor-utils';
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -92,6 +92,7 @@ async function buildViteTargets(
   options: VitePluginOptions,
   context: CreateNodesContext
 ) {
+  const { loadConfigFromFile } = await loadViteDynamicImport();
   const viteConfig = await loadConfigFromFile(
     {
       command: 'build',
@@ -215,7 +216,7 @@ function serveStaticTarget(options: VitePluginOptions) {
 }
 
 function getOutputs(
-  viteConfig: UserConfig,
+  viteConfig: Record<string, any> | undefined,
   projectRoot: string
 ): {
   buildOutputs: string[];
