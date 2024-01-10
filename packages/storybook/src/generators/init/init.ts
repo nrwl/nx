@@ -37,6 +37,10 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
   // base deps
   devDependencies['@nx/storybook'] = nxVersion;
 
+  // for @nx/web:file-server
+  // TODO: remove when we figure out another solution
+  devDependencies['@nx/web'] = nxVersion;
+
   let storybook7VersionToInstall = storybookVersion;
   if (
     storybookMajorVersion() >= 7 &&

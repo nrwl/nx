@@ -34,6 +34,7 @@ import {
   updateUnitTestConfig,
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
+import { nxVersion } from '@nx/vite';
 
 export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
   const options = await normalizeOptions(tree, _options);
@@ -271,11 +272,7 @@ function addFileServerTarget(
   options: NormalizedSchema,
   targetName: string
 ) {
-  addDependenciesToPackageJson(
-    tree,
-    {},
-    { '@nx/web': getPackageVersion(tree, 'nx') }
-  );
+  addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
 
   const projectConfig = readProjectConfiguration(tree, options.projectName);
   projectConfig.targets[targetName] = {

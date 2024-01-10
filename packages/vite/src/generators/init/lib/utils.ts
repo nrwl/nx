@@ -37,6 +37,10 @@ export function checkDependenciesInstalled(
   devDependencies['vitest'] = vitestVersion;
   devDependencies['@vitest/ui'] = vitestVersion;
 
+  // for @nx/web:file-server
+  // TODO: remove when we figure out another solution
+  devDependencies['@nx/web'] = nxVersion;
+
   if (schema.testEnvironment === 'jsdom') {
     devDependencies['jsdom'] = jsdomVersion;
   } else if (schema.testEnvironment === 'happy-dom') {

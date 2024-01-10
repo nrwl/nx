@@ -51,7 +51,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
         },
       },
     });
-    tree.write('apps/app3/webpack.config.js', 'some content');
+    tree.write('apps/app3/webpack.config.js', `console.log("some content");`);
 
     addProjectConfiguration(tree, 'app4', {
       root: 'apps/app4',
@@ -64,22 +64,29 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
         },
       },
     });
-    tree.write('some/random/path/webpack.something.ts', 'some content');
+    tree.write(
+      'some/random/path/webpack.something.ts',
+      `console.log("some content");`
+    );
 
     await webpackConfigSetup(tree);
 
     expect(tree.read('apps/app3/webpack.config.js', 'utf-8')).toMatchSnapshot();
-    expect(
-      tree.read('apps/app3/webpack.config.old.js', 'utf-8')
-    ).toMatchInlineSnapshot(`"some content"`);
+    expect(tree.read('apps/app3/webpack.config.old.js', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "console.log('some content');
+      "
+    `);
 
     expect(
       tree.read('some/random/path/webpack.something.ts', 'utf-8')
     ).toMatchSnapshot();
 
-    expect(
-      tree.read('some/random/path/webpack.something.old.ts', 'utf-8')
-    ).toMatchInlineSnapshot(`"some content"`);
+    expect(tree.read('some/random/path/webpack.something.old.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "console.log('some content');
+      "
+    `);
   });
 
   it('should update the project configuration - executor options', async () => {
@@ -114,7 +121,7 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
       },
     });
 
-    tree.write('apps/app3/webpack.config.js', 'some content');
+    tree.write('apps/app3/webpack.config.js', `console.log("some content");`);
 
     addProjectConfiguration(tree, 'app4', {
       root: 'apps/app4',
@@ -127,7 +134,10 @@ describe('15.6.3 migration (setup webpack.config file)', () => {
         },
       },
     });
-    tree.write('some/random/path/webpack.something.ts', 'some content');
+    tree.write(
+      'some/random/path/webpack.something.ts',
+      `console.log("some content");`
+    );
 
     await webpackConfigSetup(tree);
 

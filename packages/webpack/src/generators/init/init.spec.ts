@@ -20,6 +20,7 @@ describe('webpackInitGenerator', () => {
         '@swc/helpers': expect.any(String),
       },
       devDependencies: {
+        '@nx/web': expect.any(String),
         '@nx/webpack': expect.any(String),
         '@swc/cli': expect.any(String),
         '@swc/core': expect.any(String),
@@ -36,6 +37,7 @@ describe('webpackInitGenerator', () => {
       name: expect.any(String),
       dependencies: {},
       devDependencies: {
+        '@nx/web': expect.any(String),
         '@nx/webpack': expect.any(String),
         tslib: expect.any(String),
       },

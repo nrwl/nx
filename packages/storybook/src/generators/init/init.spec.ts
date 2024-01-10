@@ -433,6 +433,7 @@ describe('@nx/storybook:init', () => {
       expect(Object.keys(packageJson.devDependencies)).toEqual([
         '@nx/js',
         '@nx/storybook',
+        '@nx/web',
         '@storybook/addon-essentials',
         '@storybook/core-server',
         '@swc-node/register',

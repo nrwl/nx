@@ -27,6 +27,9 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   const devDependencies = {
     '@nx/webpack': nxVersion,
+    // for @nx/web:file-server
+    // TODO: remove when we figure out another solution
+    '@nx/web': nxVersion,
   };
 
   if (shouldAddPlugin) {
