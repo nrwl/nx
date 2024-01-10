@@ -29,27 +29,12 @@ export default function nxReleaseGitOperationsExplicitOptOut(tree: Tree) {
       nxJson.release.git.tag = false;
     }
 
-    // Consolidate version.git and changelog.git if they have matching values
+    // Opt out of staging changes in version only if using
+    // granular git config AND if committing is not enabled.
+    // We don't want to add granular git config if it doesn't already exist,
+    // because the nx release meta command is incompatible with it.
     if (
-      nxJson.release.version?.git?.commit !== undefined &&
-      nxJson.release.version?.git?.commit ===
-        nxJson.release.changelog?.git?.commit
-    ) {
-      nxJson.release.git.commit = nxJson.release.version.git.commit;
-      delete nxJson.release.version.git.commit;
-      delete nxJson.release.changelog.git.commit;
-    }
-    if (
-      nxJson.release.version?.git?.tag !== undefined &&
-      nxJson.release.version?.git?.tag === nxJson.release.changelog?.git?.tag
-    ) {
-      nxJson.release.git.tag = nxJson.release.version.git.tag;
-      delete nxJson.release.version.git.tag;
-      delete nxJson.release.changelog.git.tag;
-    }
-
-    // Opt out of staging changes in version if committing is not configured
-    if (
+      (nxJson.release.version?.git || nxJson.release.changelog?.git) &&
       !nxJson.release.git.commit &&
       !nxJson.release.version?.git?.commit &&
       !nxJson.release.changelog?.git?.commit
@@ -64,21 +49,10 @@ export default function nxReleaseGitOperationsExplicitOptOut(tree: Tree) {
     }
 
     // Ensure that we don't leave any empty object properties in their config
-    removeIfEmpty(nxJson.release.version, 'git');
-    removeIfEmpty(nxJson.release.changelog, 'git');
-    removeIfEmpty(nxJson.release, 'version');
-    removeIfEmpty(nxJson.release, 'changelog');
-    removeIfEmpty(nxJson.release, 'git');
+    if (Object.keys(nxJson.release.git).length === 0) {
+      delete nxJson.release.git;
+    }
 
     return nxJson;
   });
-}
-
-function removeIfEmpty(obj: unknown, key: string) {
-  if (!obj) {
-    return;
-  }
-  if (obj[key] && Object.keys(obj[key]).length === 0) {
-    delete obj[key];
-  }
 }

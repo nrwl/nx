@@ -1,11 +1,13 @@
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { createTree } from '../../generators/testing-utils/create-tree';
 import { createTreeWithEmptyWorkspace } from '../../generators/testing-utils/create-tree-with-empty-workspace';
+import { Tree } from '../../generators/tree';
 import { readJson, writeJson } from '../../generators/utils/json';
 import nxReleaseGitOperationsExplicitOptOut from './nx-release-git-operations-explicit-opt-out';
 
 describe('nxReleaseGitOperationsExplicitOptOut', () => {
-  let tree;
+  let tree: Tree;
+
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
   });
@@ -88,9 +90,13 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
   });
 
   describe('stageChanges', () => {
-    it('should set version.stageChanges to false if committing is not explicitly enabled', () => {
+    it('should set version.stageChanges to false if committing is not explicitly enabled and granular version.git config exists', () => {
       writeJson(tree, 'nx.json', {
-        release: {},
+        release: {
+          version: {
+            git: {},
+          },
+        },
       });
 
       nxReleaseGitOperationsExplicitOptOut(tree);
@@ -105,6 +111,55 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
           git: {
             stageChanges: false,
           },
+        },
+      });
+    });
+
+    it('should set version.stageChanges to false if committing is not explicitly enabled and granular changelog.git config exists', () => {
+      writeJson(tree, 'nx.json', {
+        release: {
+          changelog: {
+            git: {},
+          },
+        },
+      });
+
+      nxReleaseGitOperationsExplicitOptOut(tree);
+
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.release).toEqual({
+        git: {
+          commit: false,
+          tag: false,
+        },
+        changelog: {
+          git: {},
+        },
+        version: {
+          git: {
+            stageChanges: false,
+          },
+        },
+      });
+    });
+
+    it('should not set version.stageChanges if granular config is not found', () => {
+      writeJson(tree, 'nx.json', {
+        release: {
+          git: {
+            commit: false,
+            tag: false,
+          },
+        },
+      });
+
+      nxReleaseGitOperationsExplicitOptOut(tree);
+
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+      expect(nxJson.release).toEqual({
+        git: {
+          commit: false,
+          tag: false,
         },
       });
     });
@@ -187,228 +242,6 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
         changelog: {
           git: {
             commit: true,
-          },
-        },
-      });
-    });
-  });
-
-  describe('consolidation', () => {
-    it('should consolidate version.git and changelog.git if they both exist and have matching true values', () => {
-      writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-        release: {
-          git: {
-            commit: false,
-            tag: false,
-          },
-          version: {
-            git: {
-              commit: true,
-              tag: true,
-            },
-          },
-          changelog: {
-            git: {
-              commit: true,
-              tag: true,
-            },
-          },
-        },
-      });
-
-      nxReleaseGitOperationsExplicitOptOut(tree);
-
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.release).toEqual({
-        git: {
-          commit: true,
-          tag: true,
-        },
-      });
-    });
-
-    it('should consolidate version.git and changelog.git if they both exist and have matching false values', () => {
-      writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-        release: {
-          git: {
-            commit: true,
-            tag: true,
-          },
-          version: {
-            git: {
-              commit: false,
-              tag: false,
-            },
-          },
-          changelog: {
-            git: {
-              commit: false,
-              tag: false,
-            },
-          },
-        },
-      });
-
-      nxReleaseGitOperationsExplicitOptOut(tree);
-
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.release).toEqual({
-        git: {
-          commit: false,
-          tag: false,
-        },
-        version: {
-          git: {
-            stageChanges: false,
-          },
-        },
-      });
-    });
-
-    it('should consolidate commit property but not change other properties', () => {
-      writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-        release: {
-          version: {
-            git: {
-              commit: true,
-              tag: false,
-              commitMessage: 'Version commit message',
-            },
-          },
-          changelog: {
-            git: {
-              commit: true,
-              tag: true,
-              tagMessage: 'Version tag message',
-            },
-          },
-        },
-      });
-
-      nxReleaseGitOperationsExplicitOptOut(tree);
-
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.release).toEqual({
-        git: {
-          commit: true,
-        },
-        version: {
-          git: {
-            tag: false,
-            commitMessage: 'Version commit message',
-          },
-        },
-        changelog: {
-          git: {
-            tag: true,
-            tagMessage: 'Version tag message',
-          },
-        },
-      });
-    });
-
-    it('should consolidate tag property but not change other properties', () => {
-      writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-        release: {
-          version: {
-            git: {
-              commit: false,
-              tag: true,
-              commitMessage: 'Version commit message',
-            },
-          },
-          changelog: {
-            git: {
-              commit: true,
-              tag: true,
-              tagMessage: 'Version tag message',
-            },
-          },
-        },
-      });
-
-      nxReleaseGitOperationsExplicitOptOut(tree);
-
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.release).toEqual({
-        git: {
-          tag: true,
-        },
-        version: {
-          git: {
-            commit: false,
-            commitMessage: 'Version commit message',
-          },
-        },
-        changelog: {
-          git: {
-            commit: true,
-            tagMessage: 'Version tag message',
-          },
-        },
-      });
-    });
-
-    it('should remove empty version and changelog properties', () => {
-      writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-        release: {
-          git: {
-            commit: true,
-            tag: true,
-          },
-          version: {
-            git: {},
-          },
-          changelog: {
-            git: {},
-          },
-        },
-      });
-
-      nxReleaseGitOperationsExplicitOptOut(tree);
-
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.release).toEqual({
-        git: {
-          commit: true,
-          tag: true,
-        },
-      });
-    });
-
-    it('should remove empty global git property', () => {
-      writeJson<NxJsonConfiguration>(tree, 'nx.json', {
-        release: {
-          git: {},
-          version: {
-            git: {
-              commit: false,
-              tag: false,
-            },
-          },
-          changelog: {
-            git: {
-              commit: true,
-              tag: true,
-            },
-          },
-        },
-      });
-
-      nxReleaseGitOperationsExplicitOptOut(tree);
-
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(nxJson.release).toEqual({
-        version: {
-          git: {
-            commit: false,
-            tag: false,
-          },
-        },
-        changelog: {
-          git: {
-            commit: true,
-            tag: true,
           },
         },
       });
