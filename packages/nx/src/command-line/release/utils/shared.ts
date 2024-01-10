@@ -112,7 +112,7 @@ export function createCommitMessageValues(
   if (
     releaseGroups.length === 1 &&
     releaseGroups[0].projectsRelationship === 'independent' &&
-    commitMessage?.includes('{projectName}')
+    commitMessage.includes('{projectName}')
   ) {
     const releaseGroup = releaseGroups[0];
     const releaseGroupProjectNames = Array.from(
