@@ -3,13 +3,11 @@
 import { useFloating } from '@floating-ui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { ProjectDetails } from '@nx/graph/project-details';
+/* eslint-disable @nx/enforce-module-boundaries */
+// nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 import { useEffect, useState } from 'react';
-import {
-  useParams,
-  useRouteLoaderData,
-  useSearchParams,
-} from 'react-router-dom';
+import { useRouteLoaderData, useSearchParams } from 'react-router-dom';
 
 export function ProjectDetailsModal() {
   const workspaceData = useRouteLoaderData(
