@@ -56,8 +56,11 @@ export async function release(
 
   const versionResult: NxReleaseVersionResult = await releaseVersion({
     ...args,
-    // if enabled, committing and tagging will be handled by the changelog
-    // command, so we should only stage the changes in the version command
+    // We should stage the changes in the version command only if
+    // the changelog command will actually be committing the files.
+    // Since git.commit defaults to true for the changelog command, we
+    // only need to disable staging if git.commit is explicitly set to false.
+    stageChanges: nxReleaseConfig.git?.commit ?? true,
     gitCommit: false,
     gitTag: false,
   });
