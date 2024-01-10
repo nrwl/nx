@@ -125,6 +125,9 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
+        >  NX   Staging changed files with git
+
+
       `);
 
       const versionPkg2Output = runCLI(
@@ -132,26 +135,29 @@ describe('nx release - independent projects', () => {
       );
       expect(versionPkg2Output).toMatchInlineSnapshot(`
 
-          >  NX   Your filter "{project-name}" matched the following projects:
+        >  NX   Your filter "{project-name}" matched the following projects:
 
-          - {project-name}
-
-
-          >  NX   Running release version for project: {project-name}
-
-          {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-          {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
-          {project-name} 📄 Using the provided version specifier "999.9.9-package.2".
-          {project-name} ✍️  New version 999.9.9-package.2 written to {project-name}/package.json
+        - {project-name}
 
 
-          "name": "@proj/{project-name}",
-          -   "version": "0.0.0",
-          +   "version": "999.9.9-package.2",
-          "scripts": {
+        >  NX   Running release version for project: {project-name}
 
-          }
-          +
+        {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+        {project-name} 📄 Resolved the current version as 0.0.0 from {project-name}/package.json
+        {project-name} 📄 Using the provided version specifier "999.9.9-package.2".
+        {project-name} ✍️  New version 999.9.9-package.2 written to {project-name}/package.json
+
+
+        "name": "@proj/{project-name}",
+        -   "version": "0.0.0",
+        +   "version": "999.9.9-package.2",
+        "scripts": {
+
+        }
+        +
+
+
+        >  NX   Staging changed files with git
 
 
       `);
@@ -188,6 +194,9 @@ describe('nx release - independent projects', () => {
         -     "@proj/{project-name}": "0.0.0"
         +     "@proj/{project-name}": "999.9.9-package.3"
         }
+
+
+        >  NX   Staging changed files with git
 
 
       `);
@@ -653,7 +662,7 @@ describe('nx release - independent projects', () => {
   });
 
   describe('release command', () => {
-    beforeEach(() => {
+    it('should allow versioning projects independently', async () => {
       updateJson('nx.json', () => {
         return {
           release: {
@@ -670,9 +679,10 @@ describe('nx release - independent projects', () => {
           },
         };
       });
-    });
 
-    it('should allow versioning projects independently', async () => {
+      runCommand(`git add .`);
+      runCommand(`git commit -m "chore: initial commit"`);
+
       runCommand(`git tag ${pkg1}@v1.2.0`);
       runCommand(`git tag ${pkg2}@v1.4.0`);
       runCommand(`git tag ${pkg3}@v1.6.0`);
@@ -727,6 +737,9 @@ describe('nx release - independent projects', () => {
           },
         };
       });
+
+      runCommand(`git add .`);
+      runCommand(`git commit -m "chore: initial commit"`);
 
       runCommand(`git tag ${pkg1}@v1.3.0`);
       runCommand(`git tag ${pkg2}@v1.5.0`);
