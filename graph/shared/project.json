@@ -13,7 +13,8 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "graph/shared/jest.config.ts"
+        "jestConfig": "graph/shared/jest.config.ts",
+        "passWithNoTests": true
       }
     }
   }
