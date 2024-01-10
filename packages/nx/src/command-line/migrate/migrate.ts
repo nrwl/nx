@@ -49,6 +49,7 @@ import {
 import { handleErrors } from '../../utils/params';
 import {
   connectToNxCloudCommand,
+  connectToNxCloudPrompt,
   onlyDefaultRunnerIsUsed,
 } from '../connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
@@ -1222,10 +1223,10 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         !isCI() &&
         !isNxCloudUsed(originalNxJson)
       ) {
-        const useCloud = await connectToNxCloudCommand({
-          promptOverride: messages.getPromptMessage('nxCloudMigration'),
-          interactive: true,
-        });
+        const setNxCloud = await connectToNxCloudPrompt(
+          messages.getPromptMessage('nxCloudMigration')
+        );
+        const useCloud = setNxCloud ? await connectToNxCloudCommand() : false;
         await recordStat({
           command: 'migrate',
           nxVersion,

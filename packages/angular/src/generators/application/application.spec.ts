@@ -507,18 +507,12 @@ describe('app', () => {
           .toMatchInlineSnapshot(`
           {
             "executor": "@nx/eslint:lint",
-            "outputs": [
-              "{options.outputFile}",
-            ],
           }
         `);
         expect(readProjectConfiguration(appTree, 'my-app-e2e').targets.lint)
           .toMatchInlineSnapshot(`
           {
             "executor": "@nx/eslint:lint",
-            "outputs": [
-              "{options.outputFile}",
-            ],
           }
         `);
       });

@@ -69,7 +69,6 @@ describe('app', () => {
       );
       expect(project.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
       });
       expect(() =>
         readProjectConfiguration(tree, 'my-node-app-e2e')
@@ -190,7 +189,6 @@ describe('app', () => {
 
       expect(project.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
       });
 
       expect(() =>
@@ -277,9 +275,6 @@ describe('app', () => {
       expect(project.targets.lint).toMatchInlineSnapshot(`
         {
           "executor": "@nx/eslint:lint",
-          "outputs": [
-            "{options.outputFile}",
-          ],
         }
       `);
     });

@@ -70,7 +70,6 @@ describe('NxPlugin Plugin Generator', () => {
     });
     expect(project.targets.lint).toEqual({
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
     });
     expect(project.targets.test).toEqual({
       executor: '@nx/jest:jest',

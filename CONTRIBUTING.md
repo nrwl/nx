@@ -318,7 +318,7 @@ The scope must be one of the following:
 - nest - anything Nest specific
 - nextjs - anything Next specific
 - node - anything Node specific
-- nx-cloud - anything NxCloud specific
+- nx-cloud - anything Nx Cloud specific
 - nx-plugin - anything Nx Plugin specific
 - nx-dev - anything related to docs infrastructure
 - react - anything React specific

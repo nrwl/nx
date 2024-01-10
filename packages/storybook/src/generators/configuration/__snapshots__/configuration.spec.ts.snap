@@ -48,9 +48,6 @@ exports[`@nx/storybook:configuration for Storybook v7 basic functionalities shou
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
     "storybook": {
       "configurations": {

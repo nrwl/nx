@@ -9,21 +9,21 @@ export async function setupNxCloud(
   directory: string,
   packageManager: PackageManager
 ) {
-  const nxCloudSpinner = ora(`Setting up NxCloud`).start();
+  const nxCloudSpinner = ora(`Setting up Nx Cloud`).start();
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
       `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
       directory
     );
-    nxCloudSpinner.succeed('NxCloud has been set up successfully');
+    nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
     return res;
   } catch (e) {
     nxCloudSpinner.fail();
 
     if (e instanceof Error) {
       output.error({
-        title: `Failed to setup NxCloud`,
+        title: `Failed to setup Nx Cloud`,
         bodyLines: mapErrorToBodyLines(e),
       });
     } else {

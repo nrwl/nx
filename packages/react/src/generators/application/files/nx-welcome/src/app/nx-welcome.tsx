@@ -727,7 +727,7 @@ export function NxWelcome({ title }: { title: string }) {
                     />
                   </svg>
                   <h2>
-                    NxCloud
+                    Nx Cloud
                     <span>Enable faster CI & better DX</span>
                   </h2>
                 </div>
