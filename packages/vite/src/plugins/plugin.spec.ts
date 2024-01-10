@@ -66,7 +66,6 @@ describe('@nx/vite/plugin', () => {
     });
   });
 
-  // some issue wiht the tempfs
   describe('not root project', () => {
     const tempFs = new TempFs('test');
     beforeEach(() => {

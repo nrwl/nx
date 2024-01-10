@@ -33,7 +33,7 @@ import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 const DEFAULT_PORT = 4400;
 
-export function addStorybookTask(
+export function addStorybookTarget(
   tree: Tree,
   projectName: string,
   uiFramework: UiFramework,
@@ -82,7 +82,7 @@ export function addStorybookTask(
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
-export function addAngularStorybookTask(
+export function addAngularStorybookTarget(
   tree: Tree,
   projectName: string,
   interactionTests: boolean
@@ -696,18 +696,32 @@ export async function getE2EProjectName(
   return e2eProject;
 }
 
-export function getViteConfigFilePath(
+export function findViteConfig(
   tree: Tree,
-  projectRoot: string,
-  configFile?: string
+  projectRoot: string
 ): string | undefined {
-  return configFile && tree.exists(configFile)
-    ? configFile
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
-    : undefined;
+  const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
+
+  for (const ext of allowsExt) {
+    const viteConfigPath = joinPathFragments(projectRoot, `vite.config.${ext}`);
+    if (tree.exists(viteConfigPath)) {
+      return viteConfigPath;
+    }
+  }
+}
+
+export function findNextConfig(
+  tree: Tree,
+  projectRoot: string
+): string | undefined {
+  const allowsExt = ['js', 'mjs', 'cjs'];
+
+  for (const ext of allowsExt) {
+    const nextConfigPath = joinPathFragments(projectRoot, `next.config.${ext}`);
+    if (tree.exists(nextConfigPath)) {
+      return nextConfigPath;
+    }
+  }
 }
 
 export function renameAndMoveOldTsConfig(
