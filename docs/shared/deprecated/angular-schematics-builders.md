@@ -12,7 +12,7 @@ You can wrap any Nx generator with the [convertNxGenerator](/nx-api/devkit/docum
 
 To convert an existing Angular Schematic to an Nx Generator, use the [wrapAngularDevkitSchematic](/nx-api/devkit/documents/ngcli_adapter/wrapAngularDevkitSchematic) utility function. This is helpful if you want to [programmatically call](/extending-nx/recipes/composing-generators) an Angular Schematic inside of a [custom Nx Generator](/extending-nx/recipes/local-generators).
 
-## Interop between Nx Executors to Builders
+## Interop between Nx Executors and Angular Builders
 
 You can wrap any Nx executor with the [convertNxExecutor](/nx-api/devkit/documents/convertNxExecutor) function and re-export it in your own plugin as a builder.
 
