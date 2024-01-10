@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import * as enquirer from 'enquirer';
 import { join } from 'path';
 
 import { NxJsonConfiguration } from '../../../config/nx-json';
@@ -18,29 +17,6 @@ import {
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
 import { readFileSync, writeFileSync } from 'fs';
-
-export async function askAboutNxCloud(): Promise<boolean> {
-  return await enquirer
-    .prompt([
-      {
-        name: 'NxCloud',
-        message: `Enable remote caching to make your CI faster`,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-            hint: 'I want faster builds',
-          },
-
-          {
-            name: 'No',
-          },
-        ],
-        initial: 'Yes' as any,
-      },
-    ])
-    .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
-}
 
 export function createNxJsonFile(
   repoRoot: string,

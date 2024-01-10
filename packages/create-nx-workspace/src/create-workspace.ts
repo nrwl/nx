@@ -17,7 +17,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     packageManager,
     name,
     nxCloud,
-    ci = '',
     skipGit = false,
     defaultBase = 'main',
     commit,
@@ -47,16 +46,17 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   }
 
   let nxCloudInstallRes;
-  if (nxCloud) {
+  if (nxCloud !== 'skip') {
     nxCloudInstallRes = await setupNxCloud(directory, packageManager);
-  }
-  if (ci) {
-    await setupCI(
-      directory,
-      ci,
-      packageManager,
-      nxCloud && nxCloudInstallRes?.code === 0
-    );
+
+    if (nxCloud !== 'cloud-only') {
+      await setupCI(
+        directory,
+        nxCloud,
+        packageManager,
+        nxCloudInstallRes?.code === 0
+      );
+    }
   }
   if (!skipGit && commit) {
     try {

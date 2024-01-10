@@ -3,24 +3,57 @@ import { isCI } from '../ci/is-ci';
 const messageOptions = {
   nxCloudCreation: [
     {
-      code: 'set-up-distributed-caching-ci',
-      message: `Enable remote caching to make your CI faster`,
+      code: 'enable-remote-caching',
+      message: `Enable remote caching to make your CI fast`,
+      choices: [
+        { value: 'cloud-only', name: 'Yes' },
+        { value: 'github', name: 'Yes, with GitHub Actions' },
+        { value: 'circleci', name: 'Yes, with CircleCI' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
+    },
+    {
+      code: 'enable-nx-cloud',
+      message: `Do you want Nx Cloud to make your CI fast?`,
+      choices: [
+        { value: 'cloud-only', name: 'Yes, enable Nx Cloud' },
+        { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
+        { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
     },
   ],
   nxCloudMigration: [
     {
-      code: 'make-ci-faster',
-      message: `Enable remote caching to make your CI faster?`,
+      code: 'enable-remote-caching',
+      message: `Enable remote caching to make your CI fast`,
+      choices: [
+        { value: 'cloud-only', name: 'Yes' },
+        { value: 'github', name: 'Yes, with GitHub Actions' },
+        { value: 'circleci', name: 'Yes, with CircleCI' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
+    },
+    {
+      code: 'enable-nx-cloud',
+      message: `Do you want Nx Cloud to make your CI fast?`,
+      choices: [
+        { value: 'cloud-only', name: 'Yes, enable Nx Cloud' },
+        { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
+        { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
     },
   ],
 } as const;
 
 type MessageKey = keyof typeof messageOptions;
+type MessageData = typeof messageOptions[MessageKey][number];
 
 export class PromptMessages {
   private selectedMessages: { [key in MessageKey]?: number } = {};
 
-  getPromptMessage(key: MessageKey): string {
+  getPrompt(key: MessageKey): MessageData {
     if (this.selectedMessages[key] === undefined) {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
         this.selectedMessages[key] = 0;
@@ -30,7 +63,7 @@ export class PromptMessages {
         );
       }
     }
-    return messageOptions[key][this.selectedMessages[key]!].message;
+    return messageOptions[key][this.selectedMessages[key]!];
   }
 
   codeOfSelectedPromptMessage(key: MessageKey): string {

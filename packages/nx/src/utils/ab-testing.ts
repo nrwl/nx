@@ -1,39 +1,76 @@
 import { isCI } from './is-ci';
 
-export class PromptMessages {
-  private messages = {
-    nxCloudCreation: [
-      {
-        code: 'set-up-distributed-caching-ci',
-        message: `Enable remote caching to make your CI faster`,
-      },
-    ],
-    nxCloudMigration: [
-      {
-        code: 'make-ci-faster',
-        message: `Enable remote caching to make your CI faster?`,
-      },
-    ],
-  };
+export type MessageOptionKey = 'cloud-only' | 'github' | 'circleci' | 'skip';
 
+const messageOptions = {
+  nxCloudCreation: [
+    {
+      code: 'enable-nx-cloud',
+      message: `Do you want Nx Cloud to make your CI fast?`,
+      choices: [
+        { value: 'cloud-only', name: 'Yes, enable Nx Cloud' },
+        { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
+        { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
+    },
+    {
+      code: 'enable-remote-caching',
+      message: `Enable remote caching to make your CI fast`,
+      choices: [
+        { value: 'cloud-only', name: 'Yes' },
+        { value: 'github', name: 'Yes, with GitHub Actions' },
+        { value: 'circleci', name: 'Yes, with CircleCI' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
+    },
+  ],
+  nxCloudMigration: [
+    {
+      code: 'enable-nx-cloud',
+      message: `Do you want Nx Cloud to make your CI fast?`,
+      choices: [
+        { value: 'cloud-only', name: 'Yes, enable Nx Cloud' },
+        { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
+        { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
+    },
+    {
+      code: 'enable-remote-caching',
+      message: `Enable remote caching to make your CI fast?`,
+      choices: [
+        { value: 'cloud-only', name: 'Yes' },
+        { value: 'github', name: 'Yes, with GitHub Actions' },
+        { value: 'circleci', name: 'Yes, with CircleCI' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
+    },
+  ],
+} as const;
+
+export type MessageKey = keyof typeof messageOptions;
+export type MessageData = typeof messageOptions[MessageKey][number];
+
+export class PromptMessages {
   private selectedMessages = {};
 
-  getPromptMessage(key: string): string {
+  getPrompt(key: MessageKey): MessageData {
     if (this.selectedMessages[key] === undefined) {
       if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') {
         this.selectedMessages[key] = 0;
       } else {
         this.selectedMessages[key] = Math.floor(
-          Math.random() * this.messages[key].length
+          Math.random() * messageOptions[key].length
         );
       }
     }
-    return this.messages[key][this.selectedMessages[key]].message;
+    return messageOptions[key][this.selectedMessages[key]];
   }
 
   codeOfSelectedPromptMessage(key: string): string {
     if (this.selectedMessages[key] === undefined) return null;
-    return this.messages[key][this.selectedMessages[key]].code;
+    return messageOptions[key][this.selectedMessages[key]].code;
   }
 }
 

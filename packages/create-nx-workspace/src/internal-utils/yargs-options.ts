@@ -1,25 +1,20 @@
 import chalk = require('chalk');
 import yargs = require('yargs');
-import { CreateWorkspaceOptions } from '../create-workspace-options';
-import { ciList } from '../utils/ci/ci-list';
 import { messages } from '../utils/nx/ab-testing';
 import { packageManagerList } from '../utils/package-manager';
 
 export function withNxCloud<T = unknown>(argv: yargs.Argv<T>) {
-  const result = argv.option('nxCloud', {
-    describe: chalk.dim(messages.getPromptMessage('nxCloudCreation')),
-    type: 'boolean',
-  });
-  return result;
-}
+  const { message, choices } = messages.getPrompt('nxCloudCreation');
 
-export function withCI<T = unknown>(argv: yargs.Argv<T>) {
-  return argv.option('ci', {
-    describe: chalk.dim`Generate a CI workflow file`,
-    choices: ciList,
+  const result = argv.option('nxCloud', {
+    alias: 'ci',
+    describe: chalk.dim(message),
+    choices: choices.map((c) => c.value) as string[],
+    default: '',
     defaultDescription: '',
     type: 'string',
   });
+  return result;
 }
 
 export function withAllPrompts<T = unknown>(argv: yargs.Argv<T>) {

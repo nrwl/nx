@@ -8,13 +8,13 @@ import { output } from '../../../utils/output';
 import { getPackageManagerCommand } from '../../../utils/package-manager';
 import {
   addDepsToPackageJson,
-  askAboutNxCloud,
   createNxJsonFile,
   initCloud,
   printFinalMessage,
   runInstall,
   updateGitIgnore,
 } from './utils';
+import { connectExistingRepoToNxCloudPrompt } from '../../connect/connect-to-nx-cloud';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 
@@ -73,13 +73,17 @@ export async function addNxToMonorepo(options: Options) {
       )[scriptName];
     }
 
-    useNxCloud = options.nxCloud ?? (await askAboutNxCloud());
+    useNxCloud =
+      options.nxCloud ??
+      (await connectExistingRepoToNxCloudPrompt('nxCloudMigration'));
   } else {
     targetDefaults = [];
     cacheableOperations = options.cacheable ?? [];
     useNxCloud =
       options.nxCloud ??
-      (options.interactive ? await askAboutNxCloud() : false);
+      (options.interactive
+        ? await connectExistingRepoToNxCloudPrompt('nxCloudMigration')
+        : false);
   }
 
   createNxJsonFile(

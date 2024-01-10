@@ -1,6 +1,5 @@
 import * as yargs from 'yargs';
 import { messages } from '../utils/nx/ab-testing';
-import { CI } from '../utils/ci/ci-list';
 import { output } from '../utils/output';
 import { deduceDefaultBase } from '../utils/git/default-base';
 import {
@@ -10,81 +9,28 @@ import {
 } from '../utils/package-manager';
 import { stringifyCollection } from '../utils/string-utils';
 import enquirer = require('enquirer');
+import { NxCloud } from '../utils/nx/nx-cloud';
 
 export async function determineNxCloud(
-  parsedArgs: yargs.Arguments<{ nxCloud: boolean }>
-): Promise<boolean> {
+  parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
+): Promise<NxCloud> {
   if (parsedArgs.nxCloud === undefined) {
+    const { message, choices } = messages.getPrompt('nxCloudCreation');
+
     return enquirer
-      .prompt<{ NxCloud: 'Yes' | 'No' }>([
+      .prompt<{ NxCloud: NxCloud }>([
         {
           name: 'NxCloud',
-          message: messages.getPromptMessage('nxCloudCreation'),
+          message,
           type: 'autocomplete',
-          choices: [
-            {
-              name: 'Yes',
-              hint: 'I want faster builds',
-            },
-
-            {
-              name: 'No',
-            },
-          ],
-          initial: 'Yes' as any,
+          choices: choices as any,
+          initial: 'cloud-only' as any,
         },
       ])
-      .then((a) => a.NxCloud === 'Yes');
+      .then((a) => a.NxCloud);
   } else {
     return parsedArgs.nxCloud;
   }
-}
-
-export async function determineCI(
-  parsedArgs: yargs.Arguments<{ ci?: CI; allPrompts?: boolean }>,
-  nxCloud: boolean
-): Promise<string> {
-  if (!nxCloud) {
-    if (parsedArgs.ci) {
-      output.warn({
-        title: 'Invalid CI value',
-        bodyLines: [
-          `CI option only works when Nx Cloud is enabled.`,
-          `The value provided will be ignored.`,
-        ],
-      });
-    }
-    return '';
-  }
-
-  if (parsedArgs.ci) {
-    return parsedArgs.ci;
-  }
-
-  if (parsedArgs.allPrompts) {
-    return (
-      enquirer
-        .prompt<{ CI: string }>([
-          {
-            name: 'CI',
-            message: `CI workflow file to generate?      `,
-            type: 'autocomplete',
-            initial: '' as any,
-            choices: [
-              { message: 'none', name: '' },
-              { message: 'GitHub Actions', name: 'github' },
-              { message: 'Circle CI', name: 'circleci' },
-              { message: 'Azure DevOps', name: 'azure' },
-            ],
-          },
-        ])
-        // enquirer ignores name and value if they are falsy and takes
-        // first field that has a truthy value, so wee need to explicitly
-        // check for none
-        .then((a: { CI: string }) => (a.CI !== 'none' ? a.CI : ''))
-    );
-  }
-  return '';
 }
 
 export async function determineDefaultBase(

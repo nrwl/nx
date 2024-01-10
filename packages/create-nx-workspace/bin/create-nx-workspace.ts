@@ -12,14 +12,12 @@ import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-
 import { yargsDecorator } from './decorator';
 import { getThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
 import {
-  determineCI,
   determineDefaultBase,
   determineNxCloud,
   determinePackageManager,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
-  withCI,
   withGitOptions,
   withNxCloud,
   withOptions,
@@ -174,7 +172,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'boolean',
           }),
         withNxCloud,
-        withCI,
         withAllPrompts,
         withPackageManager,
         withGitOptions
@@ -225,7 +222,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   await recordStat({
     nxVersion,
     command: 'create-nx-workspace',
-    useCloud: parsedArgs.nxCloud,
+    useCloud: parsedArgs.nxCloud !== 'skip',
     meta: messages.codeOfSelectedPromptMessage('nxCloudCreation'),
   });
 
@@ -310,13 +307,11 @@ async function normalizeArgsMiddleware(
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
-    const ci = await determineCI(argv, nxCloud);
 
     Object.assign(argv, {
       nxCloud,
       packageManager,
       defaultBase,
-      ci,
     });
   } catch (e) {
     console.error(e);

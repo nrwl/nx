@@ -48,13 +48,10 @@ import {
 } from '../../utils/package-manager';
 import { handleErrors } from '../../utils/params';
 import {
-  connectToNxCloudCommand,
-  connectToNxCloudPrompt,
+  connectToNxCloudWithPrompt,
   onlyDefaultRunnerIsUsed,
 } from '../connect/connect-to-nx-cloud';
 import { output } from '../../utils/output';
-import { messages, recordStat } from '../../utils/ab-testing';
-import { nxVersion } from '../../utils/versions';
 import { existsSync, readFileSync } from 'fs';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { isCI } from '../../utils/is-ci';
@@ -1223,16 +1220,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         !isCI() &&
         !isNxCloudUsed(originalNxJson)
       ) {
-        const setNxCloud = await connectToNxCloudPrompt(
-          messages.getPromptMessage('nxCloudMigration')
-        );
-        const useCloud = setNxCloud ? await connectToNxCloudCommand() : false;
-        await recordStat({
-          command: 'migrate',
-          nxVersion,
-          useCloud,
-          meta: messages.codeOfSelectedPromptMessage('nxCloudMigration'),
-        });
+        await connectToNxCloudWithPrompt('migrate', 'nxCloudMigration');
         originalPackageJson = readJsonFile<PackageJson>(
           join(root, 'package.json')
         );

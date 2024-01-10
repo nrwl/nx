@@ -8,6 +8,13 @@ import {
 import { runNxSync } from '../../utils/child-process';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { NxArgs } from '../../utils/command-line-utils';
+import {
+  MessageKey,
+  MessageOptionKey,
+  recordStat,
+  messages,
+} from '../../utils/ab-testing';
+import { nxVersion } from '../../utils/versions';
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
   const defaultRunner = nxJson.tasksRunnerOptions?.default?.runner;
@@ -66,26 +73,56 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
   return true;
 }
 
-export async function connectToNxCloudPrompt(prompt?: string) {
+export async function connectToNxCloudWithPrompt(
+  command: string,
+  prompt: MessageKey
+) {
+  const setNxCloud = await connectToNxCloudPrompt(prompt);
+  const useCloud = setNxCloud ? await connectToNxCloudCommand() : false;
+  await recordStat({
+    command,
+    nxVersion,
+    useCloud,
+    meta: messages.codeOfSelectedPromptMessage(prompt),
+  });
+}
+
+export async function connectToNxCloudPrompt(
+  prompt: MessageKey
+): Promise<MessageOptionKey> {
+  const { message, choices } = messages.getPrompt(prompt);
   return await (
     await import('enquirer')
   )
     .prompt([
       {
         name: 'NxCloud',
-        message: prompt ?? `Enable remote caching to make your CI faster`,
+        message,
         type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-            hint: 'I want faster builds',
-          },
-          {
-            name: 'No',
-          },
-        ],
-        initial: 'Yes' as any,
+        choices: choices as any,
+        initial: 'cloud-only' as any,
       },
     ])
-    .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
+    .then((a: { NxCloud: MessageOptionKey }) => a.NxCloud);
+}
+
+export async function connectExistingRepoToNxCloudPrompt(
+  prompt: MessageKey
+): Promise<boolean> {
+  const { message, choices } = messages.getPrompt(prompt);
+  return await (
+    await import('enquirer')
+  )
+    .prompt([
+      {
+        name: 'NxCloud',
+        message,
+        type: 'autocomplete',
+        choices: choices.filter((c) =>
+          ['cloud-only', 'skip'].includes(c.value)
+        ) as any,
+        initial: 'cloud-only' as any,
+      },
+    ])
+    .then((a: { NxCloud: MessageOptionKey }) => a.NxCloud === 'cloud-only');
 }
