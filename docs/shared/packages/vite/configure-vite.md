@@ -216,3 +216,28 @@ export default defineConfig({
 ```
 
 In that config file, you can configure Vite as you would normally do. For more information, see the [Vite.js documentation](https://vitejs.dev/config/).
+
+## Set up file replacements
+
+You can use the `replaceFiles()` plugin (`@nx/vite/plugins/rollup-replace-files.plugin`) to replace files in your build. You can import the plugin from `@nx/vite/plugins/rollup-replace-files.plugin`. And you can set it up like this:
+
+```ts {% fileName="apps/my-app/vite.config.ts" %}
+...
+import { replaceFiles } from '@nx/vite/plugins/rollup-replace-files.plugin';
+
+export default defineConfig({
+  ...
+
+  plugins: [
+    ...
+    replaceFiles([
+      {
+        replace: 'apps/my-app/src/environments/environment.ts',
+        with: 'apps/my-app/src/environments/environment.prod.ts',
+      },
+    ]),
+  ],
+
+  ...
+});
+```
