@@ -16,6 +16,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/running-tasks/executors-and-configurations",
+      "id": "executors-and-configurations",
+      "name": "Executors and Configurations",
+      "path": "/concepts/executors-and-configurations"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/running-tasks/customizing-inputs",
       "id": "customizing-inputs",
       "name": "Fine-tuning Caching with Inputs",
@@ -27,13 +34,6 @@
       "id": "defining-task-pipeline",
       "name": "Defining a Task Pipeline",
       "path": "/recipes/running-tasks/defining-task-pipeline"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/executors-and-configurations",
-      "id": "executors-and-configurations",
-      "name": "Executors and Configurations",
-      "path": "/recipes/running-tasks/executors-and-configurations"
     },
     {
       "description": "",
@@ -178,6 +178,127 @@
       "path": "/nx-api/nx/documents/reset"
     }
   ],
+  "enhance-tooling": [
+    {
+      "description": "",
+      "file": "shared/features/enhance-tooling",
+      "id": "enhance-tooling",
+      "name": "Enhance Tooling",
+      "path": "/features/enhance-tooling"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/task-pipeline-configuration",
+      "id": "task-pipeline-configuration",
+      "name": "What is a Task Pipeline",
+      "path": "/concepts/task-pipeline-configuration"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/inferred-targets",
+      "id": "inferred-targets",
+      "name": "Inferred Targets",
+      "path": "/concepts/inferred-targets"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/executors-and-configurations",
+      "id": "executors-and-configurations",
+      "name": "Executors and Configurations",
+      "path": "/concepts/executors-and-configurations"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/faster-builds",
+      "id": "faster-builds-with-module-federation",
+      "name": "Faster Builds with Module Federation",
+      "path": "/concepts/module-federation/faster-builds-with-module-federation"
+    },
+    {
+      "description": "",
+      "file": "shared/incremental-builds",
+      "id": "incremental-builds",
+      "name": "Incremental Builds",
+      "path": "/concepts/more-concepts/incremental-builds"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/running-custom-commands",
+      "id": "run-commands-executor",
+      "name": "Running Custom Commands",
+      "path": "/recipes/running-tasks/run-commands-executor"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for React",
+      "path": "/recipes/react/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/module-federation-with-ssr",
+      "id": "module-federation-with-ssr",
+      "name": "Setup Module Federation with SSR for Angular",
+      "path": "/recipes/angular/module-federation-with-ssr"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/module-federation/dynamic-mfe-angular",
+      "id": "dynamic-module-federation-with-angular",
+      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
+      "path": "/recipes/angular/dynamic-module-federation-with-angular"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/performance-profiling",
+      "id": "performance-profiling",
+      "name": "Profiling Build Performance",
+      "path": "/recipes/troubleshooting/performance-profiling"
+    },
+    {
+      "description": "",
+      "file": "shared/reference/project-configuration",
+      "id": "project-configuration",
+      "name": "Project Configuration",
+      "path": "/reference/project-configuration"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/local-executors",
+      "id": "local-executors",
+      "name": "Write a Simple Executor",
+      "path": "/extending-nx/recipes/local-executors"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/compose-executors",
+      "id": "compose-executors",
+      "name": "Compose Executors",
+      "path": "/extending-nx/recipes/compose-executors"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/generated/packages/nx/documents/run",
+      "id": "run",
+      "name": "run",
+      "path": "/nx-api/nx/documents/run"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/generated/packages/nx/documents/run-many",
+      "id": "run-many",
+      "name": "run-many",
+      "path": "/nx-api/nx/documents/run-many"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/generated/packages/nx/documents/affected",
+      "id": "affected",
+      "name": "affected",
+      "path": "/nx-api/nx/documents/affected"
+    }
+  ],
   "explore-graph": [
     {
       "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
@@ -220,6 +341,71 @@
       "id": "dep-graph",
       "name": "graph",
       "path": "/nx-api/nx/documents/dep-graph"
+    }
+  ],
+  "generate-code": [
+    {
+      "description": "",
+      "file": "shared/features/generate-code",
+      "id": "generate-code",
+      "name": "Generate Code",
+      "path": "/features/generate-code"
+    },
+    {
+      "description": "",
+      "file": "shared/monorepo-nx-enterprise",
+      "id": "monorepo-nx-enterprise",
+      "name": "Using Nx at Enterprises",
+      "path": "/concepts/more-concepts/monorepo-nx-enterprise"
+    },
+    {
+      "description": "",
+      "file": "",
+      "id": "nxjson-generator-defaults",
+      "name": "nx.json generator defaults",
+      "path": "/reference/nx-json#generators"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/generators/local-generators",
+      "id": "local-generators",
+      "name": "Write a Simple Generator",
+      "path": "/extending-nx/recipes/local-generators"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/generators/composing-generators",
+      "id": "composing-generators",
+      "name": "Compose Generators",
+      "path": "/extending-nx/recipes/composing-generators"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/generators/generator-options",
+      "id": "generator-options",
+      "name": "Provide Options for Generators",
+      "path": "/extending-nx/recipes/generator-options"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/generators/creating-files",
+      "id": "creating-files",
+      "name": "Create Files",
+      "path": "/extending-nx/recipes/creating-files"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/generators/modifying-files",
+      "id": "modifying-files",
+      "name": "Modify Files",
+      "path": "/extending-nx/recipes/modifying-files"
+    },
+    {
+      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+      "file": "generated/packages/generated/packages/nx/documents/generate",
+      "id": "generate",
+      "name": "generate",
+      "path": "/nx-api/nx/documents/generate"
     }
   ],
   "automate-updating-dependencies": [
@@ -410,192 +596,6 @@
       "id": "manage-releases",
       "name": "Manage Releases",
       "path": "/features/manage-releases"
-    }
-  ],
-  "enhance-tooling": [
-    {
-      "description": "",
-      "file": "shared/features/enhance-tooling",
-      "id": "enhance-tooling",
-      "name": "Enhance Tooling",
-      "path": "/features/enhance-tooling"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/task-pipeline-configuration",
-      "id": "task-pipeline-configuration",
-      "name": "What is a Task Pipeline",
-      "path": "/concepts/task-pipeline-configuration"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/inferred-targets",
-      "id": "inferred-targets",
-      "name": "Inferred Targets",
-      "path": "/concepts/inferred-targets"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
-      "id": "faster-builds-with-module-federation",
-      "name": "Faster Builds with Module Federation",
-      "path": "/concepts/module-federation/faster-builds-with-module-federation"
-    },
-    {
-      "description": "",
-      "file": "shared/incremental-builds",
-      "id": "incremental-builds",
-      "name": "Incremental Builds",
-      "path": "/concepts/more-concepts/incremental-builds"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/executors-and-configurations",
-      "id": "executors-and-configurations",
-      "name": "Executors and Configurations",
-      "path": "/recipes/running-tasks/executors-and-configurations"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/running-custom-commands",
-      "id": "run-commands-executor",
-      "name": "Running Custom Commands",
-      "path": "/recipes/running-tasks/run-commands-executor"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for React",
-      "path": "/recipes/react/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for Angular",
-      "path": "/recipes/angular/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
-      "id": "dynamic-module-federation-with-angular",
-      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/angular/dynamic-module-federation-with-angular"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/performance-profiling",
-      "id": "performance-profiling",
-      "name": "Profiling Build Performance",
-      "path": "/recipes/troubleshooting/performance-profiling"
-    },
-    {
-      "description": "",
-      "file": "shared/reference/project-configuration",
-      "id": "project-configuration",
-      "name": "Project Configuration",
-      "path": "/reference/project-configuration"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/local-executors",
-      "id": "local-executors",
-      "name": "Write a Simple Executor",
-      "path": "/extending-nx/recipes/local-executors"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/compose-executors",
-      "id": "compose-executors",
-      "name": "Compose Executors",
-      "path": "/extending-nx/recipes/compose-executors"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/run",
-      "id": "run",
-      "name": "run",
-      "path": "/nx-api/nx/documents/run"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/run-many",
-      "id": "run-many",
-      "name": "run-many",
-      "path": "/nx-api/nx/documents/run-many"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/affected",
-      "id": "affected",
-      "name": "affected",
-      "path": "/nx-api/nx/documents/affected"
-    }
-  ],
-  "generate-code": [
-    {
-      "description": "",
-      "file": "shared/features/generate-code",
-      "id": "generate-code",
-      "name": "Generate Code",
-      "path": "/features/generate-code"
-    },
-    {
-      "description": "",
-      "file": "shared/monorepo-nx-enterprise",
-      "id": "monorepo-nx-enterprise",
-      "name": "Using Nx at Enterprises",
-      "path": "/concepts/more-concepts/monorepo-nx-enterprise"
-    },
-    {
-      "description": "",
-      "file": "",
-      "id": "nxjson-generator-defaults",
-      "name": "nx.json generator defaults",
-      "path": "/reference/nx-json#generators"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/generators/local-generators",
-      "id": "local-generators",
-      "name": "Write a Simple Generator",
-      "path": "/extending-nx/recipes/local-generators"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/generators/composing-generators",
-      "id": "composing-generators",
-      "name": "Compose Generators",
-      "path": "/extending-nx/recipes/composing-generators"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/generators/generator-options",
-      "id": "generator-options",
-      "name": "Provide Options for Generators",
-      "path": "/extending-nx/recipes/generator-options"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/generators/creating-files",
-      "id": "creating-files",
-      "name": "Create Files",
-      "path": "/extending-nx/recipes/creating-files"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/generators/modifying-files",
-      "id": "modifying-files",
-      "name": "Modify Files",
-      "path": "/extending-nx/recipes/modifying-files"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/generate",
-      "id": "generate",
-      "name": "generate",
-      "path": "/nx-api/nx/documents/generate"
     }
   ],
   "intro": [

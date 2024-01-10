@@ -591,9 +591,25 @@
             "disableCollapsible": false
           },
           {
+            "name": "Enhance Tooling",
+            "path": "/features/enhance-tooling",
+            "id": "enhance-tooling",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Explore the Graph",
             "path": "/features/explore-graph",
             "id": "explore-graph",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Generate Code",
+            "path": "/features/generate-code",
+            "id": "generate-code",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -629,22 +645,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Enhance Tooling",
-            "path": "/features/enhance-tooling",
-            "id": "enhance-tooling",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Generate Code",
-            "path": "/features/generate-code",
-            "id": "generate-code",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -666,9 +666,25 @@
         "disableCollapsible": false
       },
       {
+        "name": "Enhance Tooling",
+        "path": "/features/enhance-tooling",
+        "id": "enhance-tooling",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Explore the Graph",
         "path": "/features/explore-graph",
         "id": "explore-graph",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Generate Code",
+        "path": "/features/generate-code",
+        "id": "generate-code",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -701,22 +717,6 @@
         "name": "Manage Releases",
         "path": "/features/manage-releases",
         "id": "manage-releases",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Enhance Tooling",
-        "path": "/features/enhance-tooling",
-        "id": "enhance-tooling",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Generate Code",
-        "path": "/features/generate-code",
-        "id": "generate-code",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -763,6 +763,14 @@
             "name": "Inferred Targets",
             "path": "/concepts/inferred-targets",
             "id": "inferred-targets",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Executors and Configurations",
+            "path": "/concepts/executors-and-configurations",
+            "id": "executors-and-configurations",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1000,6 +1008,14 @@
         "name": "Inferred Targets",
         "path": "/concepts/inferred-targets",
         "id": "inferred-targets",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Executors and Configurations",
+        "path": "/concepts/executors-and-configurations",
+        "id": "executors-and-configurations",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1398,14 +1414,6 @@
                 "name": "Change Cache Location",
                 "path": "/recipes/running-tasks/change-cache-location",
                 "id": "change-cache-location",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Executors and Configurations",
-                "path": "/recipes/running-tasks/executors-and-configurations",
-                "id": "executors-and-configurations",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2427,14 +2435,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Executors and Configurations",
-            "path": "/recipes/running-tasks/executors-and-configurations",
-            "id": "executors-and-configurations",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Running Custom Commands",
             "path": "/recipes/running-tasks/run-commands-executor",
             "id": "run-commands-executor",
@@ -2497,14 +2497,6 @@
         "name": "Change Cache Location",
         "path": "/recipes/running-tasks/change-cache-location",
         "id": "change-cache-location",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Executors and Configurations",
-        "path": "/recipes/running-tasks/executors-and-configurations",
-        "id": "executors-and-configurations",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

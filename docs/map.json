@@ -203,11 +203,23 @@
               "file": "shared/features/cache-task-results"
             },
             {
+              "name": "Enhance Tooling",
+              "id": "enhance-tooling",
+              "tags": ["enhance-tooling"],
+              "file": "shared/features/enhance-tooling"
+            },
+            {
               "name": "Explore the Graph",
               "id": "explore-graph",
               "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
               "tags": ["explore-graph"],
               "file": "shared/features/explore-graph"
+            },
+            {
+              "name": "Generate Code",
+              "id": "generate-code",
+              "tags": ["generate-code"],
+              "file": "shared/features/generate-code"
             },
             {
               "name": "Automate Updating Dependencies",
@@ -236,18 +248,6 @@
               "id": "manage-releases",
               "tags": ["manage-releases"],
               "file": "shared/features/manage-releases"
-            },
-            {
-              "name": "Enhance Tooling",
-              "id": "enhance-tooling",
-              "tags": ["enhance-tooling"],
-              "file": "shared/features/enhance-tooling"
-            },
-            {
-              "name": "Generate Code",
-              "id": "generate-code",
-              "tags": ["generate-code"],
-              "file": "shared/features/generate-code"
             }
           ]
         },
@@ -285,6 +285,12 @@
               "tags": ["enhance-tooling", "inferred-targets"],
               "id": "inferred-targets",
               "file": "shared/concepts/inferred-targets"
+            },
+            {
+              "name": "Executors and Configurations",
+              "id": "executors-and-configurations",
+              "tags": ["run-tasks", "enhance-tooling"],
+              "file": "shared/recipes/running-tasks/executors-and-configurations"
             },
             {
               "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
@@ -456,12 +462,6 @@
                   "name": "Change Cache Location",
                   "id": "change-cache-location",
                   "file": "shared/recipes/running-tasks/change-cache-location"
-                },
-                {
-                  "name": "Executors and Configurations",
-                  "id": "executors-and-configurations",
-                  "tags": ["run-tasks", "enhance-tooling"],
-                  "file": "shared/recipes/running-tasks/executors-and-configurations"
                 },
                 {
                   "name": "Running Custom Commands",

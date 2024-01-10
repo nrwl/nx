@@ -805,6 +805,17 @@
         "tags": ["cache-task-results"]
       },
       {
+        "id": "enhance-tooling",
+        "name": "Enhance Tooling",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/features/enhance-tooling",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/enhance-tooling",
+        "tags": ["enhance-tooling"]
+      },
+      {
         "id": "explore-graph",
         "name": "Explore the Graph",
         "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
@@ -814,6 +825,17 @@
         "isExternal": false,
         "path": "/features/explore-graph",
         "tags": ["explore-graph"]
+      },
+      {
+        "id": "generate-code",
+        "name": "Generate Code",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/features/generate-code",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/features/generate-code",
+        "tags": ["generate-code"]
       },
       {
         "id": "automate-updating-dependencies",
@@ -858,28 +880,6 @@
         "isExternal": false,
         "path": "/features/manage-releases",
         "tags": ["manage-releases"]
-      },
-      {
-        "id": "enhance-tooling",
-        "name": "Enhance Tooling",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/features/enhance-tooling",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/enhance-tooling",
-        "tags": ["enhance-tooling"]
-      },
-      {
-        "id": "generate-code",
-        "name": "Generate Code",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/features/generate-code",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/generate-code",
-        "tags": ["generate-code"]
       }
     ],
     "isExternal": false,
@@ -908,6 +908,17 @@
     "path": "/features/cache-task-results",
     "tags": ["cache-task-results"]
   },
+  "/features/enhance-tooling": {
+    "id": "enhance-tooling",
+    "name": "Enhance Tooling",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/features/enhance-tooling",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/enhance-tooling",
+    "tags": ["enhance-tooling"]
+  },
   "/features/explore-graph": {
     "id": "explore-graph",
     "name": "Explore the Graph",
@@ -918,6 +929,17 @@
     "isExternal": false,
     "path": "/features/explore-graph",
     "tags": ["explore-graph"]
+  },
+  "/features/generate-code": {
+    "id": "generate-code",
+    "name": "Generate Code",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/features/generate-code",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/features/generate-code",
+    "tags": ["generate-code"]
   },
   "/features/automate-updating-dependencies": {
     "id": "automate-updating-dependencies",
@@ -962,28 +984,6 @@
     "isExternal": false,
     "path": "/features/manage-releases",
     "tags": ["manage-releases"]
-  },
-  "/features/enhance-tooling": {
-    "id": "enhance-tooling",
-    "name": "Enhance Tooling",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/features/enhance-tooling",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/enhance-tooling",
-    "tags": ["enhance-tooling"]
-  },
-  "/features/generate-code": {
-    "id": "generate-code",
-    "name": "Generate Code",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/features/generate-code",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/generate-code",
-    "tags": ["generate-code"]
   },
   "/concepts": {
     "id": "concepts",
@@ -1046,6 +1046,17 @@
         "isExternal": false,
         "path": "/concepts/inferred-targets",
         "tags": ["enhance-tooling", "inferred-targets"]
+      },
+      {
+        "id": "executors-and-configurations",
+        "name": "Executors and Configurations",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/executors-and-configurations",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/executors-and-configurations",
+        "tags": ["run-tasks", "enhance-tooling"]
       },
       {
         "id": "integrated-vs-package-based",
@@ -1372,6 +1383,17 @@
     "isExternal": false,
     "path": "/concepts/inferred-targets",
     "tags": ["enhance-tooling", "inferred-targets"]
+  },
+  "/concepts/executors-and-configurations": {
+    "id": "executors-and-configurations",
+    "name": "Executors and Configurations",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/executors-and-configurations",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/executors-and-configurations",
+    "tags": ["run-tasks", "enhance-tooling"]
   },
   "/concepts/integrated-vs-package-based": {
     "id": "integrated-vs-package-based",
@@ -1916,17 +1938,6 @@
             "isExternal": false,
             "path": "/recipes/running-tasks/change-cache-location",
             "tags": []
-          },
-          {
-            "id": "executors-and-configurations",
-            "name": "Executors and Configurations",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/running-tasks/executors-and-configurations",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/running-tasks/executors-and-configurations",
-            "tags": ["run-tasks", "enhance-tooling"]
           },
           {
             "id": "run-commands-executor",
@@ -3319,17 +3330,6 @@
         "tags": []
       },
       {
-        "id": "executors-and-configurations",
-        "name": "Executors and Configurations",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/running-tasks/executors-and-configurations",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/running-tasks/executors-and-configurations",
-        "tags": ["run-tasks", "enhance-tooling"]
-      },
-      {
         "id": "run-commands-executor",
         "name": "Running Custom Commands",
         "description": "",
@@ -3421,17 +3421,6 @@
     "isExternal": false,
     "path": "/recipes/running-tasks/change-cache-location",
     "tags": []
-  },
-  "/recipes/running-tasks/executors-and-configurations": {
-    "id": "executors-and-configurations",
-    "name": "Executors and Configurations",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/running-tasks/executors-and-configurations",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/running-tasks/executors-and-configurations",
-    "tags": ["run-tasks", "enhance-tooling"]
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",
