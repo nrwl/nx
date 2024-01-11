@@ -81,6 +81,7 @@ function addPlugin(host: Tree) {
     plugin: '@nx/react-native/plugin',
     options: {
       startTargetName: 'start',
+      podInstallTargetName: 'pod-install',
       bundleTargetName: 'bundle',
       runIosTargetName: 'run-ios',
       runAndroidTargetName: 'run-android',

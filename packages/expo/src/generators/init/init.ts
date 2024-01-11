@@ -18,6 +18,7 @@ import {
   reactNativeVersion,
   reactVersion,
 } from '../../utils/versions';
+import { hasExpoPlugin } from '../../utils/has-expo-plugin';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
@@ -64,18 +65,12 @@ function moveDependency(host: Tree) {
 
 function addPlugin(host: Tree) {
   const nxJson = readNxJson(host);
-  nxJson.plugins ??= [];
 
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/expo/plugin'
-        : plugin.plugin === '@nx/expo/plugin'
-    ) {
-      return;
-    }
+  if (hasExpoPlugin(host)) {
+    return;
   }
 
+  nxJson.plugins ??= [];
   nxJson.plugins.push({
     plugin: '@nx/expo/plugin',
     options: {
