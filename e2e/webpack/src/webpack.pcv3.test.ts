@@ -11,7 +11,10 @@ describe('Webpack Plugin (PCv3)', () => {
   beforeAll(() => {
     originalPcv3 = process.env.NX_PCV3;
     process.env.NX_PCV3 = 'true';
-    newProject();
+    newProject({
+      packages: ['@nx/react'],
+      unsetProjectNameAndRootFormat: false,
+    });
   });
 
   afterAll(() => {
@@ -19,13 +22,21 @@ describe('Webpack Plugin (PCv3)', () => {
     cleanupProject();
   });
 
-  it('should generate, build, and serve React applications', () => {
+  it('should generate, build, and serve React applications and libraries', () => {
     const appName = uniq('app');
+    const libName = uniq('lib');
     runCLI(
-      `generate @nx/react:app ${appName} --bundler webpack --e2eTestRunner=cypress --no-interactive`
+      `generate @nx/react:app ${appName} --bundler webpack --e2eTestRunner=cypress --rootProject --no-interactive`
     );
 
-    expect(true).toBe(true);
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
+
+    runCLI(
+      `generate @nx/react:lib ${libName} --unitTestRunner jest --no-interactive`
+    );
+
+    expect(() => runCLI(`test ${appName}`)).not.toThrow();
+    expect(() => runCLI(`test ${libName}`)).not.toThrow();
 
     // TODO: figure out why this test hangs in CI (maybe down to sudo prompt?)
     // expect(() => runCLI(`build ${appName}`)).not.toThrow();

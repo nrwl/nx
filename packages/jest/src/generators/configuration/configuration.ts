@@ -9,6 +9,7 @@ import {
   Tree,
   GeneratorCallback,
   readProjectConfiguration,
+  readNxJson,
 } from '@nx/devkit';
 
 const schemaDefaults = {
@@ -65,7 +66,16 @@ export async function configurationGenerator(
   checkForTestTarget(tree, options);
   createFiles(tree, options);
   updateTsConfig(tree, options);
-  updateWorkspace(tree, options);
+
+  const nxJson = readNxJson(tree);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/jest/plugin'
+      : p.plugin === '@nx/jest/plugin'
+  );
+  if (!hasPlugin) {
+    updateWorkspace(tree, options);
+  }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
