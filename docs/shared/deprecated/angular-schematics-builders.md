@@ -6,6 +6,14 @@ Currently, the Angular CLI can only run its own schematics and builders. The Nx 
 
 To switch from using the Angular CLI to using the Nx CLI follow the [migrating an Angular CLI project to Nx](/recipes/angular/migration/angular) recipe.
 
-## Converting Nx Generators to Schematics and Nx Executors to Builders
+## Interop between Nx Generators and Angular Schematics
 
-If you need to still support the Angular CLI, you can wrap any Nx generator with the [convertNxGenerator](/nx-api/devkit/documents/convertNxGenerator) function and re-export it in your own plugin as a schematic. In the same way, you can wrap any Nx executor with the [convertNxExecutor](/nx-api/devkit/documents/convertNxExecutor) function and re-export it in your own plugin as a builder.
+You can wrap any Nx generator with the [convertNxGenerator](/nx-api/devkit/documents/convertNxGenerator) function and re-export it in your own plugin as a schematic. This is helpful if you still want to support the Angular CLI.
+
+To convert an existing Angular Schematic to an Nx Generator, use the [wrapAngularDevkitSchematic](/nx-api/devkit/documents/ngcli_adapter/wrapAngularDevkitSchematic) utility function. This is helpful if you want to [programmatically call](/extending-nx/recipes/composing-generators) an Angular Schematic inside of a [custom Nx Generator](/extending-nx/recipes/local-generators).
+
+## Interop between Nx Executors and Angular Builders
+
+You can wrap any Nx executor with the [convertNxExecutor](/nx-api/devkit/documents/convertNxExecutor) function and re-export it in your own plugin as a builder.
+
+There is no existing utility function to convert an Angular Builder to an Nx Executor. If you want to [programmatically call](/extending-nx/recipes/compose-executors) an Angular Builder inside of a [custom Nx Executor](extending-nx/recipes/local-executors), you can import the Angular Builder into your Nx Executor's implementation and call it directly.
