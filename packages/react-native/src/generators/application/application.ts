@@ -18,6 +18,7 @@ import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
 import { addDetox } from './lib/add-detox';
 import { Schema } from './schema';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -43,6 +44,10 @@ export async function reactNativeApplicationGeneratorInternal(
   tasks.push(jsInitTask);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
   tasks.push(initTask);
+
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(host));
+  }
 
   createApplicationFiles(host, options);
   addProject(host, options);

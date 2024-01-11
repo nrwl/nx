@@ -34,7 +34,6 @@ describe('init', () => {
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['@nx/node']).toBeUndefined();
-    expect(packageJson.dependencies['tslib']).toBeDefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
     expect(packageJson.devDependencies['@nx/node']).toBeDefined();
     expect(packageJson.devDependencies[existing]).toBeDefined();
@@ -46,6 +45,6 @@ describe('init', () => {
       return json;
     });
 
-    expect(initGenerator(tree, {})).resolves.toBeTruthy();
+    await expect(initGenerator(tree, {})).resolves.toBeTruthy();
   });
 });

@@ -5,6 +5,7 @@ import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { initGenerator } from '../init/init';
 import {
   createFiles,
+  ensureDependencies,
   normalizeOptions,
   toNodeApplicationGeneratorOptions,
   updateTsConfig,
@@ -26,22 +27,30 @@ export async function applicationGeneratorInternal(
   rawOptions: ApplicationGeneratorOptions
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, rawOptions);
+
+  const tasks: GeneratorCallback[] = [];
   const initTask = await initGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
   });
+  tasks.push(initTask);
   const nodeApplicationTask = await nodeApplicationGenerator(
     tree,
     toNodeApplicationGeneratorOptions(options)
   );
+  tasks.push(nodeApplicationTask);
   createFiles(tree, options);
   updateTsConfig(tree, options);
+
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(tree));
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(initTask, nodeApplicationTask);
+  return runTasksInSerial(...tasks);
 }
 
 export default applicationGenerator;

@@ -26,7 +26,12 @@ import {
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
 import type { Linter } from '@nx/eslint';
 import { join } from 'path';
-import { nxVersion, swcLoaderVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  swcLoaderVersion,
+  tsLibVersion,
+  typesNodeVersion,
+} from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
@@ -412,6 +417,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   setDefaults(host, options);
+
+  tasks.push(
+    addDependenciesToPackageJson(
+      host,
+      { tslib: tsLibVersion },
+      { '@types/node': typesNodeVersion }
+    )
+  );
 
   if (!schema.skipFormat) {
     await formatFiles(host);

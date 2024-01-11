@@ -109,11 +109,16 @@ export async function applicationGeneratorInternal(
       typeof import('@nx/webpack')
     >('@nx/webpack', nxVersion);
     const webpackInitTask = await webpackInitGenerator(host, {
-      uiFramework: 'react',
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
     });
     tasks.push(webpackInitTask);
+    if (!options.skipPackageJson) {
+      const { ensureDependencies } = await import(
+        '@nx/webpack/src/utils/ensure-dependencies'
+      );
+      tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
+    }
   }
 
   if (!options.rootProject) {

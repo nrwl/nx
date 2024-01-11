@@ -211,7 +211,7 @@ export async function cypressProjectGeneratorInternal(
   tasks.push(installTask);
 
   if (!options.skipPackageJson) {
-    tasks.push(addDependencies(host, options));
+    tasks.push(ensureDependencies(host, options));
   }
 
   if (!options.skipFormat) {
@@ -220,7 +220,7 @@ export async function cypressProjectGeneratorInternal(
   return runTasksInSerial(...tasks);
 }
 
-function addDependencies(tree: Tree, options: CypressProjectSchema) {
+function ensureDependencies(tree: Tree, options: CypressProjectSchema) {
   const devDependencies: Record<string, string> = {
     '@types/node': typesNodeVersion,
   };

@@ -39,6 +39,8 @@ import {
   koaTypingsVersion,
   koaVersion,
   nxVersion,
+  tslibVersion,
+  typesNodeVersion,
 } from '../../utils/versions';
 import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 import { initGenerator } from '../init/init';
@@ -336,10 +338,12 @@ function addProjectDependencies(
     tree,
     {
       ...frameworkDependencies[options.framework],
+      tslib: tslibVersion,
     },
     {
       ...frameworkDevDependencies[options.framework],
       ...bundlers[options.bundler],
+      '@types/node': typesNodeVersion,
     }
   );
 }
@@ -405,11 +409,16 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       typeof import('@nx/webpack')
     >('@nx/webpack', nxVersion);
     const webpackInitTask = await webpackInitGenerator(tree, {
-      uiFramework: 'react',
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
     });
     tasks.push(webpackInitTask);
+    if (!options.skipPackageJson) {
+      const { ensureDependencies } = await import(
+        '@nx/webpack/src/utils/ensure-dependencies'
+      );
+      tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
+    }
   }
 
   addAppFiles(tree, options);

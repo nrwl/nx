@@ -3,26 +3,18 @@ import {
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-
-import {
-  nxVersion,
-  tslibVersion,
-  typesNodeVersion,
-} from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
 function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nx/node'], []);
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/node'], []));
+  tasks.push(addDependenciesToPackageJson(tree, {}, { '@nx/node': nxVersion }));
 
-  return addDependenciesToPackageJson(
-    tree,
-    {
-      tslib: tslibVersion,
-    },
-    { '@nx/node': nxVersion, '@types/node': typesNodeVersion }
-  );
+  return runTasksInSerial(...tasks);
 }
 
 export async function initGenerator(tree: Tree, options: Schema) {

@@ -82,7 +82,7 @@ export async function configurationGenerator(
   tasks.push(linterTask);
 
   if (!opts.skipPackageJson) {
-    tasks.push(addDependencies(tree, opts));
+    tasks.push(ensureDependencies(tree, opts));
   }
 
   if (!opts.skipFormat) {
@@ -92,7 +92,7 @@ export async function configurationGenerator(
   return runTasksInSerial(...tasks);
 }
 
-function addDependencies(tree: Tree, options: NormalizedSchema) {
+function ensureDependencies(tree: Tree, options: NormalizedSchema) {
   const devDependencies: Record<string, string> = {
     '@types/node': typesNodeVersion,
   };

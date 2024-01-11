@@ -24,6 +24,7 @@ import { addE2e } from './lib/add-e2e';
 import { addLinting } from '../../utils/add-linting';
 import { addVitest } from './lib/add-vitest';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
+import { ensureDependencies } from './lib/ensure-dependencies';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -43,6 +44,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     skipFormat: true,
   });
   tasks.push(nuxtInitTask);
+  tasks.push(ensureDependencies(tree, options));
 
   addProjectConfiguration(tree, options.name, {
     root: options.appProjectRoot,

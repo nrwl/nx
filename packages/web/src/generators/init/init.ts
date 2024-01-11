@@ -3,30 +3,18 @@ import {
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import {
-  nxVersion,
-  tsLibVersion,
-  typesNodeVersion,
-} from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
 function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nx/web'], []);
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/web'], []));
+  tasks.push(addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion }));
 
-  const devDependencies = {
-    '@nx/web': nxVersion,
-    '@types/node': typesNodeVersion,
-  };
-
-  return addDependenciesToPackageJson(
-    tree,
-    {
-      tslib: tsLibVersion,
-    },
-    devDependencies
-  );
+  return runTasksInSerial(...tasks);
 }
 
 export async function webInitGenerator(tree: Tree, schema: Schema) {

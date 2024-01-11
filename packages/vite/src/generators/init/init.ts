@@ -2,6 +2,7 @@ import {
   formatFiles,
   GeneratorCallback,
   readNxJson,
+  runTasksInSerial,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
@@ -46,24 +47,23 @@ export function updateNxJsonSettings(tree: Tree) {
 }
 
 export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
-  moveToDevDependencies(tree);
-  updateNxJsonSettings(tree);
-
-  const addPlugins = process.env.NX_PCV3 === 'true';
-  if (addPlugins) {
+  if (process.env.NX_PCV3 === 'true') {
     addPlugin(tree);
   }
 
-  let installTask: GeneratorCallback = () => {};
+  updateNxJsonSettings(tree);
+
+  const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
-    installTask = checkDependenciesInstalled(tree, schema);
+    tasks.push(moveToDevDependencies(tree));
+    tasks.push(checkDependenciesInstalled(tree, schema));
   }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 export default initGenerator;

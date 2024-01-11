@@ -29,6 +29,7 @@ import {
 } from '../../utils/versions';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -60,6 +61,10 @@ export async function reactNativeLibraryGeneratorInternal(
   tasks.push(jsInitTask);
   const initTask = await init(host, { ...options, skipFormat: true });
   tasks.push(initTask);
+
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(host));
+  }
 
   const addProjectTask = await addProject(host, options);
   if (addProjectTask) {

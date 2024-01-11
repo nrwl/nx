@@ -4,12 +4,6 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
 import webInitGenerator from './init';
-jest.mock('@nx/devkit', () => {
-  return {
-    ...jest.requireActual('@nx/devkit'),
-    ensurePackage: jest.fn((pkg) => jest.requireActual(pkg)),
-  };
-});
 
 describe('init', () => {
   let tree: Tree;

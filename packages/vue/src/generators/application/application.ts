@@ -16,6 +16,7 @@ import { addE2e } from './lib/add-e2e';
 import { createApplicationFiles } from './lib/create-application-files';
 import { addVite } from './lib/add-vite';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -46,6 +47,9 @@ export async function applicationGenerator(
       skipFormat: true,
     })
   );
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(tree, options));
+  }
 
   if (!options.rootProject) {
     extractTsConfigBase(tree);

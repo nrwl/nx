@@ -18,17 +18,6 @@
         "description": "Do not add dependencies to `package.json`.",
         "type": "boolean",
         "default": false
-      },
-      "routing": {
-        "type": "boolean",
-        "description": "Generate application with routes.",
-        "x-prompt": "Would you like to add Vue Router to this application?",
-        "default": false
-      },
-      "style": {
-        "description": "The file extension to be used for style files.",
-        "type": "string",
-        "default": "css"
       }
     },
     "required": [],
