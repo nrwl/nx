@@ -1,8 +1,9 @@
-import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
+  Tree,
+  GeneratorCallback,
   runTasksInSerial,
   updateProjectConfiguration,
   writeJson,
@@ -12,6 +13,7 @@ import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { rollupInitGenerator } from '../init/init';
 import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupProjectSchema } from './schema';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function configurationGenerator(
@@ -46,6 +48,7 @@ function checkForTargetConflicts(tree: Tree, options: RollupProjectSchema) {
 }
 
 function addBuildTarget(tree: Tree, options: RollupProjectSchema) {
+  addBuildTargetDefaults(tree, '@nx/rollup:rollup', options.buildTarget);
   const project = readProjectConfiguration(tree, options.project);
   const packageJsonPath = joinPathFragments(project.root, 'package.json');
 

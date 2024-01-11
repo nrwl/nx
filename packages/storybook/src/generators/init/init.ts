@@ -78,10 +78,10 @@ function moveToDevDependencies(tree: Tree): GeneratorCallback {
 }
 
 export async function initGenerator(tree: Tree, schema: Schema) {
-  addCacheableOperation(tree);
-
   if (process.env.NX_PCV3 === 'true') {
     addPlugin(tree);
+  } else {
+    addCacheableOperation(tree);
   }
 
   const tasks: GeneratorCallback[] = [];
