@@ -161,13 +161,11 @@ Type: `string`
 
 Exact version or semver keyword to apply to the selected release group.
 
-##### stageChanges
+##### stage-changes
 
 Type: `boolean`
 
-Default: `false`
-
-Whether or not to stage the changes made by this command, irrespective of the git config in nx.json related to automated commits. Useful when combining this command with changelog generation.
+Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.
 
 ##### version
 

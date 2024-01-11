@@ -54,7 +54,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -75,7 +75,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -104,7 +104,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -124,7 +125,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -145,7 +146,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -174,7 +175,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -197,7 +199,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -218,7 +220,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -247,7 +249,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -286,7 +289,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -307,7 +310,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -336,7 +339,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -365,7 +369,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -386,7 +390,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -413,7 +417,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -440,7 +445,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -461,7 +466,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -489,7 +494,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -528,7 +534,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -549,7 +555,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -590,7 +596,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -618,7 +625,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -639,7 +646,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -676,7 +683,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -706,7 +714,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -727,7 +735,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -760,7 +768,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -786,7 +795,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -807,7 +816,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": true,
               "commitArgs": "--no-verify",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -836,7 +845,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -868,7 +878,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -889,7 +899,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -918,7 +928,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -963,7 +974,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -984,7 +995,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1011,7 +1022,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1036,7 +1048,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1057,7 +1069,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1086,7 +1098,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1121,7 +1134,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1142,7 +1155,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1182,7 +1195,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1210,7 +1224,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1221,7 +1235,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1250,7 +1264,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1286,7 +1301,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1317,7 +1332,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1356,7 +1371,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1382,7 +1398,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1413,7 +1429,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1452,7 +1468,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1506,7 +1523,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1537,7 +1554,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1608,7 +1625,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1649,7 +1667,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1680,7 +1698,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1739,7 +1757,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -2034,7 +2053,7 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -2055,7 +2074,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -2095,7 +2114,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
