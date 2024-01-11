@@ -173,7 +173,7 @@ const config: StorybookConfig = {
     name: '@storybook/react-vite',
     options: {
       builder: {
-        viteConfigPath: 'apps/main-vite-ts/vite.config.custom.ts',
+        viteConfigPath: 'apps/main-vite-ts/vite.config.ts',
       },
     },
   },
@@ -323,7 +323,7 @@ const config: StorybookConfig = {
     name: '@storybook/web-components-vite',
     options: {
       builder: {
-        viteConfigPath: 'apps/wv1/vite.config.custom.ts',
+        viteConfigPath: 'apps/wv1/vite.config.ts',
       },
     },
   },

@@ -21,6 +21,7 @@ import {
 } from '../../utils/versions';
 import { Schema } from './schema';
 import {
+  addPlugin,
   getInstalledStorybookVersion,
   storybookMajorVersion,
 } from '../../utils/utilities';
@@ -59,6 +60,10 @@ function checkDependenciesInstalled(host: Tree, schema: Schema) {
     !packageJson.devDependencies['react-dom']
   ) {
     dependencies['react-dom'] = reactVersion;
+  }
+
+  if (process.env.NX_PCV3 === 'true') {
+    devDependencies['storybook'] = storybook7VersionToInstall;
   }
 
   devDependencies['@storybook/core-server'] = storybook7VersionToInstall;
@@ -204,6 +209,10 @@ export async function initGenerator(tree: Tree, schema: Schema) {
   moveToDevDependencies(tree);
   editRootTsConfig(tree);
   addCacheableOperation(tree);
+  const addPlugins = process.env.NX_PCV3 === 'true';
+  if (addPlugins) {
+    addPlugin(tree);
+  }
   return runTasksInSerial(...tasks);
 }
 
