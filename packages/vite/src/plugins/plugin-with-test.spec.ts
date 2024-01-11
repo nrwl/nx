@@ -1,12 +1,15 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
 jest.mock('vite', () => ({
   loadConfigFromFile: jest.fn().mockImplementation(() => {
     return Promise.resolve({
       path: 'vite.config.ts',
-      config: {},
+      config: {
+        test: {
+          some: 'option',
+        },
+      },
       dependencies: [],
     });
   }),
@@ -16,13 +19,17 @@ jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
     loadConfigFromFile: jest.fn().mockResolvedValue({
       path: 'vite.config.ts',
-      config: {},
+      config: {
+        test: {
+          some: 'option',
+        },
+      },
       dependencies: [],
     }),
   }),
 }));
 
-describe('@nx/vite/plugin', () => {
+describe('@nx/vite/plugin with test node', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
   describe('root project', () => {
@@ -49,7 +56,7 @@ describe('@nx/vite/plugin', () => {
       jest.resetModules();
     });
 
-    it('should create nodes', async () => {
+    it('should create nodes - with test too', async () => {
       const nodes = await createNodesFunction(
         'vite.config.ts',
         {
@@ -57,47 +64,6 @@ describe('@nx/vite/plugin', () => {
           serveTargetName: 'serve',
           previewTargetName: 'preview',
           testTargetName: 'test',
-          serveStaticTargetName: 'serve-static',
-        },
-        context
-      );
-
-      expect(nodes).toMatchSnapshot();
-    });
-  });
-
-  describe('not root project', () => {
-    const tempFs = new TempFs('test');
-    beforeEach(() => {
-      context = {
-        nxJsonConfiguration: {
-          namedInputs: {
-            default: ['{projectRoot}/**/*'],
-            production: ['!{projectRoot}/**/*.spec.ts'],
-          },
-        },
-        workspaceRoot: tempFs.tempDir,
-      };
-
-      tempFs.createFileSync(
-        'my-app/project.json',
-        JSON.stringify({ name: 'my-app' })
-      );
-      tempFs.createFileSync('my-app/vite.config.ts', '');
-    });
-
-    afterEach(() => {
-      jest.resetModules();
-    });
-
-    it('should create nodes', async () => {
-      const nodes = await createNodesFunction(
-        'my-app/vite.config.ts',
-        {
-          buildTargetName: 'build-something',
-          serveTargetName: 'my-serve',
-          previewTargetName: 'preview-site',
-          testTargetName: 'vitest',
           serveStaticTargetName: 'serve-static',
         },
         context
