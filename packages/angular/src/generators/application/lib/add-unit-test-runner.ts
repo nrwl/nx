@@ -6,6 +6,7 @@ import type { NormalizedSchema } from './normalized-schema';
 export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
   if (options.unitTestRunner === UnitTestRunner.Jest) {
     await configurationGenerator(host, {
+      ...options,
       project: options.name,
       setupFile: 'angular',
       supportTsx: false,

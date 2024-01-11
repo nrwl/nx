@@ -1,6 +1,15 @@
+let projectGraph: ProjectGraph;
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
+  createProjectGraphAsync: jest.fn().mockImplementation(async () => {
+    return projectGraph;
+  }),
+}));
+
 import {
-  addProjectConfiguration,
+  addProjectConfiguration as _addProjectConfiguration,
   NxJsonConfiguration,
+  ProjectGraph,
   readJson,
   readProjectConfiguration,
   stripIndents,
@@ -11,11 +20,29 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { jestInitGenerator } from './init';
 
+function addProjectConfiguration(tree, name, project) {
+  _addProjectConfiguration(tree, name, project);
+  projectGraph.nodes[name] = {
+    name: name,
+    type: 'lib',
+    data: {
+      root: project.root,
+      targets: project.targets,
+    },
+  };
+}
+
 describe('jest', () => {
   let tree: Tree;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    projectGraph = {
+      nodes: {},
+      dependencies: {},
+      externalNodes: {},
+    };
   });
 
   it('should generate files with --js flag', async () => {
@@ -250,6 +277,21 @@ export default {
       );
       await jestInitGenerator(tree, { rootProject: false });
       expect(tree.exists('jest.config.app.ts')).toBeTruthy();
+      expect(tree.read('jest.config.app.ts', 'utf-8')).toMatchInlineSnapshot(`
+        "
+        /* eslint-disable */
+        export default {
+          transform: {
+            '^.+\\.[tj]sx?$': 'ts-jest',
+          },
+          moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
+          globals: { 'ts-jest': { tsconfig: '<rootDir>/tsconfig.spec.json' } },
+          displayName: 'my-project',
+          testEnvironment: 'node',
+          preset: './jest.preset.js',
+        };
+        "
+      `);
       expect(tree.read('jest.config.ts', 'utf-8'))
         .toEqual(`import { getJestProjects } from '@nx/jest';
 
