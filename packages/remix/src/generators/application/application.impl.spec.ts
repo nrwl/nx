@@ -66,7 +66,7 @@ describe('Remix Application', () => {
         expectTargetsToBeCorrect(tree, '.');
 
         expect(tree.read('remix.config.cjs', 'utf-8')).toMatchSnapshot();
-        expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('vitest.config.ts', 'utf-8')).toMatchSnapshot();
         expect(
           tree.read('tests/routes/_index.spec.tsx', 'utf-8')
         ).toMatchSnapshot();
@@ -248,7 +248,7 @@ describe('Remix Application', () => {
             tree.read(`${appDir}/remix.config.cjs`, 'utf-8')
           ).toMatchSnapshot();
           expect(
-            tree.read(`${appDir}/vite.config.ts`, 'utf-8')
+            tree.read(`${appDir}/vitest.config.ts`, 'utf-8')
           ).toMatchSnapshot();
           expect(
             tree.read(`${appDir}/test-setup.ts`, 'utf-8')
