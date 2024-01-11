@@ -17,7 +17,7 @@ describe('@nx/react-native/plugin', () => {
     newProject();
     appName = uniq('app');
     runCLI(
-      `generate @nx/react-native:app ${appName} --project-name-and-root-format=as-provided --no-interactive`,
+      `generate @nx/react-native:app ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`,
       { env: { NX_PCV3: 'true' } }
     );
   });

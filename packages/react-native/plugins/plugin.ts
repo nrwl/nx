@@ -3,6 +3,7 @@ import {
   CreateNodes,
   CreateNodesContext,
   detectPackageManager,
+  joinPathFragments,
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
@@ -17,6 +18,7 @@ import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 
 export interface ReactNativePluginOptions {
   startTargetName?: string;
+  podInstallTargetName?: string;
   runIosTargetName?: string;
   runAndroidTargetName?: string;
   buildIosTargetName?: string;
@@ -102,8 +104,17 @@ function buildReactNativeTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      command: `react-native start`,
-      options: { cwd: projectRoot },
+      executor: `@nx/react-native:start`,
+    },
+    [options.podInstallTargetName]: {
+      command: `pod install`,
+      options: { cwd: joinPathFragments(projectRoot, 'ios') },
+      cache: true,
+      inputs: getInputs(namedInputs),
+      outputs: [
+        getOutputs(projectRoot, 'ios/Pods'),
+        getOutputs(projectRoot, 'ios/Podfile.lock'),
+      ],
     },
     [options.runIosTargetName]: {
       command: `react-native run-ios`,
@@ -191,6 +202,7 @@ function normalizeOptions(
 ): ReactNativePluginOptions {
   options ??= {};
   options.startTargetName ??= 'start';
+  options.podInstallTargetName ??= 'pod-install';
   options.runIosTargetName ??= 'run-ios';
   options.runAndroidTargetName ??= 'run-android';
   options.buildIosTargetName ??= 'build-ios';
