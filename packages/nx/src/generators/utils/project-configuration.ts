@@ -4,9 +4,12 @@ import { basename, join, relative } from 'path';
 import {
   buildProjectConfigurationFromPackageJson,
   getGlobPatternsFromPackageManagerWorkspaces,
-} from '../../../plugins/package-json-workspaces';
-import { buildProjectFromProjectJson } from '../../plugins/project-json/build-nodes/project-json';
-import { getDefaultPluginsSync } from '../../utils/nx-plugin.deprecated';
+  getNxPackageJsonWorkspacesPlugin,
+} from '../../plugins/package-json-workspaces';
+import {
+  buildProjectFromProjectJson,
+  ProjectJsonProjectsPlugin,
+} from '../../plugins/project-json/build-nodes/project-json';
 import { renamePropertyWithStableKeys } from '../../adapter/angular-json';
 import {
   ProjectConfiguration,
@@ -16,7 +19,8 @@ import {
   mergeProjectConfigurationIntoRootMap,
   readProjectConfigurationsFromRootMap,
 } from '../../project-graph/utils/project-configuration-utils';
-import { retrieveProjectConfigurationPaths } from '../../project-graph/utils/retrieve-workspace-files';
+import { configurationGlobs } from '../../project-graph/utils/retrieve-workspace-files';
+import { globWithWorkspaceContext } from '../../utils/workspace-context';
 import { output } from '../../utils/output';
 import { PackageJson } from '../../utils/package-json';
 import { joinPathFragments, normalizePath } from '../../utils/path';
@@ -191,10 +195,11 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
       readJson(tree, p)
     ),
   ];
-  const globbedFiles = retrieveProjectConfigurationPaths(
-    tree.root,
-    getDefaultPluginsSync(tree.root)
-  );
+  const projectGlobPatterns = configurationGlobs([
+    { plugin: ProjectJsonProjectsPlugin },
+    { plugin: getNxPackageJsonWorkspacesPlugin(tree.root) },
+  ]);
+  const globbedFiles = globWithWorkspaceContext(tree.root, projectGlobPatterns);
   const createdFiles = findCreatedProjectFiles(tree, patterns);
   const deletedFiles = findDeletedProjectFiles(tree, patterns);
   const projectFiles = [...globbedFiles, ...createdFiles].filter(
