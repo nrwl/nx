@@ -1,9 +1,9 @@
 import { ProjectNodeToolTipProps } from '@nx/graph/ui-tooltips';
 import { getProjectGraphService } from '../machines/get-services';
-import { useRouteConstructor } from '../util';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TooltipButton, TooltipLinkButton } from '@nx/graph/ui-tooltips';
 import { FlagIcon, MapPinIcon } from '@heroicons/react/24/solid';
+import { useRouteConstructor } from '@nx/graph/shared';
 
 export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
   const projectGraphService = getProjectGraphService();
@@ -12,7 +12,11 @@ export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
   const routeConstructor = useRouteConstructor();
   const navigate = useNavigate();
   const encodedId = encodeURIComponent(id);
+  const [searchParams, setSearchParams] = useSearchParams();
 
+  function onProjectDetails() {
+    setSearchParams({ projectDetails: id });
+  }
   function onExclude() {
     projectGraphService.send({
       type: 'deselectProject',
@@ -36,6 +40,7 @@ export function ProjectNodeActions({ id }: ProjectNodeToolTipProps) {
 
   return (
     <div className="grid grid-cols-3 gap-4">
+      {/* <TooltipButton onClick={onProjectDetails}>Project Details</TooltipButton> */}
       <TooltipLinkButton to={routeConstructor(`/projects/${encodedId}`, true)}>
         Focus
       </TooltipLinkButton>

@@ -1,49 +1,8 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphDependency, ProjectGraphProjectNode } from '@nx/devkit';
+import { getEnvironmentConfig } from '@nx/graph/shared';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { getEnvironmentConfig } from './hooks/use-environment-config';
-import { To, useParams, useSearchParams } from 'react-router-dom';
-
-export const useRouteConstructor = (): ((
-  to: To,
-  retainSearchParams: boolean
-) => To) => {
-  const { environment } = getEnvironmentConfig();
-  const { selectedWorkspaceId } = useParams();
-  const [searchParams] = useSearchParams();
-
-  return (to: To, retainSearchParams: true) => {
-    let pathname = '';
-
-    if (typeof to === 'object') {
-      if (environment === 'dev') {
-        pathname = `/${selectedWorkspaceId}${to.pathname}`;
-      } else {
-        pathname = to.pathname;
-      }
-      return {
-        ...to,
-        pathname,
-        search: to.search
-          ? to.search.toString()
-          : retainSearchParams
-          ? searchParams.toString()
-          : '',
-      };
-    } else if (typeof to === 'string') {
-      if (environment === 'dev') {
-        pathname = `/${selectedWorkspaceId}${to}`;
-      } else {
-        pathname = to;
-      }
-      return {
-        pathname,
-        search: retainSearchParams ? searchParams.toString() : '',
-      };
-    }
-  };
-};
 
 export function parseParentDirectoriesFromFilePath(
   path: string,
