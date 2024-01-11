@@ -3,7 +3,7 @@
 import type { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useRef } from 'react';
-import { AppConfig } from '../interfaces';
+import { AppConfig } from './app-config';
 
 export function useEnvironmentConfig(): {
   exclude: string[];

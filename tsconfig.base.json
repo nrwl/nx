@@ -36,6 +36,7 @@
       "@nx/expo/*": ["packages/expo/*"],
       "@nx/express": ["packages/express"],
       "@nx/graph/project-details": ["graph/project-details/src/index.ts"],
+      "@nx/graph/shared": ["graph/shared/src/index.ts"],
       "@nx/graph/ui-components": ["graph/ui-components/src/index.ts"],
       "@nx/graph/ui-graph": ["graph/ui-graph/src/index.ts"],
       "@nx/graph/ui-tooltips": ["graph/ui-tooltips/src/index.ts"],
