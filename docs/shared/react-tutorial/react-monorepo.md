@@ -61,7 +61,7 @@ Create a new React monorepo with the following command:
 ✔ Which bundler would you like to use? · vite
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Enable remote caching to make your CI faster · Yes
 ```
 
 Let's name the initial application `react-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. The above command generates the following structure:

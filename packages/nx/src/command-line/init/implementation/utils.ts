@@ -24,7 +24,7 @@ export async function askAboutNxCloud(): Promise<boolean> {
     .prompt([
       {
         name: 'NxCloud',
-        message: `Enable distributed caching to make your CI faster`,
+        message: `Enable remote caching to make your CI faster`,
         type: 'autocomplete',
         choices: [
           {

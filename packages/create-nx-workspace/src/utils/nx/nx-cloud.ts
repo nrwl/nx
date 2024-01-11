@@ -38,10 +38,10 @@ export async function setupNxCloud(
 
 export function printNxCloudSuccessMessage(nxCloudOut: string) {
   const bodyLines = nxCloudOut
-    .split('Distributed caching via Nx Cloud has been enabled')[1]
+    .split('Remote caching via Nx Cloud has been enabled')[1]
     .trim();
   output.note({
-    title: `Distributed caching via Nx Cloud has been enabled`,
+    title: `Remote caching via Nx Cloud has been enabled`,
     bodyLines: bodyLines.split('\n').map((r) => r.trim()),
   });
 }

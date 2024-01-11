@@ -58,7 +58,7 @@ A set of preconfigured options for a [target](#target) that should be enabled al
 
 > See: [Use Executor Configurations](/core-features/plugin-features/use-task-executors#use-executor-configurations)
 
-### Distributed Cache
+### Remote Cache
 
 A [cache](#cache) that can be shared between all developers using the repo and the CI system.
 
@@ -118,7 +118,7 @@ A [project](#project) that is located in a sub-folder of another project. This w
 
 ### Nx Cloud
 
-A service that provides [distributed caching](#distributed-cache) and [distributed task execution](#distributed-task-execution).
+A service that provides [remote caching](#remote-cache) and [distributed task execution](#distributed-task-execution).
 
 > See: [CI with Nx](/ci/intro/ci-with-nx)
 

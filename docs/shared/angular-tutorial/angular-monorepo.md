@@ -59,7 +59,7 @@ Create a new Angular monorepo with the following command:
 ✔ Default stylesheet format · css
 ✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
 ✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Enable remote caching to make your CI faster · Yes
 ```
 
 Let's name the initial application `angular-store`. In this tutorial we're going to use `cypress` for e2e tests and `css` for styling. The above command generates the following structure:

@@ -73,7 +73,7 @@ export async function connectToNxCloudPrompt(prompt?: string) {
     .prompt([
       {
         name: 'NxCloud',
-        message: prompt ?? `Enable distributed caching to make your CI faster`,
+        message: prompt ?? `Enable remote caching to make your CI faster`,
         type: 'autocomplete',
         choices: [
           {
