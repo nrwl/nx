@@ -16,4 +16,4 @@ To convert an existing Angular Schematic to an Nx Generator, use the [wrapAngula
 
 You can wrap any Nx executor with the [convertNxExecutor](/nx-api/devkit/documents/convertNxExecutor) function and re-export it in your own plugin as a builder.
 
-There is no existing utility function to convert an Angular Builder to an Nx Executor. If you want to [programmatically call](/extending-nx/recipes/compose-executors) an Angular Builder inside of a [custom Nx Executor](extending-nx/recipes/local-executors), you can import the Angular Builder into your Nx Executor's implimentation and call it directly.
+There is no existing utility function to convert an Angular Builder to an Nx Executor. If you want to [programmatically call](/extending-nx/recipes/compose-executors) an Angular Builder inside of a [custom Nx Executor](extending-nx/recipes/local-executors), you can import the Angular Builder into your Nx Executor's implementation and call it directly.
