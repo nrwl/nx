@@ -34,7 +34,7 @@ export function Header(): JSX.Element {
     {
       name: 'Nx Replay',
       description:
-        'Built-in local and remote caching to speed up your tasks and save you time and money.',
+        'Leverage remote caching to speed up your tasks and save you time and money.',
       href: '/core-features/cache-task-results',
     },
     {

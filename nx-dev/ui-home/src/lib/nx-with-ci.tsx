@@ -158,8 +158,8 @@ export function NxWithCi(): JSX.Element {
               </div>
             </dt>
             <dd className="mt-4 text-base leading-7 text-slate-700 dark:text-slate-400">
-              Built-in local and remote caching to speed up your tasks and save
-              you time and money.
+              Zero-config remote caching speeds up your tasks and saves you time
+              and money.
             </dd>
           </div>
           <div className="relative">
