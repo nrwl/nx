@@ -28,7 +28,6 @@ export async function applicationGeneratorInternal(
   const options = await normalizeOptions(tree, rawOptions);
   const initTask = await initGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
-    unitTestRunner: options.unitTestRunner,
     skipFormat: true,
   });
   const nodeApplicationTask = await nodeApplicationGenerator(

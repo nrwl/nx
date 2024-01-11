@@ -11,13 +11,8 @@
       "type": "boolean",
       "default": false
     },
-    "js": {
-      "type": "boolean",
-      "description": "Use JavaScript instead of TypeScript",
-      "default": false
-    },
-    "rootProject": {
-      "description": "Create a project at the root of the workspace",
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
       "type": "boolean",
       "default": false
     },

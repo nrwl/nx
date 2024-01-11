@@ -24,7 +24,7 @@ import {
   vitestCoverageV8Version,
 } from '../../utils/versions';
 
-import { addTsLibDependencies } from '@nx/js';
+import { addTsLibDependencies, initGenerator as jsInitGenerator } from '@nx/js';
 import { join } from 'path';
 
 export async function vitestGenerator(
@@ -53,9 +53,12 @@ export async function vitestGenerator(
       'test';
     addOrChangeTestTarget(tree, schema, testTarget);
   }
+
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
     testEnvironment: schema.testEnvironment,
+    skipFormat: true,
   });
   tasks.push(initTask);
 

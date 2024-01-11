@@ -431,14 +431,9 @@ describe('@nx/storybook:init', () => {
 
       // check that only the following dependencies have been added
       expect(Object.keys(packageJson.devDependencies)).toEqual([
-        '@nx/js',
         '@nx/storybook',
         '@storybook/addon-essentials',
         '@storybook/core-server',
-        '@swc-node/register',
-        '@swc/core',
-        'prettier',
-        'typescript',
       ]);
     });
   });

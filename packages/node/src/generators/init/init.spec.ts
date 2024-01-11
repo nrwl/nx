@@ -40,19 +40,12 @@ describe('init', () => {
     expect(packageJson.devDependencies[existing]).toBeDefined();
   });
 
-  it('should not add jest config if unitTestRunner is none', async () => {
-    await initGenerator(tree, { unitTestRunner: 'none' });
-    expect(tree.exists('jest.config.js')).toEqual(false);
-  });
-
   it('should not fail when dependencies is missing from package.json and no other init generators are invoked', async () => {
     updateJson(tree, 'package.json', (json) => {
       delete json.dependencies;
       return json;
     });
 
-    expect(
-      initGenerator(tree, { unitTestRunner: 'none' })
-    ).resolves.toBeTruthy();
+    expect(initGenerator(tree, {})).resolves.toBeTruthy();
   });
 });

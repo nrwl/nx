@@ -13,28 +13,30 @@ import {
 } from '../../utils/versions';
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
-  let task: GeneratorCallback;
+  let task: GeneratorCallback = () => {};
 
-  if (schema.compiler === 'swc') {
-    task = addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@nx/rollup': nxVersion,
-        '@swc/helpers': swcHelpersVersion,
-        '@swc/core': swcCoreVersion,
-        'swc-loader': swcLoaderVersion,
-      }
-    );
-  } else {
-    task = addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@nx/rollup': nxVersion,
-        tslib: tsLibVersion,
-      }
-    );
+  if (!schema.skipPackageJson) {
+    if (schema.compiler === 'swc') {
+      task = addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@nx/rollup': nxVersion,
+          '@swc/helpers': swcHelpersVersion,
+          '@swc/core': swcCoreVersion,
+          'swc-loader': swcLoaderVersion,
+        }
+      );
+    } else {
+      task = addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@nx/rollup': nxVersion,
+          tslib: tsLibVersion,
+        }
+      );
+    }
   }
 
   if (!schema.skipFormat) {

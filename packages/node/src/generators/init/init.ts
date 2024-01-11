@@ -3,12 +3,9 @@ import {
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
-  runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { jestInitGenerator } from '@nx/jest';
 
-import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   nxVersion,
   tslibVersion,
@@ -28,37 +25,17 @@ function updateDependencies(tree: Tree) {
   );
 }
 
-function normalizeOptions(schema: Schema) {
-  return {
-    ...schema,
-    unitTestRunner: schema.unitTestRunner ?? 'jest',
-  };
-}
-
-export async function initGenerator(tree: Tree, schema: Schema) {
-  const options = normalizeOptions(schema);
-
-  const tasks: GeneratorCallback[] = [];
-  tasks.push(
-    await jsInitGenerator(tree, {
-      ...schema,
-      tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-      skipFormat: true,
-    })
-  );
-  if (options.unitTestRunner === 'jest') {
-    tasks.push(
-      await jestInitGenerator(tree, { ...schema, testEnvironment: 'node' })
-    );
+export async function initGenerator(tree: Tree, options: Schema) {
+  let installTask: GeneratorCallback = () => {};
+  if (!options.skipPackageJson) {
+    installTask = updateDependencies(tree);
   }
-
-  tasks.push(updateDependencies(tree));
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(...tasks);
+  return installTask;
 }
 
 export default initGenerator;

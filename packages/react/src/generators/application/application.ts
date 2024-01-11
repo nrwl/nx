@@ -37,6 +37,7 @@ import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -90,10 +91,16 @@ export async function applicationGeneratorInternal(
   const options = await normalizeOptions(host, schema);
   showPossibleWarnings(host, options);
 
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
+
   const initTask = await reactInitGenerator(host, {
     ...options,
     skipFormat: true,
-    skipHelperLibs: options.bundler === 'vite',
   });
   tasks.push(initTask);
 
@@ -103,6 +110,7 @@ export async function applicationGeneratorInternal(
     >('@nx/webpack', nxVersion);
     const webpackInitTask = await webpackInitGenerator(host, {
       uiFramework: 'react',
+      skipPackageJson: options.skipPackageJson,
       skipFormat: true,
     });
     tasks.push(webpackInitTask);

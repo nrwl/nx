@@ -14,7 +14,11 @@ import {
   updateJson,
 } from '@nx/devkit';
 
-import { addTsConfigPath, getRelativePathToRootTsConfig } from '@nx/js';
+import {
+  addTsConfigPath,
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
 import init from '../init/init';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
@@ -49,11 +53,12 @@ export async function expoLibraryGeneratorInternal(
 
   const tasks: GeneratorCallback[] = [];
 
-  const initTask = await init(host, {
-    ...options,
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
     skipFormat: true,
-    e2eTestRunner: 'none',
   });
+  tasks.push(jsInitTask);
+  const initTask = await init(host, { ...options, skipFormat: true });
   tasks.push(initTask);
 
   const addProjectTask = await addProject(host, options);

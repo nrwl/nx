@@ -5,7 +5,6 @@ import {
   readNxJson,
   readProjectConfiguration,
   removeDependenciesFromPackageJson,
-  runTasksInSerial,
   stripIndents,
   TargetConfiguration,
   Tree,
@@ -13,7 +12,6 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { findRootJestConfig } from '../../utils/config/find-root-jest-files';
 import {
@@ -309,25 +307,18 @@ export async function jestInitGenerator(
   schema: JestInitSchema
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(schema);
-  const tasks: GeneratorCallback[] = [];
-
-  tasks.push(
-    await jsInitGenerator(tree, {
-      ...schema,
-      skipFormat: true,
-    })
-  );
 
   await createJestConfig(tree, options);
 
+  let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {
     removeDependenciesFromPackageJson(tree, ['@nx/jest'], []);
-    const installTask = updateDependencies(tree, options);
-    tasks.push(installTask);
+    installTask = updateDependencies(tree, options);
   }
 
   updateExtensions(tree);
-  return runTasksInSerial(...tasks);
+
+  return installTask;
 }
 
 function normalizeOptions(options: JestInitSchema) {

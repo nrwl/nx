@@ -19,7 +19,10 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getRelativePathToRootTsConfig } from '@nx/js';
+import {
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
 import type { Linter } from '@nx/eslint';
 import { join } from 'path';
@@ -224,6 +227,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
+  const jsInitTask = await jsInitGenerator(host, {
+    js: false,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const webTask = await webInitGenerator(host, {
     ...options,
     skipFormat: true,

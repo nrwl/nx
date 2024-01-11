@@ -7,6 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { vueInitGenerator } from '../init/init';
@@ -30,6 +31,15 @@ export async function applicationGenerator(
     targets: {},
   });
 
+  tasks.push(
+    await jsInitGenerator(tree, {
+      ...options,
+      tsConfigName: options.rootProject
+        ? 'tsconfig.json'
+        : 'tsconfig.base.json',
+      skipFormat: true,
+    })
+  );
   tasks.push(
     await vueInitGenerator(tree, {
       ...options,

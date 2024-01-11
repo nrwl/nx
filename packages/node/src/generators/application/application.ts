@@ -21,7 +21,11 @@ import {
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { configurationGenerator } from '@nx/jest';
-import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nx/js';
+import {
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+  tsConfigBaseOptions,
+} from '@nx/js';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
@@ -381,6 +385,12 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     return await applicationGenerator(tree, { ...options, skipFormat: true });
   }
 
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const initTask = await initGenerator(tree, {
     ...schema,
     skipFormat: true,
@@ -396,6 +406,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     >('@nx/webpack', nxVersion);
     const webpackInitTask = await webpackInitGenerator(tree, {
       uiFramework: 'react',
+      skipPackageJson: options.skipPackageJson,
       skipFormat: true,
     });
     tasks.push(webpackInitTask);

@@ -37,9 +37,14 @@
       "x-priority": "important",
       "aliases": ["storybook7UiFramework"]
     },
-    "js": {
+    "skipFormat": {
+      "description": "Skip formatting files.",
       "type": "boolean",
-      "description": "Generate JavaScript story files rather than TypeScript story files.",
+      "default": false
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
       "default": false
     }
   }

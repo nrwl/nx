@@ -5,6 +5,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { runSymlink } from '../../utils/symlink-task';
 import { addLinting } from '../../utils/add-linting';
@@ -34,7 +35,14 @@ export async function expoApplicationGeneratorInternal(
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(host, schema);
 
+  const tasks: GeneratorCallback[] = [];
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
+  tasks.push(initTask);
 
   createApplicationFiles(host, options);
   addProject(host, options);
@@ -46,6 +54,7 @@ export async function expoApplicationGeneratorInternal(
       joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
     ],
   });
+  tasks.push(lintTask);
 
   const jestTask = await addJest(
     host,
@@ -55,15 +64,18 @@ export async function expoApplicationGeneratorInternal(
     options.js,
     options.skipPackageJson
   );
+  tasks.push(jestTask);
   const detoxTask = await addDetox(host, options);
+  tasks.push(detoxTask);
   const symlinkTask = runSymlink(host.root, options.appProjectRoot);
+  tasks.push(symlinkTask);
   addEasScripts(host);
 
   if (!options.skipFormat) {
     await formatFiles(host);
   }
 
-  return runTasksInSerial(initTask, lintTask, jestTask, detoxTask, symlinkTask);
+  return runTasksInSerial(...tasks);
 }
 
 export default expoApplicationGenerator;

@@ -11,8 +11,6 @@ import {
 } from '@nx/devkit';
 import { Schema } from './schema';
 
-import { jestInitGenerator } from '@nx/jest';
-import { detoxInitGenerator } from '@nx/detox';
 import {
   babelCoreVersion,
   babelPresetReactVersion,
@@ -59,19 +57,6 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
 
     tasks.push(moveDependency(host));
     tasks.push(installTask);
-  }
-
-  if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = await jestInitGenerator(host, schema);
-    tasks.push(jestTask);
-  }
-
-  if (!schema.e2eTestRunner || schema.e2eTestRunner === 'detox') {
-    const detoxTask = await detoxInitGenerator(host, {
-      ...schema,
-      skipFormat: true,
-    });
-    tasks.push(detoxTask);
   }
 
   if (process.env.NX_PCV3 === 'true') {

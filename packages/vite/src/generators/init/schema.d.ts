@@ -3,5 +3,6 @@ export interface InitGeneratorSchema {
   compiler?: 'babel' | 'swc';
   includeLib?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  rootProject?: boolean;
+  skipFormat?: boolean;
+  skipPackageJson?: boolean;
 }

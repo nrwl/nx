@@ -36,18 +36,6 @@ describe('init generator', () => {
     expect(packageJson.devDependencies['@nx/nest']).toBe(nxVersion);
   });
 
-  it('should add jest config when unitTestRunner is jest', async () => {
-    await initGenerator(tree, { unitTestRunner: 'jest' });
-
-    expect(tree.exists('jest.config.ts')).toBe(true);
-  });
-
-  it('should not add jest config when unitTestRunner is none', async () => {
-    await initGenerator(tree, { unitTestRunner: 'none' });
-
-    expect(tree.exists('jest.config.ts')).toBe(false);
-  });
-
   describe('--skipFormat', () => {
     it('should format files by default', async () => {
       jest.spyOn(devkit, 'formatFiles');

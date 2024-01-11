@@ -1,12 +1,12 @@
 import {
   addDependenciesToPackageJson,
+  formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
 
-import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   lessVersion,
   nxVersion,
@@ -21,12 +21,13 @@ import {
 import { InitSchema } from './schema';
 
 function updateDependencies(host: Tree, schema: InitSchema) {
-  removeDependenciesFromPackageJson(host, ['@nx/vue'], []);
+  const tasks: GeneratorCallback[] = [];
+
+  tasks.push(removeDependenciesFromPackageJson(host, ['@nx/vue'], []));
 
   let dependencies: { [key: string]: string } = {
     vue: vueVersion,
   };
-
   let devDependencies: { [key: string]: string } = {
     '@nx/vue': nxVersion,
     '@vue/tsconfig': vueTsconfigVersion,
@@ -45,23 +46,22 @@ function updateDependencies(host: Tree, schema: InitSchema) {
     devDependencies['less'] = lessVersion;
   }
 
-  return addDependenciesToPackageJson(host, dependencies, devDependencies);
+  tasks.push(addDependenciesToPackageJson(host, dependencies, devDependencies));
+
+  return runTasksInSerial(...tasks);
 }
 
 export async function vueInitGenerator(host: Tree, schema: InitSchema) {
-  const tasks: GeneratorCallback[] = [];
+  let installTask: GeneratorCallback = () => {};
+  if (!schema.skipPackageJson) {
+    installTask = updateDependencies(host, schema);
+  }
 
-  tasks.push(
-    await jsInitGenerator(host, {
-      ...schema,
-      tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-      skipFormat: true,
-    })
-  );
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 
-  tasks.push(updateDependencies(host, schema));
-
-  return runTasksInSerial(...tasks);
+  return installTask;
 }
 
 export default vueInitGenerator;

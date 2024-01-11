@@ -17,9 +17,4 @@ describe('init', () => {
     expect(packageJson.devDependencies['@nx/next']).toBeDefined();
     expect(packageJson.dependencies['next']).toBeDefined();
   });
-
-  it('should not add jest config if unitTestRunner is none', async () => {
-    await nextInitGenerator(tree, { unitTestRunner: 'none' });
-    expect(tree.exists('jest.config.js')).toEqual(false);
-  });
 });

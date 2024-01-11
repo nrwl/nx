@@ -33,10 +33,6 @@ import {
 } from '../../utils/versions';
 import { ExpoPluginOptions } from '../../../plugins/plugin';
 
-import { jestInitGenerator } from '@nx/jest';
-import { detoxInitGenerator } from '@nx/detox';
-import { initGenerator as jsInitGenerator } from '@nx/js';
-
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { initRootBabelConfig } from './lib/init-root-babel-config';
 
@@ -46,29 +42,9 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
-  tasks.push(
-    await jsInitGenerator(host, {
-      ...schema,
-      skipFormat: true,
-    })
-  );
-
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
     tasks.push(updateDependencies(host));
-  }
-
-  if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = await jestInitGenerator(host, schema);
-    tasks.push(jestTask);
-  }
-
-  if (!schema.e2eTestRunner || schema.e2eTestRunner === 'detox') {
-    const detoxTask = await detoxInitGenerator(host, {
-      ...schema,
-      skipFormat: true,
-    });
-    tasks.push(detoxTask);
   }
 
   if (process.env.NX_PCV3 === 'true') {

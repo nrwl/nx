@@ -8,6 +8,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
@@ -87,9 +88,14 @@ export async function configurationGenerator(
     schema.uiFramework = '@storybook/nextjs';
   }
 
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
-    js: schema.js,
+    skipFormat: true,
   });
   tasks.push(initTask);
 

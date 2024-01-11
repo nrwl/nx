@@ -1,4 +1,4 @@
-import init from '../init/init';
+import { jestInitGenerator } from '../init/init';
 import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
 import { updateTsConfig } from './lib/update-tsconfig';
@@ -10,7 +10,9 @@ import {
   GeneratorCallback,
   readProjectConfiguration,
   readNxJson,
+  runTasksInSerial,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 const schemaDefaults = {
   setupFile: 'none',
@@ -61,7 +63,11 @@ export async function configurationGenerator(
   schema: JestProjectSchema
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(tree, schema);
-  const installTask = await init(tree, options);
+
+  const tasks: GeneratorCallback[] = [];
+
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
+  tasks.push(await jestInitGenerator(tree, options));
 
   checkForTestTarget(tree, options);
   createFiles(tree, options);
@@ -80,7 +86,8 @@ export async function configurationGenerator(
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
-  return installTask;
+
+  return runTasksInSerial(...tasks);
 }
 
 export default configurationGenerator;

@@ -8,6 +8,7 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   addOrChangeBuildTarget,
@@ -156,12 +157,18 @@ export async function viteConfigurationGenerator(
     editTsConfig(tree, schema);
   }
 
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    skipFormat: true,
+    tsConfigName: projectRoot === '.' ? 'tsconfig.json' : 'tsconfig.base.json',
+  });
+  tasks.push(jsInitTask);
   const initTask = await initGenerator(tree, {
     uiFramework: schema.uiFramework,
     includeLib: schema.includeLib,
     compiler: schema.compiler,
     testEnvironment: schema.testEnvironment,
-    rootProject: projectRoot === '.',
+    skipFormat: true,
   });
   tasks.push(initTask);
 

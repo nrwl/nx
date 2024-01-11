@@ -28,6 +28,16 @@
       "type": "string",
       "enum": ["node", "jsdom", "happy-dom", "edge-runtime"],
       "default": "jsdom"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
     }
   },
   "examplesFile": "../../../docs/init-examples.md"

@@ -17,6 +17,7 @@ import { execSync } from 'child_process';
 
 export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
   const tasks: GeneratorCallback[] = [];
+
   if (!options.skipPackageJson) {
     tasks.push(
       addDependenciesToPackageJson(
@@ -30,9 +31,6 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
         }
       )
     );
-  }
-  if (!options.skipFormat) {
-    await formatFiles(tree);
   }
 
   if (tree.exists('.vscode/extensions.json')) {
@@ -71,6 +69,10 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
       const pmc = getPackageManagerCommand();
       execSync(`${pmc.exec} playwright install`, { cwd: workspaceRoot });
     });
+  }
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 
   return runTasksInSerial(...tasks);

@@ -8,7 +8,7 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { addTsConfigPath } from '@nx/js';
+import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import { vueInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -36,6 +36,7 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     targets: {},
   });
 
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
   tasks.push(
     await vueInitGenerator(tree, {
       ...options,

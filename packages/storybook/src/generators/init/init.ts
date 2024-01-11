@@ -1,7 +1,9 @@
 import {
   addDependenciesToPackageJson,
   detectPackageManager,
+  formatFiles,
   GeneratorCallback,
+  installPackagesTask,
   readJson,
   readNxJson,
   runTasksInSerial,
@@ -9,7 +11,6 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   litVersion,
@@ -154,7 +155,9 @@ function addCacheableOperation(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function moveToDevDependencies(tree: Tree) {
+function moveToDevDependencies(tree: Tree): GeneratorCallback {
+  let updated = false;
+
   updateJson(tree, 'package.json', (packageJson) => {
     packageJson.dependencies = packageJson.dependencies || {};
     packageJson.devDependencies = packageJson.devDependencies || {};
@@ -163,9 +166,13 @@ function moveToDevDependencies(tree: Tree) {
       packageJson.devDependencies['@nx/storybook'] =
         packageJson.dependencies['@nx/storybook'];
       delete packageJson.dependencies['@nx/storybook'];
+      updated = true;
     }
+
     return packageJson;
   });
+
+  return updated ? () => installPackagesTask(tree) : () => {};
 }
 
 /**
@@ -198,21 +205,23 @@ function editRootTsConfig(tree: Tree) {
 }
 
 export async function initGenerator(tree: Tree, schema: Schema) {
-  const tasks: GeneratorCallback[] = [];
-  tasks.push(
-    await jsInitGenerator(tree, {
-      ...schema,
-      skipFormat: true,
-    })
-  );
-  tasks.push(checkDependenciesInstalled(tree, schema));
-  moveToDevDependencies(tree);
   editRootTsConfig(tree);
   addCacheableOperation(tree);
-  const addPlugins = process.env.NX_PCV3 === 'true';
-  if (addPlugins) {
+
+  if (process.env.NX_PCV3 === 'true') {
     addPlugin(tree);
   }
+
+  const tasks: GeneratorCallback[] = [];
+  if (!schema.skipPackageJson) {
+    tasks.push(moveToDevDependencies(tree));
+    tasks.push(checkDependenciesInstalled(tree, schema));
+  }
+
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
+
   return runTasksInSerial(...tasks);
 }
 
