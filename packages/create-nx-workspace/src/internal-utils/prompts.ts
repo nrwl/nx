@@ -10,6 +10,7 @@ import {
 import { stringifyCollection } from '../utils/string-utils';
 import enquirer = require('enquirer');
 import { NxCloud } from '../utils/nx/nx-cloud';
+import chalk = require('chalk');
 
 export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
@@ -23,9 +24,15 @@ export async function determineNxCloud(
           name: 'NxCloud',
           message,
           type: 'autocomplete',
-          choices: choices as any,
-          initial: 'cloud-only' as any,
-        },
+          choices,
+          initial: 'cloud-only',
+          footer() {
+            return chalk.dim`Read more about remote cache at https://nx.dev/ci/features/remote-cache`;
+          },
+          hint() {
+            return chalk.dim`it's free and can be disabled any time`;
+          },
+        } as any, // meeroslav: types in enquirer are not up to date,
       ])
       .then((a) => a.NxCloud);
   } else {

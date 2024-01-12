@@ -13,8 +13,10 @@ import {
   MessageOptionKey,
   recordStat,
   messages,
+  MessageData,
 } from '../../utils/ab-testing';
 import { nxVersion } from '../../utils/versions';
+import chalk = require('chalk');
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
   const defaultRunner = nxJson.tasksRunnerOptions?.default?.runner;
@@ -91,38 +93,42 @@ export async function connectToNxCloudPrompt(
   prompt: MessageKey
 ): Promise<MessageOptionKey> {
   const { message, choices } = messages.getPrompt(prompt);
-  return await (
-    await import('enquirer')
-  )
-    .prompt([
-      {
-        name: 'NxCloud',
-        message,
-        type: 'autocomplete',
-        choices: choices as any,
-        initial: 'cloud-only' as any,
-      },
-    ])
-    .then((a: { NxCloud: MessageOptionKey }) => a.NxCloud);
+  return generatePrompt(message, choices).then(
+    (a: { NxCloud: MessageOptionKey }) => a.NxCloud
+  );
 }
 
 export async function connectExistingRepoToNxCloudPrompt(
   prompt: MessageKey
 ): Promise<boolean> {
   const { message, choices } = messages.getPrompt(prompt);
+  const nonCIChoices = choices.filter((c) =>
+    ['cloud-only', 'skip'].includes(c.value)
+  ) as any as MessageData['choices'];
+  return generatePrompt(message, nonCIChoices).then(
+    (a: { NxCloud: MessageOptionKey }) => a.NxCloud === 'cloud-only'
+  );
+}
+
+async function generatePrompt(
+  message: string,
+  choices: MessageData['choices']
+): Promise<{ NxCloud: MessageOptionKey }> {
   return await (
     await import('enquirer')
-  )
-    .prompt([
-      {
-        name: 'NxCloud',
-        message,
-        type: 'autocomplete',
-        choices: choices.filter((c) =>
-          ['cloud-only', 'skip'].includes(c.value)
-        ) as any,
-        initial: 'cloud-only' as any,
+  ).prompt([
+    {
+      name: 'NxCloud',
+      message,
+      type: 'autocomplete',
+      choices,
+      initial: 'cloud-only',
+      footer() {
+        return chalk.dim`Read more about remote cache at https://nx.dev/ci/features/remote-cache`;
       },
-    ])
-    .then((a: { NxCloud: MessageOptionKey }) => a.NxCloud === 'cloud-only');
+      hint() {
+        return chalk.dim`it's free and can be disabled any time`;
+      },
+    } as any, // meeroslav: types in enquirer are not up to date,
+  ]);
 }
