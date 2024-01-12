@@ -185,7 +185,9 @@ async function getServerBuildPath(
   try {
     let appConfigModule: any;
     try {
-      appConfigModule = await Function(`return import("${configPath}")`)();
+      appConfigModule = await Function(
+        `return import("${configPath}?t=${Date.now()}")`
+      )();
     } catch {
       appConfigModule = require(configPath);
     }
