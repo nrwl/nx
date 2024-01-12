@@ -6,6 +6,15 @@ import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
 
+export type ReleaseVersionGeneratorResult = {
+  versionData: VersionData;
+  installCallback: (opts: {
+    dryRun?: boolean;
+    verbose?: boolean;
+    generatorOptions?: Record<string, unknown>;
+  }) => Promise<string[]>;
+};
+
 export type VersionData = Record<
   string,
   {

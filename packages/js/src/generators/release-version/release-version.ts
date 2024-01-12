@@ -19,6 +19,7 @@ import {
 } from 'nx/src/command-line/release/utils/resolve-semver-specifier';
 import { isValidSemverSpecifier } from 'nx/src/command-line/release/utils/semver';
 import {
+  ReleaseVersionGeneratorResult,
   VersionData,
   deriveNewSemverVersion,
 } from 'nx/src/command-line/release/version';
@@ -27,12 +28,13 @@ import * as ora from 'ora';
 import { relative } from 'path';
 import { prerelease } from 'semver';
 import { ReleaseVersionGeneratorSchema } from './schema';
+import { packageManagerInstall } from './utils/package-manager-install';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
 
 export async function releaseVersionGenerator(
   tree: Tree,
   options: ReleaseVersionGeneratorSchema
-) {
+): Promise<ReleaseVersionGeneratorResult> {
   try {
     const versionData: VersionData = {};
 
@@ -396,7 +398,10 @@ To fix this you will either need to add a package.json file at that location, or
     await formatFiles(tree);
 
     // Return the version data so that it can be leveraged by the overall version command
-    return versionData;
+    return {
+      versionData,
+      installCallback: packageManagerInstall,
+    };
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       output.error({

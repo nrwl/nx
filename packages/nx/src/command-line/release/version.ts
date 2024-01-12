@@ -34,6 +34,7 @@ import {
 import { gitAdd, gitTag } from './utils/git';
 import { printDiff } from './utils/print-changes';
 import {
+  ReleaseVersionGeneratorResult,
   VersionData,
   commitChanges,
   createCommitMessageValues,
@@ -43,7 +44,10 @@ import {
 
 // Reexport some utils for use in plugin release-version generator implementations
 export { deriveNewSemverVersion } from './utils/semver';
-export type { VersionData } from './utils/shared';
+export type {
+  ReleaseVersionGeneratorResult,
+  VersionData,
+} from './utils/shared';
 
 export interface ReleaseVersionGeneratorSchema {
   // The projects being versioned in the current execution
@@ -122,6 +126,7 @@ export async function releaseVersion(
   const versionData: VersionData = {};
   const commitMessage: string | undefined =
     args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
+  const changedLockFiles = new Set<string>();
 
   if (args.projects?.length) {
     /**
@@ -144,7 +149,7 @@ export async function releaseVersion(
         releaseGroupToFilteredProjects.get(releaseGroup)
       );
 
-      await runVersionOnProjects(
+      const installCallback = await runVersionOnProjects(
         projectGraph,
         nxJson,
         args,
@@ -154,6 +159,14 @@ export async function releaseVersion(
         releaseGroup,
         versionData
       );
+
+      (
+        await installCallback({
+          dryRun: !!args.dryRun,
+          verbose: !!args.verbose,
+          generatorOptions: releaseGroup.version.generatorOptions,
+        })
+      ).forEach((f) => changedLockFiles.add(f));
     }
 
     // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
@@ -169,7 +182,10 @@ export async function releaseVersion(
 
     printAndFlushChanges(tree, !!args.dryRun);
 
-    const changedFiles = tree.listChanges().map((f) => f.path);
+    const changedFiles = [
+      ...tree.listChanges().map((f) => f.path),
+      ...changedLockFiles,
+    ];
 
     // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
     if (!changedFiles.length) {
@@ -182,7 +198,7 @@ export async function releaseVersion(
 
     if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
       await commitChanges(
-        tree.listChanges().map((f) => f.path),
+        changedFiles,
         !!args.dryRun,
         !!args.verbose,
         createCommitMessageValues(
@@ -243,7 +259,7 @@ export async function releaseVersion(
       projects,
     });
 
-    await runVersionOnProjects(
+    const installCallback = await runVersionOnProjects(
       projectGraph,
       nxJson,
       args,
@@ -253,6 +269,14 @@ export async function releaseVersion(
       releaseGroup,
       versionData
     );
+
+    (
+      await installCallback({
+        dryRun: !!args.dryRun,
+        verbose: !!args.verbose,
+        generatorOptions: releaseGroup.version.generatorOptions,
+      })
+    ).forEach((f) => changedLockFiles.add(f));
   }
 
   // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
@@ -280,7 +304,10 @@ export async function releaseVersion(
     }
   }
 
-  const changedFiles = tree.listChanges().map((f) => f.path);
+  const changedFiles = [
+    ...tree.listChanges().map((f) => f.path),
+    ...changedLockFiles,
+  ];
 
   // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
   if (!changedFiles.length) {
@@ -360,7 +387,7 @@ async function runVersionOnProjects(
   projectNames: string[],
   releaseGroup: ReleaseGroupWithName,
   versionData: VersionData
-) {
+): Promise<ReleaseVersionGeneratorResult['installCallback']> {
   const generatorOptions: ReleaseVersionGeneratorSchema = {
     // Always ensure a string to avoid generator schema validation errors
     specifier: args.specifier ?? '',
@@ -388,20 +415,22 @@ async function runVersionOnProjects(
 
   const releaseVersionGenerator = generatorData.implementationFactory();
 
-  // We expect all version generator implementations to return a VersionData object, rather than a GeneratorCallback
-  const versionDataForProjects = (await releaseVersionGenerator(
+  // We expect all version generator implementations to return a ReleaseVersionGeneratorResult object, rather than a GeneratorCallback
+  const versionResult = (await releaseVersionGenerator(
     tree,
     combinedOpts
-  )) as unknown as VersionData;
+  )) as unknown as ReleaseVersionGeneratorResult;
 
-  if (typeof versionDataForProjects === 'function') {
+  if (typeof versionResult === 'function') {
     throw new Error(
-      `The version generator ${generatorData.collectionName}:${generatorData.normalizedGeneratorName} returned a function instead of an expected VersionData object`
+      `The version generator ${generatorData.collectionName}:${generatorData.normalizedGeneratorName} returned a function instead of an expected ReleaseVersionGeneratorResult`
     );
   }
 
   // Merge the extra version data into the existing
-  appendVersionData(versionData, versionDataForProjects);
+  appendVersionData(versionData, versionResult.versionData);
+
+  return versionResult.installCallback;
 }
 
 function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
