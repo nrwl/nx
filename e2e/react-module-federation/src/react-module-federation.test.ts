@@ -109,7 +109,7 @@ describe('React Module Federation', () => {
 
       if (runE2ETests()) {
         const e2eResultsSwc = await runCommandUntil(
-          `e2e ${shell}-e2e --no-watch --verbose`,
+          `e2e ${shell}-e2e --no-watch`,
           (output) => output.includes('All specs passed!')
         );
 
