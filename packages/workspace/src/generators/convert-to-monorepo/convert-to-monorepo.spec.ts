@@ -129,6 +129,6 @@ describe('monorepo generator', () => {
 
     // Extracted base config files
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
-    expect(tree.exists('jest.config.ts')).toBeTruthy();
+    expect(tree.exists('jest.preset.js')).toBeTruthy();
   });
 });
