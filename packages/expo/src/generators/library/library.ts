@@ -7,11 +7,12 @@ import {
   joinPathFragments,
   names,
   offsetFromRoot,
+  ProjectConfiguration,
   runTasksInSerial,
-  TargetConfiguration,
   toJS,
   Tree,
   updateJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 
 import {
@@ -114,62 +115,58 @@ export async function expoLibraryGeneratorInternal(
   return runTasksInSerial(...tasks);
 }
 
-async function addProject(host: Tree, options: NormalizedSchema) {
-  const targets: { [key: string]: TargetConfiguration } = {};
-
-  const tasks: GeneratorCallback[] = [];
-  if (options.publishable || options.buildable) {
-    const { rollupInitGenerator } = ensurePackage<typeof import('@nx/rollup')>(
-      '@nx/rollup',
-      nxVersion
-    );
-    tasks.push(
-      await rollupInitGenerator(host, { ...options, skipFormat: true })
-    );
-    if (!options.skipPackageJson) {
-      const { ensureDependencies } = await import(
-        '@nx/rollup/src/utils/ensure-dependencies'
-      );
-      tasks.push(ensureDependencies(host, {}));
-    }
-
-    const external = [
-      'react/jsx-runtime',
-      'react-native',
-      'react',
-      'react-dom',
-    ];
-
-    targets.build = {
-      executor: '@nx/rollup:rollup',
-      outputs: ['{options.outputPath}'],
-      options: {
-        outputPath: `dist/${options.projectRoot}`,
-        tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
-        project: `${options.projectRoot}/package.json`,
-        entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
-        external,
-        rollupConfig: `@nx/react/plugins/bundle-rollup`,
-        assets: [
-          {
-            glob: `${options.projectRoot}/README.md`,
-            input: '.',
-            output: '.',
-          },
-        ],
-      },
-    };
-  }
-
-  addProjectConfiguration(host, options.name, {
+async function addProject(
+  host: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
+  const project: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
     projectType: 'library',
     tags: options.parsedTags,
-    targets,
+    targets: {},
+  };
+  addProjectConfiguration(host, options.name, project);
+
+  if (!options.publishable && !options.buildable) {
+    return () => {};
+  }
+
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/rollup')>(
+    '@nx/rollup',
+    nxVersion
+  );
+  const rollupConfigTask = await configurationGenerator(host, {
+    ...options,
+    project: options.name,
+    skipFormat: true,
   });
 
-  return runTasksInSerial(...tasks);
+  const external = ['react/jsx-runtime', 'react-native', 'react', 'react-dom'];
+
+  project.targets.build = {
+    executor: '@nx/rollup:rollup',
+    outputs: ['{options.outputPath}'],
+    options: {
+      outputPath: `dist/${options.projectRoot}`,
+      tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
+      project: `${options.projectRoot}/package.json`,
+      entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
+      external,
+      rollupConfig: `@nx/react/plugins/bundle-rollup`,
+      assets: [
+        {
+          glob: `${options.projectRoot}/README.md`,
+          input: '.',
+          output: '.',
+        },
+      ],
+    },
+  };
+
+  updateProjectConfiguration(host, options.name, project);
+
+  return rollupConfigTask;
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {

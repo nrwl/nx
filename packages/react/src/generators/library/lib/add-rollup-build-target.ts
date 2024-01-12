@@ -23,18 +23,19 @@ export async function addRollupBuildTarget(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { rollupInitGenerator } = ensurePackage<typeof import('@nx/rollup')>(
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/rollup')>(
     '@nx/rollup',
     nxVersion
   );
-  tasks.push(await rollupInitGenerator(host, { ...options, skipFormat: true }));
+  tasks.push(
+    await configurationGenerator(host, {
+      ...options,
+      project: options.name,
+      skipFormat: true,
+    })
+  );
 
   if (!options.skipPackageJson) {
-    const { ensureDependencies } = await import(
-      '@nx/rollup/src/utils/ensure-dependencies'
-    );
-    tasks.push(ensureDependencies(host, {}));
-
     // These are used in `@nx/react/plugins/bundle-rollup`
     tasks.push(
       addDependenciesToPackageJson(
