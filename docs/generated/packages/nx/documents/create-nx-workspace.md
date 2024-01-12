@@ -115,7 +115,7 @@ Enable the App Router for Next.js
 
 Type: `string`
 
-Choices: [cloud-only, github, circleci, skip]
+Choices: [yes, github, circleci, skip]
 
 Enable remote caching to make your CI fast
 

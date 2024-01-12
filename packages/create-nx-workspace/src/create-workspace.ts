@@ -49,7 +49,7 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
   if (nxCloud !== 'skip') {
     nxCloudInstallRes = await setupNxCloud(directory, packageManager);
 
-    if (nxCloud !== 'cloud-only') {
+    if (nxCloud !== 'yes') {
       await setupCI(
         directory,
         nxCloud,

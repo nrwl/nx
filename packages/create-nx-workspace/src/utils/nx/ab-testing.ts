@@ -6,7 +6,7 @@ const messageOptions = {
       code: 'enable-remote-caching',
       message: `Enable remote caching to make your CI fast`,
       choices: [
-        { value: 'cloud-only', name: 'Yes' },
+        { value: 'yes', name: 'Yes' },
         { value: 'github', name: 'Yes, with GitHub Actions' },
         { value: 'circleci', name: 'Yes, with CircleCI' },
         { value: 'skip', name: 'Skip for now' },
@@ -16,7 +16,7 @@ const messageOptions = {
       code: 'enable-nx-cloud',
       message: `Do you want Nx Cloud to make your CI fast?`,
       choices: [
-        { value: 'cloud-only', name: 'Yes, enable Nx Cloud' },
+        { value: 'yes', name: 'Yes, enable Nx Cloud' },
         { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
         { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
         { value: 'skip', name: 'Skip for now' },
@@ -28,7 +28,7 @@ const messageOptions = {
       code: 'enable-remote-caching',
       message: `Enable remote caching to make your CI fast`,
       choices: [
-        { value: 'cloud-only', name: 'Yes' },
+        { value: 'yes', name: 'Yes' },
         { value: 'github', name: 'Yes, with GitHub Actions' },
         { value: 'circleci', name: 'Yes, with CircleCI' },
         { value: 'skip', name: 'Skip for now' },
@@ -38,7 +38,7 @@ const messageOptions = {
       code: 'enable-nx-cloud',
       message: `Do you want Nx Cloud to make your CI fast?`,
       choices: [
-        { value: 'cloud-only', name: 'Yes, enable Nx Cloud' },
+        { value: 'yes', name: 'Yes, enable Nx Cloud' },
         { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
         { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
         { value: 'skip', name: 'Skip for now' },

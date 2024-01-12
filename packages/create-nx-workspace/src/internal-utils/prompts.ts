@@ -25,12 +25,12 @@ export async function determineNxCloud(
           message,
           type: 'autocomplete',
           choices,
-          initial: 'cloud-only',
+          initial: 'yes',
           footer() {
-            return chalk.dim`Read more about remote cache at https://nx.dev/ci/features/remote-cache`;
+            return chalk.dim`\nRead more about remote cache at https://nx.dev/ci/features/remote-cache`;
           },
           hint() {
-            return chalk.dim`it's free and can be disabled any time`;
+            return chalk.dim`\n(it's free and can be disabled any time)`;
           },
         } as any, // meeroslav: types in enquirer are not up to date,
       ])

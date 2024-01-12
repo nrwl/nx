@@ -10,8 +10,6 @@ export function withNxCloud<T = unknown>(argv: yargs.Argv<T>) {
     alias: 'ci',
     describe: chalk.dim(message),
     choices: choices.map((c) => c.value) as string[],
-    default: '',
-    defaultDescription: '',
     type: 'string',
   });
   return result;

@@ -187,7 +187,7 @@ function createTempWorkspace(options: NormalizedOptions) {
     } --preset=react-monorepo --style=css --bundler=${
       options.isVite ? 'vite' : 'webpack'
     } --packageManager=${options.packageManager} ${
-      options.nxCloud ? '--nxCloud=cloud-only' : '--nxCloud=skip'
+      options.nxCloud ? '--nxCloud=yes' : '--nxCloud=skip'
     } ${options.addE2e ? '--e2eTestRunner=cypress' : '--e2eTestRunner=none'}`,
     { stdio: [0, 1, 2] }
   );

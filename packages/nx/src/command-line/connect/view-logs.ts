@@ -37,10 +37,10 @@ export async function viewLogs(): Promise<number> {
         ],
         initial: 'Yes',
         hint() {
-          return chalk.dim`it's free and can be disabled any time`;
+          return chalk.dim`\n(it's free and can be disabled any time)`;
         },
         footer() {
-          return chalk.dim`Read more about remote cache at https://nx.dev/ci/features/remote-cache`;
+          return chalk.dim`\nRead more about remote cache at https://nx.dev/ci/features/remote-cache`;
         },
       } as any,
     ])

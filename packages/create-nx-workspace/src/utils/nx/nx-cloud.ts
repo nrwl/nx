@@ -4,7 +4,7 @@ import { output } from '../output';
 import { getPackageManagerCommand, PackageManager } from '../package-manager';
 import { mapErrorToBodyLines } from '../error-utils';
 
-export type NxCloud = 'cloud-only' | 'github' | 'circleci' | 'skip';
+export type NxCloud = 'yes' | 'github' | 'circleci' | 'skip';
 
 export async function setupNxCloud(
   directory: string,
