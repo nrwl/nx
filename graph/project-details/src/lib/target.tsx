@@ -59,26 +59,6 @@ export function Target(props: TargetProps) {
     }
   };
 
-  const overrideTarget = () => {
-    externalApiService.postEvent({
-      type: 'override-target',
-      payload: {
-        projectName: props.projectName,
-        targetName: props.targetName,
-        targetConfigString: JSON.stringify(props.targetConfiguration),
-      },
-    });
-  };
-
-  const shouldDisplayOverrideTarget = () => {
-    return (
-      environment === 'nx-console' &&
-      Object.entries(props.sourceMap ?? {})
-        .filter(([key]) => key.startsWith(`targets.${props.targetName}`))
-        .every(([, value]) => value[1] !== 'nx-core-build-project-json-nodes')
-    );
-  };
-
   const targetConfigurationSortedAndFiltered = Object.entries(
     props.targetConfiguration
   )
@@ -112,9 +92,6 @@ export function Target(props: TargetProps) {
           <PlayIcon className="h-5 w-5" onClick={runTarget} />
         )}
         <EyeIcon className="h-5 w-5" onClick={viewInTaskGraph}></EyeIcon>
-        {shouldDisplayOverrideTarget() && (
-          <PencilSquareIcon className="h-5 w-5" onClick={overrideTarget} />
-        )}
       </h3>
       <div className="ml-3">
         {targetConfigurationSortedAndFiltered.map(([key, value]) =>
