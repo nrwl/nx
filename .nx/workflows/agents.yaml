@@ -32,7 +32,9 @@ launch-templates:
           pnpm install --frozen-lockfile
 
       - name: Install Cypress
-        script: pnpm exec cypress install
+        script: |
+          pnpm exec cypress install
+          apt-get install libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 libasound2 libxtst6 xauth xvfb dbus -y
 
       - name: Install Rust
         script: |
