@@ -119,8 +119,7 @@ jobs:
 
             run_command "pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte"
 
-            run_command "pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3"
-            run_command "pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1"
+            run_command "(pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 && pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1)"
 
             for pid in "${pids[@]}"; do
               wait "$pid"
