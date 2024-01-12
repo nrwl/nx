@@ -1,7 +1,10 @@
 import { jestInitGenerator } from '../init/init';
 import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
+import { createJestConfig } from './lib/create-jest-config';
+import { ensureDependencies } from './lib/ensure-dependencies';
 import { updateTsConfig } from './lib/update-tsconfig';
+import { updateVsCodeRecommendedExtensions } from './lib/update-vscode-recommended-extensions';
 import { updateWorkspace } from './lib/update-workspace';
 import { JestProjectSchema, NormalizedJestProjectSchema } from './schema';
 import {
@@ -68,10 +71,15 @@ export async function configurationGenerator(
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
   tasks.push(await jestInitGenerator(tree, options));
+  if (!schema.skipPackageJson) {
+    tasks.push(ensureDependencies(tree, options));
+  }
 
+  await createJestConfig(tree, options);
   checkForTestTarget(tree, options);
   createFiles(tree, options);
   updateTsConfig(tree, options);
+  updateVsCodeRecommendedExtensions(tree);
 
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>

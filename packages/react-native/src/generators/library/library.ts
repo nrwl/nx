@@ -116,12 +116,21 @@ export async function reactNativeLibraryGeneratorInternal(
 async function addProject(host: Tree, options: NormalizedSchema) {
   const targets: { [key: string]: TargetConfiguration } = {};
 
-  let task: GeneratorCallback;
+  const tasks: GeneratorCallback[] = [];
   if (options.publishable || options.buildable) {
     const { rollupInitGenerator } = ensurePackage<typeof import('@nx/rollup')>(
       '@nx/rollup',
       nxVersion
     );
+    tasks.push(
+      await rollupInitGenerator(host, { ...options, skipFormat: true })
+    );
+    if (!options.skipPackageJson) {
+      const { ensureDependencies } = await import(
+        '@nx/rollup/src/utils/ensure-dependencies'
+      );
+      tasks.push(ensureDependencies(host, {}));
+    }
 
     const external = [
       'react/jsx-runtime',
@@ -149,7 +158,6 @@ async function addProject(host: Tree, options: NormalizedSchema) {
         ],
       },
     };
-    task = await rollupInitGenerator(host, { ...options, skipFormat: true });
   }
 
   addProjectConfiguration(host, options.name, {
@@ -160,7 +168,7 @@ async function addProject(host: Tree, options: NormalizedSchema) {
     targets,
   });
 
-  return task;
+  return runTasksInSerial(...tasks);
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {

@@ -18,6 +18,8 @@ import { createApplicationFiles } from './lib/create-application-files';
 import { addEasScripts } from './lib/add-eas-scripts';
 import { addDetox } from './lib/add-detox';
 import { Schema } from './schema';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 
 export async function expoApplicationGenerator(
   host: Tree,
@@ -43,6 +45,10 @@ export async function expoApplicationGeneratorInternal(
   tasks.push(jsInitTask);
   const initTask = await initGenerator(host, { ...options, skipFormat: true });
   tasks.push(initTask);
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(host));
+  }
+  initRootBabelConfig(host);
 
   createApplicationFiles(host, options);
   addProject(host, options);

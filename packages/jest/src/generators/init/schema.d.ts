@@ -1,11 +1,4 @@
 export interface JestInitSchema {
-  compiler?: 'tsc' | 'babel' | 'swc';
-  js?: boolean;
+  skipFormat?: boolean;
   skipPackageJson?: boolean;
-  testEnvironment?: 'node' | 'jsdom' | 'none';
-  /**
-   * @deprecated
-   */
-  babelJest?: boolean;
-  rootProject?: boolean;
 }

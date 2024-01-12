@@ -1,9 +1,11 @@
 import { Tree } from 'nx/src/generators/tree';
 import {
+  GeneratorCallback,
   addDependenciesToPackageJson,
   ensurePackage,
   joinPathFragments,
   readProjectConfiguration,
+  runTasksInSerial,
   updateProjectConfiguration,
 } from '@nx/devkit';
 
@@ -19,20 +21,32 @@ export async function addRollupBuildTarget(
   host: Tree,
   options: NormalizedSchema
 ) {
+  const tasks: GeneratorCallback[] = [];
+
   const { rollupInitGenerator } = ensurePackage<typeof import('@nx/rollup')>(
     '@nx/rollup',
     nxVersion
   );
+  tasks.push(await rollupInitGenerator(host, { ...options, skipFormat: true }));
 
-  // These are used in `@nx/react/plugins/bundle-rollup`
-  addDependenciesToPackageJson(
-    host,
-    {},
-    {
-      '@rollup/plugin-url': rollupPluginUrlVersion,
-      '@svgr/rollup': svgrRollupVersion,
-    }
-  );
+  if (!options.skipPackageJson) {
+    const { ensureDependencies } = await import(
+      '@nx/rollup/src/utils/ensure-dependencies'
+    );
+    tasks.push(ensureDependencies(host, {}));
+
+    // These are used in `@nx/react/plugins/bundle-rollup`
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        {
+          '@rollup/plugin-url': rollupPluginUrlVersion,
+          '@svgr/rollup': svgrRollupVersion,
+        }
+      )
+    );
+  }
 
   const { targets } = readProjectConfiguration(host, options.name);
 
@@ -73,5 +87,5 @@ export async function addRollupBuildTarget(
     targets,
   });
 
-  return rollupInitGenerator(host, { ...options, skipFormat: true });
+  return runTasksInSerial(...tasks);
 }

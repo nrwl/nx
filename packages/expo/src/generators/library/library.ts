@@ -29,6 +29,8 @@ import {
 } from '../../utils/versions';
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { initRootBabelConfig } from '../../utils/init-root-babel-config';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -60,6 +62,10 @@ export async function expoLibraryGeneratorInternal(
   tasks.push(jsInitTask);
   const initTask = await init(host, { ...options, skipFormat: true });
   tasks.push(initTask);
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(host));
+  }
+  initRootBabelConfig(host);
 
   const addProjectTask = await addProject(host, options);
   if (addProjectTask) {
@@ -111,12 +117,21 @@ export async function expoLibraryGeneratorInternal(
 async function addProject(host: Tree, options: NormalizedSchema) {
   const targets: { [key: string]: TargetConfiguration } = {};
 
-  let task: GeneratorCallback;
+  const tasks: GeneratorCallback[] = [];
   if (options.publishable || options.buildable) {
     const { rollupInitGenerator } = ensurePackage<typeof import('@nx/rollup')>(
       '@nx/rollup',
       nxVersion
     );
+    tasks.push(
+      await rollupInitGenerator(host, { ...options, skipFormat: true })
+    );
+    if (!options.skipPackageJson) {
+      const { ensureDependencies } = await import(
+        '@nx/rollup/src/utils/ensure-dependencies'
+      );
+      tasks.push(ensureDependencies(host, {}));
+    }
 
     const external = [
       'react/jsx-runtime',
@@ -144,7 +159,6 @@ async function addProject(host: Tree, options: NormalizedSchema) {
         ],
       },
     };
-    task = await rollupInitGenerator(host, { ...options, skipFormat: true });
   }
 
   addProjectConfiguration(host, options.name, {
@@ -155,7 +169,7 @@ async function addProject(host: Tree, options: NormalizedSchema) {
     targets,
   });
 
-  return task;
+  return runTasksInSerial(...tasks);
 }
 
 function updateTsConfig(tree: Tree, options: NormalizedSchema) {

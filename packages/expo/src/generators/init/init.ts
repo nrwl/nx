@@ -8,47 +8,30 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { Schema } from './schema';
+import { ExpoPluginOptions } from '../../../plugins/plugin';
 import {
-  babelPresetExpoVersion,
   easCliVersion,
   expoCliVersion,
-  expoMetroConfigVersion,
-  expoSplashScreenVersion,
-  expoStatusBarVersion,
   expoVersion,
-  jestExpoVersion,
-  metroVersion,
   nxVersion,
   reactDomVersion,
-  reactNativeSvgTransformerVersion,
-  reactNativeSvgVersion,
   reactNativeVersion,
-  reactNativeWebVersion,
-  reactTestRendererVersion,
   reactVersion,
-  testingLibraryJestNativeVersion,
-  testingLibraryReactNativeVersion,
-  typesReactVersion,
 } from '../../utils/versions';
-import { ExpoPluginOptions } from '../../../plugins/plugin';
-
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
-import { initRootBabelConfig } from './lib/init-root-babel-config';
+import { Schema } from './schema';
 
 export async function expoInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
-  initRootBabelConfig(host);
-
-  const tasks: GeneratorCallback[] = [];
-
-  if (!schema.skipPackageJson) {
-    tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host));
-  }
 
   if (process.env.NX_PCV3 === 'true') {
     addPlugin(host);
+  }
+
+  const tasks: GeneratorCallback[] = [];
+  if (!schema.skipPackageJson) {
+    tasks.push(moveDependency(host));
+    tasks.push(updateDependencies(host));
   }
 
   if (!schema.skipFormat) {
@@ -66,25 +49,11 @@ export function updateDependencies(host: Tree) {
       'react-dom': reactDomVersion,
       'react-native': reactNativeVersion,
       expo: expoVersion,
-      'expo-splash-screen': expoSplashScreenVersion,
-      'expo-status-bar': expoStatusBarVersion,
-      'react-native-web': reactNativeWebVersion,
-      '@expo/metro-config': expoMetroConfigVersion,
-      'react-native-svg-transformer': reactNativeSvgTransformerVersion,
-      'react-native-svg': reactNativeSvgVersion,
     },
     {
       '@nx/expo': nxVersion,
-      '@types/react': typesReactVersion,
-      metro: metroVersion,
-      'metro-resolver': metroVersion,
-      'react-test-renderer': reactTestRendererVersion,
-      '@testing-library/react-native': testingLibraryReactNativeVersion,
-      '@testing-library/jest-native': testingLibraryJestNativeVersion,
-      'jest-expo': jestExpoVersion,
       '@expo/cli': expoCliVersion,
       'eas-cli': easCliVersion,
-      'babel-preset-expo': babelPresetExpoVersion,
     }
   );
 }
