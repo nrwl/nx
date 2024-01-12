@@ -57,23 +57,21 @@ function updateProductionFileSet(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function addJestTargetDefaults(tree: Tree, hasPlugin: boolean) {
+function addJestTargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   nxJson.targetDefaults ??= {};
   nxJson.targetDefaults['@nx/jest:jest'] ??= {};
 
-  if (!hasPlugin) {
-    const productionFileSet = nxJson.namedInputs?.production;
+  const productionFileSet = nxJson.namedInputs?.production;
 
-    nxJson.targetDefaults['@nx/jest:jest'].cache ??= true;
-    // Test targets depend on all their project's sources + production sources of dependencies
-    nxJson.targetDefaults['@nx/jest:jest'].inputs ??= [
-      'default',
-      productionFileSet ? '^production' : '^default',
-      '{workspaceRoot}/jest.preset.js',
-    ];
-  }
+  nxJson.targetDefaults['@nx/jest:jest'].cache ??= true;
+  // Test targets depend on all their project's sources + production sources of dependencies
+  nxJson.targetDefaults['@nx/jest:jest'].inputs ??= [
+    'default',
+    productionFileSet ? '^production' : '^default',
+    '{workspaceRoot}/jest.preset.js',
+  ];
 
   nxJson.targetDefaults['@nx/jest:jest'].options ??= {
     passWithNoTests: true,
@@ -104,13 +102,12 @@ export async function jestInitGenerator(
   options: JestInitSchema
 ): Promise<GeneratorCallback> {
   if (!tree.exists('jest.preset.js')) {
-    const shouldAddPlugin = process.env.NX_PCV3 === 'true';
-    if (shouldAddPlugin) {
-      addPlugin(tree);
-    }
-
     updateProductionFileSet(tree);
-    addJestTargetDefaults(tree, shouldAddPlugin);
+    if (process.env.NX_PCV3 === 'true') {
+      addPlugin(tree);
+    } else {
+      addJestTargetDefaults(tree);
+    }
   }
 
   const tasks: GeneratorCallback[] = [];
