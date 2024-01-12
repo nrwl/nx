@@ -29,7 +29,7 @@ We'll be using an Nx plugin called [@nx/vite](/nx-api/vite). Although we are usi
 **Create a new Nx workspace**
 
 ```shell
-create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=true
+create-nx-workspace@latest acme --preset=ts-standalone
 ```
 
 **Add @nx/vite, vue, and other dependencies to your workspace**

@@ -256,7 +256,7 @@ export function runCreateWorkspace(
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  let command = `${pm.createWorkspace} ${name} --preset=${preset} --no-nxCloud --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }
@@ -360,7 +360,7 @@ export function runCreatePlugin(
 
   let command = `${
     pm.runUninstalledPackage
-  } create-nx-plugin@${getPublishedVersion()} ${name} --no-nxCloud`;
+  } create-nx-plugin@${getPublishedVersion()} ${name} --nxCloud=skip`;
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;
