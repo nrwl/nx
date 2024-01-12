@@ -232,7 +232,7 @@ async function createProcess(
         }
       });
 
-      cp.wait().then((code) => res(code === 0));
+      cp.wait((code) => res(code === 0));
     });
   }
 

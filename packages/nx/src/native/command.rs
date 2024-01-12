@@ -4,12 +4,12 @@ use std::{
 };
 
 use anyhow::anyhow;
-use crossbeam_channel::{unbounded, Receiver};
+use crossbeam_channel::{bounded, unbounded, Receiver};
 use napi::threadsafe_function::ErrorStrategy::{ErrorStrategy, Fatal};
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
 use napi::{Env, JsFunction};
-use portable_pty::{Child, CommandBuilder, NativePtySystem, PtySize, PtySystem};
+use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
 
 fn command_builder() -> CommandBuilder {
     if cfg!(target_os = "windows") {
@@ -20,6 +20,7 @@ fn command_builder() -> CommandBuilder {
             .unwrap_or_else(|_| "cmd.exe");
         let mut command = CommandBuilder::new(shell);
         command.arg("/C");
+
         command
     } else {
         let mut command = CommandBuilder::new("sh");
@@ -34,37 +35,53 @@ pub enum ChildProcessMessage {
 
 #[napi]
 pub struct ChildProcess {
-    child: Box<dyn Child + Sync + Send>,
-    rx: Receiver<String>,
+    // pair: portable_pty::PtyPair,
+    child_killer: Box<dyn ChildKiller + Sync + Send>,
+    message_receiver: Receiver<String>,
+    wait_receiver: Receiver<u32>,
 }
 #[napi]
 impl ChildProcess {
-    pub fn new(child: Box<dyn Child + Sync + Send>, rx: Receiver<String>) -> Self {
-        Self { child, rx }
+    pub fn new(
+        child_killer: Box<dyn ChildKiller + Sync + Send>,
+        message_receiver: Receiver<String>,
+        exit_receiver: Receiver<u32>,
+    ) -> Self {
+        Self {
+            // pair,
+            child_killer,
+            message_receiver,
+            wait_receiver: exit_receiver,
+        }
     }
     #[napi]
     pub fn kill(&mut self) -> anyhow::Result<()> {
-        let mut killer = self.child.clone_killer();
-        killer.kill().map_err(anyhow::Error::from)?;
+        self.child_killer.kill().map_err(anyhow::Error::from)?;
         Ok(())
     }
-    #[napi]
-    pub fn is_alive(&mut self) -> anyhow::Result<bool> {
-        Ok(self
-            .child
-            .try_wait()
-            .map_err(anyhow::Error::from)?
-            .is_none())
-    }
+    // #[napi]
+    // pub fn is_alive(&mut self) -> anyhow::Result<bool> {
+    //     Ok(self
+    //         .child_killer
+    //         .try_wait()
+    //         .map_err(anyhow::Error::from)?
+    //         .is_none())
+    // }
 
     #[napi]
-    pub async unsafe fn wait(&mut self) -> napi::Result<u32> {
-        let status = self
-            .child
-            .wait()
-            .map_err(|e| anyhow!("waiting for child: {}", e))?;
+    pub fn wait(&mut self, env: Env, callback: JsFunction) -> napi::Result<()> {
+        let wait = self.wait_receiver.clone();
+        let mut callback_tsfn: ThreadsafeFunction<u32, Fatal> =
+            callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
 
-        Ok(status.exit_code())
+        std::thread::spawn(move || {
+            if let Ok(exit_code) = wait.recv() {
+                // println!("sending exit_code to node: {:?}", exit_code);
+                callback_tsfn.call(exit_code, NonBlocking);
+            }
+        });
+
+        Ok(())
     }
 
     #[napi]
@@ -73,7 +90,7 @@ impl ChildProcess {
         env: Env,
         #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
     ) -> napi::Result<()> {
-        let rx = self.rx.clone();
+        let rx = self.message_receiver.clone();
 
         let mut callback_tsfn: ThreadsafeFunction<String, Fatal> =
             callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
@@ -89,64 +106,6 @@ impl ChildProcess {
         Ok(())
     }
 }
-
-// #[napi]
-// pub struct ChildProcessWithIPC {
-//     child_process: ChildProcess,
-//
-//     subscriber: zmq::Socket,
-//     publisher: zmq::Socket,
-// }
-//
-// #[napi]
-// impl ChildProcessWithIPC {
-//     fn from(child_process: ChildProcess) -> Self {
-//         let ctx = zmq::Context::new();
-//
-//         // let publisher_address =
-//         let publisher = ctx.socket(zmq::PUB).unwrap();
-//         //
-//         //
-//         // publisher.connect();
-//
-//         let subscriber = ctx.socket(zmq::SUB).unwrap();
-//         subscriber.connect(&publisher_address).unwrap();
-//
-//         Self {
-//             child_process,
-//             publisher,
-//             subscriber,
-//         }
-//     }
-//     #[napi]
-//     pub fn kill(&mut self) -> anyhow::Result<()> {
-//         self.child_process.kill()
-//     }
-//
-//     #[napi]
-//     pub fn is_alive(&mut self) -> anyhow::Result<bool> {
-//         self.child_process.is_alive()
-//     }
-//
-//     #[napi]
-//     pub async unsafe fn wait(&mut self) -> napi::Result<u32> {
-//         self.child_process.wait().await
-//     }
-//
-//     #[napi]
-//     pub fn on_output(
-//         &mut self,
-//         env: Env,
-//         #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
-//     ) -> napi::Result<()> {
-//         self.child_process.on_output(env, callback)
-//     }
-//
-//     #[napi]
-//     pub fn on_message(&self, callback: JsFunction) -> anyhow::Result<()> {
-//         Ok(())
-//     }
-// }
 
 fn get_directory(command_dir: Option<String>) -> anyhow::Result<String> {
     if let Some(command_dir) = command_dir {
@@ -190,13 +149,7 @@ pub fn run_command(
         }
     }
 
-    let child = pair.slave.spawn_command(cmd)?;
-
-    // Release any handles owned by the slave
-    // we don't need it now that we've spawned the child.
-    drop(pair.slave);
-
-    let (tx, rx) = unbounded();
+    let (message_tx, message_rx) = unbounded();
 
     let reader = pair.master.try_clone_reader()?;
     let mut stdout = std::io::stdout();
@@ -208,17 +161,31 @@ pub fn run_command(
             if n == 0 {
                 break;
             }
-            let content = String::from_utf8_lossy(&buffer[..n]);
-            tx.send(content.to_string()).unwrap();
 
-            if (!quiet) {
-                stdout.write_all(&buffer[..n]).unwrap();
-                stdout.flush().unwrap();
+            let content = String::from_utf8_lossy(&buffer[..n]);
+            message_tx.send(content.to_string()).ok();
+            if !quiet {
+                stdout.write_all(&buffer[..n]).ok();
+                stdout.flush().ok();
             }
         }
     });
 
-    Ok(ChildProcess::new(child, rx))
+    let mut child = pair.slave.spawn_command(cmd)?;
+    // Release any handles owned by the slave
+    // we don't need it now that we've spawned the child.
+    drop(pair.slave);
+
+    let killer = child.clone_killer();
+    let (exit_tx, exit_rx) = bounded(1);
+    std::thread::spawn(move || {
+        let exit = child.wait().unwrap();
+        // make sure that master is only dropped after we wait on the child. Otherwise windows does not like it
+        drop(pair.master);
+        exit_tx.send(exit.exit_code()).ok();
+    });
+
+    Ok(ChildProcess::new(killer, message_rx, exit_rx))
 }
 
 #[napi]

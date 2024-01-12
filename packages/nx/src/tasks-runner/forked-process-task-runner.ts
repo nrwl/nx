@@ -173,13 +173,22 @@ export class ForkedProcessTaskRunner {
     let terminalOutput = '';
     p.onOutput((msg) => {
       terminalOutput += msg;
+      console.log(JSON.stringify(msg));
     });
-    const code = await p.wait();
 
-    return {
-      code,
-      terminalOutput,
-    };
+    return new Promise((res) => {
+      p.wait((code) => {
+        res({
+          code,
+          terminalOutput,
+        });
+      });
+    });
+
+    // return {
+    //   code,
+    //   terminalOutput,
+    // };
   }
 
   public forkProcessPipeOutputCapture(
@@ -412,34 +421,34 @@ export class ForkedProcessTaskRunner {
     // Terminate any task processes on exit
     process.on('exit', () => {
       this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive()) {
-          p.kill();
-        }
+        // if ('connected' in p ? p.connected : p.isAlive()) {
+        p.kill();
+        // }
       });
     });
     process.on('SIGINT', () => {
       this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive()) {
-          p.kill('SIGTERM');
-        }
+        // if ('connected' in p ? p.connected : p.isAlive()) {
+        p.kill('SIGTERM');
+        // }
       });
       // we exit here because we don't need to write anything to cache.
       process.exit();
     });
     process.on('SIGTERM', () => {
       this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive()) {
-          p.kill('SIGTERM');
-        }
+        // if ('connected' in p ? p.connected : p.isAlive()) {
+        p.kill('SIGTERM');
+        // }
       });
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });
     process.on('SIGHUP', () => {
       this.processes.forEach((p) => {
-        if ('connected' in p ? p.connected : p.isAlive()) {
-          p.kill('SIGTERM');
-        }
+        // if ('connected' in p ? p.connected : p.isAlive()) {
+        p.kill('SIGTERM');
+        // }
       });
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process

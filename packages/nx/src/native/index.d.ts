@@ -144,8 +144,7 @@ export interface FileMap {
 export function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
 export class ChildProcess {
   kill(): void
-  isAlive(): boolean
-  wait(): Promise<number>
+  wait(callback: (...args: any[]) => any): void
   onOutput(callback: (message: string) => void): void
 }
 export class ImportResult {
