@@ -1,16 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -90,16 +96,22 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should extract the layout directory from the directory options if it exists 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -193,16 +205,22 @@ export default defineConfig({
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --js should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -279,16 +297,22 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -316,16 +340,22 @@ installGlobals();
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -374,16 +404,22 @@ installGlobals();
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -463,16 +499,22 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --directory should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -552,16 +594,22 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --directory should extract the layout directory from the directory options if it exists 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -655,16 +703,22 @@ export default defineConfig({
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --js should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -741,16 +795,22 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -778,16 +838,22 @@ installGlobals();
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --unitTestRunner should generate the correct files for testing using vitest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -836,16 +902,22 @@ installGlobals();
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -939,16 +1011,22 @@ export default defineConfig({
 `;
 
 exports[`Remix Application Standalone Project Repo --js should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -1025,16 +1103,22 @@ exports[`Remix Application Standalone Project Repo --js should create the applic
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -1086,16 +1170,22 @@ test('renders loader data', async () => {
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -1164,16 +1254,22 @@ installGlobals();
 `;
 
 exports[`Remix Application Standalone Project Repo should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
