@@ -137,10 +137,9 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
 
   if (options.unitTestRunner !== 'none') {
     if (options.unitTestRunner === 'vitest') {
-      const { vitestGenerator } = ensurePackage<typeof import('@nx/vite')>(
-        '@nx/vite',
-        getPackageVersion(tree, 'nx')
-      );
+      const { vitestGenerator, createOrEditViteConfig } = ensurePackage<
+        typeof import('@nx/vite')
+      >('@nx/vite', getPackageVersion(tree, 'nx'));
       const vitestTask = await vitestGenerator(tree, {
         uiFramework: 'react',
         project: options.projectName,
@@ -148,7 +147,22 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
         inSourceTests: false,
         skipFormat: true,
         testEnvironment: 'jsdom',
+        skipViteConfig: true,
       });
+      createOrEditViteConfig(
+        tree,
+        {
+          project: options.projectName,
+          includeLib: false,
+          includeVitest: true,
+          testEnvironment: 'jsdom',
+          imports: [`import react from '@vitejs/plugin-react';`],
+          plugins: [`react()`],
+        },
+        true,
+        undefined,
+        true
+      );
       tasks.push(vitestTask);
     } else {
       const { configurationGenerator: jestConfigurationGenerator } =

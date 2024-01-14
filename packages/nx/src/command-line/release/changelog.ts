@@ -140,14 +140,14 @@ export async function releaseChangelog(
 
   const tree = new FsTree(workspaceRoot, args.verbose);
 
-  const userCommitMessage: string | undefined =
+  const commitMessage: string | undefined =
     args.gitCommitMessage || nxReleaseConfig.changelog.git.commitMessage;
 
   const commitMessageValues: string[] = createCommitMessageValues(
     releaseGroups,
     releaseGroupToFilteredProjects,
     projectsVersionData,
-    userCommitMessage
+    commitMessage
   );
 
   // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command

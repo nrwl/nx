@@ -253,12 +253,10 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
 
       tree.write('libs/react-vite/vite.config.ts', 'export default {}');
       tree.write('apps/main-vite/vite.config.ts', 'export default {}');
-      tree.write(
-        'apps/main-vite-ts/vite.config.custom.ts',
-        'export default {}'
-      );
+      tree.write('apps/main-vite-ts/vite.config.ts', 'export default {}');
       tree.write('apps/reapp/vite.config.ts', 'export default {}');
-      tree.write('apps/wv1/vite.config.custom.ts', 'export default {}');
+      tree.write('apps/wv1/vite.config.ts', 'export default {}');
+      tree.write('apps/nextapp/next.config.js', 'export default {}');
 
       await configurationGenerator(tree, {
         project: 'reapp',

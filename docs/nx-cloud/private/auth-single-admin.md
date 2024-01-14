@@ -2,7 +2,7 @@
 
 ## Why do users need access?
 
-While just adding an Nx Cloud access token to your monorepo gives you distributed caching and distributed tasks
+While just adding an Nx Cloud access token to your monorepo gives you remote caching and distributed tasks
 execution, the Nx Cloud web app gives you analytics about tasks running in your workspace, allows devs to easily inspect
 terminal output, and works seamlessly with our GitHub integration for your Pull Requests. Here is
 a [video walkthrough of this](https://youtu.be/GT7XIwG1i5A?t=409).

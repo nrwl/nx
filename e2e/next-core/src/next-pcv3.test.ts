@@ -17,7 +17,9 @@ describe('@nx/next/plugin', () => {
   let appName: string;
 
   beforeAll(() => {
-    project = newProject();
+    project = newProject({
+      packages: ['@nx/next'],
+    });
     appName = uniq('app');
     runCLI(
       `generate @nx/next:app ${appName} --project-name-and-root-format=as-provided --no-interactive`,

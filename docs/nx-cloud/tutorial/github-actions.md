@@ -315,7 +315,7 @@ Reducing the number of tasks to run via [affected commands](/ci/features/affecte
 
 ```{% command="pnpm nx connect" %}
 
- >  NX   Distributed caching via Nx Cloud has been enabled
+ >  NX   Remote caching via Nx Cloud has been enabled
 
    In addition to the caching, Nx Cloud provides config-free distributed execution,
    UI for viewing complex runs and GitHub integration. Learn more at https://nx.app

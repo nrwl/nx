@@ -1,11 +1,13 @@
 import {
   addDependenciesToPackageJson,
+  createProjectGraphAsync,
   GeneratorCallback,
-  getProjects,
   readNxJson,
+  readProjectConfiguration,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   stripIndents,
+  TargetConfiguration,
   Tree,
   updateJson,
   updateNxJson,
@@ -26,6 +28,7 @@ import {
   typesNodeVersion,
 } from '../../utils/versions';
 import { JestInitSchema } from './schema';
+import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 
 interface NormalizedSchema extends ReturnType<typeof normalizeOptions> {}
 
@@ -53,7 +56,28 @@ function generateGlobalConfig(tree: Tree, isJS: boolean) {
   tree.write(`jest.config.${isJS ? 'js' : 'ts'}`, contents);
 }
 
-function createJestConfig(tree: Tree, options: NormalizedSchema) {
+function addPlugin(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  nxJson.plugins ??= [];
+  if (
+    !nxJson.plugins.some((p) =>
+      typeof p === 'string'
+        ? p === '@nx/jest/plugin'
+        : p.plugin === '@nx/jest/plugin'
+    )
+  ) {
+    nxJson.plugins.push({
+      plugin: '@nx/jest/plugin',
+      options: {
+        targetName: 'test',
+      },
+    });
+  }
+  updateNxJson(tree, nxJson);
+}
+
+async function createJestConfig(tree: Tree, options: NormalizedSchema) {
   if (!tree.exists('jest.preset.js')) {
     // preset is always js file.
     tree.write(
@@ -64,8 +88,15 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
       module.exports = { ...nxPreset }`
     );
 
+    const shouldAddPlugin = process.env.NX_PCV3 === 'true';
+    if (shouldAddPlugin) {
+      addPlugin(tree);
+    }
+
     updateProductionFileSet(tree);
-    addJestTargetDefaults(tree);
+    if (!shouldAddPlugin) {
+      addJestTargetDefaults(tree, shouldAddPlugin);
+    }
   }
   if (options.rootProject) {
     // we don't want any config to be made because the `configurationGenerator` will do it.
@@ -84,30 +115,83 @@ function createJestConfig(tree: Tree, options: NormalizedSchema) {
 
   if (tree.exists(rootJestPath)) {
     // moving from root project config to monorepo-style config
-    const projects = getProjects(tree);
-    const projectNames = Array.from(projects.keys());
-    const rootProject = projectNames.find(
-      (projectName) => projects.get(projectName)?.root === '.'
+    const { nodes: projects } = await createProjectGraphAsync();
+    const projectConfigurations = Object.values(projects);
+    const rootProject = projectConfigurations.find(
+      (projectNode) => projectNode.data?.root === '.'
     );
     // root project might have been removed,
     // if it's missing there's nothing to migrate
     if (rootProject) {
-      const rootProjectConfig = projects.get(rootProject);
-      const jestTarget = Object.values(rootProjectConfig.targets || {}).find(
-        (t) =>
-          t?.executor === '@nx/jest:jest' || t?.executor === '@nrwl/jest:jest'
+      const jestTarget = Object.entries(rootProject.data?.targets ?? {}).find(
+        ([_, t]) =>
+          ((t?.executor === '@nx/jest:jest' ||
+            t?.executor === '@nrwl/jest:jest') &&
+            t?.options?.jestConfig === rootJestPath) ||
+          (t?.executor === 'nx:run-commands' && t?.options?.command === 'jest')
       );
-      const isProjectConfig = jestTarget?.options?.jestConfig === rootJestPath;
-      // if root project doesn't have jest target, there's nothing to migrate
-      if (isProjectConfig) {
-        const jestProjectConfig = `jest.config.${
-          rootProjectConfig.projectType === 'application' ? 'app' : 'lib'
-        }.${options.js ? 'js' : 'ts'}`;
-
-        tree.rename(rootJestPath, jestProjectConfig);
-        jestTarget.options.jestConfig = jestProjectConfig;
-        updateProjectConfiguration(tree, rootProject, rootProjectConfig);
+      if (!jestTarget) {
+        return;
       }
+
+      const [jestTargetName, jestTargetConfigInGraph] = jestTarget;
+      // if root project doesn't have jest target, there's nothing to migrate
+      const rootProjectConfig = readProjectConfiguration(
+        tree,
+        rootProject.name
+      );
+
+      if (
+        rootProjectConfig.targets['test']?.executor === 'nx:run-commands'
+          ? rootProjectConfig.targets['test']?.command !== 'jest'
+          : rootProjectConfig.targets['test']?.options?.jestConfig !==
+            rootJestPath
+      ) {
+        // Jest target has already been updated
+        return;
+      }
+
+      const jestProjectConfig = `jest.config.${
+        rootProjectConfig.projectType === 'application' ? 'app' : 'lib'
+      }.${options.js ? 'js' : 'ts'}`;
+
+      tree.rename(rootJestPath, jestProjectConfig);
+
+      const nxJson = readNxJson(tree);
+      const targetDefaults = readTargetDefaultsForTarget(
+        jestTargetName,
+        nxJson.targetDefaults,
+        jestTargetConfigInGraph.executor
+      );
+
+      const target: TargetConfiguration = (rootProjectConfig.targets[
+        jestTargetName
+      ] ??=
+        jestTargetConfigInGraph.executor === 'nx:run-commands'
+          ? { command: `jest --config ${jestProjectConfig}` }
+          : {
+              executor: jestTargetConfigInGraph.executor,
+              options: {},
+            });
+
+      if (target.executor === '@nx/jest:jest') {
+        target.options.jestConfig = jestProjectConfig;
+      }
+
+      if (targetDefaults?.cache === undefined) {
+        target.cache = jestTargetConfigInGraph.cache;
+      }
+      if (targetDefaults?.inputs === undefined) {
+        target.inputs = jestTargetConfigInGraph.inputs;
+      }
+      if (targetDefaults?.outputs === undefined) {
+        target.outputs = jestTargetConfigInGraph.outputs;
+      }
+      if (targetDefaults?.dependsOn === undefined) {
+        target.dependsOn = jestTargetConfigInGraph.dependsOn;
+      }
+
+      updateProjectConfiguration(tree, rootProject.name, rootProjectConfig);
       // generate new global config as it was move to project config or is missing
       generateGlobalConfig(tree, options.js);
     }
@@ -139,20 +223,23 @@ function updateProductionFileSet(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function addJestTargetDefaults(tree: Tree) {
+function addJestTargetDefaults(tree: Tree, hasPlugin: boolean) {
   const nxJson = readNxJson(tree);
-  const productionFileSet = nxJson.namedInputs?.production;
 
   nxJson.targetDefaults ??= {};
   nxJson.targetDefaults['@nx/jest:jest'] ??= {};
-  nxJson.targetDefaults['@nx/jest:jest'].cache ??= true;
 
-  // Test targets depend on all their project's sources + production sources of dependencies
-  nxJson.targetDefaults['@nx/jest:jest'].inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-    '{workspaceRoot}/jest.preset.js',
-  ];
+  if (!hasPlugin) {
+    const productionFileSet = nxJson.namedInputs?.production;
+
+    nxJson.targetDefaults['@nx/jest:jest'].cache ??= true;
+    // Test targets depend on all their project's sources + production sources of dependencies
+    nxJson.targetDefaults['@nx/jest:jest'].inputs ??= [
+      'default',
+      productionFileSet ? '^production' : '^default',
+      '{workspaceRoot}/jest.preset.js',
+    ];
+  }
 
   nxJson.targetDefaults['@nx/jest:jest'].options ??= {
     passWithNoTests: true,
@@ -231,7 +318,7 @@ export async function jestInitGenerator(
     })
   );
 
-  createJestConfig(tree, options);
+  await createJestConfig(tree, options);
 
   if (!options.skipPackageJson) {
     removeDependenciesFromPackageJson(tree, ['@nx/jest'], []);
