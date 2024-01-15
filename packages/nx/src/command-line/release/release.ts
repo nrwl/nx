@@ -91,15 +91,18 @@ export async function release(
 async function promptForPublish(): Promise<boolean> {
   console.log('\n');
 
-  const reply = await prompt<{ confirmation: boolean }>([
-    {
-      name: 'confirmation',
-      message: 'Do you want to publish these versions?',
-      type: 'confirm',
-    },
-  ]);
-
-  console.log('\n');
-
-  return reply.confirmation;
+  try {
+    const reply = await prompt<{ confirmation: boolean }>([
+      {
+        name: 'confirmation',
+        message: 'Do you want to publish these versions?',
+        type: 'confirm',
+      },
+    ]);
+    return reply.confirmation;
+  } catch (e) {
+    console.log('\n');
+    // Handle the case where the user exits the prompt with ctrl+c
+    return false;
+  }
 }
