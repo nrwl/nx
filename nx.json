@@ -18,8 +18,8 @@
     ],
     "sharedGlobals": [
       "{workspaceRoot}/babel.config.json",
-      ".nx/workflows/agents.yaml",
-      ".circleci/config.yml"
+      "{workspaceRoot}/.nx/workflows/agents.yaml",
+      "{workspaceRoot}/.circleci/config.yml"
     ],
     "native": [
       "{projectRoot}/**/*.rs",
