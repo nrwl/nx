@@ -403,37 +403,21 @@ export class TaskOrchestrator {
     try {
       // execution
       const { code, terminalOutput } =
-        // we want to enable the native command runner by default in Linux/macOS, but not in Windows
-        process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
-        process.platform !== 'win32'
-          ? await this.forkedProcessTaskRunner.forkProcessUsingNativeChildProcess(
-              task,
-              {
-                temporaryOutputPath,
-                streamOutput,
-                taskGraph: this.taskGraph,
-                env,
-              }
-            )
-          : pipeOutput
-          ? await this.forkedProcessTaskRunner.forkProcessPipeOutputCapture(
-              task,
-              {
-                temporaryOutputPath,
-                streamOutput,
-                taskGraph: this.taskGraph,
-                env,
-              }
-            )
-          : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
-              task,
-              {
-                temporaryOutputPath,
-                streamOutput,
-                taskGraph: this.taskGraph,
-                env,
-              }
-            );
+        process.env.NX_NATIVE_COMMAND_RUNNER !== 'false'
+          ? await this.forkedProcessTaskRunner.forkProcess(task, {
+              temporaryOutputPath,
+              streamOutput,
+              pipeOutput,
+              taskGraph: this.taskGraph,
+              env,
+            })
+          : await this.forkedProcessTaskRunner.forkProcessLegacy(task, {
+              temporaryOutputPath,
+              streamOutput,
+              pipeOutput,
+              taskGraph: this.taskGraph,
+              env,
+            });
 
       return {
         code,

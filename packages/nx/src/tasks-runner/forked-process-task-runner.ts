@@ -120,7 +120,83 @@ export class ForkedProcessTaskRunner {
     });
   }
 
-  public async forkProcessUsingNativeChildProcess(
+  public async forkProcessLegacy(
+    task: Task,
+    {
+      temporaryOutputPath,
+      streamOutput,
+      pipeOutput,
+      taskGraph,
+      env,
+    }: {
+      temporaryOutputPath: string;
+      streamOutput: boolean;
+      pipeOutput: boolean;
+      taskGraph: TaskGraph;
+      env: NodeJS.ProcessEnv;
+    }
+  ): Promise<{ code: number; terminalOutput: string }> {
+    return pipeOutput
+      ? await this.forkProcessPipeOutputCapture(task, {
+          temporaryOutputPath,
+          streamOutput,
+          taskGraph,
+          env,
+        })
+      : await this.forkProcessDirectOutputCapture(task, {
+          temporaryOutputPath,
+          streamOutput,
+          taskGraph,
+          env,
+        });
+  }
+
+  public async forkProcess(
+    task: Task,
+    {
+      temporaryOutputPath,
+      streamOutput,
+      pipeOutput,
+      taskGraph,
+      env,
+    }: {
+      temporaryOutputPath: string;
+      streamOutput: boolean;
+      pipeOutput: boolean;
+      taskGraph: TaskGraph;
+      env: NodeJS.ProcessEnv;
+    }
+  ): Promise<{ code: number; terminalOutput: string }> {
+    const shouldPrefix =
+      streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
+
+    if (process.platform === 'win32') {
+      // we want to enable the native command runner by default in Linux/macOS, but not in Windows
+      return this.forkProcessLegacy(task, {
+        temporaryOutputPath,
+        streamOutput,
+        pipeOutput,
+        taskGraph,
+        env,
+      });
+    } else if (shouldPrefix || !process.stdout.isTTY) {
+      return this.forkProcessWithPrefixAndNotTTY(task, {
+        temporaryOutputPath,
+        streamOutput,
+        taskGraph,
+        env,
+      });
+    } else {
+      return this.forkProcessWithPsuedoTerminal(task, {
+        temporaryOutputPath,
+        streamOutput,
+        taskGraph,
+        env,
+      });
+    }
+  }
+
+  private async forkProcessWithPsuedoTerminal(
     task: Task,
     {
       temporaryOutputPath,
@@ -134,17 +210,6 @@ export class ForkedProcessTaskRunner {
       env: NodeJS.ProcessEnv;
     }
   ): Promise<{ code: number; terminalOutput: string }> {
-    const shouldPrefix =
-      streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
-
-    if (shouldPrefix || !process.stdout.isTTY) {
-      return this.forkProcessWithPrefixAndNotTTY(task, {
-        temporaryOutputPath,
-        streamOutput,
-        taskGraph,
-        env,
-      });
-    }
     const args = getPrintableCommandArgsForTask(task);
     if (streamOutput) {
       output.logCommand(args.join(' '));
@@ -194,7 +259,7 @@ export class ForkedProcessTaskRunner {
     // };
   }
 
-  public forkProcessPipeOutputCapture(
+  private forkProcessPipeOutputCapture(
     task: Task,
     {
       streamOutput,
@@ -312,7 +377,7 @@ export class ForkedProcessTaskRunner {
     });
   }
 
-  public forkProcessDirectOutputCapture(
+  private forkProcessDirectOutputCapture(
     task: Task,
     {
       streamOutput,
