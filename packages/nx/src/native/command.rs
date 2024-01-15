@@ -35,33 +35,31 @@ pub enum ChildProcessMessage {
 
 #[napi]
 pub struct ChildProcess {
-    // pair: portable_pty::PtyPair,
-    child_killer: Box<dyn ChildKiller + Sync + Send>,
+    process_killer: Box<dyn ChildKiller + Sync + Send>,
     message_receiver: Receiver<String>,
     wait_receiver: Receiver<u32>,
 }
 #[napi]
 impl ChildProcess {
     pub fn new(
-        child_killer: Box<dyn ChildKiller + Sync + Send>,
+        process_killer: Box<dyn ChildKiller + Sync + Send>,
         message_receiver: Receiver<String>,
         exit_receiver: Receiver<u32>,
     ) -> Self {
         Self {
-            // pair,
-            child_killer,
+            process_killer,
             message_receiver,
             wait_receiver: exit_receiver,
         }
     }
+
     #[napi]
     pub fn kill(&mut self) -> anyhow::Result<()> {
-        self.child_killer.kill().map_err(anyhow::Error::from)?;
+        self.process_killer.kill().map_err(anyhow::Error::from)?;
         Ok(())
     }
 
     #[napi]
-
     pub fn on_exit(
         &mut self,
         #[napi(ts_arg_type = "(code: number) => void")] callback: JsFunction,
@@ -172,7 +170,7 @@ pub fn run_command(
     // we don't need it now that we've spawned the child.
     drop(pair.slave);
 
-    let killer = child.clone_killer();
+    let process_killer = child.clone_killer();
     let (exit_tx, exit_rx) = bounded(1);
     std::thread::spawn(move || {
         let exit = child.wait().unwrap();
@@ -181,7 +179,7 @@ pub fn run_command(
         exit_tx.send(exit.exit_code()).ok();
     });
 
-    Ok(ChildProcess::new(killer, message_rx, exit_rx))
+    Ok(ChildProcess::new(process_killer, message_rx, exit_rx))
 }
 
 /// This allows us to run a pseudoterminal with a fake node ipc channel
