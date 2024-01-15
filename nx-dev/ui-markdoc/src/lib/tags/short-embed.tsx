@@ -162,12 +162,11 @@ export function ShortVideo({ embedUrl, title }: VideoData) {
   return (
     <div className="w-full h-96 rounded-lg overflow-hidden">
       <iframe
-        className="!m-0"
+        className="!m-0 border-0"
         width="100%"
         height="100%"
         src={`${embedUrl}?autoplay=1&loop=1${userInteraction ? '' : '&mute=1'}`}
-        title="Two Places to Define Tasks | Nx Workspaces"
-        frameBorder="0"
+        title={title || 'Two Places to Define Tasks | Nx Workspaces'}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
       />
