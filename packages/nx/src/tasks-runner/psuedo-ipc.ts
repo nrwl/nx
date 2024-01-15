@@ -75,8 +75,6 @@ export class PsuedoIPCServer {
           const childId = message as string;
           if (this.childReadyMap.has(childId)) {
             this.childReadyMap.get(childId)();
-          } else {
-            throw new Error('What happened?');
           }
         }
       })
