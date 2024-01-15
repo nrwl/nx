@@ -1,3 +1,4 @@
+import { PseudoTtyProcess } from '../../utils/child-process';
 import { runCommand } from '../index';
 
 describe('runCommand', () => {
@@ -8,14 +9,18 @@ describe('runCommand', () => {
     });
   });
   it('should kill a running command', () => {
-    const childProcess = runCommand(
-      'sleep 3 && echo "hello world" > file.txt',
-      process.cwd()
+    const childProcess = new PseudoTtyProcess(
+      runCommand(
+        'sleep 3 && echo "hello world" > file.txt',
+        process.cwd()
+      )
     );
     childProcess.onExit((exit_code) => {
       expect(exit_code).not.toEqual(0);
     });
     childProcess.kill();
+    expect(childProcess.isAlive).toEqual(false);
+
   }, 1000);
 
   it('should subscribe to output', (done) => {
@@ -25,7 +30,7 @@ describe('runCommand', () => {
       expect(output.trim()).toEqual('hello world');
     });
 
-    childProcess.onExit((exitCode) => {
+    childProcess.onExit(() => {
       done();
     });
   });

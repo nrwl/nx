@@ -18,6 +18,7 @@ import { Readable, Transform } from 'stream';
 import { ChildProcess as NativeChildProcess, nxFork } from '../native';
 import { PsuedoIPCServer } from './psuedo-ipc';
 import { FORKED_PROCESS_OS_SOCKET_PATH } from '../daemon/socket-utils';
+import { PseudoTtyProcess } from '../utils/child-process';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -27,7 +28,7 @@ export class ForkedProcessTaskRunner {
   cliPath = getCliPath();
 
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
-  private processes = new Set<ChildProcess | NativeChildProcess>();
+  private processes = new Set<ChildProcess | PseudoTtyProcess>();
 
   private psuedoIPCPath = FORKED_PROCESS_OS_SOCKET_PATH(process.pid.toString());
 
@@ -151,13 +152,15 @@ export class ForkedProcessTaskRunner {
     }
 
     const childId = task.id;
-    const p = nxFork(
-      childId,
-      forkScript,
-      this.psuedoIPCPath,
-      process.cwd(),
-      env,
-      !streamOutput
+    const p = new PseudoTtyProcess(
+      nxFork(
+        childId,
+        forkScript,
+        this.psuedoIPCPath,
+        process.cwd(),
+        env,
+        !streamOutput
+      )
     );
 
     await this.psuedoIPC.waitForChildReady(childId);
@@ -421,34 +424,34 @@ export class ForkedProcessTaskRunner {
     // Terminate any task processes on exit
     process.on('exit', () => {
       this.processes.forEach((p) => {
-        // if ('connected' in p ? p.connected : p.isAlive()) {
-        p.kill();
-        // }
+        if ('connected' in p ? p.connected : p.isAlive) {
+          p.kill();
+        }
       });
     });
     process.on('SIGINT', () => {
       this.processes.forEach((p) => {
-        // if ('connected' in p ? p.connected : p.isAlive()) {
-        p.kill('SIGTERM');
-        // }
+        if ('connected' in p ? p.connected : p.isAlive) {
+          p.kill('SIGTERM');
+        }
       });
       // we exit here because we don't need to write anything to cache.
       process.exit();
     });
     process.on('SIGTERM', () => {
       this.processes.forEach((p) => {
-        // if ('connected' in p ? p.connected : p.isAlive()) {
-        p.kill('SIGTERM');
-        // }
+        if ('connected' in p ? p.connected : p.isAlive) {
+          p.kill('SIGTERM');
+        }
       });
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });
     process.on('SIGHUP', () => {
       this.processes.forEach((p) => {
-        // if ('connected' in p ? p.connected : p.isAlive()) {
-        p.kill('SIGTERM');
-        // }
+        if ('connected' in p ? p.connected : p.isAlive) {
+          p.kill('SIGTERM');
+        }
       });
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
