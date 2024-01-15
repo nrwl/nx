@@ -1,7 +1,11 @@
 import { exec } from 'child_process';
+import { existsSync } from 'fs';
 import * as ora from 'ora';
+import { join, relative } from 'path';
 import { isAngularPluginInstalled } from '../../adapter/angular-json';
 import type { GeneratorsJsonEntry } from '../../config/misc-interfaces';
+import { readNxJson } from '../../config/nx-json';
+import { writeJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
 import {
@@ -10,7 +14,7 @@ import {
 } from '../../utils/package-manager';
 import { handleErrors } from '../../utils/params';
 import { getPluginCapabilities } from '../../utils/plugins';
-import { workspaceRoot } from '../../utils/workspace-root';
+import { workspaceRoot, workspaceRootInner } from '../../utils/workspace-root';
 import type { AddOptions } from './command-object';
 
 export function addHandler(args: AddOptions): Promise<void> {
@@ -42,21 +46,61 @@ async function installPackage(
   const spinner = ora(`Installing ${pkgName}@${version}...`);
   spinner.start();
 
-  await new Promise<void>((resolve) =>
-    exec(
-      `${packageManagerCommands.addDev} ${pkgName}@${version}`,
-      (error, stdout) => {
+  if (existsSync('package.json')) {
+    await new Promise<void>((resolve) =>
+      exec(
+        `${packageManagerCommands.addDev} ${pkgName}@${version}`,
+        (error, stdout) => {
+          if (error) {
+            spinner.fail();
+            output.addNewline();
+            logger.log(stdout);
+            output.error({
+              title: `Failed to install ${pkgName}. Please check the error above for more details.`,
+            });
+            process.exit(1);
+          }
+
+          return resolve();
+        }
+      )
+    );
+  } else {
+    const nxJson = readNxJson();
+    nxJson.installation.plugins ??= {};
+    nxJson.installation.plugins[pkgName] = version;
+    writeJsonFile('nx.json', nxJson);
+
+    const cwd = process.cwd();
+    const offsetFromRoot = relative(cwd, workspaceRootInner(cwd, null));
+
+    let nxExecutable: string;
+    if (process.platform === 'win32') {
+      nxExecutable = '.\\' + join(`${offsetFromRoot}`, 'nx.bat');
+    } else {
+      nxExecutable = './' + join(`${offsetFromRoot}`, 'nx');
+    }
+
+    await new Promise<void>((resolve) =>
+      exec(`${nxExecutable}`, (error, _stdout, stderr) => {
         if (error) {
+          // revert adding the plugin to nx.json
+          nxJson.installation.plugins[pkgName] = undefined;
+          writeJsonFile('nx.json', nxJson);
+
           spinner.fail();
           output.addNewline();
-          logger.log(stdout);
+          logger.log(stderr);
+          output.error({
+            title: `Failed to install ${pkgName}. Please check the error above for more details.`,
+          });
           process.exit(1);
         }
 
         return resolve();
-      }
-    )
-  );
+      })
+    );
+  }
 
   spinner.succeed();
 }
@@ -92,7 +136,10 @@ async function initializePlugin(
         if (error) {
           spinner.fail();
           output.addNewline();
-          logger.log(stdout);
+          logger.error(stdout);
+          output.error({
+            title: `Failed to initialize ${pkgName}. Please check the error above for more details.`,
+          });
           process.exit(1);
         }
 
