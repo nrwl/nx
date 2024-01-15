@@ -15,6 +15,11 @@ on:
       - main
   pull_request:
 
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -58,6 +63,11 @@ on:
     branches:
       - main
   pull_request:
+
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
 
 jobs:
   main:
@@ -112,6 +122,11 @@ on:
     branches:
       - main
   pull_request:
+
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
 
 env:
   NX_CLOUD_DISTRIBUTED_EXECUTION: true # this enables DTE
