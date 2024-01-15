@@ -1,3 +1,6 @@
+jest.mock('../../utils/remix-config');
+import * as remixConfigUtils from '../../utils/remix-config';
+
 import { Tree } from '@nx/devkit';
 import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -11,6 +14,12 @@ describe('resource route', () => {
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', `/node_modules/dist`);
+
+    (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
+      Promise.resolve({
+        ignoredRouteFiles: ['**/.*'],
+      })
+    );
 
     await applicationGenerator(tree, { name: 'demo' });
   });
