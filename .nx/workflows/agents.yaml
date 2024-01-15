@@ -18,9 +18,6 @@ launch-templates:
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
-      - name: print verbose logging
-        script: |
-          echo "verbose logging is: $NX_VERBOSE_LOGGING"
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/cache/main.yaml'
         env:
