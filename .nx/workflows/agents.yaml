@@ -9,10 +9,15 @@ launch-templates:
       GIT_COMMITTER_NAME: Test
       SELECTED_PM: 'pnpm'
       NPM_CONFIG_PREFIX: '/home/workflows/.npm-global'
+      NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
+      NX_PERF_LOGGING: 'false'
+      NX_NATIVE_LOGGING: 'false'
+      CI: 'true'
+      NX_E2E_RUN_E2E: 'true'
+      NX_CLOUD_ACCESS_TOKEN: '{{secrets.NX_CLOUD_ACCESS_TOKEN}}'
     init-steps:
       - name: Checkout
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
-
       - name: Cache restore
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/cache/main.yaml'
         env:
