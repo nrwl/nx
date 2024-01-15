@@ -23,13 +23,14 @@ import {
   VersionData,
   deriveNewSemverVersion,
 } from 'nx/src/command-line/release/version';
+import { daemonClient } from 'nx/src/daemon/client/client';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { relative } from 'path';
 import { prerelease } from 'semver';
 import { ReleaseVersionGeneratorSchema } from './schema';
-import { packageManagerInstall } from './utils/package-manager-install';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
+import { updateLockFile } from './utils/update-lock-file';
 
 export async function releaseVersionGenerator(
   tree: Tree,
@@ -399,8 +400,23 @@ To fix this you will either need to add a package.json file at that location, or
 
     // Return the version data so that it can be leveraged by the overall version command
     return {
-      versionData,
-      installCallback: packageManagerInstall,
+      data: versionData,
+      callback: async (tree, opts) => {
+        const cwd = tree.root;
+
+        const isDaemonEnabled = daemonClient.enabled();
+        if (isDaemonEnabled) {
+          // temporarily stop the daemon, as it will error if the lock file is updated
+          daemonClient.stop();
+        }
+
+        const updatedFiles = updateLockFile(cwd, opts);
+
+        if (isDaemonEnabled) {
+          daemonClient.startInBackground();
+        }
+        return updatedFiles;
+      },
     };
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

@@ -127,6 +127,7 @@ export async function releaseVersion(
   const commitMessage: string | undefined =
     args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
   const changedLockFiles = new Set<string>();
+  let updateLockFileCallback: () => Promise<void>;
 
   if (args.projects?.length) {
     /**
@@ -149,7 +150,7 @@ export async function releaseVersion(
         releaseGroupToFilteredProjects.get(releaseGroup)
       );
 
-      const installCallback = await runVersionOnProjects(
+      const callback = await runVersionOnProjects(
         projectGraph,
         nxJson,
         args,
@@ -160,13 +161,14 @@ export async function releaseVersion(
         versionData
       );
 
-      (
-        await installCallback({
-          dryRun: !!args.dryRun,
-          verbose: !!args.verbose,
-          generatorOptions: releaseGroup.version.generatorOptions,
-        })
-      ).forEach((f) => changedLockFiles.add(f));
+      updateLockFileCallback = async () =>
+        (
+          await callback(tree, {
+            dryRun: !!args.dryRun,
+            verbose: !!args.verbose,
+            generatorOptions: releaseGroup.version.generatorOptions,
+          })
+        ).forEach((f) => changedLockFiles.add(f));
     }
 
     // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
@@ -181,6 +183,8 @@ export async function releaseVersion(
     handleDuplicateGitTags(gitTagValues);
 
     printAndFlushChanges(tree, !!args.dryRun);
+
+    await updateLockFileCallback();
 
     const changedFiles = [
       ...tree.listChanges().map((f) => f.path),
@@ -259,7 +263,7 @@ export async function releaseVersion(
       projects,
     });
 
-    const installCallback = await runVersionOnProjects(
+    const callback = await runVersionOnProjects(
       projectGraph,
       nxJson,
       args,
@@ -270,13 +274,14 @@ export async function releaseVersion(
       versionData
     );
 
-    (
-      await installCallback({
-        dryRun: !!args.dryRun,
-        verbose: !!args.verbose,
-        generatorOptions: releaseGroup.version.generatorOptions,
-      })
-    ).forEach((f) => changedLockFiles.add(f));
+    updateLockFileCallback = async () =>
+      (
+        await callback(tree, {
+          dryRun: !!args.dryRun,
+          verbose: !!args.verbose,
+          generatorOptions: releaseGroup.version.generatorOptions,
+        })
+      ).forEach((f) => changedLockFiles.add(f));
   }
 
   // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
@@ -291,6 +296,8 @@ export async function releaseVersion(
   handleDuplicateGitTags(gitTagValues);
 
   printAndFlushChanges(tree, !!args.dryRun);
+
+  await updateLockFileCallback();
 
   // Only applicable when there is a single release group with a fixed relationship
   let workspaceVersion: string | null | undefined = undefined;
@@ -387,7 +394,7 @@ async function runVersionOnProjects(
   projectNames: string[],
   releaseGroup: ReleaseGroupWithName,
   versionData: VersionData
-): Promise<ReleaseVersionGeneratorResult['installCallback']> {
+): Promise<ReleaseVersionGeneratorResult['callback']> {
   const generatorOptions: ReleaseVersionGeneratorSchema = {
     // Always ensure a string to avoid generator schema validation errors
     specifier: args.specifier ?? '',
@@ -428,9 +435,9 @@ async function runVersionOnProjects(
   }
 
   // Merge the extra version data into the existing
-  appendVersionData(versionData, versionResult.versionData);
+  appendVersionData(versionData, versionResult.data);
 
-  return versionResult.installCallback;
+  return versionResult.callback;
 }
 
 function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
