@@ -628,6 +628,7 @@
       - [application](/nx-api/remix/generators/application)
       - [cypress-component-configuration](/nx-api/remix/generators/cypress-component-configuration)
       - [library](/nx-api/remix/generators/library)
+      - [init](/nx-api/remix/generators/init)
       - [route](/nx-api/remix/generators/route)
       - [resource-route](/nx-api/remix/generators/resource-route)
       - [action](/nx-api/remix/generators/action)
