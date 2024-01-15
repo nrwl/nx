@@ -198,6 +198,7 @@ describe('dev mode - task graph', () => {
           // Load the fixture data and find the property based on the query parameter
 
           const expandedInputs = nxExamplesTaskInputs[taskId];
+          console.log(expandedInputs);
 
           // Reply with the selected property
           req.reply({
