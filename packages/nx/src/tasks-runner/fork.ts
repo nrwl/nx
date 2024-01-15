@@ -7,9 +7,6 @@ const forkId = process.argv[3];
 
 const script = join(__dirname, '../../bin/run-executor.js');
 
-// const sock = socket('client');
-// sock.bindSync(address);
-
 const childProcess = fork(script, {
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
 });

@@ -218,8 +218,11 @@ async function createProcess(
 ): Promise<boolean> {
   env = processEnv(color, cwd, env);
   // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
+  // currently does not work properly in windows
   if (
     process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
+    process.platform !== 'win32' &&
+    process.stdout.isTTY &&
     !commandConfig.prefix &&
     !isParallel
   ) {
@@ -232,7 +235,7 @@ async function createProcess(
         }
       });
 
-      cp.wait((code) => res(code === 0));
+      cp.onExit((code) => res(code === 0));
     });
   }
 

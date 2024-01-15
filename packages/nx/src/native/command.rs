@@ -5,7 +5,7 @@ use std::{
 
 use anyhow::anyhow;
 use crossbeam_channel::{bounded, unbounded, Receiver};
-use napi::threadsafe_function::ErrorStrategy::{ErrorStrategy, Fatal};
+use napi::threadsafe_function::ErrorStrategy::Fatal;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
 use napi::{Env, JsFunction};
@@ -59,24 +59,20 @@ impl ChildProcess {
         self.child_killer.kill().map_err(anyhow::Error::from)?;
         Ok(())
     }
-    // #[napi]
-    // pub fn is_alive(&mut self) -> anyhow::Result<bool> {
-    //     Ok(self
-    //         .child_killer
-    //         .try_wait()
-    //         .map_err(anyhow::Error::from)?
-    //         .is_none())
-    // }
 
     #[napi]
-    pub fn wait(&mut self, env: Env, callback: JsFunction) -> napi::Result<()> {
+
+    pub fn on_exit(
+        &mut self,
+        #[napi(ts_arg_type = "(code: number) => void")] callback: JsFunction,
+    ) -> napi::Result<()> {
         let wait = self.wait_receiver.clone();
-        let mut callback_tsfn: ThreadsafeFunction<u32, Fatal> =
+        let callback_tsfn: ThreadsafeFunction<u32, Fatal> =
             callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
 
         std::thread::spawn(move || {
+            // we will only get one exit_code here, so we dont need to do a while loop
             if let Ok(exit_code) = wait.recv() {
-                // println!("sending exit_code to node: {:?}", exit_code);
                 callback_tsfn.call(exit_code, NonBlocking);
             }
         });
@@ -188,6 +184,8 @@ pub fn run_command(
     Ok(ChildProcess::new(killer, message_rx, exit_rx))
 }
 
+/// This allows us to run a pseudoterminal with a fake node ipc channel
+/// this makes it possible to be backwards compatible with the old implementation
 #[napi]
 pub fn nx_fork(
     id: String,
@@ -197,12 +195,10 @@ pub fn nx_fork(
     js_env: Option<HashMap<String, String>>,
     quiet: bool,
 ) -> napi::Result<ChildProcess> {
-    let child_process = run_command(
+    run_command(
         format!("node {} {} {}", fork_script, psuedo_ipc_path, id),
         command_dir,
         js_env,
         Some(quiet),
-    )?;
-
-    Ok(child_process)
+    )
 }

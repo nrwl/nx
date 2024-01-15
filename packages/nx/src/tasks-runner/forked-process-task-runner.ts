@@ -177,7 +177,7 @@ export class ForkedProcessTaskRunner {
     });
 
     return new Promise((res) => {
-      p.wait((code) => {
+      p.onExit((code) => {
         res({
           code,
           terminalOutput,

@@ -403,7 +403,8 @@ export class TaskOrchestrator {
     try {
       // execution
       const { code, terminalOutput } =
-        process.env.NX_NATIVE_COMMAND_RUNNER !== 'false'
+        // we want to enable the native command runner by default in Linux/macOS, but not in Windows
+        (process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' && process.platform !== 'win32')
           ? await this.forkedProcessTaskRunner.forkProcessUsingNativeChildProcess(
               task,
               {
