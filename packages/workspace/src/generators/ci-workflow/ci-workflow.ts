@@ -7,6 +7,7 @@ import {
   NxJsonConfiguration,
   formatFiles,
   writeJson,
+  detectPackageManager,
 } from '@nx/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { join } from 'path';
@@ -42,6 +43,7 @@ interface Substitutes {
   mainBranch: string;
   workflowName: string;
   workflowFileName: string;
+  packageManager: string;
   packageManagerInstall: string;
   packageManagerPrefix: string;
   tmpl: '';
@@ -51,11 +53,13 @@ function normalizeOptions(options: Schema): Substitutes {
   const { name: workflowName, fileName: workflowFileName } = names(
     options.name
   );
+  const packageManager = detectPackageManager();
   const { exec: packageManagerPrefix, ciInstall: packageManagerInstall } =
-    getPackageManagerCommand();
+    getPackageManagerCommand(packageManager);
   return {
     workflowName,
     workflowFileName,
+    packageManager,
     packageManagerInstall,
     packageManagerPrefix,
     mainBranch: deduceDefaultBase(),

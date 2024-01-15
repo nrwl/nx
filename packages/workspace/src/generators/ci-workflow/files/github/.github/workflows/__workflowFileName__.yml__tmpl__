@@ -6,29 +6,31 @@ on:
       - <%= mainBranch %>
   pull_request:
 
-# Needed for nx-set-shas within nx-cloud-main.yml, when run on the <%= mainBranch %> branch
 permissions:
   actions: read
   contents: read
 
 jobs:
   main:
-    name: Nx Cloud - Main Job
-    uses: nrwl/ci/.github/workflows/nx-cloud-main.yml@v0.13.1
-    with:
-      main-branch-name: <%= mainBranch %>
-      number-of-agents: 3
-      init-commands: |
-        <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
-      parallel-commands: |
-        <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check
-      parallel-commands-on-agents: |
-        <%= packageManagerPrefix %> nx affected --target=lint --parallel=3
-        <%= packageManagerPrefix %> nx affected --target=test --parallel=3 --ci --code-coverage
-        <%= packageManagerPrefix %> nx affected --target=build --parallel=3
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      <% if(packageManager == 'pnpm'){ %>
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      <% } %># Cache node_modules
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: '<%= packageManager %>'
+      - run: <%= packageManagerInstall %>
+      - uses: nrwl/nx-set-shas@v4
 
-  agents:
-    name: Nx Cloud - Agents
-    uses: nrwl/ci/.github/workflows/nx-cloud-agents.yml@v0.13.1
-    with:
-      number-of-agents: 3
+      # uncomment to enable task distribution
+      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distributes-on="5 linux-medium"
+
+      - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check
+      - run: <%= packageManagerPrefix %> nx affected -t lint,test,build --parallel=3
