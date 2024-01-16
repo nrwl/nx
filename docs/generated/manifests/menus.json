@@ -1823,14 +1823,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Storybook Inferred Tasks",
-                "path": "/recipes/storybook/storybook-inferred-tasks",
-                "id": "storybook-inferred-tasks",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -1923,14 +1915,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Nuxt Inferred Tasks",
-                "path": "/recipes/nuxt/nuxt-inferred-tasks",
-                "id": "nuxt-inferred-tasks",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -1945,14 +1929,6 @@
                 "name": "Configure Vite on your Nx workspace",
                 "path": "/recipes/vite/configure-vite",
                 "id": "configure-vite",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Vite Inferred Tasks",
-                "path": "/recipes/vite/vite-inferred-tasks",
-                "id": "vite-inferred-tasks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3159,14 +3135,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Storybook Inferred Tasks",
-            "path": "/recipes/storybook/storybook-inferred-tasks",
-            "id": "storybook-inferred-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3263,14 +3231,6 @@
         "name": "Angular: Configuring styles and preprocessor options",
         "path": "/recipes/storybook/angular-configuring-styles",
         "id": "angular-configuring-styles",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Storybook Inferred Tasks",
-        "path": "/recipes/storybook/storybook-inferred-tasks",
-        "id": "storybook-inferred-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3411,14 +3371,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Nuxt Inferred Tasks",
-            "path": "/recipes/nuxt/nuxt-inferred-tasks",
-            "id": "nuxt-inferred-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3427,14 +3379,6 @@
         "name": "Deploying Nuxt applications to Vercel",
         "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
         "id": "deploy-nuxt-to-vercel",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nuxt Inferred Tasks",
-        "path": "/recipes/nuxt/nuxt-inferred-tasks",
-        "id": "nuxt-inferred-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3452,14 +3396,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Vite Inferred Tasks",
-            "path": "/recipes/vite/vite-inferred-tasks",
-            "id": "vite-inferred-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -3468,14 +3404,6 @@
         "name": "Configure Vite on your Nx workspace",
         "path": "/recipes/vite/configure-vite",
         "id": "configure-vite",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Vite Inferred Tasks",
-        "path": "/recipes/vite/vite-inferred-tasks",
-        "id": "vite-inferred-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

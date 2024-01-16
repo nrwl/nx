@@ -39,6 +39,51 @@ pnpm install -D @nx/storybook
 {% /tab %}
 {% /tabs %}
 
+### Enable Inferred Tasks
+
+{% callout type="note" title="Inferred Tasks" %}
+In Nx version 17.3, the `@nx/storybook` plugin can create [inferred tasks](/concepts/inferred-tasks) for projects that have a Storybook configuration file present. This means you can run `nx storybook my-project`, `nx build-storybook my-project`, `nx test-storybook my-project` and `nx static-storybook my-project` for that project, even if there is no `storybook`, `build-storybook`, `test-storybook` or `static-storybook` targets defined in `package.json` or `project.json`.
+{% /callout %}
+
+To enable inferred targets, add `@nx/storybook/plugin` to the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/storybook/plugin",
+      "options": {
+        "buildStorybookTargetName": "build-storybook",
+        "serveStorybookTargetName": "storybook",
+        "testStorybookTargetName": "test-storybook",
+        "staticStorybookTargetName": "static-storybook"
+      }
+    }
+  ]
+}
+```
+
+### Task Inference Process
+
+#### Identify Valid Projects
+
+The `@nx/storybook/plugin` plugin will create a target for any project that has a Storybook configuration file present. Any of the following files will be recognized as a Storybook configuration file:
+
+- `.storybook/main.js`
+- `.storybook/main.ts`
+- `.storybook/main.cjs`
+- `.storybook/main.cts`
+- `.storybook/main.mjs`
+- `.storybook/main.mts`
+
+#### Name the Inferred Task
+
+Once a Storybook configuration file has been identified, the targets are created with the name you specify under `buildStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTargetName` or `staticStorybookTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `storybook`, `build-storybook`, `test-storybook` and `static-storybook`.
+
+#### View and Edit Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line. Nx Console also provides a quick way to override the settings of an inferred task.
+
 ## Using Storybook
 
 ### Generating Storybook Configuration
