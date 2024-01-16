@@ -179,7 +179,9 @@ export class ForkedProcessTaskRunner {
         taskGraph,
         env,
       });
-    } else if (shouldPrefix || !process.stdout.isTTY) {
+    // streamOutput would be false if we are running multiple targets
+    // there's no point in running the commands in a pty if we are not streaming the output
+    } else if (!streamOutput || shouldPrefix || !process.stdout.isTTY) {
       return this.forkProcessWithPrefixAndNotTTY(task, {
         temporaryOutputPath,
         streamOutput,
@@ -241,7 +243,6 @@ export class ForkedProcessTaskRunner {
     let terminalOutput = '';
     p.onOutput((msg) => {
       terminalOutput += msg;
-      console.log(JSON.stringify(msg));
     });
 
     return new Promise((res) => {
@@ -252,11 +253,6 @@ export class ForkedProcessTaskRunner {
         });
       });
     });
-
-    // return {
-    //   code,
-    //   terminalOutput,
-    // };
   }
 
   private forkProcessPipeOutputCapture(

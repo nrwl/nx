@@ -30,18 +30,24 @@ export function runNxSync(
 
 export class PseudoTtyProcess {
   isAlive = true;
+
+  exitCallbacks = [];
+
   constructor(private childProcess: ChildProcess) {
-    childProcess.onExit(() => {
+    childProcess.onExit((exitCode) => {
       this.isAlive = false;
+      this.exitCallbacks.forEach((cb) => cb(exitCode));
     });
   }
 
   onExit(callback: (code: number) => void): void {
-    this.childProcess.onExit(callback);
+    this.exitCallbacks.push(callback);
   }
+
   onOutput(callback: (message: string) => void): void {
     this.childProcess.onOutput(callback);
   }
+
   kill(): void {
     try {
       this.childProcess.kill();
