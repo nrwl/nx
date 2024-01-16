@@ -48,7 +48,7 @@ Once you've created your workspace, you can
 
 Run `npx nx run-many -t build` twice to see how Nx's powerful caching speeds up your build.
 
-Learn more about [running tasks](/core-features/run-tasks).
+Learn more about [running tasks](/features/run-tasks).
 
 ## Installing Nx Into an Existing Repository
 
