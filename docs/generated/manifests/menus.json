@@ -569,14 +569,14 @@
         "disableCollapsible": false
       },
       {
-        "name": "Core Features",
-        "path": "/core-features",
-        "id": "core-features",
+        "name": "Features",
+        "path": "/features",
+        "id": "features",
         "isExternal": false,
         "children": [
           {
             "name": "Run Tasks",
-            "path": "/core-features/run-tasks",
+            "path": "/features/run-tasks",
             "id": "run-tasks",
             "isExternal": false,
             "children": [],
@@ -584,39 +584,31 @@
           },
           {
             "name": "Cache Task Results",
-            "path": "/core-features/cache-task-results",
+            "path": "/features/cache-task-results",
             "id": "cache-task-results",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Use Remote Caching",
-            "path": "/ci/features/remote-cache",
-            "id": "remote-cache",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Distribute Task Execution",
-            "path": "/ci/features/distribute-task-execution",
-            "id": "distribute-task-execution",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Explore the Graph",
-            "path": "/core-features/explore-graph",
+            "path": "/features/explore-graph",
             "id": "explore-graph",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
+            "name": "Generate Code",
+            "path": "/features/generate-code",
+            "id": "generate-code",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Automate Updating Dependencies",
-            "path": "/core-features/automate-updating-dependencies",
+            "path": "/features/automate-updating-dependencies",
             "id": "automate-updating-dependencies",
             "isExternal": false,
             "children": [],
@@ -624,7 +616,7 @@
           },
           {
             "name": "Enforce Module Boundaries",
-            "path": "/core-features/enforce-module-boundaries",
+            "path": "/features/enforce-module-boundaries",
             "id": "enforce-module-boundaries",
             "isExternal": false,
             "children": [],
@@ -632,7 +624,7 @@
           },
           {
             "name": "Integrate with Editors",
-            "path": "/core-features/integrate-with-editors",
+            "path": "/features/integrate-with-editors",
             "id": "integrate-with-editors",
             "isExternal": false,
             "children": [],
@@ -640,35 +632,10 @@
           },
           {
             "name": "Manage Releases",
-            "path": "/core-features/manage-releases",
+            "path": "/features/manage-releases",
             "id": "manage-releases",
             "isExternal": false,
             "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Plugin Features",
-            "path": "/core-features/plugin-features",
-            "id": "plugin-features",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "Use Task Executors",
-                "path": "/core-features/plugin-features/use-task-executors",
-                "id": "use-task-executors",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Use Code Generators",
-                "path": "/core-features/plugin-features/use-code-generators",
-                "id": "use-code-generators",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
             "disableCollapsible": false
           }
         ],
@@ -676,7 +643,7 @@
       },
       {
         "name": "Run Tasks",
-        "path": "/core-features/run-tasks",
+        "path": "/features/run-tasks",
         "id": "run-tasks",
         "isExternal": false,
         "children": [],
@@ -684,39 +651,31 @@
       },
       {
         "name": "Cache Task Results",
-        "path": "/core-features/cache-task-results",
+        "path": "/features/cache-task-results",
         "id": "cache-task-results",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Use Remote Caching",
-        "path": "/ci/features/remote-cache",
-        "id": "remote-cache",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Distribute Task Execution",
-        "path": "/ci/features/distribute-task-execution",
-        "id": "distribute-task-execution",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Explore the Graph",
-        "path": "/core-features/explore-graph",
+        "path": "/features/explore-graph",
         "id": "explore-graph",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
+        "name": "Generate Code",
+        "path": "/features/generate-code",
+        "id": "generate-code",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Automate Updating Dependencies",
-        "path": "/core-features/automate-updating-dependencies",
+        "path": "/features/automate-updating-dependencies",
         "id": "automate-updating-dependencies",
         "isExternal": false,
         "children": [],
@@ -724,7 +683,7 @@
       },
       {
         "name": "Enforce Module Boundaries",
-        "path": "/core-features/enforce-module-boundaries",
+        "path": "/features/enforce-module-boundaries",
         "id": "enforce-module-boundaries",
         "isExternal": false,
         "children": [],
@@ -732,7 +691,7 @@
       },
       {
         "name": "Integrate with Editors",
-        "path": "/core-features/integrate-with-editors",
+        "path": "/features/integrate-with-editors",
         "id": "integrate-with-editors",
         "isExternal": false,
         "children": [],
@@ -740,49 +699,8 @@
       },
       {
         "name": "Manage Releases",
-        "path": "/core-features/manage-releases",
+        "path": "/features/manage-releases",
         "id": "manage-releases",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Plugin Features",
-        "path": "/core-features/plugin-features",
-        "id": "plugin-features",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "Use Task Executors",
-            "path": "/core-features/plugin-features/use-task-executors",
-            "id": "use-task-executors",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Use Code Generators",
-            "path": "/core-features/plugin-features/use-code-generators",
-            "id": "use-code-generators",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Use Task Executors",
-        "path": "/core-features/plugin-features/use-task-executors",
-        "id": "use-task-executors",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Use Code Generators",
-        "path": "/core-features/plugin-features/use-code-generators",
-        "id": "use-code-generators",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -826,9 +744,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Inferred Targets",
-            "path": "/concepts/inferred-targets",
-            "id": "inferred-targets",
+            "name": "Inferred Tasks",
+            "path": "/concepts/inferred-tasks",
+            "id": "inferred-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Executors and Configurations",
+            "path": "/concepts/executors-and-configurations",
+            "id": "executors-and-configurations",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1063,9 +989,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Inferred Targets",
-        "path": "/concepts/inferred-targets",
-        "id": "inferred-targets",
+        "name": "Inferred Tasks",
+        "path": "/concepts/inferred-tasks",
+        "id": "inferred-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Executors and Configurations",
+        "path": "/concepts/executors-and-configurations",
+        "id": "executors-and-configurations",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1789,23 +1723,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "ESLint",
-            "path": "/recipes/eslint",
-            "id": "eslint",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "ESLint Inferred Targets",
-                "path": "/recipes/eslint/eslint-inferred-targets",
-                "id": "eslint-inferred-targets",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "Storybook",
             "path": "/recipes/storybook",
             "id": "storybook",
@@ -1908,9 +1825,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Storybook Inferred Targets",
-                "path": "/recipes/storybook/storybook-inferred-targets",
-                "id": "storybook-inferred-targets",
+                "name": "Storybook Inferred Tasks",
+                "path": "/recipes/storybook/storybook-inferred-tasks",
+                "id": "storybook-inferred-tasks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2008,9 +1925,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Nuxt Inferred Targets",
-                "path": "/recipes/nuxt/nuxt-inferred-targets",
-                "id": "nuxt-inferred-targets",
+                "name": "Nuxt Inferred Tasks",
+                "path": "/recipes/nuxt/nuxt-inferred-tasks",
+                "id": "nuxt-inferred-tasks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2033,9 +1950,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Vite Inferred Targets",
-                "path": "/recipes/vite/vite-inferred-targets",
-                "id": "vite-inferred-targets",
+                "name": "Vite Inferred Tasks",
+                "path": "/recipes/vite/vite-inferred-tasks",
+                "id": "vite-inferred-tasks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3175,31 +3092,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "ESLint",
-        "path": "/recipes/eslint",
-        "id": "eslint",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "ESLint Inferred Targets",
-            "path": "/recipes/eslint/eslint-inferred-targets",
-            "id": "eslint-inferred-targets",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "ESLint Inferred Targets",
-        "path": "/recipes/eslint/eslint-inferred-targets",
-        "id": "eslint-inferred-targets",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Storybook",
         "path": "/recipes/storybook",
         "id": "storybook",
@@ -3302,9 +3194,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Storybook Inferred Targets",
-            "path": "/recipes/storybook/storybook-inferred-targets",
-            "id": "storybook-inferred-targets",
+            "name": "Storybook Inferred Tasks",
+            "path": "/recipes/storybook/storybook-inferred-tasks",
+            "id": "storybook-inferred-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3409,9 +3301,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Storybook Inferred Targets",
-        "path": "/recipes/storybook/storybook-inferred-targets",
-        "id": "storybook-inferred-targets",
+        "name": "Storybook Inferred Tasks",
+        "path": "/recipes/storybook/storybook-inferred-tasks",
+        "id": "storybook-inferred-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3554,9 +3446,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nuxt Inferred Targets",
-            "path": "/recipes/nuxt/nuxt-inferred-targets",
-            "id": "nuxt-inferred-targets",
+            "name": "Nuxt Inferred Tasks",
+            "path": "/recipes/nuxt/nuxt-inferred-tasks",
+            "id": "nuxt-inferred-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3573,9 +3465,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nuxt Inferred Targets",
-        "path": "/recipes/nuxt/nuxt-inferred-targets",
-        "id": "nuxt-inferred-targets",
+        "name": "Nuxt Inferred Tasks",
+        "path": "/recipes/nuxt/nuxt-inferred-tasks",
+        "id": "nuxt-inferred-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3595,9 +3487,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Vite Inferred Targets",
-            "path": "/recipes/vite/vite-inferred-targets",
-            "id": "vite-inferred-targets",
+            "name": "Vite Inferred Tasks",
+            "path": "/recipes/vite/vite-inferred-tasks",
+            "id": "vite-inferred-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3614,9 +3506,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Vite Inferred Targets",
-        "path": "/recipes/vite/vite-inferred-targets",
-        "id": "vite-inferred-targets",
+        "name": "Vite Inferred Tasks",
+        "path": "/recipes/vite/vite-inferred-tasks",
+        "id": "vite-inferred-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
