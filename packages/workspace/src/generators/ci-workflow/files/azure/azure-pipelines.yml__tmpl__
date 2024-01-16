@@ -56,3 +56,32 @@ jobs:
       - script: <%= packageManagerPrefix %> nx-cloud stop-all-agents
         condition: always()
         displayName: Stop all Nx-Cloud agents
+        
+      - task: ArchiveFiles@2
+        displayName: Archive Build Artifacts
+        condition: always()
+        continueOnError: true
+        inputs:
+          rootFolderOrFile: '$(System.DefaultWorkingDirectory)/dist'
+          includeRootFolder: false
+          archiveType: 'zip'
+          archiveFile: $(Build.ArtifactStagingDirectory)/build/$(Build.BuildId).zip
+      - task: PublishBuildArtifacts@1
+        displayName: Publish Build Artifacts
+        condition: always()
+        continueOnError: true
+        inputs:
+          pathtoPublish: $(Build.ArtifactStagingDirectory)/build/$(Build.BuildId).zip
+          artifactName: 'drop'
+
+      - script: |
+          projects=`<%= packageManagerPrefix %> nx show projects --affected --base=$(BASE_SHA) --head=$(HEAD_SHA)`
+          echo "Touched projects:"
+          echo $projects
+
+          for project in ${projects//,/ }
+          do
+            echo "##vso[build.addbuildtag]$project"
+            echo "Creating tag for: $project"
+          done
+        displayName: 'Tag build'
