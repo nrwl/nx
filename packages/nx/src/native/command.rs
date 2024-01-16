@@ -126,9 +126,10 @@ pub fn run_command(
 
     let pty_system = NativePtySystem::default();
 
+    let (w, h) = term_size::dimensions().unwrap_or((80, 24));
     let pair = pty_system.openpty(PtySize {
-        rows: 73,
-        cols: 282,
+        rows: h as u16,
+        cols: w as u16,
         pixel_width: 0,
         pixel_height: 0,
     })?;
@@ -151,15 +152,24 @@ pub fn run_command(
         let mut reader = BufReader::new(reader);
         let mut buffer = [0; 8 * 1024];
 
+        let mut strip_clear_code = cfg!(target_os = "windows");
+
         while let Ok(n) = reader.read(&mut buffer) {
             if n == 0 {
                 break;
             }
 
-            let content = String::from_utf8_lossy(&buffer[..n]);
+            let mut content = String::from_utf8_lossy(&buffer[..n]).to_string();
+            if strip_clear_code {
+                strip_clear_code = false;
+                // remove clear screen
+                content = content.replace("\x1B[2J", "");
+                // remove cursor position 1,1
+                content = content.replace("\x1B[H", "");
+            }
             message_tx.send(content.to_string()).ok();
             if !quiet {
-                stdout.write_all(&buffer[..n]).ok();
+                stdout.write_all(content.as_bytes()).ok();
                 stdout.flush().ok();
             }
         }

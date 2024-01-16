@@ -221,7 +221,6 @@ async function createProcess(
   // currently does not work properly in windows
   if (
     process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
-    process.platform !== 'win32' &&
     process.stdout.isTTY &&
     !commandConfig.prefix &&
     !isParallel

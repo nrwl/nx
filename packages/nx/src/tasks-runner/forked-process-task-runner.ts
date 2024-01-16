@@ -170,18 +170,9 @@ export class ForkedProcessTaskRunner {
     const shouldPrefix =
       streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
 
-    if (process.platform === 'win32') {
-      // we want to enable the native command runner by default in Linux/macOS, but not in Windows
-      return this.forkProcessLegacy(task, {
-        temporaryOutputPath,
-        streamOutput,
-        pipeOutput,
-        taskGraph,
-        env,
-      });
-      // streamOutput would be false if we are running multiple targets
-      // there's no point in running the commands in a pty if we are not streaming the output
-    } else if (!streamOutput || shouldPrefix || !process.stdout.isTTY) {
+    // streamOutput would be false if we are running multiple targets
+    // there's no point in running the commands in a pty if we are not streaming the output
+    if (!streamOutput || shouldPrefix || !process.stdout.isTTY) {
       return this.forkProcessWithPrefixAndNotTTY(task, {
         temporaryOutputPath,
         streamOutput,
