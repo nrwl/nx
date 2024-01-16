@@ -6,14 +6,14 @@ export async function addJest(
   host: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  if (options.unitTestRunner === 'none') {
+    return () => {};
+  }
+
   const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
     '@nx/jest',
     nxVersion
   );
-
-  if (options.unitTestRunner !== 'jest') {
-    return () => {};
-  }
 
   return await configurationGenerator(host, {
     ...options,
