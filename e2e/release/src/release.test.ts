@@ -1065,8 +1065,8 @@ ${JSON.stringify(
           },
         },
         git: {
-          commit: true,
-          tag: true,
+          commit: false,
+          tag: false,
         },
         version: {
           generatorOptions: {
@@ -1077,11 +1077,11 @@ ${JSON.stringify(
       return nxJson;
     });
 
-    const releaseOutput4 = runCLI(`release patch --skip-publish`, {
+    const releaseOutput4a = runCLI(`release patch --skip-publish`, {
       silenceError: true,
     });
 
-    expect(releaseOutput4).toMatchInlineSnapshot(`
+    expect(releaseOutput4a).toMatchInlineSnapshot(`
 
       >  NX   Running release version for project: {project-name}
 
@@ -1092,21 +1092,40 @@ ${JSON.stringify(
 
     `);
 
+    const releaseOutput4b = runCLI(
+      `release patch --skip-publish --first-release`,
+      {
+        silenceError: true,
+      }
+    );
+
+    expect(releaseOutput4b).toMatch(
+      `📄 Unable to resolve the current version from git tag using pattern ">{version}". Falling back to the version on disk of 1400.1.0`
+    );
+    expect(
+      releaseOutput4b.match(
+        new RegExp(
+          `📄 Using the current version 1400\\.1\\.0 already resolved from disk fallback\\.`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
+
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release.version.generatorOptions.fallbackCurrentVersionResolver =
         'disk';
       return nxJson;
     });
 
-    const releaseOutput5 = runCLI(`release patch --skip-publish --verbose`);
+    const releaseOutput5 = runCLI(`release patch --skip-publish`);
 
     expect(releaseOutput5).toMatch(
-      `📄 Unable to resolve the current version from git tag using pattern ">{version}". Falling back to the version on disk of 1400.1.0`
+      `📄 Unable to resolve the current version from git tag using pattern ">{version}". Falling back to the version on disk of 1400.1.1`
     );
     expect(
       releaseOutput5.match(
         new RegExp(
-          `📄 Using the current version 1400\\.1\\.0 already resolved from disk fallback\\.`,
+          `📄 Using the current version 1400\\.1\\.1 already resolved from disk fallback\\.`,
           'g'
         )
       ).length
@@ -1123,11 +1142,11 @@ ${JSON.stringify(
       return nxJson;
     });
 
-    const releaseOutput6 = runCLI(`release patch --skip-publish`, {
+    const releaseOutput6a = runCLI(`release patch --skip-publish`, {
       silenceError: true,
     });
 
-    expect(releaseOutput6).toMatchInlineSnapshot(`
+    expect(releaseOutput6a).toMatchInlineSnapshot(`
 
       >  NX   Running release version for project: {project-name}
 
@@ -1139,6 +1158,25 @@ ${JSON.stringify(
 
     `);
 
+    const releaseOutput6b = runCLI(
+      `release patch --skip-publish --first-release`,
+      {
+        silenceError: true,
+      }
+    );
+
+    expect(releaseOutput6b).toMatch(
+      `📄 Unable to resolve the current version from the registry ${e2eRegistryUrl}. Falling back to the version on disk of 1400.1.2`
+    );
+    expect(
+      releaseOutput6b.match(
+        new RegExp(
+          `📄 Using the current version 1400\\.1\\.2 already resolved from disk fallback\\.`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
+
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release.version.generatorOptions.fallbackCurrentVersionResolver =
         'disk';
@@ -1148,12 +1186,12 @@ ${JSON.stringify(
     const releaseOutput7 = runCLI(`release patch --skip-publish --verbose`);
 
     expect(releaseOutput7).toMatch(
-      `📄 Unable to resolve the current version from the registry ${e2eRegistryUrl}. Falling back to the version on disk of 1400.1.1`
+      `📄 Unable to resolve the current version from the registry ${e2eRegistryUrl}. Falling back to the version on disk of 1400.1.3`
     );
     expect(
       releaseOutput7.match(
         new RegExp(
-          `📄 Using the current version 1400\\.1\\.1 already resolved from disk fallback\\.`,
+          `📄 Using the current version 1400\\.1\\.3 already resolved from disk fallback\\.`,
           'g'
         )
       ).length

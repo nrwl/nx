@@ -47,6 +47,11 @@ export async function releaseVersionGenerator(
       options.specifier = options.specifier.replace(/^v/, '');
     }
 
+    if (options.firstRelease) {
+      // always use disk as a fallback for the first release
+      options.fallbackCurrentVersionResolver = 'disk';
+    }
+
     const projects = options.projects;
 
     const createResolvePackageRoot =
