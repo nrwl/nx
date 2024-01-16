@@ -8,17 +8,16 @@ The code for this example is available on GitHub:
 
 Because we are not using an Nx plugin for Astro, there are few items we'll have to configure manually. We'll have to configure our own build system. There are no pre-created Astro-specific code generators. And we'll have to take care of updating any framework dependencies as needed.
 
-{% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
-{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
+{% pill url="/features/run-tasks" %}✅ Run Tasks{% /pill %}
+{% pill url="/features/cache-task-results" %}✅ Cache Task Results{% /pill %}
 {% pill url="/ci/features/remote-cache" %}✅ Remote Caching{% /pill %}
-{% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
+{% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
+{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/recipes/enforce-module-boundaries" %}✅ Enforce Project Boundaries{% /pill %}
-{% pill url="/core-features/plugin-features/use-task-executors" %}🚫 Use Task Executors{% /pill %}
-{% pill url="/core-features/plugin-features/use-code-generators" %}🚫 Use Code Generators{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
+{% pill url="/features/generate-code" %}🚫 Use Code Generators{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
 
 ## Create an astro app
 
@@ -49,7 +48,7 @@ We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#inst
    - Learn more at https://nx.dev/recipes/adopting-nx/adding-to-existing-project.
 ```
 
-You can add a task as cacheable after the fact by updating the `cacheableOperations` in the `nx.json` file. Learn more about [caching task results](/recipes/adopting-nx/adding-to-existing-project#installing-nx-on-a-non-monorepo-project) or [how caching works](/core-features/cache-task-results).
+You can add a task as cacheable after the fact by updating the `cacheableOperations` in the `nx.json` file. Learn more about [caching task results](/recipes/adopting-nx/adding-to-existing-project#installing-nx-on-a-non-monorepo-project) or [how caching works](/features/cache-task-results).
 
 ## Running Tasks
 
