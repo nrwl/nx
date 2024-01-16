@@ -1281,7 +1281,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
               `- To learn more go to https://nx.dev/recipes/tips-n-tricks/advanced-update`,
             ]
           : [
-              `- To learn more go to https://nx.dev/core-features/automate-updating-dependencies`,
+              `- To learn more go to https://nx.dev/features/automate-updating-dependencies`,
             ]),
         ...(showConnectToCloudMessage()
           ? [

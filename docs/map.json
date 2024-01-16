@@ -184,8 +184,8 @@
           ]
         },
         {
-          "name": "Core Features",
-          "id": "core-features",
+          "name": "Features",
+          "id": "features",
           "description": "Learn the core features of Nx with in depth guides.",
           "itemList": [
             {
@@ -193,82 +193,55 @@
               "description": "Learn about the various ways you can use Nx to run tasks in your workspace.",
               "tags": ["run-tasks", "cache-task-results"],
               "id": "run-tasks",
-              "file": "shared/core-features/run-tasks"
+              "file": "shared/features/run-tasks"
             },
             {
               "name": "Cache Task Results",
               "description": "Learn how to define cacheable tasks, how to fine-tune with inputs and outputs, where the cache is stored and much more.",
               "id": "cache-task-results",
               "tags": ["cache-task-results"],
-              "file": "shared/core-features/cache-task-results"
-            },
-            {
-              "name": "Use Remote Caching",
-              "id": "remote-cache",
-              "file": "",
-              "path": "/ci/features/remote-cache",
-              "isExternal": true
-            },
-            {
-              "name": "Distribute Task Execution",
-              "id": "distribute-task-execution",
-              "file": "",
-              "path": "/ci/features/distribute-task-execution",
-              "isExternal": true
+              "file": "shared/features/cache-task-results"
             },
             {
               "name": "Explore the Graph",
               "id": "explore-graph",
               "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
               "tags": ["explore-graph"],
-              "file": "shared/core-features/explore-graph"
+              "file": "shared/features/explore-graph"
+            },
+            {
+              "name": "Generate Code",
+              "id": "generate-code",
+              "tags": ["generate-code"],
+              "file": "shared/features/generate-code"
             },
             {
               "name": "Automate Updating Dependencies",
               "description": "Learn how Nx provides automated update scripts to help you keep your workspace, tooling and framework dependencies up to date.",
               "id": "automate-updating-dependencies",
               "tags": ["automate-updating-dependencies"],
-              "file": "shared/core-features/automate-updating-dependencies"
+              "file": "shared/features/automate-updating-dependencies"
             },
             {
               "name": "Enforce Module Boundaries",
               "description": "Learn how to avoid dependency hell and scale a codebase by imposing constraints on your projects using the module boundary lint rule.",
               "id": "enforce-module-boundaries",
               "tags": ["enforce-module-boundaries"],
-              "file": "shared/core-features/enforce-module-boundaries"
+              "file": "shared/features/enforce-module-boundaries"
             },
             {
               "name": "Integrate with Editors",
               "description": "Learn about Nx Console, an extension for VS Code and WebStorm.",
               "id": "integrate-with-editors",
               "tags": ["integrate-with-editors"],
-              "file": "shared/core-features/integrate-with-editors"
+              "file": "shared/features/integrate-with-editors"
             },
             {
               "name": "Manage Releases",
               "description": "Learn how Nx provides tools to help you manage releasing your projects.",
               "id": "manage-releases",
               "tags": ["manage-releases"],
-              "file": "shared/core-features/manage-releases"
-            },
-            {
-              "name": "Plugin Features",
-              "id": "plugin-features",
-              "description": "Learn what is a plugin, the different type of plugins and how to create one.",
-              "itemList": [
-                {
-                  "name": "Use Task Executors",
-                  "id": "use-task-executors",
-                  "tags": ["use-task-executors"],
-                  "file": "shared/plugin-features/use-task-executors"
-                },
-                {
-                  "name": "Use Code Generators",
-                  "id": "use-code-generators",
-                  "tags": ["use-code-generators"],
-                  "file": "shared/plugin-features/use-code-generators"
-                }
-              ]
+              "file": "shared/features/manage-releases"
             }
           ]
         },
@@ -297,15 +270,21 @@
             },
             {
               "name": "What is a Task Pipeline",
-              "tags": ["run-tasks", "use-task-executors"],
+              "tags": ["run-tasks"],
               "id": "task-pipeline-configuration",
               "file": "shared/concepts/task-pipeline-configuration"
             },
             {
-              "name": "Inferred Targets",
-              "tags": ["use-task-executors", "inferred-targets"],
-              "id": "inferred-targets",
-              "file": "shared/concepts/inferred-targets"
+              "name": "Inferred Tasks",
+              "tags": ["inferred-tasks"],
+              "id": "inferred-tasks",
+              "file": "shared/concepts/inferred-tasks"
+            },
+            {
+              "name": "Executors and Configurations",
+              "id": "executors-and-configurations",
+              "tags": ["run-tasks"],
+              "file": "shared/recipes/running-tasks/executors-and-configurations"
             },
             {
               "name": "Integrated Repos vs. Package-Based Repos vs. Standalone Apps",
@@ -327,12 +306,7 @@
                 {
                   "name": "Faster Builds with Module Federation",
                   "id": "faster-builds-with-module-federation",
-                  "tags": [
-                    "use-task-executors",
-                    "module-federation",
-                    "angular",
-                    "react"
-                  ],
+                  "tags": ["module-federation", "angular", "react"],
                   "file": "shared/guides/module-federation/faster-builds"
                 },
                 {
@@ -355,7 +329,7 @@
                 {
                   "name": "Incremental Builds",
                   "id": "incremental-builds",
-                  "tags": ["use-task-executors"],
+                  "tags": [],
                   "file": "shared/incremental-builds"
                 },
                 {
@@ -388,7 +362,7 @@
                 {
                   "name": "Using Nx at Enterprises",
                   "id": "monorepo-nx-enterprise",
-                  "tags": ["enforce-module-boundaries", "use-code-generators"],
+                  "tags": ["enforce-module-boundaries", "generate-code"],
                   "file": "shared/monorepo-nx-enterprise"
                 },
                 {
@@ -481,7 +455,7 @@
                 {
                   "name": "Running Custom Commands",
                   "id": "run-commands-executor",
-                  "tags": ["run-tasks", "use-task-executors"],
+                  "tags": ["run-tasks"],
                   "file": "shared/recipes/running-tasks/running-custom-commands"
                 },
                 {
@@ -591,7 +565,7 @@
                 {
                   "name": "Setup Module Federation with SSR for React",
                   "id": "module-federation-with-ssr",
-                  "tags": ["use-task-executors", "module-federation", "react"],
+                  "tags": ["module-federation", "react"],
                   "file": "shared/recipes/module-federation-with-ssr"
                 },
                 {
@@ -646,21 +620,13 @@
                 {
                   "name": "Setup Module Federation with SSR for Angular",
                   "id": "module-federation-with-ssr",
-                  "tags": [
-                    "use-task-executors",
-                    "module-federation",
-                    "angular"
-                  ],
+                  "tags": ["module-federation", "angular"],
                   "file": "shared/recipes/module-federation-with-ssr"
                 },
                 {
                   "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
                   "id": "dynamic-module-federation-with-angular",
-                  "tags": [
-                    "use-task-executors",
-                    "module-federation",
-                    "angular"
-                  ],
+                  "tags": ["module-federation", "angular"],
                   "file": "shared/guides/module-federation/dynamic-mfe-angular"
                 },
                 {
@@ -704,19 +670,6 @@
                   "id": "wait-for-tasks",
                   "tags": [],
                   "file": "shared/recipes/node/wait-for-tasks"
-                }
-              ]
-            },
-            {
-              "name": "ESLint",
-              "id": "eslint",
-              "description": "Set of ESLint related recipes.",
-              "itemList": [
-                {
-                  "name": "ESLint Inferred Targets",
-                  "id": "eslint-inferred-targets",
-                  "tags": ["inferred-targets"],
-                  "file": "shared/recipes/eslint/eslint-inferred-targets"
                 }
               ]
             },
@@ -810,10 +763,10 @@
                   "file": "shared/recipes/storybook/angular-configuring-styles"
                 },
                 {
-                  "name": "Storybook Inferred Targets",
-                  "id": "storybook-inferred-targets",
-                  "tags": ["inferred-targets"],
-                  "file": "shared/recipes/storybook/storybook-inferred-targets"
+                  "name": "Storybook Inferred Tasks",
+                  "id": "storybook-inferred-tasks",
+                  "tags": ["inferred-tasks"],
+                  "file": "shared/recipes/storybook/storybook-inferred-tasks"
                 }
               ]
             },
@@ -886,10 +839,10 @@
                   "file": "shared/recipes/deployment/deploy-nuxt-to-vercel"
                 },
                 {
-                  "name": "Nuxt Inferred Targets",
-                  "id": "nuxt-inferred-targets",
-                  "tags": ["inferred-targets"],
-                  "file": "shared/recipes/nuxt/nuxt-inferred-targets"
+                  "name": "Nuxt Inferred Tasks",
+                  "id": "nuxt-inferred-tasks",
+                  "tags": ["inferred-tasks"],
+                  "file": "shared/recipes/nuxt/nuxt-inferred-tasks"
                 }
               ]
             },
@@ -905,10 +858,10 @@
                   "file": "shared/packages/vite/configure-vite"
                 },
                 {
-                  "name": "Vite Inferred Targets",
-                  "id": "vite-inferred-targets",
-                  "tags": ["inferred-targets"],
-                  "file": "shared/recipes/vite/vite-inferred-targets"
+                  "name": "Vite Inferred Tasks",
+                  "id": "vite-inferred-tasks",
+                  "tags": ["inferred-tasks"],
+                  "file": "shared/recipes/vite/vite-inferred-tasks"
                 }
               ]
             },
@@ -1146,7 +1099,7 @@
                 {
                   "name": "Profiling Build Performance",
                   "id": "performance-profiling",
-                  "tags": ["use-task-executors", "environment-variables"],
+                  "tags": ["environment-variables"],
                   "file": "shared/guides/performance-profiling"
                 }
               ]
@@ -1396,7 +1349,7 @@
             {
               "name": "Project Configuration",
               "id": "project-configuration",
-              "tags": ["use-task-executors"],
+              "tags": [],
               "file": "shared/reference/project-configuration"
             },
             {
@@ -1576,7 +1529,7 @@
               "name": "nx.json generator defaults",
               "id": "nxjson-generator-defaults",
               "file": "",
-              "tags": ["use-code-generators"],
+              "tags": ["generate-code"],
               "path": "/reference/nx-json#generators",
               "isExternal": true
             },
@@ -1633,43 +1586,43 @@
             {
               "name": "Write a Simple Executor",
               "id": "local-executors",
-              "tags": ["use-task-executors"],
+              "tags": [],
               "file": "shared/recipes/plugins/local-executors"
             },
             {
               "name": "Compose Executors",
               "id": "compose-executors",
-              "tags": ["use-task-executors"],
+              "tags": [],
               "file": "shared/recipes/plugins/compose-executors"
             },
             {
               "name": "Write a Simple Generator",
               "id": "local-generators",
-              "tags": ["use-code-generators"],
+              "tags": ["generate-code"],
               "file": "shared/recipes/generators/local-generators"
             },
             {
               "name": "Compose Generators",
               "id": "composing-generators",
-              "tags": ["use-code-generators"],
+              "tags": ["generate-code"],
               "file": "shared/recipes/generators/composing-generators"
             },
             {
               "name": "Provide Options for Generators",
               "id": "generator-options",
-              "tags": ["use-code-generators"],
+              "tags": ["generate-code"],
               "file": "shared/recipes/generators/generator-options"
             },
             {
               "name": "Create Files",
               "id": "creating-files",
-              "tags": ["use-code-generators"],
+              "tags": ["generate-code"],
               "file": "shared/recipes/generators/creating-files"
             },
             {
               "name": "Modify Files",
               "id": "modifying-files",
-              "tags": ["use-code-generators"],
+              "tags": ["generate-code"],
               "file": "shared/recipes/generators/modifying-files"
             },
             {
@@ -1744,7 +1697,7 @@
               "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
               "id": "remote-cache",
               "tags": ["remote-cache"],
-              "file": "shared/core-features/remote-cache"
+              "file": "shared/features/remote-cache"
             },
             {
               "name": "Run Only Tasks Affected by a PR",
@@ -1757,7 +1710,7 @@
               "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
               "id": "distribute-task-execution",
               "tags": ["distribute-task-execution"],
-              "file": "shared/core-features/distribute-task-execution"
+              "file": "shared/features/distribute-task-execution"
             },
             {
               "name": "Set up Nx Cloud On-Premise",
@@ -2021,12 +1974,12 @@
             {
               "name": "generate",
               "id": "generate",
-              "tags": ["use-code-generators"],
+              "tags": ["generate-code"],
               "file": "generated/cli/generate"
             },
             {
               "name": "run",
-              "tags": ["run-tasks", "use-task-executors"],
+              "tags": ["run-tasks"],
               "id": "run",
               "file": "generated/cli/run"
             },
@@ -2043,13 +1996,13 @@
             },
             {
               "name": "run-many",
-              "tags": ["run-tasks", "use-task-executors"],
+              "tags": ["run-tasks"],
               "id": "run-many",
               "file": "generated/cli/run-many"
             },
             {
               "name": "affected",
-              "tags": ["run-tasks", "use-task-executors"],
+              "tags": ["run-tasks"],
               "id": "affected",
               "file": "generated/cli/affected"
             },

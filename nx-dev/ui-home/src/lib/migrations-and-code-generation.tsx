@@ -36,7 +36,7 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
           </div>
           <div className="action mt-6 flex">
             <ButtonLink
-              href="/core-features/automate-updating-dependencies"
+              href="/features/automate-updating-dependencies"
               variant="primary"
               size="default"
               title="Read more about affected command"
@@ -114,10 +114,10 @@ export function MigrationsAndCodeGeneration(): JSX.Element {
                   - Run 'yarn nx migrate --run-migrations'
                   <br />- To learn more go to
                   <a
-                    href="https://nx.dev/core-features/automate-updating-dependencies"
+                    href="https://nx.dev/features/automate-updating-dependencies"
                     className="ml-2 underline"
                   >
-                    https://nx.dev/core-features/automate-updating-dependencies
+                    https://nx.dev/features/automate-updating-dependencies
                   </a>
                 </p>
               </div>
