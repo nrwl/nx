@@ -198,9 +198,9 @@ You can also leverage a 3rd-party tool such as:
 
 Nx comes with a whole range of additional features such as:
 
-- **Interactive workspace visualization -** to interactively explore the underlying [project graph](/core-features/explore-graph) for understanding dependencies and find paths between nodes.
+- **Interactive workspace visualization -** to interactively explore the underlying [project graph](/features/explore-graph) for understanding dependencies and find paths between nodes.
 - **Nx plugins -** for adding first-class support for React, Next.js, React Native, Angular, Node, NestJS, Jest, Cypress, Storybook and many more.
-- **Dedicated VSCode extension -** You can install [Nx Console](/core-features/integrate-with-editors) which is a dedicated VSCode extension to provide a visual interface for navigating your monorepo workspace in terms of launching commands as well as for generating code.
+- **Dedicated VSCode extension -** You can install [Nx Console](/features/integrate-with-editors) which is a dedicated VSCode extension to provide a visual interface for navigating your monorepo workspace in terms of launching commands as well as for generating code.
 - **GitHub integration -** Install the [Nx Cloud GitHub App](https://github.com/apps/nx-cloud) to get inline reporting on your CI jobs.
 - ...
 
