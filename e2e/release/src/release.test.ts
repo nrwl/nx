@@ -1058,5 +1058,109 @@ ${JSON.stringify(
         new RegExp(`Successfully ran target nx-release-publish for`, 'g')
       ).length
     ).toEqual(2);
+
+    // change the releaseTagPattern to something that doesn't exist in order to test fallbackCurrentVersionResolver
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          group1: {
+            projects: [pkg1, pkg2, pkg3],
+            releaseTagPattern: '>{version}',
+          },
+        },
+        git: {
+          commit: true,
+          tag: true,
+        },
+        version: {
+          generatorOptions: {
+            currentVersionResolver: 'git-tag',
+          },
+        },
+      };
+      return nxJson;
+    });
+
+    const releaseOutput4 = runCLI(`release patch --skip-publish`, {
+      silenceError: true,
+    });
+
+    expect(releaseOutput4).toMatchInlineSnapshot(`
+
+      >  NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+
+      >  NX   No git tags matching pattern ">{version}" for project "{project-name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can set the "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.
+
+
+    `);
+
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release.version.generatorOptions.fallbackCurrentVersionResolver =
+        'disk';
+      return nxJson;
+    });
+
+    const releaseOutput5 = runCLI(`release patch --skip-publish --verbose`);
+
+    expect(releaseOutput5).toMatch(
+      `📄 Unable to resolve the current version from git tag using pattern ">{version}". Falling back to the version on disk of 1400.1.0`
+    );
+    expect(
+      releaseOutput5.match(
+        new RegExp(
+          `📄 Using the current version 1400\\.1\\.0 already resolved from disk fallback\\.`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
+
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release.version.generatorOptions.currentVersionResolver =
+        'registry';
+      nxJson.release.version.generatorOptions.currentVersionResolverMetadata = {
+        tag: 'other',
+      };
+      delete nxJson.release.version.generatorOptions
+        .fallbackCurrentVersionResolver;
+      return nxJson;
+    });
+
+    const releaseOutput6 = runCLI(`release patch --skip-publish`, {
+      silenceError: true,
+    });
+
+    expect(releaseOutput6).toMatchInlineSnapshot(`
+
+      >  NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+
+      >  NX   Unable to resolve the current version from the registry ${e2eRegistryUrl}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can set the "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.
+
+      -                  Resolving the current version for tag "other" on ${e2eRegistryUrl}
+
+    `);
+
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release.version.generatorOptions.fallbackCurrentVersionResolver =
+        'disk';
+      return nxJson;
+    });
+
+    const releaseOutput7 = runCLI(`release patch --skip-publish --verbose`);
+
+    expect(releaseOutput7).toMatch(
+      `📄 Unable to resolve the current version from the registry ${e2eRegistryUrl}. Falling back to the version on disk of 1400.1.1`
+    );
+    expect(
+      releaseOutput7.match(
+        new RegExp(
+          `📄 Using the current version 1400\\.1\\.1 already resolved from disk fallback\\.`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
   }, 500000);
 });

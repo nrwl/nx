@@ -56,6 +56,7 @@ export interface ReleaseVersionGeneratorSchema {
   packageRoot?: string;
   currentVersionResolver?: 'registry' | 'disk' | 'git-tag';
   currentVersionResolverMetadata?: Record<string, unknown>;
+  fallbackCurrentVersionResolver?: 'disk';
 }
 
 export interface NxReleaseVersionResult {
