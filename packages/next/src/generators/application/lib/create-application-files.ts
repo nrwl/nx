@@ -129,7 +129,6 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
           ...new Set([
             ...(updatedJson.exclude || []),
             ...(appJSON.exclude || []),
-            '**e2e/**/*',
             `dist/${options.projectName}/**/*`,
           ]),
         ],

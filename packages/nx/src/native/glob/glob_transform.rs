@@ -198,4 +198,39 @@ mod test {
             ]
         );
     }
+
+    #[test]
+    fn should_convert_globs_with_invalid_groups() {
+        let globs = convert_glob("libs/**/?(*.)+spec.ts?(.snap)").unwrap();
+        assert_eq!(
+            globs,
+            [
+                "libs/**/*.spec.ts",
+                "libs/**/*.spec.ts.snap",
+                "libs/**/spec.ts",
+                "libs/**/spec.ts.snap"
+            ]
+        );
+
+        let globs = convert_glob("libs/**/?(*.)@spec.ts?(.snap)").unwrap();
+        assert_eq!(
+            globs,
+            [
+                "libs/**/*.spec.ts",
+                "libs/**/*.spec.ts.snap",
+                "libs/**/spec.ts",
+                "libs/**/spec.ts.snap"
+            ]
+        );
+        let globs = convert_glob("libs/**/?(*.)?spec.ts?(.snap)").unwrap();
+        assert_eq!(
+            globs,
+            [
+                "libs/**/*.spec.ts",
+                "libs/**/*.spec.ts.snap",
+                "libs/**/spec.ts",
+                "libs/**/spec.ts.snap"
+            ]
+        );
+    }
 }
