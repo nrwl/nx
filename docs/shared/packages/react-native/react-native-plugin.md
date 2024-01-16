@@ -79,7 +79,7 @@ Replace `your-lib-name` with the app's name as defined in your `tsconfig.base.js
 
 ### Upgrade React Native
 
-The Nx CLI provides the [`migrate` command](/core-features/automate-updating-dependencies) to help you stay up to date with the latest version of Nx.
+The Nx CLI provides the [`migrate` command](/features/automate-updating-dependencies) to help you stay up to date with the latest version of Nx.
 
 #### Use upgrade-native Generator
 

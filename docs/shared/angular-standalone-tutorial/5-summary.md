@@ -11,9 +11,9 @@ In this tutorial you:
 
 {% cards %}
 
-{% card title="Core Features" description="Read about the core features of Nx." url="/core-features" /%}
+{% card title="Core Features" description="Read about the core features of Nx." url="/features" /%}
 
-{% card title="Plugin Features" description="Read about the plugin features of Nx." url="/core-features/plugin-features" /%}
+{% card title="Plugin Features" description="Read about the plugin features of Nx." url="/features" /%}
 
 {% card title="Mental Model" description="Get a deeper understanding of the mental model." url="/concepts/mental-model" /%}
 

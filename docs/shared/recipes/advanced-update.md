@@ -1,10 +1,10 @@
 # Advanced update process
 
-This guide describes advanced scenarios when it comes to updating Nx and the workspaces dependencies. It starts with a summary of the [standard update process](/core-features/automate-updating-dependencies) and continues with those advanced use cases.
+This guide describes advanced scenarios when it comes to updating Nx and the workspaces dependencies. It starts with a summary of the [standard update process](/features/automate-updating-dependencies) and continues with those advanced use cases.
 
 ## Updating to the latest Nx version
 
-The following steps are a summary of the [standard update process](/core-features/automate-updating-dependencies). For more information on each step, please visit that page.
+The following steps are a summary of the [standard update process](/features/automate-updating-dependencies). For more information on each step, please visit that page.
 
 ### Step 1: Updating dependencies and generating migrations
 

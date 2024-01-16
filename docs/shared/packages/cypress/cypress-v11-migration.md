@@ -11,7 +11,7 @@ If your nx version is below v15.3.0, this migration is called `migrate-to-cypres
 
 From v15.3.0+ this generator is called `migrate-to-cypress-11`.
 
-As of nx v15.1.0, if your project was already using Cypress v10, then your project will be migrated to Cypress v11 via the [standard nx migration process](/core-features/automate-updating-dependencies)
+As of nx v15.1.0, if your project was already using Cypress v10, then your project will be migrated to Cypress v11 via the [standard nx migration process](/features/automate-updating-dependencies)
 {% /callout %}
 
 ```shell
