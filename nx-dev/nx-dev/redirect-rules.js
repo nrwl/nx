@@ -222,7 +222,7 @@ const diataxis = {
   '/migration/preserving-git-histories':
     '/recipes/adopting-nx/preserving-git-histories',
   '/migration/manual': '/recipes/adopting-nx/manual',
-  '/executors/using-builders': '/features/enhance-tooling',
+  '/executors/using-builders': '/concepts/executors-and-configurations',
   '/executors/run-commands-builder': '/recipes/executors/run-commands-executor',
   '/executors/creating-custom-builders':
     '/recipes/executors/creating-custom-executors',
@@ -819,8 +819,10 @@ const missingAndCatchAllRedirects = {
 };
 
 const movePluginFeaturesToCore = {
-  '/plugin-features/use-task-executors': '/features/enhance-tooling',
-  '/features/plugin-features/use-task-executors': '/features/enhance-tooling',
+  '/plugin-features/use-task-executors':
+    '/concepts/executors-and-configurations',
+  '/features/plugin-features/use-task-executors':
+    '/concepts/executors-and-configurations',
   '/plugin-features/use-code-generators': '/features/generate-code',
   '/features/plugin-features/use-code-generators': '/features/generate-code',
 };
@@ -844,7 +846,8 @@ const latestRecipesRefactoring = {
   '/recipes/other/misc-data-persistence': '/packages/angular/generators/ngrx', // 200 views
   '/recipes/other/standalone-ngrx-apis': '/packages/angular/generators/ngrx', //47 views -> can be freely removed
   '/recipes/other/export-project-graph': '/recipes/features/explore-graph', // 20 views -> contents moved to explore-graph
-  '/recipes/executors/use-executor-configurations': '/features/enhance-tooling', // --> contents are moved over to enhance-tooling
+  '/recipes/executors/use-executor-configurations':
+    '/concepts/executors-and-configurations',
   // ci
   '/recipes/other/azure-last-successful-commit':
     '/recipes/ci/azure-last-successful-commit',

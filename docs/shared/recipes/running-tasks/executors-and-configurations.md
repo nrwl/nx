@@ -36,7 +36,7 @@ Each executor definition has an `executor` property and, optionally, an `options
 - `options` is an object that contains any configuration defaults for the executor. These options vary from executor to executor.
 - `configurations` allows you to create presets of options for different scenarios. All the configurations start with the properties defined in `options` as a baseline and then overwrite those options. In the example, there is a `production` configuration that overrides the default options to set `sourceMap` to `false`.
 
-Once configured, you can run an executor the same you would [run any target](/features/enhance-tooling):
+Once configured, you can run an executor the same way you would [run any target](/features/run-tasks):
 
 ```shell
 nx [command] [project]

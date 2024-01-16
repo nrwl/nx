@@ -118,7 +118,7 @@ More details: Nx [project configuration](/reference/project-configuration).
 
 Nx comes with slightly different terminology than the Angular CLI for some features.
 
-**Angular Builders** are called [Executors](/features/enhance-tooling) in Nx but work very much similarly. You use them in your project configuration to define how to build, test, lint, and serve your project. You can use both Nx executors from [Nx Plugins](/plugin-registry) or Angular Builders from the Angular Devkit.
+**Angular Builders** are called [Executors](/concepts/executors-and-configurations) in Nx but work very much similarly. You use them in your project configuration to define how to build, test, lint, and serve your project. You can use both Nx executors from [Nx Plugins](/plugin-registry) or Angular Builders from the Angular Devkit.
 
 ```json
 {

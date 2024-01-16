@@ -19,7 +19,7 @@ Even if the project you added only uses javascript, a `tsconfig.base.json` file 
 
 ## project.json
 
-The project itself will have a `project.json` file that defines all the tasks that can be run on the project. This includes tasks like `build`, `serve` and `test`. See [Use Task Executors](/features/enhance-tooling) for more information.
+The project itself will have a `project.json` file that defines all the tasks that can be run on the project. This includes tasks like `build`, `serve` and `test`. See [Executors and Configurations](/concepts/executors-and-configurations) for more information.
 
 ## Other Configuration Files
 

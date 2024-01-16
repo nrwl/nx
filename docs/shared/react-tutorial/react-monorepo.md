@@ -30,7 +30,7 @@ Features of an integrated monorepo:
 
 - [Install dependencies at the root by default](/concepts/more-concepts/dependency-management#single-version-policy)
 - [Scaffold new code with generators](/features/generate-code)
-- [Run tasks with executors](/features/enhance-tooling)
+- [Run tasks with executors](/concepts/executors-and-configurations)
 - [Updates dependencies with automated migrations](/features/automate-updating-dependencies)
 
 Visit our ["Why Nx" page](/getting-started/why-nx) for more details.

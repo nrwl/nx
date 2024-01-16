@@ -16,7 +16,6 @@ We'll be using an Nx Plugin for Qwik called [qwik-nx](https://github.com/qwikifi
 {% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
-{% pill url="/features/enhance-tooling" %}✅ Use Task Executors{% /pill %}
 {% pill url="/features/generate-code" %}✅ Use Code Generators{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Framework Dependencies{% /pill %}
 

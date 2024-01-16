@@ -56,7 +56,7 @@ Anything you run in the terminal. An example command that invokes a [task](#task
 
 A set of preconfigured options for a [target](#target) that should be enabled altogether. For example, a `production` configuration would set all the options needed for a build that could be deployed to production.
 
-> See: [Use Executor Configurations](/features/enhance-tooling#use-executor-configurations)
+> See: [Use Task Configurations](/concepts/executors-and-configurations#use-task-configurations)
 
 ### Distributed Cache
 
@@ -74,7 +74,7 @@ A system for running [tasks](#task) in CI across multiple agent processes in the
 
 A script that performs some action on your code. This can include building, linting, testing, serving and many other actions. A [target](#target) configuration specifies an executor and a set of options. Executors can be found in [plugins](#plugin).
 
-> See: [Use Task Executors](/features/enhance-tooling)
+> See: [Executors and Configurations](/concepts/executors-and-configurations)
 
 ### Generator
 

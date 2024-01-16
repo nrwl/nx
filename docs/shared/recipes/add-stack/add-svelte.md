@@ -16,7 +16,6 @@ Because we are not using a Nx plugin for Svelte, there are a few items we'll hav
 {% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
-{% pill url="/features/enhance-tooling" %}🚫 Use Task Executors{% /pill %}
 {% pill url="/features/generate-code" %}🚫 Use Code Generators{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
 

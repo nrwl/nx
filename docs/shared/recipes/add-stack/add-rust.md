@@ -17,7 +17,6 @@ called [@monodon/rust](https://github.com/cammisuli/monodon/tree/main/packages/r
 {% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
-{% pill url="/features/enhance-tooling" %}✅ Use Task Executors{% /pill %}
 {% pill url="/features/generate-code" %}✅ Use Code Generators{% /pill %}
 {% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Framework Dependencies{% /pill %}
 
