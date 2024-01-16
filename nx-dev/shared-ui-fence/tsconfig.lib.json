@@ -7,7 +7,7 @@
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
     ],
-    "lib": ["DOM"]
+    "lib": ["DOM", "es2019"]
   },
   "exclude": [
     "jest.config.ts",
