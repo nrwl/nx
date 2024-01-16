@@ -11,12 +11,11 @@ describe('init', () => {
   });
 
   it('should add react native dependencies', async () => {
-    await expoInitGenerator(tree, { e2eTestRunner: 'none' });
+    await expoInitGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['react']).toBeDefined();
     expect(packageJson.dependencies['expo']).toBeDefined();
     expect(packageJson.dependencies['react-native']).toBeDefined();
-    expect(packageJson.devDependencies['@types/react']).toBeDefined();
   });
 
   it('should add .gitignore entries for React native files and directories', async () => {
@@ -26,7 +25,7 @@ describe('init', () => {
 /node_modules
 `
     );
-    await expoInitGenerator(tree, { e2eTestRunner: 'none' });
+    await expoInitGenerator(tree, {});
 
     const content = tree.read('/.gitignore').toString();
 

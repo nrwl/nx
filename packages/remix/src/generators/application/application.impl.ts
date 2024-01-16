@@ -34,10 +34,16 @@ import {
   updateUnitTestConfig,
 } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
+import { updateDependencies } from '../utils/update-dependencies';
+import initGenerator from '../init/init';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
   const options = await normalizeOptions(tree, _options);
-  const tasks: GeneratorCallback[] = [];
+  const tasks: GeneratorCallback[] = [
+    await initGenerator(tree, { skipFormat: true }),
+    await jsInitGenerator(tree, { skipFormat: true }),
+  ];
 
   addProjectConfiguration(tree, options.projectName, {
     root: options.projectRoot,
@@ -78,25 +84,7 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
     },
   });
 
-  const installTask = addDependenciesToPackageJson(
-    tree,
-    {
-      '@remix-run/node': remixVersion,
-      '@remix-run/react': remixVersion,
-      '@remix-run/serve': remixVersion,
-      isbot: isbotVersion,
-      react: reactVersion,
-      'react-dom': reactDomVersion,
-    },
-    {
-      '@remix-run/dev': remixVersion,
-      '@remix-run/eslint-config': remixVersion,
-      '@types/react': typesReactVersion,
-      '@types/react-dom': typesReactDomVersion,
-      eslint: eslintVersion,
-      typescript: typescriptVersion,
-    }
-  );
+  const installTask = updateDependencies(tree);
   tasks.push(installTask);
 
   const vars = {

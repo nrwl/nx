@@ -9100,6 +9100,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "init",
+                "path": "/nx-api/remix/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "route",
                 "path": "/nx-api/remix/generators/route",
                 "name": "route",

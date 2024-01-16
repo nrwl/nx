@@ -2509,6 +2509,15 @@
         "path": "/nx-api/remix/generators/library",
         "type": "generator"
       },
+      "/nx-api/remix/generators/init": {
+        "description": "Initialize the `@nx/remix` plugin.",
+        "file": "generated/packages/remix/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/remix/src/generators/init/schema.json",
+        "path": "/nx-api/remix/generators/init",
+        "type": "generator"
+      },
       "/nx-api/remix/generators/route": {
         "description": "Generate a new route",
         "file": "generated/packages/remix/generators/route.json",
