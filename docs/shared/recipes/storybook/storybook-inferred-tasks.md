@@ -5,7 +5,7 @@ description: This document explains how to enable inferred targets for Storybook
 
 # Storybook Inferred Targets
 
-In Nx version 17.3, the `@nx/storybook` plugin can create [inferred targets](/concepts/inferred-targets) for projects that have a Storybook configuration file present. This means you can run `nx storybook my-project`, `nx build-storybook my-project`, `nx test-storybook my-project` and `nx static-storybook my-project` for that project, even if there is no `storybook`, `build-storybook`, `test-storybook` or `static-storybook` targets defined in `package.json` or `project.json`.
+In Nx version 17.3, the `@nx/storybook` plugin can create [inferred tasks](/concepts/inferred-tasks) for projects that have a Storybook configuration file present. This means you can run `nx storybook my-project`, `nx build-storybook my-project`, `nx test-storybook my-project` and `nx static-storybook my-project` for that project, even if there is no `storybook`, `build-storybook`, `test-storybook` or `static-storybook` targets defined in `package.json` or `project.json`.
 
 ## Setup
 
