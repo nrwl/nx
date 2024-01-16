@@ -163,9 +163,9 @@ pub fn run_command(
             if strip_clear_code {
                 strip_clear_code = false;
                 // remove clear screen
-                content = content.replace("\x1B[2J", "");
+                content = content.replacen("\x1B[2J", "", 1);
                 // remove cursor position 1,1
-                content = content.replace("\x1B[H", "");
+                content = content.replacen("\x1B[H", "", 1);
             }
             message_tx.send(content.to_string()).ok();
             if !quiet {
