@@ -566,6 +566,10 @@ export class TaskOrchestrator {
 
   private async pipeOutputCapture(task: Task) {
     try {
+      if (process.env.NX_NATIVE_COMMAND_RUNNER !== 'false') {
+        return true;
+      }
+
       const { schema } = await getExecutorForTask(task, this.projectGraph);
 
       return (

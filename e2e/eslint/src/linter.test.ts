@@ -532,7 +532,7 @@ describe('Linter', () => {
   describe('Flat config', () => {
     const packageManager = getSelectedPackageManager() || 'pnpm';
 
-    // afterEach(() => cleanupProject());
+    afterEach(() => cleanupProject());
 
     it('should convert integrated to flat config', () => {
       const myapp = uniq('myapp');
