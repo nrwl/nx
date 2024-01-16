@@ -1599,7 +1599,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/generate",
-        "tags": ["use-code-generators"],
+        "tags": ["generate-code"],
         "originalFilePath": "generated/cli/generate"
       },
       {
@@ -1610,7 +1610,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/run",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/run"
       },
       {
@@ -1643,7 +1643,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/run-many",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/run-many"
       },
       {
@@ -1654,7 +1654,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/affected",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/affected"
       },
       {

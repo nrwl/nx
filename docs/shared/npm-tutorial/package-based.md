@@ -282,7 +282,7 @@ Notice that the `base` and `head` options were populated with their default valu
 
 {% cards %}
 
-{% card title="Core Features" description="Read about the core features of Nx." url="/core-features" /%}
+{% card title="Core Features" description="Read about the core features of Nx." url="/features" /%}
 
 {% card title="Mental Model" description="Get a deeper understanding of the mental model." url="/concepts/mental-model" /%}
 

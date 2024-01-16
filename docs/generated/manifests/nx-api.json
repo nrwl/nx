@@ -1619,7 +1619,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/generate",
-        "tags": ["use-code-generators"],
+        "tags": ["generate-code"],
         "originalFilePath": "generated/cli/generate"
       },
       "/nx-api/nx/documents/run": {
@@ -1630,7 +1630,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/run",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/run"
       },
       "/nx-api/nx/documents/daemon": {
@@ -1663,7 +1663,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/run-many",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/run-many"
       },
       "/nx-api/nx/documents/affected": {
@@ -1674,7 +1674,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/affected",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/affected"
       },
       "/nx-api/nx/documents/affected-dep-graph": {
