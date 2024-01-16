@@ -1,7 +1,5 @@
 import { Footer, Header } from '@nx/nx-dev/ui-common';
 import {
-  ConfHealthAndSafety,
-  ConfLocation,
   LaunchWeekAgenda,
   LaunchWeekAnnouncements,
   LaunchWeekSpeakers,
@@ -28,7 +26,7 @@ export default function ConfPage(): JSX.Element {
               url: 'https://nx.dev/images/launch-nx-media.jpg',
               width: 1000,
               height: 500,
-              alt: 'Nx Conf 2023 - September 26th, 2023',
+              alt: 'Launch Nx - February 5-9, 2024',
               type: 'image/jpeg',
             },
           ],
@@ -50,7 +48,7 @@ export default function ConfPage(): JSX.Element {
             <div className="mt-24 flex flex-col items-start py-48 lg:flex-row">
               <div className="relative mt-8 flex w-full flex-col pb-10 lg:mt-0 lg:w-2/5 lg:pb-0">
                 <svg
-                  id="nx-conf-logo"
+                  id="launch-nx-logo"
                   className="-left-60 -top-60 w-full dark:text-white"
                   width="290"
                   height="268"
@@ -80,7 +78,7 @@ export default function ConfPage(): JSX.Element {
                     <span role="img" aria-label="globe emoji">
                       🌎
                     </span>{' '}
-                    online for free to registered attendees
+                    online and free to attend
                   </div>
                 </h3>
                 <p className="mb-6 sm:text-lg">

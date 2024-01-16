@@ -29,7 +29,7 @@ export function LaunchWeekAgenda(): JSX.Element {
     {
       type: 'event',
       time: '2:45p',
-      title: 'Nx Agents',
+      title: 'Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos',
       description: '',
       speakers: ['Rareş Matei'],
       videoUrl: '',
@@ -105,13 +105,15 @@ export function LaunchWeekAgenda(): JSX.Element {
             </div>
           </article>
         </div>
-        <div className="p-8 text-center">
-          <span className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
-            Thursday, February 8th
-          </span>
-          <p className="my-4">
-            Note: all time indications are in New York timezone (UTC-04:00).
-          </p>
+        <div className="w-full">
+          <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl px-5 py-12 md:pr-12">
+            <span className="rounded-md bg-slate-100 p-2 dark:bg-slate-800">
+              Thursday, February 8th
+            </span>
+            <p className="mt-4">
+              Note: all time indications are in New York timezone (UTC-04:00).
+            </p>
+          </div>
         </div>
         {scheduleItemsConference.map((item) => launchWeekScheduleRow(item))}
       </section>
