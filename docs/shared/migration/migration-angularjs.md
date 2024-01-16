@@ -409,7 +409,7 @@ pnpm add -D @nx/web babel-plugin-angularjs-annotate
 {% /tab %}
 {% /tabs %}
 
-Nx already has most of what you need for webpack added as a dependency. `@nx/web` contains the [executors](/core-features/plugin-features/use-task-executors) we need to use to build and serve the application with webpack and
+Nx already has most of what you need for webpack added as a dependency. `@nx/web` contains the [executors](/concepts/executors-and-configurations) we need to use to build and serve the application with webpack and
 `babel-plugin-angularjs-annotate` is going to accomplish the same thing that `browserify-ngannotate` previously did in gulp: add dependency injection annotations.
 
 Start with a `webpack.config.js` file in your application’s root directory:

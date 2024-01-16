@@ -6,9 +6,9 @@ Interested in migrating from [Lerna](https://github.com/lerna/lerna) in particul
 
 Nx has first-class support for [package-based monorepos](/getting-started/tutorials/package-based-repo-tutorial). As a result, if you have an existing NPM/Yarn or PNPM-based monorepo setup, you can easily add Nx to get
 
-- fast [task scheduling](/core-features/run-tasks)
+- fast [task scheduling](/features/run-tasks)
 - support for [task pipelines](/concepts/task-pipeline-configuration)
-- [caching](/core-features/cache-task-results)
+- [caching](/features/cache-task-results)
 - optionally [remote caching with Nx Cloud](/ci/features/remote-cache)
 - optionally [distributed task execution with Nx Cloud](/ci/features/distribute-task-execution)
 
@@ -115,7 +115,7 @@ This allows for incrementally adopting Nx in your existing workspace.
 
 {% cards %}
 
-{% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="/core-features/cache-task-results" /%}
+{% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="/features/cache-task-results" /%}
 
 {% card title="Task Pipeline Configuration" description="Learn more about how to setup task dependencies" type="documentation" url="/concepts/task-pipeline-configuration" /%}
 

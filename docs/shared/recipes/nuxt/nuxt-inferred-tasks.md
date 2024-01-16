@@ -5,7 +5,7 @@ description: This document explains how to enable inferred targets for Nuxt proj
 
 # Nuxt Inferred Targets
 
-In Nx version 17.3, the `@nx/nuxt` plugin can create [inferred targets](/concepts/inferred-targets) for projects that have a Nuxt configuration file present. This means you can run `nx build my-project`, `nx serve my-project` and `nx test my-project` for that project, even if there is no `build`, `serve` or `test` targets defined in `package.json` or `project.json`.
+In Nx version 17.3, the `@nx/nuxt` plugin can create [inferred tasks](/concepts/inferred-tasks) for projects that have a Nuxt configuration file present. This means you can run `nx build my-project`, `nx serve my-project` and `nx test my-project` for that project, even if there is no `build`, `serve` or `test` targets defined in `package.json` or `project.json`.
 
 ## Setup
 

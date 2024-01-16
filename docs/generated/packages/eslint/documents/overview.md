@@ -34,6 +34,49 @@ pnpm add -D @nx/eslint
 {% /tab %}
 {% /tabs %}
 
+### Enable Inferred Tasks
+
+{% callout type="note" title="Inferred Tasks" %}
+In Nx version 17.3, the `@nx/eslint` plugin can create [inferred tasks](/concepts/inferred-tasks) for projects that have an ESLint configuration file present. This means you can run `nx lint my-project` for that project, even if there is no `lint` task defined in `package.json` or `project.json`.
+{% /callout %}
+
+To enable inferred tasks, add `@nx/eslint/plugin` to the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    }
+  ]
+}
+```
+
+### Task Inference Process
+
+#### Identify Valid Projects
+
+The `@nx/eslint` plugin will create a task for any project that has an ESLint configuration file present. Any of the following files will be recognized as an ESLint configuration file:
+
+- `.eslintrc`
+- `.eslintrc.js`
+- `.eslintrc.cjs`
+- `.eslintrc.yaml`
+- `.eslintrc.yml`
+- `.eslintrc.json`
+- `eslint.config.js`
+
+#### Name the Inferred Task
+
+Once an ESLint configuration file has been identified, the task is created with the name you specify under `targetName` in the `nx.json` `plugins` array. The default name for inferred tasks is `lint`.
+
+#### View and Edit Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line. Nx Console also provides a quick way to override the settings of an inferred task.
+
 ## Lint
 
 You can lint an application or a library with the following command:

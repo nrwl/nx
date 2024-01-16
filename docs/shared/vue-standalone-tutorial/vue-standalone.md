@@ -81,9 +81,9 @@ The setup includes..
 
 Let me explain a couple of things that might be new to you.
 
-| File           | Description                                                                                                                                                                                                                                         |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nx.json`      | This is where we fine-tune how Nx works. We define what [cacheable operations](/core-features/cache-task-results) there are, and configure our [task pipeline](/concepts/task-pipeline-configuration). More on that soon.                           |
+| File           | Description                                                                                                                                                                                                                                           |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nx.json`      | This is where we fine-tune how Nx works. We define what [cacheable operations](/features/cache-task-results) there are, and configure our [task pipeline](/concepts/task-pipeline-configuration). More on that soon.                                  |
 | `project.json` | This file contains the targets that can be invoked for the `myvueapp` project. It is like a more evolved version of simple `package.json` scripts with more metadata attached. You can read more about it [here](/reference/project-configuration). |
 
 ## Serving the App
@@ -167,7 +167,7 @@ The most critical parts are:
 - `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the Vue app using Vite.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
-Learn more about how to [run tasks with Nx](/core-features/run-tasks).
+Learn more about how to [run tasks with Nx](/features/run-tasks).
 
 ## Testing and Linting - Running Multiple Tasks
 
@@ -199,7 +199,7 @@ More conveniently, we can also run them in parallel using the following syntax:
 
 <!-- {% video-link link="https://youtu.be/ZAO0yXupIIE?t=443" /%} -->
 
-One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
+One thing to highlight is that Nx is able to [cache the tasks you run](/features/cache-task-results).
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
@@ -217,7 +217,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
    Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
 ```
 
-Not all tasks might be cacheable though. You can mark all targets of a certain type as cacheable by setting `cache` to `true` in the `targetDefaults` of the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+Not all tasks might be cacheable though. You can mark all targets of a certain type as cacheable by setting `cache` to `true` in the `targetDefaults` of the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
 
 ## Nx Plugins? Why?
 
@@ -235,7 +235,7 @@ So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabi
 
 <!-- {% video-link link="https://youtu.be/ZAO0yXupIIE?t=500" /%} -->
 
-You can just create new Vue components as you normally would. However, Nx plugins usually also ship [generators](/core-features/plugin-features/use-code-generators). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/vue` plugin ships, run the following command and inspect the output:
+You can just create new Vue components as you normally would. However, Nx plugins usually also ship [generators](/features/generate-code). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/vue` plugin ships, run the following command and inspect the output:
 
 ```{% command="npx nx list @nx/vue" path="myvueapp" %}
 
@@ -256,7 +256,7 @@ You can just create new Vue components as you normally would. However, Nx plugin
 
 If you prefer a more integrated experience, you can install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
 
-More info can be found in [the integrate with editors article](/core-features/integrate-with-editors).
+More info can be found in [the integrate with editors article](/features/integrate-with-editors).
 
 {% /callout %}
 
@@ -588,7 +588,7 @@ Note that both the `Products` component and `Orders` component are lazy loaded s
 
 <!-- {% video-link link="https://youtu.be/ZAO0yXupIIE?t=958" /%} -->
 
-Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/core-features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/core-features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
+Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
 
 Just run:
 
@@ -821,7 +821,7 @@ If you lint your workspace you'll get an error now:
 
 ```
 
-Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
+Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
 
 ## Migrating to a Monorepo
 
@@ -834,7 +834,7 @@ Congrats, you made it!! You now know how to leverage the Nx standalone applicati
 Here's some more things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
-- [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
+- [Speed up CI: Run only tasks for project that got changed](/features/run-tasks#run-tasks-affected-by-a-pr)
 - [Speed up CI: Share your cache](/ci/features/remote-cache)
 - [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
