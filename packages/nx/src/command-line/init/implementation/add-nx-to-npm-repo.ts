@@ -1,5 +1,5 @@
 import * as enquirer from 'enquirer';
-import { InitArgs } from '../init';
+import { InitArgs } from '../init-v1';
 import { readJsonFile } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
 import { getPackageManagerCommand } from '../../../utils/package-manager';

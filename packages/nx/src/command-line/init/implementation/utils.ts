@@ -53,6 +53,10 @@ export function createNxJsonFile(
     nxJson.targetDefaults[target].cache ??= true;
   }
 
+  if (Object.keys(nxJson.targetDefaults).length === 0) {
+    delete nxJson.targetDefaults;
+  }
+
   nxJson.affected ??= {};
   nxJson.affected.defaultBase ??= deduceDefaultBase();
   writeJsonFile(nxJsonPath, nxJson);
@@ -90,11 +94,19 @@ function deduceDefaultBase() {
   }
 }
 
-export function addDepsToPackageJson(repoRoot: string) {
+export function addDepsToPackageJson(
+  repoRoot: string,
+  additionalPackages?: string[]
+) {
   const path = joinPathFragments(repoRoot, `package.json`);
   const json = readJsonFile(path);
   if (!json.devDependencies) json.devDependencies = {};
   json.devDependencies['nx'] = nxVersion;
+  if (additionalPackages) {
+    for (const p of additionalPackages) {
+      json.devDependencies[p] = nxVersion;
+    }
+  }
   writeJsonFile(path, json);
 }
 

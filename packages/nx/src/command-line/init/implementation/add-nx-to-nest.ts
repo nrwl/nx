@@ -1,7 +1,7 @@
 import * as enquirer from 'enquirer';
 import { unlinkSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
-import { InitArgs } from '../init';
+import { InitArgs } from '../init-v1';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import {
@@ -22,10 +22,7 @@ import {
   updateGitIgnore,
 } from './utils';
 import { nxVersion } from '../../../utils/versions';
-import {
-  connectExistingRepoToNxCloudPrompt,
-  connectToNxCloudPrompt,
-} from '../../connect/connect-to-nx-cloud';
+import { connectExistingRepoToNxCloudPrompt } from '../../connect/connect-to-nx-cloud';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 type NestCLIConfiguration = any;
