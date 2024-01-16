@@ -33,6 +33,7 @@ import {
   getCommitHash,
   getGitDiff,
   getLatestGitTagForPattern,
+  gitAdd,
   gitPush,
   gitTag,
   parseCommits,
@@ -374,6 +375,13 @@ async function applyChangesAndExit(
     );
     // Resolve the commit we just made
     latestCommit = await getCommitHash('HEAD');
+  } else if (args.stageChanges ?? nxReleaseConfig.changelog.git.stageChanges) {
+    output.logSingleLine(`Staging changed files with git`);
+    await gitAdd({
+      changedFiles: changes.map((f) => f.path),
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
   }
 
   // Generate a one or more git tags for the changes, if configured to do so

@@ -121,6 +121,10 @@ export interface NxReleaseGitConfiguration {
    */
   commitArgs?: string;
   /**
+   * Whether or not to stage the changes made by this command. Assumed to be true if commit is true.
+   */
+  stageChanges?: boolean;
+  /**
    * Whether or not to automatically tag the changes made by this command
    */
   tag?: boolean;
@@ -219,12 +223,7 @@ interface NxReleaseConfiguration {
     /**
      * Enable or override configuration for git operations as part of the version subcommand
      */
-    git?: NxReleaseGitConfiguration & {
-      /**
-       * Whether or not to stage the changes made by this command. Useful when combining the version command with changelog generation.
-       */
-      stageChanges?: boolean;
-    };
+    git?: NxReleaseGitConfiguration;
   };
   /**
    * Optionally override the git/release tag pattern to use. This field is the source of truth

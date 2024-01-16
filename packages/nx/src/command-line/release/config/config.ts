@@ -104,8 +104,9 @@ export async function createNxReleaseConfig(
     tag: false,
     tagMessage: '',
     tagArgs: '',
+    stageChanges: false,
   };
-  const versionGitDefaults: NxReleaseConfig['version']['git'] = {
+  const versionGitDefaults = {
     ...gitDefaults,
     stageChanges: true,
   };

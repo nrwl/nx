@@ -18,6 +18,7 @@ export interface NxReleaseArgs {
 }
 
 interface GitCommitAndTagOptions {
+  stageChanges?: boolean;
   gitCommit?: boolean;
   gitCommitMessage?: string;
   gitCommitArgs?: string;
@@ -183,11 +184,6 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
           default: '',
         })
-        .option('stage-changes', {
-          type: 'boolean',
-          describe:
-            'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
-        })
     ),
   handler: (args) =>
     import('./version')
@@ -337,5 +333,10 @@ function withGitCommitAndGitTagOptions<T>(
       describe:
         'Additional arguments to pass to the `git tag` command invoked behind the scenes',
       type: 'string',
+    })
+    .option('stage-changes', {
+      describe:
+        'Whether or not to stage the changes made by this command. Assumed to be true if git-commit is true.',
+      type: 'boolean',
     });
 }

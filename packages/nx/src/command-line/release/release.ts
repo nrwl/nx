@@ -9,8 +9,15 @@ import {
   createNxReleaseConfig,
   handleNxReleaseConfigError,
 } from './config/config';
+import { filterReleaseGroups } from './config/filter-release-groups';
 import { releasePublish } from './publish';
+import { gitCommit, gitTag } from './utils/git';
 import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
+import {
+  createCommitMessageValues,
+  createGitTagValues,
+  handleDuplicateGitTags,
+} from './utils/shared';
 import { NxReleaseVersionResult, releaseVersion } from './version';
 
 export const releaseCLIHandler = (args: VersionOptions) =>
@@ -54,13 +61,18 @@ export async function release(
     return await handleNxReleaseConfigError(configError);
   }
 
+  // Since git.commit and git.tag default to true, we only need to
+  // disable committing and tagging if they are explicitly set to false.
+  const shouldCommit = nxJson.release?.git?.commit ?? true;
+  const shouldTag = nxJson.release?.git?.tag ?? true;
+
+  // We should stage the changes only if this command
+  // will actually be committing the files, or if stageChanges is explicitly set.
+  const stageChanges = shouldCommit || nxReleaseConfig.git?.stageChanges;
+
   const versionResult: NxReleaseVersionResult = await releaseVersion({
     ...args,
-    // We should stage the changes in the version command only if
-    // the changelog command will actually be committing the files.
-    // Since git.commit defaults to true for the changelog command, we
-    // only need to disable staging if git.commit is explicitly set to false.
-    stageChanges: nxReleaseConfig.git?.commit ?? true,
+    stageChanges,
     gitCommit: false,
     gitTag: false,
   });
@@ -70,7 +82,68 @@ export async function release(
     versionData: versionResult.projectsVersionData,
     version: versionResult.workspaceVersion,
     workspaceChangelog: versionResult.workspaceVersion !== undefined,
+    stageChanges,
+    gitCommit: false,
+    gitTag: false,
   });
+
+  const {
+    error: filterError,
+    releaseGroups,
+    releaseGroupToFilteredProjects,
+  } = filterReleaseGroups(
+    projectGraph,
+    nxReleaseConfig,
+    args.projects,
+    args.groups
+  );
+  if (filterError) {
+    output.error(filterError);
+    process.exit(1);
+  }
+
+  if (shouldCommit) {
+    output.logSingleLine(`Committing changes with git`);
+
+    const commitMessage: string | undefined =
+      nxReleaseConfig.git?.commitMessage;
+
+    const commitMessageValues: string[] = createCommitMessageValues(
+      releaseGroups,
+      releaseGroupToFilteredProjects,
+      versionResult.projectsVersionData,
+      commitMessage
+    );
+
+    await gitCommit({
+      messages: commitMessageValues,
+      additionalArgs: nxReleaseConfig.git?.commitArgs,
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
+  }
+
+  if (shouldTag) {
+    output.logSingleLine(`Tagging commit with git`);
+
+    // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
+    const gitTagValues: string[] = createGitTagValues(
+      releaseGroups,
+      releaseGroupToFilteredProjects,
+      versionResult.projectsVersionData
+    );
+    handleDuplicateGitTags(gitTagValues);
+
+    for (const tag of gitTagValues) {
+      await gitTag({
+        tag,
+        message: nxReleaseConfig.git?.tagMessage,
+        additionalArgs: nxReleaseConfig.git?.tagArgs,
+        dryRun: args.dryRun,
+        verbose: args.verbose,
+      });
+    }
+  }
 
   let shouldPublish = !!args.yes && !args.skipPublish;
   const shouldPromptPublishing = !args.yes && !args.skipPublish && !args.dryRun;

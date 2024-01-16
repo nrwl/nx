@@ -165,7 +165,7 @@ Exact version or semver keyword to apply to the selected release group.
 
 Type: `boolean`
 
-Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.
+Whether or not to stage the changes made by this command. Assumed to be true if git-commit is true.
 
 ##### version
 
@@ -246,6 +246,12 @@ Type: `string`
 Choices: [all, workspace, projects]
 
 Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level
+
+##### stage-changes
+
+Type: `boolean`
+
+Whether or not to stage the changes made by this command. Assumed to be true if git-commit is true.
 
 ##### to
 
