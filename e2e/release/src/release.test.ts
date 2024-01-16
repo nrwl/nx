@@ -188,6 +188,12 @@ ${JSON.stringify(
       + - Test @{COMMIT_AUTHOR}
 
 
+      >  NX   Committing changes with git
+
+
+      >  NX   Tagging commit with git
+
+
     `);
 
     expect(readFile('CHANGELOG.md')).toMatchInlineSnapshot(`
@@ -713,14 +719,7 @@ ${JSON.stringify(
 
       + ## 1000.0.0-next.0 (YYYY-MM-DD)
       +
-      +
-      + ### 🚀 Features
-      +
-      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
-      +
-      + ### ❤️  Thank You
-      +
-      + - Test @{COMMIT_AUTHOR}
+      + This was a version bump only, there were no code changes.
       +
       ## 999.9.9 (YYYY-MM-DD)
 
@@ -732,10 +731,7 @@ ${JSON.stringify(
 
       + ## 1000.0.0-next.0
       +
-      +
-      + ### 🚀 Features
-      +
-      + - an awesome new feature
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
       >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
@@ -743,10 +739,7 @@ ${JSON.stringify(
 
       + ## 1000.0.0-next.0
       +
-      +
-      + ### 🚀 Features
-      +
-      + - an awesome new feature
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
       >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
@@ -754,10 +747,13 @@ ${JSON.stringify(
 
       + ## 1000.0.0-next.0
       +
-      +
-      + ### 🚀 Features
-      +
-      + - an awesome new feature
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+
+
+      >  NX   Committing changes with git
+
+
+      >  NX   Tagging commit with git
 
 
     `);

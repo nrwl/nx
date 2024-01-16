@@ -228,7 +228,10 @@ export async function createNxReleaseConfig(
     [
       WORKSPACE_DEFAULTS.changelog,
       // Merge in the git defaults from the top level
-      { git: rootGitConfig } as NxReleaseConfig['changelog'],
+      { git: changelogGitDefaults } as NxReleaseConfig['changelog'],
+      {
+        git: userConfig.git as Partial<NxReleaseConfig['git']>,
+      } as NxReleaseConfig['changelog'],
     ],
     normalizeTrueToEmptyObject(userConfig.changelog) as Partial<
       NxReleaseConfig['changelog']
