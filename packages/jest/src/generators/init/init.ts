@@ -86,14 +86,16 @@ function addJestTargetDefaults(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function updateDependencies(tree: Tree) {
+function updateDependencies(tree: Tree, options: JestInitSchema) {
   return addDependenciesToPackageJson(
     tree,
     {},
     {
       '@nx/jest': nxVersion,
       jest: jestVersion,
-    }
+    },
+    undefined,
+    options.keepExistingVersions
   );
 }
 
@@ -113,7 +115,7 @@ export async function jestInitGenerator(
   const tasks: GeneratorCallback[] = [];
   if (!options.skipPackageJson) {
     tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/jest'], []));
-    tasks.push(updateDependencies(tree));
+    tasks.push(updateDependencies(tree, options));
   }
 
   if (!options.skipFormat) {

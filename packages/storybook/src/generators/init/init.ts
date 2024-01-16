@@ -18,9 +18,13 @@ import {
 import { nxVersion, storybookVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
-function checkDependenciesInstalled(host: Tree): GeneratorCallback {
+function checkDependenciesInstalled(
+  host: Tree,
+  schema: Schema
+): GeneratorCallback {
   const devDependencies: Record<string, string> = {
     '@nx/storybook': nxVersion,
+    '@nx/web': nxVersion,
   };
 
   if (process.env.NX_PCV3 === 'true') {
@@ -36,7 +40,13 @@ function checkDependenciesInstalled(host: Tree): GeneratorCallback {
     devDependencies['storybook'] = storybook7VersionToInstall;
   }
 
-  return addDependenciesToPackageJson(host, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    host,
+    {},
+    devDependencies,
+    undefined,
+    schema.keepExistingVersions
+  );
 }
 
 function addCacheableOperation(tree: Tree) {
@@ -87,7 +97,7 @@ export async function initGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveToDevDependencies(tree));
-    tasks.push(checkDependenciesInstalled(tree));
+    tasks.push(checkDependenciesInstalled(tree, schema));
   }
 
   if (!schema.skipFormat) {

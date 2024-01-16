@@ -1,5 +1,4 @@
 import {
-  addDependenciesToPackageJson,
   addProjectConfiguration,
   ensurePackage,
   formatFiles,
@@ -273,12 +272,6 @@ function addFileServerTarget(
   options: NormalizedSchema,
   targetName: string
 ) {
-  addDependenciesToPackageJson(
-    tree,
-    {},
-    { '@nx/web': getPackageVersion(tree, 'nx') }
-  );
-
   const projectConfig = readProjectConfiguration(tree, options.projectName);
   projectConfig.targets[targetName] = {
     executor: '@nx/web:file-server',

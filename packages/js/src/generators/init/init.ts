@@ -79,7 +79,7 @@ export async function initGenerator(
     '@swc/core': swcCoreVersion,
   };
 
-  if (!schema.js) {
+  if (!schema.js && !schema.keepExistingVersions) {
     const installedTsVersion = await getInstalledTypescriptVersion(tree);
 
     if (
@@ -135,7 +135,13 @@ export async function initGenerator(
   }
 
   const installTask = !schema.skipPackageJson
-    ? addDependenciesToPackageJson(tree, {}, devDependencies)
+    ? addDependenciesToPackageJson(
+        tree,
+        {},
+        devDependencies,
+        undefined,
+        schema.keepExistingVersions
+      )
     : () => {};
   tasks.push(installTask);
 
