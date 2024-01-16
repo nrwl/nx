@@ -6,19 +6,23 @@ import {
 } from '@heroicons/react/24/outline';
 import classNames from 'classnames';
 import { Fragment, useEffect, useState } from 'react';
-import {
-  localStorageThemeKey,
-  Theme,
-  themeResolver,
-} from '../../theme-resolver';
+import { localStorageThemeKey, Theme, themeResolver } from './theme-resolver';
 
-export function ThemePanel(): JSX.Element {
+export function ThemePanel({
+  onThemeChange,
+}: {
+  onThemeChange?: (theme: Theme) => void;
+}): JSX.Element {
   const [theme, setTheme] = useState(
     (localStorage.getItem(localStorageThemeKey) as Theme) || 'system'
   );
 
   useEffect(() => {
     themeResolver(theme);
+
+    if (onThemeChange) {
+      onThemeChange(theme);
+    }
   }, [theme]);
 
   return (

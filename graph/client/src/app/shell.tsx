@@ -7,7 +7,7 @@ import classNames from 'classnames';
 import { DebuggerPanel } from './ui-components/debugger-panel';
 import { getGraphService } from './machines/graph.service';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
-import { ThemePanel } from './feature-projects/panels/theme-panel';
+import { getSystemTheme, Theme, ThemePanel } from '@nx/graph/ui-theme';
 import { Dropdown } from '@nx/graph/ui-components';
 import { useCurrentPath } from './hooks/use-current-path';
 import { ExperimentalFeature } from './ui-components/experimental-feature';
@@ -31,6 +31,9 @@ export function Shell(): JSX.Element {
 
   const environment = useEnvironmentConfig();
   const environmentConfig = useEnvironmentConfig();
+  function onThemeChange(theme: Theme) {
+    graphService.theme = theme === 'system' ? getSystemTheme() : theme;
+  }
 
   const navigate = useNavigate();
   const currentPath = useCurrentPath();
@@ -71,7 +74,7 @@ export function Shell(): JSX.Element {
   }
 
   return (
-    <>
+    <div className="flex max-h-screen w-full">
       <div
         className={`${
           environmentConfig.environment === 'nx-console'
@@ -124,7 +127,7 @@ export function Shell(): JSX.Element {
                   <RankdirPanel />
                 </ExperimentalFeature>
 
-                <ThemePanel />
+                <ThemePanel onThemeChange={onThemeChange} />
               </div>
             </div>
 
@@ -202,6 +205,6 @@ export function Shell(): JSX.Element {
           </Tooltip>
         </div>
       </div>
-    </>
+    </div>
   );
 }
