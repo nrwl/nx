@@ -24,7 +24,7 @@ Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI
 
 Advantages of Nx over the Angular CLI:
 
-- [Cache any target](/core-features/cache-task-results)
+- [Cache any target](/features/cache-task-results)
 - [Run only tasks affected by a code change](/ci/features/affected)
 - [Split a large angular.json into multiple project.json files](/concepts/more-concepts/nx-and-angular#projectjson-vs-angularjson)
 - [Integrate with modern tools](/concepts/more-concepts/nx-and-angular#integrating-with-modern-tools)
@@ -176,13 +176,13 @@ The most critical parts are:
 - `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
-Learn more about how to [run tasks with Nx](/core-features/run-tasks). We'll [revisit running tasks](#testing-and-linting-running-multiple-tasks) later in this tutorial.
+Learn more about how to [run tasks with Nx](/features/run-tasks). We'll [revisit running tasks](#testing-and-linting-running-multiple-tasks) later in this tutorial.
 
 ## Adding Another Application
 
 <!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=706" /%} -->
 
-Nx plugins usually provide [generators](/core-features/plugin-features/use-code-generators) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/angular` plugin provides, run the following command and inspect the output:
+Nx plugins usually provide [generators](/features/generate-code) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/angular` plugin provides, run the following command and inspect the output:
 
 ```{% command="npx nx list @nx/angular" path="angular-monorepo" %}
 
@@ -221,7 +221,7 @@ This executor is similar to the `@angular-devkit/build-angular:ng-packagr` with 
 
 If you prefer a more integrated experience, you can install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
 
-More info can be found in [the integrate with editors article](/core-features/integrate-with-editors).
+More info can be found in [the integrate with editors article](/features/integrate-with-editors).
 
 {% /callout %}
 
@@ -503,7 +503,7 @@ export class AppComponent {
 
 <!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1416" /%} -->
 
-Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/core-features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/core-features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
+Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
 
 Just run:
 
@@ -624,7 +624,7 @@ nx run-many -t test lint e2e
 
 ### Caching
 
-One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
+One thing to highlight is that Nx is able to [cache the tasks you run](/features/cache-task-results).
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
@@ -642,7 +642,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
    Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
 
 ### Testing Affected Projects
 
@@ -977,7 +977,7 @@ If you have the ESLint plugin installed in your IDE you should immediately see a
 
 ![ESLint module boundary error](/shared/angular-tutorial/module-boundary-lint-rule.png)
 
-Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
+Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
 
 ## Setting Up CI
 
@@ -1012,7 +1012,7 @@ Here's some more things you can dive into next:
 - Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects)
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-angular)
-- [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
+- [Speed up CI: Run only tasks for project that got changed](/features/run-tasks#run-tasks-affected-by-a-pr)
 - [Speed up CI: Share your cache](/ci/features/remote-cache)
 - [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
