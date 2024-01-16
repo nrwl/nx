@@ -257,7 +257,7 @@ export function Footer(): JSX.Element {
         </div>
         <div className="mt-12 border-t border-slate-200 p-2 dark:border-slate-800">
           <p className="text-sm text-slate-400 xl:text-center">
-            &copy; 2023 made with{' '}
+            &copy; 2024 made with{' '}
             <HeartIcon className="-mt-0.5 inline h-4 w-4" /> by{' '}
             <Link
               href="https://nx.app/company/?utm_source=nx.dev"
