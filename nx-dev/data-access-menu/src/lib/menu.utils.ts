@@ -9,7 +9,7 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
       .filter(
         (m) =>
           m.id === 'getting-started' ||
-          m.id === 'core-features' ||
+          m.id === 'features' ||
           m.id === 'concepts' ||
           m.id === 'recipes' ||
           m.id === 'showcase' ||
