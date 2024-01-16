@@ -78,7 +78,7 @@ function performInstallation(
   fs.writeFileSync(
     installationPath,
     JSON.stringify({
-      ...currentInstallation,
+      name: 'nx-installation',
       devDependencies: {
         nx: nxJson.installation.version,
         ...nxJson.installation.plugins,
