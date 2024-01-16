@@ -134,13 +134,35 @@ export function Target({
               targetConfiguration.executor}
           </h4>
           <span
-            className={`inline-flex justify-center rounded-md p-1 hover:bg-slate-100 hover:dark:bg-slate-700 ${
-              collapsed ? 'hidden group-hover:inline-block' : 'inline-block'
-            }`}
+            className={
+              collapsed ? 'hidden group-hover:inline-flex' : 'inline-flex'
+            }
           >
-            <EyeIcon className="h-4 w-4" onClick={viewInTaskGraph}></EyeIcon>
+            <span
+              className={`inline-flex justify-center rounded-md p-1 hover:bg-slate-100 hover:dark:bg-slate-700 
+            }`}
+            >
+              <EyeIcon
+                className="h-4 w-4"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  viewInTaskGraph();
+                }}
+              ></EyeIcon>
+            </span>
             {environment === 'nx-console' && (
-              <PlayIcon className="h-5 w-5" onClick={runTarget} />
+              <span
+                className={`inline-flex justify-center rounded-md p-1 hover:bg-slate-100 hover:dark:bg-slate-700 
+              }`}
+              >
+                <PlayIcon
+                  className="h-4 w-4"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    runTarget();
+                  }}
+                />
+              </span>
             )}
           </span>
           {targetConfiguration.cache && (
