@@ -28,21 +28,21 @@ Because we are not using a Nx plugin for Svelte, there are a few items we'll hav
 {%tab label="npm"%}
 
 ```shell
-npx create-nx-workspace@latest acme --preset=ts-standalone
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-npx create-nx-workspace@latest acme --preset=ts-standalone --pm yarn
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes --pm yarn
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-npx create-nx-workspace@latest acme --preset=ts-standalone --pm pnpm
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes --pm pnpm
 ```
 
 {% /tab %}
