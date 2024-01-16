@@ -179,8 +179,8 @@ export class ForkedProcessTaskRunner {
         taskGraph,
         env,
       });
-    // streamOutput would be false if we are running multiple targets
-    // there's no point in running the commands in a pty if we are not streaming the output
+      // streamOutput would be false if we are running multiple targets
+      // there's no point in running the commands in a pty if we are not streaming the output
     } else if (!streamOutput || shouldPrefix || !process.stdout.isTTY) {
       return this.forkProcessWithPrefixAndNotTTY(task, {
         temporaryOutputPath,
