@@ -1601,7 +1601,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/run",
-        "tags": ["run-tasks", "enhance-tooling"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/run"
       },
       {
@@ -1634,7 +1634,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/run-many",
-        "tags": ["run-tasks", "enhance-tooling"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/run-many"
       },
       {
@@ -1645,7 +1645,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/affected",
-        "tags": ["run-tasks", "enhance-tooling"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/affected"
       },
       {

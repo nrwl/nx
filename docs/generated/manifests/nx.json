@@ -805,17 +805,6 @@
         "tags": ["cache-task-results"]
       },
       {
-        "id": "enhance-tooling",
-        "name": "Enhance Tooling",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/features/enhance-tooling",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/features/enhance-tooling",
-        "tags": ["enhance-tooling"]
-      },
-      {
         "id": "explore-graph",
         "name": "Explore the Graph",
         "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
@@ -907,17 +896,6 @@
     "isExternal": false,
     "path": "/features/cache-task-results",
     "tags": ["cache-task-results"]
-  },
-  "/features/enhance-tooling": {
-    "id": "enhance-tooling",
-    "name": "Enhance Tooling",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/features/enhance-tooling",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/features/enhance-tooling",
-    "tags": ["enhance-tooling"]
   },
   "/features/explore-graph": {
     "id": "explore-graph",
@@ -1034,18 +1012,18 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/task-pipeline-configuration",
-        "tags": ["run-tasks", "enhance-tooling"]
+        "tags": ["run-tasks"]
       },
       {
-        "id": "inferred-targets",
-        "name": "Inferred Targets",
+        "id": "inferred-tasks",
+        "name": "Inferred Tasks",
         "description": "",
         "mediaImage": "",
-        "file": "shared/concepts/inferred-targets",
+        "file": "shared/concepts/inferred-tasks",
         "itemList": [],
         "isExternal": false,
-        "path": "/concepts/inferred-targets",
-        "tags": ["enhance-tooling", "inferred-targets"]
+        "path": "/concepts/inferred-tasks",
+        "tags": ["inferred-tasks"]
       },
       {
         "id": "executors-and-configurations",
@@ -1056,7 +1034,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/executors-and-configurations",
-        "tags": ["run-tasks", "enhance-tooling"]
+        "tags": ["run-tasks"]
       },
       {
         "id": "integrated-vs-package-based",
@@ -1096,7 +1074,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/module-federation/faster-builds-with-module-federation",
-            "tags": ["enhance-tooling", "module-federation", "angular", "react"]
+            "tags": ["module-federation", "angular", "react"]
           },
           {
             "id": "micro-frontend-architecture",
@@ -1141,7 +1119,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/concepts/more-concepts/incremental-builds",
-            "tags": ["enhance-tooling"]
+            "tags": []
           },
           {
             "id": "illustrated-dte",
@@ -1371,18 +1349,18 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/task-pipeline-configuration",
-    "tags": ["run-tasks", "enhance-tooling"]
+    "tags": ["run-tasks"]
   },
-  "/concepts/inferred-targets": {
-    "id": "inferred-targets",
-    "name": "Inferred Targets",
+  "/concepts/inferred-tasks": {
+    "id": "inferred-tasks",
+    "name": "Inferred Tasks",
     "description": "",
     "mediaImage": "",
-    "file": "shared/concepts/inferred-targets",
+    "file": "shared/concepts/inferred-tasks",
     "itemList": [],
     "isExternal": false,
-    "path": "/concepts/inferred-targets",
-    "tags": ["enhance-tooling", "inferred-targets"]
+    "path": "/concepts/inferred-tasks",
+    "tags": ["inferred-tasks"]
   },
   "/concepts/executors-and-configurations": {
     "id": "executors-and-configurations",
@@ -1393,7 +1371,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/executors-and-configurations",
-    "tags": ["run-tasks", "enhance-tooling"]
+    "tags": ["run-tasks"]
   },
   "/concepts/integrated-vs-package-based": {
     "id": "integrated-vs-package-based",
@@ -1433,7 +1411,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/module-federation/faster-builds-with-module-federation",
-        "tags": ["enhance-tooling", "module-federation", "angular", "react"]
+        "tags": ["module-federation", "angular", "react"]
       },
       {
         "id": "micro-frontend-architecture",
@@ -1482,7 +1460,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/module-federation/faster-builds-with-module-federation",
-    "tags": ["enhance-tooling", "module-federation", "angular", "react"]
+    "tags": ["module-federation", "angular", "react"]
   },
   "/concepts/module-federation/micro-frontend-architecture": {
     "id": "micro-frontend-architecture",
@@ -1522,7 +1500,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/concepts/more-concepts/incremental-builds",
-        "tags": ["enhance-tooling"]
+        "tags": []
       },
       {
         "id": "illustrated-dte",
@@ -1714,7 +1692,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/concepts/more-concepts/incremental-builds",
-    "tags": ["enhance-tooling"]
+    "tags": []
   },
   "/concepts/more-concepts/illustrated-dte": {
     "id": "illustrated-dte",
@@ -1948,7 +1926,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/running-tasks/run-commands-executor",
-            "tags": ["run-tasks", "enhance-tooling"]
+            "tags": ["run-tasks"]
           },
           {
             "id": "run-tasks-in-parallel",
@@ -2170,7 +2148,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/react/module-federation-with-ssr",
-            "tags": ["enhance-tooling", "module-federation", "react"]
+            "tags": ["module-federation", "react"]
           },
           {
             "id": "deploy-nextjs-to-vercel",
@@ -2282,7 +2260,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/angular/module-federation-with-ssr",
-            "tags": ["enhance-tooling", "module-federation", "angular"]
+            "tags": ["module-federation", "angular"]
           },
           {
             "id": "dynamic-module-federation-with-angular",
@@ -2293,7 +2271,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/angular/dynamic-module-federation-with-angular",
-            "tags": ["enhance-tooling", "module-federation", "angular"]
+            "tags": ["module-federation", "angular"]
           },
           {
             "id": "setup-incremental-builds-angular",
@@ -2376,29 +2354,6 @@
         ],
         "isExternal": false,
         "path": "/recipes/node",
-        "tags": []
-      },
-      {
-        "id": "eslint",
-        "name": "ESLint",
-        "description": "Set of ESLint related recipes.",
-        "mediaImage": "",
-        "file": "",
-        "itemList": [
-          {
-            "id": "eslint-inferred-targets",
-            "name": "ESLint Inferred Targets",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/eslint/eslint-inferred-targets",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/eslint/eslint-inferred-targets",
-            "tags": ["inferred-targets"]
-          }
-        ],
-        "isExternal": false,
-        "path": "/recipes/eslint",
         "tags": []
       },
       {
@@ -2541,15 +2496,15 @@
             "tags": ["storybook"]
           },
           {
-            "id": "storybook-inferred-targets",
-            "name": "Storybook Inferred Targets",
+            "id": "storybook-inferred-tasks",
+            "name": "Storybook Inferred Tasks",
             "description": "",
             "mediaImage": "",
-            "file": "shared/recipes/storybook/storybook-inferred-targets",
+            "file": "shared/recipes/storybook/storybook-inferred-tasks",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/storybook/storybook-inferred-targets",
-            "tags": ["inferred-targets"]
+            "path": "/recipes/storybook/storybook-inferred-tasks",
+            "tags": ["inferred-tasks"]
           }
         ],
         "isExternal": false,
@@ -2677,15 +2632,15 @@
             "tags": []
           },
           {
-            "id": "nuxt-inferred-targets",
-            "name": "Nuxt Inferred Targets",
+            "id": "nuxt-inferred-tasks",
+            "name": "Nuxt Inferred Tasks",
             "description": "",
             "mediaImage": "",
-            "file": "shared/recipes/nuxt/nuxt-inferred-targets",
+            "file": "shared/recipes/nuxt/nuxt-inferred-tasks",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/nuxt/nuxt-inferred-targets",
-            "tags": ["inferred-targets"]
+            "path": "/recipes/nuxt/nuxt-inferred-tasks",
+            "tags": ["inferred-tasks"]
           }
         ],
         "isExternal": false,
@@ -2711,15 +2666,15 @@
             "tags": []
           },
           {
-            "id": "vite-inferred-targets",
-            "name": "Vite Inferred Targets",
+            "id": "vite-inferred-tasks",
+            "name": "Vite Inferred Tasks",
             "description": "",
             "mediaImage": "",
-            "file": "shared/recipes/vite/vite-inferred-targets",
+            "file": "shared/recipes/vite/vite-inferred-tasks",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/vite/vite-inferred-targets",
-            "tags": ["inferred-targets"]
+            "path": "/recipes/vite/vite-inferred-tasks",
+            "tags": ["inferred-tasks"]
           }
         ],
         "isExternal": false,
@@ -3165,7 +3120,7 @@
             "itemList": [],
             "isExternal": false,
             "path": "/recipes/troubleshooting/performance-profiling",
-            "tags": ["enhance-tooling", "environment-variables"]
+            "tags": ["environment-variables"]
           }
         ],
         "isExternal": false,
@@ -3338,7 +3293,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/running-tasks/run-commands-executor",
-        "tags": ["run-tasks", "enhance-tooling"]
+        "tags": ["run-tasks"]
       },
       {
         "id": "run-tasks-in-parallel",
@@ -3431,7 +3386,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/running-tasks/run-commands-executor",
-    "tags": ["run-tasks", "enhance-tooling"]
+    "tags": ["run-tasks"]
   },
   "/recipes/running-tasks/run-tasks-in-parallel": {
     "id": "run-tasks-in-parallel",
@@ -3714,7 +3669,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/react/module-federation-with-ssr",
-        "tags": ["enhance-tooling", "module-federation", "react"]
+        "tags": ["module-federation", "react"]
       },
       {
         "id": "deploy-nextjs-to-vercel",
@@ -3818,7 +3773,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/react/module-federation-with-ssr",
-    "tags": ["enhance-tooling", "module-federation", "react"]
+    "tags": ["module-federation", "react"]
   },
   "/recipes/react/deploy-nextjs-to-vercel": {
     "id": "deploy-nextjs-to-vercel",
@@ -3925,7 +3880,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/angular/module-federation-with-ssr",
-        "tags": ["enhance-tooling", "module-federation", "angular"]
+        "tags": ["module-federation", "angular"]
       },
       {
         "id": "dynamic-module-federation-with-angular",
@@ -3936,7 +3891,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/angular/dynamic-module-federation-with-angular",
-        "tags": ["enhance-tooling", "module-federation", "angular"]
+        "tags": ["module-federation", "angular"]
       },
       {
         "id": "setup-incremental-builds-angular",
@@ -4085,7 +4040,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/module-federation-with-ssr",
-    "tags": ["enhance-tooling", "module-federation", "angular"]
+    "tags": ["module-federation", "angular"]
   },
   "/recipes/angular/dynamic-module-federation-with-angular": {
     "id": "dynamic-module-federation-with-angular",
@@ -4096,7 +4051,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/angular/dynamic-module-federation-with-angular",
-    "tags": ["enhance-tooling", "module-federation", "angular"]
+    "tags": ["module-federation", "angular"]
   },
   "/recipes/angular/setup-incremental-builds-angular": {
     "id": "setup-incremental-builds-angular",
@@ -4230,40 +4185,6 @@
     "isExternal": false,
     "path": "/recipes/node/wait-for-tasks",
     "tags": []
-  },
-  "/recipes/eslint": {
-    "id": "eslint",
-    "name": "ESLint",
-    "description": "Set of ESLint related recipes.",
-    "mediaImage": "",
-    "file": "",
-    "itemList": [
-      {
-        "id": "eslint-inferred-targets",
-        "name": "ESLint Inferred Targets",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/eslint/eslint-inferred-targets",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/eslint/eslint-inferred-targets",
-        "tags": ["inferred-targets"]
-      }
-    ],
-    "isExternal": false,
-    "path": "/recipes/eslint",
-    "tags": []
-  },
-  "/recipes/eslint/eslint-inferred-targets": {
-    "id": "eslint-inferred-targets",
-    "name": "ESLint Inferred Targets",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/eslint/eslint-inferred-targets",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/eslint/eslint-inferred-targets",
-    "tags": ["inferred-targets"]
   },
   "/recipes/storybook": {
     "id": "storybook",
@@ -4405,15 +4326,15 @@
         "tags": ["storybook"]
       },
       {
-        "id": "storybook-inferred-targets",
-        "name": "Storybook Inferred Targets",
+        "id": "storybook-inferred-tasks",
+        "name": "Storybook Inferred Tasks",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/storybook/storybook-inferred-targets",
+        "file": "shared/recipes/storybook/storybook-inferred-tasks",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/storybook/storybook-inferred-targets",
-        "tags": ["inferred-targets"]
+        "path": "/recipes/storybook/storybook-inferred-tasks",
+        "tags": ["inferred-tasks"]
       }
     ],
     "isExternal": false,
@@ -4552,16 +4473,16 @@
     "path": "/recipes/storybook/angular-configuring-styles",
     "tags": ["storybook"]
   },
-  "/recipes/storybook/storybook-inferred-targets": {
-    "id": "storybook-inferred-targets",
-    "name": "Storybook Inferred Targets",
+  "/recipes/storybook/storybook-inferred-tasks": {
+    "id": "storybook-inferred-tasks",
+    "name": "Storybook Inferred Tasks",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/storybook/storybook-inferred-targets",
+    "file": "shared/recipes/storybook/storybook-inferred-tasks",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/storybook/storybook-inferred-targets",
-    "tags": ["inferred-targets"]
+    "path": "/recipes/storybook/storybook-inferred-tasks",
+    "tags": ["inferred-tasks"]
   },
   "/recipes/cypress": {
     "id": "cypress",
@@ -4750,15 +4671,15 @@
         "tags": []
       },
       {
-        "id": "nuxt-inferred-targets",
-        "name": "Nuxt Inferred Targets",
+        "id": "nuxt-inferred-tasks",
+        "name": "Nuxt Inferred Tasks",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/nuxt/nuxt-inferred-targets",
+        "file": "shared/recipes/nuxt/nuxt-inferred-tasks",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nuxt/nuxt-inferred-targets",
-        "tags": ["inferred-targets"]
+        "path": "/recipes/nuxt/nuxt-inferred-tasks",
+        "tags": ["inferred-tasks"]
       }
     ],
     "isExternal": false,
@@ -4776,16 +4697,16 @@
     "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
     "tags": []
   },
-  "/recipes/nuxt/nuxt-inferred-targets": {
-    "id": "nuxt-inferred-targets",
-    "name": "Nuxt Inferred Targets",
+  "/recipes/nuxt/nuxt-inferred-tasks": {
+    "id": "nuxt-inferred-tasks",
+    "name": "Nuxt Inferred Tasks",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/nuxt/nuxt-inferred-targets",
+    "file": "shared/recipes/nuxt/nuxt-inferred-tasks",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nuxt/nuxt-inferred-targets",
-    "tags": ["inferred-targets"]
+    "path": "/recipes/nuxt/nuxt-inferred-tasks",
+    "tags": ["inferred-tasks"]
   },
   "/recipes/vite": {
     "id": "vite",
@@ -4806,15 +4727,15 @@
         "tags": []
       },
       {
-        "id": "vite-inferred-targets",
-        "name": "Vite Inferred Targets",
+        "id": "vite-inferred-tasks",
+        "name": "Vite Inferred Tasks",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/vite/vite-inferred-targets",
+        "file": "shared/recipes/vite/vite-inferred-tasks",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/vite/vite-inferred-targets",
-        "tags": ["inferred-targets"]
+        "path": "/recipes/vite/vite-inferred-tasks",
+        "tags": ["inferred-tasks"]
       }
     ],
     "isExternal": false,
@@ -4832,16 +4753,16 @@
     "path": "/recipes/vite/configure-vite",
     "tags": []
   },
-  "/recipes/vite/vite-inferred-targets": {
-    "id": "vite-inferred-targets",
-    "name": "Vite Inferred Targets",
+  "/recipes/vite/vite-inferred-tasks": {
+    "id": "vite-inferred-tasks",
+    "name": "Vite Inferred Tasks",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/vite/vite-inferred-targets",
+    "file": "shared/recipes/vite/vite-inferred-tasks",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/vite/vite-inferred-targets",
-    "tags": ["inferred-targets"]
+    "path": "/recipes/vite/vite-inferred-tasks",
+    "tags": ["inferred-tasks"]
   },
   "/recipes/webpack": {
     "id": "webpack",
@@ -5601,7 +5522,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/recipes/troubleshooting/performance-profiling",
-        "tags": ["enhance-tooling", "environment-variables"]
+        "tags": ["environment-variables"]
       }
     ],
     "isExternal": false,
@@ -5661,7 +5582,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/troubleshooting/performance-profiling",
-    "tags": ["enhance-tooling", "environment-variables"]
+    "tags": ["environment-variables"]
   },
   "/recipes/nx-console": {
     "id": "nx-console",
@@ -6654,7 +6575,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/reference/project-configuration",
-        "tags": ["enhance-tooling"]
+        "tags": []
       },
       {
         "id": "nxignore",
@@ -6725,7 +6646,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/reference/project-configuration",
-    "tags": ["enhance-tooling"]
+    "tags": []
   },
   "/reference/nxignore": {
     "id": "nxignore",

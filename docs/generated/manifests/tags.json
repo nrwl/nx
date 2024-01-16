@@ -178,127 +178,6 @@
       "path": "/nx-api/nx/documents/reset"
     }
   ],
-  "enhance-tooling": [
-    {
-      "description": "",
-      "file": "shared/features/enhance-tooling",
-      "id": "enhance-tooling",
-      "name": "Enhance Tooling",
-      "path": "/features/enhance-tooling"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/task-pipeline-configuration",
-      "id": "task-pipeline-configuration",
-      "name": "What is a Task Pipeline",
-      "path": "/concepts/task-pipeline-configuration"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/inferred-targets",
-      "id": "inferred-targets",
-      "name": "Inferred Targets",
-      "path": "/concepts/inferred-targets"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/executors-and-configurations",
-      "id": "executors-and-configurations",
-      "name": "Executors and Configurations",
-      "path": "/concepts/executors-and-configurations"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/faster-builds",
-      "id": "faster-builds-with-module-federation",
-      "name": "Faster Builds with Module Federation",
-      "path": "/concepts/module-federation/faster-builds-with-module-federation"
-    },
-    {
-      "description": "",
-      "file": "shared/incremental-builds",
-      "id": "incremental-builds",
-      "name": "Incremental Builds",
-      "path": "/concepts/more-concepts/incremental-builds"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/running-custom-commands",
-      "id": "run-commands-executor",
-      "name": "Running Custom Commands",
-      "path": "/recipes/running-tasks/run-commands-executor"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for React",
-      "path": "/recipes/react/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/module-federation-with-ssr",
-      "id": "module-federation-with-ssr",
-      "name": "Setup Module Federation with SSR for Angular",
-      "path": "/recipes/angular/module-federation-with-ssr"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/module-federation/dynamic-mfe-angular",
-      "id": "dynamic-module-federation-with-angular",
-      "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
-      "path": "/recipes/angular/dynamic-module-federation-with-angular"
-    },
-    {
-      "description": "",
-      "file": "shared/guides/performance-profiling",
-      "id": "performance-profiling",
-      "name": "Profiling Build Performance",
-      "path": "/recipes/troubleshooting/performance-profiling"
-    },
-    {
-      "description": "",
-      "file": "shared/reference/project-configuration",
-      "id": "project-configuration",
-      "name": "Project Configuration",
-      "path": "/reference/project-configuration"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/local-executors",
-      "id": "local-executors",
-      "name": "Write a Simple Executor",
-      "path": "/extending-nx/recipes/local-executors"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/compose-executors",
-      "id": "compose-executors",
-      "name": "Compose Executors",
-      "path": "/extending-nx/recipes/compose-executors"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/run",
-      "id": "run",
-      "name": "run",
-      "path": "/nx-api/nx/documents/run"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/run-many",
-      "id": "run-many",
-      "name": "run-many",
-      "path": "/nx-api/nx/documents/run-many"
-    },
-    {
-      "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
-      "file": "generated/packages/generated/packages/nx/documents/affected",
-      "id": "affected",
-      "name": "affected",
-      "path": "/nx-api/nx/documents/affected"
-    }
-  ],
   "explore-graph": [
     {
       "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
@@ -614,41 +493,34 @@
       "path": "/concepts/integrated-vs-package-based"
     }
   ],
-  "inferred-targets": [
+  "inferred-tasks": [
     {
       "description": "",
-      "file": "shared/concepts/inferred-targets",
-      "id": "inferred-targets",
-      "name": "Inferred Targets",
-      "path": "/concepts/inferred-targets"
+      "file": "shared/concepts/inferred-tasks",
+      "id": "inferred-tasks",
+      "name": "Inferred Tasks",
+      "path": "/concepts/inferred-tasks"
     },
     {
       "description": "",
-      "file": "shared/recipes/eslint/eslint-inferred-targets",
-      "id": "eslint-inferred-targets",
-      "name": "ESLint Inferred Targets",
-      "path": "/recipes/eslint/eslint-inferred-targets"
+      "file": "shared/recipes/storybook/storybook-inferred-tasks",
+      "id": "storybook-inferred-tasks",
+      "name": "Storybook Inferred Tasks",
+      "path": "/recipes/storybook/storybook-inferred-tasks"
     },
     {
       "description": "",
-      "file": "shared/recipes/storybook/storybook-inferred-targets",
-      "id": "storybook-inferred-targets",
-      "name": "Storybook Inferred Targets",
-      "path": "/recipes/storybook/storybook-inferred-targets"
+      "file": "shared/recipes/nuxt/nuxt-inferred-tasks",
+      "id": "nuxt-inferred-tasks",
+      "name": "Nuxt Inferred Tasks",
+      "path": "/recipes/nuxt/nuxt-inferred-tasks"
     },
     {
       "description": "",
-      "file": "shared/recipes/nuxt/nuxt-inferred-targets",
-      "id": "nuxt-inferred-targets",
-      "name": "Nuxt Inferred Targets",
-      "path": "/recipes/nuxt/nuxt-inferred-targets"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/vite/vite-inferred-targets",
-      "id": "vite-inferred-targets",
-      "name": "Vite Inferred Targets",
-      "path": "/recipes/vite/vite-inferred-targets"
+      "file": "shared/recipes/vite/vite-inferred-tasks",
+      "id": "vite-inferred-tasks",
+      "name": "Vite Inferred Tasks",
+      "path": "/recipes/vite/vite-inferred-tasks"
     }
   ],
   "repository-types": [

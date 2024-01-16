@@ -105,7 +105,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/local-executors",
-        "tags": ["enhance-tooling"]
+        "tags": []
       },
       {
         "id": "compose-executors",
@@ -116,7 +116,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/extending-nx/recipes/compose-executors",
-        "tags": ["enhance-tooling"]
+        "tags": []
       },
       {
         "id": "local-generators",
@@ -231,7 +231,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/local-executors",
-    "tags": ["enhance-tooling"]
+    "tags": []
   },
   "/extending-nx/recipes/compose-executors": {
     "id": "compose-executors",
@@ -242,7 +242,7 @@
     "itemList": [],
     "isExternal": false,
     "path": "/extending-nx/recipes/compose-executors",
-    "tags": ["enhance-tooling"]
+    "tags": []
   },
   "/extending-nx/recipes/local-generators": {
     "id": "local-generators",

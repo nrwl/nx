@@ -591,14 +591,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Enhance Tooling",
-            "path": "/features/enhance-tooling",
-            "id": "enhance-tooling",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Explore the Graph",
             "path": "/features/explore-graph",
             "id": "explore-graph",
@@ -661,14 +653,6 @@
         "name": "Cache Task Results",
         "path": "/features/cache-task-results",
         "id": "cache-task-results",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Enhance Tooling",
-        "path": "/features/enhance-tooling",
-        "id": "enhance-tooling",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -760,9 +744,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Inferred Targets",
-            "path": "/concepts/inferred-targets",
-            "id": "inferred-targets",
+            "name": "Inferred Tasks",
+            "path": "/concepts/inferred-tasks",
+            "id": "inferred-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1005,9 +989,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Inferred Targets",
-        "path": "/concepts/inferred-targets",
-        "id": "inferred-targets",
+        "name": "Inferred Tasks",
+        "path": "/concepts/inferred-tasks",
+        "id": "inferred-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1739,23 +1723,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "ESLint",
-            "path": "/recipes/eslint",
-            "id": "eslint",
-            "isExternal": false,
-            "children": [
-              {
-                "name": "ESLint Inferred Targets",
-                "path": "/recipes/eslint/eslint-inferred-targets",
-                "id": "eslint-inferred-targets",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              }
-            ],
-            "disableCollapsible": false
-          },
-          {
             "name": "Storybook",
             "path": "/recipes/storybook",
             "id": "storybook",
@@ -1858,9 +1825,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Storybook Inferred Targets",
-                "path": "/recipes/storybook/storybook-inferred-targets",
-                "id": "storybook-inferred-targets",
+                "name": "Storybook Inferred Tasks",
+                "path": "/recipes/storybook/storybook-inferred-tasks",
+                "id": "storybook-inferred-tasks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1958,9 +1925,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Nuxt Inferred Targets",
-                "path": "/recipes/nuxt/nuxt-inferred-targets",
-                "id": "nuxt-inferred-targets",
+                "name": "Nuxt Inferred Tasks",
+                "path": "/recipes/nuxt/nuxt-inferred-tasks",
+                "id": "nuxt-inferred-tasks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1983,9 +1950,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Vite Inferred Targets",
-                "path": "/recipes/vite/vite-inferred-targets",
-                "id": "vite-inferred-targets",
+                "name": "Vite Inferred Tasks",
+                "path": "/recipes/vite/vite-inferred-tasks",
+                "id": "vite-inferred-tasks",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3092,31 +3059,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "ESLint",
-        "path": "/recipes/eslint",
-        "id": "eslint",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "ESLint Inferred Targets",
-            "path": "/recipes/eslint/eslint-inferred-targets",
-            "id": "eslint-inferred-targets",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "ESLint Inferred Targets",
-        "path": "/recipes/eslint/eslint-inferred-targets",
-        "id": "eslint-inferred-targets",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Storybook",
         "path": "/recipes/storybook",
         "id": "storybook",
@@ -3219,9 +3161,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Storybook Inferred Targets",
-            "path": "/recipes/storybook/storybook-inferred-targets",
-            "id": "storybook-inferred-targets",
+            "name": "Storybook Inferred Tasks",
+            "path": "/recipes/storybook/storybook-inferred-tasks",
+            "id": "storybook-inferred-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3326,9 +3268,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Storybook Inferred Targets",
-        "path": "/recipes/storybook/storybook-inferred-targets",
-        "id": "storybook-inferred-targets",
+        "name": "Storybook Inferred Tasks",
+        "path": "/recipes/storybook/storybook-inferred-tasks",
+        "id": "storybook-inferred-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3471,9 +3413,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nuxt Inferred Targets",
-            "path": "/recipes/nuxt/nuxt-inferred-targets",
-            "id": "nuxt-inferred-targets",
+            "name": "Nuxt Inferred Tasks",
+            "path": "/recipes/nuxt/nuxt-inferred-tasks",
+            "id": "nuxt-inferred-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3490,9 +3432,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nuxt Inferred Targets",
-        "path": "/recipes/nuxt/nuxt-inferred-targets",
-        "id": "nuxt-inferred-targets",
+        "name": "Nuxt Inferred Tasks",
+        "path": "/recipes/nuxt/nuxt-inferred-tasks",
+        "id": "nuxt-inferred-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3512,9 +3454,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Vite Inferred Targets",
-            "path": "/recipes/vite/vite-inferred-targets",
-            "id": "vite-inferred-targets",
+            "name": "Vite Inferred Tasks",
+            "path": "/recipes/vite/vite-inferred-tasks",
+            "id": "vite-inferred-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3531,9 +3473,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Vite Inferred Targets",
-        "path": "/recipes/vite/vite-inferred-targets",
-        "id": "vite-inferred-targets",
+        "name": "Vite Inferred Tasks",
+        "path": "/recipes/vite/vite-inferred-tasks",
+        "id": "vite-inferred-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

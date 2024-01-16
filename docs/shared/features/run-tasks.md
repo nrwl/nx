@@ -2,51 +2,11 @@
 
 Monorepos can have hundreds or even thousands of projects, so being able to run actions against all (or some) of them is a key feature of a tool like Nx.
 
-## Definitions
+## Types of Tasks
 
-- **Command -** anything the developer types into the terminal (e.g., `nx run header:build`).
-- **Target -** the name of an action taken on a project (e.g., `build`)
-- **Task -** an invocation of a target on a specific project (e.g., `header:build`).
+Nx tasks can be created from existing `package.json` scripts, [inferred from tooling configuration files](/concepts/inferred-tasks), or defined in a `project.json` file. Nx will merge all three sources together to determine the tasks for a particular project.
 
-## Define Tasks
-
-For these examples, we'll imagine a repo that has three projects: `myapp`, `header` and `footer`. `myapp` is a deployable app and uses the `header` and `footer` libraries.
-
-Each project has the `test` and `build` targets defined. Tasks can be defined as npm scripts in a project's `package.json` file or as targets in a `project.json` file:
-
-{% tabs %}
-{% tab label="package.json" %}
-
-```json {% fileName="package.json" %}
-{
-  "scripts": {
-    "build": "webpack -c webpack.conf.js",
-    "test": "jest --coverage"
-  }
-}
-```
-
-{% /tab %}
-{% tab label="project.json" %}
-
-```json {% fileName="project.json" %}
-{
-  "targets": {
-    "build": {
-      "command": "webpack -c webpack.conf.js"
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "codeCoverage": true
-      }
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
+Read the [Project Configuration docs](/reference/project-configuration) to see all the configuration options for a task.
 
 ## Running Tasks
 
@@ -56,7 +16,7 @@ Nx uses the following syntax:
 
 ### Run a Single Task
 
-To run the `test` target on the `header` project run this command:
+To run the `test` task for the `header` project run this command:
 
 ```shell
 npx nx test header
@@ -66,19 +26,19 @@ npx nx test header
 
 You can use the `run-many` command to run a task for multiple projects. Here are a couple of examples.
 
-Run the `build` target for all projects in the repo:
+Run the `build` task for all projects in the repo:
 
 ```shell
 npx nx run-many -t build
 ```
 
-Run the `build`, `lint` and `test` target for all projects in the repo:
+Run the `build`, `lint` and `test` task for all projects in the repo:
 
 ```shell
 npx nx run-many -t build lint test
 ```
 
-Run the `build`, `lint` and `test` target just on the `header` and `footer` projects:
+Run the `build`, `lint` and `test` task just on the `header` and `footer` projects:
 
 ```shell
 npx nx run-many -t build lint test -p header footer

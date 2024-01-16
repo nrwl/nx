@@ -203,12 +203,6 @@
               "file": "shared/features/cache-task-results"
             },
             {
-              "name": "Enhance Tooling",
-              "id": "enhance-tooling",
-              "tags": ["enhance-tooling"],
-              "file": "shared/features/enhance-tooling"
-            },
-            {
               "name": "Explore the Graph",
               "id": "explore-graph",
               "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
@@ -276,20 +270,20 @@
             },
             {
               "name": "What is a Task Pipeline",
-              "tags": ["run-tasks", "enhance-tooling"],
+              "tags": ["run-tasks"],
               "id": "task-pipeline-configuration",
               "file": "shared/concepts/task-pipeline-configuration"
             },
             {
-              "name": "Inferred Targets",
-              "tags": ["enhance-tooling", "inferred-targets"],
-              "id": "inferred-targets",
-              "file": "shared/concepts/inferred-targets"
+              "name": "Inferred Tasks",
+              "tags": ["inferred-tasks"],
+              "id": "inferred-tasks",
+              "file": "shared/concepts/inferred-tasks"
             },
             {
               "name": "Executors and Configurations",
               "id": "executors-and-configurations",
-              "tags": ["run-tasks", "enhance-tooling"],
+              "tags": ["run-tasks"],
               "file": "shared/recipes/running-tasks/executors-and-configurations"
             },
             {
@@ -312,12 +306,7 @@
                 {
                   "name": "Faster Builds with Module Federation",
                   "id": "faster-builds-with-module-federation",
-                  "tags": [
-                    "enhance-tooling",
-                    "module-federation",
-                    "angular",
-                    "react"
-                  ],
+                  "tags": ["module-federation", "angular", "react"],
                   "file": "shared/guides/module-federation/faster-builds"
                 },
                 {
@@ -340,7 +329,7 @@
                 {
                   "name": "Incremental Builds",
                   "id": "incremental-builds",
-                  "tags": ["enhance-tooling"],
+                  "tags": [],
                   "file": "shared/incremental-builds"
                 },
                 {
@@ -466,7 +455,7 @@
                 {
                   "name": "Running Custom Commands",
                   "id": "run-commands-executor",
-                  "tags": ["run-tasks", "enhance-tooling"],
+                  "tags": ["run-tasks"],
                   "file": "shared/recipes/running-tasks/running-custom-commands"
                 },
                 {
@@ -576,7 +565,7 @@
                 {
                   "name": "Setup Module Federation with SSR for React",
                   "id": "module-federation-with-ssr",
-                  "tags": ["enhance-tooling", "module-federation", "react"],
+                  "tags": ["module-federation", "react"],
                   "file": "shared/recipes/module-federation-with-ssr"
                 },
                 {
@@ -631,13 +620,13 @@
                 {
                   "name": "Setup Module Federation with SSR for Angular",
                   "id": "module-federation-with-ssr",
-                  "tags": ["enhance-tooling", "module-federation", "angular"],
+                  "tags": ["module-federation", "angular"],
                   "file": "shared/recipes/module-federation-with-ssr"
                 },
                 {
                   "name": "Advanced Micro Frontends with Angular using Dynamic Federation",
                   "id": "dynamic-module-federation-with-angular",
-                  "tags": ["enhance-tooling", "module-federation", "angular"],
+                  "tags": ["module-federation", "angular"],
                   "file": "shared/guides/module-federation/dynamic-mfe-angular"
                 },
                 {
@@ -681,19 +670,6 @@
                   "id": "wait-for-tasks",
                   "tags": [],
                   "file": "shared/recipes/node/wait-for-tasks"
-                }
-              ]
-            },
-            {
-              "name": "ESLint",
-              "id": "eslint",
-              "description": "Set of ESLint related recipes.",
-              "itemList": [
-                {
-                  "name": "ESLint Inferred Targets",
-                  "id": "eslint-inferred-targets",
-                  "tags": ["inferred-targets"],
-                  "file": "shared/recipes/eslint/eslint-inferred-targets"
                 }
               ]
             },
@@ -787,10 +763,10 @@
                   "file": "shared/recipes/storybook/angular-configuring-styles"
                 },
                 {
-                  "name": "Storybook Inferred Targets",
-                  "id": "storybook-inferred-targets",
-                  "tags": ["inferred-targets"],
-                  "file": "shared/recipes/storybook/storybook-inferred-targets"
+                  "name": "Storybook Inferred Tasks",
+                  "id": "storybook-inferred-tasks",
+                  "tags": ["inferred-tasks"],
+                  "file": "shared/recipes/storybook/storybook-inferred-tasks"
                 }
               ]
             },
@@ -863,10 +839,10 @@
                   "file": "shared/recipes/deployment/deploy-nuxt-to-vercel"
                 },
                 {
-                  "name": "Nuxt Inferred Targets",
-                  "id": "nuxt-inferred-targets",
-                  "tags": ["inferred-targets"],
-                  "file": "shared/recipes/nuxt/nuxt-inferred-targets"
+                  "name": "Nuxt Inferred Tasks",
+                  "id": "nuxt-inferred-tasks",
+                  "tags": ["inferred-tasks"],
+                  "file": "shared/recipes/nuxt/nuxt-inferred-tasks"
                 }
               ]
             },
@@ -882,10 +858,10 @@
                   "file": "shared/packages/vite/configure-vite"
                 },
                 {
-                  "name": "Vite Inferred Targets",
-                  "id": "vite-inferred-targets",
-                  "tags": ["inferred-targets"],
-                  "file": "shared/recipes/vite/vite-inferred-targets"
+                  "name": "Vite Inferred Tasks",
+                  "id": "vite-inferred-tasks",
+                  "tags": ["inferred-tasks"],
+                  "file": "shared/recipes/vite/vite-inferred-tasks"
                 }
               ]
             },
@@ -1123,7 +1099,7 @@
                 {
                   "name": "Profiling Build Performance",
                   "id": "performance-profiling",
-                  "tags": ["enhance-tooling", "environment-variables"],
+                  "tags": ["environment-variables"],
                   "file": "shared/guides/performance-profiling"
                 }
               ]
@@ -1354,7 +1330,7 @@
             {
               "name": "Project Configuration",
               "id": "project-configuration",
-              "tags": ["enhance-tooling"],
+              "tags": [],
               "file": "shared/reference/project-configuration"
             },
             {
@@ -1591,13 +1567,13 @@
             {
               "name": "Write a Simple Executor",
               "id": "local-executors",
-              "tags": ["enhance-tooling"],
+              "tags": [],
               "file": "shared/recipes/plugins/local-executors"
             },
             {
               "name": "Compose Executors",
               "id": "compose-executors",
-              "tags": ["enhance-tooling"],
+              "tags": [],
               "file": "shared/recipes/plugins/compose-executors"
             },
             {
@@ -1984,7 +1960,7 @@
             },
             {
               "name": "run",
-              "tags": ["run-tasks", "enhance-tooling"],
+              "tags": ["run-tasks"],
               "id": "run",
               "file": "generated/cli/run"
             },
@@ -2001,13 +1977,13 @@
             },
             {
               "name": "run-many",
-              "tags": ["run-tasks", "enhance-tooling"],
+              "tags": ["run-tasks"],
               "id": "run-many",
               "file": "generated/cli/run-many"
             },
             {
               "name": "affected",
-              "tags": ["run-tasks", "enhance-tooling"],
+              "tags": ["run-tasks"],
               "id": "affected",
               "file": "generated/cli/affected"
             },
