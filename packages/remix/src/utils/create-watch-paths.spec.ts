@@ -9,7 +9,12 @@ describe('createWatchPaths', () => {
     const testDir = joinPathFragments(workspaceRoot, 'e2e/remix');
 
     const paths = await createWatchPaths(testDir);
-    expect(paths).toEqual(['../../packages', '../../graph', '../../e2e/utils']);
+    expect(paths).toEqual([
+      '../../packages',
+      '../../graph',
+      '../../nx-dev',
+      '../../e2e/utils',
+    ]);
   });
 });
 
