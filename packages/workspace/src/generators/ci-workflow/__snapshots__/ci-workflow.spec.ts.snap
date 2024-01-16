@@ -116,7 +116,7 @@ jobs:
       # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t lint,test,build --parallel=3
+      - run: npx nx affected -target lint,test,build --parallel=3
 "
 `;
 
@@ -152,7 +152,7 @@ jobs:
       # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t lint,test,build --parallel=3
+      - run: npx nx affected -target lint,test,build --parallel=3
 "
 `;
 
@@ -308,7 +308,7 @@ jobs:
       # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -t lint,test,build --parallel=3
+      - run: pnpm exec nx affected -target lint,test,build --parallel=3
 "
 `;
 
@@ -348,7 +348,7 @@ jobs:
       # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -t lint,test,build --parallel=3
+      - run: pnpm exec nx affected -target lint,test,build --parallel=3
 "
 `;
 
@@ -494,7 +494,7 @@ jobs:
       # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: yarn nx-cloud record -- nx format:check
-      - run: yarn nx affected -t lint,test,build --parallel=3
+      - run: yarn nx affected -target lint,test,build --parallel=3
 "
 `;
 
@@ -530,7 +530,7 @@ jobs:
       # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: yarn nx-cloud record -- nx format:check
-      - run: yarn nx affected -t lint,test,build --parallel=3
+      - run: yarn nx affected -target lint,test,build --parallel=3
 "
 `;
 

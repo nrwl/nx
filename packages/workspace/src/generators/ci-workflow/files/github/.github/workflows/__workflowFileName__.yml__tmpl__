@@ -33,4 +33,4 @@ jobs:
       # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check
-      - run: <%= packageManagerPrefix %> nx affected -t lint,test,build --parallel=3
+      - run: <%= packageManagerPrefix %> nx affected -target lint,test,build --parallel=3
