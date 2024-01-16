@@ -174,7 +174,7 @@ CI:
     # uncomment to enable task distribution
     # - npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
     - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage & npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage & npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint,test,build --parallel=3
 "
 `;
 
@@ -372,7 +372,7 @@ CI:
     # uncomment to enable task distribution
     # - pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
     - pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage & pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage & pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint,test,build --parallel=3
 "
 `;
 
@@ -552,7 +552,7 @@ CI:
     # uncomment to enable task distribution
     # - yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
     - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint --parallel=3 & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=test --parallel=3 --ci --code-coverage & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=e2e --parallel=3 --ci --code-coverage & yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=build --parallel=3
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint,test,build --parallel=3
 "
 `;
 
