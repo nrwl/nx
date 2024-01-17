@@ -179,12 +179,12 @@ export default function ConfPage(): JSX.Element {
                 >
                   Launch Conf
                 </Link>
-                <Link
-                  href="#community-partners"
-                  className="cursor-pointer bg-white/40 py-8 transition hover:bg-white dark:bg-slate-800/60 dark:hover:bg-slate-800"
-                >
-                  Community Partners
-                </Link>
+                {/*<Link*/}
+                {/*  href="#community-partners"*/}
+                {/*  className="cursor-pointer bg-white/40 py-8 transition hover:bg-white dark:bg-slate-800/60 dark:hover:bg-slate-800"*/}
+                {/*>*/}
+                {/*  Community Partners*/}
+                {/*</Link>*/}
               </div>
             </div>
           </div>
