@@ -46,6 +46,7 @@
     },
     "git": {
       "commit": false,
+      "stageChanges": false,
       "tag": false
     }
   },
