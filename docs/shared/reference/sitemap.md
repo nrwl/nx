@@ -542,6 +542,7 @@
       - [show](/nx-api/nx/documents/show)
       - [view-logs](/nx-api/nx/documents/view-logs)
       - [release](/nx-api/nx/documents/release)
+      - [add](/nx-api/nx/documents/add)
     - [executors](/nx-api/nx/executors)
       - [noop](/nx-api/nx/executors/noop)
       - [run-commands](/nx-api/nx/executors/run-commands)

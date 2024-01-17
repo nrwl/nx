@@ -2055,6 +2055,11 @@
               "name": "release",
               "id": "release",
               "file": "generated/cli/release"
+            },
+            {
+              "name": "add",
+              "id": "add",
+              "file": "generated/cli/add"
             }
           ]
         },
