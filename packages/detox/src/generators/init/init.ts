@@ -8,16 +8,9 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { jestVersion, typesNodeVersion } from '@nx/jest/src/utils/versions';
-
-import { Schema } from './schema';
-import {
-  configPluginsDetoxVersion,
-  detoxVersion,
-  nxVersion,
-  testingLibraryJestDom,
-} from '../../utils/versions';
 import { DetoxPluginOptions } from '../../plugins/plugin';
+import { detoxVersion, nxVersion } from '../../utils/versions';
+import { Schema } from './schema';
 
 export async function detoxInitGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -45,13 +38,9 @@ export function updateDependencies(host: Tree, schema: Schema) {
     {
       '@nx/detox': nxVersion,
       detox: detoxVersion,
-      '@testing-library/jest-dom': testingLibraryJestDom,
-      '@types/node': typesNodeVersion,
-      'jest-circus': jestVersion,
-      ...(schema.framework === 'expo'
-        ? { '@config-plugins/detox': configPluginsDetoxVersion }
-        : {}),
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 

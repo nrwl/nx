@@ -1,13 +1,6 @@
-import {
-  getNxWrapperContents,
-  nxWrapperPath,
-} from '../../command-line/init/implementation/dot-nx/add-nx-scripts';
-import { normalizePath } from '../../utils/path';
 import { Tree } from '../../generators/tree';
+import { updateNxw } from '../../utils/update-nxw';
 
 export default async function (tree: Tree) {
-  const wrapperPath = normalizePath(nxWrapperPath());
-  if (tree.exists(wrapperPath)) {
-    tree.write(wrapperPath, getNxWrapperContents());
-  }
+  updateNxw(tree);
 }

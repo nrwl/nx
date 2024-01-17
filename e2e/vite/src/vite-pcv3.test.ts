@@ -1,4 +1,12 @@
-import { cleanupProject, newProject, runCLI, uniq } from '@nx/e2e/utils';
+import {
+  cleanupProject,
+  killProcessAndPorts,
+  newProject,
+  runCLI,
+  runCommandUntil,
+  uniq,
+} from '@nx/e2e/utils';
+import { ChildProcess } from 'child_process';
 
 const myApp = uniq('my-app');
 const myVueApp = uniq('my-vue-app');
@@ -45,5 +53,26 @@ describe('@nx/vite/plugin', () => {
       const result = runCLI(`test ${myVueApp}`);
       expect(result).toContain('Successfully ran target test');
     }, 200_000);
+  });
+
+  it('should run serve-static', async () => {
+    let process: ChildProcess;
+    const port = 8081;
+
+    try {
+      process = await runCommandUntil(
+        `serve-static ${myApp} --port=${port}`,
+        (output) => {
+          return output.includes(`http://localhost:${port}`);
+        }
+      );
+    } catch (err) {
+      console.error(err);
+    }
+
+    // port and process cleanup
+    if (process && process.pid) {
+      await killProcessAndPorts(process.pid, port);
+    }
   });
 });

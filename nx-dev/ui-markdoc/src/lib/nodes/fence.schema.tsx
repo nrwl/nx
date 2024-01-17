@@ -1,7 +1,7 @@
 import { Schema, Tag } from '@markdoc/markdoc';
 
 export const fence: Schema = {
-  render: 'Fence',
+  render: 'FenceWrapper',
   attributes: {
     content: { type: 'String', render: false, required: true },
     language: { type: 'String' },
@@ -18,6 +18,6 @@ export const fence: Schema = {
     const children = node.children.length
       ? node.transformChildren(config)
       : [node.attributes['content']];
-    return new Tag('Fence', attributes, children);
+    return new Tag('FenceWrapper', attributes, children);
   },
 };

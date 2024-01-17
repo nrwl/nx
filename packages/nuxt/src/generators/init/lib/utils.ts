@@ -1,48 +1,23 @@
 import {
   addDependenciesToPackageJson,
-  PluginConfiguration,
   readNxJson,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import {
-  nxVersion,
-  nuxtDevtoolsVersion,
-  nuxtVersion,
-  h3Version,
-  nuxtUiTemplatesVersion,
-} from '../../../utils/versions';
-import {
-  lessVersion,
-  sassVersion,
-  vueRouterVersion,
-  vueVersion,
-  vueTscVersion,
-} from '@nx/vue';
+import { nuxtVersion, nxVersion } from '../../../utils/versions';
 import { InitSchema } from '../schema';
 
 export function updateDependencies(host: Tree, schema: InitSchema) {
-  let devDependencies: { [key: string]: string } = {
-    '@nx/nuxt': nxVersion,
-    '@nx/vite': nxVersion, // needed for the nxViteTsPaths plugin and @nx/vite/plugin
-    '@nuxt/devtools': nuxtDevtoolsVersion,
-    '@nuxt/kit': nuxtVersion,
-    '@nuxt/ui-templates': nuxtUiTemplatesVersion,
-    nuxi: nuxtVersion,
-    nuxt: nuxtVersion,
-    h3: h3Version,
-    vue: vueVersion,
-    'vue-router': vueRouterVersion,
-    'vue-tsc': vueTscVersion,
-  };
-
-  if (schema.style === 'scss') {
-    devDependencies['sass'] = sassVersion;
-  } else if (schema.style === 'less') {
-    devDependencies['less'] = lessVersion;
-  }
-
-  return addDependenciesToPackageJson(host, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    host,
+    {},
+    {
+      '@nx/nuxt': nxVersion,
+      nuxi: nuxtVersion,
+    },
+    undefined,
+    schema.keepExistingVersions
+  );
 }
 
 export function addVitestTargetDefaults(tree: Tree) {

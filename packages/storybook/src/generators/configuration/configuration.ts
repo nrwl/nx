@@ -8,6 +8,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import { cypressProjectGenerator } from '../cypress-project/cypress-project';
 import { StorybookConfigureSchema } from './schema';
@@ -19,6 +20,7 @@ import {
   addStaticTarget,
   addStorybookTarget,
   addStorybookToNamedInputs,
+  addStorybookToTargetDefaults,
   configureTsProjectConfig,
   configureTsSolutionConfig,
   createProjectStorybookDir,
@@ -44,6 +46,8 @@ import {
   tsNodeVersion,
 } from '../../utils/versions';
 import { interactionTestsDependencies } from './lib/interaction-testing.utils';
+import { ensureDependencies } from './lib/ensure-dependencies';
+import { editRootTsConfig } from './lib/edit-root-tsconfig';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -63,7 +67,9 @@ export async function configurationGenerator(
   );
   const { compiler } = findStorybookAndBuildTargetsAndCompiler(targets);
 
-  const viteConfigFilePath = findViteConfig(tree, root);
+  const viteConfig = findViteConfig(tree, root);
+  const viteConfigFilePath = viteConfig?.fullConfigPath;
+  const viteConfigFileName = viteConfig?.viteConfigFileName;
   const nextConfigFilePath = findNextConfig(tree, root);
 
   if (viteConfigFilePath) {
@@ -87,11 +93,16 @@ export async function configurationGenerator(
     schema.uiFramework = '@storybook/nextjs';
   }
 
-  const initTask = await initGenerator(tree, {
-    uiFramework: schema.uiFramework,
-    js: schema.js,
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    skipFormat: true,
   });
+  tasks.push(jsInitTask);
+  const initTask = await initGenerator(tree, { skipFormat: true });
   tasks.push(initTask);
+  tasks.push(ensureDependencies(tree, { uiFramework: schema.uiFramework }));
+
+  editRootTsConfig(tree);
 
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
@@ -105,7 +116,8 @@ export async function configurationGenerator(
       ? 'components'
       : 'src';
 
-  const usesVite = !!viteConfigFilePath || schema.uiFramework.endsWith('-vite');
+  const usesVite =
+    !!viteConfigFilePath || schema.uiFramework?.endsWith('-vite');
 
   createProjectStorybookDir(
     tree,
@@ -121,7 +133,9 @@ export async function configurationGenerator(
     !!nextConfigFilePath,
     compiler === 'swc',
     usesVite,
-    viteConfigFilePath
+    viteConfigFilePath,
+    hasPlugin,
+    viteConfigFileName
   );
 
   if (schema.uiFramework !== '@storybook/angular') {
@@ -140,6 +154,9 @@ export async function configurationGenerator(
 
   addBuildStorybookToCacheableOperations(tree);
   addStorybookToNamedInputs(tree);
+  if (!hasPlugin) {
+    addStorybookToTargetDefaults(tree);
+  }
 
   let devDeps = {};
 
@@ -210,7 +227,7 @@ export async function configurationGenerator(
     devDeps['core-js'] = coreJsVersion;
   }
 
-  if (schema.uiFramework.endsWith('-vite') && !viteConfigFilePath) {
+  if (schema.uiFramework?.endsWith('-vite') && !viteConfigFilePath) {
     // This means that the user has selected a Vite framework
     // but the project does not have Vite configuration.
     // We need to install the @nx/vite plugin in order to be able to use

@@ -80,7 +80,6 @@ jobs:
     executor: linux
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-      NX_VERBOSE_LOGGING: 'true'
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
       NX_NATIVE_LOGGING: 'false'
@@ -88,7 +87,7 @@ jobs:
       NX_CI_EXECUTION_ENV: 'linux'
     steps:
       - checkout
-      - run: npx nx-cloud@next start-ci-run --distributes-on="8 linux-medium" --stop-agents-after="e2e" --with-env-vars="auto"
+      - run: npx nx-cloud@next start-ci-run --distributes-on="8 linux-medium" --stop-agents-after="e2e"
       - run:
           command: |
             sudo apt-get update
@@ -160,6 +159,11 @@ jobs:
           name: Run E2E Tests for macOS
           command: |
             pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+          no_output_timeout: 45m
+      - run:
+          name: Close CI group
+          command: |
+            pnpm nx-cloud stop-all-agents
           no_output_timeout: 45m
 
 # -------------------------
