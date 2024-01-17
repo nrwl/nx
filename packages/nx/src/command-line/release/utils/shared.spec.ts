@@ -11,6 +11,7 @@ describe('shared', () => {
             projectsRelationship: 'independent',
             projects: ['foo'], // single project, will get flattened in the final commit message
             version: {
+              conventionalCommits: false,
               generator: '@nx/js:version',
               generatorOptions: {},
             },
@@ -22,6 +23,7 @@ describe('shared', () => {
             projectsRelationship: 'fixed',
             projects: ['bar', 'baz'],
             version: {
+              conventionalCommits: false,
               generator: '@nx/js:version',
               generatorOptions: {},
             },
@@ -82,6 +84,7 @@ describe('shared', () => {
               'node',
             ],
             version: {
+              conventionalCommits: true,
               generator: '@nx/js:release-version',
               generatorOptions: {
                 specifierSource: 'conventional-commits',
