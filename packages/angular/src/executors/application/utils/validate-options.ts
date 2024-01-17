@@ -18,6 +18,12 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
     );
   }
 
+  if (options.indexHtmlTransformer && lt(angularVersion, '17.1.0-rc.0')) {
+    throw new Error(
+      `The "indexHtmlTransformer" option requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`
+    );
+  }
+
   if (
     typeof options.index === 'object' &&
     options.index.preloadInitial !== undefined &&
