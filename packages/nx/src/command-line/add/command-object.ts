@@ -16,7 +16,7 @@ export const yargsAddCommand: CommandModule<
       .positional('packageSpecifier', {
         type: 'string',
         description:
-          'The package name and optional version (e.g. `@nx/react` or `@nx/react@latest`) to install and initialize',
+          'The package name and optional version (e.g. `@nx/react` or `@nx/react@latest`) to install and initialize. If the version is not specified it will install the same version as the `nx` package for Nx core plugins or the latest version for other packages',
       })
       .option('verbose', {
         type: 'boolean',
@@ -26,6 +26,10 @@ export const yargsAddCommand: CommandModule<
       .example(
         '$0 add @nx/react',
         'Install the latest version of the `@nx/react` package and run its `@nx/react:init` generator'
+      )
+      .example(
+        '$0 add non-core-nx-plugin',
+        'Install the latest version of the `non-core-nx-plugin` package and run its `non-core-nx-plugin:init` generator if available'
       )
       .example(
         '$0 add @nx/react@17.0.0',

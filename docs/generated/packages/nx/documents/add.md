@@ -47,7 +47,7 @@ Show help
 
 Type: `string`
 
-The package name and optional version (e.g. `@nx/react` or `@nx/react@latest`) to install and initialize
+The package name and optional version (e.g. `@nx/react` or `@nx/react@latest`) to install and initialize. If the version is not specified it will install the same version as the `nx` package for Nx core plugins or the latest version for other packages
 
 ### verbose
 
