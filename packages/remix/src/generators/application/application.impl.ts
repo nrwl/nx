@@ -36,6 +36,7 @@ import { NxRemixGeneratorSchema } from './schema';
 import { updateDependencies } from '../utils/update-dependencies';
 import initGenerator from '../init/init';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
   const options = await normalizeOptions(tree, _options);
@@ -43,6 +44,8 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
     await initGenerator(tree, { skipFormat: true }),
     await jsInitGenerator(tree, { skipFormat: true }),
   ];
+
+  addBuildTargetDefaults(tree, '@nx/remix:build');
 
   addProjectConfiguration(tree, options.projectName, {
     root: options.projectRoot,

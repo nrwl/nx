@@ -20,6 +20,7 @@ import {
   addStaticTarget,
   addStorybookTarget,
   addStorybookToNamedInputs,
+  addStorybookToTargetDefaults,
   configureTsProjectConfig,
   configureTsSolutionConfig,
   createProjectStorybookDir,
@@ -153,6 +154,9 @@ export async function configurationGenerator(
 
   addBuildStorybookToCacheableOperations(tree);
   addStorybookToNamedInputs(tree);
+  if (!hasPlugin) {
+    addStorybookToTargetDefaults(tree);
+  }
 
   let devDeps = {};
 

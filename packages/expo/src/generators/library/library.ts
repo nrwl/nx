@@ -32,6 +32,7 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -143,6 +144,8 @@ async function addProject(
   });
 
   const external = ['react/jsx-runtime', 'react-native', 'react', 'react-dom'];
+
+  addBuildTargetDefaults(host, '@nx/rollup:rollup');
 
   project.targets.build = {
     executor: '@nx/rollup:rollup',
