@@ -28,10 +28,6 @@
     "project": {
       "type": "string",
       "description": "The name of the project.",
-      "$default": {
-        "$source": "projectName"
-      },
-      "x-prompt": "What project is this route in?",
       "pattern": "^[a-zA-Z].*$",
       "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v18."
     }

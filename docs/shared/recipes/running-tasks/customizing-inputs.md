@@ -172,7 +172,7 @@ Here's how we could define that, starting from our default situation:
 {
   "namedInputs": {
     "default": ["{projectRoot}/**/*"],
-    "production": ["default", "!{projectRoot}/**/?(*.)+spec.ts"]
+    "production": ["default", "!{projectRoot}/**/?(*.)+(spec|test).ts"]
   },
   "targetDefaults": {
     "build": {

@@ -1,0 +1,20 @@
+{
+  "name": "shared-ui-fence",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/shared-ui-fence/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "nx-dev/shared-ui-fence/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

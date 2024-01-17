@@ -1,9 +1,19 @@
+jest.mock('../../utils/remix-config');
+import * as remixConfigUtils from '../../utils/remix-config';
+
 import { addProjectConfiguration } from '@nx/devkit';
 import { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import errorBoundaryGenerator from './error-boundary.impl';
 
 describe('ErrorBoundary', () => {
+  beforeEach(() => {
+    (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
+      Promise.resolve({
+        ignoredRouteFiles: ['**/.*'],
+      })
+    );
+  });
   describe.each([
     ['derived', 'app/routes/test.tsx', 'demo'],
     ['as-provided', 'app/routes/test.tsx', ''],
@@ -26,7 +36,7 @@ describe('ErrorBoundary', () => {
           });
           const routeFilePath = `app/routes/test.tsx`;
           tree.write(routeFilePath, ``);
-          tree.write('remix.config.cjs', `module.exports = {}`);
+          tree.write('remix.config.js', `module.exports = {}`);
 
           // ACT
           await errorBoundaryGenerator(tree, {
@@ -50,7 +60,7 @@ describe('ErrorBoundary', () => {
           });
           const routeFilePath = `app/routes/test.tsx`;
           tree.write(routeFilePath, ``);
-          tree.write('remix.config.cjs', `module.exports = {}`);
+          tree.write('remix.config.js', `module.exports = {}`);
 
           // ACT & ASSERT
           await expect(

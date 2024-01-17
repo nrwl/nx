@@ -21,7 +21,7 @@ describe('setup-tailwind generator', () => {
     expect(tree.exists('app/tailwind.css')).toBeTruthy();
     expect(tree.read('app/tailwind.css', 'utf-8')).toMatchSnapshot();
     expect(tree.read('app/root.tsx', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('remix.config.cjs', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
     expect(
       readJson(tree, 'package.json').dependencies['tailwindcss']
     ).toBeTruthy();
@@ -45,7 +45,7 @@ describe('setup-tailwind generator', () => {
     expect(tree.exists('app/tailwind.css')).toBeTruthy();
     expect(tree.read('app/tailwind.css', 'utf-8')).toMatchSnapshot();
     expect(tree.read('app/root.js', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('remix.config.cjs', 'utf-8')).toMatchSnapshot();
+    expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
     expect(
       readJson(tree, 'package.json').dependencies['tailwindcss']
     ).toBeTruthy();
