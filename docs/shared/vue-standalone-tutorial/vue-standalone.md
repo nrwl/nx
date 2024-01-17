@@ -30,7 +30,7 @@ Create a new Vue application with the following command:
 
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Enable remote caching to make your CI faster · Yes
 
  >  NX   Creating your v17.0.0 workspace.
 
@@ -835,8 +835,8 @@ Here's some more things you can dive into next:
 
 - Learn more about the [underlying mental model of Nx](/concepts/mental-model)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/nx-cloud/features/remote-cache)
-- [Speed up CI: Distribute your tasks across machines](/nx-cloud/features/distribute-task-execution)
+- [Speed up CI: Share your cache](/ci/features/remote-cache)
+- [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you
 

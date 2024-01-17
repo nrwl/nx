@@ -54,7 +54,7 @@ export const parserConfiguration: Partial<yargs.ParserConfigurationOptions> = {
  */
 export const commandsObject = yargs
   .parserConfiguration(parserConfiguration)
-  .usage(chalk.bold('Smart, Fast and Extensible Build System'))
+  .usage(chalk.bold('Smart Monorepos · Fast CI'))
   .demandCommand(1, '')
   .command(yargsAffectedBuildCommand)
   .command(yargsAffectedCommand)

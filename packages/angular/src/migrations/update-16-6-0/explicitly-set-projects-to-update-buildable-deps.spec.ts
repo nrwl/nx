@@ -12,6 +12,7 @@ let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
+  formatFiles: jest.fn(),
 }));
 
 describe('explicitly-set-projects-to-update-buildable-deps migration', () => {

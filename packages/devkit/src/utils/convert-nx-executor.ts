@@ -32,7 +32,7 @@ export function convertNxExecutor(executor: Executor) {
               projects: await retrieveProjectConfigurationsWithAngularProjects(
                 builderContext.workspaceRoot,
                 nxJsonConfiguration
-              ).then((p) => p.projectNodes),
+              ).then((p) => (p as any).projectNodes ?? p.projects),
             }
           : // TODO(v18): remove retrieveProjectConfigurations. This is to be backwards compatible with Nx 16.5 and below.
             (workspaces as any).readProjectsConfigurations({

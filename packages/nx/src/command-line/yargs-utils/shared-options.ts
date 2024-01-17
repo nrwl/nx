@@ -224,9 +224,24 @@ export function withOverrides<T extends { _: Array<string | number> }>(
   };
 }
 
+const allOutputStyles = [
+  'dynamic',
+  'static',
+  'stream',
+  'stream-without-prefixes',
+  'compact',
+] as const;
+
+export type OutputStyle = typeof allOutputStyles[number];
+
 export function withOutputStyleOption(
   yargs: Argv,
-  choices = ['dynamic', 'static', 'stream', 'stream-without-prefixes']
+  choices: ReadonlyArray<OutputStyle> = [
+    'dynamic',
+    'static',
+    'stream',
+    'stream-without-prefixes',
+  ]
 ) {
   return yargs.option('output-style', {
     describe: 'Defines how Nx emits outputs tasks logs',
@@ -295,13 +310,7 @@ export function withRunOneOptions(yargs: Argv) {
   );
 
   const res = withRunOptions(
-    withOutputStyleOption(withConfiguration(yargs), [
-      'dynamic',
-      'static',
-      'stream',
-      'stream-without-prefixes',
-      'compact',
-    ])
+    withOutputStyleOption(withConfiguration(yargs), allOutputStyles)
   )
     .parserConfiguration({
       'strip-dashed': true,

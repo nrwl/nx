@@ -15,7 +15,7 @@ import { toMarkdown } from 'mdast-util-to-markdown';
 import { toString } from 'mdast-util-to-string';
 import { u } from 'unist-builder';
 import mapJson from '../../../../docs/map.json' assert { type: 'json' };
-import manifestsCloud from '../../../../docs/generated/manifests/cloud.json' assert { type: 'json' };
+import manifestsCI from '../../../../docs/generated/manifests/ci.json' assert { type: 'json' };
 import manifestsExtending from '../../../../docs/generated/manifests/extending-nx.json' assert { type: 'json' };
 import manifestsNx from '../../../../docs/generated/manifests/nx.json' assert { type: 'json' };
 import manifestsPackages from '../../../../docs/generated/manifests/nx-api.json' assert { type: 'json' };
@@ -195,7 +195,7 @@ async function generateEmbeddings() {
   allFilesPaths = [
     ...allFilesPaths,
     ...getAllFilesFromMapJson(mapJson),
-    ...getAllFilesWithItemList(manifestsCloud),
+    ...getAllFilesWithItemList(manifestsCI),
     ...getAllFilesWithItemList(manifestsExtending),
     ...getAllFilesWithItemList(manifestsPackages),
     ...getAllFilesWithItemList(manifestsTags),

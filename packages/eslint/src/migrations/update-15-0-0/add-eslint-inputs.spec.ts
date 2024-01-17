@@ -6,7 +6,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import addEslintInputs from './add-eslint-inputs';
-import { eslintConfigFileWhitelist } from '../../generators/utils/eslint-file';
+import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
 
 describe('15.0.0 migration (add-eslint-inputs)', () => {
   let tree: Tree;
@@ -41,7 +41,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
       });
     });
 
-    test.each(eslintConfigFileWhitelist)(
+    test.each(ESLINT_CONFIG_FILENAMES)(
       'should ignore %p for production',
       async (eslintConfigFilename) => {
         tree.write(eslintConfigFilename, '{}');
@@ -57,7 +57,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
       }
     );
 
-    test.each(eslintConfigFileWhitelist)(
+    test.each(ESLINT_CONFIG_FILENAMES)(
       'should add %p to all lint targets',
       async (eslintConfigFilename) => {
         tree.write(eslintConfigFilename, '{}');
@@ -95,7 +95,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
       });
     });
 
-    test.each(eslintConfigFileWhitelist)(
+    test.each(ESLINT_CONFIG_FILENAMES)(
       'should not add `!{projectRoot}/%s` if `workspaceConfiguration.namedInputs` is undefined',
       async (eslintConfigFilename) => {
         tree.write(eslintConfigFilename, '{}');
@@ -108,7 +108,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
       }
     );
 
-    test.each(eslintConfigFileWhitelist)(
+    test.each(ESLINT_CONFIG_FILENAMES)(
       'should not add `!{projectRoot}/%s` if `workspaceConfiguration.namedInputs.production` is undefined',
       async (eslintConfigFilename) => {
         updateNxJson(tree, {
@@ -148,7 +148,7 @@ describe('15.0.0 migration (add-eslint-inputs)', () => {
       });
     });
 
-    test.each(eslintConfigFileWhitelist)(
+    test.each(ESLINT_CONFIG_FILENAMES)(
       'should not override `targetDefaults.lint.inputs` with `%s` as there was a default target set in the workspace config',
       async (eslintConfigFilename) => {
         updateNxJson(tree, {

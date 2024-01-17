@@ -5,7 +5,5 @@ import { Directive } from '@angular/core';
   standalone: true<%}%>
 })
 export class <%= symbolName %> {
-
-  constructor() { }
-
+  constructor() {}
 }

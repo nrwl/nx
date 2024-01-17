@@ -4,6 +4,7 @@ export interface GeneratorOptions {
   library: string;
   name: string;
   skipModule?: boolean;
+  skipFormat?: boolean;
 }
 
 export interface NormalizedGeneratorOptions extends GeneratorOptions {

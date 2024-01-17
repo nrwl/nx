@@ -18,7 +18,10 @@ describe('React Cypress Component Tests', () => {
   const buildableLibName = uniq('cy-react-buildable-lib');
 
   beforeAll(async () => {
-    projectName = newProject({ name: uniq('cy-react') });
+    projectName = newProject({
+      name: uniq('cy-react'),
+      packages: ['@nx/react'],
+    });
     ensureCypressInstallation();
 
     runCLI(

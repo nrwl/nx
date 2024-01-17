@@ -101,6 +101,22 @@
       "description": "Configuration for the nx release commands.",
       "additionalProperties": false,
       "properties": {
+        "projects": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "A project name"
+            },
+            {
+              "type": "array",
+              "description": "An array of project names",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
         "groups": {
           "type": "object",
           "additionalProperties": {
@@ -113,14 +129,16 @@
               "projects": {
                 "oneOf": [
                   {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "minItems": 1
+                    "type": "string",
+                    "description": "A project name"
                   },
                   {
-                    "type": "string"
+                    "type": "array",
+                    "description": "An array of project names",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 ]
               },
@@ -146,8 +164,7 @@
                     "$ref": "#/definitions/NxReleaseChangelogConfiguration"
                   },
                   {
-                    "type": "boolean",
-                    "enum": [false]
+                    "type": "boolean"
                   }
                 ]
               },
@@ -167,8 +184,7 @@
                   "$ref": "#/definitions/NxReleaseChangelogConfiguration"
                 },
                 {
-                  "type": "boolean",
-                  "enum": [false]
+                  "type": "boolean"
                 }
               ]
             },
@@ -178,8 +194,7 @@
                   "$ref": "#/definitions/NxReleaseChangelogConfiguration"
                 },
                 {
-                  "type": "boolean",
-                  "enum": [false]
+                  "type": "boolean"
                 }
               ]
             }
@@ -424,6 +439,7 @@
                       {
                         "type": "array",
                         "description": "An array of project names",
+                        "minItems": 1,
                         "items": {
                           "type": "string"
                         }

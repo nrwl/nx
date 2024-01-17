@@ -2,22 +2,24 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
+  detectPackageManager,
+  NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, extname, join } from 'path';
+import { dirname, extname, join, relative } from 'path';
 import { registerTsProject } from '@nx/js/src/internal';
 
-import { getRootTsConfigPath } from '@nx/js';
+import { getLockFileName, getRootTsConfigPath } from '@nx/js';
 
 import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
+import { NX_PLUGIN_OPTIONS } from '../utils/symbols';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
@@ -69,7 +71,9 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
       return {};
     }
 
-    const hash = calculateHashForCreateNodes(projectRoot, options, context);
+    const hash = calculateHashForCreateNodes(projectRoot, options, context, [
+      getLockFileName(detectPackageManager(context.workspaceRoot)),
+    ]);
 
     const targets = targetsCache[hash]
       ? targetsCache[hash]
@@ -102,7 +106,7 @@ function getOutputs(
   }
 
   const { screenshotsFolder, videosFolder, e2e, component } = cypressConfig;
-  const outputs = ['{options.videosFolder}', '{options.screenshotsFolder}'];
+  const outputs = [];
 
   if (videosFolder) {
     outputs.push(getOutput(videosFolder));
@@ -135,6 +139,7 @@ function getOutputs(
 
   return outputs;
 }
+
 function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
@@ -143,81 +148,47 @@ function buildCypressTargets(
 ) {
   const cypressConfig = getCypressConfig(configFilePath, context);
 
-  const namedInputs = getNamedInputs(projectRoot, context);
-
-  const baseTargetConfig: TargetConfiguration<CypressExecutorOptions> = {
-    executor: '@nx/cypress:cypress',
-    options: {
-      cypressConfig: configFilePath,
-    },
+  const pluginPresetOptions = {
+    ...cypressConfig.e2e?.[NX_PLUGIN_OPTIONS],
+    ...cypressConfig.env,
+    ...cypressConfig.e2e?.env,
   };
 
-  const targets: Record<
-    string,
-    TargetConfiguration<CypressExecutorOptions>
-  > = {};
+  const webServerCommands: Record<string, string> =
+    pluginPresetOptions?.webServerCommands;
+
+  const relativeConfigPath = relative(projectRoot, configFilePath);
+
+  const namedInputs = getNamedInputs(projectRoot, context);
+
+  const targets: Record<string, TargetConfiguration> = {};
 
   if ('e2e' in cypressConfig) {
-    const e2eTargetDefaults = readTargetDefaultsForTarget(
-      options.targetName,
-      context.nxJsonConfiguration.targetDefaults,
-      '@nx/cypress:cypress'
-    );
-
     targets[options.targetName] = {
-      ...baseTargetConfig,
-      options: {
-        ...baseTargetConfig.options,
-        testingType: 'e2e',
-      },
+      command: `cypress run --config-file ${relativeConfigPath} --e2e`,
+      options: { cwd: projectRoot },
+      cache: true,
+      inputs: getInputs(namedInputs),
+      outputs: getOutputs(projectRoot, cypressConfig, 'e2e'),
     };
 
-    if (e2eTargetDefaults?.cache === undefined) {
-      targets[options.targetName].cache = true;
+    if (webServerCommands?.default) {
+      delete webServerCommands.default;
     }
 
-    if (e2eTargetDefaults?.inputs === undefined) {
-      targets[options.targetName].inputs =
-        'production' in namedInputs
-          ? ['default', '^production']
-          : ['default', '^default'];
-    }
-
-    if (e2eTargetDefaults?.outputs === undefined) {
-      targets[options.targetName].outputs = getOutputs(
-        projectRoot,
-        cypressConfig,
-        'e2e'
-      );
-    }
-
-    const cypressEnv = {
-      ...cypressConfig.env,
-      ...cypressConfig.e2e?.env,
-    };
-
-    const devServerTargets: Record<string, string> =
-      cypressEnv?.devServerTargets;
-
-    if (devServerTargets?.default) {
-      targets[options.targetName].options.devServerTarget =
-        devServerTargets.default;
-      delete devServerTargets.default;
-    }
-
-    if (Object.keys(devServerTargets ?? {}).length > 0) {
+    if (Object.keys(webServerCommands ?? {}).length > 0) {
       targets[options.targetName].configurations ??= {};
-      for (const [configuration, devServerTarget] of Object.entries(
-        devServerTargets ?? {}
+      for (const [configuration, webServerCommand] of Object.entries(
+        webServerCommands ?? {}
       )) {
         targets[options.targetName].configurations[configuration] = {
-          devServerTarget,
+          command: `cypress run --config-file ${relativeConfigPath} --e2e --env webServerCommand="${webServerCommand}"`,
         };
       }
     }
 
-    const ciDevServerTarget: string = cypressEnv?.ciDevServerTarget;
-    if (ciDevServerTarget) {
+    const ciWebServerCommand: string = pluginPresetOptions?.ciWebServerCommand;
+    if (ciWebServerCommand) {
       const specPatterns = Array.isArray(cypressConfig.e2e.specPattern)
         ? cypressConfig.e2e.specPattern.map((p) => join(projectRoot, p))
         : [join(projectRoot, cypressConfig.e2e.specPattern)];
@@ -236,22 +207,17 @@ function buildCypressTargets(
 
       const dependsOn: TargetConfiguration['dependsOn'] = [];
       const outputs = getOutputs(projectRoot, cypressConfig, 'e2e');
-      const inputs =
-        'production' in namedInputs
-          ? ['default', '^production']
-          : ['default', '^default'];
+      const inputs = getInputs(namedInputs);
       for (const file of specFiles) {
-        const targetName = options.ciTargetName + '--' + file;
+        const relativeSpecFilePath = relative(projectRoot, file);
+        const targetName = options.ciTargetName + '--' + relativeSpecFilePath;
         targets[targetName] = {
-          ...targets[options.targetName],
           outputs,
           inputs,
           cache: true,
-          configurations: undefined,
+          command: `cypress run --config-file ${relativeConfigPath} --e2e --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath}`,
           options: {
-            ...targets[options.targetName].options,
-            devServerTarget: ciDevServerTarget,
-            spec: file,
+            cwd: projectRoot,
           },
         };
         dependsOn.push({
@@ -273,39 +239,14 @@ function buildCypressTargets(
   }
 
   if ('component' in cypressConfig) {
-    const componentTestingTargetDefaults = readTargetDefaultsForTarget(
-      options.componentTestingTargetName,
-      context.nxJsonConfiguration.targetDefaults,
-      '@nx/cypress:cypress'
-    );
-
     // This will not override the e2e target if it is the same
     targets[options.componentTestingTargetName] ??= {
-      ...baseTargetConfig,
-      options: {
-        ...baseTargetConfig.options,
-        testingType: 'component',
-      },
+      command: `cypress open --config-file ${relativeConfigPath} --component`,
+      options: { cwd: projectRoot },
+      cache: true,
+      inputs: getInputs(namedInputs),
+      outputs: getOutputs(projectRoot, cypressConfig, 'component'),
     };
-
-    if (componentTestingTargetDefaults?.cache === undefined) {
-      targets[options.componentTestingTargetName].cache = true;
-    }
-
-    if (componentTestingTargetDefaults?.inputs === undefined) {
-      targets[options.componentTestingTargetName].inputs =
-        'production' in namedInputs
-          ? ['default', '^production']
-          : ['default', '^default'];
-    }
-
-    if (componentTestingTargetDefaults?.outputs === undefined) {
-      targets[options.componentTestingTargetName].outputs = getOutputs(
-        projectRoot,
-        cypressConfig,
-        'component'
-      );
-    }
   }
 
   return targets;
@@ -324,15 +265,15 @@ function getCypressConfig(
     if (tsConfigPath) {
       const unregisterTsProject = registerTsProject(tsConfigPath);
       try {
-        module = require(resolvedPath);
+        module = load(resolvedPath);
       } finally {
         unregisterTsProject();
       }
     } else {
-      module = require(resolvedPath);
+      module = load(resolvedPath);
     }
   } else {
-    module = require(resolvedPath);
+    module = load(resolvedPath);
   }
   return module.default ?? module;
 }
@@ -343,4 +284,41 @@ function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
   options.componentTestingTargetName ??= 'component-test';
   options.ciTargetName ??= 'e2e-ci';
   return options;
+}
+
+function getInputs(
+  namedInputs: NxJsonConfiguration['namedInputs']
+): TargetConfiguration['inputs'] {
+  return [
+    ...('production' in namedInputs
+      ? ['default', '^production']
+      : ['default', '^default']),
+
+    {
+      externalDependencies: ['cypress'],
+    },
+  ];
+}
+
+/**
+ * Load the module after ensuring that the require cache is cleared.
+ */
+const packageInstallationDirectories = ['node_modules', '.yarn'];
+
+function load(path: string): any {
+  // Clear cache if the path is in the cache
+  if (require.cache[path]) {
+    for (const k of Object.keys(require.cache)) {
+      // We don't want to clear the require cache of installed packages.
+      // Clearing them can cause some issues when running Nx without the daemon
+      // and may cause issues for other packages that use the module state
+      // in some to store cached information.
+      if (!packageInstallationDirectories.some((dir) => k.includes(dir))) {
+        delete require.cache[k];
+      }
+    }
+  }
+
+  // Then require
+  return require(path);
 }

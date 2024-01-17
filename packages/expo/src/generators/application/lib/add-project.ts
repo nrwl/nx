@@ -2,17 +2,23 @@ import {
   addProjectConfiguration,
   offsetFromRoot,
   ProjectConfiguration,
+  readNxJson,
   TargetConfiguration,
   Tree,
 } from '@nx/devkit';
+
+import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
+  const nxJson = readNxJson(host);
+  const hasPlugin = hasExpoPlugin(host);
+
   const projectConfiguration: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: `${options.appProjectRoot}/src`,
     projectType: 'application',
-    targets: { ...getTargets(options) },
+    targets: hasPlugin ? {} : getTargets(options),
     tags: options.parsedTags,
   };
 

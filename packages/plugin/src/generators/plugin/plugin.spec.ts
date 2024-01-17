@@ -70,13 +70,6 @@ describe('NxPlugin Plugin Generator', () => {
     });
     expect(project.targets.lint).toEqual({
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
-      options: {
-        lintFilePatterns: expect.arrayContaining([
-          'libs/my-plugin/**/*.ts',
-          'libs/my-plugin/package.json',
-        ]),
-      },
     });
     expect(project.targets.test).toEqual({
       executor: '@nx/jest:jest',

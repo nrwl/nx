@@ -1,0 +1,54 @@
+{
+  "generators": {},
+  "packageJsonUpdates": {
+    "17.2.1": {
+      "version": "17.2.1-beta.0",
+      "packages": {
+        "@remix-run/node": {
+          "version": "^2.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/react": {
+          "version": "^2.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/serve": {
+          "version": "^2.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/dev": {
+          "version": "^2.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/css-bundle": {
+          "version": "^2.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@remix-run/eslint-config": {
+          "version": "^2.3.0",
+          "alwaysAddToPackageJson": true
+        },
+        "isbot": {
+          "version": "^3.6.8",
+          "alwaysAddToPackageJson": true
+        },
+        "eslint": {
+          "version": "^8.38.0",
+          "alwaysAddToPackageJson": true
+        },
+        "@testing-library/react": {
+          "version": "^14.1.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/jest-dom": {
+          "version": "^6.1.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/user-event": {
+          "version": "^14.5.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    }
+  }
+}

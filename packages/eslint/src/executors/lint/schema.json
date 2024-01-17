@@ -17,7 +17,7 @@
     "lintFilePatterns": {
       "type": "array",
       "description": "One or more files/dirs/globs to pass directly to ESLint's `lintFiles()` method.",
-      "default": [],
+      "default": ["{projectRoot}"],
       "items": {
         "type": "string"
       }
@@ -144,6 +144,5 @@
       "default": true
     }
   },
-  "required": ["lintFilePatterns"],
   "examplesFile": "../../../docs/eslint-examples.md"
 }

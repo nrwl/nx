@@ -32,6 +32,16 @@
       "version": "17.1.0-beta.1",
       "description": "Updates for @typescript-utils/utils v6.9.1+",
       "implementation": "./src/migrations/update-17-1-0/update-typescript-eslint"
+    },
+    "simplify-eslint-patterns": {
+      "version": "17.2.0-beta.0",
+      "description": "Simplify eslintFilePatterns",
+      "implementation": "./src/migrations/update-17-2-0/simplify-eslint-patterns"
+    },
+    "move-options-to-target-defaults": {
+      "version": "17.2.9",
+      "description": "Move executor options to target defaults",
+      "implementation": "./src/migrations/update-17-2-9/move-options-to-target-defaults"
     }
   },
   "packageJsonUpdates": {
@@ -99,6 +109,28 @@
         },
         "@typescript-eslint/utils": {
           "version": "^6.9.1"
+        }
+      }
+    },
+    "17.2.0": {
+      "version": "17.2.0-beta.2",
+      "packages": {
+        "eslint": {
+          "version": "~8.48.0"
+        }
+      }
+    },
+    "17.3.0": {
+      "version": "17.3.0-beta.0",
+      "packages": {
+        "@typescript-eslint/parser": {
+          "version": "^6.13.2"
+        },
+        "@typescript-eslint/eslint-plugin": {
+          "version": "^6.13.2"
+        },
+        "@typescript-eslint/utils": {
+          "version": "^6.13.2"
         }
       }
     }

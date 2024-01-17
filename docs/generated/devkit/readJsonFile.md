@@ -1,6 +1,6 @@
 # Function: readJsonFile
 
-▸ **readJsonFile**<`T`\>(`path`, `options?`): `T`
+▸ **readJsonFile**\<`T`\>(`path`, `options?`): `T`
 
 Reads a JSON file and returns the object the JSON content represents.
 

@@ -19,7 +19,8 @@ export async function handleRequestProjectGraph(): Promise<HandlerResult> {
 
     const serializedResult = serializeResult(
       result.error,
-      result.serializedProjectGraph
+      result.serializedProjectGraph,
+      result.serializedSourceMaps
     );
     if (!serializedResult) {
       return {

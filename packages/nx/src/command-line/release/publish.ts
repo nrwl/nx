@@ -19,13 +19,28 @@ import {
 } from './config/config';
 import { filterReleaseGroups } from './config/filter-release-groups';
 
-export async function publishHandler(
-  args: PublishOptions & { __overrides_unparsed__: string[] }
-): Promise<void> {
+export const releasePublishCLIHandler = (args: PublishOptions) =>
+  releasePublish(args);
+
+/**
+ * NOTE: This function is also exported for programmatic usage and forms part of the public API
+ * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
+ * to have control over their own error handling when using the API.
+ */
+export async function releasePublish(args: PublishOptions): Promise<void> {
+  /**
+   * When used via the CLI, the args object will contain a __overrides_unparsed__ property that is
+   * important for invoking the relevant executor behind the scenes.
+   *
+   * We intentionally do not include that in the function signature, however, so as not to cause
+   * confusing errors for programmatic consumers of this function.
+   */
+  const _args = args as PublishOptions & { __overrides_unparsed__: string[] };
+
   const projectGraph = await createProjectGraphAsync({ exitOnError: true });
   const nxJson = readNxJson();
 
-  if (args.verbose) {
+  if (_args.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
@@ -46,8 +61,8 @@ export async function publishHandler(
   } = filterReleaseGroups(
     projectGraph,
     nxReleaseConfig,
-    args.projects,
-    args.groups
+    _args.projects,
+    _args.groups
   );
   if (filterError) {
     output.error(filterError);
@@ -60,7 +75,7 @@ export async function publishHandler(
      */
     for (const releaseGroup of releaseGroups) {
       await runPublishOnProjects(
-        args,
+        _args,
         projectGraph,
         nxJson,
         Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
@@ -75,14 +90,14 @@ export async function publishHandler(
    */
   for (const releaseGroup of releaseGroups) {
     await runPublishOnProjects(
-      args,
+      _args,
       projectGraph,
       nxJson,
       releaseGroup.projects
     );
   }
 
-  if (args.dryRun) {
+  if (_args.dryRun) {
     logger.warn(
       `\nNOTE: The "dryRun" flag means no projects were actually published.`
     );
@@ -114,6 +129,11 @@ async function runPublishOnProjects(
   }
   if (args.dryRun) {
     overrides.dryRun = args.dryRun;
+    /**
+     * Ensure the env var is set too, so that any and all publish executors triggered
+     * indirectly via dependsOn can also pick up on the fact that this is a dry run.
+     */
+    process.env.NX_DRY_RUN = 'true';
   }
 
   if (args.verbose) {

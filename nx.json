@@ -26,6 +26,11 @@
     ]
   },
   "release": {
+    "projects": [
+      "packages/*",
+      "packages/nx/native-packages/*",
+      "packages-legacy/*"
+    ],
     "releaseTagPattern": "{version}",
     "changelog": {
       "workspaceChangelog": {
@@ -33,19 +38,10 @@
         "file": false
       }
     },
-    "groups": {
-      "npm": {
-        "projects": [
-          "packages/*",
-          "packages/nx/native-packages/*",
-          "packages-legacy/*"
-        ],
-        "version": {
-          "generatorOptions": {
-            "packageRoot": "build/packages/{projectName}",
-            "currentVersionResolver": "registry"
-          }
-        }
+    "version": {
+      "generatorOptions": {
+        "packageRoot": "build/packages/{projectName}",
+        "currentVersionResolver": "registry"
       }
     }
   },
@@ -102,16 +98,7 @@
       ],
       "executor": "@nx/eslint:lint",
       "options": {
-        "lintFilePatterns": [
-          "{projectRoot}/**/*.{ts,tsx,js,jsx}",
-          "{projectRoot}/**/executors/**/schema.json",
-          "{projectRoot}/**/generators/**/schema.json",
-          "{projectRoot}/generators.json",
-          "{projectRoot}/executors.json",
-          "{projectRoot}/package.json",
-          "{projectRoot}/project.json",
-          "{projectRoot}/migrations.json"
-        ]
+        "lintFilePatterns": ["{projectRoot}"]
       },
       "outputs": ["{options.outputFile}"],
       "cache": true
@@ -212,5 +199,6 @@
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "cacheDirectory": "/tmp/nx-cache"
+  "cacheDirectory": "/tmp/nx-cache",
+  "bust": 5
 }

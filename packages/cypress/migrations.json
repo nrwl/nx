@@ -47,16 +47,6 @@
       "version": "16.8.0-beta.4",
       "description": "Update to Cypress v13. Most noteable change is video recording is off by default. This migration will only update if the workspace is already on Cypress v12. https://docs.cypress.io/guides/references/migration-guide#Migrating-to-Cypress-130",
       "implementation": "./src/migrations/update-16-8-0/cypress-13"
-    },
-    "add-nx-metadata": {
-      "version": "17.2.0-beta.0",
-      "description": "Add devServerTargets into cypress.config.ts files for @nx/cypress/plugin",
-      "implementation": "./src/migrations/update-17-2-0/add-dev-server-targets-to-cypress-configs"
-    },
-    "add-nx-cypress-plugin": {
-      "version": "17.2.0-beta.0",
-      "description": "Add the @nx/cypress/plugin to nx.json plugins",
-      "implementation": "./src/migrations/update-17-2-0/add-nx-cypress-plugin"
     }
   },
   "packageJsonUpdates": {
@@ -89,6 +79,24 @@
       "packages": {
         "eslint-plugin-cypress": {
           "version": "^2.13.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.2.0-beta.2": {
+      "version": "17.2.0-beta.2",
+      "packages": {
+        "vite": {
+          "version": "^5.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.3.0": {
+      "version": "17.3.0-beta.3",
+      "packages": {
+        "@types/node": {
+          "version": "18.16.9",
           "alwaysAddToPackageJson": false
         }
       }

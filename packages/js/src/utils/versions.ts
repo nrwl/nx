@@ -7,7 +7,7 @@ export const swcCoreVersion = '~1.3.85';
 export const swcHelpersVersion = '~0.5.2';
 export const swcNodeVersion = '~1.6.7';
 export const tsLibVersion = '^2.3.0';
-export const typesNodeVersion = '18.7.1';
+export const typesNodeVersion = '18.16.9';
 export const verdaccioVersion = '^5.0.4';
 
 // Typescript
@@ -17,4 +17,4 @@ export const typescriptVersion = '~5.2.2';
  * that's supported by the lowest Angular supported version, e.g.
  * `npm view @angular/compiler-cli@14.0.0 peerDependencies.typescript`
  */
-export const supportedTypescriptVersions = '>=4.6.2';
+export const supportedTypescriptVersions = '>=4.8.2';

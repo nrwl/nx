@@ -20,7 +20,7 @@ The command will ask you three questions.
 
 2. Which scripts are cacheable?
 
-   Any scripts you select in this step will be added to the `cacheableOperations` in `nx.json`. i.e. `"cacheableOperations": ["build", "test", "lint"]`
+   Any scripts you select in this step will be made cacheable, i.e. the `cache` property will be set to `true` (`false` by default) in the `targetDefaults` section.
 
 3. For each cacheable script, does it produce output in the file system?
 
@@ -34,7 +34,7 @@ This process adds `nx` to your `package.json` at the root of your workspace:
   ...
   "devDependencies": {
     ...
-    "nx": "16.8.0"
+    "nx": "17.2.0"
   }
 }
 ```
@@ -213,9 +213,9 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `--output-logs`             | Use [`--output-style`](/nx-api/nx/documents/run-many#output-style)                                                                                                                    |
 | `--only`                    | N/A                                                                                                                                                                                   |
 | `--parallel`                | N/A                                                                                                                                                                                   |
-| `--remote-only`             | N/A. Can [ignore the remote cache](/nx-cloud/features/remote-cache#skipping-cloud) with `--no-cloud`.                                                                                 |
+| `--remote-only`             | N/A. Can [ignore the remote cache](/ci/features/remote-cache#skipping-cloud) with `--no-cloud`.                                                                                       |
 | `--summarize`               | N/A                                                                                                                                                                                   |
-| `--token`                   | Set the [Nx Cloud token in `nx.json`](/nx-cloud/recipes/security/access-tokens#setting-access-tokens) or as an environment variable (`NX_CLOUD_ACCESS_TOKEN`)                         |
+| `--token`                   | Set the [Nx Cloud token in `nx.json`](/ci/recipes/security/access-tokens#setting-access-tokens) or as an environment variable (`NX_CLOUD_ACCESS_TOKEN`)                               |
 | `--team`                    | See `--token` for choosing a different Nx Cloud workspace. You can [use `--runner`](/nx-api/nx/documents/run-many#runner) to choose a different runner defined in the `nx.json` file. |
 | `--preflight`               | N/A                                                                                                                                                                                   |
 | `--trace`                   | N/A. [`--verbose`](/nx-api/nx/documents/run-many#verbose) for more logging.                                                                                                           |

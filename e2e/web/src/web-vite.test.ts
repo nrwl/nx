@@ -61,8 +61,8 @@ describe('Web Components Applications with bundler set as vite', () => {
       `dist/apps/${appName}/_should_remove.txt`,
       `dist/apps/_should_not_remove.txt`
     );
-    runCLI(`build ${appName}`);
-    runCLI(`build ${libName}`);
+    runCLI(`build ${appName} --emptyOutDir`);
+    runCLI(`build ${libName} --emptyOutDir`);
     checkFilesDoNotExist(
       `dist/apps/${appName}/_should_remove.txt`,
       `dist/libs/${libName}/_should_remove.txt`

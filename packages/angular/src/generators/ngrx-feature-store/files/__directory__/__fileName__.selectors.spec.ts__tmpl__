@@ -20,7 +20,7 @@ describe('<%= className %> Selectors', () => {
         create<%= className %>Entity('PRODUCT-CCC')
       ], {
         ...initial<%= className %>State,
-        selectedId : 'PRODUCT-BBB',
+        selectedId: 'PRODUCT-BBB',
         error: ERROR_MSG,
         loaded: true
       })

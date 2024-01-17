@@ -2,7 +2,7 @@
 
 ## Why do users need access?
 
-While just adding an Nx Cloud access token to your monorepo gives you distributed caching and distributed tasks
+While just adding an Nx Cloud access token to your monorepo gives you remote caching and distributed tasks
 execution, the Nx Cloud web app gives you analytics about tasks running in your workspace, allows devs to easily inspect
 terminal output, and works seamlessly with our GitHub integration for your Pull Requests. Here is
 a [video walkthrough of this](https://youtu.be/GT7XIwG1i5A?t=409).
@@ -33,10 +33,10 @@ than 1 admin to your workspace, to reduce the chance of losing access to it.
 
 For instructions on how to set up third-party auth providers, please refer to these guides:
 
-- [GitHub Auth](/nx-cloud/recipes/on-premise/auth-github)
-- [GitLab Auth](/nx-cloud/recipes/on-premise/auth-gitlab)
-- [BitBucket Auth](/nx-cloud/recipes/on-premise/auth-bitbucket)
-- [SAML Auth](/nx-cloud/recipes/on-premise/auth-saml)
+- [GitHub Auth](/ci/recipes/on-premise/auth-github)
+- [GitLab Auth](/ci/recipes/on-premise/auth-gitlab)
+- [BitBucket Auth](/ci/recipes/on-premise/auth-bitbucket)
+- [SAML Auth](/ci/recipes/on-premise/auth-saml)
 
 ## Inviting users
 

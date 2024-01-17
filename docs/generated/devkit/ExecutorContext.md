@@ -9,15 +9,15 @@ Context that is passed into an executor
 - [configurationName](../../devkit/documents/ExecutorContext#configurationname): string
 - [cwd](../../devkit/documents/ExecutorContext#cwd): string
 - [isVerbose](../../devkit/documents/ExecutorContext#isverbose): boolean
-- [nxJsonConfiguration](../../devkit/documents/ExecutorContext#nxjsonconfiguration): NxJsonConfiguration&lt;string[] | &quot;\*&quot;&gt;
+- [nxJsonConfiguration](../../devkit/documents/ExecutorContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
 - [projectGraph](../../devkit/documents/ExecutorContext#projectgraph): ProjectGraph
 - [projectName](../../devkit/documents/ExecutorContext#projectname): string
 - [projectsConfigurations](../../devkit/documents/ExecutorContext#projectsconfigurations): ProjectsConfigurations
 - [root](../../devkit/documents/ExecutorContext#root): string
-- [target](../../devkit/documents/ExecutorContext#target): TargetConfiguration&lt;any&gt;
+- [target](../../devkit/documents/ExecutorContext#target): TargetConfiguration<any>
 - [targetName](../../devkit/documents/ExecutorContext#targetname): string
 - [taskGraph](../../devkit/documents/ExecutorContext#taskgraph): TaskGraph
-- [workspace](../../devkit/documents/ExecutorContext#workspace): ProjectsConfigurations &amp; NxJsonConfiguration&lt;string[] | &quot;\*&quot;&gt;
+- [workspace](../../devkit/documents/ExecutorContext#workspace): ProjectsConfigurations & NxJsonConfiguration<string[] | "\*">
 
 ## Properties
 
@@ -47,7 +47,7 @@ Enable verbose logging
 
 ### nxJsonConfiguration
 
-• `Optional` **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
+• `Optional` **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
 
 The contents of nx.json.
 
@@ -94,7 +94,7 @@ The root of the workspace
 
 ### target
 
-• `Optional` **target**: [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)<`any`\>
+• `Optional` **target**: [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\<`any`\>
 
 The configuration of the target being executed
 
@@ -119,7 +119,7 @@ it existed when the Nx command was kicked off
 
 ### workspace
 
-• `Optional` **workspace**: [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
+• `Optional` **workspace**: [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
 
 Deprecated. Use projectsConfigurations or nxJsonConfiguration
 The full workspace configuration

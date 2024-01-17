@@ -1,5 +1,5 @@
 import { type ProjectGraph } from '../../../devkit-exports';
-import { CATCH_ALL_RELEASE_GROUP, NxReleaseConfig } from './config';
+import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
 import { filterReleaseGroups } from './filter-release-groups';
 
 describe('filterReleaseGroups()', () => {
@@ -12,10 +12,10 @@ describe('filterReleaseGroups()', () => {
       groups: {},
       changelog: {
         git: {
-          commit: false,
+          commit: true,
           commitMessage: '',
           commitArgs: '',
-          tag: false,
+          tag: true,
           tagMessage: '',
           tagArgs: '',
         },
@@ -26,6 +26,7 @@ describe('filterReleaseGroups()', () => {
         generator: '',
         generatorOptions: {},
         git: {
+          stageChanges: true,
           commit: false,
           commitMessage: '',
           commitArgs: '',
@@ -201,9 +202,9 @@ describe('filterReleaseGroups()', () => {
       `);
     });
 
-    it('should produce an appropriately formatted error for the CATCH_ALL_RELEASE_GROUP', () => {
+    it('should produce an appropriately formatted error for the IMPLICIT_DEFAULT_RELEASE_GROUP', () => {
       nxReleaseConfig.groups = {
-        [CATCH_ALL_RELEASE_GROUP]: {
+        [IMPLICIT_DEFAULT_RELEASE_GROUP]: {
           projectsRelationship: 'fixed',
           projects: ['lib-a', 'lib-a'],
           changelog: false,

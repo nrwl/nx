@@ -13,6 +13,8 @@ import { Linter } from '@nx/eslint';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {
+  angularDevkitVersion,
+  angularVersion,
   autoprefixerVersion,
   postcssVersion,
   tailwindVersion,
@@ -37,7 +39,7 @@ describe('lib', () => {
       publishable: false,
       buildable: false,
       linter: Linter.EsLint,
-      skipFormat: false,
+      skipFormat: true,
       unitTestRunner: UnitTestRunner.Jest,
       simpleName: false,
       strict: true,
@@ -48,6 +50,11 @@ describe('lib', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    projectGraph = {
+      dependencies: {},
+      nodes: {},
+    };
   });
 
   it('should run the library generator without erroring if the directory has a trailing slash', async () => {
@@ -55,6 +62,36 @@ describe('lib', () => {
     await expect(
       runLibraryGeneratorWithOpts({ directory: 'mylib/shared/' })
     ).resolves.not.toThrow();
+  });
+
+  it('should add angular dependencies', async () => {
+    // ACT
+    await runLibraryGeneratorWithOpts();
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+
+    expect(dependencies['@angular/animations']).toBe(angularVersion);
+    expect(dependencies['@angular/common']).toBe(angularVersion);
+    expect(dependencies['@angular/compiler']).toBe(angularVersion);
+    expect(dependencies['@angular/core']).toBe(angularVersion);
+    expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
+    expect(dependencies['@angular/platform-browser-dynamic']).toBe(
+      angularVersion
+    );
+    expect(dependencies['@angular/router']).toBe(angularVersion);
+    expect(dependencies['rxjs']).toBeDefined();
+    expect(dependencies['tslib']).toBeDefined();
+    expect(dependencies['zone.js']).toBeDefined();
+    expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
+    expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
+    expect(devDependencies['@angular/language-service']).toBe(angularVersion);
+    expect(devDependencies['@angular-devkit/build-angular']).toBe(
+      angularDevkitVersion
+    );
+
+    // codelyzer should no longer be there by default
+    expect(devDependencies['codelyzer']).toBeUndefined();
   });
 
   describe('not nested', () => {
@@ -151,7 +188,10 @@ describe('lib', () => {
       const moduleFileExists = tree.exists('my-lib/src/lib/my-lib.module.ts');
       expect(moduleFileExists).toBeFalsy();
       const indexApi = tree.read('my-lib/src/index.ts', 'utf-8');
-      expect(indexApi).toMatchInlineSnapshot(`""`);
+      expect(indexApi).toMatchInlineSnapshot(`
+        "
+        "
+      `);
     });
 
     it('should remove "build" target from project.json when a library is not publishable', async () => {
@@ -594,11 +634,17 @@ describe('lib', () => {
       expect(tree.read('my-dir/my-lib/.eslintrc.json', 'utf-8'))
         .toMatchInlineSnapshot(`
         "{
-          "extends": ["../../.eslintrc.json"],
-          "ignorePatterns": ["!**/*"],
+          "extends": [
+            "../../.eslintrc.json"
+          ],
+          "ignorePatterns": [
+            "!**/*"
+          ],
           "overrides": [
             {
-              "files": ["*.ts"],
+              "files": [
+                "*.ts"
+              ],
               "extends": [
                 "plugin:@nx/angular",
                 "plugin:@angular-eslint/template/process-inline-templates"
@@ -623,12 +669,18 @@ describe('lib', () => {
               }
             },
             {
-              "files": ["*.html"],
-              "extends": ["plugin:@nx/angular-template"],
+              "files": [
+                "*.html"
+              ],
+              "extends": [
+                "plugin:@nx/angular-template"
+              ],
               "rules": {}
             },
             {
-              "files": ["*.json"],
+              "files": [
+                "*.json"
+              ],
               "parser": "jsonc-eslint-parser",
               "rules": {
                 "@nx/dependency-checks": "error"
@@ -721,6 +773,7 @@ describe('lib', () => {
           routing: true,
           lazy: true,
           parent: 'myapp/src/app/app.module.ts',
+          skipFormat: false,
         });
 
         const moduleContents = tree
@@ -737,6 +790,7 @@ describe('lib', () => {
           lazy: true,
           simpleName: true,
           parent: 'myapp/src/app/app.module.ts',
+          skipFormat: false,
         });
 
         const moduleContents2 = tree
@@ -753,6 +807,7 @@ describe('lib', () => {
           lazy: true,
           simpleName: true,
           parent: 'myapp/src/app/app.module.ts',
+          skipFormat: false,
         });
 
         const moduleContents3 = tree
@@ -1129,15 +1184,6 @@ describe('lib', () => {
           .toMatchInlineSnapshot(`
           {
             "executor": "@nx/eslint:lint",
-            "options": {
-              "lintFilePatterns": [
-                "my-lib/**/*.ts",
-                "my-lib/**/*.html",
-              ],
-            },
-            "outputs": [
-              "{options.outputFile}",
-            ],
           }
         `);
       });
@@ -1486,6 +1532,7 @@ describe('lib', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         routing: true,
+        skipFormat: true,
       });
 
       // ACT
@@ -1510,6 +1557,7 @@ describe('lib', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         routing: true,
+        skipFormat: true,
       });
 
       // ACT
@@ -1536,6 +1584,7 @@ describe('lib', () => {
         name: 'app1',
         routing: true,
         standalone: true,
+        skipFormat: true,
       });
 
       // ACT
@@ -1551,7 +1600,8 @@ describe('lib', () => {
         "import { Route } from '@angular/router';
         import { myLibRoutes } from '@proj/my-lib';
 
-        export const appRoutes: Route[] = [{ path: 'my-lib', children: myLibRoutes }];
+        export const appRoutes: Route[] = [
+            { path: 'my-lib', children: myLibRoutes },];
         "
       `);
     });
@@ -1562,6 +1612,7 @@ describe('lib', () => {
         name: 'app1',
         routing: true,
         standalone: true,
+        skipFormat: true,
       });
 
       // ACT
@@ -1578,11 +1629,7 @@ describe('lib', () => {
         "import { Route } from '@angular/router';
 
         export const appRoutes: Route[] = [
-          {
-            path: 'my-lib',
-            loadChildren: () => import('@proj/my-lib').then((m) => m.myLibRoutes),
-          },
-        ];
+            { path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes) },];
         "
       `);
     });

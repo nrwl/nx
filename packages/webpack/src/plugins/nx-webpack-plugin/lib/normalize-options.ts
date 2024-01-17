@@ -1,4 +1,4 @@
-import { basename, dirname, relative, resolve } from 'path';
+import { basename, dirname, join, relative, resolve } from 'path';
 import { statSync } from 'fs';
 import {
   normalizePath,
@@ -51,12 +51,15 @@ export function normalizeOptions(
     Object.assign(combinedOptions, originalTargetOptions, options);
   }
 
+  normalizeRelativePaths(projectNode.data.root, options);
+
   const sourceRoot = projectNode.data.sourceRoot ?? projectNode.data.root;
 
-  if (!options.main)
+  if (!options.main) {
     throw new Error(
       `Missing "main" option for the entry file. Set this option in your Nx webpack plugin.`
     );
+  }
 
   return {
     ...options,
@@ -142,7 +145,7 @@ export function normalizeAssets(
   });
 }
 
-function normalizeFileReplacements(
+export function normalizeFileReplacements(
   root: string,
   fileReplacements: FileReplacement[]
 ): FileReplacement[] {
@@ -152,4 +155,30 @@ function normalizeFileReplacements(
         with: resolve(root, fileReplacement.with),
       }))
     : [];
+}
+
+function normalizeRelativePaths(
+  projectRoot: string,
+  options: NxWebpackPluginOptions
+): void {
+  for (const [fieldName, fieldValue] of Object.entries(options)) {
+    if (isRelativePath(fieldValue)) {
+      options[fieldName] = join(projectRoot, fieldValue);
+    } else if (Array.isArray(fieldValue)) {
+      for (let i = 0; i < fieldValue.length; i++) {
+        if (isRelativePath(fieldValue[i])) {
+          fieldValue[i] = join(projectRoot, fieldValue[i]);
+        }
+      }
+    }
+  }
+}
+
+function isRelativePath(val: unknown): boolean {
+  return (
+    typeof val === 'string' &&
+    (val.startsWith('./') ||
+      // Windows
+      val.startsWith('.\\'))
+  );
 }

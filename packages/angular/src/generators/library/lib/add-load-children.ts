@@ -24,13 +24,13 @@ export function addLoadChildren(
     true
   );
 
-  const route = `{path: '${
+  const route = `{ path: '${
     names(options.fileName).fileName
   }', loadChildren: () => import('${options.importPath}').then(m => m.${
     options.standalone
       ? `${names(options.name).propertyName}Routes`
       : options.moduleName
-  })}`;
+  }) }`;
 
   addRoute(tree, options.parent, route);
 }

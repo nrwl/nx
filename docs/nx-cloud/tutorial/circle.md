@@ -226,7 +226,7 @@ Clearly this is not a scalable solution as it requires us to manually add every 
 
 This change makes our CI pipeline configuration more maintainable. For a small repository, this might be good enough, but after a little bit of growth this approach will cause your CI times to become unmanageable.
 
-Nx comes with a dedicated ["affected" command](/nx-cloud/features/affected) to help with that by only running tasks for projects that were affected by the changes in a given PR.
+Nx comes with a dedicated ["affected" command](/ci/features/affected) to help with that by only running tasks for projects that were affected by the changes in a given PR.
 
 ```{% command="nx affected -t build" %}
     ✔  nx run shared-product-types:build (404ms)
@@ -310,13 +310,12 @@ Merge your PR into the `main` branch when you're ready to move to the next secti
 
 ## Enable Remote Caching on Circle CI
 
-Reducing the number of tasks to run via [affected commands](/nx-cloud/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/core-features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. The [Nx Cloud remote cache](/nx-cloud/features/remote-cache) can eliminate that waste for you.
+Reducing the number of tasks to run via [affected commands](/ci/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/core-features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. The [Nx Cloud remote cache](/ci/features/remote-cache) can eliminate that waste for you.
 
 ```{% command="pnpm nx connect" %}
-✔ Enable distributed caching to make your CI faster · Yes
 $ nx g nx:connect-to-nx-cloud --quiet --no-interactive
 
- >  NX   Distributed caching via Nx Cloud has been enabled
+ >  NX   Remote caching via Nx Cloud has been enabled
 
    In addition to the caching, Nx Cloud provides config-free distributed execution,
    UI for viewing complex runs and GitHub integration. Learn more at https://nx.app
@@ -350,7 +349,7 @@ When Circle CI now processes our tasks they'll only take a fraction of the usual
 
 ![Circle CI after enabling remote caching](/nx-cloud/tutorial/circle-ci-remote-cache.png)
 
-The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on various scenarios](/nx-cloud/concepts/scenarios) and how to configure them.
+The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on security settings for your remote cache](/ci/concepts/cache-security).
 
 You might also want to learn more about [how to fine-tune caching](/recipes/running-tasks/customizing-inputs) to get even better results.
 
@@ -358,7 +357,7 @@ Merge your PR into the `main` branch when you're ready to move to the next secti
 
 ## Parallelize Tasks across Multiple Machines
 
-The affected command and remote caching help speed up the average CI time, but there will be some PRs that affect everything in the repository. The only way to speed up that worst case scenario is through efficient parallelization. The best way to parallelize CI with Nx is to use [distributed task execution (DTE)](/nx-cloud/features/distribute-task-execution).
+The affected command and remote caching help speed up the average CI time, but there will be some PRs that affect everything in the repository. The only way to speed up that worst case scenario is through efficient parallelization. The best way to parallelize CI with Nx is to use [distributed task execution (DTE)](/ci/features/distribute-task-execution).
 
 Nx Cloud's DTE feature
 
@@ -501,7 +500,7 @@ Once Circle CI starts, you should see multiple agents running in parallel:
 
 If you open your Nx Cloud dashboard, you'll get a better view of the individual tasks and their corresponding logs.
 
-![Nx Cloud run details](/nx-cloud/tutorial/circle-nx-cloud-run-details.png)
+![Nx Cloud run details](/nx-cloud/tutorial/nx-cloud-run-details.png)
 
 With this pipeline configuration in place, no matter how large the repository scales, Nx Cloud will adjust and distribute tasks across agents in the optimal way. If CI pipelines start to slow down, just add some agents to the `ordinal: [1, 2, 3]` array. One of the main advantages is that such a pipeline definition is declarative. We just give instructions what commands to run, but not how to distribute them. As such even if our monorepo structure changes and evolves over time, the distribution will be taken care of by Nx Cloud.
 
@@ -509,6 +508,6 @@ With this pipeline configuration in place, no matter how large the repository sc
 
 You now have a highly optimized CI configuration that will scale as your repository scales. See what else you can do with Nx Cloud.
 
-- Set up [GitHub PR integration](/nx-cloud/recipes/source-control-integration/github) to view Nx Cloud results directly in your PR
-- Choose the [security scenario](/nx-cloud/concepts/scenarios) that makes sense for your organization
-- [Record non-Nx commands](/nx-cloud/recipes/other/record-commands) and view the results in the Nx Cloud interface
+- Set up [GitHub PR integration](/ci/recipes/source-control-integration/github) to view Nx Cloud results directly in your PR
+- Choose the [security settings](/ci/concepts/cache-security) that make sense for your organization
+- [Record non-Nx commands](/ci/recipes/other/record-commands) and view the results in the Nx Cloud interface

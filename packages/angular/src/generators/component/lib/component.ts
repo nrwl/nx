@@ -54,7 +54,7 @@ export function exportComponentInEntryPoint(
     entryPointPath,
     'utf-8'
   )}
-    export * from "${relativePathFromEntryPoint}";`;
+    export * from '${relativePathFromEntryPoint}';`;
 
   tree.write(entryPointPath, updateEntryPointContent);
 }

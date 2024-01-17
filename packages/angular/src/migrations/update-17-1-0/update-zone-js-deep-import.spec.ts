@@ -1,5 +1,6 @@
 import {
   addProjectConfiguration,
+  formatFiles,
   type ProjectConfiguration,
   type ProjectGraph,
   type Tree,
@@ -11,6 +12,7 @@ let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
+  formatFiles: jest.fn(),
 }));
 
 describe('update-zone-js-deep-imports migration', () => {
@@ -26,16 +28,15 @@ describe('update-zone-js-deep-imports migration', () => {
     ]);
     tree.write(
       'apps/app1/src/polyfills.ts',
-      `
-    /***************************************************************************************************
-     * Zone JS is required by default for Angular itself.
-     */
-    import 'zone.js/dist/zone'; // Included with Angular CLI.
+      `/***************************************************************************************************
+ * Zone JS is required by default for Angular itself.
+ */
+import 'zone.js/dist/zone'; // Included with Angular CLI.
 
-    /***************************************************************************************************
-     * APPLICATION IMPORTS
-     */
-    `
+/***************************************************************************************************
+ * APPLICATION IMPORTS
+ */
+`
     );
 
     await migration(tree);
@@ -52,6 +53,7 @@ describe('update-zone-js-deep-imports migration', () => {
        */
       "
     `);
+    expect(formatFiles).toHaveBeenCalled();
   });
 
   it('should replace replace import from "zone.js/dist/zone-testing"', async () => {
@@ -60,28 +62,27 @@ describe('update-zone-js-deep-imports migration', () => {
     ]);
     tree.write(
       'apps/app1/src/test.ts',
-      `
-      // This file is required by karma.conf.js and loads recursively all the .spec and framework files
-      import 'zone.js/dist/zone';
-      import 'zone.js/dist/zone-testing';
-      import { getTestBed } from '@angular/core/testing';
-      import {
-        BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting
-      } from '@angular/platform-browser-dynamic/testing';
-      
-      declare const require: any;
-      
-      // First, initialize the Angular testing environment.
-      getTestBed().initTestEnvironment(
-        BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting()
-      );
-      // Then we find all the tests.
-      const context = require.context('./', true, /\.spec\.ts$/);
-      // And load the modules.
-      context.keys().map(context);
-    `
+      `// This file is required by karma.conf.js and loads recursively all the .spec and framework files
+import 'zone.js/dist/zone';
+import 'zone.js/dist/zone-testing';
+import { getTestBed } from '@angular/core/testing';
+import {
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting,
+} from '@angular/platform-browser-dynamic/testing';
+
+declare const require: any;
+
+// First, initialize the Angular testing environment.
+getTestBed().initTestEnvironment(
+  BrowserDynamicTestingModule,
+  platformBrowserDynamicTesting()
+);
+// Then we find all the tests.
+const context = require.context('./', true, /\.spec\.ts$/);
+// And load the modules.
+context.keys().map(context);
+`
     );
 
     await migration(tree);

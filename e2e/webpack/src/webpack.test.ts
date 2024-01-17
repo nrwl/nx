@@ -1,7 +1,7 @@
 import {
+  checkFilesExist,
   cleanupProject,
   newProject,
-  packageInstall,
   rmDist,
   runCLI,
   runCommand,
@@ -125,12 +125,18 @@ module.exports = composePlugins(withNx(), (config) => {
           path: path.join(__dirname, '../../dist/${appName}')
         },
         plugins: [
-          new NxWebpackPlugin()
+          new NxWebpackPlugin({
+            compiler: 'tsc',
+            main: 'apps/${appName}/src/main.ts',
+            tsConfig: 'apps/${appName}/tsconfig.app.json',
+            outputHashing: 'none',
+            optimization: false,
+          })
         ]
       };`
     );
 
-    runCLI(`build ${appName} --outputHashing none`);
+    runCLI(`build ${appName}`);
 
     let output = runCommand(`node dist/${appName}/main.js`);
     expect(output).toMatch(/Hello/);
@@ -161,5 +167,13 @@ module.exports = composePlugins(withNx(), (config) => {
     expect(() => {
       runCLI(`build ${appName} --outputHashing none`);
     }).not.toThrow();
+    checkFilesExist(`dist/apps/${appName}/styles.css`);
+
+    expect(() => {
+      runCLI(`build ${appName} --outputHashing none --extractCss false`);
+    }).not.toThrow();
+    expect(() => {
+      checkFilesExist(`dist/apps/${appName}/styles.css`);
+    }).toThrow();
   });
 });

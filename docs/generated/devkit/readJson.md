@@ -1,6 +1,6 @@
 # Function: readJson
 
-▸ **readJson**<`T`\>(`tree`, `path`, `options?`): `T`
+▸ **readJson**\<`T`\>(`tree`, `path`, `options?`): `T`
 
 Reads a json file, removes all comments and parses JSON.
 

@@ -19,12 +19,12 @@ let proj: string;
 
 describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
   });
 
   afterEach(() => cleanupProject());
 
-  it('should convert a standalone project to a monorepo', async () => {
+  it('should convert a standalone webpack and jest react project to a monorepo', async () => {
     const reactApp = uniq('reactapp');
     runCLI(
       `generate @nx/react:app ${reactApp} --rootProject=true --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --no-interactive`
@@ -35,6 +35,26 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     checkFilesExist(
       `apps/${reactApp}/src/main.tsx`,
       `apps/e2e/cypress.config.ts`
+    );
+
+    expect(() => runCLI(`build ${reactApp}`)).not.toThrow();
+    expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
+    expect(() => runCLI(`lint ${reactApp}`)).not.toThrow();
+    expect(() => runCLI(`lint e2e`)).not.toThrow();
+    expect(() => runCLI(`e2e e2e`)).not.toThrow();
+  });
+
+  it('should be convert a standalone vite and playwright react project to a monorepo', async () => {
+    const reactApp = uniq('reactapp');
+    runCLI(
+      `generate @nx/react:app ${reactApp} --rootProject=true --bundler=vite --unitTestRunner vitest --e2eTestRunner=playwright --no-interactive`
+    );
+
+    runCLI('generate @nx/workspace:convert-to-monorepo --no-interactive');
+
+    checkFilesExist(
+      `apps/${reactApp}/src/main.tsx`,
+      `apps/e2e/playwright.config.ts`
     );
 
     expect(() => runCLI(`build ${reactApp}`)).not.toThrow();
@@ -206,10 +226,6 @@ describe('Workspace Tests', () => {
       const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `shared/${lib1}/data-access/**/*.ts`,
-        `shared/${lib1}/data-access/package.json`,
-      ]);
 
       /**
        * Check that the import in lib2 has been updated
@@ -342,11 +358,6 @@ describe('Workspace Tests', () => {
       const lib3Config = readJson(join(lib3, 'project.json'));
       expect(lib3Config.implicitDependencies).toEqual([newName]);
 
-      expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `shared/${lib1}/data-access/**/*.ts`,
-        `shared/${lib1}/data-access/package.json`,
-      ]);
-
       /**
        * Check that the import in lib2 has been updated
        */
@@ -478,10 +489,6 @@ describe('Workspace Tests', () => {
       const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `packages/shared/${lib1}/data-access/**/*.ts`,
-        `packages/shared/${lib1}/data-access/package.json`,
-      ]);
       expect(project.tags).toEqual([]);
 
       /**
@@ -614,10 +621,6 @@ describe('Workspace Tests', () => {
       const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `${lib1}/data-access/**/*.ts`,
-        `${lib1}/data-access/package.json`,
-      ]);
 
       /**
        * Check that the import in lib2 has been updated
@@ -735,10 +738,6 @@ describe('Workspace Tests', () => {
       const project = readJson(join(newPath, 'project.json'));
       expect(project).toBeTruthy();
       expect(project.sourceRoot).toBe(`${newPath}/src`);
-      expect(project.targets.lint.options.lintFilePatterns).toEqual([
-        `shared/${lib1}/data-access/**/*.ts`,
-        `shared/${lib1}/data-access/package.json`,
-      ]);
 
       /**
        * Check that the import in lib2 has been updated

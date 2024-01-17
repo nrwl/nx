@@ -4,6 +4,7 @@ jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   getPackageManagerCommand: jest.fn(() => ({ install: '' })),
   writeJsonFile: jest.fn(),
+  formatFiles: jest.fn(),
 }));
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';

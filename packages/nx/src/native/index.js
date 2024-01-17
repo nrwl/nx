@@ -246,19 +246,24 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { expandOutputs, getFilesForOutputs, remove, copy, hashArray, hashFile, hashFiles, ImportResult, findImports, HashPlanner, EventType, Watcher, WorkspaceContext, WorkspaceErrors } = nativeBinding
+const { expandOutputs, getFilesForOutputs, remove, copy, ChildProcess, runCommand, nxFork, hashArray, hashFile, ImportResult, findImports, transferProjectGraph, HashPlanner, TaskHasher, EventType, Watcher, WorkspaceContext, WorkspaceErrors, testOnlyTransferFileMap } = nativeBinding
 
 module.exports.expandOutputs = expandOutputs
 module.exports.getFilesForOutputs = getFilesForOutputs
 module.exports.remove = remove
 module.exports.copy = copy
+module.exports.ChildProcess = ChildProcess
+module.exports.runCommand = runCommand
+module.exports.nxFork = nxFork
 module.exports.hashArray = hashArray
 module.exports.hashFile = hashFile
-module.exports.hashFiles = hashFiles
 module.exports.ImportResult = ImportResult
 module.exports.findImports = findImports
+module.exports.transferProjectGraph = transferProjectGraph
 module.exports.HashPlanner = HashPlanner
+module.exports.TaskHasher = TaskHasher
 module.exports.EventType = EventType
 module.exports.Watcher = Watcher
 module.exports.WorkspaceContext = WorkspaceContext
 module.exports.WorkspaceErrors = WorkspaceErrors
+module.exports.testOnlyTransferFileMap = testOnlyTransferFileMap

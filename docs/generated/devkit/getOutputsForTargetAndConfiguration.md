@@ -23,11 +23,11 @@ Returns the list of outputs that will be cached.
 
 #### Parameters
 
-| Name        | Type                                                                                                               |
-| :---------- | :----------------------------------------------------------------------------------------------------------------- |
-| `target`    | [`Task`](../../devkit/documents/Task) \| { `configuration?`: `string` ; `project`: `string` ; `target`: `string` } |
-| `overrides` | `any`                                                                                                              |
-| `node`      | [`ProjectGraphProjectNode`](../../devkit/documents/ProjectGraphProjectNode)                                        |
+| Name        | Type                                                                                                                |
+| :---------- | :------------------------------------------------------------------------------------------------------------------ |
+| `target`    | [`Task`](../../devkit/documents/Task) \| \{ `configuration?`: `string` ; `project`: `string` ; `target`: `string` } |
+| `overrides` | `any`                                                                                                               |
+| `node`      | [`ProjectGraphProjectNode`](../../devkit/documents/ProjectGraphProjectNode)                                         |
 
 #### Returns
 

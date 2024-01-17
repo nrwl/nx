@@ -299,7 +299,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
           },
           fix: (fixer) => {
             expectedDependencyNames.sort().reduce((acc, d) => {
-              acc[d] = rootPackageJsonDeps[d] || dependencies[d];
+              acc[d] = rootPackageJsonDeps[d] || npmDependencies[d];
               return acc;
             }, projPackageJsonDeps);
 

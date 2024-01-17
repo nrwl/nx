@@ -21,7 +21,7 @@ import { join } from 'path';
 describe('Nx Affected and Graph Tests', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => (proj = newProject({ packages: ['@nx/web', '@nx/js'] })));
   afterAll(() => cleanupProject());
 
   describe('affected:*', () => {

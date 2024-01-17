@@ -68,6 +68,12 @@ description: This is a custom description
 ---
 ```
 
+### Social Media Images
+
+You can specify a custom social media image for a page by specifying `mediaImage` in the `map.json` entry for that page. `mediaImage` is a path relative to `/docs`.
+
+Note that you won't see the social media image in the preview generated for your PR, because it loads from the live `nx.dev` site. You can make sure the image is correct by looking at `[preview-url]/images/open-graph/[page-url].[image-extension]`.
+
 ### Custom markdown syntax
 
 The documentation website [nx.dev](https://nx.dev) is using custom Markdown syntax to enable the authors to add functionality to its content.
@@ -80,6 +86,16 @@ Callouts are available to get the attention of the reader on some specific type 
 {% callout type="caution|check|note|warning" title="string" %}
 Your content goes here.
 {% /callout %}
+```
+
+#### Disclosure
+
+A disclosure can be used for less important information that is initially collapsed.
+
+```markdown
+{% disclosure title="string" %}
+Your content goes here.
+{% /disclosure %}
 ```
 
 #### Cards

@@ -1,4 +1,5 @@
 import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './remove-render-module-platform-server-exports';
 
@@ -8,6 +9,9 @@ describe('remove-render-module-platform-server-exports migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   describe(`Migration to remove '@angular/platform-server' exports`, () => {

@@ -1,0 +1,32 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "$id": "NxNuxtInit",
+    "title": "Init Nuxt Plugin",
+    "description": "Initialize a Nuxt Plugin.",
+    "cli": "nx",
+    "type": "object",
+    "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false
+      },
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": [],
+    "presets": []
+  },
+  "description": "Initialize the `@nx/nuxt` plugin.",
+  "aliases": ["ng-add"],
+  "hidden": true,
+  "implementation": "/packages/nuxt/src/generators/init/init.ts",
+  "path": "/packages/nuxt/src/generators/init/schema.json",
+  "type": "generator"
+}

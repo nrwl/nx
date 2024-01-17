@@ -18,7 +18,7 @@ describe('directive generator', () => {
 
   it('should generate correctly', async () => {
     // ACT
-    await generateDirectiveWithDefaultOptions(tree);
+    await generateDirectiveWithDefaultOptions(tree, { skipFormat: false });
 
     // ASSERT
     expect(
@@ -67,7 +67,10 @@ describe('directive generator', () => {
       // ARRANGE
 
       // ACT
-      await generateDirectiveWithDefaultOptions(tree, { standalone: false });
+      await generateDirectiveWithDefaultOptions(tree, {
+        standalone: false,
+        skipFormat: false,
+      });
 
       // ASSERT
       expect(
@@ -166,13 +169,14 @@ describe('directive generator', () => {
 function addModule(tree: Tree) {
   tree.write(
     'test/src/app/test.module.ts',
-    `import {NgModule} from "@angular/core";
-  @NgModule({
-    imports: [],
-    declarations: [],
-    exports: []
-  })
-  export class TestModule {}`
+    `import { NgModule } from '@angular/core';
+@NgModule({
+  imports: [],
+  declarations: [],
+  exports: [],
+})
+export class TestModule {}
+`
   );
 }
 
@@ -184,6 +188,7 @@ async function generateDirectiveWithDefaultOptions(
     name: 'test',
     project: 'test',
     flat: true,
+    skipFormat: true,
     ...overrides,
   });
 }

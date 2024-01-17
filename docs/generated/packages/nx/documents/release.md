@@ -15,9 +15,9 @@ nx release
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
 
-## Options
+## Shared Options
 
-### dryRun
+### dry-run
 
 Type: `boolean`
 
@@ -57,6 +57,52 @@ Show version number
 
 ## Subcommands
 
+### Base Command Options
+
+Create a version and release for the workspace, generate a changelog, and optionally publish the packages
+
+```shell
+nx release [specifier]
+```
+
+#### Options
+
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.
+
+##### help
+
+Type: `boolean`
+
+Show help
+
+##### skip-publish
+
+Type: `boolean`
+
+Skip publishing by automatically answering no to the confirmation prompt for publishing
+
+##### specifier
+
+Type: `string`
+
+Exact version or semver keyword to apply to the selected release group.
+
+##### version
+
+Type: `boolean`
+
+Show version number
+
+##### yes
+
+Type: `boolean`
+
+Automatically answer yes to the confirmation prompt for publishing
+
 ### version
 
 Create a version and release for one or more applications and libraries
@@ -66,6 +112,12 @@ nx release version [specifier]
 ```
 
 #### Options
+
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.
 
 ##### git-commit
 
@@ -121,6 +173,12 @@ Type: `string`
 
 Exact version or semver keyword to apply to the selected release group.
 
+##### stage-changes
+
+Type: `boolean`
+
+Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.
+
 ##### version
 
 Type: `boolean`
@@ -161,6 +219,14 @@ Type: `string`
 
 Custom git commit message to use when committing the changes made by this command. {version} will be dynamically interpolated when performing fixed releases, interpolated tags will be appended to the commit body when performing independent releases.
 
+##### git-remote
+
+Type: `string`
+
+Default: `origin`
+
+Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)
+
 ##### git-tag
 
 Type: `boolean`
@@ -178,14 +244,6 @@ Additional arguments to pass to the `git tag` command invoked behind the scenes
 Type: `string`
 
 Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself.
-
-##### gitRemote
-
-Type: `string`
-
-Default: `origin`
-
-Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)
 
 ##### help
 

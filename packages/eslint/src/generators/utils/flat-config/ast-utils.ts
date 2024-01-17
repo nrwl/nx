@@ -2,10 +2,11 @@ import {
   ChangeType,
   StringChange,
   applyChangesToString,
-  joinPathFragments,
+  parseJson,
 } from '@nx/devkit';
 import { Linter } from 'eslint';
 import * as ts from 'typescript';
+import { mapFilePath } from './path-utils';
 
 /**
  * Remove all overrides from the config file
@@ -92,7 +93,7 @@ export function hasOverride(
         // strip any spread elements
         objSource = fullNodeText.replace(/\s*\.\.\.[a-zA-Z0-9_]+,?\n?/, '');
       }
-      const data = JSON.parse(
+      const data = parseJson(
         objSource
           // ensure property names have double quotes so that JSON.parse works
           .replace(/'/g, '"')
@@ -109,7 +110,7 @@ export function hasOverride(
 const STRIP_SPREAD_ELEMENTS = /\s*\.\.\.[a-zA-Z0-9_]+,?\n?/g;
 
 function parseTextToJson(text: string): any {
-  return JSON.parse(
+  return parseJson(
     text
       // ensure property names have double quotes so that JSON.parse works
       .replace(/'/g, '"')
@@ -124,7 +125,7 @@ export function replaceOverride(
   content: string,
   root: string,
   lookup: (override: Linter.ConfigOverride<Linter.RulesRecord>) => boolean,
-  update: (
+  update?: (
     override: Linter.ConfigOverride<Linter.RulesRecord>
   ) => Linter.ConfigOverride<Linter.RulesRecord>
 ): string {
@@ -166,12 +167,14 @@ export function replaceOverride(
           length: end - start,
         });
         const updatedData = update(data);
-        mapFilePaths(updatedData, root);
-        changes.push({
-          type: ChangeType.Insert,
-          index: start,
-          text: JSON.stringify(updatedData, null, 2).slice(2, -2), // remove curly braces and start/end line breaks since we are injecting just properties
-        });
+        if (updatedData) {
+          mapFilePaths(updatedData);
+          changes.push({
+            type: ChangeType.Insert,
+            index: start,
+            text: JSON.stringify(updatedData, null, 2).slice(2, -2), // remove curly braces and start/end line breaks since we are injecting just properties
+          });
+        }
       }
     }
   });
@@ -694,19 +697,27 @@ export function stringifyNodeList(
     | ts.Identifier
     | ts.ExpressionStatement
     | ts.SourceFile
-  >,
-  root: string,
-  fileName: string
+  >
 ): string {
   const printer = ts.createPrinter({ newLine: ts.NewLineKind.LineFeed });
   const resultFile = ts.createSourceFile(
-    joinPathFragments(root, fileName),
+    '',
     '',
     ts.ScriptTarget.Latest,
     true,
     ts.ScriptKind.JS
   );
-  return printer.printList(ts.ListFormat.MultiLine, nodes, resultFile);
+  return (
+    printer
+      .printList(ts.ListFormat.MultiLine, nodes, resultFile)
+      // add new line before compat initialization
+      .replace(
+        /const compat = new FlatCompat/,
+        '\nconst compat = new FlatCompat'
+      )
+      // add new line before module.exports = ...
+      .replace(/module\.exports/, '\nmodule.exports')
+  );
 }
 
 /**
@@ -740,10 +751,9 @@ export function generateRequire(
  * Generates AST object or spread element based on JSON override object
  */
 export function generateFlatOverride(
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
-  root: string
+  override: Linter.ConfigOverride<Linter.RulesRecord>
 ): ts.ObjectLiteralExpression | ts.SpreadElement {
-  mapFilePaths(override, root);
+  mapFilePaths(override);
   if (
     !override.env &&
     !override.extends &&
@@ -801,41 +811,22 @@ export function generateFlatOverride(
 }
 
 export function mapFilePaths(
-  override: Linter.ConfigOverride<Linter.RulesRecord>,
-  root: string
+  override: Linter.ConfigOverride<Linter.RulesRecord>
 ) {
   if (override.files) {
     override.files = Array.isArray(override.files)
       ? override.files
       : [override.files];
-    override.files = override.files.map((file) => mapFilePath(file, root));
+    override.files = override.files.map((file) => mapFilePath(file));
   }
   if (override.excludedFiles) {
     override.excludedFiles = Array.isArray(override.excludedFiles)
       ? override.excludedFiles
       : [override.excludedFiles];
     override.excludedFiles = override.excludedFiles.map((file) =>
-      mapFilePath(file, root)
+      mapFilePath(file)
     );
   }
-}
-
-export function mapFilePath(filePath: string, root: string) {
-  if (filePath.startsWith('!')) {
-    const fileWithoutBang = filePath.slice(1);
-    if (fileWithoutBang.startsWith('*.')) {
-      return `!${joinPathFragments(root, '**', fileWithoutBang)}`;
-    } else if (!fileWithoutBang.startsWith(root)) {
-      return `!${joinPathFragments(root, fileWithoutBang)}`;
-    }
-    return filePath;
-  }
-  if (filePath.startsWith('*.')) {
-    return joinPathFragments(root, '**', filePath);
-  } else if (!filePath.startsWith(root)) {
-    return joinPathFragments(root, filePath);
-  }
-  return filePath;
 }
 
 function addTSObjectProperty(

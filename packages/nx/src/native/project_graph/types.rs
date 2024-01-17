@@ -19,9 +19,12 @@ pub struct Target {
     pub executor: Option<String>,
     pub inputs: Option<Vec<JsInputs>>,
     pub outputs: Option<Vec<String>>,
+    pub options: Option<String>,
+    pub configurations: Option<String>,
 }
 
 #[napi(object)]
+#[derive(Default)]
 pub struct Project {
     pub root: String,
     pub named_inputs: Option<HashMap<String, Vec<JsInputs>>>,

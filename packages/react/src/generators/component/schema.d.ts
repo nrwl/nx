@@ -33,6 +33,8 @@ export interface Schema {
   // Used by other wrapping generators to preserve previous behavior
   // e.g. @nx/next:component
   derivedDirectory?: string;
+  // Used by Next.js to determine how React should generate the page
+  isNextPage?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {

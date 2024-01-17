@@ -1,6 +1,6 @@
 # Function: wrapAngularDevkitSchematic
 
-▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: `Tree`, `generatorOptions`: { `[k: string]`: `any`; }) => `Promise`<`any`\>
+▸ **wrapAngularDevkitSchematic**(`collectionName`, `generatorName`): (`host`: `Tree`, `generatorOptions`: \{ `[k: string]`: `any`; }) => `Promise`\<`any`\>
 
 #### Parameters
 
@@ -13,7 +13,7 @@
 
 `fn`
 
-▸ (`host`, `generatorOptions`): `Promise`<`any`\>
+▸ (`host`, `generatorOptions`): `Promise`\<`any`\>
 
 ##### Parameters
 
@@ -24,4 +24,4 @@
 
 ##### Returns
 
-`Promise`<`any`\>
+`Promise`\<`any`\>

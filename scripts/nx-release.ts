@@ -5,7 +5,7 @@ import { rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
-import { ReleaseType, parse } from 'semver';
+import { ReleaseType, inc, major, parse } from 'semver';
 import * as yargs from 'yargs';
 
 const LARGE_BUFFER = 1024 * 1000000;
@@ -36,7 +36,7 @@ const LARGE_BUFFER = 1024 * 1000000;
   });
 
   // Expected to run as part of the Github `publish` workflow
-  if (!options.local && process.env.NPM_TOKEN) {
+  if (!options.local && process.env.NODE_AUTH_TOKEN) {
     // Delete all .node files that were built during the previous steps
     // Always run before the artifacts step because we still need the .node files for native-packages
     execSync('find ./build -name "*.node" -delete', {
@@ -65,7 +65,7 @@ const LARGE_BUFFER = 1024 * 1000000;
   };
 
   // Intended for creating a github release which triggers the publishing workflow
-  if (!options.local && !process.env.NPM_TOKEN) {
+  if (!options.local && !process.env.NODE_AUTH_TOKEN) {
     // For this important use-case it makes sense to always have full logs
     isVerboseLogging = true;
 
@@ -204,6 +204,60 @@ function parseArgs() {
       description:
         'The version to publish. This does not need to be passed and can be inferred.',
       default: 'minor',
+      coerce: (version) => {
+        if (version !== 'canary') {
+          return version;
+        }
+        /**
+         * Handle the special case of `canary`
+         */
+
+        const currentLatestVersion = execSync('npm view nx@latest version')
+          .toString()
+          .trim();
+        const currentNextVersion = execSync('npm view nx@next version')
+          .toString()
+          .trim();
+
+        let canaryBaseVersion: string | null = null;
+
+        // If the latest and next are not on the same major version, then we need to publish a canary version of the next major
+        if (major(currentLatestVersion) !== major(currentNextVersion)) {
+          canaryBaseVersion = `${major(currentNextVersion)}.0.0`;
+        } else {
+          // Determine next minor version above the currentLatestVersion
+          const nextMinorRelease = inc(
+            currentLatestVersion,
+            'minor',
+            undefined
+          );
+          canaryBaseVersion = nextMinorRelease;
+        }
+
+        if (!canaryBaseVersion) {
+          throw new Error(`Unable to determine a base for the canary version.`);
+        }
+
+        // Create YYYYMMDD string
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const day = String(date.getDate()).padStart(2, '0');
+        const YYYYMMDD = `${year}${month}${day}`;
+
+        // Get the current short git sha
+        const gitSha = execSync('git rev-parse --short HEAD').toString().trim();
+
+        const canaryVersion = `${canaryBaseVersion}-canary.${YYYYMMDD}-${gitSha}`;
+
+        console.log(`\nDerived canary version dynamically`, {
+          currentLatestVersion,
+          currentNextVersion,
+          canaryVersion,
+        });
+
+        return canaryVersion;
+      },
     })
     .option('gitRemote', {
       type: 'string',
@@ -265,7 +319,14 @@ function getRegistry() {
   return new URL(execSync('npm config get registry').toString().trim());
 }
 
-function determineDistTag(newVersion: string): 'latest' | 'next' | 'previous' {
+function determineDistTag(
+  newVersion: string
+): 'latest' | 'next' | 'previous' | 'canary' {
+  // Special case of canary
+  if (newVersion.includes('canary')) {
+    return 'canary';
+  }
+
   // For a relative version keyword, it cannot be previous
   if (isRelativeVersionKeyword(newVersion)) {
     const prereleaseKeywords: ReleaseType[] = [

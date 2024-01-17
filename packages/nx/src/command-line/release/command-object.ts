@@ -1,12 +1,14 @@
 import { Argv, CommandModule, showHelp } from 'yargs';
 import { readNxJson } from '../../project-graph/file-utils';
 import {
+  OutputStyle,
   RunManyOptions,
   parseCSV,
   withOutputStyleOption,
   withOverrides,
   withRunManyOptions,
 } from '../yargs-utils/shared-options';
+import { VersionData } from './utils/shared';
 
 export interface NxReleaseArgs {
   groups?: string[];
@@ -28,23 +30,34 @@ export type VersionOptions = NxReleaseArgs &
   GitCommitAndTagOptions & {
     specifier?: string;
     preid?: string;
+    stageChanges?: boolean;
+    firstRelease?: boolean;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
   GitCommitAndTagOptions & {
-    version: string;
-    to: string;
+    // version and/or versionData must be set
+    version?: string | null;
+    versionData?: VersionData;
+    to?: string;
     from?: string;
     interactive?: string;
     gitRemote?: string;
+    workspaceChangelog?: boolean;
   };
 
 export type PublishOptions = NxReleaseArgs &
-  RunManyOptions & {
+  Partial<RunManyOptions> & { outputStyle?: OutputStyle } & {
     registry?: string;
     tag?: string;
     otp?: number;
   };
+
+export type ReleaseOptions = NxReleaseArgs & {
+  yes?: boolean;
+  skipPublish?: boolean;
+  firstRelease?: boolean;
+};
 
 export const yargsReleaseCommand: CommandModule<
   Record<string, unknown>,
@@ -55,6 +68,7 @@ export const yargsReleaseCommand: CommandModule<
     '**ALPHA**: Orchestrate versioning and publishing of applications and libraries',
   builder: (yargs) =>
     yargs
+      .command(releaseCommand)
       .command(versionCommand)
       .command(changelogCommand)
       .command(publishCommand)
@@ -75,7 +89,7 @@ export const yargsReleaseCommand: CommandModule<
         describe:
           'Projects to run. (comma/space delimited project names and/or patterns)',
       })
-      .option('dryRun', {
+      .option('dry-run', {
         describe:
           'Preview the changes without updating files/creating releases',
         alias: 'd',
@@ -111,6 +125,52 @@ export const yargsReleaseCommand: CommandModule<
   },
 };
 
+const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
+  command: '$0 [specifier]',
+  describe:
+    'Create a version and release for the workspace, generate a changelog, and optionally publish the packages',
+  builder: (yargs) =>
+    yargs
+      .positional('specifier', {
+        type: 'string',
+        describe:
+          'Exact version or semver keyword to apply to the selected release group.',
+      })
+      .option('yes', {
+        type: 'boolean',
+        alias: 'y',
+        description:
+          'Automatically answer yes to the confirmation prompt for publishing',
+      })
+      .option('skip-publish', {
+        type: 'boolean',
+        description:
+          'Skip publishing by automatically answering no to the confirmation prompt for publishing',
+      })
+      .option('first-release', {
+        type: 'boolean',
+        description:
+          'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.',
+      })
+      .check((argv) => {
+        if (argv.yes !== undefined && argv.skipPublish !== undefined) {
+          throw new Error(
+            'The --yes and --skip-publish options are mutually exclusive, please use one or the other.'
+          );
+        }
+        return true;
+      }),
+  handler: (args) =>
+    import('./release')
+      .then((m) => m.releaseCLIHandler(args))
+      .then((versionDataOrExitCode) => {
+        if (typeof versionDataOrExitCode === 'number') {
+          return process.exit(versionDataOrExitCode);
+        }
+        process.exit(0);
+      }),
+};
+
 const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
   command: 'version [specifier]',
   aliases: ['v'],
@@ -130,8 +190,26 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
           default: '',
         })
+        .option('stage-changes', {
+          type: 'boolean',
+          describe:
+            'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
+        })
+        .option('first-release', {
+          type: 'boolean',
+          description:
+            'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.',
+        })
     ),
-  handler: (args) => import('./version').then((m) => m.versionHandler(args)),
+  handler: (args) =>
+    import('./version')
+      .then((m) => m.releaseVersionCLIHandler(args))
+      .then((versionDataOrExitCode) => {
+        if (typeof versionDataOrExitCode === 'number') {
+          return process.exit(versionDataOrExitCode);
+        }
+        process.exit(0);
+      }),
 };
 
 const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
@@ -166,7 +244,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
             'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level',
           choices: ['all', 'workspace', 'projects'],
         })
-        .option('gitRemote', {
+        .option('git-remote', {
           type: 'string',
           description:
             'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)',
@@ -182,7 +260,9 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
         })
     ),
   handler: async (args) => {
-    const status = await (await import('./changelog')).changelogHandler(args);
+    const status = await (
+      await import('./changelog')
+    ).releaseChangelogCLIHandler(args);
     process.exit(status);
   },
 };
@@ -208,7 +288,7 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
       }),
   handler: (args) =>
     import('./publish').then((m) =>
-      m.publishHandler(coerceParallelOption(withOverrides(args, 2)))
+      m.releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)))
     ),
 };
 

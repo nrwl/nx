@@ -68,14 +68,7 @@ interface VueArguments extends BaseArguments {
   stack: 'vue';
   workspaceType: 'standalone' | 'integrated';
   appName: string;
-  style: string;
-  e2eTestRunner: 'none' | 'cypress' | 'playwright';
-}
-
-interface NuxtArguments extends BaseArguments {
-  stack: 'nuxt';
-  workspaceType: 'standalone' | 'integrated';
-  appName: string;
+  framework: 'none' | 'nuxt';
   style: string;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
@@ -97,7 +90,6 @@ type Arguments =
   | ReactArguments
   | AngularArguments
   | VueArguments
-  | NuxtArguments
   | NodeArguments
   | UnknownStackArguments;
 
@@ -122,8 +114,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
               Preset
             )
-              // TODO(katerina): Remove this option when @nx/nuxt is released.
-              .filter((p) => p !== Preset.NuxtStandalone && p !== Preset.Nuxt)
               .map((p) => `"${p}"`)
               .join(
                 ', '
@@ -375,7 +365,7 @@ async function determineFolder(
 
 async function determineStack(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'nuxt' | 'unknown'> {
+): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'unknown'> {
   if (parsedArgs.preset) {
     switch (parsedArgs.preset) {
       case Preset.Angular:
@@ -390,10 +380,9 @@ async function determineStack(
         return 'react';
       case Preset.VueStandalone:
       case Preset.VueMonorepo:
-        return 'vue';
-      case Preset.NuxtStandalone:
       case Preset.Nuxt:
-        return 'nuxt';
+      case Preset.NuxtStandalone:
+        return 'vue';
       case Preset.Nest:
       case Preset.NodeStandalone:
       case Preset.Express:
@@ -429,7 +418,7 @@ async function determineStack(
         },
         {
           name: `vue`,
-          message: `Vue:           Configures a Vue application with modern tooling.`,
+          message: `Vue:           Configures a Vue application with your framework of choice.`,
         },
         {
           name: `angular`,
@@ -458,8 +447,6 @@ async function determinePresetOptions(
       return determineAngularOptions(parsedArgs);
     case 'vue':
       return determineVueOptions(parsedArgs);
-    case 'nuxt':
-      return determineNuxtOptions(parsedArgs);
     case 'node':
       return determineNodeOptions(parsedArgs);
     default:
@@ -640,83 +627,33 @@ async function determineVueOptions(
 
   if (parsedArgs.preset) {
     preset = parsedArgs.preset;
+    if (preset === Preset.VueStandalone || preset === Preset.NuxtStandalone) {
+      appName = parsedArgs.appName ?? parsedArgs.name;
+    } else {
+      appName = await determineAppName(parsedArgs);
+    }
   } else {
     const workspaceType = await determineStandaloneOrMonorepo();
-
     if (workspaceType === 'standalone') {
-      preset = Preset.VueStandalone;
+      appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
-      preset = Preset.VueMonorepo;
+      appName = await determineAppName(parsedArgs);
     }
-  }
+    const framework = await determineVueFramework(parsedArgs);
 
-  if (preset === Preset.VueStandalone) {
-    appName = parsedArgs.appName ?? parsedArgs.name;
-  } else {
-    appName = await determineAppName(parsedArgs);
-  }
-
-  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-
-  if (parsedArgs.style) {
-    style = parsedArgs.style;
-  } else {
-    const reply = await enquirer.prompt<{ style: string }>([
-      {
-        name: 'style',
-        message: `Default stylesheet format`,
-        initial: 'css' as any,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'css',
-            message: 'CSS',
-          },
-          {
-            name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
-          },
-          {
-            name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
-          },
-          {
-            name: 'none',
-            message: 'None',
-          },
-        ],
-      },
-    ]);
-    style = reply.style;
-  }
-
-  return { preset, style, appName, e2eTestRunner };
-}
-
-async function determineNuxtOptions(
-  parsedArgs: yargs.Arguments<NuxtArguments>
-): Promise<Partial<Arguments>> {
-  let preset: Preset;
-  let style: undefined | string = undefined;
-  let appName: string;
-  let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-
-  if (parsedArgs.preset) {
-    preset = parsedArgs.preset;
-  } else {
-    const workspaceType = await determineStandaloneOrMonorepo();
-
-    if (workspaceType === 'standalone') {
-      preset = Preset.NuxtStandalone;
+    if (framework === 'nuxt') {
+      if (workspaceType === 'standalone') {
+        preset = Preset.NuxtStandalone;
+      } else {
+        preset = Preset.Nuxt;
+      }
     } else {
-      preset = Preset.Nuxt;
+      if (workspaceType === 'standalone') {
+        preset = Preset.VueStandalone;
+      } else {
+        preset = Preset.VueMonorepo;
+      }
     }
-  }
-
-  if (preset === Preset.NuxtStandalone) {
-    appName = parsedArgs.appName ?? parsedArgs.name;
-  } else {
-    appName = await determineAppName(parsedArgs);
   }
 
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
@@ -1021,11 +958,7 @@ async function determineStandaloneOrMonorepo(): Promise<
 
 async function determineAppName(
   parsedArgs: yargs.Arguments<
-    | ReactArguments
-    | AngularArguments
-    | NodeArguments
-    | VueArguments
-    | NuxtArguments
+    ReactArguments | AngularArguments | NodeArguments | VueArguments
   >
 ): Promise<string> {
   if (parsedArgs.appName) return parsedArgs.appName;
@@ -1131,6 +1064,34 @@ async function determineNextAppDir(
     },
   ]);
   return reply.nextAppDir === 'Yes';
+}
+
+async function determineVueFramework(
+  parsedArgs: yargs.Arguments<VueArguments>
+): Promise<'none' | 'nuxt'> {
+  if (!!parsedArgs.framework) return parsedArgs.framework;
+  const reply = await enquirer.prompt<{
+    framework: 'none' | 'nuxt';
+  }>([
+    {
+      name: 'framework',
+      message: 'What framework would you like to use?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'none',
+          message: 'None',
+          hint: '         I only want vue',
+        },
+        {
+          name: 'nuxt',
+          message: 'Nuxt          [ https://nuxt.com/ ]',
+        },
+      ],
+      initial: 'none' as any,
+    },
+  ]);
+  return reply.framework;
 }
 
 async function determineNodeFramework(

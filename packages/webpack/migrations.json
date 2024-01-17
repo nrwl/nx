@@ -29,6 +29,12 @@
       "version": "16.0.0-beta.1",
       "description": "Replace @nrwl/webpack with @nx/webpack",
       "implementation": "./src/migrations/update-16-0-0-add-nx-packages/update-16-0-0-add-nx-packages"
+    },
+    "update-17-2-1-webpack-config-setup": {
+      "cli": "nx",
+      "version": "17.2.1-beta.0",
+      "description": "Add webpack.config.js file when webpackConfig is not defined",
+      "implementation": "./src/migrations/update-17-2-1/webpack-config-setup"
     }
   },
   "packageJsonUpdates": {

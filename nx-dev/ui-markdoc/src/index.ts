@@ -8,8 +8,6 @@ import {
 } from '@markdoc/markdoc';
 import { load as yamlLoad } from 'js-yaml';
 import React, { ReactNode } from 'react';
-import { Fence } from './lib/nodes/fence.component';
-import { fence } from './lib/nodes/fence.schema';
 import { Heading } from './lib/nodes/heading.component';
 import { heading } from './lib/nodes/heading.schema';
 import { getImageSchema } from './lib/nodes/image.schema';
@@ -21,6 +19,8 @@ import { CallToAction } from './lib/tags/call-to-action.component';
 import { callToAction } from './lib/tags/call-to-action.schema';
 import { Card, Cards, LinkCard } from './lib/tags/cards.component';
 import { card, cards, linkCard } from './lib/tags/cards.schema';
+import { Disclosure } from './lib/tags/disclosure.component';
+import { disclosure } from './lib/tags/disclosure.schema';
 import { GithubRepository } from './lib/tags/github-repository.component';
 import { githubRepository } from './lib/tags/github-repository.schema';
 import { StackblitzButton } from './lib/tags/stackblitz-button.component';
@@ -43,7 +43,7 @@ import { SideBySide } from './lib/tags/side-by-side.component';
 import { sideBySide } from './lib/tags/side-by-side.schema';
 import { Tab, Tabs } from './lib/tags/tabs.component';
 import { tab, tabs } from './lib/tags/tabs.schema';
-import { YouTube, youtube } from './lib/tags/youtube.component';
+import { YouTube, youtube } from '@nx/nx-dev/ui-common';
 import {
   TerminalVideo,
   terminalVideo,
@@ -52,6 +52,9 @@ import { VideoLink, videoLink } from './lib/tags/video-link.component';
 // import { SvgAnimation, svgAnimation } from './lib/tags/svg-animation.component';
 import { Pill } from './lib/tags/pill.component';
 import { pill } from './lib/tags/pill.schema';
+import { frameworkIcons } from './lib/icons';
+import { fence } from './lib/nodes/fence.schema';
+import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
@@ -71,6 +74,7 @@ export const getMarkdocCustomConfig = (
       'call-to-action': callToAction,
       card,
       cards,
+      disclosure,
       'link-card': linkCard,
       'github-repository': githubRepository,
       'stackblitz-button': stackblitzButton,
@@ -96,9 +100,10 @@ export const getMarkdocCustomConfig = (
     CallToAction,
     Card,
     Cards,
+    Disclosure,
     LinkCard,
     CustomLink,
-    Fence,
+    FenceWrapper,
     GithubRepository,
     StackblitzButton,
     Graph,
@@ -129,6 +134,8 @@ export const parseMarkdown: (markdown: string) => Node = (markdown) => {
   const tokens = tokenizer.tokenize(markdown);
   return parse(tokens);
 };
+
+export { frameworkIcons };
 
 export const renderMarkdown: (
   documentContent: string,

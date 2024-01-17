@@ -494,6 +494,50 @@ To fix this you will either need to add a package.json file at that location, or
       });
     });
   });
+
+  describe('leading v in version', () => {
+    it(`should strip a leading v from the provided specifier`, async () => {
+      expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+        '0.0.1'
+      );
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: 'v8.8.8',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+      });
+      expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "my-lib",
+          "version": "8.8.8",
+        }
+      `);
+
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "8.8.8",
+          },
+          "name": "project-with-dependency-on-my-pkg",
+          "version": "8.8.8",
+        }
+      `);
+      expect(
+        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "8.8.8",
+          },
+          "name": "project-with-devDependency-on-my-pkg",
+          "version": "8.8.8",
+        }
+      `);
+    });
+  });
 });
 
 function createReleaseGroup(

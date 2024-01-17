@@ -42,7 +42,6 @@ describe('app', () => {
               outputPath: 'dist/my-node-app',
               main: 'my-node-app/src/main.ts',
               tsConfig: 'my-node-app/tsconfig.app.json',
-              isolatedConfig: true,
               webpackConfig: 'my-node-app/webpack.config.js',
               assets: ['my-node-app/src/assets'],
             },
@@ -70,10 +69,6 @@ describe('app', () => {
       );
       expect(project.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-node-app/**/*.ts'],
-        },
       });
       expect(() =>
         readProjectConfiguration(tree, 'my-node-app-e2e')
@@ -194,10 +189,6 @@ describe('app', () => {
 
       expect(project.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-dir/my-node-app/**/*.ts'],
-        },
       });
 
       expect(() =>
@@ -284,14 +275,6 @@ describe('app', () => {
       expect(project.targets.lint).toMatchInlineSnapshot(`
         {
           "executor": "@nx/eslint:lint",
-          "options": {
-            "lintFilePatterns": [
-              "my-node-app/**/*.ts",
-            ],
-          },
-          "outputs": [
-            "{options.outputFile}",
-          ],
         }
       `);
     });

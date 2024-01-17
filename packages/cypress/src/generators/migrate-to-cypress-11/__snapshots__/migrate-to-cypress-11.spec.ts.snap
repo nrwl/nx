@@ -182,14 +182,6 @@ exports[`convertToCypressTen convertCypressProject should infer targets with --a
   },
   "lint": {
     "executor": "@nx/eslint:lint",
-    "options": {
-      "lintFilePatterns": [
-        "app-e2e/**/*.{js,ts}",
-      ],
-    },
-    "outputs": [
-      "{options.outputFile}",
-    ],
   },
 }
 `;
@@ -247,14 +239,6 @@ exports[`convertToCypressTen convertCypressProject should not break when an inva
   },
   "lint": {
     "executor": "@nx/eslint:lint",
-    "options": {
-      "lintFilePatterns": [
-        "app-e2e/**/*.{js,ts}",
-      ],
-    },
-    "outputs": [
-      "{options.outputFile}",
-    ],
   },
 }
 `;

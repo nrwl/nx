@@ -147,6 +147,9 @@ async function buildStaticRemotes(
   context: ExecutorContext,
   options: ModuleFederationDevServerOptions
 ) {
+  if (!remotes.staticRemotes.length) {
+    return;
+  }
   logger.info(`NX Building ${remotes.staticRemotes.length} static remotes...`);
   const mappedLocationOfRemotes: Record<string, string> = {};
 
@@ -250,6 +253,8 @@ export default async function* moduleFederationDevServer(
         context.projectGraph.nodes[r].data.targets['serve'].options.port;
       if (remotePort >= portToUse) {
         return remotePort + 1;
+      } else {
+        return portToUse;
       }
     }, options.staticRemotesPort);
   }

@@ -64,14 +64,6 @@ describe('updateEslint', () => {
         "overrides": [
           {
             "files": [
-              "*.*",
-            ],
-            "rules": {
-              "@next/next/no-html-link-for-pages": "off",
-            },
-          },
-          {
-            "files": [
               "*.ts",
               "*.tsx",
               "*.js",
@@ -124,6 +116,7 @@ describe('updateEslint', () => {
       "const FlatCompat = require("@eslint/eslintrc");
       const js = require("@eslint/js");
       const baseConfig = require("../eslint.config.js");
+
       const compat = new FlatCompat({
             baseDirectory: __dirname,
             recommendedConfig: js.configs.recommended,
@@ -131,17 +124,13 @@ describe('updateEslint', () => {
         
 
       module.exports = [
-      {
-          files: ["my-app/**/*.*"],
-          rules: { "@next/next/no-html-link-for-pages": "off" }
-      },
           ...baseConfig,
           {
         "files": [
-          "my-app/**/*.ts",
-          "my-app/**/*.tsx",
-          "my-app/**/*.js",
-          "my-app/**/*.jsx"
+          "**/*.ts",
+          "**/*.tsx",
+          "**/*.js",
+          "**/*.jsx"
         ],
         "rules": {
           "@next/next/no-html-link-for-pages": [
@@ -152,15 +141,15 @@ describe('updateEslint', () => {
           },
           {
               files: [
-                  "my-app/**/*.ts",
-                  "my-app/**/*.tsx"
+                  "**/*.ts",
+                  "**/*.tsx"
               ],
               rules: {}
           },
           {
               files: [
-                  "my-app/**/*.js",
-                  "my-app/**/*.jsx"
+                  "**/*.js",
+                  "**/*.jsx"
               ],
               rules: {}
           },
@@ -168,13 +157,13 @@ describe('updateEslint', () => {
       ...compat.config({ env: { jest: true } }).map(config => ({
           ...config,
           files: [
-              "my-app/**/*.spec.ts",
-              "my-app/**/*.spec.tsx",
-              "my-app/**/*.spec.js",
-              "my-app/**/*.spec.jsx"
+              "**/*.spec.ts",
+              "**/*.spec.tsx",
+              "**/*.spec.js",
+              "**/*.spec.jsx"
           ]
       })),
-      { ignores: ["my-app/.next/**/*"] }
+      { ignores: [".next/**/*"] }
       ];
       "
     `);

@@ -6,15 +6,15 @@ Graph of Tasks to be executed
 
 ### Properties
 
-- [dependencies](../../devkit/documents/TaskGraph#dependencies): Record&lt;string, string[]&gt;
+- [dependencies](../../devkit/documents/TaskGraph#dependencies): Record<string, string[]>
 - [roots](../../devkit/documents/TaskGraph#roots): string[]
-- [tasks](../../devkit/documents/TaskGraph#tasks): Record&lt;string, Task&gt;
+- [tasks](../../devkit/documents/TaskGraph#tasks): Record<string, Task>
 
 ## Properties
 
 ### dependencies
 
-• **dependencies**: `Record`<`string`, `string`[]\>
+• **dependencies**: `Record`\<`string`, `string`[]\>
 
 Map of Task IDs to IDs of tasks which the task depends on
 
@@ -30,6 +30,6 @@ IDs of Tasks which do not have any dependencies and are thus ready to execute im
 
 ### tasks
 
-• **tasks**: `Record`<`string`, [`Task`](../../devkit/documents/Task)\>
+• **tasks**: `Record`\<`string`, [`Task`](../../devkit/documents/Task)\>
 
 Map of Task IDs to Tasks

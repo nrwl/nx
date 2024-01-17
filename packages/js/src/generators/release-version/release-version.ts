@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 import * as chalk from 'chalk';
 import { exec } from 'child_process';
-import { CATCH_ALL_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
+import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
 import { getLatestGitTagForPattern } from 'nx/src/command-line/release/utils/git';
 import {
   resolveSemverSpecifierFromConventionalCommits,
@@ -37,10 +37,19 @@ export async function releaseVersionGenerator(
     const versionData: VersionData = {};
 
     // If the user provided a specifier, validate that it is valid semver or a relative semver keyword
-    if (options.specifier && !isValidSemverSpecifier(options.specifier)) {
-      throw new Error(
-        `The given version specifier "${options.specifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`
-      );
+    if (options.specifier) {
+      if (!isValidSemverSpecifier(options.specifier)) {
+        throw new Error(
+          `The given version specifier "${options.specifier}" is not valid. You provide an exact version or a valid semver keyword such as "major", "minor", "patch", etc.`
+        );
+      }
+      // The node semver library classes a leading `v` as valid, but we want to ensure it is not present in the final version
+      options.specifier = options.specifier.replace(/^v/, '');
+    }
+
+    if (options.firstRelease) {
+      // always use disk as a fallback for the first release
+      options.fallbackCurrentVersionResolver = 'disk';
     }
 
     const projects = options.projects;
@@ -71,6 +80,7 @@ export async function releaseVersionGenerator(
     }
 
     let currentVersion: string;
+    let currentVersionResolvedFromFallback: boolean = false;
 
     // only used for options.currentVersionResolver === 'git-tag', but
     // must be declared here in order to reuse it for additional projects
@@ -142,31 +152,53 @@ To fix this you will either need to add a package.json file at that location, or
               color.spinnerColor as typeof colors[number]['spinnerColor'];
             spinner.start();
 
-            // Must be non-blocking async to allow spinner to render
-            currentVersion = await new Promise<string>((resolve, reject) => {
-              exec(
-                `npm view ${packageName} version --registry=${registry} --tag=${tag}`,
-                (error, stdout, stderr) => {
-                  if (error) {
-                    return reject(error);
+            try {
+              // Must be non-blocking async to allow spinner to render
+              currentVersion = await new Promise<string>((resolve, reject) => {
+                exec(
+                  `npm view ${packageName} version --registry=${registry} --tag=${tag}`,
+                  (error, stdout, stderr) => {
+                    if (error) {
+                      return reject(error);
+                    }
+                    if (stderr) {
+                      return reject(stderr);
+                    }
+                    return resolve(stdout.trim());
                   }
-                  if (stderr) {
-                    return reject(stderr);
-                  }
-                  return resolve(stdout.trim());
-                }
+                );
+              });
+
+              spinner.stop();
+
+              log(
+                `📄 Resolved the current version as ${currentVersion} for tag "${tag}" from registry ${registry}`
               );
-            });
+            } catch (e) {
+              spinner.stop();
 
-            spinner.stop();
-
-            log(
-              `📄 Resolved the current version as ${currentVersion} for tag "${tag}" from registry ${registry}`
-            );
+              if (options.fallbackCurrentVersionResolver === 'disk') {
+                log(
+                  `📄 Unable to resolve the current version from the registry ${registry}. Falling back to the version on disk of ${currentVersionFromDisk}`
+                );
+                currentVersion = currentVersionFromDisk;
+                currentVersionResolvedFromFallback = true;
+              } else {
+                throw new Error(
+                  `Unable to resolve the current version from the registry ${registry}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can set the "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`
+                );
+              }
+            }
           } else {
-            log(
-              `📄 Using the current version ${currentVersion} already resolved from the registry ${registry}`
-            );
+            if (currentVersionResolvedFromFallback) {
+              log(
+                `📄 Using the current version ${currentVersion} already resolved from disk fallback.`
+              );
+            } else {
+              log(
+                `📄 Using the current version ${currentVersion} already resolved from the registry ${registry}`
+              );
+            }
           }
           break;
         }
@@ -190,19 +222,33 @@ To fix this you will either need to add a package.json file at that location, or
               }
             );
             if (!latestMatchingGitTag) {
-              throw new Error(
-                `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version.`
+              if (options.fallbackCurrentVersionResolver === 'disk') {
+                log(
+                  `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`
+                );
+                currentVersion = currentVersionFromDisk;
+                currentVersionResolvedFromFallback = true;
+              } else {
+                throw new Error(
+                  `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can set the "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`
+                );
+              }
+            } else {
+              currentVersion = latestMatchingGitTag.extractedVersion;
+              log(
+                `📄 Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}".`
               );
             }
-
-            currentVersion = latestMatchingGitTag.extractedVersion;
-            log(
-              `📄 Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}".`
-            );
           } else {
-            log(
-              `📄 Using the current version ${currentVersion} already resolved from git tag "${latestMatchingGitTag.tag}".`
-            );
+            if (currentVersionResolvedFromFallback) {
+              log(
+                `📄 Using the current version ${currentVersion} already resolved from disk fallback.`
+              );
+            } else {
+              log(
+                `📄 Using the current version ${currentVersion} already resolved from git tag "${latestMatchingGitTag.tag}".`
+              );
+            }
           }
           break;
         }
@@ -240,10 +286,15 @@ To fix this you will either need to add a package.json file at that location, or
               );
             }
 
+            const affectedProjects =
+              options.releaseGroup.projectsRelationship === 'independent'
+                ? [projectName]
+                : projects.map((p) => p.name);
+
             specifier = await resolveSemverSpecifierFromConventionalCommits(
               latestMatchingGitTag.tag,
               options.projectGraph,
-              projects.map((p) => p.name)
+              affectedProjects
             );
 
             if (!specifier) {
@@ -271,7 +322,9 @@ To fix this you will either need to add a package.json file at that location, or
           case 'prompt': {
             // Only add the release group name to the log if it is one set by the user, otherwise it is useless noise
             const maybeLogReleaseGroup = (log: string): string => {
-              if (options.releaseGroup.name === CATCH_ALL_RELEASE_GROUP) {
+              if (
+                options.releaseGroup.name === IMPLICIT_DEFAULT_RELEASE_GROUP
+              ) {
                 return log;
               }
               return `${log} within release group "${options.releaseGroup.name}"`;
@@ -304,14 +357,7 @@ To fix this you will either need to add a package.json file at that location, or
         }
       }
 
-      if (!specifier) {
-        log(
-          `🚫 Skipping versioning "${projectPackageJson.name}" as no changes were detected.`
-        );
-        continue;
-      }
-
-      // Resolve any local package dependencies for this project (before applying the new version)
+      // Resolve any local package dependencies for this project (before applying the new version or updating the versionData)
       const localPackageDependencies = resolveLocalPackageDependencies(
         tree,
         options.projectGraph,
@@ -322,11 +368,31 @@ To fix this you will either need to add a package.json file at that location, or
         options.releaseGroup.projectsRelationship === 'independent'
       );
 
+      const dependentProjects = Object.values(localPackageDependencies)
+        .flat()
+        .filter((localPackageDependency) => {
+          return localPackageDependency.target === project.name;
+        });
+
+      versionData[projectName] = {
+        currentVersion,
+        dependentProjects,
+        newVersion: null, // will stay as null in the final result the case that no changes are detected
+      };
+
+      if (!specifier) {
+        log(
+          `🚫 Skipping versioning "${projectPackageJson.name}" as no changes were detected.`
+        );
+        continue;
+      }
+
       const newVersion = deriveNewSemverVersion(
         currentVersion,
         specifier,
         options.preid
       );
+      versionData[projectName].newVersion = newVersion;
 
       writeJson(tree, packageJsonPath, {
         ...projectPackageJson,
@@ -336,12 +402,6 @@ To fix this you will either need to add a package.json file at that location, or
       log(
         `✍️  New version ${newVersion} written to ${workspaceRelativePackageJsonPath}`
       );
-
-      const dependentProjects = Object.values(localPackageDependencies)
-        .flat()
-        .filter((localPackageDependency) => {
-          return localPackageDependency.target === project.name;
-        });
 
       if (dependentProjects.length > 0) {
         log(
@@ -369,12 +429,6 @@ To fix this you will either need to add a package.json file at that location, or
           }
         );
       }
-
-      versionData[projectName] = {
-        currentVersion,
-        newVersion,
-        dependentProjects,
-      };
     }
 
     /**

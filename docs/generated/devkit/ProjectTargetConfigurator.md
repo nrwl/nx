@@ -1,10 +1,10 @@
 # Type alias: ProjectTargetConfigurator
 
-Ƭ **ProjectTargetConfigurator**: (`file`: `string`) => `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
+Ƭ **ProjectTargetConfigurator**: (`file`: `string`) => `Record`\<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
 
 #### Type declaration
 
-▸ (`file`): `Record`<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
+▸ (`file`): `Record`\<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
 
 ##### Parameters
 
@@ -14,7 +14,7 @@
 
 ##### Returns
 
-`Record`<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
+`Record`\<`string`, [`TargetConfiguration`](../../devkit/documents/TargetConfiguration)\>
 
 **`Deprecated`**
 

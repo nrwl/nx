@@ -1,6 +1,6 @@
 # Function: createProjectFileMapUsingProjectGraph
 
-▸ **createProjectFileMapUsingProjectGraph**(`graph`): `Promise`<[`ProjectFileMap`](../../devkit/documents/ProjectFileMap)\>
+▸ **createProjectFileMapUsingProjectGraph**(`graph`): `Promise`\<[`ProjectFileMap`](../../devkit/documents/ProjectFileMap)\>
 
 #### Parameters
 
@@ -10,4 +10,4 @@
 
 #### Returns
 
-`Promise`<[`ProjectFileMap`](../../devkit/documents/ProjectFileMap)\>
+`Promise`\<[`ProjectFileMap`](../../devkit/documents/ProjectFileMap)\>

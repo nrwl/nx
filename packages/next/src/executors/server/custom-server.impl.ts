@@ -15,7 +15,8 @@ export default async function* serveExecutor(
     : 'production';
 
   // Setting port that the custom server should use.
-  (process.env as any).PORT = options.port;
+  process.env.PORT = options.port ? `${options.port}` : process.env.PORT;
+  options.port = parseInt(process.env.PORT);
 
   const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 

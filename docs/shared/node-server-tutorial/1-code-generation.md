@@ -44,10 +44,10 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 ✔ What framework should be used? · express
 ✔ Standalone project or integrated monorepo? · standalone
 ✔ Would you like to generate a Dockerfile? [https://docs.docker.com/] · Yes
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Enable remote caching to make your CI faster · Yes
 ```
 
-{% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/nx-cloud/intro/ci-with-nx" /%}
+{% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/ci/intro/ci-with-nx" /%}
 
 The `node-standalone` preset automatically creates a `products-api` application at the root of the workspace and an `e2e` project that runs against it.
 

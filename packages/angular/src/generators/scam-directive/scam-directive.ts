@@ -20,7 +20,9 @@ export async function scamDirectiveGenerator(tree: Tree, rawOptions: Schema) {
   convertDirectiveToScam(tree, options);
   exportScam(tree, options);
 
-  await formatFiles(tree);
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
 }
 
 export default scamDirectiveGenerator;

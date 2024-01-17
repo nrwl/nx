@@ -323,6 +323,12 @@
       },
       "description": "Replace the deep imports from 'zone.js/dist/zone' and 'zone.js/dist/zone-testing' with 'zone.js' and 'zone.js/testing'.",
       "factory": "./src/migrations/update-17-1-0/update-zone-js-deep-import"
+    },
+    "rename-webpack-dev-server-executor": {
+      "cli": "nx",
+      "version": "17.2.0-beta.2",
+      "description": "Rename '@nx/angular:webpack-dev-server' executor to '@nx/angular:dev-server'",
+      "factory": "./src/migrations/update-17-2-0/rename-webpack-dev-server"
     }
   },
   "packageJsonUpdates": {
@@ -1427,6 +1433,10 @@
           "version": "~17.0.0",
           "alwaysAddToPackageJson": false
         },
+        "@angular/pwa": {
+          "version": "~17.0.0",
+          "alwaysAddToPackageJson": false
+        },
         "@angular/core": {
           "version": "~17.0.0",
           "alwaysAddToPackageJson": true
@@ -1502,6 +1512,27 @@
       "packages": {
         "jest-preset-angular": {
           "version": "~13.1.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.2.0-ngrx": {
+      "version": "17.2.0-beta.3",
+      "requires": {
+        "@angular/core": "^17.0.0"
+      },
+      "packages": {
+        "@ngrx/store": {
+          "version": "~17.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.3.0": {
+      "version": "17.3.0-beta.3",
+      "packages": {
+        "@types/node": {
+          "version": "18.16.9",
           "alwaysAddToPackageJson": false
         }
       }

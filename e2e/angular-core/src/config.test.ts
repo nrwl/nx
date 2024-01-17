@@ -12,7 +12,7 @@ describe('angular.json v1 config', () => {
   const app1 = uniq('app1');
 
   beforeAll(() => {
-    newProject();
+    newProject({ packages: ['@nx/angular'] });
     runCLI(
       `generate @nx/angular:app ${app1} --project-name-and-root-format=as-provided --no-interactive`
     );
@@ -120,13 +120,7 @@ const angularV1Json = (appName: string) => `{
           }
         },
         "lint": {
-          "builder": "@nx/eslint:lint",
-          "options": {
-            "lintFilePatterns": [
-              "${appName}/src/**/*.ts",
-              "${appName}/src/**/*.html"
-            ]
-          }
+          "builder": "@nx/eslint:lint"
         },
         "test": {
           "builder": "@nx/jest:jest",
@@ -159,10 +153,7 @@ const angularV1Json = (appName: string) => `{
         },
         "lint": {
           "builder": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": ["${appName}-e2e/**/*.{js,ts}"]
-          }
+          "outputs": ["{options.outputFile}"]
         }
       },
       "tags": [],

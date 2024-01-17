@@ -1,8 +1,9 @@
-import type { Tree } from '@nx/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
 import {
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
+  runTasksInSerial,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -11,20 +12,27 @@ import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { rollupInitGenerator } from '../init/init';
 import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupProjectSchema } from './schema';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function configurationGenerator(
   tree: Tree,
   options: RollupProjectSchema
 ) {
-  const task = await rollupInitGenerator(tree, {
-    ...options,
-    skipFormat: true,
-  });
+  const tasks: GeneratorCallback[] = [];
+  tasks.push(await rollupInitGenerator(tree, { ...options, skipFormat: true }));
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(tree, options));
+  }
+
   options.buildTarget ??= 'build';
   checkForTargetConflicts(tree, options);
   addBuildTarget(tree, options);
-  await formatFiles(tree);
-  return task;
+
+  if (!options.skipFormat) {
+    await formatFiles(tree);
+  }
+
+  return runTasksInSerial(...tasks);
 }
 
 function checkForTargetConflicts(tree: Tree, options: RollupProjectSchema) {

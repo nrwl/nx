@@ -4,17 +4,17 @@
 
 ### Properties
 
-- [builders](../../devkit/documents/ExecutorsJson#builders): Record&lt;string, ExecutorsJsonEntry&gt;
-- [executors](../../devkit/documents/ExecutorsJson#executors): Record&lt;string, ExecutorsJsonEntry&gt;
+- [builders](../../devkit/documents/ExecutorsJson#builders): Record<string, ExecutorsJsonEntry>
+- [executors](../../devkit/documents/ExecutorsJson#executors): Record<string, ExecutorsJsonEntry>
 
 ## Properties
 
 ### builders
 
-• `Optional` **builders**: `Record`<`string`, `ExecutorsJsonEntry`\>
+• `Optional` **builders**: `Record`\<`string`, `ExecutorsJsonEntry`\>
 
 ---
 
 ### executors
 
-• `Optional` **executors**: `Record`<`string`, `ExecutorsJsonEntry`\>
+• `Optional` **executors**: `Record`\<`string`, `ExecutorsJsonEntry`\>

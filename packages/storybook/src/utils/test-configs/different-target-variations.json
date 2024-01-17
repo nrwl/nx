@@ -160,13 +160,7 @@
       "defaultConfiguration": "production"
     },
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "libs/nglibuild/**/*.ts",
-          "libs/nglibuild/**/*.html"
-        ]
-      }
+      "executor": "@nx/eslint:lint"
     }
   },
   "react-swc": {

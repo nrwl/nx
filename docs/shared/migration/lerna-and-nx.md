@@ -21,9 +21,9 @@ For a discussion on #2, see [dependency management](#dependency-management) belo
 Nx comes with a powerful task scheduler that intelligently runs operations and makes sure they are quick. This happens in a variety of ways:
 
 - **Parallelization and task dependencies -** Nx automatically [knows how your projects relate to each other](/concepts/more-concepts/how-project-graph-is-built). As a result, if `project-a` depends on `project-b` and you run the build command for `project-a`, Nx first runs the builds for all of `project-a`'s dependencies and then the invoked project itself. Nx sorts these tasks to maximize parallelism.
-- **Only run what changed -** Using [Nx affected commands](/nx-cloud/features/affected) you only really execute tasks on the projects that changed, compared to a given baseline (usually the main branch).
+- **Only run what changed -** Using [Nx affected commands](/ci/features/affected) you only really execute tasks on the projects that changed, compared to a given baseline (usually the main branch).
 - **Caching -** You get Nx's [computation caching](/concepts/how-caching-works) for free. All operations, including artifacts and terminal output are restored from the cache (if present) in a completely transparent way without disrupting your DX. No configuration needed. Obviously this results in an incredible speed improvement.
-- **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization. It even learns from previous runs to better distribute tasks! [Learn more](/nx-cloud/concepts/dte)
+- **Distributed Task Execution -** This is unique to Nx. In combination with Nx Cloud your tasks are automatically distributed across CI agents, taking into account build order, maximizing parallelization and thus agent utilization. It even learns from previous runs to better distribute tasks! [Learn more](/ci/features/distribute-task-execution)
 
 ## Integrating Nx with Lerna
 
@@ -102,7 +102,7 @@ Nx works even without `nx.json` but to configure some more details such as the `
 Having done these steps, you can now keep using your Lerna repository as you did before. All the commands will work in a backwards compatible way but will be a lot faster. [Read our blog post for some benchmarks](https://blog.nrwl.io/lerna-used-to-walk-now-it-can-fly-eab7a0fe7700?source=friends_link&sk=6c827ec7c9adfc1c760ff2e3f3e05cc7).
 
 {% callout type="note" title="Enable remote caching?" %}
-This does not include distributed caching or distributed task execution powered by Nx Cloud. But you can easily add support for it if wanted. All that's required is `npx nx connect-to-nx-cloud`.
+This does not include remote caching or distributed task execution powered by Nx Cloud. But you can easily add support for it if wanted. All that's required is `npx nx connect-to-nx-cloud`.
 {% /callout %}
 
 ### Switch to the Nx native commands in your Lerna workspace
