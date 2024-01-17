@@ -22,8 +22,8 @@ export class NxWebpackPlugin {
   private readonly options: NormalizedNxWebpackPluginOptions;
 
   constructor(options: NxWebpackPluginOptions = {}) {
-    // If we're not in an Nx task, we're building inferred targets, so skip normalizing build options.
-    if (process.env['NX_TASK_TARGET_PROJECT']) {
+    // If we're building inferred targets, skip normalizing build options.
+    if (!global.NX_GRAPH_CREATION) {
       this.options = normalizeOptions(options);
     }
   }

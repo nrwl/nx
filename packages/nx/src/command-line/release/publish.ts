@@ -129,6 +129,11 @@ async function runPublishOnProjects(
   }
   if (args.dryRun) {
     overrides.dryRun = args.dryRun;
+    /**
+     * Ensure the env var is set too, so that any and all publish executors triggered
+     * indirectly via dependsOn can also pick up on the fact that this is a dry run.
+     */
+    process.env.NX_DRY_RUN = 'true';
   }
 
   if (args.verbose) {

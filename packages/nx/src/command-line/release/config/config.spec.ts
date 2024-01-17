@@ -52,10 +52,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -65,7 +65,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -73,7 +75,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -102,7 +104,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -120,10 +123,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -133,7 +136,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -141,7 +146,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -170,7 +175,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -191,10 +197,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -204,7 +210,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -212,7 +220,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -241,7 +249,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -278,10 +287,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -291,7 +300,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -299,7 +310,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -328,7 +339,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -355,10 +367,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -368,7 +380,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -376,7 +390,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -403,7 +417,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -428,10 +443,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -441,7 +456,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -449,7 +466,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -477,7 +494,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -514,10 +532,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -527,7 +545,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -535,7 +555,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -576,7 +596,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -602,10 +623,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -615,7 +636,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -623,7 +646,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -635,7 +658,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
-                    "includeAuthors": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -658,7 +683,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -686,10 +712,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -699,7 +725,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -707,7 +735,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -740,7 +768,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -766,8 +795,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -777,7 +806,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -785,7 +816,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": true,
               "commitArgs": "--no-verify",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -814,7 +845,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -844,9 +876,9 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -857,7 +889,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -865,7 +899,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -894,7 +928,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -937,10 +972,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -950,7 +985,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -958,7 +995,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -985,7 +1022,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1008,10 +1046,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1021,7 +1059,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1029,7 +1069,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1058,7 +1098,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1091,10 +1132,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1104,7 +1145,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1112,7 +1155,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1124,7 +1167,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
-                    "includeAuthors": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1150,7 +1195,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1176,10 +1222,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1189,7 +1235,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1218,7 +1264,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1240,7 +1287,8 @@ describe('createNxReleaseConfig()', () => {
             // override single field in user config
             file: './{projectRoot}/custom-path.md',
             renderOptions: {
-              includeAuthors: false, // override deeply nested field in user config
+              authors: false, // override deeply nested field in user config
+              commitReferences: false, // override deeply nested field in user config
             },
           },
         },
@@ -1251,10 +1299,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1263,7 +1311,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "./{projectRoot}/custom-path.md",
                 "renderOptions": {
-                  "includeAuthors": false,
+                  "authors": false,
+                  "commitReferences": false,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1272,7 +1322,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "Custom no changes!",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1280,7 +1332,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1292,7 +1344,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
-                    "includeAuthors": false,
+                    "authors": false,
+                    "commitReferences": false,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1317,7 +1371,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1341,10 +1396,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1353,7 +1408,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1362,7 +1419,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1370,7 +1429,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1382,7 +1441,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
-                    "includeAuthors": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1407,7 +1468,85 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should respect disabling git at the top level (thus disabling the default of true for changelog', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        git: {
+          commit: false,
+          tag: false,
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1427,7 +1566,7 @@ describe('createNxReleaseConfig()', () => {
             // overriding field at the root should be inherited by all groups that do not set their own override
             file: './{projectRoot}/custom-path.md',
             renderOptions: {
-              includeAuthors: true, // should be overridden by group level config
+              authors: true, // should be overridden by group level config
             },
           },
         },
@@ -1437,7 +1576,7 @@ describe('createNxReleaseConfig()', () => {
             changelog: {
               createRelease: 'github', // set field in group config
               renderOptions: {
-                includeAuthors: false, // override deeply nested field in group config
+                authors: false, // override deeply nested field in group config
               },
             },
           },
@@ -1459,10 +1598,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1471,7 +1610,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "./{projectRoot}/custom-path.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1480,7 +1621,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1488,7 +1631,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1500,7 +1643,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/custom-path.md",
                   "renderOptions": {
-                    "includeAuthors": false,
+                    "authors": false,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1532,7 +1677,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "./{projectRoot}/a-different-custom-path-at-the-group.md",
                   "renderOptions": {
-                    "includeAuthors": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1555,7 +1702,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1594,10 +1742,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1606,7 +1754,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                 "file": "{projectRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1615,7 +1765,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1623,7 +1775,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1635,7 +1787,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
-                    "includeAuthors": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1655,7 +1809,9 @@ describe('createNxReleaseConfig()', () => {
                   "entryWhenNoChanges": "This was a version bump only for {projectName} to align it with other projects, there were no code changes.",
                   "file": "{projectRoot}/CHANGELOG.md",
                   "renderOptions": {
-                    "includeAuthors": true,
+                    "authors": true,
+                    "commitReferences": true,
+                    "versionTitleDate": true,
                   },
                   "renderer": "nx/changelog-renderer",
                 },
@@ -1678,7 +1834,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1971,10 +2128,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1984,7 +2141,9 @@ describe('createNxReleaseConfig()', () => {
                 "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
                 "file": "{workspaceRoot}/CHANGELOG.md",
                 "renderOptions": {
-                  "includeAuthors": true,
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
                 },
                 "renderer": "nx/changelog-renderer",
               },
@@ -1992,7 +2151,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -2032,7 +2191,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",

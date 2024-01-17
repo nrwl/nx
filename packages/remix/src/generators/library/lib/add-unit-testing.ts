@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import {
   updateJestTestSetup,
-  updateViteTestSetup,
+  updateVitestTestSetup,
 } from '../../../utils/testing-config-utils';
 import {
   getRemixVersion,
@@ -40,7 +40,7 @@ export function addUnitTestingSetup(tree: Tree, options: RemixLibraryOptions) {
       options.projectRoot,
       `vite.config.ts`
     );
-    updateViteTestSetup(tree, pathToVitestConfig, './src/test-setup.ts');
+    updateVitestTestSetup(tree, pathToVitestConfig, './src/test-setup.ts');
   } else if (options.unitTestRunner === 'jest') {
     const pathToJestConfig = joinPathFragments(
       options.projectRoot,

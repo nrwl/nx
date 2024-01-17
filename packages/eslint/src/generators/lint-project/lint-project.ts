@@ -1,4 +1,5 @@
 import type {
+  GeneratorCallback,
   NxJsonConfiguration,
   ProjectConfiguration,
   Tree,
@@ -8,6 +9,7 @@ import {
   offsetFromRoot,
   readJson,
   readProjectConfiguration,
+  runTasksInSerial,
   updateJson,
   updateProjectConfiguration,
   writeJson,
@@ -35,6 +37,7 @@ import {
   baseEsLintFlatConfigFile,
 } from '../../utils/config-file';
 import { hasEslintPlugin } from '../utils/plugin';
+import { setupRootEsLint } from './setup-root-eslint';
 
 interface LintProjectOptions {
   project: string;
@@ -52,12 +55,17 @@ export async function lintProjectGenerator(
   tree: Tree,
   options: LintProjectOptions
 ) {
-  const installTask = lintInitGenerator(tree, {
-    linter: options.linter,
+  const tasks: GeneratorCallback[] = [];
+  const initTask = lintInitGenerator(tree, {
+    skipPackageJson: options.skipPackageJson,
+  });
+  tasks.push(initTask);
+  const rootEsLintTask = setupRootEsLint(tree, {
     unitTestRunner: options.unitTestRunner,
     skipPackageJson: options.skipPackageJson,
     rootProject: options.rootProject,
   });
+  tasks.push(rootEsLintTask);
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   let lintFilePatterns = options.eslintFilePatterns;
@@ -91,7 +99,6 @@ export async function lintProjectGenerator(
   } else {
     projectConfig.targets['lint'] = {
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
     };
 
     if (lintFilePatterns && lintFilePatterns.length) {
@@ -155,7 +162,7 @@ export async function lintProjectGenerator(
     await formatFiles(tree);
   }
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 function createEsLintConfiguration(

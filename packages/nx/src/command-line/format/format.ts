@@ -25,6 +25,8 @@ import { readNxJson } from '../../config/configuration';
 import { ProjectGraph } from '../../config/project-graph';
 import { chunkify } from '../../utils/chunkify';
 import { allFileData } from '../../utils/all-file-data';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { output } from '../../utils/output';
 
 const PRETTIER_PATH = getPrettierPath();
 
@@ -83,19 +85,21 @@ async function getPatterns(
     const p = parseFiles(args);
 
     // In prettier v3 the getSupportInfo result is a promise
-    const supportedExtensions = (
-      await (prettier.getSupportInfo() as Promise<SupportInfo> | SupportInfo)
-    ).languages
-      .flatMap((language) => language.extensions)
-      .filter((extension) => !!extension)
-      // Prettier supports ".swcrc" as a file instead of an extension
-      // So we add ".swcrc" as a supported extension manually
-      // which allows it to be considered for calculating "patterns"
-      .concat('.swcrc');
-
-    const patterns = p.files.filter(
-      (f) => fileExists(f) && supportedExtensions.includes(path.extname(f))
+    const supportedExtensions = new Set(
+      (
+        await (prettier.getSupportInfo() as Promise<SupportInfo> | SupportInfo)
+      ).languages
+        .flatMap((language) => language.extensions)
+        .filter((extension) => !!extension)
+        // Prettier supports ".swcrc" as a file instead of an extension
+        // So we add ".swcrc" as a supported extension manually
+        // which allows it to be considered for calculating "patterns"
+        .concat('.swcrc')
     );
+
+    const patterns = p.files
+      .map((f) => path.relative(workspaceRoot, f))
+      .filter((f) => fileExists(f) && supportedExtensions.has(path.extname(f)));
 
     // exclude patterns in .nxignore or .gitignore
     const nonIgnoredPatterns = getIgnoreObject().filter(patterns);
@@ -107,7 +111,13 @@ async function getPatterns(
           graph
         )
       : nonIgnoredPatterns;
-  } catch {
+  } catch (err) {
+    output.error({
+      title:
+        err?.message ||
+        'Something went wrong when resolving the list of files for the formatter',
+      bodyLines: [`Defaulting to all files pattern: "${allFilesPattern}"`],
+    });
     return allFilesPattern;
   }
 }

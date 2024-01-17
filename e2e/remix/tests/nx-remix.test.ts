@@ -60,7 +60,7 @@ describe('remix e2e', () => {
       const plugin = uniq('remix');
       const appName = `sub-${plugin}`;
       runCLI(
-        `generate @nx/remix:app ${plugin} --directory=sub --projectNameAndRootFormat=derived --rootProject=false`
+        `generate @nx/remix:app ${plugin} --directory=sub --projectNameAndRootFormat=derived --rootProject=false --no-interactive`
       );
       const project = readJson(`sub/${plugin}/project.json`);
       expect(project.targets.build.options.outputPath).toEqual(
@@ -74,7 +74,7 @@ describe('remix e2e', () => {
     it('should create src in the specified directory --projectNameAndRootFormat=as-provided', async () => {
       const plugin = uniq('remix');
       runCLI(
-        `generate @nx/remix:app ${plugin} --directory=subdir --projectNameAndRootFormat=as-provided --rootProject=false`
+        `generate @nx/remix:app ${plugin} --directory=subdir --projectNameAndRootFormat=as-provided --rootProject=false --no-interactive`
       );
       const project = readJson(`subdir/project.json`);
       expect(project.targets.build.options.outputPath).toEqual(`dist/subdir`);

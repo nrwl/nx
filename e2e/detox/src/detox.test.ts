@@ -51,7 +51,7 @@ describe('Detox', () => {
     const appName = uniq('app1');
 
     runCLI(
-      `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint --install=false --project-name-and-root-format=as-provided`
+      `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --linter=eslint --install=false --project-name-and-root-format=as-provided --interactive=false`
     );
 
     // check files are generated without the layout directory ("apps/") and

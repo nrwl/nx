@@ -5,11 +5,9 @@ import {
   joinPathFragments,
   Tree,
 } from '@nx/devkit';
-import { configurationGenerator } from '@nx/jest';
 import { Linter } from '@nx/eslint';
-import { addTsConfigPath } from '@nx/js';
+import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import init from '../../generators/init/init';
-import { E2eTestRunner } from '../../utils/test-runners';
 import addLintingGenerator from '../add-linting/add-linting';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
 import {
@@ -30,6 +28,9 @@ import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
 import { createFiles } from './lib/create-files';
 import { addProject } from './lib/add-project';
+import { addJest } from '../utils/add-jest';
+import { setGeneratorDefaults } from './lib/set-generator-defaults';
+import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -69,11 +70,9 @@ export async function libraryGeneratorInternal(
 
   const pkgVersions = versions(tree);
 
-  await init(tree, {
-    ...libraryOptions,
-    skipFormat: true,
-    e2eTestRunner: E2eTestRunner.None,
-  });
+  await jsInitGenerator(tree, { ...options, js: false, skipFormat: true });
+  await init(tree, { ...libraryOptions, skipFormat: true });
+  ensureAngularDependencies(tree);
 
   const project = addProject(tree, libraryOptions);
 
@@ -81,6 +80,7 @@ export async function libraryGeneratorInternal(
   updateTsConfig(tree, libraryOptions);
   await addUnitTestRunner(tree, libraryOptions);
   updateNpmScopeIfBuildableOrPublishable(tree, libraryOptions);
+  setGeneratorDefaults(tree, options);
 
   if (!libraryOptions.standalone) {
     addModule(tree, libraryOptions);
@@ -127,33 +127,12 @@ async function addUnitTestRunner(
   options: NormalizedSchema['libraryOptions']
 ) {
   if (options.unitTestRunner === 'jest') {
-    await configurationGenerator(host, {
-      project: options.name,
-      setupFile: 'angular',
-      supportTsx: false,
-      skipSerializers: false,
-      skipFormat: true,
+    await addJest(host, {
+      name: options.name,
+      projectRoot: options.projectRoot,
       skipPackageJson: options.skipPackageJson,
+      strict: options.strict,
     });
-    const setupFile = joinPathFragments(
-      options.projectRoot,
-      'src',
-      'test-setup.ts'
-    );
-    if (options.strict && host.exists(setupFile)) {
-      const contents = host.read(setupFile, 'utf-8');
-      host.write(
-        setupFile,
-        `// @ts-expect-error https://thymikee.github.io/jest-preset-angular/docs/getting-started/test-environment
-globalThis.ngJest = {
-  testEnvironmentOptions: {
-    errorOnUnknownElements: true,
-    errorOnUnknownProperties: true,
-  },
-};
-${contents}`
-      );
-    }
   }
 }
 

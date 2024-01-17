@@ -28,7 +28,6 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "nuxi": "^3.10.0",
     "tslib": "^2.3.0",
     "@nuxt/kit": "^3.8.1",
     "@nx/devkit": "file:../devkit",
@@ -36,9 +35,7 @@
     "@nx/eslint": "file:../eslint",
     "@nx/vue": "file:../vue"
   },
-  "peerDependencies": {
-    "vite": "^5.0.0"
-  },
+  "peerDependencies": {},
   "publishConfig": {
     "access": "public"
   }

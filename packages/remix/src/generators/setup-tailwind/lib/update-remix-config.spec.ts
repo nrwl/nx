@@ -7,7 +7,7 @@ describe('updateRemixConfig', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     tree.write(
-      `remix.config.cjs`,
+      `remix.config.js`,
       stripIndents`module.exports = {
       ignoredRouteFiles: ['**/.*'],
       watchPaths: ['../../libs']
@@ -18,7 +18,7 @@ describe('updateRemixConfig', () => {
     updateRemixConfig(tree, '.');
 
     // ASSERT
-    expect(tree.read('remix.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.read('remix.config.js', 'utf-8')).toMatchInlineSnapshot(`
       "module.exports = {
       tailwind: true,
       ignoredRouteFiles: ['**/.*'],
@@ -31,7 +31,7 @@ describe('updateRemixConfig', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     tree.write(
-      `remix.config.cjs`,
+      `remix.config.js`,
       stripIndents`module.exports = {
       ignoredRouteFiles: ['**/.*'],
       tailwind: false,
@@ -43,7 +43,7 @@ describe('updateRemixConfig', () => {
     updateRemixConfig(tree, '.');
 
     // ASSERT
-    expect(tree.read('remix.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.read('remix.config.js', 'utf-8')).toMatchInlineSnapshot(`
       "module.exports = {
       ignoredRouteFiles: ['**/.*'],
       tailwind: true,
@@ -56,7 +56,7 @@ describe('updateRemixConfig', () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();
     tree.write(
-      `remix.config.cjs`,
+      `remix.config.js`,
       stripIndents`module.exports = {
       ignoredRouteFiles: ['**/.*'],
       tailwind: true,
@@ -68,7 +68,7 @@ describe('updateRemixConfig', () => {
     updateRemixConfig(tree, '.');
 
     // ASSERT
-    expect(tree.read('remix.config.cjs', 'utf-8')).toMatchInlineSnapshot(`
+    expect(tree.read('remix.config.js', 'utf-8')).toMatchInlineSnapshot(`
       "module.exports = {
       ignoredRouteFiles: ['**/.*'],
       tailwind: true,

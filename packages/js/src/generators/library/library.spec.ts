@@ -495,7 +495,6 @@ describe('lib', () => {
         });
         expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
           executor: '@nx/eslint:lint',
-          outputs: ['{options.outputFile}'],
         });
       });
 
@@ -565,7 +564,6 @@ describe('lib', () => {
 
         expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
           executor: '@nx/eslint:lint',
-          outputs: ['{options.outputFile}'],
         });
       });
 

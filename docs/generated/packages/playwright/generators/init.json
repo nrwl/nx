@@ -19,11 +19,6 @@
         "default": false,
         "description": "Do not add dependencies to `package.json`.",
         "x-priority": "internal"
-      },
-      "skipInstall": {
-        "type": "boolean",
-        "description": "Skip running `playwright install`. This is to ensure that playwright browsers are installed.",
-        "default": false
       }
     },
     "required": [],

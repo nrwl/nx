@@ -4,6 +4,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import { testOnlyTransferFileMap } from '../native';
 
 describe('native task hasher', () => {
   let tempFs: TempFs;
@@ -653,4 +654,41 @@ describe('native task hasher', () => {
       }
     `);
   });
+
+  /**
+   * commented out to show how to debug issues with hashing
+   *
+   *
+   *
+   * gather the project graph + task graph with `nx run project:target --graph=graph.json`
+   * gather the file-map.json from `.nx/cache/file-map.json`
+   * gather the nx.json file
+   */
+  // it('should test client workspaces', async () => {
+  //   let nxJson = require('nx.json');
+  //   let graphs = require('graph.json');
+  //   let projectGraph = graphs.graph;
+  //   let taskGraph = graphs.tasks;
+  //
+  //   let files = require('file-map.json');
+  //   let projectFiles = files.fileMap.projectFileMap;
+  //   let nonProjectFiles = files.fileMap.nonProjectFiles;
+  //
+  //   let transferred = testOnlyTransferFileMap(projectFiles, nonProjectFiles);
+  //
+  //   let hasher = new NativeTaskHasherImpl(
+  //     '',
+  //     nxJson,
+  //     projectGraph,
+  //     transferred,
+  //     { selectivelyHashTsConfig: false }
+  //   );
+  //
+  //   const hashes = await hasher.hashTasks(
+  //     Object.values(taskGraph.tasks),
+  //     taskGraph,
+  //     {}
+  //   );
+  //   console.dir(hashes, { depth: null });
+  // });
 });

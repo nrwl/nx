@@ -1,6 +1,11 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { useIntervalWhen } from '../hooks/use-interval-when';
+import { getProjectGraphService } from '../machines/get-services';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
+import { FocusedPanel } from '../ui-components/focused-panel';
+import { ShowHideAll } from '../ui-components/show-hide-all';
 import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
+import { TracingAlgorithmType } from './machines/interfaces';
 import {
   collapseEdgesSelector,
   focusedProjectNameSelector,
@@ -12,21 +17,17 @@ import {
   textFilterSelector,
 } from './machines/selectors';
 import { CollapseEdgesPanel } from './panels/collapse-edges-panel';
-import { FocusedPanel } from '../ui-components/focused-panel';
 import { GroupByFolderPanel } from './panels/group-by-folder-panel';
-import { ProjectList } from './project-list';
 import { SearchDepth } from './panels/search-depth';
-import { ShowHideAll } from '../ui-components/show-hide-all';
 import { TextFilterPanel } from './panels/text-filter-panel';
 import { TracingPanel } from './panels/tracing-panel';
-import { useEnvironmentConfig } from '../hooks/use-environment-config';
-import { TracingAlgorithmType } from './machines/interfaces';
-import { getProjectGraphService } from '../machines/get-services';
-import { useIntervalWhen } from '../hooks/use-interval-when';
+import { ProjectList } from './project-list';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
+import { useFloating } from '@floating-ui/react';
+import { useEnvironmentConfig, useRouteConstructor } from '@nx/graph/shared';
 import {
   useNavigate,
   useParams,
@@ -35,7 +36,7 @@ import {
 } from 'react-router-dom';
 import { getProjectGraphDataService } from '../hooks/get-project-graph-data-service';
 import { useCurrentPath } from '../hooks/use-current-path';
-import { useRouteConstructor } from '../util';
+import { ProjectDetailsModal } from '../ui-components/project-details-modal';
 
 export function ProjectsSidebar(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
@@ -329,6 +330,8 @@ export function ProjectsSidebar(): JSX.Element {
 
   return (
     <>
+      <ProjectDetailsModal />
+
       {focusedProject ? (
         <FocusedPanel
           focusedLabel={focusedProject}

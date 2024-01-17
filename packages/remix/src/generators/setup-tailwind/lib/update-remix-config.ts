@@ -1,19 +1,15 @@
 import { joinPathFragments, type Tree } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
+import { getRemixConfigPathFromProjectRoot } from '../../../utils/remix-config';
 
 export function updateRemixConfig(tree: Tree, projectRoot: string) {
-  const pathToRemixConfig = joinPathFragments(projectRoot, 'remix.config.cjs');
-
-  if (!tree.exists(pathToRemixConfig)) {
-    throw new Error(
-      `Could not find "${pathToRemixConfig}". Please ensure a "remix.config.cjs" exists at the root of your project.`
-    );
-  }
-
+  const pathToRemixConfig = getRemixConfigPathFromProjectRoot(
+    tree,
+    projectRoot
+  );
   const fileContents = tree.read(pathToRemixConfig, 'utf-8');
 
-  const REMIX_CONFIG_OBJECT_SELECTOR =
-    'PropertyAccessExpression:has(Identifier[name=module], Identifier[name=exports])~ObjectLiteralExpression';
+  const REMIX_CONFIG_OBJECT_SELECTOR = 'ObjectLiteralExpression';
   const ast = tsquery.ast(fileContents);
 
   const nodes = tsquery(ast, REMIX_CONFIG_OBJECT_SELECTOR, {

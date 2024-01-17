@@ -25,7 +25,7 @@ export function moveProjectFiles(
     '.babelrc',
     '.eslintrc.json',
     'eslint.config.js',
-    /^jest\.config\.(app|lib)\.[jt]s$/,
+    /^jest\.config\.((app|lib)\.)?[jt]s$/,
     'vite.config.ts',
     /^webpack.*\.js$/,
     'index.html', // Vite

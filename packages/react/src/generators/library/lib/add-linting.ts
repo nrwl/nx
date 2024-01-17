@@ -30,7 +30,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
 
     let installTask = () => {};
     if (!options.skipPackageJson) {
-      installTask = await addDependenciesToPackageJson(
+      installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
         extraEslintDependencies.devDependencies

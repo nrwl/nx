@@ -1,15 +1,15 @@
-import { Shell } from './shell';
 import { redirect, RouteObject } from 'react-router-dom';
 import { ProjectsSidebar } from './feature-projects/projects-sidebar';
 import { TasksSidebar } from './feature-tasks/tasks-sidebar';
-import { getEnvironmentConfig } from './hooks/use-environment-config';
+import { Shell } from './shell';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';
+import { ProjectDetailsPage } from '@nx/graph/project-details';
+import { getEnvironmentConfig } from '@nx/graph/shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
-import { ProjectDetails } from '@nx/graph/project-details';
+import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -44,7 +44,9 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
 
   const targets = Array.from(targetsSet).sort((a, b) => a.localeCompare(b));
 
-  return { ...projectGraph, targets };
+  const sourceMaps = await sourceMapsLoader(selectedWorkspaceId);
+
+  return { ...projectGraph, targets, sourceMaps };
 };
 
 const taskDataLoader = async (selectedWorkspaceId: string) => {
@@ -176,7 +178,7 @@ export const devRoutes: RouteObject[] = [
       {
         path: ':selectedWorkspaceId/project-details/:projectName',
         id: 'selectedProjectDetails',
-        element: <ProjectDetails />,
+        element: <ProjectDetailsPage />,
         loader: async ({ request, params }) => {
           const projectName = params.projectName;
           return projectDetailsLoader(params.selectedWorkspaceId, projectName);
@@ -213,7 +215,7 @@ export const releaseRoutes: RouteObject[] = [
   {
     path: 'project-details/:projectName',
     id: 'selectedProjectDetails',
-    element: <ProjectDetails />,
+    element: <ProjectDetailsPage />,
     loader: async ({ request, params }) => {
       const projectName = params.projectName;
       return projectDetailsLoader(appConfig.defaultWorkspaceId, projectName);

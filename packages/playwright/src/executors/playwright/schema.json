@@ -43,6 +43,14 @@
       "type": "string",
       "description": "Only run tests that do not match this regular expression"
     },
+    "testFiles": {
+      "alias": "t",
+      "type": "array",
+      "description": "Test files to run",
+      "items": {
+        "type": "string"
+      }
+    },
     "headed": {
       "type": "boolean",
       "description": "Run tests in headed browsers",

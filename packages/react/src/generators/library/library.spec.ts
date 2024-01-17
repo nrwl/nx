@@ -54,7 +54,6 @@ describe('lib', () => {
     expect(project.targets.build).toBeUndefined();
     expect(project.targets.lint).toEqual({
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
     });
   });
 
@@ -315,7 +314,6 @@ describe('lib', () => {
       expect(config.root).toEqual('my-dir/my-lib');
       expect(config.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
       });
     });
 
@@ -410,9 +408,6 @@ describe('lib', () => {
       expect(config.targets.lint).toMatchInlineSnapshot(`
         {
           "executor": "@nx/eslint:lint",
-          "outputs": [
-            "{options.outputFile}",
-          ],
         }
       `);
     });

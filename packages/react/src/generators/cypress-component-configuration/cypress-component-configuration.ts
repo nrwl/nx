@@ -45,9 +45,7 @@ export async function cypressComponentConfigGenerator(
     await formatFiles(tree);
   }
 
-  return () => {
-    installTask();
-  };
+  return installTask;
 }
 
 export default cypressComponentConfigGenerator;

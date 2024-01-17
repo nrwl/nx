@@ -1,3 +1,5 @@
+jest.mock('../../utils/remix-config');
+import * as remixConfigUtils from '../../utils/remix-config';
 import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from '../application/application.impl';
@@ -11,6 +13,11 @@ describe('route', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', `/node_modules/dist`);
+    (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
+      Promise.resolve({
+        ignoredRouteFiles: ['**/.*'],
+      })
+    );
   });
 
   it('should add css file to shared styles directory', async () => {
@@ -59,7 +66,7 @@ describe('route', () => {
     await applicationGenerator(tree, { name: 'demo' });
 
     tree.write(
-      'apps/demo/remix.config.cjs',
+      'apps/demo/remix.config.js',
       `
     /**
      * @type {import('@remix-run/dev').AppConfig}
@@ -68,6 +75,12 @@ describe('route', () => {
       ignoredRouteFiles: ["**/.*"],
       appDirectory: "my-custom-dir",
     };`
+    );
+    (remixConfigUtils.getRemixConfigValues as jest.Mock) = jest.fn(() =>
+      Promise.resolve({
+        ignoredRouteFiles: ['**/.*'],
+        appDirectory: 'my-custom-dir',
+      })
     );
 
     await routeGenerator(tree, {

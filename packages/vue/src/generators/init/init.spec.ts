@@ -10,10 +10,7 @@ describe('init', () => {
   });
 
   it('should add vue dependencies', async () => {
-    await vueInitGenerator(tree, {
-      skipFormat: false,
-      routing: true,
-    });
+    await vueInitGenerator(tree, { skipFormat: false });
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toMatchSnapshot();
   });

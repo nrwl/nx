@@ -386,6 +386,8 @@ const recipesUrls = {
     '/recipes/webpack/webpack-plugins',
   '/packages/webpack/documents/webpack-config-setup':
     '/recipes/webpack/webpack-config-setup',
+  '/showcase/example-repos/add-nuxt': '/nx-api/nuxt',
+  '/showcase/example-repos/add-vue': '/nx-api/vue',
 };
 
 /**

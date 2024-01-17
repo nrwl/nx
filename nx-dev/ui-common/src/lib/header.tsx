@@ -32,10 +32,10 @@ export function Header(): JSX.Element {
       href: '/core-features',
     },
     {
-      name: 'Nx Cache',
+      name: 'Nx Replay',
       description:
         'Built-in local and remote caching to speed up your tasks and save you time and money.',
-      href: '/ci/features/nx-agents',
+      href: '/core-features/cache-task-results',
     },
     {
       name: 'Recipes',

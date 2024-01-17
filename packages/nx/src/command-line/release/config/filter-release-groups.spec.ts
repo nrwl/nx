@@ -12,10 +12,10 @@ describe('filterReleaseGroups()', () => {
       groups: {},
       changelog: {
         git: {
-          commit: false,
+          commit: true,
           commitMessage: '',
           commitArgs: '',
-          tag: false,
+          tag: true,
           tagMessage: '',
           tagArgs: '',
         },
@@ -26,6 +26,7 @@ describe('filterReleaseGroups()', () => {
         generator: '',
         generatorOptions: {},
         git: {
+          stageChanges: true,
           commit: false,
           commitMessage: '',
           commitArgs: '',

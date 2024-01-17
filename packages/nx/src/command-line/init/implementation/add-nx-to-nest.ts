@@ -1,7 +1,7 @@
 import * as enquirer from 'enquirer';
 import { unlinkSync, writeFileSync } from 'fs-extra';
 import { join } from 'path';
-import { InitArgs } from '../init';
+import { InitArgs } from '../init-v1';
 import {
   NrwlJsPluginConfig,
   NxJsonConfiguration,
@@ -238,7 +238,6 @@ function createProjectJson(
     // lint
     json.targets['lint'] = {
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
       options: {
         lintFilePatterns: ['./src', './test'],
       },

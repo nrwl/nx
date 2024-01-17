@@ -14,13 +14,17 @@ import { Schema } from './schema';
 import nuxtInitGenerator from '../init/init';
 import { normalizeOptions } from './lib/normalize-options';
 import { createTsConfig } from '../../utils/create-ts-config';
-import { getRelativePathToRootTsConfig } from '@nx/js';
+import {
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
 import { updateGitIgnore } from '../../utils/update-gitignore';
 import { Linter } from '@nx/eslint';
 import { addE2e } from './lib/add-e2e';
 import { addLinting } from '../../utils/add-linting';
 import { addVitest } from './lib/add-vitest';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
+import { ensureDependencies } from './lib/ensure-dependencies';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -29,11 +33,18 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   const projectOffsetFromRoot = offsetFromRoot(options.appProjectRoot);
 
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const nuxtInitTask = await nuxtInitGenerator(tree, {
     ...options,
     skipFormat: true,
   });
   tasks.push(nuxtInitTask);
+  tasks.push(ensureDependencies(tree, options));
 
   addProjectConfiguration(tree, options.name, {
     root: options.appProjectRoot,

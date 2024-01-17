@@ -23,14 +23,6 @@ Type: `boolean`
 
 Show help
 
-### interactive
-
-Type: `boolean`
-
-Default: `true`
-
-Prompt for confirmation
-
 ### version
 
 Type: `boolean`

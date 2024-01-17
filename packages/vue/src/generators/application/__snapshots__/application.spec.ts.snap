@@ -100,8 +100,7 @@ exports[`application generator should set up project correctly with given option
   "sourceRoot": "test/src",
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
+      "executor": "@nx/eslint:lint"
     },
     "build": {
       "executor": "@nx/vite:build",

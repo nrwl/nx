@@ -1,17 +1,25 @@
 import {
   addProjectConfiguration,
   ProjectConfiguration,
+  readNxJson,
   TargetConfiguration,
   Tree,
 } from '@nx/devkit';
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
+  const nxJson = readNxJson(host);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/react-native/plugin'
+      : p.plugin === '@nx/react-native/plugin'
+  );
+
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: `${options.appProjectRoot}/src`,
     projectType: 'application',
-    targets: { ...getTargets(options) },
+    targets: hasPlugin ? {} : getTargets(options),
     tags: options.parsedTags,
   };
 

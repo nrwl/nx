@@ -57,3 +57,7 @@ export function createBuildableTsConfig(
     process.env.NX_TSCONFIG_PATH = tmpTsConfigPath;
   }
 }
+
+export function loadViteDynamicImport() {
+  return Function('return import("vite")')() as Promise<typeof import('vite')>;
+}

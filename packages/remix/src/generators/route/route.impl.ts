@@ -109,6 +109,7 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
     await StyleGenerator(tree, {
       project: projectName,
       path: routeFilePath,
+      nameAndDirectoryFormat: 'as-provided',
     });
   }
 

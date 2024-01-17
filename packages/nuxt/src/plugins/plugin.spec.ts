@@ -2,16 +2,6 @@ import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
-jest.mock('vite', () => ({
-  loadConfigFromFile: jest.fn().mockImplementation(() => {
-    return Promise.resolve({
-      path: 'vite.config.ts',
-      config: {},
-      dependencies: [],
-    });
-  }),
-}));
-
 jest.mock('@nuxt/kit', () => ({
   loadNuxtConfig: jest.fn().mockImplementation(() => {
     return Promise.resolve({

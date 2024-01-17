@@ -1,4 +1,4 @@
-import { InitArgs } from '../../init';
+import { InitArgs } from '../../init-v1';
 import type { TargetConfiguration } from '../../../../config/workspace-json-project-json';
 
 export type Options = Pick<

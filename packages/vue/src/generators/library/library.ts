@@ -8,7 +8,7 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { addTsConfigPath } from '@nx/js';
+import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import { vueInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
@@ -17,6 +17,7 @@ import { createLibraryFiles } from './lib/create-library-files';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import componentGenerator from '../component/component';
 import { addVite } from './lib/add-vite';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
@@ -36,12 +37,16 @@ export async function libraryGenerator(tree: Tree, schema: Schema) {
     targets: {},
   });
 
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
   tasks.push(
     await vueInitGenerator(tree, {
       ...options,
       skipFormat: true,
     })
   );
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(tree, options));
+  }
 
   extractTsConfigBase(tree);
 

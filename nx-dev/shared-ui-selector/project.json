@@ -1,0 +1,20 @@
+{
+  "name": "shared-ui-selector",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/shared-ui-selector/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint"
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "nx-dev/shared-ui-selector/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  }
+}

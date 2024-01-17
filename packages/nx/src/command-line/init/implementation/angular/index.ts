@@ -11,6 +11,7 @@ import {
   initCloud,
   printFinalMessage,
   runInstall,
+  updateGitIgnore,
 } from '../utils';
 import { setupIntegratedWorkspace } from './integrated-workspace';
 import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-versions';
@@ -147,6 +148,8 @@ async function setupWorkspace(
   cacheableOperations: string[],
   isIntegratedMigration: boolean
 ): Promise<void> {
+  updateGitIgnore(repoRoot);
+
   if (isIntegratedMigration) {
     setupIntegratedWorkspace();
   } else {

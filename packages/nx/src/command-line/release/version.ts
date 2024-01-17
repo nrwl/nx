@@ -56,6 +56,8 @@ export interface ReleaseVersionGeneratorSchema {
   packageRoot?: string;
   currentVersionResolver?: 'registry' | 'disk' | 'git-tag';
   currentVersionResolverMetadata?: Record<string, unknown>;
+  fallbackCurrentVersionResolver?: 'disk';
+  firstRelease?: boolean;
 }
 
 export interface NxReleaseVersionResult {
@@ -120,7 +122,7 @@ export async function releaseVersion(
   const tree = new FsTree(workspaceRoot, args.verbose);
 
   const versionData: VersionData = {};
-  const userCommitMessage: string | undefined =
+  const commitMessage: string | undefined =
     args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
 
   if (args.projects?.length) {
@@ -169,6 +171,17 @@ export async function releaseVersion(
 
     printAndFlushChanges(tree, !!args.dryRun);
 
+    const changedFiles = tree.listChanges().map((f) => f.path);
+
+    // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
+    if (!changedFiles.length) {
+      return {
+        // An overall workspace version cannot be relevant when filtering to independent projects
+        workspaceVersion: undefined,
+        projectsVersionData: versionData,
+      };
+    }
+
     if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
       await commitChanges(
         tree.listChanges().map((f) => f.path),
@@ -178,10 +191,17 @@ export async function releaseVersion(
           releaseGroups,
           releaseGroupToFilteredProjects,
           versionData,
-          userCommitMessage
+          commitMessage
         ),
         args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
       );
+    } else if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
+      output.logSingleLine(`Staging changed files with git`);
+      await gitAdd({
+        changedFiles,
+        dryRun: args.dryRun,
+        verbose: args.verbose,
+      });
     }
 
     if (args.gitTag ?? nxReleaseConfig.version.git.tag) {
@@ -272,17 +292,6 @@ export async function releaseVersion(
     };
   }
 
-  if (args.stageChanges) {
-    output.logSingleLine(
-      `Staging changed files with git because --stage-changes was set`
-    );
-    await gitAdd({
-      changedFiles,
-      dryRun: args.dryRun,
-      verbose: args.verbose,
-    });
-  }
-
   if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
     await commitChanges(
       changedFiles,
@@ -292,10 +301,17 @@ export async function releaseVersion(
         releaseGroups,
         releaseGroupToFilteredProjects,
         versionData,
-        userCommitMessage
+        commitMessage
       ),
       args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
     );
+  } else if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
+    output.logSingleLine(`Staging changed files with git`);
+    await gitAdd({
+      changedFiles,
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
   }
 
   if (args.gitTag ?? nxReleaseConfig.version.git.tag) {
@@ -356,6 +372,7 @@ async function runVersionOnProjects(
     projects: projectNames.map((p) => projectGraph.nodes[p]),
     projectGraph,
     releaseGroup,
+    firstRelease: args.firstRelease ?? false,
   };
 
   // Apply generator defaults from schema.json file etc

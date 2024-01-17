@@ -5839,17 +5839,6 @@
             "tags": []
           },
           {
-            "id": "add-nuxt",
-            "name": "Add a Nuxt Project",
-            "description": "Add a nuxt project to your repo",
-            "mediaImage": "",
-            "file": "shared/recipes/add-stack/add-nuxt",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/showcase/example-repos/add-nuxt",
-            "tags": []
-          },
-          {
             "id": "add-astro",
             "name": "Add an Astro Project",
             "description": "Add Nx to an Astro project",
@@ -5858,17 +5847,6 @@
             "itemList": [],
             "isExternal": false,
             "path": "/showcase/example-repos/add-astro",
-            "tags": []
-          },
-          {
-            "id": "add-vue",
-            "name": "Add a Vue Project",
-            "description": "Add a Vue project to your repo",
-            "mediaImage": "",
-            "file": "shared/recipes/add-stack/add-vue",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/showcase/example-repos/add-vue",
             "tags": []
           },
           {
@@ -6099,17 +6077,6 @@
         "tags": []
       },
       {
-        "id": "add-nuxt",
-        "name": "Add a Nuxt Project",
-        "description": "Add a nuxt project to your repo",
-        "mediaImage": "",
-        "file": "shared/recipes/add-stack/add-nuxt",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/showcase/example-repos/add-nuxt",
-        "tags": []
-      },
-      {
         "id": "add-astro",
         "name": "Add an Astro Project",
         "description": "Add Nx to an Astro project",
@@ -6118,17 +6085,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/showcase/example-repos/add-astro",
-        "tags": []
-      },
-      {
-        "id": "add-vue",
-        "name": "Add a Vue Project",
-        "description": "Add a Vue project to your repo",
-        "mediaImage": "",
-        "file": "shared/recipes/add-stack/add-vue",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/showcase/example-repos/add-vue",
         "tags": []
       },
       {
@@ -6301,17 +6257,6 @@
     "path": "/showcase/example-repos/add-dotnet",
     "tags": []
   },
-  "/showcase/example-repos/add-nuxt": {
-    "id": "add-nuxt",
-    "name": "Add a Nuxt Project",
-    "description": "Add a nuxt project to your repo",
-    "mediaImage": "",
-    "file": "shared/recipes/add-stack/add-nuxt",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/showcase/example-repos/add-nuxt",
-    "tags": []
-  },
   "/showcase/example-repos/add-astro": {
     "id": "add-astro",
     "name": "Add an Astro Project",
@@ -6321,17 +6266,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-astro",
-    "tags": []
-  },
-  "/showcase/example-repos/add-vue": {
-    "id": "add-vue",
-    "name": "Add a Vue Project",
-    "description": "Add a Vue project to your repo",
-    "mediaImage": "",
-    "file": "shared/recipes/add-stack/add-vue",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/showcase/example-repos/add-vue",
     "tags": []
   },
   "/showcase/example-repos/add-svelte": {

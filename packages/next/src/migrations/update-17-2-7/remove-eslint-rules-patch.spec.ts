@@ -1,14 +1,23 @@
-import { Tree, addProjectConfiguration, writeJson } from '@nx/devkit';
+import { addProjectConfiguration, readJson, Tree, writeJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
 
 import update from './remove-eslint-rules-patch';
-import { readJson } from '@nx/devkit';
 
 describe('update-nx-next-dependency', () => {
   let tree: Tree;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  it('should handle projects without eslintrc file', async () => {
+    tree.write('.eslintrc.json', '{}');
+
+    addProjectConfiguration(tree, 'my-pkg', {
+      root: 'packages/my-pkg',
+    });
+
+    await expect(update(tree)).resolves.not.toThrow();
   });
 
   it('should remove @next/next/no-html-link-for-pages in json configs', async () => {

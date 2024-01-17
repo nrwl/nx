@@ -67,6 +67,12 @@ nx release [specifier]
 
 #### Options
 
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.
+
 ##### help
 
 Type: `boolean`
@@ -106,6 +112,12 @@ nx release version [specifier]
 ```
 
 #### Options
+
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.
 
 ##### git-commit
 
@@ -161,13 +173,11 @@ Type: `string`
 
 Exact version or semver keyword to apply to the selected release group.
 
-##### stageChanges
+##### stage-changes
 
 Type: `boolean`
 
-Default: `false`
-
-Whether or not to stage the changes made by this command, irrespective of the git config in nx.json related to automated commits. Useful when combining this command with changelog generation.
+Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.
 
 ##### version
 

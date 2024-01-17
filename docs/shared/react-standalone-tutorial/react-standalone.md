@@ -44,7 +44,7 @@ Create a new standalone React application with the following command:
 ✔ Which bundler would you like to use? · vite
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Enable remote caching to make your CI faster · Yes
 ```
 
 You can choose any bundler you like. In this tutorial we're going to use Vite. The above command generates the following structure:

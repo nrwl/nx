@@ -17,7 +17,7 @@ pipelines:
             - node
           script:
             - npm ci
-            - npx nx format:check
+            - npx nx-cloud record -- nx format:check
             - npx nx affected -t lint,test,build --base=origin/master --head=HEAD --configuration=ci
 
   branches:
@@ -28,7 +28,7 @@ pipelines:
             - node
           script:
             - npm ci
-            - npx nx format:check
+            - npx nx-cloud record -- nx format:check
             - npx nx affected -t lint,test,build --base=HEAD~1 --configuration=ci
 ```
 
@@ -71,7 +71,7 @@ pipelines:
 
                 - npm ci
                 - npx nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
-                - npx nx-cloud record -- npx nx format:check
+                - npx nx-cloud record -- nx format:check
                 - npx nx affected --target=lint,test,build --parallel=2
           - step: *agent
           - step: *agent

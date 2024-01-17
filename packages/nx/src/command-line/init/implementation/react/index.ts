@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { copySync, moveSync, readdirSync, removeSync } from 'fs-extra';
 import { join } from 'path';
-import { InitArgs } from '../../init';
+import { InitArgs } from '../../init-v1';
 import {
   fileExists,
   readJsonFile,

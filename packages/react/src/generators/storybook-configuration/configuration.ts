@@ -3,6 +3,7 @@ import storiesGenerator from '../stories/stories';
 import {
   ensurePackage,
   formatFiles,
+  joinPathFragments,
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
@@ -44,8 +45,7 @@ export async function storybookConfigurationGenerator(
   const projectConfig = readProjectConfiguration(host, schema.project);
 
   if (
-    projectConfig.targets['build']?.executor === '@nx/webpack:webpack' ||
-    projectConfig.targets['build']?.executor === '@nrwl/webpack:webpack' ||
+    findWebpackConfig(host, projectConfig.root) ||
     projectConfig.targets['build']?.executor === '@nx/rollup:rollup' ||
     projectConfig.targets['build']?.executor === '@nrwl/rollup:rollup'
   ) {
@@ -75,3 +75,20 @@ export async function storybookConfigurationGenerator(
 }
 
 export default storybookConfigurationGenerator;
+
+export function findWebpackConfig(
+  tree: Tree,
+  projectRoot: string
+): string | undefined {
+  const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
+
+  for (const ext of allowsExt) {
+    const webpackConfigPath = joinPathFragments(
+      projectRoot,
+      `webpack.config.${ext}`
+    );
+    if (tree.exists(webpackConfigPath)) {
+      return webpackConfigPath;
+    }
+  }
+}

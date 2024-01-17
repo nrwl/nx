@@ -37,6 +37,11 @@ describe('Cypress Component Testing Configuration', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', '');
     mockedInstalledCypressVersion.mockReturnValue(10);
+
+    projectGraph = {
+      dependencies: {},
+      nodes: {},
+    };
   });
 
   afterEach(() => {
@@ -191,6 +196,9 @@ describe('Cypress Component Testing Configuration', () => {
         export: true,
         skipFormat: true,
       });
+
+      jest.clearAllMocks();
+
       const appConfig = readProjectConfiguration(tree, 'fancy-app');
       appConfig.targets['build'].executor = 'something/else';
       updateProjectConfiguration(tree, 'fancy-app', appConfig);

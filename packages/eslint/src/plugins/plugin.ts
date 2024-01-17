@@ -1,8 +1,4 @@
-import {
-  CreateNodes,
-  CreateNodesContext,
-  TargetConfiguration,
-} from '@nx/devkit';
+import { CreateNodes, TargetConfiguration } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { readdirSync } from 'fs';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
@@ -34,12 +30,7 @@ export const createNodes: CreateNodes<EslintPluginOptions> = [
     return {
       projects: {
         [projectRoot]: {
-          targets: buildEslintTargets(
-            eslintConfigs,
-            projectRoot,
-            options,
-            context
-          ),
+          targets: buildEslintTargets(eslintConfigs, projectRoot, options),
         },
       },
     };
@@ -99,38 +90,32 @@ function getEslintConfigsForProject(
 function buildEslintTargets(
   eslintConfigs: string[],
   projectRoot: string,
-  options: EslintPluginOptions,
-  context: CreateNodesContext
+  options: EslintPluginOptions
 ) {
   const isRootProject = projectRoot === '.';
 
   const targets: Record<string, TargetConfiguration> = {};
 
-  const baseTargetConfig: TargetConfiguration = {
+  const targetConfig: TargetConfiguration = {
     command: `eslint ${isRootProject ? './src' : '.'}`,
+    cache: true,
     options: {
       cwd: projectRoot,
     },
-  };
-  if (eslintConfigs.some((config) => isFlatConfig(config))) {
-    baseTargetConfig.options.env = {
-      ESLINT_USE_FLAT_CONFIG: 'true',
-    };
-  }
-
-  targets[options.targetName] = {
-    ...baseTargetConfig,
-    cache: true,
     inputs: [
       'default',
       ...eslintConfigs.map((config) => `{workspaceRoot}/${config}`),
       '{workspaceRoot}/tools/eslint-rules/**/*',
       { externalDependencies: ['eslint'] },
     ],
-    options: {
-      ...baseTargetConfig.options,
-    },
   };
+  if (eslintConfigs.some((config) => isFlatConfig(config))) {
+    targetConfig.options.env = {
+      ESLINT_USE_FLAT_CONFIG: 'true',
+    };
+  }
+
+  targets[options.targetName] = targetConfig;
 
   return targets;
 }

@@ -9,6 +9,12 @@
     "description": "Add Cypress Configuration to the workspace.",
     "type": "object",
     "properties": {
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
+      },
       "skipPackageJson": {
         "type": "boolean",
         "default": false,

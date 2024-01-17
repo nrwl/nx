@@ -68,7 +68,7 @@ export interface NxReleaseChangelogConfiguration {
    * is false by default.
    *
    * NOTE: if createRelease is set on a group of projects, it will cause the default releaseTagPattern of
-   * "{projectName}@v{version}" to be used for those projects, even when versioning everything together.
+   * "{projectName}@{version}" to be used for those projects, even when versioning everything together.
    */
   createRelease?: 'github' | false;
   /**
@@ -219,7 +219,12 @@ interface NxReleaseConfiguration {
     /**
      * Enable or override configuration for git operations as part of the version subcommand
      */
-    git?: NxReleaseGitConfiguration;
+    git?: NxReleaseGitConfiguration & {
+      /**
+       * Whether or not to stage the changes made by this command. Useful when combining the version command with changelog generation.
+       */
+      stageChanges?: boolean;
+    };
   };
   /**
    * Optionally override the git/release tag pattern to use. This field is the source of truth
@@ -229,7 +234,7 @@ interface NxReleaseConfiguration {
    * project level version control system releases) the project name as {projectName} within the string.
    *
    * The default releaseTagPattern for fixed/unified releases is: "v{version}"
-   * The default releaseTagPattern for independent releases at the project level is: "{projectName}@v{version}"
+   * The default releaseTagPattern for independent releases at the project level is: "{projectName}@{version}"
    */
   releaseTagPattern?: string;
   /**

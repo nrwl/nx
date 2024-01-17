@@ -249,7 +249,7 @@ export async function gitTag({
   }
 }
 
-export async function gitPush() {
+export async function gitPush(gitRemote?: string) {
   try {
     await execCommand('git', [
       'push',
@@ -257,6 +257,8 @@ export async function gitPush() {
       '--follow-tags',
       '--no-verify',
       '--atomic',
+      // Set custom git remote if provided
+      ...(gitRemote ? [gitRemote] : []),
     ]);
   } catch (err) {
     throw new Error(`Unexpected git push error: ${err}`);

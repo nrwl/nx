@@ -132,13 +132,15 @@ function updateExistingDependenciesVersion(
  * @param dependencies Dependencies to be added to the dependencies section of package.json
  * @param devDependencies Dependencies to be added to the devDependencies section of package.json
  * @param packageJsonPath Path to package.json
+ * @param keepExistingVersions If true, prevents existing dependencies from being bumped to newer versions
  * @returns Callback to install dependencies only if necessary, no-op otherwise
  */
 export function addDependenciesToPackageJson(
   tree: Tree,
   dependencies: Record<string, string>,
   devDependencies: Record<string, string>,
-  packageJsonPath: string = 'package.json'
+  packageJsonPath: string = 'package.json',
+  keepExistingVersions?: boolean
 ): GeneratorCallback {
   const currentPackageJson = readJson(tree, packageJsonPath);
 
@@ -155,6 +157,7 @@ export function addDependenciesToPackageJson(
 
   // filtered dependencies should consist of:
   // - dependencies of the same type that are not present
+  // by default, filtered dependencies also include these (unless keepExistingVersions is true):
   // - dependencies of the same type that have greater version
   // - specified dependencies of the other type that have greater version and are already installed as current type
   filteredDependencies = {
@@ -178,14 +181,25 @@ export function addDependenciesToPackageJson(
     ),
   };
 
-  filteredDependencies = removeLowerVersions(
-    filteredDependencies,
-    currentPackageJson.dependencies
-  );
-  filteredDevDependencies = removeLowerVersions(
-    filteredDevDependencies,
-    currentPackageJson.devDependencies
-  );
+  if (keepExistingVersions) {
+    filteredDependencies = removeExistingDependencies(
+      filteredDependencies,
+      currentPackageJson.dependencies
+    );
+    filteredDevDependencies = removeExistingDependencies(
+      filteredDevDependencies,
+      currentPackageJson.devDependencies
+    );
+  } else {
+    filteredDependencies = removeLowerVersions(
+      filteredDependencies,
+      currentPackageJson.dependencies
+    );
+    filteredDevDependencies = removeLowerVersions(
+      filteredDevDependencies,
+      currentPackageJson.devDependencies
+    );
+  }
 
   if (
     requiresAddingOfPackages(
@@ -227,12 +241,24 @@ function removeLowerVersions(
 ) {
   return Object.keys(incomingDeps).reduce((acc, d) => {
     if (
-      existingDeps?.[d] &&
-      !isIncomingVersionGreater(incomingDeps[d], existingDeps[d])
+      !existingDeps?.[d] ||
+      isIncomingVersionGreater(incomingDeps[d], existingDeps[d])
     ) {
-      return acc;
+      acc[d] = incomingDeps[d];
     }
-    return { ...acc, [d]: incomingDeps[d] };
+    return acc;
+  }, {});
+}
+
+function removeExistingDependencies(
+  incomingDeps: Record<string, string>,
+  existingDeps: Record<string, string>
+): Record<string, string> {
+  return Object.keys(incomingDeps).reduce((acc, d) => {
+    if (!existingDeps?.[d]) {
+      acc[d] = incomingDeps[d];
+    }
+    return acc;
   }, {});
 }
 

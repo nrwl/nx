@@ -1,0 +1,45 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/vite:init should add vite packages and react-related dependencies for vite 1`] = `
+{
+  "dependencies": {
+    "@nx/vite": "0.0.1",
+    "existing": "1.0.0",
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.0",
+    "existing": "1.0.0",
+  },
+  "name": "@proj/source",
+}
+`;
+
+exports[`@nx/vite:init should support --testEnvironment=edge-runtime 1`] = `
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@edge-runtime/vm": "~3.0.2",
+  },
+  "name": "@proj/source",
+}
+`;
+
+exports[`@nx/vite:init should support --testEnvironment=happy-dom 1`] = `
+{
+  "dependencies": {},
+  "devDependencies": {
+    "happy-dom": "~9.20.3",
+  },
+  "name": "@proj/source",
+}
+`;
+
+exports[`@nx/vite:init should support --testEnvironment=jsdom 1`] = `
+{
+  "dependencies": {},
+  "devDependencies": {
+    "jsdom": "~22.1.0",
+  },
+  "name": "@proj/source",
+}
+`;

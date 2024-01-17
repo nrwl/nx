@@ -24,7 +24,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
   afterEach(() => cleanupProject());
 
-  it('should convert a standalone project to a monorepo', async () => {
+  it('should convert a standalone webpack and jest react project to a monorepo', async () => {
     const reactApp = uniq('reactapp');
     runCLI(
       `generate @nx/react:app ${reactApp} --rootProject=true --bundler=webpack --unitTestRunner=jest --e2eTestRunner=cypress --no-interactive`
@@ -35,6 +35,26 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     checkFilesExist(
       `apps/${reactApp}/src/main.tsx`,
       `apps/e2e/cypress.config.ts`
+    );
+
+    expect(() => runCLI(`build ${reactApp}`)).not.toThrow();
+    expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
+    expect(() => runCLI(`lint ${reactApp}`)).not.toThrow();
+    expect(() => runCLI(`lint e2e`)).not.toThrow();
+    expect(() => runCLI(`e2e e2e`)).not.toThrow();
+  });
+
+  it('should be convert a standalone vite and playwright react project to a monorepo', async () => {
+    const reactApp = uniq('reactapp');
+    runCLI(
+      `generate @nx/react:app ${reactApp} --rootProject=true --bundler=vite --unitTestRunner vitest --e2eTestRunner=playwright --no-interactive`
+    );
+
+    runCLI('generate @nx/workspace:convert-to-monorepo --no-interactive');
+
+    checkFilesExist(
+      `apps/${reactApp}/src/main.tsx`,
+      `apps/e2e/playwright.config.ts`
     );
 
     expect(() => runCLI(`build ${reactApp}`)).not.toThrow();

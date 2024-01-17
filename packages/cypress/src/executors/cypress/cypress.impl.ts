@@ -32,7 +32,7 @@ export interface CypressExecutorOptions extends Json {
   copyFiles?: string;
   ciBuildId?: string | number;
   group?: string;
-  ignoreTestFiles?: string;
+  ignoreTestFiles?: string | string[];
   reporter?: string;
   reporterOptions?: string | Json;
   skipServe?: boolean;

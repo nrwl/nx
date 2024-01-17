@@ -225,9 +225,9 @@ export function DocumentationHeader({
         </div>
         {/*NAVIGATION*/}
         <div className="hidden flex-grow lg:flex">{/* SPACER */}</div>
-        {/* <div className="hidden lg:flex">
+        <div className="hidden lg:flex">
           <AnnouncementBanner />
-        </div> */}
+        </div>
         <div className="hidden flex-shrink-0 lg:flex">
           <nav
             role="accessory-nav"

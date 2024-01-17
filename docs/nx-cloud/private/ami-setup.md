@@ -1,4 +1,4 @@
-# Setting up a dedicated NxCloud VM
+# Setting up a dedicated Nx Cloud VM
 
 ## AWS EC2
 
@@ -14,24 +14,24 @@
    - Allow SSH from your current IP
 6. Leave the storage options as they are
 7. "Launch instance"
-8. Wait 10 minutes, then navigate to your instance's IP in the browser. You should see the NxCloud dashboard!
+8. Wait 10 minutes, then navigate to your instance's IP in the browser. You should see the Nx Cloud dashboard!
 
-![NxCloud landing page](/nx-cloud/private/images/nx-cloud-landing.png)
+![Nx Cloud landing page](/nx-cloud/private/images/nx-cloud-landing.png)
 
-### Your NxCloud URL
+### Your Nx Cloud URL
 
 1. At this point, your instance will have a public IP accessible from the browser.
-   - You can consider this IP the URL of NxCloud, and proceed with the below steps and all will work fine!
+   - You can consider this IP the URL of Nx Cloud, and proceed with the below steps and all will work fine!
 2. You might want, however, to add a Load Balancer in front of the instance, with an explicit domain (e.g. https://my-nxcloud.my-org.com).
-   - This is strongly recommended because you will be able to upgrade/restart/re-configure your NxCloud EC2 instance while keeping the NxCloud URL static.
+   - This is strongly recommended because you will be able to upgrade/restart/re-configure your Nx Cloud EC2 instance while keeping the Nx Cloud URL static.
    - Create an [application load balancer](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-application-load-balancer.html)
    - You will need to create a certificate for your domain to assign to the LB
    - And you will need to target your EC2 instance from the LB
-   - You should now have a permanent domain pointing to your NxCloud instance
+   - You should now have a permanent domain pointing to your Nx Cloud instance
 
-Once you have your NxCloud URL proceed to the below steps!
+Once you have your Nx Cloud URL proceed to the below steps!
 
-### Configuring your NxCloud instance
+### Configuring your Nx Cloud instance
 
 1. Create a new `myconfiguration.yaml` file with the below contents
 
@@ -66,9 +66,9 @@ Once you log-in, you will see an organisation has been created for you.
    - It should look something like this: https://your-url.com/orgs/649f240f7fb955000c1fd10b/workspaces
 3. We will then give you a License Key which you can apply on your org's billing page
 
-### Connecting to your NxCloud instance
+### Connecting to your instance
 
-In your Nx workspace, you can enable NxCloud by running:
+In your Nx workspace, you can enable Nx Cloud by running:
 
 ```bash
 NX_CLOUD_API="https://nx-cloud.on.my-domain.ca" npx nx connect
@@ -94,7 +94,7 @@ You can optionally enable authentication using your preferred SSO provider:
 ```yaml
 # This is all you need to get the baseline of your nx-cloud instance configured!
 
-# only use this if you'd like to use any of the newer NxCloud version from here: https://nx.dev/ci/reference/release-notes#docker-containers
+# only use this if you'd like to use any of the newer Nx Cloud version from here: https://nx.dev/ci/reference/release-notes#docker-containers
 # global.imageTag: ''
 
 # Set the external URL your instance is running on
@@ -152,10 +152,10 @@ secret:
 
 ### Upgrades
 
-We send out emails with every new NxCloud release to all our Enterprise customers:
+We send out emails with every new Nx Cloud release to all our Enterprise customers:
 
 1. You can view your current version at the `/version` route: https://your-nx-cloud-url.com/version
-2. [And these are the latest NxCloud releases](https://nx.dev/ci/reference/release-notes#docker-containers)
+2. [And these are the latest Nx Cloud releases](https://nx.dev/ci/reference/release-notes#docker-containers)
 
 To upgrade to a newer version, add the below line to your `myconfiguration.yml` file:
 

@@ -14,7 +14,7 @@ const scopes = [
   { value: 'nextjs',        name: 'nextjs:          anything Next specific' },
   { value: 'node',          name: 'node:            anything Node specific' },
   { value: 'nuxt',          name: 'nuxt:            anything Nuxt specific' },
-  { value: 'nx-cloud',      name: 'nx-cloud:        anything NxCloud specific' },
+  { value: 'nx-cloud',      name: 'nx-cloud:        anything Nx Cloud specific' },
   { value: 'nx-plugin',     name: 'nx-plugin:       anything Nx Plugin specific' },
   { value: 'nx-dev',        name: 'nx-dev:         anything related to docs infrastructure' },
   { value: 'react',         name: 'react:           anything React specific' },

@@ -18,6 +18,7 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
   const prev = { ...nxJson.generators['@nx/react'] };
 
   const appDefaults = {
+    babel: true,
     style: options.style,
     linter: options.linter,
     bundler: options.bundler,

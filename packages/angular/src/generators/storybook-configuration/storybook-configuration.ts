@@ -34,9 +34,7 @@ export async function storybookConfigurationGenerator(
     await formatFiles(tree);
   }
 
-  return () => {
-    storybookGeneratorInstallTask();
-  };
+  return storybookGeneratorInstallTask;
 }
 
 export default storybookConfigurationGenerator;

@@ -8,26 +8,26 @@ export function AnnouncementBanner(): JSX.Element {
           <p className="text-sm font-medium">
             <span className="md:hidden">
               <Link
-                href="https://survey.devographics.com/en-US/survey/state-of-js/2023"
+                href="https://go.nx.dev/january-webinar?utm_source=nx.dev"
                 className="underline"
               >
-                The State of JS survey is live, featuring a monorepo tools
-                section
+                Nx Webinar: Monorepos - The Benefits, Challenges and Importance
+                of Tooling Support
               </Link>
             </span>
             <span className="hidden md:inline">
               <span className="font-semibold">
-                The State of JS survey is live, featuring a monorepo tools
-                section
+                Nx Webinar: Monorepos - The Benefits, Challenges and Importance
+                of Tooling Support
               </span>
             </span>
             <span className="ml-2 inline-block">
               <Link
-                href="https://survey.devographics.com/en-US/survey/state-of-js/2023"
+                href="https://go.nx.dev/january-webinar?utm_source=nx.dev"
                 className="font-semibold text-blue-500 underline dark:text-sky-500"
               >
                 <span className="absolute inset-0" aria-hidden="true" />
-                Vote for us
+                Register
                 <span aria-hidden="true">&rarr;</span>
               </Link>
             </span>

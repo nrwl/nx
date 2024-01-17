@@ -5,7 +5,6 @@ import {
 } from '@heroicons/react/24/outline';
 import classNames from 'classnames';
 import { DebuggerPanel } from './ui-components/debugger-panel';
-import { useEnvironmentConfig } from './hooks/use-environment-config';
 import { getGraphService } from './machines/graph.service';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import { ThemePanel } from './feature-projects/panels/theme-panel';
@@ -17,6 +16,7 @@ import { getProjectGraphService } from './machines/get-services';
 import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import { Tooltip } from '@nx/graph/ui-tooltips';
 import { TooltipDisplay } from './ui-tooltips/graph-tooltip-display';
+import { useEnvironmentConfig } from '@nx/graph/shared';
 
 export function Shell(): JSX.Element {
   const projectGraphService = getProjectGraphService();

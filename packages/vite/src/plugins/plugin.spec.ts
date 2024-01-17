@@ -12,6 +12,16 @@ jest.mock('vite', () => ({
   }),
 }));
 
+jest.mock('../utils/executor-utils', () => ({
+  loadViteDynamicImport: jest.fn().mockResolvedValue({
+    loadConfigFromFile: jest.fn().mockResolvedValue({
+      path: 'vite.config.ts',
+      config: {},
+      dependencies: [],
+    }),
+  }),
+}));
+
 describe('@nx/vite/plugin', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
@@ -56,7 +66,6 @@ describe('@nx/vite/plugin', () => {
     });
   });
 
-  // some issue wiht the tempfs
   describe('not root project', () => {
     const tempFs = new TempFs('test');
     beforeEach(() => {

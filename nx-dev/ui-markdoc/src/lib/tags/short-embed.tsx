@@ -94,7 +94,7 @@ export function ShortEmbeds({
           leaveFrom="opacity-100 translate-y-0"
           leaveTo="opacity-0 translate-y-full"
         >
-          <div className="relative mt-12 w-full h-full rounded-xl shadow-xl coding flex flex-col border border-slate-200 bg-slate-50 p-4 leading-normal text-slate-800 subpixel-antialiased dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
+          <div className="relative mt-12 w-full h-full rounded-xl shadow-xl coding flex flex-col border border-slate-200 bg-slate-50 p-2 leading-normal text-slate-800 subpixel-antialiased dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
             <Button
               size="small"
               variant="secondary"
@@ -160,14 +160,13 @@ export function ShortVideo({ embedUrl, title }: VideoData) {
   }
 
   return (
-    <div className="w-[216px] h-96 rounded-lg overflow-hidden">
+    <div className="w-full h-96 rounded-lg overflow-hidden">
       <iframe
-        className="!m-0"
+        className="!m-0 border-0"
         width="100%"
         height="100%"
         src={`${embedUrl}?autoplay=1&loop=1${userInteraction ? '' : '&mute=1'}`}
-        title="Two Places to Define Tasks | Nx Workspaces"
-        frameBorder="0"
+        title={title || 'Two Places to Define Tasks | Nx Workspaces'}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
       />

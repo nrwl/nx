@@ -45,7 +45,7 @@ describe('Next.js Apps Libs', () => {
     const buildableLib = uniq('buildablelib');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false --src=false`
     );
     runCLI(`generate @nx/next:lib ${nextLib} --no-interactive`);
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);

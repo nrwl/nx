@@ -37,12 +37,12 @@ export async function cypressComponentConfiguration(
     '@nx/webpack',
     nxVersion
   );
+  tasks.push(await webpackInitGenerator(tree, { skipFormat: true }));
+  const { ensureDependencies } = await import(
+    '@nx/webpack/src/utils/ensure-dependencies'
+  );
   tasks.push(
-    await webpackInitGenerator(tree, {
-      compiler: 'swc',
-      uiFramework: 'react',
-      skipFormat: true,
-    })
+    ensureDependencies(tree, { compiler: 'swc', uiFramework: 'react' })
   );
 
   const projectConfig = readProjectConfiguration(tree, options.project);

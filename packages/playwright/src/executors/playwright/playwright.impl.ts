@@ -20,6 +20,7 @@ export interface PlaywrightExecutorSchema {
   grep?: string;
   globalTimeout?: number;
   grepInvert?: string;
+  testFiles?: string[];
   headed?: boolean;
   ignoreSnapshots?: boolean;
   workers?: string;
@@ -104,7 +105,12 @@ function createArgs(
 ): string[] {
   const args: string[] = [];
 
-  for (const key in opts) {
+  const { testFiles, ...rest } = opts;
+  if (testFiles) {
+    args.push(...testFiles);
+  }
+
+  for (const key in rest) {
     if (exclude.includes(key)) continue;
 
     const value = opts[key];

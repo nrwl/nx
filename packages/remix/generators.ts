@@ -12,3 +12,4 @@ export * from './src/generators/route/route.impl';
 export * from './src/generators/setup-tailwind/setup-tailwind.impl';
 export * from './src/generators/storybook-configuration/storybook-configuration.impl';
 export * from './src/generators/style/style.impl';
+export * from './src/generators/init/init';

@@ -1,0 +1,21 @@
+{
+  "name": "init",
+  "factory": "./src/generators/init/init#lintInitGenerator",
+  "schema": {
+    "$schema": "http://json-schema.org/schema",
+    "cli": "nx",
+    "$id": "NxESLintInit",
+    "title": "Initialize ESLint Plugin",
+    "description": "Set up the ESLint plugin.",
+    "type": "object",
+    "properties": {},
+    "required": [],
+    "presets": []
+  },
+  "description": "Set up the ESLint plugin.",
+  "hidden": true,
+  "implementation": "/packages/eslint/src/generators/init/init#lintInitGenerator.ts",
+  "aliases": [],
+  "path": "/packages/eslint/src/generators/init/schema.json",
+  "type": "generator"
+}
