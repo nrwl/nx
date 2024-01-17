@@ -1220,7 +1220,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         !isCI() &&
         !isNxCloudUsed(originalNxJson)
       ) {
-        await connectToNxCloudWithPrompt('migrate', 'nxCloudMigration');
+        await connectToNxCloudWithPrompt('migrate');
         originalPackageJson = readJsonFile<PackageJson>(
           join(root, 'package.json')
         );

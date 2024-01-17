@@ -12,10 +12,7 @@ import {
   runInstall,
   updateGitIgnore,
 } from './utils';
-import {
-  connectExistingRepoToNxCloudPrompt,
-  connectToNxCloudPrompt,
-} from '../../connect/connect-to-nx-cloud';
+import { connectExistingRepoToNxCloudPrompt } from '../../connect/connect-to-nx-cloud';
 
 type Options = Pick<InitArgs, 'nxCloud' | 'interactive' | 'cacheable'>;
 
@@ -65,14 +62,13 @@ export async function addNxToNpmRepo(options: Options) {
     }
 
     useNxCloud =
-      options.nxCloud ??
-      (await connectExistingRepoToNxCloudPrompt('nxCloudMigration'));
+      options.nxCloud ?? (await connectExistingRepoToNxCloudPrompt());
   } else {
     cacheableOperations = options.cacheable ?? [];
     useNxCloud =
       options.nxCloud ??
       (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt('nxCloudMigration')
+        ? await connectExistingRepoToNxCloudPrompt()
         : false);
   }
 

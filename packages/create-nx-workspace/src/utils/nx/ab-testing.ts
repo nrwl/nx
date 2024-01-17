@@ -1,53 +1,48 @@
 import { isCI } from '../ci/is-ci';
 
+export const NxCloudChoices = ['yes', 'github', 'circleci', 'skip'];
+
 const messageOptions = {
-  nxCloudCreation: [
-    {
-      code: 'enable-remote-caching',
-      message: `Enable remote caching to make your CI fast`,
-      choices: [
-        { value: 'yes', name: 'Yes' },
-        { value: 'github', name: 'Yes, with GitHub Actions' },
-        { value: 'circleci', name: 'Yes, with CircleCI' },
-        { value: 'skip', name: 'Skip for now' },
-      ],
-    },
+  setupCI: [
     {
       code: 'enable-nx-cloud',
       message: `Do you want Nx Cloud to make your CI fast?`,
+      initial: 'github',
       choices: [
         { value: 'yes', name: 'Yes, enable Nx Cloud' },
         { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
         { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
         { value: 'skip', name: 'Skip for now' },
       ],
+      fallback: undefined,
+    },
+    {
+      code: 'set-up-ci',
+      message: `Set up CI with caching, distribution and test deflaking`,
+      initial: 'github',
+      choices: [
+        { value: 'github', name: 'Yes, for GitHub Actions with Nx Cloud' },
+        { value: 'circleci', name: 'Yes, for CircleCI with Nx Cloud' },
+        { value: 'skip', name: 'Skip for now' },
+      ],
+      fallback: { value: 'skip', key: 'setupNxCloud' },
     },
   ],
-  nxCloudMigration: [
+  setupNxCloud: [
     {
-      code: 'enable-remote-caching',
-      message: `Enable remote caching to make your CI fast`,
+      code: 'enable-caching',
+      message: `Would you like remote caching to make your build faster`,
+      initial: 'yes',
       choices: [
         { value: 'yes', name: 'Yes' },
-        { value: 'github', name: 'Yes, with GitHub Actions' },
-        { value: 'circleci', name: 'Yes, with CircleCI' },
         { value: 'skip', name: 'Skip for now' },
       ],
-    },
-    {
-      code: 'enable-nx-cloud',
-      message: `Do you want Nx Cloud to make your CI fast?`,
-      choices: [
-        { value: 'yes', name: 'Yes, enable Nx Cloud' },
-        { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
-        { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
-        { value: 'skip', name: 'Skip for now' },
-      ],
+      fallback: undefined,
     },
   ],
 } as const;
 
-type MessageKey = keyof typeof messageOptions;
+export type MessageKey = keyof typeof messageOptions;
 type MessageData = typeof messageOptions[MessageKey][number];
 
 export class PromptMessages {
@@ -69,7 +64,7 @@ export class PromptMessages {
   codeOfSelectedPromptMessage(key: MessageKey): string {
     const selected = this.selectedMessages[key];
     if (selected === undefined) {
-      return messageOptions[key][0].code;
+      return '';
     } else {
       return messageOptions[key][selected].code;
     }
@@ -86,7 +81,7 @@ export async function recordStat(opts: {
   command: string;
   nxVersion: string;
   useCloud: boolean;
-  meta: string;
+  meta: string[];
 }) {
   try {
     const major = Number(opts.nxVersion.split('.')[0]);
@@ -104,7 +99,7 @@ export async function recordStat(opts: {
         command: opts.command,
         isCI: isCI(),
         useCloud: opts.useCloud,
-        meta: opts.meta,
+        meta: opts.meta.filter((v) => !!v).join(','),
       });
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

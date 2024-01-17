@@ -88,7 +88,7 @@ export async function getLegacyMigrationFunctionIfApplicable(
     const useNxCloud =
       options.nxCloud ??
       (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt('nxCloudMigration')
+        ? await connectExistingRepoToNxCloudPrompt()
         : false);
 
     output.log({ title: '📦 Installing dependencies' });

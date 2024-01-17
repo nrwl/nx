@@ -1,5 +1,5 @@
 import * as yargs from 'yargs';
-import { messages } from '../utils/nx/ab-testing';
+import { MessageKey, messages } from '../utils/nx/ab-testing';
 import { output } from '../utils/output';
 import { deduceDefaultBase } from '../utils/git/default-base';
 import {
@@ -16,28 +16,37 @@ export async function determineNxCloud(
   parsedArgs: yargs.Arguments<{ nxCloud: NxCloud }>
 ): Promise<NxCloud> {
   if (parsedArgs.nxCloud === undefined) {
-    const { message, choices } = messages.getPrompt('nxCloudCreation');
-
-    return enquirer
-      .prompt<{ NxCloud: NxCloud }>([
-        {
-          name: 'NxCloud',
-          message,
-          type: 'autocomplete',
-          choices,
-          initial: 'yes',
-          footer() {
-            return chalk.dim`\nRead more about remote cache at https://nx.dev/ci/features/remote-cache`;
-          },
-          hint() {
-            return chalk.dim`\n(it's free and can be disabled any time)`;
-          },
-        } as any, // meeroslav: types in enquirer are not up to date,
-      ])
-      .then((a) => a.NxCloud);
+    return nxCloudPrompt('setupCI');
   } else {
     return parsedArgs.nxCloud;
   }
+}
+
+async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
+  const { message, choices, initial, fallback } = messages.getPrompt(key);
+
+  return enquirer
+    .prompt<{ NxCloud: NxCloud }>([
+      {
+        name: 'NxCloud',
+        message,
+        type: 'autocomplete',
+        choices,
+        initial,
+        footer() {
+          return chalk.dim`\nRead more about remote cache at https://nx.dev/ci/features/remote-cache`;
+        },
+        hint() {
+          return chalk.dim`\n(it's free and can be disabled any time)`;
+        },
+      } as any, // types in enquirer are not up to date,
+    ])
+    .then((a) => {
+      if (fallback && a.NxCloud === fallback.value) {
+        return nxCloudPrompt(fallback.key);
+      }
+      return a.NxCloud;
+    });
 }
 
 export async function determineDefaultBase(

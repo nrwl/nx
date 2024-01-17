@@ -1,15 +1,15 @@
 import chalk = require('chalk');
 import yargs = require('yargs');
-import { messages } from '../utils/nx/ab-testing';
+import { NxCloudChoices, messages } from '../utils/nx/ab-testing';
 import { packageManagerList } from '../utils/package-manager';
 
 export function withNxCloud<T = unknown>(argv: yargs.Argv<T>) {
-  const { message, choices } = messages.getPrompt('nxCloudCreation');
+  const { message } = messages.getPrompt('setupCI');
 
   const result = argv.option('nxCloud', {
     alias: 'ci',
     describe: chalk.dim(message),
-    choices: choices.map((c) => c.value) as string[],
+    choices: NxCloudChoices,
     type: 'string',
   });
   return result;

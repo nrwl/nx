@@ -69,9 +69,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
   const detectPluginsResponse = await detectPlugins();
   const useNxCloud =
     options.nxCloud ??
-    (options.interactive
-      ? await connectExistingRepoToNxCloudPrompt('nxCloudMigration')
-      : false);
+    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
   if (detectPluginsResponse) {
     addDepsToPackageJson(repoRoot, detectPluginsResponse.plugins);

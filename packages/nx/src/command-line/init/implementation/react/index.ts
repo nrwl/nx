@@ -95,9 +95,7 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
 
   const nxCloud =
     options.nxCloud ??
-    (options.interactive
-      ? await connectExistingRepoToNxCloudPrompt('nxCloudMigration')
-      : false);
+    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
   return {
     ...options,

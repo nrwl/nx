@@ -157,7 +157,10 @@ async function main(parsedArgs: yargs.Arguments<CreateNxPluginArguments>) {
     nxVersion,
     command: 'create-nx-workspace',
     useCloud: parsedArgs.nxCloud !== 'skip',
-    meta: messages.codeOfSelectedPromptMessage('nxCloudCreation'),
+    meta: [
+      messages.codeOfSelectedPromptMessage('setupCI'),
+      messages.codeOfSelectedPromptMessage('setupNxCloud'),
+    ],
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {

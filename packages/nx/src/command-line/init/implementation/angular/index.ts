@@ -16,7 +16,7 @@ import { setupIntegratedWorkspace } from './integrated-workspace';
 import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-versions';
 import { setupStandaloneWorkspace } from './standalone-workspace';
 import type { AngularJsonConfig, Options } from './types';
-import { connectToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
+import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
 
 const defaultCacheableOperations: string[] = [
   'build',
@@ -53,9 +53,7 @@ export async function addNxToAngularCliRepo(options: Options) {
     : [];
   const useNxCloud =
     options.nxCloud ??
-    (options.interactive
-      ? await connectToNxCloudPrompt('nxCloudMigration')
-      : false);
+    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
   output.log({ title: '📦 Installing dependencies' });
   installDependencies();

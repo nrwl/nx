@@ -99,14 +99,13 @@ export async function addNxToNest(options: Options, packageJson: PackageJson) {
     }
 
     useNxCloud =
-      options.nxCloud ??
-      (await connectExistingRepoToNxCloudPrompt('nxCloudMigration'));
+      options.nxCloud ?? (await connectExistingRepoToNxCloudPrompt());
   } else {
     cacheableOperations = options.cacheable ?? [];
     useNxCloud =
       options.nxCloud ??
       (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt('nxCloudMigration')
+        ? await connectExistingRepoToNxCloudPrompt()
         : false);
   }
 

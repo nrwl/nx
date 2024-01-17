@@ -13,7 +13,6 @@ import {
   MessageOptionKey,
   recordStat,
   messages,
-  MessageData,
 } from '../../utils/ab-testing';
 import { nxVersion } from '../../utils/versions';
 import chalk = require('chalk');
@@ -75,60 +74,43 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
   return true;
 }
 
-export async function connectToNxCloudWithPrompt(
-  command: string,
-  prompt: MessageKey
-) {
-  const setNxCloud = await connectToNxCloudPrompt(prompt);
+export async function connectToNxCloudWithPrompt(command: string) {
+  const setNxCloud = await nxCloudPrompt();
   const useCloud = setNxCloud ? await connectToNxCloudCommand() : false;
   await recordStat({
     command,
     nxVersion,
     useCloud,
-    meta: messages.codeOfSelectedPromptMessage(prompt),
+    meta: messages.codeOfSelectedPromptMessage('setupNxCloud'),
   });
 }
 
-export async function connectToNxCloudPrompt(
-  prompt: MessageKey
-): Promise<MessageOptionKey> {
-  const { message, choices } = messages.getPrompt(prompt);
-  return generatePrompt(message, choices).then(
-    (a: { NxCloud: MessageOptionKey }) => a.NxCloud
-  );
+export async function connectExistingRepoToNxCloudPrompt(): Promise<boolean> {
+  return nxCloudPrompt().then((value: MessageOptionKey) => value === 'yes');
 }
 
-export async function connectExistingRepoToNxCloudPrompt(
-  prompt: MessageKey
-): Promise<boolean> {
-  const { message, choices } = messages.getPrompt(prompt);
-  const nonCIChoices = choices.filter((c) =>
-    ['yes', 'skip'].includes(c.value)
-  ) as any as MessageData['choices'];
-  return generatePrompt(message, nonCIChoices).then(
-    (a: { NxCloud: MessageOptionKey }) => a.NxCloud === 'yes'
-  );
-}
+async function nxCloudPrompt(): Promise<MessageOptionKey> {
+  const { message, choices, initial } = messages.getPrompt('setupNxCloud');
 
-async function generatePrompt(
-  message: string,
-  choices: MessageData['choices']
-): Promise<{ NxCloud: MessageOptionKey }> {
   return await (
     await import('enquirer')
-  ).prompt([
-    {
-      name: 'NxCloud',
-      message,
-      type: 'autocomplete',
-      choices,
-      initial: 'yes',
-      footer() {
-        return chalk.dim`\nRead more about remote cache at https://nx.dev/ci/features/remote-cache`;
-      },
-      hint() {
-        return chalk.dim`\n(it's free and can be disabled any time)`;
-      },
-    } as any, // meeroslav: types in enquirer are not up to date,
-  ]);
+  )
+    .prompt<{ NxCloud: MessageOptionKey }>([
+      {
+        name: 'NxCloud',
+        message,
+        type: 'autocomplete',
+        choices,
+        initial,
+        footer() {
+          return chalk.dim`\nRead more about remote cache at https://nx.dev/ci/features/remote-cache`;
+        },
+        hint() {
+          return chalk.dim`\n(it's free and can be disabled any time)`;
+        },
+      } as any, // meeroslav: types in enquirer are not up to date,
+    ])
+    .then((a) => {
+      return a.NxCloud;
+    });
 }

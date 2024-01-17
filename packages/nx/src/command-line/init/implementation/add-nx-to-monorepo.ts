@@ -74,15 +74,14 @@ export async function addNxToMonorepo(options: Options) {
     }
 
     useNxCloud =
-      options.nxCloud ??
-      (await connectExistingRepoToNxCloudPrompt('nxCloudMigration'));
+      options.nxCloud ?? (await connectExistingRepoToNxCloudPrompt());
   } else {
     targetDefaults = [];
     cacheableOperations = options.cacheable ?? [];
     useNxCloud =
       options.nxCloud ??
       (options.interactive
-        ? await connectExistingRepoToNxCloudPrompt('nxCloudMigration')
+        ? await connectExistingRepoToNxCloudPrompt()
         : false);
   }
 

@@ -117,7 +117,7 @@ Type: `string`
 
 Choices: [yes, github, circleci, skip]
 
-Enable remote caching to make your CI fast
+Do you want Nx Cloud to make your CI fast?
 
 ### packageManager
 
