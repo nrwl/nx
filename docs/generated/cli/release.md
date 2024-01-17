@@ -67,6 +67,12 @@ nx release [specifier]
 
 #### Options
 
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.
+
 ##### help
 
 Type: `boolean`
@@ -106,6 +112,12 @@ nx release version [specifier]
 ```
 
 #### Options
+
+##### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.
 
 ##### git-commit
 

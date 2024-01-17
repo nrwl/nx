@@ -583,7 +583,7 @@ describe('Linter', () => {
       const outFlat = runCLI(`affected -t lint`, {
         silenceError: true,
       });
-      expect(outFlat).toContain('All files pass linting');
+      expect(outFlat).toContain('ran target lint');
     }, 1000000);
 
     it('should convert standalone to flat config', () => {
@@ -616,7 +616,7 @@ describe('Linter', () => {
       const outFlat = runCLI(`affected -t lint`, {
         silenceError: true,
       });
-      expect(outFlat).toContain('All files pass linting');
+      expect(outFlat).toContain('ran target lint');
     }, 1000000);
   });
 

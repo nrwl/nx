@@ -32,6 +32,7 @@ export type VersionOptions = NxReleaseArgs &
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
+    firstRelease?: boolean;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
@@ -56,6 +57,7 @@ export type PublishOptions = NxReleaseArgs &
 export type ReleaseOptions = NxReleaseArgs & {
   yes?: boolean;
   skipPublish?: boolean;
+  firstRelease?: boolean;
 };
 
 export const yargsReleaseCommand: CommandModule<
@@ -146,6 +148,11 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
         description:
           'Skip publishing by automatically answering no to the confirmation prompt for publishing',
       })
+      .option('first-release', {
+        type: 'boolean',
+        description:
+          'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.',
+      })
       .check((argv) => {
         if (argv.yes !== undefined && argv.skipPublish !== undefined) {
           throw new Error(
@@ -183,6 +190,16 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
           describe:
             'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
           default: '',
+        })
+        .option('stage-changes', {
+          type: 'boolean',
+          describe:
+            'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
+        })
+        .option('first-release', {
+          type: 'boolean',
+          description:
+            'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.',
         })
     ),
   handler: (args) =>
