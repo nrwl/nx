@@ -8,7 +8,7 @@ export interface Message extends Record<string, any> {
   data?: any;
 }
 
-export class SocketMessenger {
+export class DaemonSocketMessenger {
   constructor(private socket: Socket) {}
 
   async sendMessage(messageToDaemon: Message) {
