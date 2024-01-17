@@ -10,6 +10,7 @@ Below is an example of an GitLab setup that runs on a single job, building and t
 image: node:18
 
 stages:
+  - lint
   - test
   - build
 
@@ -36,7 +37,7 @@ format-check:
   stage: test
   extends: .distributed
   script:
-    - npx nx format:check --base=$NX_BASE --head=$NX_HEAD
+    - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
 
 lint:
   stage: test
@@ -112,7 +113,7 @@ nx-dte:
   extends: .base-pipeline
   script:
     - yarn nx-cloud start-ci-run --stop-agents-after=build
-    - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
+    - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=2
 
 # Create as many agents as you want

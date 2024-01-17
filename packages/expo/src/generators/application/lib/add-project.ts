@@ -6,15 +6,13 @@ import {
   TargetConfiguration,
   Tree,
 } from '@nx/devkit';
+
+import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { NormalizedSchema } from './normalize-options';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/expo/plugin'
-      : p.plugin === '@nx/expo/plugin'
-  );
+  const hasPlugin = hasExpoPlugin(host);
 
   const projectConfiguration: ProjectConfiguration = {
     root: options.appProjectRoot,

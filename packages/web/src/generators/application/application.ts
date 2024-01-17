@@ -19,11 +19,19 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getRelativePathToRootTsConfig } from '@nx/js';
+import {
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
 import type { Linter } from '@nx/eslint';
 import { join } from 'path';
-import { nxVersion, swcLoaderVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  swcLoaderVersion,
+  tsLibVersion,
+  typesNodeVersion,
+} from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
@@ -224,6 +232,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
+  const jsInitTask = await jsInitGenerator(host, {
+    js: false,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const webTask = await webInitGenerator(host, {
     ...options,
     skipFormat: true,
@@ -404,6 +417,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   setDefaults(host, options);
+
+  tasks.push(
+    addDependenciesToPackageJson(
+      host,
+      { tslib: tsLibVersion },
+      { '@types/node': typesNodeVersion }
+    )
+  );
 
   if (!schema.skipFormat) {
     await formatFiles(host);

@@ -102,6 +102,8 @@
       "@nx/remix/*": ["packages/remix/*"],
       "@nx/rollup": ["packages/rollup"],
       "@nx/rollup/*": ["packages/rollup/*"],
+      "@nx/shared-ui-fence": ["nx-dev/shared-ui-fence/src/index.ts"],
+      "@nx/shared-ui-selector": ["nx-dev/shared-ui-selector/src/index.ts"],
       "@nx/storybook": ["packages/storybook"],
       "@nx/storybook/*": ["packages/storybook/*"],
       "@nx/typedoc-theme": ["typedoc-theme/src/index.ts"],

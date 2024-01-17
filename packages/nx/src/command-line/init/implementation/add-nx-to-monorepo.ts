@@ -2,7 +2,7 @@ import { prompt } from 'enquirer';
 import { readdirSync, readFileSync, statSync } from 'fs';
 import ignore from 'ignore';
 import { join, relative } from 'path';
-import { InitArgs } from '../init';
+import { InitArgs } from '../init-v1';
 import { readJsonFile } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
 import { getPackageManagerCommand } from '../../../utils/package-manager';
