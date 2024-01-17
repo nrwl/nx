@@ -43,6 +43,10 @@
         "packageRoot": "build/packages/{projectName}",
         "currentVersionResolver": "registry"
       }
+    },
+    "git": {
+      "commit": false,
+      "tag": false
     }
   },
   "targetDefaults": {
