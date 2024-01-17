@@ -373,8 +373,9 @@ const tips: NewYearTip[] = [
 ];
 
 export default function NewYear(): JSX.Element {
-  const currentDay =
-    new Date().getFullYear() === 2024 ? new Date().getDate() : 0;
+  // const currentDay =
+  //   new Date().getFullYear() === 2024 ? new Date().getDate() : 0;
+  const currentDay = 15;
   const router = useRouter();
   const [cards, setCards] = useState({});
 
