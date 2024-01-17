@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -17,6 +18,7 @@ import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { join } from 'path';
+import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { Schema } from './schema';
 
@@ -66,6 +68,8 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
     updateTsConfigsToJs(tree, options);
   }
   updateProject(tree, options);
+
+  tasks.push(ensureDependencies(tree));
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
@@ -185,4 +189,12 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
   }
 
   updateProjectConfiguration(tree, options.projectName, project);
+}
+
+function ensureDependencies(tree: Tree): GeneratorCallback {
+  return addDependenciesToPackageJson(
+    tree,
+    { tslib: tslibVersion },
+    { '@types/node': typesNodeVersion }
+  );
 }

@@ -9,7 +9,7 @@ describe('init', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should add nuxt dependencies', async () => {
+  it('should install required dependencies', async () => {
     await nuxtInitGenerator(tree, {
       skipFormat: false,
     });

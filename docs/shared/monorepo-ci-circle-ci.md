@@ -19,7 +19,7 @@ jobs:
       - run: npm ci
       - nx/set-shas
 
-      - run: npx nx format:check
+      - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=3 --configuration=ci
 workflows:
   build:
@@ -67,7 +67,7 @@ jobs:
       # Tell Nx Cloud to use DTE and stop agents when the build tasks are done
       - run: npx nx-cloud start-ci-run --stop-agents-after=build
       # Send logs to Nx Cloud for any CLI command
-      - run: npx nx-cloud record -- npx nx format:check
+      - run: npx nx-cloud record -- nx format:check
       # Lint, test and build on agent jobs everything affected by a change
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=2 --configuration=ci
   agent:

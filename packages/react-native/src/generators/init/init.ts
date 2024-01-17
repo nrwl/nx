@@ -1,6 +1,5 @@
 import {
   addDependenciesToPackageJson,
-  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   readNxJson,
@@ -9,73 +8,30 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { Schema } from './schema';
-
-import { jestInitGenerator } from '@nx/jest';
-import { detoxInitGenerator } from '@nx/detox';
+import { ReactNativePluginOptions } from '../../../plugins/plugin';
 import {
-  babelCoreVersion,
-  babelPresetReactVersion,
-} from '@nx/react/src/utils/versions';
-import { initGenerator as jsInitGenerator } from '@nx/js';
-
-import {
-  babelRuntimeVersion,
-  jestReactNativeVersion,
-  metroVersion,
   nxVersion,
   reactDomVersion,
   reactNativeCommunityCli,
   reactNativeCommunityCliAndroid,
   reactNativeCommunityCliIos,
-  reactNativeMetroConfigVersion,
-  reactNativeSvgTransformerVersion,
-  reactNativeSvgVersion,
   reactNativeVersion,
-  reactTestRendererVersion,
   reactVersion,
-  testingLibraryJestNativeVersion,
-  testingLibraryReactNativeVersion,
-  typesNodeVersion,
-  typesReactVersion,
 } from '../../utils/versions';
-
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
-import { ReactNativePluginOptions } from '../../../plugins/plugin';
+import { Schema } from './schema';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
-  const tasks: GeneratorCallback[] = [];
-
-  tasks.push(
-    await jsInitGenerator(host, {
-      ...schema,
-      skipFormat: true,
-    })
-  );
-
-  if (!schema.skipPackageJson) {
-    const installTask = updateDependencies(host);
-
-    tasks.push(moveDependency(host));
-    tasks.push(installTask);
-  }
-
-  if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = await jestInitGenerator(host, schema);
-    tasks.push(jestTask);
-  }
-
-  if (!schema.e2eTestRunner || schema.e2eTestRunner === 'detox') {
-    const detoxTask = await detoxInitGenerator(host, {
-      ...schema,
-      skipFormat: true,
-    });
-    tasks.push(detoxTask);
-  }
 
   if (process.env.NX_PCV3 === 'true') {
     addPlugin(host);
+  }
+
+  const tasks: GeneratorCallback[] = [];
+  if (!schema.skipPackageJson) {
+    tasks.push(moveDependency(host));
+    tasks.push(updateDependencies(host));
   }
 
   if (!schema.skipFormat) {
@@ -86,7 +42,6 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
 }
 
 export function updateDependencies(host: Tree) {
-  const isPnpm = detectPackageManager(host.root) === 'pnpm';
   return addDependenciesToPackageJson(
     host,
     {
@@ -96,32 +51,10 @@ export function updateDependencies(host: Tree) {
     },
     {
       '@nx/react-native': nxVersion,
-      '@types/node': typesNodeVersion,
-      '@types/react': typesReactVersion,
-      '@react-native/metro-config': reactNativeMetroConfigVersion,
       '@react-native-community/cli': reactNativeCommunityCli,
       '@react-native-community/cli-platform-android':
         reactNativeCommunityCliAndroid,
       '@react-native-community/cli-platform-ios': reactNativeCommunityCliIos,
-      '@testing-library/react-native': testingLibraryReactNativeVersion,
-      '@testing-library/jest-native': testingLibraryJestNativeVersion,
-      'jest-react-native': jestReactNativeVersion,
-      metro: metroVersion,
-      'metro-config': metroVersion,
-      'metro-resolver': metroVersion,
-      'metro-babel-register': metroVersion,
-      'metro-react-native-babel-preset': metroVersion,
-      'metro-react-native-babel-transformer': metroVersion,
-      'react-test-renderer': reactTestRendererVersion,
-      'react-native-svg-transformer': reactNativeSvgTransformerVersion,
-      'react-native-svg': reactNativeSvgVersion,
-      '@babel/preset-react': babelPresetReactVersion,
-      '@babel/core': babelCoreVersion,
-      ...(isPnpm
-        ? {
-            '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
-          }
-        : {}),
     }
   );
 }
@@ -148,6 +81,7 @@ function addPlugin(host: Tree) {
     plugin: '@nx/react-native/plugin',
     options: {
       startTargetName: 'start',
+      podInstallTargetName: 'pod-install',
       bundleTargetName: 'bundle',
       runIosTargetName: 'run-ios',
       runAndroidTargetName: 'run-android',
