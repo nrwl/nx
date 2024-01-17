@@ -54,7 +54,7 @@ type PropertValueRendererProps = PropertyRendererProps & {
 function PropertyValueRenderer(props: PropertValueRendererProps) {
   const { propertyKey, propertyValue, sourceMap, keyPrefix, nested } = props;
 
-  if (Array.isArray(propertyValue) && propertyValue.length) {
+  if (propertyValue && Array.isArray(propertyValue) && propertyValue.length) {
     return (
       <div className="ml-3">
         {nested && renderOpening(propertyValue)}
@@ -107,7 +107,7 @@ function PropertyValueRenderer(props: PropertValueRendererProps) {
 }
 
 function renderOpening(value: any): string {
-  return Array.isArray(value) && value.length
+  return value && Array.isArray(value) && value.length
     ? '['
     : value && typeof value === 'object'
     ? '{'
@@ -115,7 +115,7 @@ function renderOpening(value: any): string {
 }
 
 function renderClosing(value: any): string {
-  return Array.isArray(value) && value.length
+  return value && Array.isArray(value) && value.length
     ? '],'
     : value && typeof value === 'object'
     ? '},'

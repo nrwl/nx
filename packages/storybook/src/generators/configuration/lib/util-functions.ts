@@ -536,7 +536,9 @@ export function createProjectStorybookDir(
   isNextJs?: boolean,
   usesSwc?: boolean,
   usesVite?: boolean,
-  viteConfigFilePath?: string
+  viteConfigFilePath?: string,
+  hasPlugin?: boolean,
+  viteConfigFileName?: string
 ) {
   let projectDirectory =
     projectType === 'application'
@@ -579,6 +581,8 @@ export function createProjectStorybookDir(
     usesVite,
     isRootProject: projectIsRootProjectInStandaloneWorkspace,
     viteConfigFilePath,
+    hasPlugin,
+    viteConfigFileName,
   });
 
   if (js) {
@@ -699,13 +703,19 @@ export async function getE2EProjectName(
 export function findViteConfig(
   tree: Tree,
   projectRoot: string
-): string | undefined {
+): {
+  fullConfigPath: string | undefined;
+  viteConfigFileName: string | undefined;
+} {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
   for (const ext of allowsExt) {
     const viteConfigPath = joinPathFragments(projectRoot, `vite.config.${ext}`);
     if (tree.exists(viteConfigPath)) {
-      return viteConfigPath;
+      return {
+        fullConfigPath: viteConfigPath,
+        viteConfigFileName: `vite.config.${ext}`,
+      };
     }
   }
 }

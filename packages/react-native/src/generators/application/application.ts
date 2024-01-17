@@ -11,6 +11,7 @@ import { runSymlink } from '../../utils/symlink-task';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
 import { chmodAndroidGradlewFilesTask } from '../../utils/chmod-android-gradle-files';
+import { runPodInstall } from '../../utils/pod-install-task';
 
 import { normalizeOptions } from './lib/normalize-options';
 import initGenerator from '../init/init';
@@ -78,6 +79,13 @@ export async function reactNativeApplicationGeneratorInternal(
     joinPathFragments(host.root, options.androidProjectRoot)
   );
   tasks.push(chmodTaskGradlewTask);
+
+  const podInstallTask = runPodInstall(
+    joinPathFragments(host.root, options.iosProjectRoot)
+  );
+  if (options.install) {
+    tasks.push(podInstallTask);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);

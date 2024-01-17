@@ -14,7 +14,13 @@ import {
 } from './batch/batch-messages';
 import { stripIndents } from '../utils/strip-indents';
 import { Task, TaskGraph } from '../config/task-graph';
-import { Transform } from 'stream';
+import { Readable, Transform } from 'stream';
+import { ChildProcess as NativeChildProcess, nxFork } from '../native';
+import { PsuedoIPCServer } from './psuedo-ipc';
+import { FORKED_PROCESS_OS_SOCKET_PATH } from '../daemon/socket-utils';
+import { PseudoTtyProcess } from '../utils/child-process';
+
+const forkScript = join(__dirname, './fork.js');
 
 const workerPath = join(__dirname, './batch/run-batch.js');
 
@@ -22,9 +28,16 @@ export class ForkedProcessTaskRunner {
   cliPath = getCliPath();
 
   private readonly verbose = process.env.NX_VERBOSE_LOGGING === 'true';
-  private processes = new Set<ChildProcess>();
+  private processes = new Set<ChildProcess | PseudoTtyProcess>();
 
-  constructor(private readonly options: DefaultTasksRunnerOptions) {
+  private psuedoIPCPath = FORKED_PROCESS_OS_SOCKET_PATH(process.pid.toString());
+
+  private psuedoIPC = new PsuedoIPCServer(this.psuedoIPCPath);
+
+  constructor(private readonly options: DefaultTasksRunnerOptions) {}
+
+  async init() {
+    await this.psuedoIPC.init();
     this.setupProcessEventListeners();
   }
 
@@ -107,7 +120,155 @@ export class ForkedProcessTaskRunner {
     });
   }
 
-  public forkProcessPipeOutputCapture(
+  public async forkProcessLegacy(
+    task: Task,
+    {
+      temporaryOutputPath,
+      streamOutput,
+      pipeOutput,
+      taskGraph,
+      env,
+    }: {
+      temporaryOutputPath: string;
+      streamOutput: boolean;
+      pipeOutput: boolean;
+      taskGraph: TaskGraph;
+      env: NodeJS.ProcessEnv;
+    }
+  ): Promise<{ code: number; terminalOutput: string }> {
+    return pipeOutput
+      ? await this.forkProcessPipeOutputCapture(task, {
+          temporaryOutputPath,
+          streamOutput,
+          taskGraph,
+          env,
+        })
+      : await this.forkProcessDirectOutputCapture(task, {
+          temporaryOutputPath,
+          streamOutput,
+          taskGraph,
+          env,
+        });
+  }
+
+  public async forkProcess(
+    task: Task,
+    {
+      temporaryOutputPath,
+      streamOutput,
+      pipeOutput,
+      taskGraph,
+      env,
+    }: {
+      temporaryOutputPath: string;
+      streamOutput: boolean;
+      pipeOutput: boolean;
+      taskGraph: TaskGraph;
+      env: NodeJS.ProcessEnv;
+    }
+  ): Promise<{ code: number; terminalOutput: string }> {
+    const shouldPrefix =
+      streamOutput && process.env.NX_PREFIX_OUTPUT === 'true';
+
+    // streamOutput would be false if we are running multiple targets
+    // there's no point in running the commands in a pty if we are not streaming the output
+    if (!streamOutput || shouldPrefix || !process.stdout.isTTY) {
+      return this.forkProcessWithPrefixAndNotTTY(task, {
+        temporaryOutputPath,
+        streamOutput,
+        taskGraph,
+        env,
+      });
+    } else {
+      return this.forkProcessWithPsuedoTerminal(task, {
+        temporaryOutputPath,
+        streamOutput,
+        taskGraph,
+        env,
+      });
+    }
+  }
+
+  private async forkProcessWithPsuedoTerminal(
+    task: Task,
+    {
+      temporaryOutputPath,
+      streamOutput,
+      taskGraph,
+      env,
+    }: {
+      temporaryOutputPath: string;
+      streamOutput: boolean;
+      taskGraph: TaskGraph;
+      env: NodeJS.ProcessEnv;
+    }
+  ): Promise<{ code: number; terminalOutput: string }> {
+    const args = getPrintableCommandArgsForTask(task);
+    if (streamOutput) {
+      output.logCommand(args.join(' '));
+      output.addNewline();
+    }
+
+    const childId = task.id;
+    const p = new PseudoTtyProcess(
+      nxFork(
+        childId,
+        forkScript,
+        this.psuedoIPCPath,
+        process.cwd(),
+        env,
+        !streamOutput
+      )
+    );
+
+    await this.psuedoIPC.waitForChildReady(childId);
+
+    this.psuedoIPC.sendMessageToChild(childId, {
+      targetDescription: task.target,
+      overrides: task.overrides,
+      taskGraph,
+      isVerbose: this.verbose,
+    });
+    this.processes.add(p);
+
+    let terminalOutput = '';
+    p.onOutput((msg) => {
+      terminalOutput += msg;
+    });
+
+    return new Promise((res) => {
+      p.onExit((code) => {
+        res({
+          code,
+          terminalOutput,
+        });
+      });
+    });
+  }
+
+  private forkProcessPipeOutputCapture(
+    task: Task,
+    {
+      streamOutput,
+      temporaryOutputPath,
+      taskGraph,
+      env,
+    }: {
+      streamOutput: boolean;
+      temporaryOutputPath: string;
+      taskGraph: TaskGraph;
+      env: NodeJS.ProcessEnv;
+    }
+  ) {
+    return this.forkProcessWithPrefixAndNotTTY(task, {
+      streamOutput,
+      temporaryOutputPath,
+      taskGraph,
+      env,
+    });
+  }
+
+  private forkProcessWithPrefixAndNotTTY(
     task: Task,
     {
       streamOutput,
@@ -203,7 +364,7 @@ export class ForkedProcessTaskRunner {
     });
   }
 
-  public forkProcessDirectOutputCapture(
+  private forkProcessDirectOutputCapture(
     task: Task,
     {
       streamOutput,
@@ -296,10 +457,17 @@ export class ForkedProcessTaskRunner {
   }
 
   private setupProcessEventListeners() {
+    this.psuedoIPC.onMessageFromChildren((message: Serializable) => {
+      process.send(message);
+    });
+
     // When the nx process gets a message, it will be sent into the task's process
     process.on('message', (message: Serializable) => {
+      // this.publisher.publish(message.toString());
+      this.psuedoIPC.sendMessageToChildren(message);
+
       this.processes.forEach((p) => {
-        if (p.connected) {
+        if ('connected' in p && p.connected) {
           p.send(message);
         }
       });
@@ -308,14 +476,14 @@ export class ForkedProcessTaskRunner {
     // Terminate any task processes on exit
     process.on('exit', () => {
       this.processes.forEach((p) => {
-        if (p.connected) {
+        if ('connected' in p ? p.connected : p.isAlive) {
           p.kill();
         }
       });
     });
     process.on('SIGINT', () => {
       this.processes.forEach((p) => {
-        if (p.connected) {
+        if ('connected' in p ? p.connected : p.isAlive) {
           p.kill('SIGTERM');
         }
       });
@@ -324,7 +492,7 @@ export class ForkedProcessTaskRunner {
     });
     process.on('SIGTERM', () => {
       this.processes.forEach((p) => {
-        if (p.connected) {
+        if ('connected' in p ? p.connected : p.isAlive) {
           p.kill('SIGTERM');
         }
       });
@@ -333,13 +501,17 @@ export class ForkedProcessTaskRunner {
     });
     process.on('SIGHUP', () => {
       this.processes.forEach((p) => {
-        if (p.connected) {
+        if ('connected' in p ? p.connected : p.isAlive) {
           p.kill('SIGTERM');
         }
       });
       // no exit here because we expect child processes to terminate which
       // will store results to the cache and will terminate this process
     });
+  }
+
+  destroy() {
+    this.psuedoIPC.close();
   }
 }
 
