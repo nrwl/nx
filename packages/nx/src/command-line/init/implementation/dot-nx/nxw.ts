@@ -1,6 +1,6 @@
 // This file should be committed to your repository! It wraps Nx and ensures
 // that your local installation matches nx.json.
-// See: https://nx.dev/more-concepts/nx-and-the-wrapper for more info.
+// See: https://nx.dev/recipes/installation/install-non-javascript for more info.
 //
 //# The contents of this file are executed before packages are installed.
 //# As such, we should not import anything from nx, other @nrwl packages,

@@ -17,10 +17,16 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ### Examples
 
-Install the latest version of the `@nx/react` package and run its `@nx/react:init` generator:
+Install the `@nx/react` package matching the installed version of the `nx` package and run its `@nx/react:init` generator:
 
 ```shell
  nx add @nx/react
+```
+
+Install the latest version of the `non-core-nx-plugin` package and run its `non-core-nx-plugin:init` generator if available:
+
+```shell
+ nx add non-core-nx-plugin
 ```
 
 Install version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator:

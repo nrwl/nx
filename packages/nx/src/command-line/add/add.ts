@@ -8,12 +8,10 @@ import { runNxAsync } from '../../utils/child-process';
 import { writeJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
-import {
-  getPackageManagerCommand,
-  type PackageManagerCommands,
-} from '../../utils/package-manager';
+import { getPackageManagerCommand } from '../../utils/package-manager';
 import { handleErrors } from '../../utils/params';
 import { getPluginCapabilities } from '../../utils/plugins';
+import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { AddOptions } from './command-object';
 
@@ -26,11 +24,10 @@ export function addHandler(args: AddOptions): Promise<void> {
   return handleErrors(isVerbose, async () => {
     output.addNewline();
 
-    const pmc = getPackageManagerCommand();
     const [pkgName, version] = parsePackageSpecifier(args.packageSpecifier);
 
-    await installPackage(pkgName, version, pmc);
-    await initializePlugin(pkgName, pmc);
+    await installPackage(pkgName, version);
+    await initializePlugin(pkgName);
 
     output.success({
       title: `Package ${pkgName} added successfully.`,
@@ -38,32 +35,26 @@ export function addHandler(args: AddOptions): Promise<void> {
   });
 }
 
-async function installPackage(
-  pkgName: string,
-  version: string,
-  packageManagerCommands: PackageManagerCommands
-): Promise<void> {
+async function installPackage(pkgName: string, version: string): Promise<void> {
   const spinner = ora(`Installing ${pkgName}@${version}...`);
   spinner.start();
 
   if (existsSync('package.json')) {
+    const pmc = getPackageManagerCommand();
     await new Promise<void>((resolve) =>
-      exec(
-        `${packageManagerCommands.addDev} ${pkgName}@${version}`,
-        (error, stdout) => {
-          if (error) {
-            spinner.fail();
-            output.addNewline();
-            logger.error(stdout);
-            output.error({
-              title: `Failed to install ${pkgName}. Please check the error above for more details.`,
-            });
-            process.exit(1);
-          }
-
-          return resolve();
+      exec(`${pmc.addDev} ${pkgName}@${version}`, (error, stdout) => {
+        if (error) {
+          spinner.fail();
+          output.addNewline();
+          logger.error(stdout);
+          output.error({
+            title: `Failed to install ${pkgName}. Please check the error above for more details.`,
+          });
+          process.exit(1);
         }
-      )
+
+        return resolve();
+      })
     );
   } else {
     const nxJson = readNxJson();
@@ -91,10 +82,7 @@ async function installPackage(
   spinner.succeed();
 }
 
-async function initializePlugin(
-  pkgName: string,
-  packageManagerCommands: PackageManagerCommands
-): Promise<void> {
+async function initializePlugin(pkgName: string): Promise<void> {
   const capabilities = await getPluginCapabilities(workspaceRoot, pkgName, {});
   const generators = capabilities?.generators;
   if (!generators) {
@@ -115,24 +103,17 @@ async function initializePlugin(
   const spinner = ora(`Initializing ${pkgName}...`);
   spinner.start();
 
-  await new Promise<void>((resolve) =>
-    exec(
-      `${packageManagerCommands.exec} nx g ${pkgName}:${initGenerator}`,
-      (error, stdout) => {
-        if (error) {
-          spinner.fail();
-          output.addNewline();
-          logger.error(stdout);
-          output.error({
-            title: `Failed to initialize ${pkgName}. Please check the error above for more details.`,
-          });
-          process.exit(1);
-        }
-
-        return resolve();
-      }
-    )
-  );
+  try {
+    await runNxAsync(`g ${pkgName}:${initGenerator}`);
+  } catch (e) {
+    spinner.fail();
+    output.addNewline();
+    logger.error(e.message);
+    output.error({
+      title: `Failed to initialize ${pkgName}. Please check the error above for more details.`,
+    });
+    process.exit(1);
+  }
 
   spinner.succeed();
 }
@@ -162,6 +143,10 @@ function parsePackageSpecifier(
   const i = packageSpecifier.lastIndexOf('@');
 
   if (i <= 0) {
+    if (coreNxPlugins.includes(packageSpecifier)) {
+      return [packageSpecifier, nxVersion];
+    }
+
     return [packageSpecifier, 'latest'];
   }
 
@@ -170,3 +155,32 @@ function parsePackageSpecifier(
 
   return [pkgName, version];
 }
+
+const coreNxPlugins = [
+  '@nx/angular',
+  '@nx/cypress',
+  '@nx/detox',
+  '@nx/devkit',
+  '@nx/esbuild',
+  '@nx/eslint',
+  '@nx/eslint-plugin',
+  '@nx/expo',
+  '@nx/express',
+  '@nx/jest',
+  '@nx/nest',
+  '@nx/next',
+  '@nx/node',
+  '@nx/nuxt',
+  '@nx/playwright',
+  '@nx/plugin',
+  '@nx/react',
+  '@nx/react-native',
+  '@nx/remix',
+  '@nx/rollup',
+  '@nx/storybook',
+  '@nx/vite',
+  '@nx/vue',
+  '@nx/web',
+  '@nx/webpack',
+  '@nx/workspace',
+];

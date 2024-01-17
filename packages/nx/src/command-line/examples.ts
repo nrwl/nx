@@ -393,7 +393,12 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'add @nx/react',
       description:
-        'Install the latest version of the `@nx/react` package and run its `@nx/react:init` generator',
+        'Install the `@nx/react` package matching the installed version of the `nx` package and run its `@nx/react:init` generator',
+    },
+    {
+      command: 'add non-core-nx-plugin',
+      description:
+        'Install the latest version of the `non-core-nx-plugin` package and run its `non-core-nx-plugin:init` generator if available',
     },
     {
       command: 'add @nx/react@17.0.0',
