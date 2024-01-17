@@ -209,7 +209,10 @@ export async function createNxReleaseConfig(
     [
       WORKSPACE_DEFAULTS.version,
       // Merge in the git defaults from the top level
-      { git: rootGitConfig } as NxReleaseConfig['version'],
+      { git: versionGitDefaults } as NxReleaseConfig['version'],
+      {
+        git: userConfig.git as Partial<NxReleaseConfig['git']>,
+      } as NxReleaseConfig['version'],
     ],
     userConfig.version as Partial<NxReleaseConfig['version']>
   );

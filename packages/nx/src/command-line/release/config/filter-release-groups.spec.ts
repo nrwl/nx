@@ -18,6 +18,7 @@ describe('filterReleaseGroups()', () => {
           tag: true,
           tagMessage: '',
           tagArgs: '',
+          stageChanges: false,
         },
         workspaceChangelog: false,
         projectChangelogs: false,
@@ -43,6 +44,7 @@ describe('filterReleaseGroups()', () => {
         tag: false,
         tagMessage: '',
         tagArgs: '',
+        stageChanges: false,
       },
     };
     projectGraph = {
