@@ -15,6 +15,11 @@ on:
       - main
   pull_request:
 
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   main:
     runs-on: ubuntu-latest
@@ -32,7 +37,7 @@ jobs:
       # This line is needed for nx affected to work when CI is running on a PR
       - run: git branch --track main origin/main
 
-      - run: npx nx format:check
+      - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t lint,test,build --parallel=3
 ```
 
@@ -59,6 +64,11 @@ on:
       - main
   pull_request:
 
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   main:
     name: Nx Cloud - Main Job
@@ -66,7 +76,7 @@ jobs:
     with:
       number-of-agents: 3
       parallel-commands: |
-        npx nx-cloud record -- npx nx format:check
+        npx nx-cloud record -- nx format:check
       parallel-commands-on-agents: |
         npx nx affected -t lint,test,build --parallel=2
 
@@ -112,6 +122,11 @@ on:
     branches:
       - main
   pull_request:
+
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
 
 env:
   NX_CLOUD_DISTRIBUTED_EXECUTION: true # this enables DTE
@@ -174,7 +189,7 @@ jobs:
           }
 
           # list of commands to be run on main has env flag NX_CLOUD_DISTRIBUTED_EXECUTION set to false
-          run_command "NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx-cloud record -- npx nx format:check"
+          run_command "NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx-cloud record -- nx format:check"
 
           # list of commands to be run on agents
           run_command "npx nx affected -t lint,test,build --parallel=3"

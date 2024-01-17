@@ -5,6 +5,11 @@ import {
   lessVersion,
   sassVersion,
   swcLoaderVersion,
+  testingLibraryReactVersion,
+  tsLibVersion,
+  typesNodeVersion,
+  typesReactDomVersion,
+  typesReactVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 
@@ -12,7 +17,20 @@ export function installCommonDependencies(
   host: Tree,
   options: NormalizedSchema
 ) {
-  const devDependencies: Record<string, string> = {};
+  if (options.skipPackageJson) {
+    return () => {};
+  }
+
+  const dependencies: Record<string, string> = {};
+  const devDependencies: Record<string, string> = {
+    '@types/node': typesNodeVersion,
+    '@types/react': typesReactVersion,
+    '@types/react-dom': typesReactDomVersion,
+  };
+
+  if (options.bundler !== 'vite') {
+    dependencies['tslib'] = tsLibVersion;
+  }
 
   // Vite requires style preprocessors to be installed manually.
   // `@nx/webpack` installs them automatically for now.
@@ -36,6 +54,10 @@ export function installCommonDependencies(
       devDependencies['@babel/preset-react'] = babelPresetReactVersion;
       devDependencies['@babel/core'] = babelCoreVersion;
     }
+  }
+
+  if (options.unitTestRunner && options.unitTestRunner !== 'none') {
+    devDependencies['@testing-library/react'] = testingLibraryReactVersion;
   }
 
   return addDependenciesToPackageJson(host, {}, devDependencies);

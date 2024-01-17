@@ -229,7 +229,7 @@ describe('react native', () => {
     const libName = uniq('@my-org/lib1');
 
     runCLI(
-      `generate @nx/react-native:application ${appName} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/react-native:application ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/") and
