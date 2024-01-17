@@ -66,7 +66,9 @@ export async function configurationGenerator(
   );
   const { compiler } = findStorybookAndBuildTargetsAndCompiler(targets);
 
-  const viteConfigFilePath = findViteConfig(tree, root);
+  const viteConfig = findViteConfig(tree, root);
+  const viteConfigFilePath = viteConfig?.fullConfigPath;
+  const viteConfigFileName = viteConfig?.viteConfigFileName;
   const nextConfigFilePath = findNextConfig(tree, root);
 
   if (viteConfigFilePath) {
@@ -130,7 +132,9 @@ export async function configurationGenerator(
     !!nextConfigFilePath,
     compiler === 'swc',
     usesVite,
-    viteConfigFilePath
+    viteConfigFilePath,
+    hasPlugin,
+    viteConfigFileName
   );
 
   if (schema.uiFramework !== '@storybook/angular') {
