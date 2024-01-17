@@ -2252,6 +2252,178 @@ describe('createNxReleaseConfig()', () => {
   });
 
   describe('version.conventionalCommits shorthand', () => {
+    it('should be implicitly false and not interfere with its long-form equivalent generatorOptions when not explicitly set', async () => {
+      const res1 = await createNxReleaseConfig(projectGraph, {
+        version: {
+          generatorOptions: {
+            currentVersionResolver: 'git-tag',
+            specifierSource: 'conventional-commits',
+          },
+        },
+      });
+      expect(res1).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {
+                    "currentVersionResolver": "git-tag",
+                    "specifierSource": "conventional-commits",
+                  },
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {
+                "currentVersionResolver": "git-tag",
+                "specifierSource": "conventional-commits",
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(projectGraph, {
+        version: {
+          generatorOptions: {
+            currentVersionResolver: 'registry',
+            specifierSource: 'prompt',
+          },
+        },
+      });
+      expect(res2).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {
+                    "currentVersionResolver": "registry",
+                    "specifierSource": "prompt",
+                  },
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {
+                "currentVersionResolver": "registry",
+                "specifierSource": "prompt",
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
     it('should update appropriate default values for generatorOptions when applied at the root', async () => {
       const res = await createNxReleaseConfig(projectGraph, {
         version: {

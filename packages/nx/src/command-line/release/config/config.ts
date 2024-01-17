@@ -262,6 +262,19 @@ export async function createNxReleaseConfig(
   const rootVersionWithoutGit = { ...rootVersionConfig };
   delete rootVersionWithoutGit.git;
 
+  // Apply conventionalCommits shorthand to the final group defaults if explicitly configured in the original user config
+  if (userConfig.version?.conventionalCommits === true) {
+    rootVersionWithoutGit.generatorOptions = {
+      ...rootVersionWithoutGit.generatorOptions,
+      currentVersionResolver: 'git-tag',
+      specifierSource: 'conventional-commits',
+    };
+  }
+  if (userConfig.version?.conventionalCommits === false) {
+    delete rootVersionWithoutGit.generatorOptions.currentVersionResolver;
+    delete rootVersionWithoutGit.generatorOptions.specifierSource;
+  }
+
   const groups: NxReleaseConfig['groups'] =
     userConfig.groups && Object.keys(userConfig.groups).length
       ? ensureProjectsConfigIsArray(userConfig.groups)
@@ -424,7 +437,10 @@ export async function createNxReleaseConfig(
         specifierSource: 'conventional-commits',
       };
     }
-    if (releaseGroup.version?.conventionalCommits === false) {
+    if (
+      releaseGroup.version?.conventionalCommits === false &&
+      releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
+    ) {
       delete finalReleaseGroup.version.generatorOptions.currentVersionResolver;
       delete finalReleaseGroup.version.generatorOptions.specifierSource;
     }
