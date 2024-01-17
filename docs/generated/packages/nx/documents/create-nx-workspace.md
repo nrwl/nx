@@ -119,11 +119,17 @@ Type: `boolean`
 
 Enable the App Router for Next.js
 
+### nextSrcDir
+
+Type: `boolean`
+
+Generate a 'src/' directory for Next.js
+
 ### nxCloud
 
 Type: `boolean`
 
-Enable distributed caching to make your CI faster
+Enable remote caching to make your CI faster
 
 ### packageManager
 

@@ -9,7 +9,7 @@ describe('init', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should add nuxt dependencies', async () => {
+  it('should install required dependencies', async () => {
     await nuxtInitGenerator(tree, {
       skipFormat: false,
     });
@@ -31,6 +31,10 @@ describe('init', () => {
         {
           options: { buildTargetName: 'build', serveTargetName: 'serve' },
           plugin: '@nx/nuxt/plugin',
+        },
+        {
+          options: { testTargetName: 'test' },
+          plugin: '@nx/vite/plugin',
         },
       ]);
     });

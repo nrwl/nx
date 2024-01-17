@@ -523,6 +523,8 @@ async function startServer(
   currentProjectGraphClientResponse.groupByFolder = groupByFolder;
   currentProjectGraphClientResponse.exclude = exclude;
 
+  currentSourceMapsClientResponse = sourceMapResponse;
+
   const app = http.createServer(async (req, res) => {
     // parse URL
     const parsedUrl = new URL(req.url, `http://${host}:${port}`);
@@ -530,6 +532,8 @@ async function startServer(
     // Avoid https://en.wikipedia.org/wiki/Directory_traversal_attack
     // e.g curl --path-as-is http://localhost:9000/../fileInDanger.txt
     // by limiting the path to current directory only
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
     const sanitizePath = basename(parsedUrl.pathname);
     if (sanitizePath === 'project-graph.json') {
@@ -660,7 +664,8 @@ function createFileWatcher() {
 
         if (
           projectGraphClientResponse.hash !==
-          currentProjectGraphClientResponse.hash
+            currentProjectGraphClientResponse.hash &&
+          sourceMapResponse
         ) {
           output.note({ title: 'Graph changes updated.' });
 
@@ -695,7 +700,7 @@ async function createProjectGraphAndSourceMapClientResponse(
   const dependencies = graph.dependencies;
 
   const hasher = createHash('sha256');
-  hasher.update(JSON.stringify({ layout, projects, dependencies }));
+  hasher.update(JSON.stringify({ layout, projects, dependencies, sourceMaps }));
 
   const hash = hasher.digest('hex');
 

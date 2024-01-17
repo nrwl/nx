@@ -25,7 +25,7 @@ export const autoprefixerVersion = '^10.4.0';
 export const tsNodeVersion = '10.9.1';
 
 export const jestPresetAngularVersion = '~13.1.4';
-export const typesNodeVersion = '16.11.7';
+export const typesNodeVersion = '18.16.9';
 export const jasmineMarblesVersion = '^0.9.2';
 
 export const jsoncEslintParserVersion = '^2.1.0';

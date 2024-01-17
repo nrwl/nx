@@ -1,7 +1,10 @@
-import init from '../init/init';
+import { jestInitGenerator } from '../init/init';
 import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
+import { createJestConfig } from './lib/create-jest-config';
+import { ensureDependencies } from './lib/ensure-dependencies';
 import { updateTsConfig } from './lib/update-tsconfig';
+import { updateVsCodeRecommendedExtensions } from './lib/update-vscode-recommended-extensions';
 import { updateWorkspace } from './lib/update-workspace';
 import { JestProjectSchema, NormalizedJestProjectSchema } from './schema';
 import {
@@ -9,7 +12,10 @@ import {
   Tree,
   GeneratorCallback,
   readProjectConfiguration,
+  readNxJson,
+  runTasksInSerial,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 const schemaDefaults = {
   setupFile: 'none',
@@ -60,17 +66,36 @@ export async function configurationGenerator(
   schema: JestProjectSchema
 ): Promise<GeneratorCallback> {
   const options = normalizeOptions(tree, schema);
-  const installTask = await init(tree, options);
 
+  const tasks: GeneratorCallback[] = [];
+
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
+  tasks.push(await jestInitGenerator(tree, options));
+  if (!schema.skipPackageJson) {
+    tasks.push(ensureDependencies(tree, options));
+  }
+
+  await createJestConfig(tree, options);
   checkForTestTarget(tree, options);
   createFiles(tree, options);
   updateTsConfig(tree, options);
-  updateWorkspace(tree, options);
+  updateVsCodeRecommendedExtensions(tree);
+
+  const nxJson = readNxJson(tree);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/jest/plugin'
+      : p.plugin === '@nx/jest/plugin'
+  );
+  if (!hasPlugin) {
+    updateWorkspace(tree, options);
+  }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
-  return installTask;
+
+  return runTasksInSerial(...tasks);
 }
 
 export default configurationGenerator;

@@ -322,7 +322,7 @@ It supports interpolating the version as `{version}` and (if releasing independe
 
 The default `"releaseTagPattern"` for fixed/unified releases is: `v{version}`
 
-The default `"releaseTagPattern"` for independent releases at the project level is: `{projectName}@v{version}`
+The default `"releaseTagPattern"` for independent releases at the project level is: `{projectName}@{version}`
 
 ```jsonc {% fileName="nx.json" %}
 {

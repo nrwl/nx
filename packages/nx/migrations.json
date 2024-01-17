@@ -76,6 +76,12 @@
       "version": "17.0.0-rc.1",
       "description": "Migration for v17.0.0-rc.1",
       "implementation": "./src/migrations/update-17-0-0/rm-default-collection-npm-scope"
+    },
+    "17.3.0-nx-release-git-operations-explicit-opt-out": {
+      "cli": "nx",
+      "version": "17.3.0-beta.3",
+      "description": "Explicitly opt-out of git operations in nx release",
+      "implementation": "./src/migrations/update-17-3-0/nx-release-git-operations-explicit-opt-out"
     }
   }
 }

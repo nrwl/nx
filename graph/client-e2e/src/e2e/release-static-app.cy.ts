@@ -58,57 +58,6 @@ describe('release static-mode app', () => {
         });
       });
     });
-
-    ['depGraphService', 'projectGraphService'].forEach((serviceName) => {
-      describe(`deprecated api - ${serviceName}`, () => {
-        it('should focus project', () => {
-          cy.window().then((window) => {
-            window.externalApi[serviceName].send({
-              type: 'focusProject',
-              projectName: 'cart',
-            });
-            checkFocusedProject(nxExamplesJson, 'cart');
-          });
-        });
-
-        it('should select all projects', () => {
-          cy.window().then((window) => {
-            window.externalApi[serviceName].send({ type: 'selectAll' });
-            checkSelectAll(nxExamplesJson);
-          });
-        });
-
-        it('should select a project', () => {
-          cy.window().then((window) => {
-            window.externalApi[serviceName].send({
-              type: 'selectProject',
-              projectName: 'cart',
-            });
-            checkSelectedProject('cart');
-          });
-        });
-
-        it('should deselect a project', () => {
-          cy.window().then((window) => {
-            window.externalApi[serviceName].send({
-              type: 'selectProject',
-              projectName: 'cart',
-            });
-            window.externalApi[serviceName].send({
-              type: 'selectProject',
-              projectName: 'cart-e2e',
-            });
-            window.externalApi[serviceName].send({
-              type: 'deselectProject',
-              projectName: 'cart',
-            });
-
-            checkSelectedProject('cart-e2e');
-            checkDeselectedProject('cart');
-          });
-        });
-      });
-    });
   });
 });
 

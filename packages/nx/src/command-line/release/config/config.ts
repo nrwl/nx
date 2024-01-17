@@ -99,11 +99,20 @@ export async function createNxReleaseConfig(
 
   const gitDefaults = {
     commit: false,
-    commitMessage: '',
+    commitMessage: 'chore(release): publish {version}',
     commitArgs: '',
     tag: false,
     tagMessage: '',
     tagArgs: '',
+  };
+  const versionGitDefaults: NxReleaseConfig['version']['git'] = {
+    ...gitDefaults,
+    stageChanges: true,
+  };
+  const changelogGitDefaults = {
+    ...gitDefaults,
+    commit: true,
+    tag: true,
   };
 
   const defaultFixedReleaseTagPattern = 'v{version}';
@@ -117,12 +126,12 @@ export async function createNxReleaseConfig(
     projectsRelationship: workspaceProjectsRelationship,
     git: gitDefaults,
     version: {
-      git: gitDefaults,
+      git: versionGitDefaults,
       generator: '@nx/js:release-version',
       generatorOptions: {},
     },
     changelog: {
-      git: gitDefaults,
+      git: changelogGitDefaults,
       workspaceChangelog: {
         createRelease: false,
         entryWhenNoChanges:
@@ -130,7 +139,9 @@ export async function createNxReleaseConfig(
         file: '{workspaceRoot}/CHANGELOG.md',
         renderer: 'nx/changelog-renderer',
         renderOptions: {
-          includeAuthors: true,
+          authors: true,
+          commitReferences: true,
+          versionTitleDate: true,
         },
       },
       // For projectChangelogs if the user has set any changelog config at all, then use one set of defaults, otherwise default to false for the whole feature
@@ -142,7 +153,9 @@ export async function createNxReleaseConfig(
               'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
             renderer: 'nx/changelog-renderer',
             renderOptions: {
-              includeAuthors: true,
+              authors: true,
+              commitReferences: true,
+              versionTitleDate: true,
             },
           }
         : false,
@@ -171,7 +184,9 @@ export async function createNxReleaseConfig(
       file: '{projectRoot}/CHANGELOG.md',
       renderer: 'nx/changelog-renderer',
       renderOptions: {
-        includeAuthors: true,
+        authors: true,
+        commitReferences: true,
+        versionTitleDate: true,
       },
     },
     releaseTagPattern:
@@ -213,7 +228,10 @@ export async function createNxReleaseConfig(
     [
       WORKSPACE_DEFAULTS.changelog,
       // Merge in the git defaults from the top level
-      { git: rootGitConfig } as NxReleaseConfig['changelog'],
+      { git: changelogGitDefaults } as NxReleaseConfig['changelog'],
+      {
+        git: userConfig.git as Partial<NxReleaseConfig['git']>,
+      } as NxReleaseConfig['changelog'],
     ],
     normalizeTrueToEmptyObject(userConfig.changelog) as Partial<
       NxReleaseConfig['changelog']

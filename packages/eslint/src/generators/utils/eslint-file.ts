@@ -226,6 +226,13 @@ export function updateOverrideInLintConfig(
     tree.write(fileName, content);
   } else {
     const fileName = joinPathFragments(root, '.eslintrc.json');
+    if (!tree.exists(fileName)) {
+      return;
+    }
+    const existingJson = readJson(tree, fileName);
+    if (!existingJson.overrides || !existingJson.overrides.some(lookup)) {
+      return;
+    }
     updateJson(tree, fileName, (json: Linter.Config) => {
       const index = json.overrides.findIndex(lookup);
       if (index !== -1) {
