@@ -21,7 +21,9 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
         {
           '@nx/playwright': nxVersion,
           '@playwright/test': playwrightVersion,
-        }
+        },
+        undefined,
+        options.keepExistingVersions
       )
     );
   }

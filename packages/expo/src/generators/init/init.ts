@@ -32,7 +32,7 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host));
+    tasks.push(updateDependencies(host, schema));
   }
 
   if (!schema.skipFormat) {
@@ -42,7 +42,7 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree) {
+export function updateDependencies(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     host,
     {
@@ -55,7 +55,9 @@ export function updateDependencies(host: Tree) {
       '@nx/expo': nxVersion,
       '@expo/cli': expoCliVersion,
       'eas-cli': easCliVersion,
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 

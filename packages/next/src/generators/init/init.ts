@@ -26,7 +26,9 @@ function updateDependencies(host: Tree, schema: InitSchema) {
       },
       {
         '@nx/next': nxVersion,
-      }
+      },
+      undefined,
+      schema.keepExistingVersions
     )
   );
 

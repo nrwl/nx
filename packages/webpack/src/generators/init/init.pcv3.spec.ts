@@ -25,6 +25,7 @@ describe('webpackInitGenerator (PCv3)', () => {
       name: expect.any(String),
       dependencies: {},
       devDependencies: {
+        '@nx/web': expect.any(String),
         '@nx/webpack': expect.any(String),
         'webpack-cli': expect.any(String),
       },

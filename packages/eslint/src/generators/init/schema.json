@@ -5,6 +5,18 @@
   "title": "Initialize ESLint Plugin",
   "description": "Set up the ESLint plugin.",
   "type": "object",
-  "properties": {},
+  "properties": {
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
+    }
+  },
   "required": []
 }
