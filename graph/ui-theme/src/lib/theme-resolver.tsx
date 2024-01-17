@@ -1,5 +1,3 @@
-import { getGraphService } from './machines/graph.service';
-
 const htmlEl = document.documentElement;
 export const localStorageThemeKey = 'nx-dep-graph-theme';
 export type Theme = 'light' | 'dark' | 'system';
@@ -27,6 +25,11 @@ export function themeInit() {
   themeResolver(theme);
 }
 
+export function getSystemTheme() {
+  const darkMedia = window.matchMedia('(prefers-color-scheme: dark)');
+  return darkMedia.matches ? 'dark' : 'light';
+}
+
 export function themeResolver(theme: Theme) {
   if (!('matchMedia' in window)) {
     return;
@@ -46,8 +49,6 @@ export function themeResolver(theme: Theme) {
   }
 
   localStorage.setItem(localStorageThemeKey, theme);
-
-  getGraphService().theme = currentTheme;
 }
 
 export function selectValueByThemeDynamic<T>(

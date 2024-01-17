@@ -39,6 +39,7 @@
       "@nx/graph/shared": ["graph/shared/src/index.ts"],
       "@nx/graph/ui-components": ["graph/ui-components/src/index.ts"],
       "@nx/graph/ui-graph": ["graph/ui-graph/src/index.ts"],
+      "@nx/graph/ui-theme": ["graph/ui-theme/src/index.ts"],
       "@nx/graph/ui-tooltips": ["graph/ui-tooltips/src/index.ts"],
       "@nx/jest": ["packages/jest"],
       "@nx/jest/*": ["packages/jest/*"],
