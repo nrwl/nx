@@ -125,6 +125,9 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
+        >  NX   Updating npm lock file
+
+
         >  NX   Staging changed files with git
 
 
@@ -155,6 +158,9 @@ describe('nx release - independent projects', () => {
 
         }
         +
+
+
+        >  NX   Updating npm lock file
 
 
         >  NX   Staging changed files with git
@@ -196,6 +202,9 @@ describe('nx release - independent projects', () => {
         }
 
 
+        >  NX   Updating npm lock file
+
+
         >  NX   Staging changed files with git
 
 
@@ -235,10 +244,15 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
+        >  NX   Updating npm lock file
+
+        Updating package-lock.json with the following command:
+        npm install --package-lock-only
+
         >  NX   Committing changes with git
 
         Staging files in git with the following command:
-        git add {project-name}/package.json
+        git add {project-name}/package.json package-lock.json
 
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.2
@@ -338,10 +352,20 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
+        >  NX   Updating npm lock file
+
+        Updating package-lock.json with the following command:
+        npm install --package-lock-only
+
+        >  NX   Updating npm lock file
+
+        Updating package-lock.json with the following command:
+        npm install --package-lock-only
+
         >  NX   Committing changes with git
 
         Staging files in git with the following command:
-        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json package-lock.json
 
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - release-group: fixed 999.9.9-version-git-operations-test.3
