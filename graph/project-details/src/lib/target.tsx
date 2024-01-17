@@ -18,9 +18,10 @@ import {
 import { JsonCodeBlock } from '@nx/graph/ui-code-block';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { SourceMapInfo } from './ui/sourcemap-info-component';
+import { SourceItem } from './ui/sourcemap-info-component';
 import { FadingCollapsible } from './ui/fading-collapsible.component';
 import { RenderProperty } from './ui/render-property.component';
+import { selectSourceInfo } from './select-source-info';
 
 /* eslint-disable-next-line */
 export interface TargetProps {
@@ -216,17 +217,23 @@ export function Target({
             <>
               <h4 className="font-bold">Inputs</h4>
               <ul className="list-disc pl-5 mb-4">
-                {targetConfiguration.inputs.map((input) => (
-                  <li className="group">
-                    <RenderProperty property={input}>
-                      <SourceMapInfo
-                        sourceMap={sourceMap}
-                        targetName={targetName}
-                        key={`sourceMapInfo-${input.toString()}`}
-                      />
-                    </RenderProperty>
-                  </li>
-                ))}
+                {targetConfiguration.inputs.map((input) => {
+                  const sourceInfo = selectSourceInfo(
+                    sourceMap,
+                    `targets.${targetName}.inputs`
+                  );
+                  return (
+                    <li className="group">
+                      <RenderProperty property={input}>
+                        {sourceInfo && (
+                          <span className="hidden group-hover:inline">
+                            <SourceItem source={sourceInfo} />
+                          </span>
+                        )}
+                      </RenderProperty>
+                    </li>
+                  );
+                })}
               </ul>
             </>
           )}
@@ -234,17 +241,23 @@ export function Target({
             <>
               <h4 className="font-bold">Outputs</h4>
               <ul className="list-disc pl-5 mb-4">
-                {targetConfiguration.outputs?.map((output) => (
-                  <li className="group">
-                    <RenderProperty property={output}>
-                      <SourceMapInfo
-                        sourceMap={sourceMap}
-                        targetName={targetName}
-                        key={`sourceMapInfo-${output.toString()}`}
-                      />
-                    </RenderProperty>
-                  </li>
-                )) ?? <span>no outputs</span>}
+                {targetConfiguration.outputs?.map((output) => {
+                  const sourceInfo = selectSourceInfo(
+                    sourceMap,
+                    `targets.${targetName}.outputs`
+                  );
+                  return (
+                    <li className="group">
+                      <RenderProperty property={output}>
+                        {sourceInfo && (
+                          <span className="hidden group-hover:inline">
+                            <SourceItem source={sourceInfo} />
+                          </span>
+                        )}
+                      </RenderProperty>
+                    </li>
+                  );
+                }) ?? <span>no outputs</span>}
               </ul>
             </>
           )}
@@ -252,17 +265,22 @@ export function Target({
             <>
               <h4 className="font-bold">Depends On</h4>
               <ul className="list-disc pl-5 mb-4">
-                {targetConfiguration.dependsOn.map((dep) => (
-                  <li className="group">
-                    <RenderProperty property={dep}>
-                      <SourceMapInfo
-                        sourceMap={sourceMap}
-                        targetName={targetName}
-                        key={`sourceMapInfo-${dep.toString()}`}
-                      />
-                    </RenderProperty>
-                  </li>
-                ))}
+                {targetConfiguration.dependsOn.map((dep) => {
+                  const sourceInfo = selectSourceInfo(
+                    sourceMap,
+                    `targets.${targetName}.dependsOn`
+                  );
+
+                  return (
+                    <li className="group">
+                      <RenderProperty property={dep}>
+                        <span className="hidden group-hover:inline">
+                          {sourceInfo && <SourceItem source={sourceInfo} />}
+                        </span>
+                      </RenderProperty>
+                    </li>
+                  );
+                })}
               </ul>
             </>
           )}
@@ -272,9 +290,18 @@ export function Target({
               <h4 className="font-bold mb-2">Options</h4>
               <div className="mb-4">
                 <FadingCollapsible>
-                  <JsonCodeBlock>
-                    {JSON.stringify(targetConfiguration.options, null, 2)}
-                  </JsonCodeBlock>
+                  <JsonCodeBlock
+                    data={targetConfiguration.options}
+                    renderSource={(propertyName: string) => {
+                      const sourceInfo = selectSourceInfo(
+                        sourceMap,
+                        `targets.${targetName}.options.${propertyName}`
+                      );
+                      return sourceInfo ? (
+                        <SourceItem source={sourceInfo} />
+                      ) : null;
+                    }}
+                  />
                 </FadingCollapsible>
               </div>
             </>
@@ -296,9 +323,18 @@ export function Target({
                 )}
               </h4>
               <FadingCollapsible>
-                <JsonCodeBlock>
-                  {JSON.stringify(targetConfiguration.configurations, null, 2)}
-                </JsonCodeBlock>
+                <JsonCodeBlock
+                  data={targetConfiguration.configurations}
+                  renderSource={(propertyName: string) => {
+                    const sourceInfo = selectSourceInfo(
+                      sourceMap,
+                      `targets.${targetName}.options.${propertyName}`
+                    );
+                    return sourceInfo ? (
+                      <SourceItem source={sourceInfo} />
+                    ) : null;
+                  }}
+                />
               </FadingCollapsible>
             </>
           ) : (
