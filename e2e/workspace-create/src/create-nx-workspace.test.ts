@@ -223,11 +223,12 @@ describe('create-nx-workspace', () => {
       style: 'css',
       appName,
       nextAppDir: false,
+      nextSrcDir: true,
       packageManager,
       e2eTestRunner: 'none',
     });
 
-    checkFilesExist(`apps/${appName}/pages/index.tsx`);
+    checkFilesExist(`apps/${appName}/src/pages/index.tsx`);
 
     expectNoAngularDevkit();
     expectCodeIsFormatted();
@@ -240,12 +241,13 @@ describe('create-nx-workspace', () => {
       preset: 'nextjs-standalone',
       style: 'css',
       nextAppDir: true,
+      nextSrcDir: true,
       appName,
       packageManager,
       e2eTestRunner: 'none',
     });
 
-    checkFilesExist('app/page.tsx');
+    checkFilesExist('src/app/page.tsx');
 
     expectNoAngularDevkit();
     expectCodeIsFormatted();
@@ -258,12 +260,13 @@ describe('create-nx-workspace', () => {
       preset: 'nextjs-standalone',
       style: 'css',
       nextAppDir: false,
+      nextSrcDir: true,
       appName,
       packageManager,
       e2eTestRunner: 'none',
     });
 
-    checkFilesExist('pages/index.tsx');
+    checkFilesExist('src/pages/index.tsx');
 
     expectNoAngularDevkit();
     expectCodeIsFormatted();
