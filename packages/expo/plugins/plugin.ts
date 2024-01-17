@@ -18,6 +18,7 @@ import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 
 export interface ExpoPluginOptions {
   startTargetName?: string;
+  serveTargetName?: string;
   runIosTargetName?: string;
   runAndroidTargetName?: string;
   exportTargetName?: string;
@@ -67,7 +68,6 @@ export const createNodes: CreateNodes<ExpoPluginOptions> = [
     const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
     if (
       !siblingFiles.includes('package.json') ||
-      !siblingFiles.includes('project.json') ||
       !siblingFiles.includes('metro.config.js')
     ) {
       return {};
@@ -107,16 +107,17 @@ function buildExpoTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      command: `expo start`,
+      executor: `@nx/expo:start`,
+    },
+    [options.serveTargetName]: {
+      command: `expo start --web`,
       options: { cwd: projectRoot },
     },
     [options.runIosTargetName]: {
-      command: `expo run:ios`,
-      options: { cwd: projectRoot },
+      executor: `@nx/expo:run-ios`,
     },
     [options.runAndroidTargetName]: {
-      command: `expo run:android`,
-      options: { cwd: projectRoot },
+      executor: `@nx/expo:run-android`,
     },
     [options.exportTargetName]: {
       command: `expo export`,
@@ -139,18 +140,15 @@ function buildExpoTargets(
       options: { cwd: workspaceRoot }, // install at workspace root
     },
     [options.prebuildTargetName]: {
-      command: `expo prebuild`,
-      options: { cwd: projectRoot },
+      executor: `@nx/expo:prebuild`,
     },
     [options.buildTargetName]: {
-      command: `eas build`,
-      options: { cwd: projectRoot },
+      executor: `@nx/expo:build`,
       dependsOn: [`^${options.buildTargetName}`],
       inputs: getInputs(namedInputs),
     },
     [options.submitTargetName]: {
-      command: `eas submit`,
-      options: { cwd: projectRoot },
+      executor: `@nx/expo:submit`,
       dependsOn: [`^${options.submitTargetName}`],
       inputs: getInputs(namedInputs),
     },
@@ -208,6 +206,7 @@ function load(path: string): any {
 function normalizeOptions(options: ExpoPluginOptions): ExpoPluginOptions {
   options ??= {};
   options.startTargetName ??= 'start';
+  options.serveTargetName ??= 'serve';
   options.runIosTargetName ??= 'run-ios';
   options.runAndroidTargetName ??= 'run-android';
   options.exportTargetName ??= 'export';
