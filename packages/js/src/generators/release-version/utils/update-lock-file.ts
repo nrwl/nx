@@ -20,9 +20,11 @@ export function updateLockFile(
     generatorOptions?: Record<string, unknown>;
   }
 ) {
-  if (generatorOptions?.skipInstall) {
+  if (generatorOptions?.skipLockFileUpdate) {
     if (verbose) {
-      console.log('\nSkipped lockfile update because skipInstall was set.');
+      console.log(
+        '\nSkipped lock file update because skipLockFileUpdate was set.'
+      );
     }
     return [];
   }
@@ -32,7 +34,7 @@ export function updateLockFile(
 
   let installArgs = generatorOptions?.installArgs || '';
 
-  output.logSingleLine(`Updating ${packageManager} lockfile`);
+  output.logSingleLine(`Updating ${packageManager} lock file`);
 
   let env: object = {};
 
@@ -87,12 +89,12 @@ function execLockFileUpdate(
     });
   } catch (e) {
     output.error({
-      title: `Error updating lockfile with command '${command}'`,
+      title: `Error updating lock file with command '${command}'`,
       bodyLines: [
         `Verify that '${command}' succeeds when run from the workspace root.`,
-        `To configure a string of arguments to be passed to this command, set the 'release.version.installArgs' property in nx.json.`,
-        `To ignore install lifecycle scripts, set 'release.version.installIgnoreScripts' to true in nx.json.`,
-        `To disable this step entirely, set 'release.version.skipInstall' to true in nx.json.`,
+        `To configure a string of arguments to be passed to this command, set the 'release.version.generatorOptions.installArgs' property in nx.json.`,
+        `To ignore install lifecycle scripts, set 'release.version.generatorOptions.installIgnoreScripts' to true in nx.json.`,
+        `To disable this step entirely, set 'release.version.skipLockFileUpdate' to true in nx.json.`,
       ],
     });
     throw e;
