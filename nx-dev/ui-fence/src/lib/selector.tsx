@@ -1,6 +1,6 @@
 import { Listbox, Transition } from '@headlessui/react';
-import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/24/solid';
-import { Fragment } from 'react';
+import { ChevronUpDownIcon } from '@heroicons/react/24/solid';
+import { Fragment, JSX } from 'react';
 
 export interface SelectorProps<T> {
   children: JSX.Element;

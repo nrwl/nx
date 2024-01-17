@@ -14,7 +14,7 @@ import {
   useEnvironmentConfig,
   useRouteConstructor,
 } from '@nx/graph/shared';
-import { Fence } from '@nx/shared-ui-fence';
+import { JsonCodeBlock } from '@nx/graph/ui-code-block';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FadingCollapsible } from './ui/fading-collapsible.component';
@@ -194,17 +194,9 @@ export function Target({
               <h4 className="font-bold mb-2">Options</h4>
               <div className="mb-4">
                 <FadingCollapsible>
-                  <Fence
-                    language="json"
-                    command=""
-                    path=""
-                    fileName=""
-                    highlightLines={[]}
-                    lineGroups={{}}
-                    enableCopy={true}
-                  >
+                  <JsonCodeBlock>
                     {JSON.stringify(targetConfiguration.options, null, 2)}
-                  </Fence>
+                  </JsonCodeBlock>
                 </FadingCollapsible>
               </div>
             </>
@@ -225,17 +217,9 @@ export function Target({
                 )}
               </h4>
               <FadingCollapsible>
-                <Fence
-                  language="json"
-                  command=""
-                  path=""
-                  fileName=""
-                  highlightLines={[]}
-                  lineGroups={{}}
-                  enableCopy={true}
-                >
+                <JsonCodeBlock>
                   {JSON.stringify(targetConfiguration.configurations, null, 2)}
-                </Fence>
+                </JsonCodeBlock>
               </FadingCollapsible>
             </>
           ) : (
