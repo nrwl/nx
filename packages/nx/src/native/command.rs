@@ -10,6 +10,7 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
 use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
+use termion::{terminal_size, raw::IntoRawMode};
 
 fn command_builder() -> CommandBuilder {
     if cfg!(target_os = "windows") {
@@ -126,10 +127,10 @@ pub fn run_command(
 
     let pty_system = NativePtySystem::default();
 
-    let (w, h) = term_size::dimensions().unwrap_or((80, 24));
+    let (w, h) = terminal_size().unwrap_or((80, 24));
     let pair = pty_system.openpty(PtySize {
-        rows: h as u16,
-        cols: w as u16,
+        rows: h,
+        cols: w,
         pixel_width: 0,
         pixel_height: 0,
     })?;
@@ -148,6 +149,8 @@ pub fn run_command(
 
     let reader = pair.master.try_clone_reader()?;
     let mut stdout = std::io::stdout();
+    
+    // Output -> stdout handling
     std::thread::spawn(move || {
         let mut reader = BufReader::new(reader);
         let mut buffer = [0; 8 * 1024];
@@ -182,10 +185,23 @@ pub fn run_command(
 
     let process_killer = child.clone_killer();
     let (exit_tx, exit_rx) = bounded(1);
+
+    let mut writer = pair.master.take_writer()?;
+    
+    let raw_terminal = std::io::stdout().into_raw_mode().expect("Failed to convert stdout to raw mode.");
+
+    // Stdin -> pty stdin
+    std::thread::spawn(move || {
+        let mut stdin = std::io::stdin();
+
+        std::io::copy(&mut stdin, &mut writer).expect("Failed to pass input to pty.");
+    });
+
     std::thread::spawn(move || {
         let exit = child.wait().unwrap();
         // make sure that master is only dropped after we wait on the child. Otherwise windows does not like it
         drop(pair.master);
+        drop(raw_terminal);
         exit_tx.send(exit.exit_code()).ok();
     });
 
