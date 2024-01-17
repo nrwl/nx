@@ -13,6 +13,7 @@ import { hasEslintPlugin } from '../utils/plugin';
 
 export interface LinterInitOptions {
   skipPackageJson?: boolean;
+  keepExistingVersions?: boolean;
 }
 
 function updateProductionFileset(tree: Tree) {
@@ -98,7 +99,9 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
         {
           '@nx/eslint': nxVersion,
           eslint: eslintVersion,
-        }
+        },
+        undefined,
+        options.keepExistingVersions
       )
     );
   }

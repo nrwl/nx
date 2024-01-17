@@ -17,7 +17,10 @@ describe('webpackInitGenerator', () => {
     expect(packageJson).toEqual({
       name: expect.any(String),
       dependencies: {},
-      devDependencies: { '@nx/webpack': expect.any(String) },
+      devDependencies: {
+        '@nx/webpack': expect.any(String),
+        '@nx/web': expect.any(String),
+      },
     });
   });
 });
