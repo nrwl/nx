@@ -36,6 +36,7 @@ import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -175,6 +176,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
     // TODO(jack): Flush this out... no bundler should be possible for web but the experience isn't holistic due to missing features (e.g. writing index.html).
   } else if (options.bundler === 'none') {
     const project = readProjectConfiguration(tree, options.projectName);
+    addBuildTargetDefaults(tree, `@nx/js:${options.compiler}`);
     project.targets.build = {
       executor: `@nx/js:${options.compiler}`,
       outputs: ['{options.outputPath}'],

@@ -20,13 +20,20 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
   if (!schema.skipPackageJson) {
     const devDependencies = {
       '@nx/webpack': nxVersion,
+      '@nx/web': nxVersion,
     };
 
     if (shouldAddPlugin) {
       devDependencies['webpack-cli'] = webpackCliVersion;
     }
 
-    installTask = addDependenciesToPackageJson(tree, {}, devDependencies);
+    installTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      devDependencies,
+      undefined,
+      schema.keepExistingVersions
+    );
   }
 
   if (!schema.skipFormat) {

@@ -8,7 +8,10 @@ import {
   runCommandUntil,
   killProcessAndPorts,
   checkFilesExist,
+  updateFile,
+  runCLIAsync,
 } from 'e2e/utils';
+import { join } from 'path';
 
 describe('@nx/expo/plugin', () => {
   let project: string;
@@ -54,7 +57,7 @@ describe('@nx/expo/plugin', () => {
 
     try {
       process = await runCommandUntil(
-        `start ${appName} --port=${port}`,
+        `start ${appName} -- --port=${port}`,
         (output) => output.includes(`http://localhost:8081`)
       );
     } catch (err) {
@@ -65,5 +68,45 @@ describe('@nx/expo/plugin', () => {
     if (process && process.pid) {
       await killProcessAndPorts(process.pid, port);
     }
+  });
+
+  it('should serve the app', async () => {
+    let process: ChildProcess;
+    const port = 8081;
+
+    try {
+      process = await runCommandUntil(
+        `serve ${appName} -- --port=${port}`,
+        (output) => output.includes(`http://localhost:8081`)
+      );
+    } catch (err) {
+      console.error(err);
+    }
+
+    // port and process cleanup
+    if (process && process.pid) {
+      await killProcessAndPorts(process.pid, port);
+    }
+  });
+
+  it('should prebuild', async () => {
+    // run prebuild command with git check disable
+    // set a mock package name for ios and android in expo's app.json
+    const appJsonPath = join(appName, `app.json`);
+    const appJson = await readJson(appJsonPath);
+    if (appJson.expo.ios) {
+      appJson.expo.ios.bundleIdentifier = 'nx.test';
+    }
+    if (appJson.expo.android) {
+      appJson.expo.android.package = 'nx.test';
+    }
+    updateFile(appJsonPath, JSON.stringify(appJson));
+
+    // run prebuild command with git check disable
+    process.env['EXPO_NO_GIT_STATUS'] = 'true';
+    const prebuildResult = await runCLIAsync(
+      `prebuild ${appName} --no-interactive --install=false`
+    );
+    expect(prebuildResult.combinedOutput).toContain('Config synced');
   });
 });

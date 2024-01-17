@@ -49,6 +49,7 @@ interface LintProjectOptions {
   skipPackageJson?: boolean;
   unitTestRunner?: string;
   rootProject?: boolean;
+  keepExistingVersions?: boolean;
 }
 
 export async function lintProjectGenerator(
@@ -126,7 +127,8 @@ export async function lintProjectGenerator(
       migrateConfigToMonorepoStyle(
         filteredProjects,
         tree,
-        options.unitTestRunner
+        options.unitTestRunner,
+        options.keepExistingVersions
       );
     }
   }

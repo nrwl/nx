@@ -17,7 +17,9 @@ export async function esbuildInitGenerator(tree: Tree, schema: Schema) {
       {
         '@nx/esbuild': nxVersion,
         esbuild: esbuildVersion,
-      }
+      },
+      undefined,
+      schema.keepExistingVersions
     );
   }
 

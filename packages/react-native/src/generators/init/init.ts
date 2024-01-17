@@ -31,7 +31,7 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host));
+    tasks.push(updateDependencies(host, schema));
   }
 
   if (!schema.skipFormat) {
@@ -41,7 +41,7 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree) {
+export function updateDependencies(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     host,
     {
@@ -55,7 +55,9 @@ export function updateDependencies(host: Tree) {
       '@react-native-community/cli-platform-android':
         reactNativeCommunityCliAndroid,
       '@react-native-community/cli-platform-ios': reactNativeCommunityCliIos,
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 
@@ -81,6 +83,7 @@ function addPlugin(host: Tree) {
     plugin: '@nx/react-native/plugin',
     options: {
       startTargetName: 'start',
+      podInstallTargetName: 'pod-install',
       bundleTargetName: 'bundle',
       runIosTargetName: 'run-ios',
       runAndroidTargetName: 'run-android',

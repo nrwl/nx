@@ -67,15 +67,18 @@ function createNxJson(
     affected: {
       defaultBase,
     },
-    targetDefaults: {
-      build: {
-        cache: true,
-        dependsOn: ['^build'],
-      },
-      lint: {
-        cache: true,
-      },
-    },
+    targetDefaults:
+      process.env.NX_PCV3 !== 'true'
+        ? {
+            build: {
+              cache: true,
+              dependsOn: ['^build'],
+            },
+            lint: {
+              cache: true,
+            },
+          }
+        : undefined,
   };
 
   if (defaultBase === 'main') {
@@ -87,7 +90,9 @@ function createNxJson(
       production: ['default'],
       sharedGlobals: [],
     };
-    nxJson.targetDefaults.build.inputs = ['production', '^production'];
+    if (process.env.NX_PCV3 !== 'true') {
+      nxJson.targetDefaults.build.inputs = ['production', '^production'];
+    }
   }
 
   writeJson<NxJsonConfiguration>(tree, join(directory, 'nx.json'), nxJson);

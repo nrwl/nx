@@ -24,7 +24,9 @@ export async function reactInitGenerator(host: Tree, schema: InitSchema) {
         },
         {
           '@nx/react': nxVersion,
-        }
+        },
+        undefined,
+        schema.keepExistingVersions
       )
     );
   }

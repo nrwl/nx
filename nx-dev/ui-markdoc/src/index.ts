@@ -8,8 +8,6 @@ import {
 } from '@markdoc/markdoc';
 import { load as yamlLoad } from 'js-yaml';
 import React, { ReactNode } from 'react';
-import { Fence } from './lib/nodes/fence.component';
-import { fence } from './lib/nodes/fence.schema';
 import { Heading } from './lib/nodes/heading.component';
 import { heading } from './lib/nodes/heading.schema';
 import { getImageSchema } from './lib/nodes/image.schema';
@@ -55,6 +53,8 @@ import { VideoLink, videoLink } from './lib/tags/video-link.component';
 import { Pill } from './lib/tags/pill.component';
 import { pill } from './lib/tags/pill.schema';
 import { frameworkIcons } from './lib/icons';
+import { fence } from './lib/nodes/fence.schema';
+import { FenceWrapper } from './lib/nodes/fence-wrapper.component';
 
 // TODO fix this export
 export { GithubRepository } from './lib/tags/github-repository.component';
@@ -103,7 +103,7 @@ export const getMarkdocCustomConfig = (
     Disclosure,
     LinkCard,
     CustomLink,
-    Fence,
+    FenceWrapper,
     GithubRepository,
     StackblitzButton,
     Graph,

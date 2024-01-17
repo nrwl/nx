@@ -21,6 +21,7 @@ import { join } from 'path';
 import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { Schema } from './schema';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export interface NormalizedSchema extends Schema {
   fileName: string;
@@ -164,6 +165,7 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
 
   project.targets = project.targets || {};
+  addBuildTargetDefaults(tree, `@nx/js:${options.compiler}`);
   project.targets.build = {
     executor: `@nx/js:${options.compiler}`,
     outputs: ['{options.outputPath}'],

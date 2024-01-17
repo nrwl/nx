@@ -542,6 +542,11 @@
     "NxReleaseVersionConfiguration": {
       "type": "object",
       "properties": {
+        "conventionalCommits": {
+          "type": "boolean",
+          "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
+          "default": false
+        },
         "generator": {
           "type": "string"
         },

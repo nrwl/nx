@@ -4,6 +4,7 @@ import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import * as chalk from 'chalk';
+import { runCommand } from '../../native';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -121,7 +122,8 @@ async function runInParallel(
       options.readyWhen,
       options.color,
       calculateCwd(options.cwd, context),
-      options.env ?? {}
+      options.env ?? {},
+      true
     ).then((result) => ({
       result,
       command: c.command,
@@ -187,7 +189,8 @@ async function runSerially(
       undefined,
       options.color,
       calculateCwd(options.cwd, context),
-      options.env ?? {}
+      options.env ?? {},
+      false
     );
     if (!success) {
       process.stderr.write(
@@ -200,7 +203,7 @@ async function runSerially(
   return true;
 }
 
-function createProcess(
+async function createProcess(
   commandConfig: {
     command: string;
     color?: string;
@@ -210,12 +213,50 @@ function createProcess(
   readyWhen: string,
   color: boolean,
   cwd: string,
-  env: Record<string, string>
+  env: Record<string, string>,
+  isParallel: boolean
+): Promise<boolean> {
+  env = processEnv(color, cwd, env);
+  // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
+  // currently does not work properly in windows
+  if (
+    process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
+    process.stdout.isTTY &&
+    !commandConfig.prefix &&
+    !isParallel
+  ) {
+    const cp = runCommand(commandConfig.command, cwd, env);
+
+    return new Promise((res) => {
+      cp.onOutput((output) => {
+        if (readyWhen && output.indexOf(readyWhen) > -1) {
+          res(true);
+        }
+      });
+
+      cp.onExit((code) => res(code === 0));
+    });
+  }
+
+  return nodeProcess(commandConfig, color, cwd, env, readyWhen);
+}
+
+function nodeProcess(
+  commandConfig: {
+    command: string;
+    color?: string;
+    bgColor?: string;
+    prefix?: string;
+  },
+  color: boolean,
+  cwd: string,
+  env: Record<string, string>,
+  readyWhen: string
 ): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(commandConfig.command, {
       maxBuffer: LARGE_BUFFER,
-      env: processEnv(color, cwd, env),
+      env,
       cwd,
     });
     /**

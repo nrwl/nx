@@ -72,10 +72,17 @@ describe('@nx/storybook/plugin', () => {
     expect(
       nodes?.['projects']?.['my-app']?.targets?.['build-storybook']
     ).toMatchObject({
-      command:
-        'storybook build --config-dir my-app/.storybook --output-dir dist/storybook/my-app',
+      command: 'storybook build',
+      options: {
+        cwd: 'my-app',
+      },
       cache: true,
-      outputs: ['{workspaceRoot}/dist/storybook/{projectRoot}'],
+      outputs: [
+        '{workspaceRoot}/{projectRoot}/static-storybook',
+        '{options.output-dir}',
+        '{options.outputDir}',
+        '{options.o}',
+      ],
       inputs: [
         'production',
         '^production',
@@ -86,12 +93,12 @@ describe('@nx/storybook/plugin', () => {
     expect(
       nodes?.['projects']?.['my-app']?.targets?.['storybook']
     ).toMatchObject({
-      command: 'storybook dev --config-dir my-app/.storybook',
+      command: 'storybook dev',
     });
     expect(
       nodes?.['projects']?.['my-app']?.targets?.['test-storybook']
     ).toMatchObject({
-      command: 'test-storybook --config-dir my-app/.storybook',
+      command: 'test-storybook',
     });
   });
 
@@ -128,13 +135,18 @@ describe('@nx/storybook/plugin', () => {
     ).toMatchObject({
       executor: '@storybook/angular:build-storybook',
       options: {
-        outputDir: 'dist/storybook/my-ng-app',
+        outputDir: 'my-ng-app/static-storybook',
         configDir: 'my-ng-app/.storybook',
         browserTarget: 'my-ng-app:build-storybook',
         compodoc: false,
       },
       cache: true,
-      outputs: ['{workspaceRoot}/dist/storybook/{projectRoot}'],
+      outputs: [
+        '{workspaceRoot}/{projectRoot}/static-storybook',
+        '{options.output-dir}',
+        '{options.outputDir}',
+        '{options.o}',
+      ],
       inputs: [
         'production',
         '^production',
@@ -161,7 +173,7 @@ describe('@nx/storybook/plugin', () => {
     expect(
       nodes?.['projects']?.['my-ng-app']?.targets?.['test-storybook']
     ).toMatchObject({
-      command: 'test-storybook --config-dir my-ng-app/.storybook',
+      command: 'test-storybook',
     });
   });
 });

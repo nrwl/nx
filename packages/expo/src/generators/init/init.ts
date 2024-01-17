@@ -18,6 +18,7 @@ import {
   reactNativeVersion,
   reactVersion,
 } from '../../utils/versions';
+import { hasExpoPlugin } from '../../utils/has-expo-plugin';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
@@ -31,7 +32,7 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host));
+    tasks.push(updateDependencies(host, schema));
   }
 
   if (!schema.skipFormat) {
@@ -41,7 +42,7 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree) {
+export function updateDependencies(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     host,
     {
@@ -54,7 +55,9 @@ export function updateDependencies(host: Tree) {
       '@nx/expo': nxVersion,
       '@expo/cli': expoCliVersion,
       'eas-cli': easCliVersion,
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 
@@ -64,18 +67,12 @@ function moveDependency(host: Tree) {
 
 function addPlugin(host: Tree) {
   const nxJson = readNxJson(host);
-  nxJson.plugins ??= [];
 
-  for (const plugin of nxJson.plugins) {
-    if (
-      typeof plugin === 'string'
-        ? plugin === '@nx/expo/plugin'
-        : plugin.plugin === '@nx/expo/plugin'
-    ) {
-      return;
-    }
+  if (hasExpoPlugin(host)) {
+    return;
   }
 
+  nxJson.plugins ??= [];
   nxJson.plugins.push({
     plugin: '@nx/expo/plugin',
     options: {
