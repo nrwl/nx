@@ -14,7 +14,7 @@ import {
   useEnvironmentConfig,
   useRouteConstructor,
 } from '@nx/graph/shared';
-import { JsonCodeBlock } from '@nx/graph/ui-code-block';
+import { filterSourceMap, JsonCodeBlock } from '@nx/graph/ui-code-block';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FadingCollapsible } from './ui/fading-collapsible.component';
@@ -194,9 +194,13 @@ export function Target({
               <h4 className="font-bold mb-2">Options</h4>
               <div className="mb-4">
                 <FadingCollapsible>
-                  <JsonCodeBlock>
-                    {JSON.stringify(targetConfiguration.options, null, 2)}
-                  </JsonCodeBlock>
+                  <JsonCodeBlock
+                    data={targetConfiguration.options}
+                    sourceMap={filterSourceMap(
+                      `targets.${targetName}.options`,
+                      sourceMap
+                    )}
+                  />
                 </FadingCollapsible>
               </div>
             </>
@@ -217,9 +221,13 @@ export function Target({
                 )}
               </h4>
               <FadingCollapsible>
-                <JsonCodeBlock>
-                  {JSON.stringify(targetConfiguration.configurations, null, 2)}
-                </JsonCodeBlock>
+                <JsonCodeBlock
+                  data={targetConfiguration.configurations}
+                  sourceMap={filterSourceMap(
+                    `targets.${targetName}.configurations`,
+                    sourceMap
+                  )}
+                />
               </FadingCollapsible>
             </>
           ) : (

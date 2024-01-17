@@ -1,1 +1,1 @@
-export { JsonCodeBlock } from './lib/json-code-block';
+export { JsonCodeBlock, filterSourceMap } from './lib/json-code-block';
