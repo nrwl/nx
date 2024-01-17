@@ -74,7 +74,7 @@ export function Shell(): JSX.Element {
   }
 
   return (
-    <div className="flex max-h-screen w-full">
+    <div className="flex h-screen w-screen">
       <div
         className={`${
           environmentConfig.environment === 'nx-console'
