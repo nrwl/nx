@@ -88,7 +88,7 @@ export function sourcesRenderer(
       const element = createElement({
         node,
         stylesheet,
-        useInlineStyles: true,
+        useInlineStyles: false,
         key: `code-line-${idx}`,
       });
       let sourceElement: ReactNode;

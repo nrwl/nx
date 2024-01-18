@@ -1,3 +1,4 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 import type { StorybookConfig } from '@storybook/react-vite';
 import { mergeConfig } from 'vite';
 // nx-ignore-next-line

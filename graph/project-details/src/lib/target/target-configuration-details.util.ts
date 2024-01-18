@@ -5,8 +5,7 @@ export function selectSourceInfo(
   let rootKey: string | undefined;
   let rootSource: Array<string> | undefined;
   for (const [key, value] of Object.entries(sourceMap)) {
-    const match = key.match(new RegExp(`^${path}\\.(.*)`));
-    if (match) {
+    if (path === key) {
       return value;
     } else if (path.startsWith(`${key}.`)) {
       // When the key is a prefix of the filter, we can record it as the root source.
