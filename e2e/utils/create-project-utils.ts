@@ -221,7 +221,6 @@ export function runCreateWorkspace(
     base,
     packageManager,
     extraArgs,
-    ci,
     useDetectedPm = false,
     cwd = e2eCwd,
     bundler,
@@ -240,7 +239,6 @@ export function runCreateWorkspace(
     base?: string;
     packageManager?: 'npm' | 'yarn' | 'pnpm';
     extraArgs?: string;
-    ci?: 'azure' | 'github' | 'circleci';
     useDetectedPm?: boolean;
     cwd?: string;
     bundler?: 'webpack' | 'vite';
@@ -264,9 +262,6 @@ export function runCreateWorkspace(
   }
   if (style) {
     command += ` --style=${style}`;
-  }
-  if (ci) {
-    command += ` --ci=${ci}`;
   }
 
   if (bundler) {
