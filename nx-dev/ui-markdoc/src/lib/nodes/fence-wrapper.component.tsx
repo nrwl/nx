@@ -1,4 +1,4 @@
-import { Fence, FenceProps } from '@nx/shared-ui-fence';
+import { Fence, FenceProps } from '@nx/nx-dev/ui-fence';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 

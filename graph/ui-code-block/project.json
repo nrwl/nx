@@ -1,7 +1,7 @@
 {
-  "name": "shared-ui-selector",
+  "name": "graph-ui-code-block",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "nx-dev/shared-ui-selector/src",
+  "sourceRoot": "graph/ui-code-block/src",
   "projectType": "library",
   "tags": [],
   "targets": {
@@ -12,8 +12,7 @@
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
-        "jestConfig": "nx-dev/shared-ui-selector/jest.config.ts",
-        "passWithNoTests": true
+        "jestConfig": "graph/ui-code-block/jest.config.ts"
       }
     }
   }

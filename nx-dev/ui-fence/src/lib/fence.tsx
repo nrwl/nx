@@ -4,14 +4,15 @@ import {
   InformationCircleIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
-import React, { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, JSX, useEffect, useState } from 'react';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 // @ts-ignore
 import SyntaxHighlighter from 'react-syntax-highlighter';
-import { CodeOutput } from './fences/code-output.component';
-import { TerminalOutput } from './fences/terminal-output.component';
-import { Selector } from '@nx/shared-ui-selector';
+import { CodeOutput } from './fences/code-output';
+import { TerminalOutput } from './fences/terminal-output';
+
+import { Selector } from './selector';
 
 function resolveLanguage(lang: string) {
   switch (lang) {
