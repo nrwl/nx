@@ -104,7 +104,12 @@ async function initializePlugin(pkgName: string): Promise<void> {
   spinner.start();
 
   try {
-    await runNxAsync(`g ${pkgName}:${initGenerator}`);
+    const isCoreNxPlugin = coreNxPlugins.includes(pkgName);
+    await runNxAsync(
+      `g ${pkgName}:${initGenerator}${
+        isCoreNxPlugin ? ' --updatePackageScripts' : ''
+      }`
+    );
   } catch (e) {
     spinner.fail();
     output.addNewline();

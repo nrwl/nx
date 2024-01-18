@@ -30,6 +30,5 @@
       "description": "Keep existing dependencies versions",
       "default": false
     }
-  },
-  "additionalProperties": false
+  }
 }

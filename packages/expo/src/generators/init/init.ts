@@ -8,7 +8,8 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { ExpoPluginOptions } from '../../../plugins/plugin';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes, ExpoPluginOptions } from '../../../plugins/plugin';
 import {
   easCliVersion,
   expoCliVersion,
@@ -33,6 +34,10 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
     tasks.push(updateDependencies(host, schema));
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(host, createNodes);
   }
 
   if (!schema.skipFormat) {
