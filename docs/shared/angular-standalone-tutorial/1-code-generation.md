@@ -38,7 +38,7 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 ✔ Default stylesheet format             · css
 ✔ Would you like to use Standalone Components in your application? · No
 ✔ Would you like to add routing? · Yes
-✔ Enable remote caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 ```
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this tutorial, but you can see the introduction to Nx Cloud for more details." url="/ci/intro/ci-with-nx" /%}

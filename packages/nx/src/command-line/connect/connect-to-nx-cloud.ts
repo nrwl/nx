@@ -8,6 +8,14 @@ import {
 import { runNxSync } from '../../utils/child-process';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { NxArgs } from '../../utils/command-line-utils';
+import {
+  MessageKey,
+  MessageOptionKey,
+  recordStat,
+  messages,
+} from '../../utils/ab-testing';
+import { nxVersion } from '../../utils/versions';
+import chalk = require('chalk');
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
   const defaultRunner = nxJson.tasksRunnerOptions?.default?.runner;
@@ -66,26 +74,43 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
   return true;
 }
 
-export async function connectToNxCloudPrompt(prompt?: string) {
-  return await (
-    await import('enquirer')
-  )
-    .prompt([
-      {
-        name: 'NxCloud',
-        message: prompt ?? `Enable remote caching to make your CI faster`,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-            hint: 'I want faster builds',
-          },
-          {
-            name: 'No',
-          },
-        ],
-        initial: 'Yes' as any,
-      },
-    ])
-    .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
+export async function connectToNxCloudWithPrompt(command: string) {
+  const setNxCloud = await nxCloudPrompt('setupNxCloud');
+  const useCloud = setNxCloud ? await connectToNxCloudCommand() : false;
+  await recordStat({
+    command,
+    nxVersion,
+    useCloud,
+    meta: messages.codeOfSelectedPromptMessage('setupNxCloud'),
+  });
+}
+
+export async function connectExistingRepoToNxCloudPrompt(
+  key: MessageKey = 'setupNxCloud'
+): Promise<boolean> {
+  return nxCloudPrompt(key).then((value: MessageOptionKey) => value === 'yes');
+}
+
+async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
+  const { message, choices, initial, footer, hint } = messages.getPrompt(key);
+
+  const promptConfig = {
+    name: 'NxCloud',
+    message,
+    type: 'autocomplete',
+    choices,
+    initial,
+  } as any; // meeroslav: types in enquirer are not up to date
+  if (footer) {
+    promptConfig.footer = () => chalk.dim(footer);
+  }
+  if (hint) {
+    promptConfig.hint = () => chalk.dim(hint);
+  }
+
+  return await (await import('enquirer'))
+    .prompt<{ NxCloud: MessageOptionKey }>([promptConfig])
+    .then((a) => {
+      return a.NxCloud;
+    });
 }
