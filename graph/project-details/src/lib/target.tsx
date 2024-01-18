@@ -45,6 +45,27 @@ export function Target({
   const [collapsed, setCollapsed] = useState(true);
   const [copied, setCopied] = useState(false);
 
+  console.log('targetConfiguration', targetConfiguration.executor);
+
+  let executorLink;
+
+  if (targetConfiguration.executor?.startsWith('@nx/')) {
+    const packageName = targetConfiguration.executor
+      .split('/')[1]
+      .split(':')[0];
+    const executorName = targetConfiguration.executor
+      .split('/')[1]
+      .split(':')[1];
+    executorLink = `https://nx.dev/nx-api/${packageName}/executors/${executorName}`;
+  } else if (targetConfiguration.executor === 'nx:run-commands') {
+    executorLink = `https://nx.dev/nx-api/nx/executors/run-commands`;
+  } else if (targetConfiguration.executor === 'nx:run-script') {
+    executorLink = `https://nx.dev/nx-api/nx/executors/run-script`;
+  } else if (targetConfiguration.executor?.includes('monodon')) {
+    executorLink =
+      'https://github.com/cammisuli/monodon/tree/main/packages/rust#readme';
+  }
+
   useEffect(() => {
     const expandedSections = searchParams.get('expanded')?.split(',') || [];
     setCollapsed(!expandedSections.includes(targetName));
@@ -209,9 +230,15 @@ export function Target({
           <div className="mb-4">
             <h4 className="font-bold">Executor</h4>
             <p>
-              {targetConfiguration?.command ??
-                targetConfiguration.options?.command ??
-                targetConfiguration.executor}
+              <a
+                href={executorLink ?? 'https://nx.dev/nx-api'}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {targetConfiguration?.command ??
+                  targetConfiguration.options?.command ??
+                  targetConfiguration.executor}
+              </a>
             </p>
           </div>
 
