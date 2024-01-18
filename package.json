@@ -225,7 +225,7 @@
     "metro-config": "0.76.8",
     "metro-resolver": "0.76.8",
     "mini-css-extract-plugin": "~2.4.7",
-    "minimatch": "3.0.5",
+    "minimatch": "9.0.3",
     "next-sitemap": "^3.1.10",
     "ng-packagr": "~17.0.0",
     "node-fetch": "^2.6.7",

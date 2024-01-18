@@ -10,7 +10,7 @@ import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 import { join } from 'path';
 
 export type SourceInformation = [string, string];
