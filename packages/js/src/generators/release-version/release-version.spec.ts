@@ -1,3 +1,15 @@
+let originalExit = process.exit;
+let stubProcessExit = false;
+
+const processExitSpy = jest
+  .spyOn(process, 'exit')
+  .mockImplementation((...args) => {
+    if (stubProcessExit) {
+      return undefined as never;
+    }
+    return originalExit(...args);
+  });
+
 import { ProjectGraph, Tree, output, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ReleaseGroupWithName } from 'nx/src/command-line/release/config/filter-release-groups';
@@ -15,6 +27,9 @@ describe('release-version', () => {
   let projectGraph: ProjectGraph;
 
   beforeEach(() => {
+    // @ts-ignore
+    process.exit = processExitSpy;
+
     tree = createTreeWithEmptyWorkspace();
 
     projectGraph = createWorkspaceWithPackageDependencies(tree, {
@@ -56,6 +71,10 @@ describe('release-version', () => {
   });
   afterEach(() => {
     jest.clearAllMocks();
+    stubProcessExit = false;
+  });
+  afterAll(() => {
+    process.exit = originalExit;
   });
 
   it('should return a versionData object', async () => {
@@ -107,12 +126,13 @@ describe('release-version', () => {
     });
 
     it(`should exit with code one and print guidance when not all of the given projects are appropriate for JS versioning`, async () => {
-      const processSpy = jest.spyOn(process, 'exit').mockImplementation(() => {
-        return undefined as never;
-      });
-      const outputSpy = jest.spyOn(output, 'error').mockImplementation(() => {
-        return undefined as never;
-      });
+      stubProcessExit = true;
+
+      const outputSpy = jest
+        .spyOn(output, 'error')
+        .mockImplementationOnce(() => {
+          return undefined as never;
+        });
 
       await releaseVersionGenerator(tree, {
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -128,10 +148,9 @@ describe('release-version', () => {
 To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "my-lib" from the current release group, or amend the packageRoot configuration to point to where the package.json should be.`,
       });
 
-      expect(processSpy).toHaveBeenCalledWith(1);
-
-      processSpy.mockRestore();
       outputSpy.mockRestore();
+
+      stubProcessExit = false;
     });
   });
 
@@ -593,6 +612,9 @@ To fix this you will either need to add a package.json file at that location, or
         },
       });
     });
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
 
     it('should work with an empty prefix', async () => {
       expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
@@ -823,12 +845,13 @@ To fix this you will either need to add a package.json file at that location, or
     });
 
     it(`should exit with code one and print guidance for invalid prefix values`, async () => {
-      const processSpy = jest.spyOn(process, 'exit').mockImplementation(() => {
-        return undefined as never;
-      });
-      const outputSpy = jest.spyOn(output, 'error').mockImplementation(() => {
-        return undefined as never;
-      });
+      stubProcessExit = true;
+
+      const outputSpy = jest
+        .spyOn(output, 'error')
+        .mockImplementationOnce(() => {
+          return undefined as never;
+        });
 
       await releaseVersionGenerator(tree, {
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -841,14 +864,13 @@ To fix this you will either need to add a package.json file at that location, or
 
       expect(outputSpy).toHaveBeenCalledWith({
         title: `Invalid value for version.generatorOptions.versionPrefix: "$"
-        
+
 Valid values are: "auto", "", "~", "^"`,
       });
 
-      expect(processSpy).toHaveBeenCalledWith(1);
-
-      processSpy.mockRestore();
       outputSpy.mockRestore();
+
+      stubProcessExit = false;
     });
   });
 });

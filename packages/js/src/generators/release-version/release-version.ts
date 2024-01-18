@@ -48,12 +48,15 @@ export async function releaseVersionGenerator(
       options.specifier = options.specifier.replace(/^v/, '');
     }
 
-    if (validReleaseVersionPrefixes.indexOf(options.versionPrefix) === -1) {
+    if (
+      options.versionPrefix &&
+      validReleaseVersionPrefixes.indexOf(options.versionPrefix) === -1
+    ) {
       throw new Error(
         `Invalid value for version.generatorOptions.versionPrefix: "${
           options.versionPrefix
         }"
-        
+
 Valid values are: ${validReleaseVersionPrefixes
           .map((s) => `"${s}"`)
           .join(', ')}`
