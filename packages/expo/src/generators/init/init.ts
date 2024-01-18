@@ -82,10 +82,10 @@ function addPlugin(host: Tree) {
     plugin: '@nx/expo/plugin',
     options: {
       startTargetName: 'start',
+      serveTargetName: 'serve',
       runIosTargetName: 'run-ios',
       runAndroidTargetName: 'run-android',
       exportTargetName: 'export',
-      exportWebTargetName: 'export-web',
       prebuildTargetName: 'prebuild',
       installTargetName: 'install',
       buildTargetName: 'build',

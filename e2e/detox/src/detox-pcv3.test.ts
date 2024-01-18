@@ -36,13 +36,14 @@ describe('@nx/detox/plugin', () => {
 
   it('nx.json should contain plugin configuration', () => {
     const nxJson = readJson('nx.json');
-    const reactNativePlugin = nxJson.plugins.find(
+    const detoxPlugin = nxJson.plugins.find(
       (plugin) => plugin.plugin === '@nx/detox/plugin'
     );
-    expect(reactNativePlugin).toBeDefined();
-    expect(reactNativePlugin.options).toBeDefined();
-    expect(reactNativePlugin.options.buildTargetName).toEqual('build');
-    expect(reactNativePlugin.options.testTargetName).toEqual('test');
+    expect(detoxPlugin).toBeDefined();
+    expect(detoxPlugin.options).toBeDefined();
+    expect(detoxPlugin.options.buildTargetName).toEqual('build');
+    expect(detoxPlugin.options.testTargetName).toEqual('test');
+    expect(detoxPlugin.options.startTargetName).toEqual('start');
   });
 
   it('should build the app', async () => {

@@ -17,6 +17,7 @@ import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 
 export interface DetoxPluginOptions {
   buildTargetName?: string;
+  startTargetName?: string;
   testTargetName?: string;
 }
 
@@ -95,6 +96,10 @@ function buildDetoxTargets(
       cache: true,
       inputs: getInputs(namedInputs),
     },
+    [options.startTargetName]: {
+      command: `detox start`,
+      options: { cwd: projectRoot },
+    },
     [options.testTargetName]: {
       command: `detox test`,
       options: { cwd: projectRoot },
@@ -122,6 +127,7 @@ function getInputs(
 function normalizeOptions(options: DetoxPluginOptions): DetoxPluginOptions {
   options ??= {};
   options.buildTargetName ??= 'build';
+  options.startTargetName ??= 'start';
   options.testTargetName ??= 'test';
   return options;
 }

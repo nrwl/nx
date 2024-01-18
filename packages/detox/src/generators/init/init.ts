@@ -71,6 +71,7 @@ function addPlugin(host: Tree) {
     plugin: '@nx/detox/plugin',
     options: {
       buildTargetName: 'build',
+      startTargetName: 'start',
       testTargetName: 'test',
     } as DetoxPluginOptions,
   });
