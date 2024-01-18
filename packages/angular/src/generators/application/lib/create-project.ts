@@ -1,8 +1,8 @@
-import type { Tree } from '@nx/devkit';
-import { addProjectConfiguration } from '@nx/devkit';
+import { addProjectConfiguration, Tree } from '@nx/devkit';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export function createProject(tree: Tree, options: NormalizedSchema) {
   const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
@@ -19,6 +19,8 @@ export function createProject(tree: Tree, options: NormalizedSchema) {
     angularMajorVersion >= 17 && options.bundler === 'esbuild'
       ? 'browser'
       : 'main';
+
+  addBuildTargetDefaults(tree, buildExecutor);
 
   let budgets = undefined;
   if (options.bundler === 'webpack' || angularMajorVersion >= 17) {

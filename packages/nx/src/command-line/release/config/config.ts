@@ -73,7 +73,8 @@ export interface CreateNxReleaseConfigError {
     | 'RELEASE_GROUP_MATCHES_NO_PROJECTS'
     | 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE'
     | 'PROJECT_MATCHES_MULTIPLE_GROUPS'
-    | 'PROJECTS_MISSING_TARGET';
+    | 'PROJECTS_MISSING_TARGET'
+    | 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS';
   data: Record<string, string | string[]>;
 }
 
@@ -91,6 +92,16 @@ export async function createNxReleaseConfig(
     return {
       error: {
         code: 'PROJECTS_AND_GROUPS_DEFINED',
+        data: {},
+      },
+      nxReleaseConfig: null,
+    };
+  }
+
+  if (hasInvalidConventionalCommitsConfig(userConfig)) {
+    return {
+      error: {
+        code: 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS',
         data: {},
       },
       nxReleaseConfig: null,
@@ -121,14 +132,22 @@ export async function createNxReleaseConfig(
   const workspaceProjectsRelationship =
     userConfig.projectsRelationship || 'fixed';
 
+  const defaultGeneratorOptions = userConfig.version?.conventionalCommits
+    ? {
+        currentVersionResolver: 'git-tag',
+        specifierSource: 'conventional-commits',
+      }
+    : {};
+
   const WORKSPACE_DEFAULTS: Omit<NxReleaseConfig, 'groups'> = {
     // By default all projects in all groups are released together
     projectsRelationship: workspaceProjectsRelationship,
     git: gitDefaults,
     version: {
       git: versionGitDefaults,
+      conventionalCommits: userConfig.version?.conventionalCommits || false,
       generator: '@nx/js:release-version',
-      generatorOptions: {},
+      generatorOptions: defaultGeneratorOptions,
     },
     changelog: {
       git: changelogGitDefaults,
@@ -174,6 +193,7 @@ export async function createNxReleaseConfig(
   const GROUP_DEFAULTS: Omit<NxReleaseConfig['groups'][string], 'projects'> = {
     projectsRelationship: groupProjectsRelationship,
     version: {
+      conventionalCommits: false,
       generator: '@nx/js:release-version',
       generatorOptions: {},
     },
@@ -241,6 +261,19 @@ export async function createNxReleaseConfig(
   // git configuration is not supported at the group level, only the root/command level
   const rootVersionWithoutGit = { ...rootVersionConfig };
   delete rootVersionWithoutGit.git;
+
+  // Apply conventionalCommits shorthand to the final group defaults if explicitly configured in the original user config
+  if (userConfig.version?.conventionalCommits === true) {
+    rootVersionWithoutGit.generatorOptions = {
+      ...rootVersionWithoutGit.generatorOptions,
+      currentVersionResolver: 'git-tag',
+      specifierSource: 'conventional-commits',
+    };
+  }
+  if (userConfig.version?.conventionalCommits === false) {
+    delete rootVersionWithoutGit.generatorOptions.currentVersionResolver;
+    delete rootVersionWithoutGit.generatorOptions.specifierSource;
+  }
 
   const groups: NxReleaseConfig['groups'] =
     userConfig.groups && Object.keys(userConfig.groups).length
@@ -390,11 +423,29 @@ export async function createNxReleaseConfig(
           : userConfig.releaseTagPattern || defaultFixedReleaseTagPattern),
     };
 
-    releaseGroups[releaseGroupName] = deepMergeDefaults([groupDefaults], {
+    const finalReleaseGroup = deepMergeDefaults([groupDefaults], {
       ...releaseGroup,
       // Ensure that the resolved project names take priority over the original user config (which could have contained unresolved globs etc)
       projects: matchingProjects,
     });
+
+    // Apply conventionalCommits shorthand to the final group if explicitly configured in the original group
+    if (releaseGroup.version?.conventionalCommits === true) {
+      finalReleaseGroup.version.generatorOptions = {
+        ...finalReleaseGroup.version.generatorOptions,
+        currentVersionResolver: 'git-tag',
+        specifierSource: 'conventional-commits',
+      };
+    }
+    if (
+      releaseGroup.version?.conventionalCommits === false &&
+      releaseGroupName !== IMPLICIT_DEFAULT_RELEASE_GROUP
+    ) {
+      delete finalReleaseGroup.version.generatorOptions.currentVersionResolver;
+      delete finalReleaseGroup.version.generatorOptions.specifierSource;
+    }
+
+    releaseGroups[releaseGroupName] = finalReleaseGroup;
   }
 
   return {
@@ -477,6 +528,17 @@ export async function handleNxReleaseConfigError(
         ]);
         output.error({
           title: `Release group "${error.data.releaseGroupName}" has an invalid releaseTagPattern. Please ensure the pattern contains exactly one instance of the "{version}" placeholder`,
+          bodyLines: [nxJsonMessage],
+        });
+      }
+      break;
+    case 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS':
+      {
+        const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+          'release',
+        ]);
+        output.error({
+          title: `You have configured both the shorthand "version.conventionalCommits" and one or more of the related "version.generatorOptions" that it sets for you. Please use one or the other:`,
           bodyLines: [nxJsonMessage],
         });
       }
@@ -599,4 +661,34 @@ function deepMergeDefaults<T>(
   }
 
   return result as DeepRequired<T>;
+}
+
+/**
+ * We want to prevent users from setting both the conventionalCommits shorthand and any of the related
+ * generatorOptions at the same time, since it is at best redundant, and at worst invalid.
+ */
+function hasInvalidConventionalCommitsConfig(
+  userConfig: NxJsonConfiguration['release']
+): boolean {
+  // at the root
+  if (
+    userConfig.version?.conventionalCommits === true &&
+    (userConfig.version?.generatorOptions?.currentVersionResolver ||
+      userConfig.version?.generatorOptions?.specifierSource)
+  ) {
+    return true;
+  }
+  // within any groups
+  if (userConfig.groups) {
+    for (const group of Object.values(userConfig.groups)) {
+      if (
+        group.version?.conventionalCommits === true &&
+        (group.version?.generatorOptions?.currentVersionResolver ||
+          group.version?.generatorOptions?.specifierSource)
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
 }

@@ -45,7 +45,7 @@ describe('Next.js Apps Libs', () => {
     const buildableLib = uniq('buildablelib');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false --src=false`
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
     );
     runCLI(`generate @nx/next:lib ${nextLib} --no-interactive`);
     runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
@@ -100,11 +100,11 @@ describe('Next.js Apps Libs', () => {
               `
     );
 
-    const mainPath = `packages/${appName}/pages/index.tsx`;
+    const mainPath = `packages/${appName}/src/pages/index.tsx`;
     const content = readFile(mainPath);
 
     updateFile(
-      `packages/${appName}/pages/api/hello.ts`,
+      `packages/${appName}/src/pages/api/hello.ts`,
       `
               import { jsLibAsync } from '@${proj}/${jsLib}';
     

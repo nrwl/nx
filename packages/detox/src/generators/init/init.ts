@@ -38,7 +38,9 @@ export function updateDependencies(host: Tree, schema: Schema) {
     {
       '@nx/detox': nxVersion,
       detox: detoxVersion,
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 

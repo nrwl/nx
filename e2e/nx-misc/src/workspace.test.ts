@@ -12,6 +12,7 @@ import {
   getPackageManagerCommand,
   getSelectedPackageManager,
   runCommand,
+  runE2ETests,
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
@@ -41,7 +42,9 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint e2e`)).not.toThrow();
-    expect(() => runCLI(`e2e e2e`)).not.toThrow();
+    if (runE2ETests()) {
+      expect(() => runCLI(`e2e e2e`)).not.toThrow();
+    }
   });
 
   it('should be convert a standalone vite and playwright react project to a monorepo', async () => {
@@ -61,7 +64,9 @@ describe('@nx/workspace:convert-to-monorepo', () => {
     expect(() => runCLI(`test ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint ${reactApp}`)).not.toThrow();
     expect(() => runCLI(`lint e2e`)).not.toThrow();
-    expect(() => runCLI(`e2e e2e`)).not.toThrow();
+    if (runE2ETests()) {
+      expect(() => runCLI(`e2e e2e`)).not.toThrow();
+    }
   });
 });
 

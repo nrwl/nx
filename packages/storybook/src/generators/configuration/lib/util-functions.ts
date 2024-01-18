@@ -481,45 +481,53 @@ export function addStorybookToNamedInputs(tree: Tree) {
       }
     }
 
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['build-storybook'] ??= {};
-    nxJson.targetDefaults['build-storybook'].inputs ??= [
-      'default',
-      hasProductionFileset ? '^production' : '^default',
-    ];
-
-    if (
-      !nxJson.targetDefaults['build-storybook'].inputs.includes(
-        '{projectRoot}/.storybook/**/*'
-      )
-    ) {
-      nxJson.targetDefaults['build-storybook'].inputs.push(
-        '{projectRoot}/.storybook/**/*'
-      );
-    }
-
-    // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
-    // because we want to rebuild Storybook if the .storybook folder changes
-    const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
-      '!{projectRoot}/.storybook/**/*'
-    );
-
-    if (index !== -1) {
-      nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
-    }
-
-    if (
-      !nxJson.targetDefaults['build-storybook'].inputs.includes(
-        '{projectRoot}/tsconfig.storybook.json'
-      )
-    ) {
-      nxJson.targetDefaults['build-storybook'].inputs.push(
-        '{projectRoot}/tsconfig.storybook.json'
-      );
-    }
-
     updateNxJson(tree, nxJson);
   }
+}
+
+export function addStorybookToTargetDefaults(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['build-storybook'] ??= {};
+  nxJson.targetDefaults['build-storybook'].inputs ??= [
+    'default',
+    nxJson.namedInputs && 'production' in nxJson.namedInputs
+      ? '^production'
+      : '^default',
+  ];
+
+  if (
+    !nxJson.targetDefaults['build-storybook'].inputs.includes(
+      '{projectRoot}/.storybook/**/*'
+    )
+  ) {
+    nxJson.targetDefaults['build-storybook'].inputs.push(
+      '{projectRoot}/.storybook/**/*'
+    );
+  }
+
+  // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
+  // because we want to rebuild Storybook if the .storybook folder changes
+  const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
+    '!{projectRoot}/.storybook/**/*'
+  );
+
+  if (index !== -1) {
+    nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
+  }
+
+  if (
+    !nxJson.targetDefaults['build-storybook'].inputs.includes(
+      '{projectRoot}/tsconfig.storybook.json'
+    )
+  ) {
+    nxJson.targetDefaults['build-storybook'].inputs.push(
+      '{projectRoot}/tsconfig.storybook.json'
+    );
+  }
+
+  updateNxJson(tree, nxJson);
 }
 
 export function createProjectStorybookDir(

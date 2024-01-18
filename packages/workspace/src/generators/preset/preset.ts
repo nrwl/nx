@@ -143,6 +143,7 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       appDir: options.nextAppDir,
+      src: options.nextSrcDir,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
     });
   } else if (options.preset === Preset.NextJsStandalone) {
@@ -155,6 +156,7 @@ async function createPreset(tree: Tree, options: Schema) {
       style: options.style,
       linter: options.linter,
       appDir: options.nextAppDir,
+      src: options.nextSrcDir,
       e2eTestRunner: options.e2eTestRunner ?? 'cypress',
       rootProject: true,
     });

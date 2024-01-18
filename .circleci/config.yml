@@ -4,7 +4,7 @@ version: 2.1
 #        ORBS
 # -------------------------
 orbs:
-  nx: nrwl/nx@1.6.1
+  nx: nrwl/nx@1.6.2
   rust: circleci/rust@1.6.0
   browser-tools: circleci/browser-tools@1.4.6
 
@@ -48,7 +48,7 @@ commands:
             - run:
                 name: Install pnpm package manager (linux)
                 command: |
-                  npm install --prefix=$HOME/.local -g @pnpm/exe@8.7.4
+                  npm install --prefix=$HOME/.local -g @pnpm/exe@8.14
       - when:
           condition:
             equal: [<< parameters.os >>, macos]
@@ -56,7 +56,7 @@ commands:
             - run:
                 name: Install pnpm package manager (macos)
                 command: |
-                  npm install -g @pnpm/exe@8.7.4
+                  npm install -g @pnpm/exe@8.14
       - run:
           name: Install Dependencies
           command: |

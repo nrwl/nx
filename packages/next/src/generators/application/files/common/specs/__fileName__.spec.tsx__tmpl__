@@ -1,8 +1,10 @@
 import React from 'react';
 import { render } from '@testing-library/react';
-
+<% if (src) { %>
+import Index from '../src/pages/index';
+<% } else { %>
 import Index from '../pages/index';
-
+<% } %>
 describe('Index', () => {
   it('should render successfully', () => {
     const { baseElement } = render(<Index />);

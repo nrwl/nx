@@ -18,6 +18,12 @@
         "type": "boolean",
         "default": false,
         "description": "Do not add dependencies to `package.json`."
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
       }
     },
     "required": [],
