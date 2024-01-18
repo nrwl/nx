@@ -50,9 +50,8 @@ export function Target({
     setCollapsed(!expandedSections.includes(targetName));
   }, [searchParams, targetName]);
 
-  const handleCopyClick = (e: any) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(`nx run ${projectName}:${targetName}`);
+  const handleCopyClick = (copyText: string) => {
+    navigator.clipboard.writeText(copyText);
     setCopied(true);
     setTimeout(() => setCopied(false), 600);
   };
@@ -196,7 +195,10 @@ export function Target({
               className={`h-5 w-5 ml-2 inline-block cursor-pointer ${
                 copied ? 'text-sky-500' : ''
               }`}
-              onClick={handleCopyClick}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopyClick(`nx run ${projectName}:${targetName}`);
+              }}
             ></ClipboardIcon>
           </div>
         )}
@@ -214,8 +216,19 @@ export function Target({
           </div>
 
           {targetConfiguration.inputs && (
-            <>
-              <h4 className="font-bold">Inputs</h4>
+            <div className="group">
+              <h4 className="font-bold">
+                Inputs
+                <ClipboardIcon
+                  className={`hidden group-hover:inline h-4 w-5 ml-2 mb-1 cursor-pointer ${
+                    copied ? 'text-sky-500' : ''
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCopyClick(JSON.stringify(targetConfiguration.inputs));
+                  }}
+                ></ClipboardIcon>
+              </h4>
               <ul className="list-disc pl-5 mb-4">
                 {targetConfiguration.inputs.map((input) => {
                   const sourceInfo = selectSourceInfo(
@@ -235,7 +248,7 @@ export function Target({
                   );
                 })}
               </ul>
-            </>
+            </div>
           )}
           {targetConfiguration.outputs && (
             <>
