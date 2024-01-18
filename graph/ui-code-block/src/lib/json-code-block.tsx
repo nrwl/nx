@@ -1,14 +1,12 @@
 import {
   ClipboardDocumentCheckIcon,
   ClipboardDocumentIcon,
-  InformationCircleIcon,
-  SparklesIcon,
 } from '@heroicons/react/24/outline';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
 // @ts-ignore
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { Children, JSX, ReactNode, useEffect, useState } from 'react';
+import SyntaxHighlighter, { createElement } from 'react-syntax-highlighter';
+import { JSX, ReactNode, useEffect, useMemo, useState } from 'react';
 import { twMerge } from 'tailwind-merge';
 
 export function JsonCodeBlockPreTag({
@@ -19,7 +17,7 @@ export function JsonCodeBlockPreTag({
   return (
     <div
       className={twMerge(
-        'hljs not-prose w-full overflow-x-auto',
+        'hljs not-prose w-full overflow-hidden',
         'font-mono text-sm',
         'border border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/60'
       )}
@@ -29,8 +27,17 @@ export function JsonCodeBlockPreTag({
   );
 }
 
-export function JsonCodeBlock(props: { children: ReactNode }): JSX.Element {
+export interface JsonCodeBlockProps {
+  data: any;
+  renderSource: (propertyName: string) => ReactNode;
+}
+
+export function JsonCodeBlock(props: JsonCodeBlockProps): JSX.Element {
   const [copied, setCopied] = useState(false);
+  const jsonString = useMemo(
+    () => JSON.stringify(props.data, null, 2),
+    [props.data]
+  );
   useEffect(() => {
     if (!copied) return;
     const t = setTimeout(() => {
@@ -42,7 +49,7 @@ export function JsonCodeBlock(props: { children: ReactNode }): JSX.Element {
     <div className="code-block group relative w-full">
       <div className="absolute top-0 right-0 z-10 flex">
         <CopyToClipboard
-          text={props.children}
+          text={jsonString}
           onCopy={() => {
             setCopied(true);
           }}
@@ -64,12 +71,47 @@ export function JsonCodeBlock(props: { children: ReactNode }): JSX.Element {
         </CopyToClipboard>
       </div>
       <SyntaxHighlighter
-        useInlineStyles={false}
-        showLineNumbers={false}
         language="json"
-        children={props.children}
+        children={jsonString}
         PreTag={JsonCodeBlockPreTag}
+        renderer={sourcesRenderer(props.renderSource)}
       />
     </div>
   );
+}
+
+export function sourcesRenderer(
+  renderSource: (propertyName: string) => ReactNode
+) {
+  return ({ rows, stylesheet }: any) => {
+    return rows.map((node: any, idx: number) => {
+      const element = createElement({
+        node,
+        stylesheet,
+        useInlineStyles: false,
+        key: `code-line-${idx}`,
+      });
+      let sourceElement: ReactNode;
+      const attrNode = node.children.find(
+        (c: any) =>
+          c.type === 'element' && c.properties?.className?.includes('hljs-attr')
+      );
+      if (attrNode?.children?.length) {
+        for (const child of attrNode.children) {
+          sourceElement = renderSource(child.value); // e.g. command
+          if (sourceElement) break;
+        }
+      }
+      return (
+        <span className="flex group/line" key={`code-group${idx}`}>
+          <span>{element}</span>
+          {sourceElement && (
+            <span className="hidden group-hover/line:inline pl-2">
+              {sourceElement}
+            </span>
+          )}
+        </span>
+      );
+    });
+  };
 }

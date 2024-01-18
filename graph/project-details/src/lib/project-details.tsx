@@ -12,7 +12,7 @@ import {
   useEnvironmentConfig,
   useRouteConstructor,
 } from '@nx/graph/shared';
-import Target from './target';
+import { TargetConfigurationDetails } from './target/target-configuration-details';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
@@ -89,7 +89,7 @@ export function ProjectDetails({
               };
               return (
                 <li className="mb-4">
-                  <Target {...props} />
+                  <TargetConfigurationDetails {...props} />
                 </li>
               );
             }
