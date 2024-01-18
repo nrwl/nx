@@ -52,7 +52,7 @@
     "js-yaml": "4.1.0",
     "jsonc-parser": "3.2.0",
     "lines-and-columns": "~2.0.3",
-    "minimatch": "3.0.5",
+    "minimatch": "9.0.3",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
     "semver": "7.5.3",
