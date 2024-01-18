@@ -4,31 +4,33 @@ import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
-import { ProjectGraphService } from './interfaces';
+import { ProjectGraphService } from './get-project-graph-data-service';
+/* eslint-enable @nx/enforce-module-boundaries */
 
-export class NxConsoleProjectGraphService implements ProjectGraphService {
+export class LocalProjectGraphService implements ProjectGraphService {
   async getHash(): Promise<string> {
     return new Promise((resolve) => resolve('some-hash'));
   }
 
   async getProjectGraph(url: string): Promise<ProjectGraphClientResponse> {
-    return await window.externalApi.loadProjectGraph?.(url);
+    return new Promise((resolve) => resolve(window.projectGraphResponse));
   }
 
   async getTaskGraph(url: string): Promise<TaskGraphClientResponse> {
-    return await window.externalApi.loadTaskGraph?.(url);
+    return new Promise((resolve) => resolve(window.taskGraphResponse));
   }
 
   async getExpandedTaskInputs(
     taskId: string
   ): Promise<Record<string, string[]>> {
-    const res = await window.externalApi.loadExpandedTaskInputs?.(taskId);
-    return res ? res[taskId] : {};
+    return new Promise((resolve) =>
+      resolve(window.expandedTaskInputsResponse[taskId])
+    );
   }
 
   async getSourceMaps(
     url: string
   ): Promise<Record<string, Record<string, string[]>>> {
-    return await window.externalApi.loadSourceMaps?.(url);
+    return new Promise((resolve) => resolve(window.sourceMapsResponse));
   }
 }

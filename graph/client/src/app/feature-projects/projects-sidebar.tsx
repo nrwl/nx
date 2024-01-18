@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useIntervalWhen } from '../hooks/use-interval-when';
 import { getProjectGraphService } from '../machines/get-services';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { FocusedPanel } from '../ui-components/focused-panel';
@@ -27,14 +26,19 @@ import { ProjectList } from './project-list';
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { useFloating } from '@floating-ui/react';
-import { useEnvironmentConfig, useRouteConstructor } from '@nx/graph/shared';
+import {
+  fetchProjectGraph,
+  getProjectGraphDataService,
+  useEnvironmentConfig,
+  useIntervalWhen,
+  useRouteConstructor,
+} from '@nx/graph/shared';
 import {
   useNavigate,
   useParams,
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
-import { getProjectGraphDataService } from '../hooks/get-project-graph-data-service';
 import { useCurrentPath } from '../hooks/use-current-path';
 import { ProjectDetailsModal } from '../ui-components/project-details-modal';
 
@@ -293,28 +297,18 @@ export function ProjectsSidebar(): JSX.Element {
 
   useIntervalWhen(
     () => {
-      const selectedWorkspaceId =
-        params.selectedWorkspaceId ??
-        environmentConfig.appConfig.defaultWorkspaceId;
-
-      const projectInfo = environmentConfig.appConfig.workspaces.find(
-        (graph) => graph.id === selectedWorkspaceId
-      );
-
-      const fetchProjectGraph = async () => {
-        const response: ProjectGraphClientResponse =
-          await projectGraphDataService.getProjectGraph(
-            projectInfo.projectGraphUrl
-          );
+      fetchProjectGraph(
+        projectGraphDataService,
+        params,
+        environmentConfig.appConfig
+      ).then((response: ProjectGraphClientResponse) => {
         projectGraphService.send({
           type: 'updateGraph',
           projects: response.projects,
           dependencies: response.dependencies,
           fileMap: response.fileMap,
         });
-      };
-
-      fetchProjectGraph();
+      });
     },
     5000,
     environmentConfig.watch

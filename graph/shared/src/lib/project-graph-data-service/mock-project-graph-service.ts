@@ -9,8 +9,8 @@ import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
+import { ProjectGraphService } from './get-project-graph-data-service';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { ProjectGraphService } from '../app/interfaces';
 
 export class MockProjectGraphService implements ProjectGraphService {
   private projectGraphsResponse: ProjectGraphClientResponse = {
@@ -82,6 +82,12 @@ export class MockProjectGraphService implements ProjectGraphService {
 
   getTaskGraph(url: string): Promise<TaskGraphClientResponse> {
     return new Promise((resolve) => resolve(this.taskGraphsResponse));
+  }
+
+  getSourceMaps(
+    url: string
+  ): Promise<Record<string, Record<string, string[]>>> {
+    return new Promise((resolve) => resolve({}));
   }
 
   private createNewProject(): ProjectGraphProjectNode {
