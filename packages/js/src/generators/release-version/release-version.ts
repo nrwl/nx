@@ -21,6 +21,7 @@ import { isValidSemverSpecifier } from 'nx/src/command-line/release/utils/semver
 import {
   VersionData,
   deriveNewSemverVersion,
+  validReleaseVersionPrefixes,
 } from 'nx/src/command-line/release/version';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
@@ -45,6 +46,18 @@ export async function releaseVersionGenerator(
       }
       // The node semver library classes a leading `v` as valid, but we want to ensure it is not present in the final version
       options.specifier = options.specifier.replace(/^v/, '');
+    }
+
+    if (validReleaseVersionPrefixes.indexOf(options.versionPrefix) === -1) {
+      throw new Error(
+        `Invalid value for version.generatorOptions.versionPrefix: "${
+          options.versionPrefix
+        }"
+        
+Valid values are: ${validReleaseVersionPrefixes
+          .map((s) => `"${s}"`)
+          .join(', ')}`
+      );
     }
 
     if (options.firstRelease) {

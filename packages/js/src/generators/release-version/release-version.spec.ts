@@ -821,6 +821,35 @@ To fix this you will either need to add a package.json file at that location, or
         }
       `);
     });
+
+    it(`should exit with code one and print guidance for invalid prefix values`, async () => {
+      const processSpy = jest.spyOn(process, 'exit').mockImplementation(() => {
+        return undefined as never;
+      });
+      const outputSpy = jest.spyOn(output, 'error').mockImplementation(() => {
+        return undefined as never;
+      });
+
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: 'major',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+        versionPrefix: '$',
+      });
+
+      expect(outputSpy).toHaveBeenCalledWith({
+        title: `Invalid value for version.generatorOptions.versionPrefix: "$"
+        
+Valid values are: "auto", "", "~", "^"`,
+      });
+
+      expect(processSpy).toHaveBeenCalledWith(1);
+
+      processSpy.mockRestore();
+      outputSpy.mockRestore();
+    });
   });
 });
 
