@@ -64,6 +64,7 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
     if (projectRoot === '') {
       projectRoot = '.';
     }
+
     // Do not create a project if package.json and project.json isn't there.
     const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
     if (
@@ -101,7 +102,7 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
       },
     };
     // For root projects, the name is not inferred from root package.json, so we need to manually set it.
-    // TODO(jack): We should handle this in core and remove this workaround.
+    // TODO(katerina): Remove this workaround once Craigory's PR (https://github.com/nrwl/nx/pull/21125) is merged
     if (projectRoot === '.') {
       result.projects[projectRoot]['name'] = projectName;
     }
@@ -130,19 +131,20 @@ function buildStorybookTargets(
   targets[options.buildStorybookTargetName] = buildTarget(
     namedInputs,
     buildOutputs,
-    configFilePath,
     projectRoot,
     frameworkIsAngular,
-    projectName
+    projectName,
+    configFilePath
   );
 
   targets[options.serveStorybookTargetName] = serveTarget(
-    configFilePath,
+    projectRoot,
     frameworkIsAngular,
-    projectName
+    projectName,
+    configFilePath
   );
 
-  targets[options.testStorybookTargetName] = testTarget(configFilePath);
+  targets[options.testStorybookTargetName] = testTarget(projectRoot);
 
   targets[options.staticStorybookTargetName] = serveStaticTarget(
     options,
@@ -157,23 +159,21 @@ function buildTarget(
     [inputName: string]: any[];
   },
   outputs: string[],
-  configFilePath: string,
   projectRoot: string,
   frameworkIsAngular: boolean,
-  projectName: string
+  projectName: string,
+  configFilePath: string
 ) {
-  const outputDir = joinPathFragments('dist/storybook', projectRoot);
-
   let targetConfig: TargetConfiguration;
 
   if (frameworkIsAngular) {
     targetConfig = {
       executor: '@storybook/angular:build-storybook',
       options: {
-        outputDir: `${outputDir}`,
         configDir: `${dirname(configFilePath)}`,
         browserTarget: `${projectName}:build-storybook`,
         compodoc: false,
+        outputDir: joinPathFragments(projectRoot, 'static-storybook'),
       },
       cache: true,
       outputs,
@@ -192,9 +192,8 @@ function buildTarget(
     };
   } else {
     targetConfig = {
-      command: `storybook build --config-dir ${dirname(
-        configFilePath
-      )} --output-dir ${outputDir}`,
+      command: `storybook build`,
+      options: { cwd: projectRoot },
       cache: true,
       outputs,
       inputs: [
@@ -212,9 +211,10 @@ function buildTarget(
 }
 
 function serveTarget(
-  configFilePath: string,
+  projectRoot: string,
   frameworkIsAngular: boolean,
-  projectName: string
+  projectName: string,
+  configFilePath: string
 ) {
   if (frameworkIsAngular) {
     return {
@@ -227,14 +227,16 @@ function serveTarget(
     };
   } else {
     return {
-      command: `storybook dev --config-dir ${dirname(configFilePath)}`,
+      command: `storybook dev`,
+      options: { cwd: projectRoot },
     };
   }
 }
 
-function testTarget(configFilePath: string) {
+function testTarget(projectRoot: string) {
   const targetConfig: TargetConfiguration = {
-    command: `test-storybook --config-dir ${dirname(configFilePath)}`,
+    command: `test-storybook`,
+    options: { cwd: projectRoot },
     inputs: [
       {
         externalDependencies: ['storybook', '@storybook/test-runner'],
@@ -253,8 +255,7 @@ function serveStaticTarget(
     executor: '@nx/web:file-server',
     options: {
       buildTarget: `${options.buildStorybookTargetName}`,
-      // TODO(katerina): need to read the output from CLI args
-      staticFilePath: joinPathFragments('dist/storybook', projectRoot),
+      staticFilePath: joinPathFragments(projectRoot, 'static-storybook'),
     },
   };
 
@@ -316,12 +317,14 @@ function getStorybookConfig(
 }
 
 function getOutputs(_projectRoot: string): string[] {
-  // TODO(katerina): need to read the output from CLI args
-  // const outputPath = <output path as read from CLI>;
-
   const normalizedOutputPath = normalizeOutputPath(undefined, _projectRoot);
 
-  const outputs = [normalizedOutputPath];
+  const outputs = [
+    normalizedOutputPath,
+    `{options.output-dir}`,
+    `{options.outputDir}`,
+    `{options.o}`,
+  ];
 
   return outputs;
 }
@@ -330,22 +333,10 @@ function normalizeOutputPath(
   outputPath: string | undefined,
   projectRoot: string
 ): string | undefined {
-  if (!outputPath) {
-    if (projectRoot === '.') {
-      return `{projectRoot}/dist/storybook`;
-    } else {
-      return `{workspaceRoot}/dist/storybook/{projectRoot}`;
-    }
+  if (projectRoot === '.') {
+    return `{projectRoot}/static-storybook`;
   } else {
-    if (isAbsolute(outputPath)) {
-      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
-    } else {
-      if (outputPath.startsWith('..')) {
-        return join('{workspaceRoot}', join(projectRoot, outputPath));
-      } else {
-        return join('{projectRoot}', outputPath);
-      }
-    }
+    return `{workspaceRoot}/{projectRoot}/static-storybook`;
   }
 }
 

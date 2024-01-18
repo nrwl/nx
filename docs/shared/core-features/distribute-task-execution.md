@@ -46,7 +46,7 @@ If you have a new workspace, you can generate the CI configuration as follows:
 nx generate @nx/workspace:ci-workflow --ci=github
 ```
 
-The `--ci` flag can be `github`, `circleci` or `azure`.
+The `--ci` flag can be `github`, `circleci`, `azure`, `gitlab`, or `bitbucket`.
 
 For existing workspaces you would probably want to adjust your configuration by hand. See below for examples.
 

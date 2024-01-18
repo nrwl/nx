@@ -12,7 +12,7 @@ import {
   containsComponentDeclaration,
   projectRootPath,
 } from '@nx/react/src/generators/stories/stories';
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 import { nxVersion } from '../../utils/versions';
 
 export async function createAllStories(

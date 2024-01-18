@@ -192,7 +192,7 @@ function setYarnUnsafeHttpWhitelist(
   currentWhitelist: Set<string>,
   options: VerdaccioExecutorSchema
 ) {
-  if (currentWhitelist.size > 1) {
+  if (currentWhitelist.size > 0) {
     execSync(
       `yarn config set unsafeHttpWhitelist --json '${JSON.stringify(
         Array.from(currentWhitelist)
