@@ -18,4 +18,4 @@ pipelines:
                 # uncomment to enable task distribution
                 # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distributes-on="5 linux-medium"
                 - <%= packageManagerPrefix %> nx-cloud record -- nx format:check
-                - <%= packageManagerPrefix %> nx affected --target=lint,test,build --parallel=3
+                - <%= packageManagerPrefix %> nx affected -t=lint,test,build --parallel=3

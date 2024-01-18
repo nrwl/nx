@@ -28,7 +28,7 @@ jobs:
       # uncomment to enable task distribution
       # - script: npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint,test,build --parallel=3
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build --parallel=3
 "
 `;
 
@@ -51,7 +51,7 @@ pipelines:
                 # uncomment to enable task distribution
                 # - npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
                 - npx nx-cloud record -- nx format:check
-                - npx nx affected --target=lint,test,build --parallel=3
+                - npx nx affected -t=lint,test,build --parallel=3
 "
 `;
 
@@ -73,7 +73,7 @@ jobs:
       # uncomment to enable task distribution
       # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint,test,build --parallel=3
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 
 workflows:
   version: 2
@@ -116,7 +116,7 @@ jobs:
       # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -target lint,test,build --parallel=3
+      - run: npx nx affected -t=lint,test,build --parallel=3
 "
 `;
 
@@ -152,7 +152,7 @@ jobs:
       # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -target lint,test,build --parallel=3
+      - run: npx nx affected -t=lint,test,build --parallel=3
 "
 `;
 
@@ -174,7 +174,7 @@ CI:
     # uncomment to enable task distribution
     # - npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
     - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint,test,build --parallel=3
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 "
 `;
 
@@ -210,7 +210,7 @@ jobs:
       # uncomment to enable task distribution
       # - script: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
       - script: pnpm exec nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint,test,build --parallel=3
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build --parallel=3
 "
 `;
 
@@ -235,7 +235,7 @@ pipelines:
                 # uncomment to enable task distribution
                 # - pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
                 - pnpm exec nx-cloud record -- nx format:check
-                - pnpm exec nx affected --target=lint,test,build --parallel=3
+                - pnpm exec nx affected -t=lint,test,build --parallel=3
 "
 `;
 
@@ -261,7 +261,7 @@ jobs:
       # uncomment to enable task distribution
       # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
       - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint,test,build --parallel=3
+      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 
 workflows:
   version: 2
@@ -308,7 +308,7 @@ jobs:
       # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -target lint,test,build --parallel=3
+      - run: pnpm exec nx affected -t=lint,test,build --parallel=3
 "
 `;
 
@@ -348,7 +348,7 @@ jobs:
       # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -target lint,test,build --parallel=3
+      - run: pnpm exec nx affected -t=lint,test,build --parallel=3
 "
 `;
 
@@ -372,7 +372,7 @@ CI:
     # uncomment to enable task distribution
     # - pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
     - pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint,test,build --parallel=3
+    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 "
 `;
 
@@ -406,7 +406,7 @@ jobs:
       # uncomment to enable task distribution
       # - script: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
       - script: yarn nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) --target=lint,test,build --parallel=3
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build --parallel=3
 "
 `;
 
@@ -429,7 +429,7 @@ pipelines:
                 # uncomment to enable task distribution
                 # - yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
                 - yarn nx-cloud record -- nx format:check
-                - yarn nx affected --target=lint,test,build --parallel=3
+                - yarn nx affected -t=lint,test,build --parallel=3
 "
 `;
 
@@ -451,7 +451,7 @@ jobs:
       # uncomment to enable task distribution
       # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
       - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint,test,build --parallel=3
+      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 
 workflows:
   version: 2
@@ -494,7 +494,7 @@ jobs:
       # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: yarn nx-cloud record -- nx format:check
-      - run: yarn nx affected -target lint,test,build --parallel=3
+      - run: yarn nx affected -t=lint,test,build --parallel=3
 "
 `;
 
@@ -530,7 +530,7 @@ jobs:
       # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
 
       - run: yarn nx-cloud record -- nx format:check
-      - run: yarn nx affected -target lint,test,build --parallel=3
+      - run: yarn nx affected -t=lint,test,build --parallel=3
 "
 `;
 
@@ -552,7 +552,7 @@ CI:
     # uncomment to enable task distribution
     # - yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
     - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint,test,build --parallel=3
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 "
 `;
 

@@ -19,7 +19,7 @@ jobs:
       # uncomment to enable task distribution
       # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distributes-on="5 linux-medium"
       - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD --target=lint,test,build --parallel=3
+      - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 
 workflows:
   version: 2
