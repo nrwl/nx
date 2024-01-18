@@ -156,7 +156,7 @@ export async function createNxReleaseConfig(
         entryWhenNoChanges:
           'This was a version bump only, there were no code changes.',
         file: '{workspaceRoot}/CHANGELOG.md',
-        renderer: 'nx/changelog-renderer',
+        renderer: 'nx/release/changelog-renderer',
         renderOptions: {
           authors: true,
           commitReferences: true,
@@ -170,7 +170,7 @@ export async function createNxReleaseConfig(
             file: '{projectRoot}/CHANGELOG.md',
             entryWhenNoChanges:
               'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
-            renderer: 'nx/changelog-renderer',
+            renderer: 'nx/release/changelog-renderer',
             renderOptions: {
               authors: true,
               commitReferences: true,
@@ -202,7 +202,7 @@ export async function createNxReleaseConfig(
       entryWhenNoChanges:
         'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
       file: '{projectRoot}/CHANGELOG.md',
-      renderer: 'nx/changelog-renderer',
+      renderer: 'nx/release/changelog-renderer',
       renderOptions: {
         authors: true,
         commitReferences: true,

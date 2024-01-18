@@ -16,7 +16,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 import { loadPlaywrightConfig } from '../utils/load-config-file';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';

@@ -69,7 +69,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -142,7 +142,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -218,7 +218,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -310,7 +310,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -392,7 +392,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -470,7 +470,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -561,7 +561,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -655,7 +655,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -677,7 +677,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/changelog-renderer",
+                  "renderer": "nx/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -746,7 +746,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -829,7 +829,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -914,7 +914,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -1012,7 +1012,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -1088,7 +1088,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -1176,7 +1176,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -1198,7 +1198,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/changelog-renderer",
+                  "renderer": "nx/release/changelog-renderer",
                 },
                 "projects": [
                   "nx",
@@ -1346,7 +1346,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": false,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
               "workspaceChangelog": {
                 "createRelease": false,
@@ -1357,7 +1357,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -1379,7 +1379,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": false,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/changelog-renderer",
+                  "renderer": "nx/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -1445,7 +1445,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
               "workspaceChangelog": {
                 "createRelease": false,
@@ -1456,7 +1456,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -1478,7 +1478,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/changelog-renderer",
+                  "renderer": "nx/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -1545,7 +1545,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -1651,7 +1651,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
               "workspaceChangelog": {
                 "createRelease": false,
@@ -1662,7 +1662,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -1684,7 +1684,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/changelog-renderer",
+                  "renderer": "nx/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -1720,7 +1720,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/changelog-renderer",
+                  "renderer": "nx/release/changelog-renderer",
                 },
                 "projects": [
                   "nx",
@@ -1799,7 +1799,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
               "workspaceChangelog": {
                 "createRelease": "github",
@@ -1810,7 +1810,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -1832,7 +1832,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/changelog-renderer",
+                  "renderer": "nx/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-b",
@@ -1855,7 +1855,7 @@ describe('createNxReleaseConfig()', () => {
                     "commitReferences": true,
                     "versionTitleDate": true,
                   },
-                  "renderer": "nx/changelog-renderer",
+                  "renderer": "nx/release/changelog-renderer",
                 },
                 "projects": [
                   "lib-a",
@@ -2189,7 +2189,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -2284,7 +2284,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -2369,7 +2369,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -2453,7 +2453,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -2545,7 +2545,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {
@@ -2627,7 +2627,7 @@ describe('createNxReleaseConfig()', () => {
                   "commitReferences": true,
                   "versionTitleDate": true,
                 },
-                "renderer": "nx/changelog-renderer",
+                "renderer": "nx/release/changelog-renderer",
               },
             },
             "git": {

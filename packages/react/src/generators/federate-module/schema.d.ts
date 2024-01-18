@@ -4,7 +4,7 @@ export interface Schema {
   remote: string;
   remoteDirectory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
-  e2eTestRunner?: 'cypress' | 'none';
+  e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   host?: string;
   linter?: Linter;
   skipFormat?: boolean;

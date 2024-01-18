@@ -1,3 +1,4 @@
+import { minimatch } from 'minimatch';
 import { basename, join, relative } from 'path';
 
 import {
@@ -23,8 +24,6 @@ import { readJson, writeJson } from './json';
 import { readNxJson } from './nx-json';
 
 import type { Tree } from '../tree';
-
-import minimatch = require('minimatch');
 
 export { readNxJson, updateNxJson } from './nx-json';
 
