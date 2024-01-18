@@ -31,7 +31,7 @@ const messageOptions = {
   setupNxCloud: [
     {
       code: 'enable-caching',
-      message: `Would you like remote caching to make your build faster`,
+      message: `Would you like remote caching to make your build faster?`,
       initial: 'yes',
       choices: [
         { value: 'yes', name: 'Yes' },
