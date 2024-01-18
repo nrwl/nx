@@ -1,11 +1,11 @@
 import { major } from 'semver';
-import type { GitCommit } from '../src/command-line/release/utils/git';
+import type { GitCommit } from '../../src/command-line/release/utils/git';
 import {
   RepoSlug,
   formatReferences,
-} from '../src/command-line/release/utils/github';
-import { getCommitsRelevantToProjects } from '../src/command-line/release/utils/shared';
-import type { ProjectGraph } from '../src/config/project-graph';
+} from '../../src/command-line/release/utils/github';
+import { getCommitsRelevantToProjects } from '../../src/command-line/release/utils/shared';
+import type { ProjectGraph } from '../../src/config/project-graph';
 
 // axios types and values don't seem to match
 import _axios = require('axios');
