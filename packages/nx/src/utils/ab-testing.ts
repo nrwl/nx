@@ -5,13 +5,13 @@ export class PromptMessages {
     nxCloudCreation: [
       {
         code: 'set-up-distributed-caching-ci',
-        message: `Enable distributed caching to make your CI faster`,
+        message: `Enable remote caching to make your CI faster`,
       },
     ],
     nxCloudMigration: [
       {
         code: 'make-ci-faster',
-        message: `Enable distributed caching to make your CI faster?`,
+        message: `Enable remote caching to make your CI faster?`,
       },
     ],
   };

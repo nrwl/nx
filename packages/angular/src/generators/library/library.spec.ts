@@ -13,6 +13,8 @@ import { Linter } from '@nx/eslint';
 import { createApp } from '../../utils/nx-devkit/testing';
 import { UnitTestRunner } from '../../utils/test-runners';
 import {
+  angularDevkitVersion,
+  angularVersion,
   autoprefixerVersion,
   postcssVersion,
   tailwindVersion,
@@ -48,6 +50,11 @@ describe('lib', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+    projectGraph = {
+      dependencies: {},
+      nodes: {},
+    };
   });
 
   it('should run the library generator without erroring if the directory has a trailing slash', async () => {
@@ -55,6 +62,36 @@ describe('lib', () => {
     await expect(
       runLibraryGeneratorWithOpts({ directory: 'mylib/shared/' })
     ).resolves.not.toThrow();
+  });
+
+  it('should add angular dependencies', async () => {
+    // ACT
+    await runLibraryGeneratorWithOpts();
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(tree, 'package.json');
+
+    expect(dependencies['@angular/animations']).toBe(angularVersion);
+    expect(dependencies['@angular/common']).toBe(angularVersion);
+    expect(dependencies['@angular/compiler']).toBe(angularVersion);
+    expect(dependencies['@angular/core']).toBe(angularVersion);
+    expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
+    expect(dependencies['@angular/platform-browser-dynamic']).toBe(
+      angularVersion
+    );
+    expect(dependencies['@angular/router']).toBe(angularVersion);
+    expect(dependencies['rxjs']).toBeDefined();
+    expect(dependencies['tslib']).toBeDefined();
+    expect(dependencies['zone.js']).toBeDefined();
+    expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
+    expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
+    expect(devDependencies['@angular/language-service']).toBe(angularVersion);
+    expect(devDependencies['@angular-devkit/build-angular']).toBe(
+      angularDevkitVersion
+    );
+
+    // codelyzer should no longer be there by default
+    expect(devDependencies['codelyzer']).toBeUndefined();
   });
 
   describe('not nested', () => {
@@ -1147,9 +1184,6 @@ describe('lib', () => {
           .toMatchInlineSnapshot(`
           {
             "executor": "@nx/eslint:lint",
-            "outputs": [
-              "{options.outputFile}",
-            ],
           }
         `);
       });

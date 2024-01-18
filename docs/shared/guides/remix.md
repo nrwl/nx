@@ -7,7 +7,7 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 ```{% command="npx create-nx-workspace acme --preset=apps" path="~/" %}
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Enable remote caching to make your CI faster · Yes
 
  >  NX   Creating your v16.3.2 workspace.
 

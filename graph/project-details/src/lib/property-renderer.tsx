@@ -20,14 +20,23 @@ export function PropertyRenderer(props: PropertyRendererProps) {
   };
 
   return (
-    <div title={getSourceInformation(sourceMap, sourceMapKey)}>
-      {isCollapsible && (
-        <button className="text-xs" onClick={toggleCollapse}>
-          {isCollapsed ? '\u25B6' : '\u25BC'}
-        </button>
-      )}
-      <span className="font-medium">{propertyKey}</span>:{' '}
-      {renderOpening(propertyValue)}
+    <div
+      title={getSourceInformation(sourceMap, sourceMapKey)}
+      className={!isCollapsible ? 'pl-4 relative' : 'relative'}
+    >
+      <span>
+        {isCollapsible && (
+          <button className="text-xs w-4" onClick={toggleCollapse}>
+            {isCollapsed ? '\u25B6' : '\u25BC'}
+          </button>
+        )}
+        <span className="font-medium">
+          {propertyKey}
+          <div className="absolute top-0 left-0 w-full bg-grey-500 z-10"></div>
+        </span>
+        : {renderOpening(propertyValue)}
+      </span>
+
       {!isCollapsed || !isCollapsible ? (
         <PropertyValueRenderer {...props} />
       ) : (
@@ -45,7 +54,7 @@ type PropertValueRendererProps = PropertyRendererProps & {
 function PropertyValueRenderer(props: PropertValueRendererProps) {
   const { propertyKey, propertyValue, sourceMap, keyPrefix, nested } = props;
 
-  if (Array.isArray(propertyValue) && propertyValue.length) {
+  if (propertyValue && Array.isArray(propertyValue) && propertyValue.length) {
     return (
       <div className="ml-3">
         {nested && renderOpening(propertyValue)}
@@ -98,7 +107,7 @@ function PropertyValueRenderer(props: PropertValueRendererProps) {
 }
 
 function renderOpening(value: any): string {
-  return Array.isArray(value) && value.length
+  return value && Array.isArray(value) && value.length
     ? '['
     : value && typeof value === 'object'
     ? '{'
@@ -106,7 +115,7 @@ function renderOpening(value: any): string {
 }
 
 function renderClosing(value: any): string {
-  return Array.isArray(value) && value.length
+  return value && Array.isArray(value) && value.length
     ? '],'
     : value && typeof value === 'object'
     ? '},'

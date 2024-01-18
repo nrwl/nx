@@ -15,7 +15,7 @@ tasks can start right away.
 
 The problem with the binning approach is you'll end up with some idle time on one or more jobs. Nx's distributed task
 execution reduces that idle time to the minimum possible by assigning each individual task to agent jobs based on the
-task's average run time. Nx also guarantees that tasks are executed in the correct order and uses distributed caching to
+task's average run time. Nx also guarantees that tasks are executed in the correct order and uses remote caching to
 make sure that build artifacts from previous tasks are present on every agent job that needs them.
 
 When you set up Nx's distributed task execution, your task graph will look more like this:
@@ -23,7 +23,7 @@ When you set up Nx's distributed task execution, your task graph will look more 
 ![CI using DTE](/shared/images/dte/3agents.svg)
 
 And not only will CI finish faster, but the debugging experience is the same as if you ran all of your CI on a single
-job. That's because Nx uses distributed caching to recreate all of the logs and build artifacts on the main job.
+job. That's because Nx uses remote caching to recreate all of the logs and build artifacts on the main job.
 
 Find more information in this [guide to parallelization and distribution in CI](/ci/concepts/parallelization-distribution).
 
@@ -46,7 +46,7 @@ If you have a new workspace, you can generate the CI configuration as follows:
 nx generate @nx/workspace:ci-workflow --ci=github
 ```
 
-The `--ci` flag can be `github`, `circleci` or `azure`.
+The `--ci` flag can be `github`, `circleci`, `azure`, `gitlab`, or `bitbucket`.
 
 For existing workspaces you would probably want to adjust your configuration by hand. See below for examples.
 
@@ -143,7 +143,7 @@ build, they will start running tests and lints. The result is better agent utili
 
 ## CI/CD Examples
 
-The examples below show how to set up CI using Nx and Nx Cloud using distributed task execution and distributed caching.
+The examples below show how to set up CI using Nx and Nx Cloud using distributed task execution and remote caching.
 
 Every organization manages their CI/CD pipelines differently, so the examples don't cover org-specific aspects of
 CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly.

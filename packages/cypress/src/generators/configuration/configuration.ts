@@ -16,13 +16,16 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { getRelativePathToRootTsConfig } from '@nx/js';
+import {
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
 import { Linter } from '@nx/eslint';
 import { join } from 'path';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { addDefaultE2EConfig } from '../../utils/config';
 import { installedCypressVersion } from '../../utils/cypress-version';
-import { viteVersion } from '../../utils/versions';
+import { typesNodeVersion, viteVersion } from '../../utils/versions';
 import cypressInitGenerator from '../init/init';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
 
@@ -56,7 +59,8 @@ export async function configurationGenerator(
   const tasks: GeneratorCallback[] = [];
 
   if (!installedCypressVersion()) {
-    tasks.push(await cypressInitGenerator(tree, opts));
+    tasks.push(await jsInitGenerator(tree, { ...options, skipFormat: true }));
+    tasks.push(await cypressInitGenerator(tree, { ...opts, skipFormat: true }));
   }
   const projectGraph = await createProjectGraphAsync();
   const nxJson = readNxJson(tree);
@@ -65,9 +69,7 @@ export async function configurationGenerator(
       ? p === '@nx/cypress/plugin'
       : p.plugin === '@nx/cypress/plugin'
   );
-  if (opts.bundler === 'vite') {
-    tasks.push(addDependenciesToPackageJson(tree, {}, { vite: viteVersion }));
-  }
+
   await addFiles(tree, opts, projectGraph, hasPlugin);
   if (!hasPlugin) {
     addTarget(tree, opts);
@@ -79,11 +81,27 @@ export async function configurationGenerator(
   });
   tasks.push(linterTask);
 
+  if (!opts.skipPackageJson) {
+    tasks.push(ensureDependencies(tree, opts));
+  }
+
   if (!opts.skipFormat) {
     await formatFiles(tree);
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function ensureDependencies(tree: Tree, options: NormalizedSchema) {
+  const devDependencies: Record<string, string> = {
+    '@types/node': typesNodeVersion,
+  };
+
+  if (options.bundler === 'vite') {
+    devDependencies['vite'] = viteVersion;
+  }
+
+  return addDependenciesToPackageJson(tree, {}, devDependencies);
 }
 
 function normalizeOptions(tree: Tree, options: CypressE2EConfigSchema) {

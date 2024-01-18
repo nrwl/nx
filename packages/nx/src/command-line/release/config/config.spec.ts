@@ -52,10 +52,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -75,7 +75,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -91,6 +91,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -99,12 +100,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -122,10 +125,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -145,7 +148,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -161,6 +164,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -169,12 +173,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -195,10 +201,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -218,7 +224,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -234,6 +240,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -242,12 +249,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -284,10 +293,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -307,7 +316,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -323,6 +332,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -331,12 +341,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -363,10 +375,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -386,7 +398,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -400,6 +412,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -408,12 +421,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -438,10 +453,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -461,7 +476,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -476,6 +491,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -484,12 +500,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -526,10 +544,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -549,7 +567,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -563,6 +581,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@custom/generator",
                   "generatorOptions": {
                     "optionsOverride": "something",
@@ -577,6 +596,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@custom/generator-alternative",
                   "generatorOptions": {},
                 },
@@ -585,12 +605,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -616,10 +638,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -639,7 +661,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -663,6 +685,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -671,12 +694,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -704,10 +729,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -727,7 +752,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -743,6 +768,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {
                     "foo": "bar",
@@ -753,6 +779,7 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {
                 "foo": "bar",
@@ -760,7 +787,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -786,8 +814,8 @@ describe('createNxReleaseConfig()', () => {
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -807,7 +835,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": true,
               "commitArgs": "--no-verify",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -823,6 +851,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -831,12 +860,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -866,9 +897,9 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -889,7 +920,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -905,6 +936,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -913,12 +945,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -961,10 +995,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -984,7 +1018,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -998,6 +1032,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -1006,12 +1041,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1034,10 +1071,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1057,7 +1094,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1073,6 +1110,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}__{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -1081,12 +1119,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{projectName}__{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1119,10 +1159,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1142,7 +1182,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1166,6 +1206,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {
                     "currentVersionResolver": "git-tag",
@@ -1177,12 +1218,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1208,10 +1251,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1221,7 +1264,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1237,6 +1280,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -1245,12 +1289,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1284,10 +1330,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1317,7 +1363,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1343,6 +1389,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -1351,12 +1398,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1380,10 +1429,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1413,7 +1462,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1439,6 +1488,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -1447,12 +1497,93 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should respect disabling git at the top level (thus disabling the default of true for changelog', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        git: {
+          commit: false,
+          tag: false,
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {},
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1504,10 +1635,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1537,7 +1668,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1561,6 +1692,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -1573,6 +1705,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -1595,6 +1728,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -1603,12 +1737,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -1647,10 +1783,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -1680,7 +1816,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -1704,6 +1840,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -1726,6 +1863,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "{projectName}-{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -1734,12 +1872,14 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "v{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -2032,10 +2172,10 @@ describe('createNxReleaseConfig()', () => {
           "nxReleaseConfig": {
             "changelog": {
               "git": {
-                "commit": false,
+                "commit": true,
                 "commitArgs": "",
-                "commitMessage": "",
-                "tag": false,
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -2055,7 +2195,7 @@ describe('createNxReleaseConfig()', () => {
             "git": {
               "commit": false,
               "commitArgs": "",
-              "commitMessage": "",
+              "commitMessage": "chore(release): publish {version}",
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -2069,6 +2209,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "independent",
                 "releaseTagPattern": "{projectName}@{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -2082,6 +2223,7 @@ describe('createNxReleaseConfig()', () => {
                 "projectsRelationship": "fixed",
                 "releaseTagPattern": "v{version}",
                 "version": {
+                  "conventionalCommits": false,
                   "generator": "@nx/js:release-version",
                   "generatorOptions": {},
                 },
@@ -2090,18 +2232,492 @@ describe('createNxReleaseConfig()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "{projectName}@{version}",
             "version": {
+              "conventionalCommits": false,
               "generator": "@nx/js:release-version",
               "generatorOptions": {},
               "git": {
                 "commit": false,
                 "commitArgs": "",
-                "commitMessage": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
                 "tag": false,
                 "tagArgs": "",
                 "tagMessage": "",
               },
             },
           },
+        }
+      `);
+    });
+  });
+
+  describe('version.conventionalCommits shorthand', () => {
+    it('should be implicitly false and not interfere with its long-form equivalent generatorOptions when not explicitly set', async () => {
+      const res1 = await createNxReleaseConfig(projectGraph, {
+        version: {
+          generatorOptions: {
+            currentVersionResolver: 'git-tag',
+            specifierSource: 'conventional-commits',
+          },
+        },
+      });
+      expect(res1).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {
+                    "currentVersionResolver": "git-tag",
+                    "specifierSource": "conventional-commits",
+                  },
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {
+                "currentVersionResolver": "git-tag",
+                "specifierSource": "conventional-commits",
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(projectGraph, {
+        version: {
+          generatorOptions: {
+            currentVersionResolver: 'registry',
+            specifierSource: 'prompt',
+          },
+        },
+      });
+      expect(res2).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {
+                    "currentVersionResolver": "registry",
+                    "specifierSource": "prompt",
+                  },
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": false,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {
+                "currentVersionResolver": "registry",
+                "specifierSource": "prompt",
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should update appropriate default values for generatorOptions when applied at the root', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        version: {
+          conventionalCommits: true,
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": true,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {
+                    "currentVersionResolver": "git-tag",
+                    "specifierSource": "conventional-commits",
+                  },
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": true,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {
+                "currentVersionResolver": "git-tag",
+                "specifierSource": "conventional-commits",
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should be possible to override at the group level and produce the appropriate default generatorOptions', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        version: {
+          conventionalCommits: true,
+        },
+        groups: {
+          'group-1': {
+            projects: 'nx',
+            version: {
+              conventionalCommits: false,
+            },
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "group-1": {
+                "changelog": false,
+                "projects": [
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": false,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {},
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": true,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {
+                "currentVersionResolver": "git-tag",
+                "specifierSource": "conventional-commits",
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not error if the shorthand is combined with unrelated generatorOptions', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        version: {
+          conventionalCommits: true,
+          generatorOptions: {
+            someUnrelatedOption: 'foobar',
+          },
+        },
+      });
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": null,
+          "nxReleaseConfig": {
+            "changelog": {
+              "git": {
+                "commit": true,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "tag": true,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+              "projectChangelogs": false,
+              "workspaceChangelog": {
+                "createRelease": false,
+                "entryWhenNoChanges": "This was a version bump only, there were no code changes.",
+                "file": "{workspaceRoot}/CHANGELOG.md",
+                "renderOptions": {
+                  "authors": true,
+                  "commitReferences": true,
+                  "versionTitleDate": true,
+                },
+                "renderer": "nx/changelog-renderer",
+              },
+            },
+            "git": {
+              "commit": false,
+              "commitArgs": "",
+              "commitMessage": "chore(release): publish {version}",
+              "tag": false,
+              "tagArgs": "",
+              "tagMessage": "",
+            },
+            "groups": {
+              "__default__": {
+                "changelog": false,
+                "projects": [
+                  "lib-a",
+                  "lib-b",
+                  "nx",
+                ],
+                "projectsRelationship": "fixed",
+                "releaseTagPattern": "v{version}",
+                "version": {
+                  "conventionalCommits": true,
+                  "generator": "@nx/js:release-version",
+                  "generatorOptions": {
+                    "currentVersionResolver": "git-tag",
+                    "someUnrelatedOption": "foobar",
+                    "specifierSource": "conventional-commits",
+                  },
+                },
+              },
+            },
+            "projectsRelationship": "fixed",
+            "releaseTagPattern": "v{version}",
+            "version": {
+              "conventionalCommits": true,
+              "generator": "@nx/js:release-version",
+              "generatorOptions": {
+                "currentVersionResolver": "git-tag",
+                "someUnrelatedOption": "foobar",
+                "specifierSource": "conventional-commits",
+              },
+              "git": {
+                "commit": false,
+                "commitArgs": "",
+                "commitMessage": "chore(release): publish {version}",
+                "stageChanges": true,
+                "tag": false,
+                "tagArgs": "",
+                "tagMessage": "",
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should error if the shorthand is combined with related generatorOptions', async () => {
+      const res1 = await createNxReleaseConfig(projectGraph, {
+        version: {
+          conventionalCommits: true,
+          generatorOptions: {
+            specifierSource: 'prompt',
+          },
+        },
+      });
+      expect(res1).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS",
+            "data": {},
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+
+      const res2 = await createNxReleaseConfig(projectGraph, {
+        version: {
+          conventionalCommits: true,
+          generatorOptions: {
+            currentVersionResolver: 'registry',
+          },
+        },
+      });
+      expect(res2).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS",
+            "data": {},
+          },
+          "nxReleaseConfig": null,
         }
       `);
     });

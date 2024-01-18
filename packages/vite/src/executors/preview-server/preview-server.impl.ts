@@ -14,6 +14,7 @@ import { ViteBuildExecutorOptions } from '../build/schema';
 import { VitePreviewServerExecutorOptions } from './schema';
 import { relative } from 'path';
 import { getBuildExtraArgs } from '../build/build.impl';
+import { loadViteDynamicImport } from '../../utils/executor-utils';
 
 export async function* vitePreviewServerExecutor(
   options: VitePreviewServerExecutorOptions,
@@ -21,9 +22,8 @@ export async function* vitePreviewServerExecutor(
 ) {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, preview, loadConfigFromFile } = await (Function(
-    'return import("vite")'
-  )() as Promise<typeof import('vite')>);
+  const { mergeConfig, preview, loadConfigFromFile } =
+    await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   const target = parseTargetString(options.buildTarget, context);

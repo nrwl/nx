@@ -47,7 +47,7 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/ci/recipes/on-premise/auth-gitlab',
   },
   {
-    title: 'Setting up a dedicated NxCloud VM',
+    title: 'Setting up a dedicated Nx Cloud VM',
     path: '/ci/recipes/on-premise/ami-setup',
   },
   {

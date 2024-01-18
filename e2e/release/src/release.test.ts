@@ -188,6 +188,12 @@ ${JSON.stringify(
       + - Test @{COMMIT_AUTHOR}
 
 
+      >  NX   Committing changes with git
+
+
+      >  NX   Tagging commit with git
+
+
     `);
 
     expect(readFile('CHANGELOG.md')).toMatchInlineSnapshot(`
@@ -713,14 +719,7 @@ ${JSON.stringify(
 
       + ## 1000.0.0-next.0 (YYYY-MM-DD)
       +
-      +
-      + ### 🚀 Features
-      +
-      + - an awesome new feature ([{COMMIT_SHA}](https://github.com/nrwl/fake-repo/commit/{COMMIT_SHA}))
-      +
-      + ### ❤️  Thank You
-      +
-      + - Test @{COMMIT_AUTHOR}
+      + This was a version bump only, there were no code changes.
       +
       ## 999.9.9 (YYYY-MM-DD)
 
@@ -732,10 +731,7 @@ ${JSON.stringify(
 
       + ## 1000.0.0-next.0
       +
-      +
-      + ### 🚀 Features
-      +
-      + - an awesome new feature
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
       >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
@@ -743,10 +739,7 @@ ${JSON.stringify(
 
       + ## 1000.0.0-next.0
       +
-      +
-      + ### 🚀 Features
-      +
-      + - an awesome new feature
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
 
 
       >  NX   Previewing a GitHub release and an entry in {project-name}/CHANGELOG.md for v1000.0.0-next.0
@@ -754,10 +747,13 @@ ${JSON.stringify(
 
       + ## 1000.0.0-next.0
       +
-      +
-      + ### 🚀 Features
-      +
-      + - an awesome new feature
+      + This was a version bump only for {project-name} to align it with other projects, there were no code changes.
+
+
+      >  NX   Committing changes with git
+
+
+      >  NX   Tagging commit with git
 
 
     `);
@@ -940,5 +936,265 @@ ${JSON.stringify(
         )
       ).length
     ).toEqual(1);
+
+    // define two release groups that are released separately to ensure the --from ref is selected correctly
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          group1: {
+            projects: [pkg1],
+            releaseTagPattern: 'xx-{version}',
+          },
+          group2: {
+            projects: [pkg2, pkg3],
+            releaseTagPattern: 'zz-{version}',
+          },
+        },
+        git: {
+          commit: true,
+          commitMessage: 'chore(release): release {version}',
+          tag: true,
+        },
+        version: {
+          generatorOptions: {
+            specifierSource: 'conventional-commits',
+            currentVersionResolver: 'git-tag',
+          },
+        },
+        changelog: {
+          projectChangelogs: {},
+        },
+      };
+      return nxJson;
+    });
+
+    await runCommandAsync(`git tag zz-1300.0.0`);
+    await runCommandAsync(`git tag xx-1400.0.0`);
+
+    // update my-pkg-1 with a feature commit
+    updateJson(`${pkg1}/package.json`, (json) => ({
+      ...json,
+      license: 'MIT',
+    }));
+    await runCommandAsync(`git add ${pkg1}/package.json`);
+    await runCommandAsync(`git commit -m "feat(${pkg1}): new feature 1"`);
+
+    // update my-pkg-3 with a feature commit
+    updateJson(`${pkg3}/package.json`, (json) => ({
+      ...json,
+      license: 'GNU GPLv3',
+    }));
+    await runCommandAsync(`git add ${pkg3}/package.json`);
+    await runCommandAsync(`git commit -m "feat(${pkg3}): new feat 3"`);
+
+    // set 1300.1.0 as the latest version for group2
+    const releaseOutput2 = runCLI(`release version --group=group2`);
+    expect(
+      releaseOutput2.match(
+        new RegExp(
+          `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+    expect(
+      releaseOutput2.match(new RegExp(`New version 1300\.1\.0 written to`, 'g'))
+        .length
+    ).toEqual(2);
+
+    // update my-pkg-3 with a fix commit
+    updateJson(`${pkg3}/package.json`, (json) => ({
+      ...json,
+      license: 'MIT',
+    }));
+    await runCommandAsync(`git add ${pkg3}/package.json`);
+    await runCommandAsync(`git commit -m "fix(${pkg3}): new fix 2"`);
+
+    const releaseOutput3 = runCLI(`release -y`);
+
+    expect(
+      releaseOutput3.match(
+        new RegExp(
+          `Resolved the specifier as "minor" using git history and the conventional commits standard.`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+    expect(
+      releaseOutput3.match(
+        new RegExp(`New version 1400\\.1\\.0 written to`, 'g')
+      ).length
+    ).toEqual(1);
+    expect(
+      releaseOutput3.match(
+        new RegExp(`- \\*\\*${pkg1}:\\*\\* new feature 1`, 'g')
+      ).length
+    ).toEqual(1);
+
+    expect(
+      releaseOutput3.match(
+        new RegExp(
+          `Resolved the specifier as "patch" using git history and the conventional commits standard.`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
+    expect(
+      releaseOutput3.match(
+        new RegExp(`New version 1300\\.1\\.1 written to`, 'g')
+      ).length
+    ).toEqual(2);
+    expect(
+      releaseOutput3.match(new RegExp(`- \\*\\*${pkg3}:\\*\\* new fix 2`, 'g'))
+        .length
+    ).toEqual(1);
+
+    expect(
+      releaseOutput3.match(
+        new RegExp(`Successfully ran target nx-release-publish for`, 'g')
+      ).length
+    ).toEqual(2);
+
+    // change the releaseTagPattern to something that doesn't exist in order to test fallbackCurrentVersionResolver
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release = {
+        groups: {
+          group1: {
+            projects: [pkg1, pkg2, pkg3],
+            releaseTagPattern: '>{version}',
+          },
+        },
+        git: {
+          commit: false,
+          tag: false,
+        },
+        version: {
+          generatorOptions: {
+            currentVersionResolver: 'git-tag',
+          },
+        },
+      };
+      return nxJson;
+    });
+
+    const releaseOutput4a = runCLI(`release patch --skip-publish`, {
+      silenceError: true,
+    });
+
+    expect(releaseOutput4a).toMatchInlineSnapshot(`
+
+      >  NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+
+      >  NX   No git tags matching pattern ">{version}" for project "{project-name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can set the "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.
+
+
+    `);
+
+    const releaseOutput4b = runCLI(
+      `release patch --skip-publish --first-release`,
+      {
+        silenceError: true,
+      }
+    );
+
+    expect(releaseOutput4b).toMatch(
+      `📄 Unable to resolve the current version from git tag using pattern ">{version}". Falling back to the version on disk of 1400.1.0`
+    );
+    expect(
+      releaseOutput4b.match(
+        new RegExp(
+          `📄 Using the current version 1400\\.1\\.0 already resolved from disk fallback\\.`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
+
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release.version.generatorOptions.fallbackCurrentVersionResolver =
+        'disk';
+      return nxJson;
+    });
+
+    const releaseOutput5 = runCLI(`release patch --skip-publish`);
+
+    expect(releaseOutput5).toMatch(
+      `📄 Unable to resolve the current version from git tag using pattern ">{version}". Falling back to the version on disk of 1400.1.1`
+    );
+    expect(
+      releaseOutput5.match(
+        new RegExp(
+          `📄 Using the current version 1400\\.1\\.1 already resolved from disk fallback\\.`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
+
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release.version.generatorOptions.currentVersionResolver =
+        'registry';
+      nxJson.release.version.generatorOptions.currentVersionResolverMetadata = {
+        tag: 'other',
+      };
+      delete nxJson.release.version.generatorOptions
+        .fallbackCurrentVersionResolver;
+      return nxJson;
+    });
+
+    const releaseOutput6a = runCLI(`release patch --skip-publish`, {
+      silenceError: true,
+    });
+
+    expect(releaseOutput6a).toMatchInlineSnapshot(`
+
+      >  NX   Running release version for project: {project-name}
+
+      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
+
+      >  NX   Unable to resolve the current version from the registry ${e2eRegistryUrl}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can set the "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.
+
+      -                  Resolving the current version for tag "other" on ${e2eRegistryUrl}
+
+    `);
+
+    const releaseOutput6b = runCLI(
+      `release patch --skip-publish --first-release`,
+      {
+        silenceError: true,
+      }
+    );
+
+    expect(releaseOutput6b).toMatch(
+      `📄 Unable to resolve the current version from the registry ${e2eRegistryUrl}. Falling back to the version on disk of 1400.1.2`
+    );
+    expect(
+      releaseOutput6b.match(
+        new RegExp(
+          `📄 Using the current version 1400\\.1\\.2 already resolved from disk fallback\\.`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
+
+    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+      nxJson.release.version.generatorOptions.fallbackCurrentVersionResolver =
+        'disk';
+      return nxJson;
+    });
+
+    const releaseOutput7 = runCLI(`release patch --skip-publish --verbose`);
+
+    expect(releaseOutput7).toMatch(
+      `📄 Unable to resolve the current version from the registry ${e2eRegistryUrl}. Falling back to the version on disk of 1400.1.3`
+    );
+    expect(
+      releaseOutput7.match(
+        new RegExp(
+          `📄 Using the current version 1400\\.1\\.3 already resolved from disk fallback\\.`,
+          'g'
+        )
+      ).length
+    ).toEqual(2);
   }, 500000);
 });
