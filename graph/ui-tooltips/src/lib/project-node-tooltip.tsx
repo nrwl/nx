@@ -1,6 +1,6 @@
 import {
   PencilSquareIcon,
-  ArrowTopRightOnSquareIcon,
+  DocumentMagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { Tag } from '@nx/graph/ui-components';
 import { ReactNode } from 'react';
@@ -45,7 +45,7 @@ export function ProjectNodeToolTip({
           {isNxConsole ? (
             <PencilSquareIcon className="h-5 w-5" />
           ) : (
-            <ArrowTopRightOnSquareIcon className="h-5 w-5" />
+            <DocumentMagnifyingGlassIcon className="h-5 w-5" />
           )}
         </button>
       </h4>

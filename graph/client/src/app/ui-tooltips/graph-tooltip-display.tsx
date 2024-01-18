@@ -27,10 +27,6 @@ export function TooltipDisplay() {
   if (currentTooltip) {
     if (currentTooltip.type === 'projectNode') {
       const onConfigClick = (() => {
-        if (currentTooltip.props.openConfigCallback) {
-          return currentTooltip.props.openConfigCallback;
-        }
-
         if (environment !== 'nx-console') {
           return () => {
             navigate(
@@ -42,6 +38,14 @@ export function TooltipDisplay() {
               )
             );
           };
+        } else {
+          return () =>
+            this.externalApiService.postEvent({
+              type: 'open-project-config',
+              payload: {
+                projectName: currentTooltip.props.id,
+              },
+            });
         }
       })();
 
@@ -57,8 +61,38 @@ export function TooltipDisplay() {
     } else if (currentTooltip.type === 'projectEdge') {
       tooltipToRender = <ProjectEdgeNodeTooltip {...currentTooltip.props} />;
     } else if (currentTooltip.type === 'taskNode') {
+      const onConfigClick = (() => {
+        const [projectName, targetName] = currentTooltip.props.id.split(':');
+        if (environment !== 'nx-console') {
+          return () => {
+            navigate(
+              routeConstructor(
+                {
+                  pathname: `/project-details/${projectName}`,
+                  search: `expanded=${targetName}`,
+                },
+                false
+              )
+            );
+          };
+        } else {
+          return () =>
+            this.externalApiService.postEvent({
+              type: 'open-project-config',
+              payload: {
+                projectName,
+                targetName,
+              },
+            });
+        }
+      })();
+
       tooltipToRender = (
-        <TaskNodeTooltip {...currentTooltip.props}>
+        <TaskNodeTooltip
+          {...currentTooltip.props}
+          openConfigCallback={onConfigClick}
+          isNxConsole={environment === 'nx-console'}
+        >
           <TaskNodeActions {...currentTooltip.props} />
         </TaskNodeTooltip>
       );
