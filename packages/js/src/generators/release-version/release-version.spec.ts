@@ -149,6 +149,7 @@ To fix this you will either need to add a package.json file at that location, or
       });
 
       outputSpy.mockRestore();
+      expect(processExitSpy).toHaveBeenCalledWith(1);
 
       stubProcessExit = false;
     });
@@ -869,6 +870,7 @@ Valid values are: "auto", "", "~", "^"`,
       });
 
       outputSpy.mockRestore();
+      expect(processExitSpy).toHaveBeenCalledWith(1);
 
       stubProcessExit = false;
     });
