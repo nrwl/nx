@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { TerminalShellWrapper } from './terminal-shell.component';
+import { TerminalShellWrapper } from './terminal-shell';
 
 export function TerminalOutput({
   content,

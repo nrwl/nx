@@ -1,5 +1,5 @@
 import { cx } from '@nx/nx-dev/ui-primitives';
-import { ReactNode } from 'react';
+import { JSX, ReactNode } from 'react';
 
 export function TerminalShellWrapper({
   isMessageBelow,
