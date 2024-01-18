@@ -205,7 +205,7 @@ export function Target({
       {!collapsed && (
         <div className="p-4 text-base">
           <div className="mb-4">
-            <h4 className="font-bold">Executor is:</h4>
+            <h4 className="font-bold">Executor</h4>
             <p>
               {targetConfiguration?.command ??
                 targetConfiguration.options?.command ??
@@ -223,7 +223,7 @@ export function Target({
                     `targets.${targetName}.inputs`
                   );
                   return (
-                    <li className="group">
+                    <li className="group overflow-hidden whitespace-nowrap">
                       <RenderProperty property={input}>
                         {sourceInfo && (
                           <span className="hidden group-hover:inline">
@@ -247,7 +247,7 @@ export function Target({
                     `targets.${targetName}.outputs`
                   );
                   return (
-                    <li className="group">
+                    <li className="group overflow-hidden whitespace-nowrap">
                       <RenderProperty property={output}>
                         {sourceInfo && (
                           <span className="hidden group-hover:inline">
@@ -272,7 +272,7 @@ export function Target({
                   );
 
                   return (
-                    <li className="group">
+                    <li className="group overflow-hidden whitespace-nowrap">
                       <RenderProperty property={dep}>
                         <span className="hidden group-hover:inline">
                           {sourceInfo && <SourceItem source={sourceInfo} />}
