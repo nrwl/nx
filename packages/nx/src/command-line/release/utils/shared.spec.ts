@@ -96,7 +96,7 @@ describe('shared', () => {
               entryWhenNoChanges:
                 'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
               file: '{projectRoot}/CHANGELOG.md',
-              renderer: 'nx/changelog-renderer',
+              renderer: 'nx/release/changelog-renderer',
               renderOptions: { authors: true },
             },
             releaseTagPattern: '{projectName}-{version}',

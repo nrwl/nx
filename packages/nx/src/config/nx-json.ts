@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
-import type { ChangelogRenderOptions } from '../../changelog-renderer';
+import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
 import { readJsonFile } from '../utils/fileutils';
 import { PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -109,7 +109,7 @@ export interface NxReleaseChangelogConfiguration {
    * A path to a valid changelog renderer function used to transform commit messages and other metadata into
    * the final changelog (usually in markdown format). Its output can be modified using the optional `renderOptions`.
    *
-   * By default, the renderer is set to "nx/changelog-renderer" which nx provides out of the box.
+   * By default, the renderer is set to "nx/release/changelog-renderer" which nx provides out of the box.
    */
   renderer?: string;
   renderOptions?: ChangelogRenderOptions;

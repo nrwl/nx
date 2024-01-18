@@ -1,7 +1,7 @@
-import type { GitCommit } from '../src/command-line/release/utils/git';
+import type { GitCommit } from '../../src/command-line/release/utils/git';
 import defaultChangelogRenderer from './index';
 
-jest.mock('../src/project-graph/file-map-utils', () => ({
+jest.mock('../../src/project-graph/file-map-utils', () => ({
   createFileMapUsingProjectGraph: jest.fn().mockImplementation(() => {
     return Promise.resolve({
       allWorkspaceFiles: [],
