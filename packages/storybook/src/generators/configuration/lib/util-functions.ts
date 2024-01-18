@@ -481,45 +481,53 @@ export function addStorybookToNamedInputs(tree: Tree) {
       }
     }
 
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['build-storybook'] ??= {};
-    nxJson.targetDefaults['build-storybook'].inputs ??= [
-      'default',
-      hasProductionFileset ? '^production' : '^default',
-    ];
-
-    if (
-      !nxJson.targetDefaults['build-storybook'].inputs.includes(
-        '{projectRoot}/.storybook/**/*'
-      )
-    ) {
-      nxJson.targetDefaults['build-storybook'].inputs.push(
-        '{projectRoot}/.storybook/**/*'
-      );
-    }
-
-    // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
-    // because we want to rebuild Storybook if the .storybook folder changes
-    const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
-      '!{projectRoot}/.storybook/**/*'
-    );
-
-    if (index !== -1) {
-      nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
-    }
-
-    if (
-      !nxJson.targetDefaults['build-storybook'].inputs.includes(
-        '{projectRoot}/tsconfig.storybook.json'
-      )
-    ) {
-      nxJson.targetDefaults['build-storybook'].inputs.push(
-        '{projectRoot}/tsconfig.storybook.json'
-      );
-    }
-
     updateNxJson(tree, nxJson);
   }
+}
+
+export function addStorybookToTargetDefaults(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['build-storybook'] ??= {};
+  nxJson.targetDefaults['build-storybook'].inputs ??= [
+    'default',
+    nxJson.namedInputs && 'production' in nxJson.namedInputs
+      ? '^production'
+      : '^default',
+  ];
+
+  if (
+    !nxJson.targetDefaults['build-storybook'].inputs.includes(
+      '{projectRoot}/.storybook/**/*'
+    )
+  ) {
+    nxJson.targetDefaults['build-storybook'].inputs.push(
+      '{projectRoot}/.storybook/**/*'
+    );
+  }
+
+  // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
+  // because we want to rebuild Storybook if the .storybook folder changes
+  const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
+    '!{projectRoot}/.storybook/**/*'
+  );
+
+  if (index !== -1) {
+    nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
+  }
+
+  if (
+    !nxJson.targetDefaults['build-storybook'].inputs.includes(
+      '{projectRoot}/tsconfig.storybook.json'
+    )
+  ) {
+    nxJson.targetDefaults['build-storybook'].inputs.push(
+      '{projectRoot}/tsconfig.storybook.json'
+    );
+  }
+
+  updateNxJson(tree, nxJson);
 }
 
 export function createProjectStorybookDir(
@@ -536,7 +544,9 @@ export function createProjectStorybookDir(
   isNextJs?: boolean,
   usesSwc?: boolean,
   usesVite?: boolean,
-  viteConfigFilePath?: string
+  viteConfigFilePath?: string,
+  hasPlugin?: boolean,
+  viteConfigFileName?: string
 ) {
   let projectDirectory =
     projectType === 'application'
@@ -579,6 +589,8 @@ export function createProjectStorybookDir(
     usesVite,
     isRootProject: projectIsRootProjectInStandaloneWorkspace,
     viteConfigFilePath,
+    hasPlugin,
+    viteConfigFileName,
   });
 
   if (js) {
@@ -699,13 +711,19 @@ export async function getE2EProjectName(
 export function findViteConfig(
   tree: Tree,
   projectRoot: string
-): string | undefined {
+): {
+  fullConfigPath: string | undefined;
+  viteConfigFileName: string | undefined;
+} {
   const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
 
   for (const ext of allowsExt) {
     const viteConfigPath = joinPathFragments(projectRoot, `vite.config.${ext}`);
     if (tree.exists(viteConfigPath)) {
-      return viteConfigPath;
+      return {
+        fullConfigPath: viteConfigPath,
+        viteConfigFileName: `vite.config.${ext}`,
+      };
     }
   }
 }

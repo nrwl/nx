@@ -2,7 +2,7 @@ import * as chalk from 'chalk';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { valid } from 'semver';
 import { dirSync } from 'tmp';
-import type { ChangelogRenderer } from '../../../changelog-renderer';
+import type { ChangelogRenderer } from '../../../release/changelog-renderer';
 import { readNxJson } from '../../config/nx-json';
 import {
   ProjectGraph,

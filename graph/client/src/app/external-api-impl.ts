@@ -81,6 +81,25 @@ export class ExternalApiImpl extends ExternalApi {
     }
   }
 
+  async openProjectDetails(projectName: string, targetName?: string) {
+    await this.router.navigate(
+      `/project-details/${encodeURIComponent(projectName)}`
+    );
+    if (targetName) {
+      this.focusTargetInProjectDetails(targetName);
+    }
+  }
+
+  focusTargetInProjectDetails(targetName: string) {
+    const currentLocation = this.router.state.location;
+
+    const searchParams = new URLSearchParams(currentLocation.search);
+    searchParams.set('expanded', targetName);
+
+    const newUrl = `${currentLocation.pathname}?${searchParams.toString()}`;
+    this.router.navigate(newUrl);
+  }
+
   focusProject(projectName: string) {
     this.router.navigate(`/projects/${encodeURIComponent(projectName)}`);
   }

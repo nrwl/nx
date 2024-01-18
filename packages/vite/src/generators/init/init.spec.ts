@@ -18,7 +18,7 @@ describe('@nx/vite:init', () => {
   });
 
   describe('dependencies for package.json', () => {
-    it('should add vite packages and react-related dependencies for vite', async () => {
+    it('should add required packages', async () => {
       const existing = 'existing';
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
@@ -26,42 +26,7 @@ describe('@nx/vite:init', () => {
         { '@nx/vite': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
-      await initGenerator(tree, {
-        uiFramework: 'react',
-      });
-      const packageJson = readJson(tree, 'package.json');
-
-      expect(packageJson).toMatchSnapshot();
-    });
-
-    it('should support --testEnvironment=jsdom', async () => {
-      await initGenerator(tree, {
-        testEnvironment: 'jsdom',
-        uiFramework: 'none',
-      });
-
-      const packageJson = readJson(tree, 'package.json');
-
-      expect(packageJson).toMatchSnapshot();
-    });
-
-    it('should support --testEnvironment=happy-dom', async () => {
-      await initGenerator(tree, {
-        testEnvironment: 'happy-dom',
-        uiFramework: 'none',
-      });
-
-      const packageJson = readJson(tree, 'package.json');
-
-      expect(packageJson).toMatchSnapshot();
-    });
-
-    it('should support --testEnvironment=edge-runtime', async () => {
-      await initGenerator(tree, {
-        testEnvironment: 'edge-runtime',
-        uiFramework: 'none',
-      });
-
+      await initGenerator(tree, {});
       const packageJson = readJson(tree, 'package.json');
 
       expect(packageJson).toMatchSnapshot();
@@ -76,7 +41,7 @@ describe('@nx/vite:init', () => {
         return json;
       });
 
-      await initGenerator(tree, { uiFramework: 'react' });
+      await initGenerator(tree, {});
 
       const productionNamedInputs = readJson(tree, 'nx.json').namedInputs
         .production;

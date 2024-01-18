@@ -39,7 +39,7 @@ We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#inst
 ✔ Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts. · build
 
 ✔ Does the "build" script create any outputs? If not, leave blank, otherwise provide a path (e.g. dist, lib, build, coverage) · dist
-✔ Enable remote caching to make your CI faster · No
+✔ Would you like remote caching to make your build faster? · Yes
 
  >  NX   📦 Installing dependencies
 

@@ -1,4 +1,5 @@
 pub mod cache;
+pub mod command;
 pub mod glob;
 pub mod hasher;
 mod logger;

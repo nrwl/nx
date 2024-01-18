@@ -1,70 +1,35 @@
 import {
   addDependenciesToPackageJson,
-  logger,
-  readJson,
+  installPackagesTask,
   readNxJson,
   Tree,
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-
-import {
-  edgeRuntimeVmVersion,
-  happyDomVersion,
-  jsdomVersion,
-  nxVersion,
-  vitePluginDtsVersion,
-  vitePluginReactSwcVersion,
-  vitePluginReactVersion,
-  vitestVersion,
-  viteVersion,
-} from '../../../utils/versions';
+import { nxVersion, vitestVersion, viteVersion } from '../../../utils/versions';
 import { InitGeneratorSchema } from '../schema';
 
 export function checkDependenciesInstalled(
   host: Tree,
   schema: InitGeneratorSchema
 ) {
-  const packageJson = readJson(host, 'package.json');
-  const devDependencies = {};
-  const dependencies = {};
-  packageJson.dependencies = packageJson.dependencies || {};
-  packageJson.devDependencies = packageJson.devDependencies || {};
-
-  // base deps
-  devDependencies['@nx/vite'] = nxVersion;
-  devDependencies['vite'] = viteVersion;
-  devDependencies['vitest'] = vitestVersion;
-  devDependencies['@vitest/ui'] = vitestVersion;
-
-  if (schema.testEnvironment === 'jsdom') {
-    devDependencies['jsdom'] = jsdomVersion;
-  } else if (schema.testEnvironment === 'happy-dom') {
-    devDependencies['happy-dom'] = happyDomVersion;
-  } else if (schema.testEnvironment === 'edge-runtime') {
-    devDependencies['@edge-runtime/vm'] = edgeRuntimeVmVersion;
-  } else if (schema.testEnvironment !== 'node' && schema.testEnvironment) {
-    logger.info(
-      `A custom environment was provided: ${schema.testEnvironment}. You need to install it manually.`
-    );
-  }
-
-  if (schema.uiFramework === 'react') {
-    if (schema.compiler === 'swc') {
-      devDependencies['@vitejs/plugin-react-swc'] = vitePluginReactSwcVersion;
-    } else {
-      devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
-    }
-  }
-
-  if (schema.includeLib) {
-    devDependencies['vite-plugin-dts'] = vitePluginDtsVersion;
-  }
-
-  return addDependenciesToPackageJson(host, dependencies, devDependencies);
+  return addDependenciesToPackageJson(
+    host,
+    {},
+    {
+      '@nx/vite': nxVersion,
+      '@nx/web': nxVersion,
+      vite: viteVersion,
+      vitest: vitestVersion,
+      '@vitest/ui': vitestVersion,
+    },
+    undefined,
+    schema.keepExistingVersions
+  );
 }
 
 export function moveToDevDependencies(tree: Tree) {
+  let wasUpdated = false;
   updateJson(tree, 'package.json', (packageJson) => {
     packageJson.dependencies = packageJson.dependencies || {};
     packageJson.devDependencies = packageJson.devDependencies || {};
@@ -73,9 +38,12 @@ export function moveToDevDependencies(tree: Tree) {
       packageJson.devDependencies['@nx/vite'] =
         packageJson.dependencies['@nx/vite'];
       delete packageJson.dependencies['@nx/vite'];
+      wasUpdated = true;
     }
     return packageJson;
   });
+
+  return wasUpdated ? () => installPackagesTask(tree) : () => {};
 }
 
 export function createVitestConfig(tree: Tree) {

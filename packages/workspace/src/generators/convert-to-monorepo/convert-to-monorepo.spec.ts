@@ -111,6 +111,7 @@ describe('monorepo generator', () => {
       unitTestRunner: 'jest',
       e2eTestRunner: 'none',
       appDir: true,
+      src: true,
       linter: 'eslint',
       rootProject: true,
     });
@@ -121,7 +122,7 @@ describe('monorepo generator', () => {
     expect(readProjectConfiguration(tree, 'demo')).toMatchObject({
       sourceRoot: 'apps/demo',
     });
-    expect(tree.read('apps/demo/app/page.tsx', 'utf-8')).toContain('demo');
+    expect(tree.read('apps/demo/src/app/page.tsx', 'utf-8')).toContain('demo');
     expect(readProjectConfiguration(tree, 'util')).toMatchObject({
       sourceRoot: 'libs/util/src',
     });
@@ -129,6 +130,6 @@ describe('monorepo generator', () => {
 
     // Extracted base config files
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
-    expect(tree.exists('jest.config.ts')).toBeTruthy();
+    expect(tree.exists('jest.preset.js')).toBeTruthy();
   });
 });

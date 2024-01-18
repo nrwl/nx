@@ -15,7 +15,7 @@ Run the following command with the options listed to create an empty workspace.
 ✔ Where would you like to create your workspace? · myorg
 ✔ Which stack do you want to use? · none
 ✔ Package-based or integrated? · integrated
-✔ Enable remote caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 ```
 
 {% card title="Opting into Nx Cloud" description="You will also be prompted whether to add Nx Cloud to your workspace. We won't address this in this recipe, but you can see the introduction to Nx Cloud for more details." url="/ci/intro/ci-with-nx" /%}

@@ -40,7 +40,7 @@ Create a new Angular application with the following command:
 ✔ Default stylesheet format · css
 ✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
 ✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Enable remote caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 ```
 
 You get asked a few questions that help Nx preconfigure your new Angular application. These include
