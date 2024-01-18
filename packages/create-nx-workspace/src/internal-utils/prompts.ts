@@ -23,30 +23,29 @@ export async function determineNxCloud(
 }
 
 async function nxCloudPrompt(key: MessageKey): Promise<NxCloud> {
-  const { message, choices, initial, fallback } = messages.getPrompt(key);
+  const { message, choices, initial, fallback, footer, hint } =
+    messages.getPrompt(key);
 
-  return enquirer
-    .prompt<{ NxCloud: NxCloud }>([
-      {
-        name: 'NxCloud',
-        message,
-        type: 'autocomplete',
-        choices,
-        initial,
-        footer() {
-          return chalk.dim`\nRead more about remote cache at https://nx.dev/ci/features/remote-cache`;
-        },
-        hint() {
-          return chalk.dim`\n(it's free and can be disabled any time)`;
-        },
-      } as any, // types in enquirer are not up to date,
-    ])
-    .then((a) => {
-      if (fallback && a.NxCloud === fallback.value) {
-        return nxCloudPrompt(fallback.key);
-      }
-      return a.NxCloud;
-    });
+  const promptConfig = {
+    name: 'NxCloud',
+    message,
+    type: 'autocomplete',
+    choices,
+    initial,
+  } as any; // meeroslav: types in enquirer are not up to date
+  if (footer) {
+    promptConfig.footer = () => chalk.dim(footer);
+  }
+  if (hint) {
+    promptConfig.hint = () => chalk.dim(hint);
+  }
+
+  return enquirer.prompt<{ NxCloud: NxCloud }>([promptConfig]).then((a) => {
+    if (fallback && a.NxCloud === fallback.value) {
+      return nxCloudPrompt(fallback.key);
+    }
+    return a.NxCloud;
+  });
 }
 
 export async function determineDefaultBase(

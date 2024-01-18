@@ -12,6 +12,27 @@ const messageOptions = {
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
       ],
+      footer:
+        '\nRead more about remote cache at https://nx.dev/ci/features/remote-cache',
+      hint: `\n(it's free and can be disabled any time)`,
+    },
+  ],
+  setupViewLogs: [
+    {
+      code: 'connect-to-view-logs',
+      message: `To view the logs, Nx needs to connect your workspace to Nx Cloud and upload the most recent run details`,
+      initial: 'yes',
+      choices: [
+        {
+          value: 'yes',
+          name: 'Yes',
+          hint: 'Connect to Nx Cloud and upload the run details',
+        },
+        { value: 'skip', name: 'No' },
+      ],
+      footer:
+        '\nRead more about remote cache at https://nx.dev/ci/features/remote-cache',
+      hint: `\n(it's free and can be disabled any time)`,
     },
   ],
 } as const;

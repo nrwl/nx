@@ -14,6 +14,9 @@ const messageOptions = {
         { value: 'circleci', name: 'Yes, configure Nx Cloud for Circle CI' },
         { value: 'skip', name: 'Skip for now' },
       ],
+      footer:
+        '\nRead more about remote cache at https://nx.dev/ci/features/remote-cache',
+      hint: `\n(it's free and can be disabled any time)`,
       fallback: undefined,
     },
     {
@@ -25,6 +28,9 @@ const messageOptions = {
         { value: 'circleci', name: 'Yes, for CircleCI with Nx Cloud' },
         { value: 'skip', name: 'Skip for now' },
       ],
+      footer:
+        '\nRead more about CI benefits with Nx at https://nx.dev/ci/intro/ci-with-nx',
+      hint: `\n(it's free and can be disabled any time)`,
       fallback: { value: 'skip', key: 'setupNxCloud' },
     },
   ],
@@ -37,6 +43,9 @@ const messageOptions = {
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
       ],
+      footer:
+        '\nRead more about remote caching at https://nx.dev/ci/features/remote-cache',
+      hint: `\n(it's free and can be disabled any time)`,
       fallback: undefined,
     },
   ],

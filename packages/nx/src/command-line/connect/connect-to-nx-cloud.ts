@@ -75,7 +75,7 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
 }
 
 export async function connectToNxCloudWithPrompt(command: string) {
-  const setNxCloud = await nxCloudPrompt();
+  const setNxCloud = await nxCloudPrompt('setupNxCloud');
   const useCloud = setNxCloud ? await connectToNxCloudCommand() : false;
   await recordStat({
     command,
@@ -85,31 +85,31 @@ export async function connectToNxCloudWithPrompt(command: string) {
   });
 }
 
-export async function connectExistingRepoToNxCloudPrompt(): Promise<boolean> {
-  return nxCloudPrompt().then((value: MessageOptionKey) => value === 'yes');
+export async function connectExistingRepoToNxCloudPrompt(
+  key: MessageKey = 'setupNxCloud'
+): Promise<boolean> {
+  return nxCloudPrompt(key).then((value: MessageOptionKey) => value === 'yes');
 }
 
-async function nxCloudPrompt(): Promise<MessageOptionKey> {
-  const { message, choices, initial } = messages.getPrompt('setupNxCloud');
+async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
+  const { message, choices, initial, footer, hint } = messages.getPrompt(key);
 
-  return await (
-    await import('enquirer')
-  )
-    .prompt<{ NxCloud: MessageOptionKey }>([
-      {
-        name: 'NxCloud',
-        message,
-        type: 'autocomplete',
-        choices,
-        initial,
-        footer() {
-          return chalk.dim`\nRead more about remote cache at https://nx.dev/ci/features/remote-cache`;
-        },
-        hint() {
-          return chalk.dim`\n(it's free and can be disabled any time)`;
-        },
-      } as any, // meeroslav: types in enquirer are not up to date,
-    ])
+  const promptConfig = {
+    name: 'NxCloud',
+    message,
+    type: 'autocomplete',
+    choices,
+    initial,
+  } as any; // meeroslav: types in enquirer are not up to date
+  if (footer) {
+    promptConfig.footer = () => chalk.dim(footer);
+  }
+  if (hint) {
+    promptConfig.hint = () => chalk.dim(hint);
+  }
+
+  return await (await import('enquirer'))
+    .prompt<{ NxCloud: MessageOptionKey }>([promptConfig])
     .then((a) => {
       return a.NxCloud;
     });
