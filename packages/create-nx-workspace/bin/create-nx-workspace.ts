@@ -47,6 +47,7 @@ interface ReactArguments extends BaseArguments {
   style: string;
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
+  nextSrcDir: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
@@ -160,6 +161,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           })
           .option('nextAppDir', {
             describe: chalk.dim`Enable the App Router for Next.js`,
+            type: 'boolean',
+          })
+          .option('nextSrcDir', {
+            describe: chalk.dim`Generate a 'src/' directory for Next.js`,
             type: 'boolean',
           })
           .option('e2eTestRunner', {
@@ -510,6 +515,7 @@ async function determineReactOptions(
   let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let nextAppDir = false;
+  let nextSrcDir = false;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
     preset = parsedArgs.preset;
@@ -561,6 +567,7 @@ async function determineReactOptions(
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
     nextAppDir = await determineNextAppDir(parsedArgs);
+    nextSrcDir = await determineNextSrcDir(parsedArgs);
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
 
@@ -612,7 +619,15 @@ async function determineReactOptions(
     style = reply.style;
   }
 
-  return { preset, style, appName, bundler, nextAppDir, e2eTestRunner };
+  return {
+    preset,
+    style,
+    appName,
+    bundler,
+    nextAppDir,
+    nextSrcDir,
+    e2eTestRunner,
+  };
 }
 
 async function determineVueOptions(
@@ -1062,6 +1077,29 @@ async function determineNextAppDir(
     },
   ]);
   return reply.nextAppDir === 'Yes';
+}
+
+async function determineNextSrcDir(
+  parsedArgs: yargs.Arguments<ReactArguments>
+): Promise<boolean> {
+  if (parsedArgs.nextSrcDir !== undefined) return parsedArgs.nextSrcDir;
+  const reply = await enquirer.prompt<{ nextSrcDir: 'Yes' | 'No' }>([
+    {
+      name: 'nextSrcDir',
+      message: 'Would you like to use the src/ directory?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 'Yes' as any,
+    },
+  ]);
+  return reply.nextSrcDir === 'Yes';
 }
 
 async function determineVueFramework(

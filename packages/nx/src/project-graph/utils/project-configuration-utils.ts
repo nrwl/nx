@@ -7,9 +7,11 @@ import {
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
 import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
+import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
 
 import minimatch = require('minimatch');
+import { join } from 'path';
 
 export type SourceInformation = [string, string];
 export type ConfigurationSourceMaps = Record<
@@ -287,6 +289,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       Object.assign(externalNodes, pluginExternalNodes);
     }
 
+    const projects = readProjectConfigurationsFromRootMap(projectRootMap);
     const rootMap = createRootMap(projectRootMap);
 
     performance.mark('createNodes:merge - end');
@@ -297,7 +300,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     );
 
     return {
-      projects: readProjectConfigurationsFromRootMap(projectRootMap),
+      projects,
       externalNodes,
       rootMap,
       sourceMaps: configurationSourceMaps,
@@ -316,8 +319,14 @@ export function readProjectConfigurationsFromRootMap(
 
   for (const [root, configuration] of projectRootMap.entries()) {
     if (!configuration.name) {
-      throw new Error(`Project at ${root} has no name provided.`);
-    } else if (configuration.name in projects) {
+      try {
+        const { name } = readJsonFile(join(root, 'package.json'));
+        configuration.name = name;
+      } catch {
+        throw new Error(`Project at ${root} has no name provided.`);
+      }
+    }
+    if (configuration.name in projects) {
       let rootErrors = errors.get(configuration.name) ?? [
         projects[configuration.name].root,
       ];

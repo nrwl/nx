@@ -1,4 +1,9 @@
-import { execSync, ExecSyncOptions } from 'child_process';
+import {
+  exec,
+  execSync,
+  type ExecOptions,
+  type ExecSyncOptions,
+} from 'child_process';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
 import { getPackageManagerCommand } from './package-manager';
@@ -26,6 +31,49 @@ export function runNxSync(
     }
   }
   execSync(`${baseCmd} ${cmd}`, options);
+}
+
+export async function runNxAsync(
+  cmd: string,
+  options?: ExecOptions & { cwd?: string; silent?: boolean }
+) {
+  let baseCmd: string;
+  if (existsSync(join(workspaceRoot, 'package.json'))) {
+    baseCmd = `${getPackageManagerCommand().exec} nx`;
+  } else {
+    options ??= {};
+    options.cwd ??= process.cwd();
+    const offsetFromRoot = relative(
+      options.cwd,
+      workspaceRootInner(options.cwd, null)
+    );
+    if (process.platform === 'win32') {
+      baseCmd = '.\\' + join(`${offsetFromRoot}`, 'nx.bat');
+    } else {
+      baseCmd = './' + join(`${offsetFromRoot}`, 'nx');
+    }
+  }
+  const silent = options?.silent ?? true;
+  if (options?.silent) {
+    delete options.silent;
+  }
+  await new Promise((resolve, reject) => {
+    const child = exec(
+      `${baseCmd} ${cmd}`,
+      options,
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(stdout);
+        }
+      }
+    );
+    if (!silent) {
+      child.stdout?.pipe(process.stdout);
+      child.stderr?.pipe(process.stderr);
+    }
+  });
 }
 
 export class PseudoTtyProcess {

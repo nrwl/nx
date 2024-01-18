@@ -32,7 +32,7 @@ jobs:
       - uses: pnpm/action-setup@v2
         name: Install pnpm
         with:
-          version: 8.7.4
+          version: 8
           run_install: false
 
       - name: Set node

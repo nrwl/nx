@@ -14,7 +14,7 @@ import {
   useEnvironmentConfig,
   useRouteConstructor,
 } from '@nx/graph/shared';
-import { Fence } from '@nx/shared-ui-fence';
+import { JsonCodeBlock } from '@nx/graph/ui-code-block';
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { FadingCollapsible } from './ui/fading-collapsible.component';
@@ -120,72 +120,49 @@ export function Target({
       : true);
 
   return (
-    <div className="ml-3 mb-3 rounded-md border border-slate-500 relative overflow-hidden">
-      {/* header */}
-      <div className="group hover:bg-slate-800 px-2 cursor-pointer ">
-        <h3
-          className="text-lg font-bold flex items-center gap-2"
-          onClick={toggleCollapsed}
-        >
-          {targetName}{' '}
-          <h4 className="text-sm text-slate-600">
-            {targetConfiguration?.command ??
-              targetConfiguration.options?.command ??
-              targetConfiguration.executor}
-          </h4>
-          <span
-            className={
-              collapsed ? 'hidden group-hover:inline-flex' : 'inline-flex'
-            }
-          >
-            <span
-              className={`inline-flex justify-center rounded-md p-1 hover:bg-slate-100 hover:dark:bg-slate-700 
-            }`}
-            >
-              <EyeIcon
-                className="h-4 w-4"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  viewInTaskGraph();
-                }}
-              ></EyeIcon>
-            </span>
-            {environment === 'nx-console' && (
-              <span
-                className={`inline-flex justify-center rounded-md p-1 hover:bg-slate-100 hover:dark:bg-slate-700 
-              }`}
-              >
-                <PlayIcon
-                  className="h-4 w-4"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    runTarget();
-                  }}
-                />
-              </span>
-            )}
+    <div className="rounded-md border border-slate-500 relative overflow-hidden">
+      <header
+        className={`flex space-between group hover:bg-slate-200 dark:hover:bg-slate-800 p-2 cursor-pointer items-center ${
+          !collapsed
+            ? 'bg-slate-200 dark:bg-slate-800 border-b-2 border-slate-900/10 dark:border-slate-300/10 '
+            : ''
+        }`}
+        onClick={toggleCollapsed}
+      >
+        <h3 className="font-bold mr-2">{targetName}</h3>
+        <p className="text-slate-600 mr-2">
+          {targetConfiguration?.command ??
+            targetConfiguration.options?.command ??
+            targetConfiguration.executor}
+        </p>
+        {targetConfiguration.cache && (
+          <span className="rounded-full inline-block text-xs bg-sky-500 px-2 text-slate-50">
+            Cacheable
           </span>
-          {targetConfiguration.cache && (
-            <span className="rounded-full inline-block text-xs bg-sky-500 px-2 text-slate-50 ml-auto mr-6">
-              Cacheable
-            </span>
+        )}
+        <span className="flex items-center ml-auto">
+          <EyeIcon
+            className="h-4 w-4 mr-2 hidden group-hover:inline-block"
+            title="View in Task Graph"
+            onClick={viewInTaskGraph}
+          ></EyeIcon>
+          {environment === 'nx-console' && (
+            <PlayIcon className="h-5 w-5" onClick={runTarget} />
           )}
-        </h3>
-        <div className="absolute top-2 right-3" onClick={toggleCollapsed}>
           {collapsed ? (
-            <ChevronUpIcon className="h-3 w-3" />
-          ) : (
             <ChevronDownIcon className="h-3 w-3" />
+          ) : (
+            <ChevronUpIcon className="h-3 w-3" />
           )}
-        </div>
-      </div>
+        </span>
+      </header>
       {/* body */}
       {!collapsed && (
-        <div className="pl-5 text-base pb-6 pt-2 ">
+        <div className="p-4 text-base">
           {targetConfiguration.inputs && (
             <>
               <h4 className="font-bold">Inputs</h4>
-              <ul className="list-disc pl-5">
+              <ul className="list-disc pl-5 mb-4">
                 {targetConfiguration.inputs.map((input) => (
                   <li> {input.toString()} </li>
                 ))}
@@ -194,8 +171,8 @@ export function Target({
           )}
           {targetConfiguration.outputs && (
             <>
-              <h4 className="font-bold pt-2">Outputs</h4>
-              <ul className="list-disc pl-5">
+              <h4 className="font-bold">Outputs</h4>
+              <ul className="list-disc pl-5 mb-4">
                 {targetConfiguration.outputs?.map((output) => (
                   <li> {output.toString()} </li>
                 )) ?? <span>no outputs</span>}
@@ -204,8 +181,8 @@ export function Target({
           )}
           {targetConfiguration.dependsOn && (
             <>
-              <h4 className="font-bold py-2">Depends On</h4>
-              <ul className="list-disc pl-5">
+              <h4 className="font-bold">Depends On</h4>
+              <ul className="list-disc pl-5 mb-4">
                 {targetConfiguration.dependsOn.map((dep) => (
                   <li> {dep.toString()} </li>
                 ))}
@@ -214,20 +191,14 @@ export function Target({
           )}
           {shouldRenderOptions ? (
             <>
-              <h4 className="font-bold py-2">Options</h4>
-              <FadingCollapsible>
-                <Fence
-                  language="json"
-                  command=""
-                  path=""
-                  fileName=""
-                  highlightLines={[]}
-                  lineGroups={{}}
-                  enableCopy={true}
-                >
-                  {JSON.stringify(targetConfiguration.options, null, 2)}
-                </Fence>
-              </FadingCollapsible>
+              <h4 className="font-bold mb-2">Options</h4>
+              <div className="mb-4">
+                <FadingCollapsible>
+                  <JsonCodeBlock>
+                    {JSON.stringify(targetConfiguration.options, null, 2)}
+                  </JsonCodeBlock>
+                </FadingCollapsible>
+              </div>
             </>
           ) : (
             ''
@@ -246,17 +217,9 @@ export function Target({
                 )}
               </h4>
               <FadingCollapsible>
-                <Fence
-                  language="json"
-                  command=""
-                  path=""
-                  fileName=""
-                  highlightLines={[]}
-                  lineGroups={{}}
-                  enableCopy={true}
-                >
+                <JsonCodeBlock>
                   {JSON.stringify(targetConfiguration.configurations, null, 2)}
-                </Fence>
+                </JsonCodeBlock>
               </FadingCollapsible>
             </>
           ) : (

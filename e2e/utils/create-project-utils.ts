@@ -229,6 +229,7 @@ export function runCreateWorkspace(
     standaloneApi,
     docker,
     nextAppDir,
+    nextSrcDir,
     e2eTestRunner,
     ssr,
     framework,
@@ -247,6 +248,7 @@ export function runCreateWorkspace(
     routing?: boolean;
     docker?: boolean;
     nextAppDir?: boolean;
+    nextSrcDir?: boolean;
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
     ssr?: boolean;
     framework?: string;
@@ -273,6 +275,10 @@ export function runCreateWorkspace(
 
   if (nextAppDir !== undefined) {
     command += ` --nextAppDir=${nextAppDir}`;
+  }
+
+  if (nextSrcDir !== undefined) {
+    command += ` --nextSrcDir=${nextSrcDir}`;
   }
 
   if (docker !== undefined) {

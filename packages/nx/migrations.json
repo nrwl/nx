@@ -82,6 +82,12 @@
       "version": "17.3.0-beta.3",
       "description": "Explicitly opt-out of git operations in nx release",
       "implementation": "./src/migrations/update-17-3-0/nx-release-git-operations-explicit-opt-out"
+    },
+    "17.3.0-update-nx-wrapper": {
+      "cli": "nx",
+      "version": "17.3.0-beta.6",
+      "description": "Updates the nx wrapper.",
+      "implementation": "./src/migrations/update-17-3-0/update-nxw"
     }
   }
 }
