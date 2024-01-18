@@ -1,6 +1,8 @@
 import { GraphService } from '@nx/graph/ui-graph';
-import { getProjectGraphDataService } from '../hooks/get-project-graph-data-service';
-import { getEnvironmentConfig } from '@nx/graph/shared';
+import {
+  getEnvironmentConfig,
+  getProjectGraphDataService,
+} from '@nx/graph/shared';
 import { selectValueByThemeStatic } from '@nx/graph/ui-theme';
 
 let graphService: GraphService;

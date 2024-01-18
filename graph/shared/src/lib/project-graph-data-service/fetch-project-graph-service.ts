@@ -4,8 +4,8 @@ import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
 } from 'nx/src/command-line/graph/graph';
+import { ProjectGraphService } from './get-project-graph-data-service';
 /* eslint-enable @nx/enforce-module-boundaries */
-import { ProjectGraphService } from './interfaces';
 
 export class FetchProjectGraphService implements ProjectGraphService {
   private taskInputsUrl: string;

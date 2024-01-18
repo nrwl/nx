@@ -1,25 +1,58 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphProjectNode } from '@nx/devkit';
-import { Link, useRouteLoaderData } from 'react-router-dom';
+import {
+  Link,
+  ScrollRestoration,
+  useLocation,
+  useNavigate,
+  useParams,
+  useRouteLoaderData,
+} from 'react-router-dom';
 import ProjectDetails from './project-details';
-import { useEnvironmentConfig, useRouteConstructor } from '@nx/graph/shared';
+import {
+  fetchProjectGraph,
+  getProjectGraphDataService,
+  useEnvironmentConfig,
+  useIntervalWhen,
+  useRouteConstructor,
+} from '@nx/graph/shared';
 import { ThemePanel } from '@nx/graph/ui-theme';
 
 export function ProjectDetailsPage() {
-  const { project, sourceMap } = useRouteLoaderData(
+  const { project, sourceMap, hash } = useRouteLoaderData(
     'selectedProjectDetails'
   ) as {
+    hash: string;
     project: ProjectGraphProjectNode;
     sourceMap: Record<string, string[]>;
   };
 
-  const environment = useEnvironmentConfig()?.environment;
+  const { environment, watch, appConfig } = useEnvironmentConfig();
+
+  const projectGraphDataService = getProjectGraphDataService();
+  const params = useParams();
+
+  useIntervalWhen(
+    async () => {
+      fetchProjectGraph(projectGraphDataService, params, appConfig).then(
+        (data) => {
+          if (data?.hash !== hash) {
+            window.location.reload();
+          }
+          return;
+        }
+      );
+    },
+    1000,
+    watch
+  );
 
   const routeConstructor = useRouteConstructor();
 
   return (
     <div className="flex flex-col justify-center w-full text-slate-700 dark:text-slate-400">
+      <ScrollRestoration />
       {environment !== 'nx-console' ? (
         <header className="flex w-full justify-center items-center px-4 py-2 border-b-2 border-slate-900/10 mb-16 dark:border-slate-300/10">
           <div className="flex flex-grow items-center justify-between max-w-6xl">
