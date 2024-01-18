@@ -44,7 +44,7 @@ export function ProjectDetailsPage() {
         }
       );
     },
-    5000,
+    1000,
     watch
   );
 
