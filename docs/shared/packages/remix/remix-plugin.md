@@ -68,41 +68,6 @@ The `@nx/remix/plugin` plugin will create a task for any project that has a Remi
 
 Once a Remix configuration file has been identified, the targets are created with the name you specify under `buildTargetName`, `serveTargetName`, `startTargetName` or `typecheckTargetName` in the `nx.json` `plugins` array. The default names for the inferred tasks are `build`, `serve`, `start` and `typecheck`.
 
-#### Set Inferred Options
-
-The `@nx/remix/plugin` plugin will start with any `targetDefaults` you have set in `nx.json`, and then apply the following properties:
-
-##### For `build`
-
-| Property   | Sample Value                          | Description                                                                                                                   |
-| ---------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `executor` | `@nx/remix:build`                     | Build the project                                                                                                             |
-| `cache`    | `true`                                | Automatically cache the task                                                                                                  |
-| `inputs`   | `production`                          | Break the cache if non-test files in the project change                                                                       |
-| `outputs`  | `["{workspaceRoot}/dist/my-project"]` | The output directory of the build - combining `serverBuildPath` from the Remix configuration file with a workspace-aware path |
-
-##### For `serve`
-
-| Property          | Sample Value                     | Description                                                                      |
-| ----------------- | -------------------------------- | -------------------------------------------------------------------------------- |
-| `executor`        | `@nx/remix:serve`                | Serve the project                                                                |
-| `options.command` | `npx remix-serve build/index.js` | The command for the Remix Dev Server to use when serving the project in dev mode |
-
-##### For `start`
-
-| Property    | Sample Value                     | Description                                                   |
-| ----------- | -------------------------------- | ------------------------------------------------------------- |
-| `command`   | `npx remix-serve build/index.js` | Start the project with the Remix Server                       |
-| `dependsOn` | `["build"]`                      | Ensure the project is built before running the `start` target |
-
-##### For `typecheck`
-
-| Property  | Sample Value | Description                                             |
-| --------- | ------------ | ------------------------------------------------------- |
-| `command` | `tsc`        | Use Typescript to run typechecking on the project       |
-| `cache`   | `true`       | Automatically cache the task                            |
-| `inputs`  | `production` | Break the cache if non-test files in the project change |
-
 #### View and Edit Inferred Tasks
 
 To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line. Nx Console also provides a quick way to override the settings of an inferred task.
