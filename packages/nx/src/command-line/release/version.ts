@@ -58,6 +58,8 @@ export interface ReleaseVersionGeneratorSchema {
   currentVersionResolverMetadata?: Record<string, unknown>;
   fallbackCurrentVersionResolver?: 'disk';
   firstRelease?: boolean;
+  // auto means the existing prefix will be preserved, and is the default behavior
+  versionPrefix?: 'auto' | '' | '~' | '^';
 }
 
 export interface NxReleaseVersionResult {

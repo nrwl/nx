@@ -377,7 +377,7 @@ To fix this you will either need to add a package.json file at that location, or
       versionData[projectName] = {
         currentVersion,
         dependentProjects,
-        newVersion: null, // will stay as null in the final result the case that no changes are detected
+        newVersion: null, // will stay as null in the final result in the case that no changes are detected
       };
 
       if (!specifier) {
@@ -423,8 +423,23 @@ To fix this you will either need to add a package.json file at that location, or
             'package.json'
           ),
           (json) => {
-            json[dependentProject.dependencyCollection][packageName] =
-              newVersion;
+            let versionPrefix = options.versionPrefix || '';
+            // For auto, we infer the prefix based on the current version of the dependent
+            if (versionPrefix === 'auto') {
+              const current =
+                json[dependentProject.dependencyCollection][packageName];
+              if (current) {
+                const prefixMatch = current.match(/^[~^]/);
+                if (prefixMatch) {
+                  versionPrefix = prefixMatch[0];
+                } else {
+                  versionPrefix = '';
+                }
+              }
+            }
+            json[dependentProject.dependencyCollection][
+              packageName
+            ] = `${versionPrefix}${newVersion}`;
             return json;
           }
         );
