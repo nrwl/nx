@@ -25,6 +25,7 @@ import {
   useDismiss,
   useHover,
   useRole,
+  safePolygon,
 } from '@floating-ui/react';
 
 export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
@@ -92,7 +93,10 @@ export function Tooltip({
     outsidePress: true,
     outsidePressEvent: 'mousedown',
   });
-  const hover = useHover(context, { enabled: openAction === 'hover' });
+  const hover = useHover(context, {
+    enabled: openAction === 'hover',
+    handleClose: safePolygon({ restMs: 5 }),
+  });
   const role = useRole(context, { role: 'tooltip' });
 
   const { getReferenceProps, getFloatingProps } = useInteractions([
