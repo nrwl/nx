@@ -44,6 +44,50 @@ pnpm add -D @nx/remix
 {% /tab %}
 {% /tabs %}
 
+### Enabled Inferred Tasks
+
+{% callout type="note" title="Inferred Tasks" %}
+In Nx version 17.3, the `@nx/remix` plugin can create [inferred tasks](/concepts/inferred-tasks) for projects that have a Remix configuration file present. This means you can run `nx build my-project`, `nx serve my-project`, `nx start my-project` or `nx typecheck my-project` for that project, even if there are no `build`, `serve`, `start` or `typecheck` tasks defined in `package.json` or `project.json`.
+{% /callout %}
+
+#### Setup
+
+To enable inferred tasks, add `@nx/remix/plugin` to the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/remix/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "startTargetName": "start",
+        "typecheckTargetName": "typecheck"
+      }
+    }
+  ]
+}
+```
+
+### Task Inference Process
+
+#### Identify Valid Projects
+
+The `@nx/remix/plugin` plugin will create a task for any project that has a Remix configuration file present. Any of the following files will be recognized as a Remix configuration file:
+
+- `remix.config.js`
+- `remix.config.mjs`
+- `remix.config.cjs`
+
+#### Name the Inferred Task
+
+Once a Remix configuration file has been identified, the targets are created with the name you specify under `buildTargetName`, `serveTargetName`, `startTargetName` or `typecheckTargetName` in the `nx.json` `plugins` array. The default names for the inferred tasks are `build`, `serve`, `start` and `typecheck`.
+
+#### View and Edit Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line. Nx Console also provides a quick way to override the settings of an inferred task.
+
 ## Using the Remix Plugin
 
 ## Generate a Remix Application
