@@ -525,6 +525,10 @@
           "type": "string",
           "description": "Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes"
         },
+        "stageChanges": {
+          "type": "boolean",
+          "description": "Whether or not to stage the changes made by this command. Assumed to be true if commit is true."
+        },
         "tag": {
           "type": "boolean",
           "description": "Whether or not to automatically tag the changes made by this command"
