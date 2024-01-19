@@ -10,7 +10,7 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
 use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
-use termion::{terminal_size, raw::IntoRawMode};
+use crossterm::terminal::{self, enable_raw_mode, disable_raw_mode};
 
 fn command_builder() -> CommandBuilder {
     if cfg!(target_os = "windows") {
@@ -127,9 +127,9 @@ pub fn run_command(
 
     let pty_system = NativePtySystem::default();
 
-    let (w, h) = terminal_size().unwrap_or((80, 24));
+    let (w, h) = terminal::size().unwrap_or((80, 24));
     let pair = pty_system.openpty(PtySize {
-        rows: h,
+        rows: r,
         cols: w,
         pixel_width: 0,
         pixel_height: 0,
@@ -188,12 +188,10 @@ pub fn run_command(
 
     let mut writer = pair.master.take_writer()?;
     
-    let raw_terminal = std::io::stdout().into_raw_mode().expect("Failed to convert stdout to raw mode.");
-
     // Stdin -> pty stdin
     std::thread::spawn(move || {
         let mut stdin = std::io::stdin();
-
+        enable_raw_mode().expect("Failed to enter raw terminal mode");
         std::io::copy(&mut stdin, &mut writer).expect("Failed to pass input to pty.");
     });
 
@@ -201,7 +199,7 @@ pub fn run_command(
         let exit = child.wait().unwrap();
         // make sure that master is only dropped after we wait on the child. Otherwise windows does not like it
         drop(pair.master);
-        drop(raw_terminal);
+        disable_raw_mode().expect("Failed to restore non-raw terminal");
         exit_tx.send(exit.exit_code()).ok();
     });
 
