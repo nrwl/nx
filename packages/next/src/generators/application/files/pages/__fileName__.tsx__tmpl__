@@ -25,6 +25,6 @@ export function Index() {
       <%- appContent %>
     </<%= wrapper %>>
   );
-};
+}
 
 export default Index;
