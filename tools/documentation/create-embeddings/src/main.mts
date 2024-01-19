@@ -608,54 +608,28 @@ export async function generateEmbeddingsForNxAPI(supabaseClient) {
     try {
       const { checksum, contents } = await embeddingSource.load();
 
-      // Check for existing page in DB and compare checksums
-      const { error: fetchPageError, data: existingPage } = await supabaseClient
-        .from('nx_api_docs')
-        .select('id, path, checksum')
-        .filter('path', 'eq', path)
-        .limit(1)
-        .maybeSingle();
+      // OpenAI processing for embeddings
+      const input = contents.replace(/\n/g, ' ');
+      const openai = new OpenAI({ apiKey: process.env.NX_OPENAI_KEY });
+      const embeddingResponse = await openai.embeddings.create({
+        model: 'text-embedding-ada-002',
+        input,
+      });
 
-      if (fetchPageError) {
-        throw fetchPageError;
-      }
+      const [responseData] = embeddingResponse.data;
 
-      // We use checksum to determine if this page needs to be regenerated
-      if (!shouldRefresh && existingPage?.checksum === checksum) {
-        continue;
-      }
-
-      if (existingPage) {
-        if (!shouldRefresh) {
-          console.log(
-            `#${index}: [${path}] Docs have changed, removing old pages and their embeddings`
-          );
-        } else {
-          console.log(
-            `#${index}: [${path}] Refresh flag set, removing old pages and their embeddings`
-          );
-        }
-
-        const { error: deletePageError } = await supabaseClient
-          .from('nx_api_docs')
-          .delete()
-          .filter('page_id', 'eq', existingPage.id);
-
-        if (deletePageError) {
-          throw deletePageError;
-        }
-      }
-
-      // Create/update page record. Intentionally clear checksum until we
-      // have successfully generated all pages.
-      const { error: upsertPageError, data: page } = await supabaseClient
+      // Upsert page record with all data including checksum and embedding
+      const { error: upsertPageError } = await supabaseClient
         .from('nx_api_docs')
         .upsert({
-          checksum: null,
-          path,
-          url_partial,
-          type,
-          source,
+          checksum: checksum,
+          path: path,
+          url_partial: url_partial,
+          type: type,
+          source: source,
+          content: contents,
+          token_count: embeddingResponse.usage.total_tokens,
+          embedding: responseData.embedding,
         })
         .select()
         .limit(1)
@@ -669,67 +643,12 @@ export async function generateEmbeddingsForNxAPI(supabaseClient) {
         `${embeddingSources.length - index - 1} pages remaining to process.`
       );
 
-      // OpenAI recommends replacing newlines with spaces for best results (specific to embeddings)
-      const input = contents.replace(/\n/g, ' ');
-
-      try {
-        const openai = new OpenAI({
-          apiKey: process.env.NX_OPENAI_KEY,
-        });
-        const embeddingResponse = await openai.embeddings.create({
-          model: 'text-embedding-ada-002',
-          input,
-        });
-
-        const [responseData] = embeddingResponse.data;
-
-        const { error: insertPageError } = await supabaseClient
-          .from('nx_api_docs')
-          .insert({
-            page_id: page.id,
-            content: contents,
-            url_partial,
-            token_count: embeddingResponse.usage.total_tokens,
-            embedding: responseData.embedding,
-          })
-          .select()
-          .limit(1)
-          .single();
-
-        if (insertPageError) {
-          throw insertPageError;
-        }
-        // Add delay after each request
-        await delay(500); // delay of 0.5 second
-      } catch (err) {
-        // TODO: decide how to better handle failed embeddings
-        console.error(
-          `Failed to generate embeddings for '${path}' page starting with '${input.slice(
-            0,
-            40
-          )}...'`
-        );
-
-        throw err;
-      }
-
-      // Set page checksum so that we know this page was stored successfully
-      const { error: updatePageError } = await supabaseClient
-        .from('nx_api_docs')
-        .update({ checksum })
-        .filter('id', 'eq', page.id);
-
-      if (updatePageError) {
-        throw updatePageError;
-      }
+      // Add delay after each request
+      await delay(500); // delay of 0.5 second
     } catch (err) {
-      console.error(
-        `Page '${path}' has been marked with null checksum to indicate that it needs to be re-generated.`
-      );
-      console.error(err);
+      console.error(`Failed to process '${path}': ${err}`);
     }
   }
-
   console.log('Embedding for Nx API generation complete');
 }
 
