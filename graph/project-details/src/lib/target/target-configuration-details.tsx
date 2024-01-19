@@ -22,7 +22,11 @@ import { FadingCollapsible } from './fading-collapsible';
 import { TargetConfigurationProperty } from './target-configuration-property';
 import { selectSourceInfo } from './target-configuration-details.util';
 import { CopyToClipboard } from './copy-to-clipboard';
-import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
+import {
+  PropertyInfoTooltip,
+  SourcemapInfoToolTip,
+  Tooltip,
+} from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from './ui/tooltip-trigger-text';
 
 /* eslint-disable-next-line */
@@ -217,8 +221,11 @@ export function TargetConfigurationDetails({
         </div>
         {!collapsed && (
           <div className="flex items-center text-sm mt-2">
-            <span className="flex-1">
-              <SourceInfo data={sourceMap[`targets.${targetName}`]} />
+            <span className="flex-1 flex items-center">
+              <SourceInfo
+                data={sourceMap[`targets.${targetName}`]}
+                propertyKey={`targets.${targetName}`}
+              />
             </span>
             <code className="ml-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono px-2 py-1 rounded">
               nx run {projectName}:{targetName}
@@ -310,7 +317,10 @@ export function TargetConfigurationDetails({
                       <TargetConfigurationProperty data={input}>
                         {sourceInfo && (
                           <span className="hidden group-hover/line:inline pl-4">
-                            <SourceInfo data={sourceInfo} />
+                            <SourceInfo
+                              data={sourceInfo}
+                              propertyKey={`targets.${targetName}.inputs`}
+                            />
                           </span>
                         )}
                       </TargetConfigurationProperty>
@@ -354,7 +364,10 @@ export function TargetConfigurationDetails({
                       <TargetConfigurationProperty data={output}>
                         {sourceInfo && (
                           <span className="hidden group-hover/line:inline pl-4">
-                            <SourceInfo data={sourceInfo} />
+                            <SourceInfo
+                              data={sourceInfo}
+                              propertyKey={`targets.${targetName}.outputs`}
+                            />
                           </span>
                         )}
                       </TargetConfigurationProperty>
@@ -397,8 +410,13 @@ export function TargetConfigurationDetails({
                   return (
                     <li className="group/line overflow-hidden whitespace-nowrap">
                       <TargetConfigurationProperty data={dep}>
-                        <span className="hidden group-hover/line:inline pl-4">
-                          {sourceInfo && <SourceInfo data={sourceInfo} />}
+                        <span className="hidden group-hover/line:inline pl-4 h-6">
+                          {sourceInfo && (
+                            <SourceInfo
+                              data={sourceInfo}
+                              propertyKey={`targets.${targetName}.dependsOn`}
+                            />
+                          )}
                         </span>
                       </TargetConfigurationProperty>
                     </li>
@@ -431,7 +449,10 @@ export function TargetConfigurationDetails({
                       );
                       return sourceInfo ? (
                         <span className="pl-4">
-                          <SourceInfo data={sourceInfo} />
+                          <SourceInfo
+                            data={sourceInfo}
+                            propertyKey={`targets.${targetName}.options.${propertyName}`}
+                          />
                         </span>
                       ) : null;
                     }}
@@ -475,7 +496,10 @@ export function TargetConfigurationDetails({
                     );
                     return sourceInfo ? (
                       <span className="pl-4">
-                        <SourceInfo data={sourceInfo} />{' '}
+                        <SourceInfo
+                          data={sourceInfo}
+                          propertyKey={`targets.${targetName}.configurations.${propertyName}`}
+                        />{' '}
                       </span>
                     ) : null;
                   }}

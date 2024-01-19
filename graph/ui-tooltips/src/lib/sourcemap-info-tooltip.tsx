@@ -19,8 +19,8 @@ export function SourcemapInfoToolTip({
     : undefined;
 
   return (
-    <div className="text-sm text-slate-700 dark:text-slate-400">
-      <h4 className="flex justify-between items-center border-b text-base">
+    <div className="text-sm text-slate-700 dark:text-slate-400 max-w-md sm:max-w-full">
+      <h4 className="flex justify-between items-center border-b text-base gap-4">
         <span className="font-mono">{propertyKey}</span>
         <span className="text-sm text-gray-500 italic">Nx Graph Insights</span>
       </h4>
