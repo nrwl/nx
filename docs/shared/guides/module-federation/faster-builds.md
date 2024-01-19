@@ -89,27 +89,60 @@ take advantage of remote caching and other features it provides.
 
 Then, for React users, install the `@nx/react` plugin; and for Angular users, install the `@nx/angular` plugin.
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
 # If you use React
-npm install --save-dev @nx/react
+npm add -D @nx/react
 
 # If you use Angular
-npm install --save-dev @nx/angular
-
-# Or with yarn
-yarn add --dev @nx/react
-yarn add --dev @nx/angular
+npm add -D @nx/angular
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+# If you use React
+yarn add -D @nx/react
+
+# If you use Angular
+yarn add -D @nx/angular
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+# If you use React
+pnpm add -D @nx/react
+
+# If you use Angular
+pnpm add -D @nx/angular
+```
+
+{% /tab %}
+{% /tabs %}
 
 Next, generate the host and remote applications.
 
-```shell
-# React
-nx g @nx/react:host host --remotes=shop,cart,about
+{% tabs %}
+{% tab label="React" %}
 
-# Angular
+```shell
+nx g @nx/react:host host --remotes=shop,cart,about
+```
+
+{% /tab %}
+{% tab label="Angular" %}
+
+```shell
 nx g @nx/angular:host host --remotes=shop,cart,about
 ```
+
+{% /tab %}
+{% /tabs %}
 
 {% callout type="note" title="More details" %}
 You can leave off the `--remotes` option and add them later with `nx g @nx/react:remote shop --host=host`
