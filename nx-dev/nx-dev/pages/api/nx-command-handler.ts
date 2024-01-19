@@ -24,7 +24,7 @@ export default async function handler(request: NextRequest) {
       getSupabaseClient(supabaseUrl, supabaseServiceKey);
 
     const { query } = (await request.json()) as { query: string };
-    console.log('Katerina', request);
+    console.log('Katerina KATERINA', query);
 
     const sanitizedQuery = query.trim();
 
@@ -76,8 +76,14 @@ export default async function handler(request: NextRequest) {
       temperature: 0,
       stream: false,
     });
-    console.log(response);
-    return response;
+    const command = response.choices[0].message?.content?.trim();
+
+    return new Response(command, {
+      status: 200,
+      headers: {
+        'content-type': 'application/json',
+      },
+    });
   } catch (err: unknown) {
     console.error('Error: ', err);
     const errorResponse = extractErrorMessage(err);

@@ -8,6 +8,7 @@ export async function getResponseFromAI(prompt: string) {
         query: prompt,
       }
     );
+    console.log('Katerina KATERINA', response.data);
     return response.data;
   } catch (error) {
     console.error('Error calling Next.js edge function:', error);
