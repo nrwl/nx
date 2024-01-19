@@ -286,6 +286,8 @@
     - [The Building Blocks of Fast CI](/ci/concepts/building-blocks-fast-ci)
     - [Reduce Wasted Time in CI](/ci/concepts/reduce-waste)
     - [Parallelization and Distribution](/ci/concepts/parallelization-distribution)
+    - [Automatically Split E2E Tasks by File](/ci/concepts/split-e2e-tasks)
+    - [Identify and Re-run Flaky Tasks](/ci/concepts/flaky-tasks)
     - [Cache Security](/ci/concepts/cache-security)
   - [Recipes](/ci/recipes)
     - [Set Up CI](/ci/recipes/set-up)
