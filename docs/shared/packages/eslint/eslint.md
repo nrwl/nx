@@ -10,9 +10,25 @@ Make sure to install the `@nx/eslint` version that matches the version of `nx` i
 
 In any Nx workspace, you can install `@nx/eslint` by running the following command:
 
+{% tabs %}
+{% tab label="Nx >18" %}
+
 ```shell
 nx add @nx/eslint
 ```
+
+{% /tab %}
+{% tab label="Nx <=17.3" %}
+
+Install the `@nx/eslint` package with your package manager and then run the `init` generator.
+
+```shell
+npm add -D @nx/eslint
+nx g @nx/eslint:init
+```
+
+{% /tab %}
+{% /tabs %}
 
 This command will install the correct version of `@nx/eslint` and optionally set up inferred tasks.
 
