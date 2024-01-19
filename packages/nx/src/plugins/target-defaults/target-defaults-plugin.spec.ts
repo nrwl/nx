@@ -1,26 +1,34 @@
 import * as memfs from 'memfs';
 
-import '../../../internal-testing-utils/mock-fs';
+import '../../../src/internal-testing-utils/mock-fs';
 
-import { ProjectJsonProjectsPlugin } from './project-json';
-import { CreateNodesContext } from '../../../utils/nx-plugin';
-const { createNodes } = ProjectJsonProjectsPlugin;
+import { TargetDefaultsPlugin } from './target-defaults-plugin';
+import { CreateNodesContext } from '../../utils/nx-plugin';
+const {
+  createNodes: [, createNodesFn],
+} = TargetDefaultsPlugin;
 
 describe('nx project.json plugin', () => {
   let context: CreateNodesContext;
   beforeEach(() => {
     context = {
-      nxJsonConfiguration: {},
+      nxJsonConfiguration: {
+        targetDefaults: {
+          build: {
+            dependsOn: ['^build'],
+          },
+        },
+      },
       workspaceRoot: '/root',
     };
   });
 
-  it('should build projects from project.json', () => {
+  it('should add target default info to project json projects', () => {
     memfs.vol.fromJSON(
       {
         'project.json': JSON.stringify({
           name: 'root',
-          targets: { command: 'echo root project' },
+          targets: { echo: { command: 'echo root project' } },
         }),
         'packages/lib-a/project.json': JSON.stringify({
           name: 'lib-a',
@@ -35,31 +43,33 @@ describe('nx project.json plugin', () => {
       '/root'
     );
 
-    expect(createNodes[1]('project.json', undefined, context))
+    expect(createNodesFn('project.json', undefined, context))
       .toMatchInlineSnapshot(`
       {
         "projects": {
           ".": {
-            "name": "root",
-            "root": ".",
             "targets": {
-              "command": "echo root project",
+              "build": {
+                "dependsOn": [
+                  "^build",
+                ],
+                Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
+              },
             },
           },
         },
       }
     `);
-    expect(createNodes[1]('packages/lib-a/project.json', undefined, context))
+    expect(createNodesFn('packages/lib-a/project.json', undefined, context))
       .toMatchInlineSnapshot(`
       {
         "projects": {
           "packages/lib-a": {
-            "name": "lib-a",
-            "root": "packages/lib-a",
             "targets": {
               "build": {
-                "executor": "nx:run-commands",
-                "options": {},
+                "dependsOn": [
+                  "^build",
+                ],
               },
             },
           },

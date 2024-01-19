@@ -1,7 +1,7 @@
 import * as memfs from 'memfs';
 
-import '../src/internal-testing-utils/mock-fs';
-import { createNodeFromPackageJson } from './package-json-workspaces';
+import '../../internal-testing-utils/mock-fs';
+import { createNodeFromPackageJson } from './create-nodes';
 
 describe('nx package.json workspaces plugin', () => {
   it('should build projects from package.json files', () => {

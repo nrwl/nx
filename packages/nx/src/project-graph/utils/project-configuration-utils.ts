@@ -1,4 +1,3 @@
-import { writeFileSync } from 'fs';
 import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
 import {
@@ -9,11 +8,12 @@ import { NX_PREFIX } from '../../utils/logger';
 import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
 import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/target-defaults-plugin';
 
 import { minimatch } from 'minimatch';
 import { join } from 'path';
 
-export type SourceInformation = [string, string];
+export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<
   string,
   Record<string, SourceInformation>
@@ -21,7 +21,12 @@ export type ConfigurationSourceMaps = Record<
 
 export function mergeProjectConfigurationIntoRootMap(
   projectRootMap: Map<string, ProjectConfiguration>,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration & {
+    targets?: Record<
+      string,
+      TargetConfiguration & { [ONLY_MODIFIES_EXISTING_TARGET]?: boolean }
+    >;
+  },
   configurationSourceMaps?: ConfigurationSourceMaps,
   sourceInformation?: SourceInformation
 ): void {
@@ -123,15 +128,34 @@ export function mergeProjectConfigurationIntoRootMap(
   }
 
   if (project.targets) {
-    updatedProjectConfiguration.targets = {
-      ...matchingProject.targets,
-      ...project.targets,
-    };
+    // We merge the targets with special handling, so clear this back to the
+    // targets as defined originally before merging.
+    updatedProjectConfiguration.targets = matchingProject?.targets ?? {};
 
+    // For each target defined in the new config
     for (const target in project.targets) {
-      if (sourceMap) {
+      // Always set source map info for the target, but don't overwrite info already there
+      // if augmenting an existing target.
+      if (
+        sourceMap &&
+        !project.targets[target]?.[ONLY_MODIFIES_EXISTING_TARGET]
+      ) {
         sourceMap[`targets.${target}`] = sourceInformation;
       }
+
+      // If ONLY_MODIFIES_EXISTING_TARGET is true, and its not on the matching project
+      // we shouldn't merge its info into the graph
+      if (
+        project.targets[target]?.[ONLY_MODIFIES_EXISTING_TARGET] &&
+        !matchingProject.targets?.[target]
+      ) {
+        continue;
+      }
+
+      // We don't want the symbol to live on past the merge process
+      if (project.targets[target]?.[ONLY_MODIFIES_EXISTING_TARGET])
+        delete project.targets[target]?.[ONLY_MODIFIES_EXISTING_TARGET];
+
       updatedProjectConfiguration.targets[target] = mergeTargetConfigurations(
         project.targets[target],
         matchingProject.targets?.[target],
@@ -392,12 +416,12 @@ export function mergeTargetConfigurations(
   const {
     configurations: defaultConfigurations,
     options: defaultOptions,
-    ...defaults
+    ...baseTargetProperties
   } = baseTarget ?? {};
 
   // Target is "compatible", e.g. executor is defined only once or is the same
   // in both places. This means that it is likely safe to merge
-  const isCompatible = isCompatibleTarget(defaults, target);
+  const isCompatible = isCompatibleTarget(baseTargetProperties, target);
 
   if (!isCompatible && projectConfigSourceMap) {
     // if the target is not compatible, we will simply override the options
@@ -411,7 +435,7 @@ export function mergeTargetConfigurations(
 
   // merge top level properties if they're compatible
   const result = {
-    ...(isCompatible ? defaults : {}),
+    ...(isCompatible ? baseTargetProperties : {}),
     ...target,
   };
 

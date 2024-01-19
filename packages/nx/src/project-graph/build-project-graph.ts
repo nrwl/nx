@@ -176,7 +176,7 @@ async function buildProjectGraphUsingContext(
     builder.addExternalNode(knownExternalNodes[node]);
   }
 
-  await normalizeProjectNodes(ctx, builder, nxJson);
+  await normalizeProjectNodes(ctx, builder);
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
   const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
