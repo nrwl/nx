@@ -15,9 +15,29 @@ Nx provides an `enforce-module-boundaries` eslint rule that enforces the public 
 
 To set up the lint rule, install these dependencies:
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm i @nx/eslint-plugin @nx/devkit
+npm add @nx/eslint-plugin @nx/devkit
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add @nx/eslint-plugin @nx/devkit
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add @nx/eslint-plugin @nx/devkit
+```
+
+{% /tab %}
+{% /tabs %}
 
 And configure the rule in your root `.eslintrc.json` file:
 

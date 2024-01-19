@@ -20,7 +20,7 @@ You can also add a new Deno application to an existing Nx monorepo workspace. Ma
 {% tab label="npm" %}
 
 ```shell
-npm i -D @nx/deno
+npm add -D @nx/deno
 ```
 
 {% /tab %}

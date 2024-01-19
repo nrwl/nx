@@ -42,11 +42,29 @@ To enable Nx support (and thus speed up task running) go through the following s
 
 **1. Install Nx**
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm i nx --save-dev
+npm add -D nx
 ```
 
-(or the yarn/pnpm alternatives).
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D nx
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D nx
+```
+
+{% /tab %}
+{% /tabs %}
 
 **2. Adjust your lerna.json**
 

@@ -407,9 +407,29 @@ export * from './lib/product-list/product-list';
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up React Router.
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install react-router-dom
+npm add react-router-dom
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add react-router-dom
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add react-router-dom
+```
+
+{% /tab %}
+{% /tabs %}
 
 Configure it in the `main.tsx`.
 

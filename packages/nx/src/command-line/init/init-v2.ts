@@ -71,9 +71,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     options.nxCloud ??
     (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
-  if (detectPluginsResponse) {
-    addDepsToPackageJson(repoRoot, detectPluginsResponse.plugins);
-  }
+  addDepsToPackageJson(repoRoot, detectPluginsResponse?.plugins ?? []);
 
   output.log({ title: '📦 Installing Nx' });
 
@@ -119,7 +117,7 @@ const npmPackageToPluginMap: Record<string, string> = {
   // Testing tools
   jest: '@nx/jest',
   cypress: '@nx/cypress',
-  playwright: '@nx/playwright',
+  '@playwright/test': '@nx/playwright',
   next: '@nx/next',
   nuxt: '@nx/nuxt',
 };

@@ -26,14 +26,21 @@ Make sure to install the `@nx/express` version that matches the version of `nx` 
 {%tab label="npm"%}
 
 ```shell
-npm i --save-dev @nx/express
+npm add -D @nx/express
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nx/express
+yarn add -D @nx/express
+```
+
+{% /tab %}
+{%tab label="pnpm"%}
+
+```shell
+pnpm add -D @nx/express
 ```
 
 {% /tab %}

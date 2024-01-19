@@ -25,7 +25,7 @@ There are a number of ways to use Nuxt in your existing workspace.
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/nuxt
+npm add -D @nx/nuxt
 ```
 
 {% /tab %}
@@ -39,7 +39,7 @@ yarn add -D @nx/nuxt
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/nuxt
+pnpm add -D @nx/nuxt
 ```
 
 {% /tab %}
