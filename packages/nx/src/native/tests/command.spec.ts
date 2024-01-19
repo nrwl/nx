@@ -10,13 +10,17 @@ describe('runCommand', () => {
   });
   it('should kill a running command', () => {
     const childProcess = new PseudoTtyProcess(
-      runCommand('sleep 3 && echo "hello world" > file.txt', process.cwd())
+      runCommand(
+        'sleep 3 && echo "hello world" > file.txt',
+        process.cwd()
+      )
     );
     childProcess.onExit((exit_code) => {
       expect(exit_code).not.toEqual(0);
     });
     childProcess.kill();
     expect(childProcess.isAlive).toEqual(false);
+
   }, 1000);
 
   it('should subscribe to output', (done) => {
@@ -36,7 +40,7 @@ describe('runCommand', () => {
     childProcess.onOutput((out) => {
       let output = JSON.stringify(out.trim());
       // check to make sure that we have ansi sequence characters only available in tty terminals
-      expect(output).toMatchInlineSnapshot(`""""`);
+      expect(output).toMatchInlineSnapshot(`""\\u001b[33mtrue\\u001b[39m""`);
     });
     childProcess.onExit((_) => {
       done();

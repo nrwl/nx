@@ -129,7 +129,7 @@ pub fn run_command(
 
     let (w, h) = terminal::size().unwrap_or((80, 24));
     let pair = pty_system.openpty(PtySize {
-        rows: r,
+        rows: h,
         cols: w,
         pixel_width: 0,
         pixel_height: 0,
