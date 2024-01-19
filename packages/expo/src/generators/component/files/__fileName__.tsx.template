@@ -26,7 +26,7 @@ export function <%= className %>(props: <%= className %>Props) {
       <Text>Welcome to <%= name %>!</Text>
     </View>
   );
-};
+}
 <% } %>
 
 export default <%= className %>;
