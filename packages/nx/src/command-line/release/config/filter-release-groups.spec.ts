@@ -22,6 +22,7 @@ describe('filterReleaseGroups()', () => {
         },
         workspaceChangelog: false,
         projectChangelogs: false,
+        automaticFromRef: false,
       },
       version: {
         conventionalCommits: false,
