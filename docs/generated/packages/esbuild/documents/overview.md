@@ -32,6 +32,13 @@ yarn add -D @nx/esbuild
 ```
 
 {% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/esbuild
+```
+
+{% /tab %}
 {% /tabs %}
 
 ### Creating a new JS library

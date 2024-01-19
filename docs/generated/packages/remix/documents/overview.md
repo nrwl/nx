@@ -20,13 +20,29 @@ can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-
 
 Adding the Remix plugin to an existing Nx workspace can be done with the following:
 
-```shell
-yarn add -D @nx/remix
-```
+{% tabs %}
+{% tab label="npm" %}
 
 ```shell
 npm install -D @nx/remix
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @nx/remix
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/remix
+```
+
+{% /tab %}
+{% /tabs %}
 
 ## Using the Remix Plugin
 

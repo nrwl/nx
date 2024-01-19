@@ -14,21 +14,21 @@ If the `@nx/playwright` package is not installed, install the version that match
 {% tab label="npm" %}
 
 ```shell
-npm install --save-dev @nx/playwright
+npm install -D @nx/playwright
 ```
 
 {% /tab %}
 {% tab label="yarn" %}
 
 ```shell
-yarn add --dev @nx/playwright
+yarn add -D @nx/playwright
 ```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```shell
-pnpm i -D @nx/playwright
+pnpm install -D @nx/playwright
 ```
 
 {% /tab %}

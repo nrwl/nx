@@ -14,17 +14,24 @@ Make sure to install the `@nx/eslint-plugin` version that matches the version of
 In any Nx workspace, you can install `@nx/eslint-plugin` by running the following commands if the package is not already installed:
 
 {% tabs %}
-{%tab label="npm"%}
+{% tab label="npm" %}
 
 ```shell
-npm i --save-dev @nx/eslint-plugin
+npm install -D @nx/eslint-plugin
 ```
 
 {% /tab %}
-{%tab label="yarn"%}
+{% tab label="yarn" %}
 
 ```shell
-yarn add --dev @nx/eslint-plugin
+yarn add -D @nx/eslint-plugin
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/eslint-plugin
 ```
 
 {% /tab %}

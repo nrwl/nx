@@ -22,13 +22,29 @@ First, install `@nx/jest`, if not already installed using your preferred package
 Make sure to install the `@nx/jest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-```shell
-npm install --save-dev @nx/jest
-```
+{% tabs %}
+{% tab label="npm" %}
 
 ```shell
-yarn add --dev @nx/jest
+npm install -D @nx/jest
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @nx/jest
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/jest
+```
+
+{% /tab %}
+{% /tabs %}
 
 Once installed, run the `configuration` generator
 

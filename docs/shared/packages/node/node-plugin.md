@@ -8,13 +8,29 @@ Make sure to install the `@nx/node` version that matches the version of `nx` in 
 
 To add the Node plugin to an existing workspace, run one of the following:
 
-```shell
-# For npm users
-npm install -D @nx/node
+{% tabs %}
+{% tab label="npm" %}
 
-# For yarn users
+```shell
+npm install -D @nx/node
+```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
 yarn add -D @nx/node
 ```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/node
+```
+
+{% /tab %}
+{% /tabs %}
 
 ### Creating Applications
 

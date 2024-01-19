@@ -38,19 +38,24 @@ You can create a new Detox E2E project for an existing mobile project.
 If the `@nx/detox` package is not installed, install the version that matches your `@nx/workspace` version.
 
 {% tabs %}
-{%tab label="npm"%}
+{% tab label="npm" %}
 
-```sh
-# npm
-npm install --save-dev @nx/detox
+```shell
+npm install -D @nx/detox
 ```
 
 {% /tab %}
-{%tab label="yarn"%}
+{% tab label="yarn" %}
 
-```sh
-# yarn
-yarn add --dev @nx/detox
+```shell
+yarn add -D @nx/detox
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/detox
 ```
 
 {% /tab %}

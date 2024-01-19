@@ -16,17 +16,17 @@ Make sure to install the `@nx/storybook` version that matches the version of `nx
 {% /callout %}
 
 {% tabs %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/storybook
-```
-
-{% /tab %}
 {% tab label="npm" %}
 
 ```shell
 npm install -D @nx/storybook
+```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @nx/storybook
 ```
 
 {% /tab %}

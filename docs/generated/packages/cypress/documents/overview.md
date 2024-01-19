@@ -15,13 +15,29 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 
 If the `@nx/cypress` package is not installed, install the version that matches your `nx` package version.
 
-```shell
-yarn add --dev @nx/cypress
-```
+{% tabs %}
+{% tab label="npm" %}
 
 ```shell
-npm install --save-dev @nx/cypress
+npm install -D @nx/cypress
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @nx/cypress
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/cypress
+```
+
+{% /tab %}
+{% /tabs %}
 
 ## E2E Testing
 

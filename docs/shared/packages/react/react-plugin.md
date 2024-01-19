@@ -16,13 +16,29 @@ Make sure to install the `@nx/react` version that matches the version of `nx` in
 
 To add the React plugin to an existing workspace, run one of the following:
 
-```shell
-# For npm users
-npm install -D @nx/react
+{% tabs %}
+{% tab label="npm" %}
 
-# For yarn users
+```shell
+npm install -D @nx/react
+```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
 yarn add -D @nx/react
 ```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/react
+```
+
+{% /tab %}
+{% /tabs %}
 
 {% callout type="note" title="React Tutorials" %}
 For a full tutorial experience, follow the [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial) or the [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)

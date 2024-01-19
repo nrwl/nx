@@ -19,17 +19,24 @@ Make sure to install the `@nx/expo` version that matches the version of `nx` in 
 {% /callout %}
 
 {% tabs %}
-{%tab label="npm"%}
+{% tab label="npm" %}
 
 ```shell
-npm i --save-dev @nx/expo
+npm install -D @nx/expo
 ```
 
 {% /tab %}
-{%tab label="yarn"%}
+{% tab label="yarn" %}
 
 ```shell
-yarn add --dev @nx/expo
+yarn add -D @nx/expo
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/expo
 ```
 
 {% /tab %}

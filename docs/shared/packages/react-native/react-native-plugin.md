@@ -35,17 +35,24 @@ Make sure to install the `@nx/react-native` version that matches the version of 
 {% /callout %}
 
 {% tabs %}
-{%tab label="npm"%}
+{% tab label="npm" %}
 
 ```shell
-npm i --save-dev @nx/react-native
+npm install -D @nx/react-native
 ```
 
 {% /tab %}
-{%tab label="yarn"%}
+{% tab label="yarn" %}
 
 ```shell
-yarn add --dev @nx/react-native
+yarn add -D @nx/react-native
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/react-native
 ```
 
 {% /tab %}

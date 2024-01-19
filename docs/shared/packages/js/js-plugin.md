@@ -11,17 +11,24 @@ Make sure to install the `@nx/js` version that matches the version of `nx` in yo
 In any Nx workspace, you can install `@nx/js` by running the following commands if `@nx/js` package is not installed:
 
 {% tabs %}
-{%tab label="npm"%}
+{% tab label="npm" %}
 
 ```shell
-npm i --save-dev @nx/js
+npm install -D @nx/js
 ```
 
 {% /tab %}
-{%tab label="yarn"%}
+{% tab label="yarn" %}
 
 ```shell
-yarn add --dev @nx/js
+yarn add -D @nx/js
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install -D @nx/js
 ```
 
 {% /tab %}
