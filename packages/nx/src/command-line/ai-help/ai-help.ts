@@ -1,24 +1,7 @@
-import { workspaceRoot } from '../../utils/workspace-root';
 import { output } from '../../utils/output';
-import {
-  fetchCorePlugins,
-  getInstalledPluginsAndCapabilities,
-  listCorePlugins,
-  listInstalledPlugins,
-  listPluginCapabilities,
-} from '../../utils/plugins';
-import {
-  getLocalWorkspacePlugins,
-  listLocalWorkspacePlugins,
-} from '../../utils/plugins/local-plugins';
-import {
-  createProjectGraphAsync,
-  readProjectsConfigurationFromProjectGraph,
-} from '../../project-graph/project-graph';
-import { readNxJson } from '../../config/nx-json';
-import { getResponseFromAI } from './lib/get-response-from-ai';
+import { sendPostRequest } from './lib/get-response-from-ai';
 
-export interface ListArgs {
+export interface AiArgs {
   prompt?: string | undefined;
 }
 
@@ -30,40 +13,28 @@ export interface ListArgs {
  * Must be run within an Nx workspace
  *
  */
-export async function aiHandler(args: ListArgs): Promise<void> {
-  const nxJson = readNxJson();
-  const projectGraph = await createProjectGraphAsync({ exitOnError: true });
-  const projects = readProjectsConfigurationFromProjectGraph(projectGraph);
-
+export async function aiHandler(args: AiArgs): Promise<void> {
   if (args.prompt) {
-    const response = await getResponseFromAI(args.prompt);
-    console.log(response);
-  } else {
-    const corePlugins = fetchCorePlugins();
-
-    const localPlugins = await getLocalWorkspacePlugins(projects, nxJson);
-    const installedPlugins = await getInstalledPluginsAndCapabilities(
-      workspaceRoot,
-      projects.projects
-    );
-
-    if (localPlugins.size) {
-      listLocalWorkspacePlugins(localPlugins);
+    try {
+      const response = await sendPostRequest({ query: args.prompt });
+      if (typeof response === 'string') {
+        output.note({
+          title: 'The command you need to run is:',
+          bodyLines: [response],
+        });
+      } else {
+        output.error({
+          title: 'Could not find a command to run.',
+          bodyLines: ['Please check out our docs: https://nx.dev/nx-api'],
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
     }
-    listInstalledPlugins(installedPlugins);
-    listCorePlugins(installedPlugins, corePlugins);
-
-    output.note({
-      title: 'Community Plugins',
-      bodyLines: [
-        'Looking for a technology / framework not listed above?',
-        'There are many excellent plugins maintained by the Nx community.',
-        'Search for the one you need here: https://nx.dev/plugins/registry.',
-      ],
-    });
-
-    output.note({
-      title: `Use "nx list [plugin]" to find out more`,
+  } else {
+    output.error({
+      title: 'Please provide a prompt.',
+      bodyLines: ['Example: nx ai "I want to generate a new react component"'],
     });
   }
 }
