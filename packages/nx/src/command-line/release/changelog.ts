@@ -410,7 +410,10 @@ async function applyChangesAndExit(
     );
     // Resolve the commit we just made
     latestCommit = await getCommitHash('HEAD');
-  } else if (args.stageChanges ?? nxReleaseConfig.changelog.git.stageChanges) {
+  } else if (
+    (args.stageChanges ?? nxReleaseConfig.changelog.git.stageChanges) &&
+    changes.length
+  ) {
     output.logSingleLine(`Staging changed files with git`);
     await gitAdd({
       changedFiles: changes.map((f) => f.path),

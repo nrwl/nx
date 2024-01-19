@@ -98,38 +98,9 @@ describe('nx release first run', () => {
 
   describe('with --first-release', () => {
     it('should not error', async () => {
-      const releaseOutput1 = runCLI(
-        `release patch --verbose --first-release -y -d`
-      );
-
-      expect(
-        releaseOutput1.match(
-          new RegExp('NX   Staging changed files with git', 'g')
-        ).length
-      ).toEqual(2);
-      expect(
-        releaseOutput1.match(
-          new RegExp('NX   Committing changes with git', 'g')
-        ).length
-      ).toEqual(1);
-      expect(
-        releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g'))
-          .length
-      ).toEqual(1);
-      expect(
-        releaseOutput1.match(
-          new RegExp('Skipped npm view because --first-release was set', 'g')
-        ).length
-      ).toEqual(3);
-    });
-
-    it('should not error when changelog is disabled', async () => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
           projects: [pkg1, pkg2, pkg3],
-          changelog: {
-            workspaceChangelog: false,
-          },
         };
         return nxJson;
       });
@@ -154,6 +125,112 @@ describe('nx release first run', () => {
       ).toEqual(1);
       expect(
         releaseOutput1.match(
+          new RegExp('Skipped npm view because --first-release was set', 'g')
+        ).length
+      ).toEqual(3);
+
+      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+        nxJson.release = {
+          projects: [pkg1, pkg2, pkg3],
+          projectsRelationship: 'independent',
+          changelog: {
+            projectChangelogs: {},
+          },
+        };
+        return nxJson;
+      });
+
+      const releaseOutput2 = runCLI(
+        `release patch --verbose --first-release -y -d`
+      );
+
+      expect(
+        releaseOutput2.match(
+          new RegExp('NX   Staging changed files with git', 'g')
+        ).length
+      ).toEqual(2);
+      expect(
+        releaseOutput2.match(
+          new RegExp('NX   Committing changes with git', 'g')
+        ).length
+      ).toEqual(1);
+      expect(
+        releaseOutput2.match(new RegExp('NX   Tagging commit with git', 'g'))
+          .length
+      ).toEqual(1);
+      expect(
+        releaseOutput2.match(
+          new RegExp('Skipped npm view because --first-release was set', 'g')
+        ).length
+      ).toEqual(3);
+    });
+
+    it('should not error when changelog is disabled', async () => {
+      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+        nxJson.release = {
+          projects: [pkg1, pkg2, pkg3],
+          changelog: {
+            workspaceChangelog: false,
+          },
+        };
+        return nxJson;
+      });
+
+      const releaseOutput1 = runCLI(
+        `release patch --verbose --first-release -y -d`
+      );
+
+      expect(
+        releaseOutput1.match(
+          new RegExp('NX   Staging changed files with git', 'g')
+        ).length
+      ).toEqual(1);
+      expect(
+        releaseOutput1.match(
+          new RegExp('NX   Committing changes with git', 'g')
+        ).length
+      ).toEqual(1);
+      expect(
+        releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g'))
+          .length
+      ).toEqual(1);
+      expect(
+        releaseOutput1.match(
+          new RegExp('Skipped npm view because --first-release was set', 'g')
+        ).length
+      ).toEqual(3);
+
+      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+        nxJson.release = {
+          projects: [pkg1, pkg2, pkg3],
+          projectsRelationship: 'independent',
+          changelog: {
+            workspaceChangelog: false,
+          },
+        };
+        return nxJson;
+      });
+
+      const releaseOutput2 = runCLI(
+        `release patch --verbose --first-release -y -d`
+      );
+
+      expect(
+        releaseOutput2.match(
+          new RegExp('NX   Staging changed files with git', 'g')
+        ).length
+      ).toEqual(1);
+      expect(
+        releaseOutput2.match(
+          new RegExp('NX   Committing changes with git', 'g')
+        ).length
+      ).toEqual(1);
+      expect(
+        releaseOutput2.match(new RegExp('NX   Tagging commit with git', 'g'))
+          .length
+      ).toEqual(1);
+      expect(
+        releaseOutput2.match(
           new RegExp('Skipped npm view because --first-release was set', 'g')
         ).length
       ).toEqual(3);
@@ -218,6 +295,71 @@ describe('nx release first run', () => {
       ).toEqual(1);
       expect(
         releaseOutput2.match(new RegExp('NX   Tagging commit with git', 'g'))
+          .length
+      ).toEqual(1);
+
+      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+        nxJson.release = {
+          projects: [pkg1, pkg2, pkg3],
+          projectsRelationship: 'independent',
+          version: {
+            generatorOptions: {
+              fallbackCurrentVersionResolver: 'disk',
+            },
+          },
+          changelog: {
+            projectChangelogs: {},
+          },
+        };
+
+        return nxJson;
+      });
+
+      const releaseOutput3 = runCLI(`release patch --verbose -y -d`, {
+        silenceError: true,
+      });
+
+      expect(
+        releaseOutput3.match(
+          new RegExp(
+            `NX   Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`,
+            'g'
+          )
+        ).length
+      ).toEqual(1);
+
+      updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
+        nxJson.release = {
+          projects: [pkg1, pkg2, pkg3],
+          projectsRelationship: 'independent',
+          version: {
+            generatorOptions: {
+              fallbackCurrentVersionResolver: 'disk',
+            },
+          },
+          changelog: {
+            automaticFromRef: true,
+            projectChangelogs: {},
+          },
+        };
+
+        return nxJson;
+      });
+
+      const releaseOutput4 = runCLI(`release patch --skip-publish -d`);
+
+      expect(
+        releaseOutput4.match(
+          new RegExp('NX   Staging changed files with git', 'g')
+        ).length
+      ).toEqual(2);
+      expect(
+        releaseOutput4.match(
+          new RegExp('NX   Committing changes with git', 'g')
+        ).length
+      ).toEqual(1);
+      expect(
+        releaseOutput4.match(new RegExp('NX   Tagging commit with git', 'g'))
           .length
       ).toEqual(1);
     });
