@@ -20,6 +20,7 @@ expect.addSnapshotSerializer({
         .replaceAll(tmpProjPath(), '')
         .replaceAll('/private/', '')
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
+        .replaceAll(' in /{project-name}', ' in {project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
           'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
