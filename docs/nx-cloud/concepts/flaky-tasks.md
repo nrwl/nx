@@ -1,8 +1,8 @@
 # Identify and Re-run Flaky Tasks
 
-Sometimes there are tasks in CI that fail or succeed without any related code changes. These tasks are called flaky tasks. Because the cause of the flakiness can be difficult to determine, developers will typically re-run CI in the hopes that another run will cause the task to succeed and allow them to merge their PR. Every time a developer has to do this, it is harming their productivity and the productivity of the company as a whole.
+Sometimes there are tasks in CI that can fail or succeed without any related code changes. These tasks are called flaky tasks. Because the cause of the flakiness can be difficult to determine, developers will typically re-run CI in the hopes that another run will cause the task to succeed and allow them to merge their PR. Every time a developer has to do this, it is harming their productivity and the productivity of the company as a whole.
 
-Nx is perfectly positioned to detect which tasks are flaky and, with [Nx Agents](/ci/features/nx-agents), automatically re-run the flaky task in a new agent so that developers can have confidence that a failed CI pipeline is a real failure.
+Nx is perfectly positioned to detect which tasks are flaky and automatically re-run the flaky task in a different agent so that developers can have confidence that a failed CI pipeline is a real failure.
 
 ## Identify Flaky Tasks
 
@@ -10,4 +10,4 @@ Nx creates a hash of all the inputs for a task whenever it is run. If Nx ever en
 
 ## Re-run Flaky Tasks
 
-When a flaky task fails in CI, Nx will automatically send that task to a new agent and run it again (up to 3 tries in total). Its important to run the task on a new agent to ensure that the agent itself or the other tasks that were run on that agent are not the reason for the flakiness.
+When a flaky task fails in CI with [distributed task execution](/ci/features/distribute-task-execution) enabled, Nx will automatically send that task to a different agent and run it again (up to 2 tries in total). Its important to run the task on a different agent to ensure that the agent itself or the other tasks that were run on that agent are not the reason for the flakiness.
