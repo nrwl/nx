@@ -31,7 +31,7 @@ Keep reading to learn what the configuration and setup looks like.
 
 ## Managed Agents, Seamless Configuration
 
-Enabling task distribution with Nx Agents can be done in a single line. Simply add the following to your CI pipeline configuration before your other steps:
+Enabling task distribution with Nx Agents can be done in a single line. Simply add the `--distributes-on` property to the `start-ci-run` line in your CI pipeline configuration:
 
 ```yaml
 - name: Start CI run
@@ -102,11 +102,8 @@ jobs:
     displayName: Main Job
     ...
     steps:
-      - checkout: self
-        persistCredentials: true
-      - script: |
-          npx nx-cloud start-ci-run --distributes-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e-wrapper"
-        displayName: Start CI run
+      - checkout
+      - run: npx nx-cloud start-ci-run --distributes-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e-wrapper"
       - ...
 ```
 
