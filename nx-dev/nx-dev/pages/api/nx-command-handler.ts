@@ -24,6 +24,7 @@ export default async function handler(request: NextRequest) {
       getSupabaseClient(supabaseUrl, supabaseServiceKey);
 
     const { query } = (await request.json()) as { query: string };
+    console.log('Katerina', request);
 
     const sanitizedQuery = query.trim();
 
