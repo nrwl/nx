@@ -81,7 +81,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     output.log({ title: '🔨 Configuring plugins' });
     for (const plugin of detectPluginsResponse.plugins) {
       execSync(
-        `${pmc.exec} nx g ${plugin}:init --skipPackageJson ${
+        `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
           detectPluginsResponse.updatePackageScripts
             ? '--updatePackageScripts'
             : ''

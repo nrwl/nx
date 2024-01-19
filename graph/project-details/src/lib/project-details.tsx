@@ -13,6 +13,8 @@ import {
   useRouteConstructor,
 } from '@nx/graph/shared';
 import { TargetConfigurationDetails } from './target/target-configuration-details';
+import { PropertyInfoTooltip, Tooltip } from '@nx/graph/ui-tooltips';
+import { TooltipTriggerText } from './target/ui/tooltip-trigger-text';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
@@ -77,7 +79,16 @@ export function ProjectDetails({
         </div>
       </header>
       <div>
-        <h2 className="text-3xl mb-2">Targets</h2>
+        <h2 className="text-3xl mb-4">
+          <Tooltip
+            openAction="hover"
+            content={(<PropertyInfoTooltip type="targets" />) as any}
+          >
+            <span>
+              <TooltipTriggerText>Targets</TooltipTriggerText>
+            </span>
+          </Tooltip>
+        </h2>
         <ul>
           {Object.entries(projectData.targets ?? {}).map(
             ([targetName, target]) => {

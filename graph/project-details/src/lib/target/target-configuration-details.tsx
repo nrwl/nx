@@ -22,6 +22,13 @@ import { FadingCollapsible } from './fading-collapsible';
 import { TargetConfigurationProperty } from './target-configuration-property';
 import { selectSourceInfo } from './target-configuration-details.util';
 import { CopyToClipboard } from './copy-to-clipboard';
+import {
+  PropertyInfoTooltip,
+  SourcemapInfoToolTip,
+  Tooltip,
+} from '@nx/graph/ui-tooltips';
+import { TooltipTriggerText } from './ui/tooltip-trigger-text';
+import { ExternalLink } from '@nx/graph/ui-tooltips';
 
 /* eslint-disable-next-line */
 export interface TargetProps {
@@ -40,7 +47,7 @@ export function TargetConfigurationDetails({
   const environment = useEnvironmentConfig()?.environment;
   const externalApiService = getExternalApiService();
   const navigate = useNavigate();
-  const routeContructor = useRouteConstructor();
+  const routeConstructor = useRouteConstructor();
   const [searchParams, setSearchParams] = useSearchParams();
   const [collapsed, setCollapsed] = useState(true);
 
@@ -120,7 +127,7 @@ export function TargetConfigurationDetails({
       });
     } else {
       navigate(
-        routeContructor(
+        routeConstructor(
           {
             pathname: `/tasks/${encodeURIComponent(targetName)}`,
             search: `?projects=${encodeURIComponent(projectName)}`,
@@ -187,9 +194,15 @@ export function TargetConfigurationDetails({
               }}
             />
             {targetConfiguration.cache && (
-              <span className="rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 text-slate-50 mr-2">
-                Cacheable
-              </span>
+              <Tooltip
+                openAction="hover"
+                strategy="fixed"
+                content={(<PropertyInfoTooltip type="cacheable" />) as any}
+              >
+                <span className="rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 text-slate-50 mr-2">
+                  Cacheable
+                </span>
+              </Tooltip>
             )}
             {environment === 'nx-console' && (
               <PlayIcon
@@ -209,8 +222,11 @@ export function TargetConfigurationDetails({
         </div>
         {!collapsed && (
           <div className="flex items-center text-sm mt-2">
-            <span className="flex-1">
-              <SourceInfo data={sourceMap[`targets.${targetName}`]} />
+            <span className="flex-1 flex items-center">
+              <SourceInfo
+                data={sourceMap[`targets.${targetName}`]}
+                propertyKey={`targets.${targetName}`}
+              />
             </span>
             <code className="ml-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono px-2 py-1 rounded">
               nx run {projectName}:{targetName}
@@ -229,9 +245,9 @@ export function TargetConfigurationDetails({
       {!collapsed && (
         <div className="p-4 text-base">
           <div className="mb-4 group">
-            <h4 className="font-bold">
+            <h4 className="mb-4">
               {singleCommand ? (
-                <>
+                <span className="font-bold">
                   Command
                   <span className="hidden group-hover:inline ml-2 mb-1">
                     <CopyToClipboard
@@ -240,21 +256,27 @@ export function TargetConfigurationDetails({
                       }
                     />
                   </span>
-                </>
+                </span>
               ) : (
-                'Executor'
+                <Tooltip
+                  openAction="hover"
+                  content={(<PropertyInfoTooltip type="executors" />) as any}
+                >
+                  <span className="font-bold">
+                    <TooltipTriggerText>Executor</TooltipTriggerText>
+                  </span>
+                </Tooltip>
               )}
             </h4>
             <p className="pl-5">
               {executorLink ? (
-                <a
-                  className="underline"
+                <ExternalLink
                   href={executorLink ?? 'https://nx.dev/nx-api'}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {singleCommand ? singleCommand : targetConfiguration.executor}
-                </a>
+                  text={
+                    singleCommand ? singleCommand : targetConfiguration.executor
+                  }
+                  title="View Documentation"
+                />
               ) : singleCommand ? (
                 singleCommand
               ) : (
@@ -265,8 +287,15 @@ export function TargetConfigurationDetails({
 
           {targetConfiguration.inputs && (
             <div className="group">
-              <h4 className="font-bold">
-                Inputs
+              <h4 className="mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={(<PropertyInfoTooltip type="inputs" />) as any}
+                >
+                  <span className="font-bold">
+                    <TooltipTriggerText>Inputs</TooltipTriggerText>
+                  </span>
+                </Tooltip>
                 <span className="hidden group-hover:inline ml-2 mb-1">
                   <CopyToClipboard
                     onCopy={() =>
@@ -288,7 +317,10 @@ export function TargetConfigurationDetails({
                       <TargetConfigurationProperty data={input}>
                         {sourceInfo && (
                           <span className="hidden group-hover/line:inline pl-4">
-                            <SourceInfo data={sourceInfo} />
+                            <SourceInfo
+                              data={sourceInfo}
+                              propertyKey={`targets.${targetName}.inputs`}
+                            />
                           </span>
                         )}
                       </TargetConfigurationProperty>
@@ -300,8 +332,15 @@ export function TargetConfigurationDetails({
           )}
           {targetConfiguration.outputs && (
             <div className="group">
-              <h4 className="font-bold">
-                Outputs
+              <h4 className="mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={(<PropertyInfoTooltip type="outputs" />) as any}
+                >
+                  <span className="font-bold">
+                    <TooltipTriggerText>Outputs</TooltipTriggerText>
+                  </span>
+                </Tooltip>
                 <span className="hidden group-hover:inline ml-2 mb-1">
                   <CopyToClipboard
                     onCopy={() =>
@@ -325,7 +364,10 @@ export function TargetConfigurationDetails({
                       <TargetConfigurationProperty data={output}>
                         {sourceInfo && (
                           <span className="hidden group-hover/line:inline pl-4">
-                            <SourceInfo data={sourceInfo} />
+                            <SourceInfo
+                              data={sourceInfo}
+                              propertyKey={`targets.${targetName}.outputs`}
+                            />
                           </span>
                         )}
                       </TargetConfigurationProperty>
@@ -337,8 +379,15 @@ export function TargetConfigurationDetails({
           )}
           {targetConfiguration.dependsOn && (
             <div className="group">
-              <h4 className="font-bold">
-                Depends On
+              <h4 className="mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={(<PropertyInfoTooltip type="dependsOn" />) as any}
+                >
+                  <span className="font-bold">
+                    <TooltipTriggerText>Depends On</TooltipTriggerText>
+                  </span>
+                </Tooltip>
                 <span className="hidden group-hover:inline ml-2 mb-1">
                   <CopyToClipboard
                     onCopy={() =>
@@ -361,8 +410,13 @@ export function TargetConfigurationDetails({
                   return (
                     <li className="group/line overflow-hidden whitespace-nowrap">
                       <TargetConfigurationProperty data={dep}>
-                        <span className="hidden group-hover/line:inline pl-4">
-                          {sourceInfo && <SourceInfo data={sourceInfo} />}
+                        <span className="hidden group-hover/line:inline pl-4 h-6">
+                          {sourceInfo && (
+                            <SourceInfo
+                              data={sourceInfo}
+                              propertyKey={`targets.${targetName}.dependsOn`}
+                            />
+                          )}
                         </span>
                       </TargetConfigurationProperty>
                     </li>
@@ -374,7 +428,16 @@ export function TargetConfigurationDetails({
 
           {shouldRenderOptions ? (
             <>
-              <h4 className="font-bold mb-2">Options</h4>
+              <h4 className="mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={(<PropertyInfoTooltip type="options" />) as any}
+                >
+                  <span className="font-bold">
+                    <TooltipTriggerText>Options</TooltipTriggerText>
+                  </span>
+                </Tooltip>
+              </h4>
               <div className="mb-4">
                 <FadingCollapsible>
                   <JsonCodeBlock
@@ -386,7 +449,10 @@ export function TargetConfigurationDetails({
                       );
                       return sourceInfo ? (
                         <span className="pl-4">
-                          <SourceInfo data={sourceInfo} />
+                          <SourceInfo
+                            data={sourceInfo}
+                            propertyKey={`targets.${targetName}.options.${propertyName}`}
+                          />
                         </span>
                       ) : null;
                     }}
@@ -400,11 +466,20 @@ export function TargetConfigurationDetails({
 
           {shouldRenderConfigurations ? (
             <>
-              <h4 className="font-bold py-2">
-                Configurations{' '}
+              <h4 className="py-2 mb-4">
+                <Tooltip
+                  openAction="hover"
+                  content={
+                    (<PropertyInfoTooltip type="configurations" />) as any
+                  }
+                >
+                  <span className="font-bold">
+                    <TooltipTriggerText>Configurations</TooltipTriggerText>
+                  </span>
+                </Tooltip>{' '}
                 {targetConfiguration.defaultConfiguration && (
                   <span
-                    className="ml-3 rounded-full inline-block text-xs bg-sky-500 px-2 text-slate-50  mr-6"
+                    className="ml-3 font-bold rounded-full inline-block text-xs bg-sky-500 px-2 text-slate-50  mr-6"
                     title="Default Configuration"
                   >
                     {targetConfiguration.defaultConfiguration}
@@ -421,7 +496,10 @@ export function TargetConfigurationDetails({
                     );
                     return sourceInfo ? (
                       <span className="pl-4">
-                        <SourceInfo data={sourceInfo} />{' '}
+                        <SourceInfo
+                          data={sourceInfo}
+                          propertyKey={`targets.${targetName}.configurations.${propertyName}`}
+                        />{' '}
                       </span>
                     ) : null;
                   }}
