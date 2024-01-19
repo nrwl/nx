@@ -45,6 +45,8 @@ import {
 export { deriveNewSemverVersion } from './utils/semver';
 export type { VersionData } from './utils/shared';
 
+export const validReleaseVersionPrefixes = ['auto', '', '~', '^'];
+
 export interface ReleaseVersionGeneratorSchema {
   // The projects being versioned in the current execution
   projects: ProjectGraphProjectNode[];
@@ -58,6 +60,8 @@ export interface ReleaseVersionGeneratorSchema {
   currentVersionResolverMetadata?: Record<string, unknown>;
   fallbackCurrentVersionResolver?: 'disk';
   firstRelease?: boolean;
+  // auto means the existing prefix will be preserved, and is the default behavior
+  versionPrefix?: typeof validReleaseVersionPrefixes[number];
 }
 
 export interface NxReleaseVersionResult {
