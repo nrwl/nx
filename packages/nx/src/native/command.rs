@@ -5,12 +5,12 @@ use std::{
 
 use anyhow::anyhow;
 use crossbeam_channel::{bounded, unbounded, Receiver};
+use crossterm::terminal::{self, disable_raw_mode, enable_raw_mode};
 use napi::threadsafe_function::ErrorStrategy::Fatal;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
 use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
-use crossterm::terminal::{self, enable_raw_mode, disable_raw_mode};
 
 fn command_builder() -> CommandBuilder {
     if cfg!(target_os = "windows") {
@@ -149,7 +149,7 @@ pub fn run_command(
 
     let reader = pair.master.try_clone_reader()?;
     let mut stdout = std::io::stdout();
-    
+
     // Output -> stdout handling
     std::thread::spawn(move || {
         let mut reader = BufReader::new(reader);
@@ -187,12 +187,14 @@ pub fn run_command(
     let (exit_tx, exit_rx) = bounded(1);
 
     let mut writer = pair.master.take_writer()?;
-    
+
     // Stdin -> pty stdin
     std::thread::spawn(move || {
-        let mut stdin = std::io::stdin();
         enable_raw_mode().expect("Failed to enter raw terminal mode");
-        std::io::copy(&mut stdin, &mut writer).expect("Failed to pass input to pty.");
+        let mut stdin = std::io::stdin();
+        #[allow(clippy::redundant_pattern_matching)]
+        // ignore errors that come from copying the stream
+        if let Ok(_) = std::io::copy(&mut stdin, &mut writer) {}
     });
 
     std::thread::spawn(move || {
