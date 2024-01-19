@@ -27,7 +27,7 @@
     "updatePackageScripts": {
       "type": "boolean",
       "x-priority": "internal",
-      "description": "Update package.json scripts with inferred targets",
+      "description": "Update `package.json` scripts with inferred targets",
       "default": false
     }
   },
