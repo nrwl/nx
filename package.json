@@ -47,7 +47,7 @@
     "@babel/runtime": "^7.22.6",
     "@eslint/eslintrc": "^2.1.1",
     "@eslint/js": "^8.48.0",
-    "@floating-ui/react": "0.19.2",
+    "@floating-ui/react": "0.26.6",
     "@jest/reporters": "^29.4.1",
     "@jest/test-result": "^29.4.1",
     "@jest/types": "^29.4.1",
