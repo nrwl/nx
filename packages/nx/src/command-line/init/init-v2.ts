@@ -117,7 +117,7 @@ const npmPackageToPluginMap: Record<string, string> = {
   // Testing tools
   jest: '@nx/jest',
   cypress: '@nx/cypress',
-  playwright: '@nx/playwright',
+  '@playwright/test': '@nx/playwright',
   next: '@nx/next',
   nuxt: '@nx/nuxt',
 };
