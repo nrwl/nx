@@ -31,6 +31,7 @@ import {
 import {
   GitCommit,
   getCommitHash,
+  getFirstGitCommit,
   getGitDiff,
   getLatestGitTagForPattern,
   gitAdd,
@@ -102,6 +103,9 @@ export async function releaseChangelog(
     process.exit(1);
   }
 
+  const useAutomaticFromRef =
+    nxReleaseConfig.changelog?.automaticFromRef || args.firstRelease;
+
   /**
    * For determining the versions to use within changelog files, there are a few different possibilities:
    * - the user is using the nx CLI, and therefore passes a single --version argument which represents the version for any and all changelog
@@ -164,13 +168,22 @@ export async function releaseChangelog(
 
   const postGitTasks: PostGitTask[] = [];
 
-  const workspaceChangelogFromRef =
+  let workspaceChangelogFromRef =
     args.from ||
     (await getLatestGitTagForPattern(nxReleaseConfig.releaseTagPattern))?.tag;
   if (!workspaceChangelogFromRef) {
-    throw new Error(
-      `Unable to determine the previous git tag, please provide an explicit git reference using --from`
-    );
+    if (useAutomaticFromRef) {
+      workspaceChangelogFromRef = await getFirstGitCommit();
+      if (args.verbose) {
+        console.log(
+          `Determined workspace --from ref from the first commit in workspace: ${workspaceChangelogFromRef}`
+        );
+      }
+    } else {
+      throw new Error(
+        `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+      );
+    }
   }
 
   // Make sure that the fromRef is actually resolvable
@@ -210,20 +223,42 @@ export async function releaseChangelog(
 
     if (releaseGroup.projectsRelationship === 'independent') {
       for (const project of projectNodes) {
-        const fromRef =
+        let fromRef =
           args.from ||
           (
             await getLatestGitTagForPattern(releaseGroup.releaseTagPattern, {
               projectName: project.name,
             })
           )?.tag;
+
+        let commits: GitCommit[] | null = null;
+
+        if (useAutomaticFromRef) {
+          const firstCommit = await getFirstGitCommit();
+          const allCommits = await getCommits(firstCommit, toSHA);
+          const commitsForProject = allCommits.filter((c) =>
+            c.affectedFiles.find((f) => f.startsWith(project.data.root))
+          );
+
+          fromRef = commitsForProject[0]?.shortHash;
+          if (args.verbose) {
+            console.log(
+              `Determined --from ref for ${project.name} from the first commit in which it exists: ${fromRef}`
+            );
+          }
+          commits = commitsForProject;
+        }
+
         if (!fromRef) {
           throw new Error(
-            `Unable to determine the previous git tag, please provide an explicit git reference using --from`
+            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
           );
         }
 
-        const commits = await getCommits(fromRef, toSHA);
+        if (!commits) {
+          commits = await getCommits(fromRef, toSHA);
+        }
+
         await generateChangelogForProjects(
           tree,
           args,

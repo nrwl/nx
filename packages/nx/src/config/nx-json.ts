@@ -225,6 +225,12 @@ interface NxReleaseConfiguration {
      * - false = explicitly disable project level changelogs
      */
     projectChangelogs?: NxReleaseChangelogConfiguration | boolean;
+    /**
+     * Whether or not to automatically look up the first commit for the workspace (or package, if versioning independently)
+     * and use that as the starting point for changelog generation. If this is not enabled, changelog generation will fail
+     * if there is no previous matching git tag to use as a starting point.
+     */
+    automaticFromRef?: boolean;
   };
   /**
    * If no version config is provided, we will assume that @nx/js:release-version

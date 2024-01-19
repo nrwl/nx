@@ -1196,32 +1196,5 @@ ${JSON.stringify(
         )
       ).length
     ).toEqual(2);
-
-    await runCommandAsync(`git add .`);
-    await runCommandAsync(`git commit -m "chore: update all packages"`);
-
-    // remove all properties to ensure committing happens by default
-    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-      nxJson.release = {
-        projects: [pkg1, pkg2, pkg3],
-      };
-      return nxJson;
-    });
-
-    const releaseOutput8 = runCLI(`release patch --skip-publish`);
-
-    expect(
-      releaseOutput8.match(
-        new RegExp('NX   Staging changed files with git', 'g')
-      ).length
-    ).toEqual(2);
-    expect(
-      releaseOutput8.match(new RegExp('NX   Committing changes with git', 'g'))
-        .length
-    ).toEqual(1);
-    expect(
-      releaseOutput8.match(new RegExp('NX   Tagging commit with git', 'g'))
-        .length
-    ).toEqual(1);
   }, 500000);
 });

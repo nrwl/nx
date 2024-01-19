@@ -360,3 +360,13 @@ export async function getCommitHash(ref: string) {
     throw new Error(`Unknown revision: ${ref}`);
   }
 }
+
+export async function getFirstGitCommit() {
+  try {
+    return (
+      await execCommand('git', ['rev-list', '--max-parents=0', 'HEAD'])
+    ).trim();
+  } catch (e) {
+    throw new Error(`Unable to find first commit in git history`);
+  }
+}

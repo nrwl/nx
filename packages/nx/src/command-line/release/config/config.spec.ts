@@ -51,6 +51,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -126,6 +127,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -204,6 +206,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -298,6 +301,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -382,6 +386,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -462,6 +467,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -555,6 +561,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -651,6 +658,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -744,6 +752,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -829,6 +838,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "--no-verify",
@@ -916,6 +926,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -1016,6 +1027,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -1094,6 +1106,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -1184,6 +1197,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -1278,6 +1292,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -1359,6 +1374,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -1460,6 +1476,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -1561,6 +1578,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": false,
                 "commitArgs": "",
@@ -1670,6 +1688,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -1820,6 +1839,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -2211,6 +2231,7 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
@@ -2308,10 +2329,12 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -2333,6 +2356,7 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -2393,10 +2417,12 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -2418,6 +2444,7 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -2477,10 +2504,12 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -2502,6 +2531,7 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -2569,10 +2599,12 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -2594,6 +2626,7 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",
@@ -2651,10 +2684,12 @@ describe('createNxReleaseConfig()', () => {
           "error": null,
           "nxReleaseConfig": {
             "changelog": {
+              "automaticFromRef": false,
               "git": {
                 "commit": true,
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
+                "stageChanges": false,
                 "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
@@ -2676,6 +2711,7 @@ describe('createNxReleaseConfig()', () => {
               "commit": false,
               "commitArgs": "",
               "commitMessage": "chore(release): publish {version}",
+              "stageChanges": false,
               "tag": false,
               "tagArgs": "",
               "tagMessage": "",

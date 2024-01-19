@@ -179,6 +179,7 @@ export async function createNxReleaseConfig(
             },
           }
         : false,
+      automaticFromRef: false,
     },
     releaseTagPattern:
       userConfig.releaseTagPattern ||

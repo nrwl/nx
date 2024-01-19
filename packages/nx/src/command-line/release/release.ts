@@ -81,7 +81,9 @@ export async function release(
     ...args,
     versionData: versionResult.projectsVersionData,
     version: versionResult.workspaceVersion,
-    workspaceChangelog: versionResult.workspaceVersion !== undefined,
+    workspaceChangelog:
+      versionResult.workspaceVersion !== undefined &&
+      !!nxReleaseConfig.changelog.workspaceChangelog,
     stageChanges,
     gitCommit: false,
     gitTag: false,
