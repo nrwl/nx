@@ -300,7 +300,9 @@ export function TargetConfigurationDetails({
                   <CopyToClipboard
                     onCopy={() =>
                       handleCopyClick(
-                        `"inputs": JSON.stringify(targetConfiguration.inputs)`
+                        `"inputs": ${JSON.stringify(
+                          targetConfiguration.inputs
+                        )}`
                       )
                     }
                   />
@@ -345,7 +347,7 @@ export function TargetConfigurationDetails({
                   <CopyToClipboard
                     onCopy={() =>
                       handleCopyClick(
-                        `"ouputs": ${JSON.stringify(
+                        `"outputs": ${JSON.stringify(
                           targetConfiguration.outputs
                         )}`
                       )
