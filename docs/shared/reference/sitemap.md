@@ -521,6 +521,7 @@
   - [nx](/nx-api/nx)
     - [documents](/nx-api/nx/documents)
       - [create-nx-workspace](/nx-api/nx/documents/create-nx-workspace)
+      - [ai](/nx-api/nx/documents/ai)
       - [init](/nx-api/nx/documents/init)
       - [generate](/nx-api/nx/documents/generate)
       - [run](/nx-api/nx/documents/run)

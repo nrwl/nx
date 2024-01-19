@@ -1572,6 +1572,17 @@
         "originalFilePath": "generated/cli/create-nx-workspace"
       },
       {
+        "id": "ai",
+        "name": "ai",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/ai",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/ai",
+        "tags": [],
+        "originalFilePath": "generated/cli/ai"
+      },
+      {
         "id": "init",
         "name": "init",
         "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
