@@ -71,9 +71,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     options.nxCloud ??
     (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
-  if (detectPluginsResponse) {
-    addDepsToPackageJson(repoRoot, detectPluginsResponse.plugins);
-  }
+  addDepsToPackageJson(repoRoot, detectPluginsResponse?.plugins ?? []);
 
   output.log({ title: '📦 Installing Nx' });
 
