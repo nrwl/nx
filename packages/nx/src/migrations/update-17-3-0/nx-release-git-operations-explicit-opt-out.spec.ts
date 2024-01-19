@@ -90,7 +90,7 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
   });
 
   describe('stageChanges', () => {
-    it('should set version.stageChanges to false if committing is not explicitly enabled and granular version.git config exists', () => {
+    it('should set stageChanges to false if committing is not explicitly enabled with version config', () => {
       writeJson(tree, 'nx.json', {
         release: {
           version: {
@@ -106,16 +106,15 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
         git: {
           commit: false,
           tag: false,
+          stageChanges: false,
         },
         version: {
-          git: {
-            stageChanges: false,
-          },
+          git: {},
         },
       });
     });
 
-    it('should set version.stageChanges to false if committing is not explicitly enabled and granular changelog.git config exists', () => {
+    it('should set stageChanges to false if committing is not explicitly enabled with changelog config', () => {
       writeJson(tree, 'nx.json', {
         release: {
           changelog: {
@@ -131,19 +130,15 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
         git: {
           commit: false,
           tag: false,
+          stageChanges: false,
         },
         changelog: {
           git: {},
         },
-        version: {
-          git: {
-            stageChanges: false,
-          },
-        },
       });
     });
 
-    it('should not set version.stageChanges if granular config is not found', () => {
+    it('set version.stageChanges if granular config is not found', () => {
       writeJson(tree, 'nx.json', {
         release: {
           git: {
@@ -160,6 +155,7 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
         git: {
           commit: false,
           tag: false,
+          stageChanges: false,
         },
       });
     });
@@ -216,7 +212,7 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
       });
     });
 
-    it('should not set version.stageChanges if committing is enabled in changelog', () => {
+    it('should set version.stageChanges if committing is only enabled in changelog', () => {
       writeJson(tree, 'nx.json', {
         release: {
           git: {
@@ -238,6 +234,7 @@ describe('nxReleaseGitOperationsExplicitOptOut', () => {
         git: {
           commit: false,
           tag: false,
+          stageChanges: false,
         },
         changelog: {
           git: {

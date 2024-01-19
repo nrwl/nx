@@ -29,23 +29,9 @@ export default function nxReleaseGitOperationsExplicitOptOut(tree: Tree) {
       nxJson.release.git.tag = false;
     }
 
-    // Opt out of staging changes in version only if using
-    // granular git config AND if committing is not enabled.
-    // We don't want to add granular git config if it doesn't already exist,
-    // because the nx release meta command is incompatible with it.
-    if (
-      (nxJson.release.version?.git || nxJson.release.changelog?.git) &&
-      !nxJson.release.git.commit &&
-      !nxJson.release.version?.git?.commit &&
-      !nxJson.release.changelog?.git?.commit
-    ) {
-      nxJson.release.version = {
-        ...nxJson.release.version,
-        git: {
-          ...nxJson.release.version?.git,
-          stageChanges: false,
-        },
-      };
+    // Opt out of staging changes if committing is not enabled globally or in version
+    if (!nxJson.release.git.commit && !nxJson.release.version?.git?.commit) {
+      nxJson.release.git.stageChanges = false;
     }
 
     // Ensure that we don't leave any empty object properties in their config
