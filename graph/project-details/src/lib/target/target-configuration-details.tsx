@@ -28,6 +28,7 @@ import {
   Tooltip,
 } from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from './ui/tooltip-trigger-text';
+import { ExternalLink } from '@nx/graph/ui-tooltips';
 
 /* eslint-disable-next-line */
 export interface TargetProps {
@@ -269,14 +270,13 @@ export function TargetConfigurationDetails({
             </h4>
             <p className="pl-5">
               {executorLink ? (
-                <a
-                  className="underline"
+                <ExternalLink
                   href={executorLink ?? 'https://nx.dev/nx-api'}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {singleCommand ? singleCommand : targetConfiguration.executor}
-                </a>
+                  text={
+                    singleCommand ? singleCommand : targetConfiguration.executor
+                  }
+                  title="View Documentation"
+                />
               ) : singleCommand ? (
                 singleCommand
               ) : (

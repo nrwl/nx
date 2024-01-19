@@ -5,6 +5,9 @@ export function SourceInfo(props: {
   data: Array<string>;
   propertyKey: string;
 }) {
+  // Target property key is in the form `target.${targetName}`
+  // Every other property within in the target has the form `target.${targetName}.${propertyName}
+  const isTarget = props.propertyKey.split('.').length === 2;
   return (
     <span className="inline-flex items-center gap-2">
       <Tooltip
@@ -26,7 +29,7 @@ export function SourceInfo(props: {
         {/*  <InformationCircleIcon className="w-3 h-3" />*/}
         {/*</span>*/}
         <span className="italic text-gray-500">
-          Created by {props.data[1]} from {props.data[0]}
+          {isTarget ? 'Created' : 'Set'} by {props.data[1]} from {props.data[0]}
         </span>
       </Tooltip>
     </span>

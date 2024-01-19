@@ -99,7 +99,7 @@ export function Tooltip({
   });
   const hover = useHover(context, {
     enabled: openAction === 'hover',
-    delay: { open: 0, close: 500 },
+    delay: { open: 0, close: 150 },
     handleClose: safePolygon({ buffer }),
   });
   const role = useRole(context, { role: 'tooltip' });

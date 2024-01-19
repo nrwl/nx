@@ -12,6 +12,7 @@ type PropertyInfoTooltipType =
 
 type PropertyInfoTooltipTypeOptions = {
   docsUrl: string;
+  docsLinkText?: string;
   heading: string;
   description: string;
 };
@@ -25,50 +26,52 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
 > = {
   targets: {
     docsUrl: 'https://nx.dev/core-features/run-tasks#define-tasks',
+    docsLinkText: 'Learn more about running tasks',
     heading: 'Target',
     description:
-      'A Target is the definition of an action taken on a project (e.g. build). It defines how an action should be performed which Nx will then use when invoking the task.',
+      'A Target is the definition of a task for a project. These can be run in many different ways.',
   },
   executors: {
     docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
     heading: 'Executors',
     description:
-      "Executors are pre-packaged node scripts that can be used to run tasks in a consistent way.\nIn order to use an executor, you need to install the plugin that contains the executor and then configure the executor in the project's project.json file.",
+      'Executors define what happens when a task is run.\nCheck the documentation of the executor below to learn more about what it does.',
   },
   cacheable: {
     docsUrl: 'https://nx.dev/concepts/how-caching-works',
-    heading: 'Cacheable Target',
+    docsLinkText: 'Learn more about Caching',
+    heading: 'Caching',
     description:
-      'Marking a target as cacheable tells Nx to store the computation hash for the task after the task has run.\nBefore subsequent runs of the target Nx will recalculate the computation hash. If the hash matches an existing computation hash, Nx retrieves the computation and replays it. This includes restoring files.',
+      'This task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.',
   },
   inputs: {
     docsUrl: 'https://nx.dev/recipes/running-tasks/customizing-inputs',
     heading: 'Inputs',
-    description: `Inputs configure what goes into the calculation of a hash for the task.\nThis affects when things can be pulled from cache/replay.`,
+    description: `Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.`,
   },
   outputs: {
     docsUrl: 'https://nx.dev/reference/project-configuration#outputs',
     heading: 'Outputs',
     description:
-      'Targets may define outputs to tell Nx where the target is going to create file artifacts that Nx should cache. ',
+      'Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.',
   },
   dependsOn: {
     docsUrl: 'https://nx.dev/concepts/task-pipeline-configuration',
+    docsLinkText: 'Learn more about creating dependencies between tasks',
     heading: 'Depends On',
     description:
-      'The dependsOn property allows a target to define other tasks that must be completed before the target can run.\nThese could be tasks from other projects in the monorepo or tasks from the same project.',
+      'This is a list of other tasks which must be completed before running this task.',
+  },
+  options: {
+    docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
+    heading: 'Options',
+    description: 'Options modify the behaviour of the task.',
   },
   configurations: {
     docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
     heading: 'Configurations',
     description:
-      'The configurations property provides extra sets of values that will be merged into the options map when the task is run by Nx.',
-  },
-  options: {
-    docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
-    heading: 'Options',
-    description:
-      'Options are used to provide arguments allowing for the modification of the behaviour of the executor.',
+      'Configurations are sets of Options to allow a Target to be used in different scenarios.',
   },
 };
 
@@ -79,7 +82,6 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
     <div className="text-sm text-slate-700 dark:text-slate-400 max-w-lg">
       <h4 className="flex justify-between items-center border-b text-base">
         <span className="font-mono">{propertyInfo.heading}</span>
-        <span className="text-sm text-gray-500 italic">Nx Graph Insights</span>
       </h4>
       <div className="flex flex-col font-mono border-b py-2">
         <p className="flex grow items-center gap-2 whitespace-pre-wrap">
@@ -89,7 +91,10 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
       <div className="flex py-2">
         <p className="pr-4 flex items-center">
           <ExternalLink
-            text={`View ${propertyInfo.heading} Documentation`}
+            text={
+              propertyInfo.docsLinkText ??
+              `Learn more about ${propertyInfo.heading}`
+            }
             href={propertyInfo.docsUrl}
           />
         </p>
