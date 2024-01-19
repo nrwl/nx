@@ -6,7 +6,7 @@ import type {
   CreateNodesResult,
 } from 'nx/src/utils/nx-plugin';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { dirname } from 'path';
+import { basename, dirname } from 'path';
 import * as yargs from 'yargs-parser';
 import { requireNx } from '../../nx';
 
@@ -28,7 +28,7 @@ export async function updatePackageScripts(
   const files = glob(tree, [pattern]);
 
   for (const file of files) {
-    const projectRoot = dirname(file);
+    const projectRoot = getProjectRootFromConfigFile(file);
     await processProject(tree, projectRoot, file, createNodes, nxJson);
   }
 }
@@ -221,4 +221,13 @@ function excludeScriptFromPackageJson(
   packageJson.nx.includedScripts = packageJson.nx.includedScripts.filter(
     (s) => s !== scriptName
   );
+}
+
+function getProjectRootFromConfigFile(file: string): string {
+  let projectRoot = dirname(file);
+  if (basename(projectRoot) === '.storybook') {
+    projectRoot = dirname(projectRoot);
+  }
+
+  return projectRoot;
 }
