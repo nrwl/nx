@@ -5876,6 +5876,22 @@
             "disableCollapsible": false
           },
           {
+            "name": "Automatically Split E2E Tasks by File",
+            "path": "/ci/concepts/split-e2e-tasks",
+            "id": "split-e2e-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Identify and Re-run Flaky Tasks",
+            "path": "/ci/concepts/flaky-tasks",
+            "id": "flaky-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Cache Security",
             "path": "/ci/concepts/cache-security",
             "id": "cache-security",
@@ -5906,6 +5922,22 @@
         "name": "Parallelization and Distribution",
         "path": "/ci/concepts/parallelization-distribution",
         "id": "parallelization-distribution",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automatically Split E2E Tasks by File",
+        "path": "/ci/concepts/split-e2e-tasks",
+        "id": "split-e2e-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Identify and Re-run Flaky Tasks",
+        "path": "/ci/concepts/flaky-tasks",
+        "id": "flaky-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
