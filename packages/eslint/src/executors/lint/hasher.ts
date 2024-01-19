@@ -50,6 +50,10 @@ export default async function run(
       hashes.push(res.details.nodes[d]);
     }
   }
+  // The hashes in res.details are in a random order causing cache mismatches even if the various hashes are equal.
+  // Sorting the hashes prevents this from happening
+  hashes.sort();
+
   return {
     value: hashArray([command, selfSource, ...hashes, tags]),
     details: {
