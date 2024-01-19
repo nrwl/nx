@@ -26,7 +26,7 @@ Make sure to install the `@nx/jest` version that matches the version of `nx` in 
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/jest
+npm add -D @nx/jest
 ```
 
 {% /tab %}
@@ -40,7 +40,7 @@ yarn add -D @nx/jest
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/jest
+pnpm add -D @nx/jest
 ```
 
 {% /tab %}

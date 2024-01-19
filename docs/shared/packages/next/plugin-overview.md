@@ -16,7 +16,7 @@ To add Next.js to an existing Nx workspace, install the `@nx/next` package. Make
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/next
+npm add -D @nx/next
 ```
 
 {% /tab %}
@@ -30,7 +30,7 @@ yarn add -D @nx/next
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/next
+pnpm add -D @nx/next
 ```
 
 {% /tab %}

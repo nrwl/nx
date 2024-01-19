@@ -14,7 +14,7 @@ In any Nx workspace, you can install `@nx/js` by running the following commands 
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/js
+npm add -D @nx/js
 ```
 
 {% /tab %}
@@ -28,7 +28,7 @@ yarn add -D @nx/js
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/js
+pnpm add -D @nx/js
 ```
 
 {% /tab %}

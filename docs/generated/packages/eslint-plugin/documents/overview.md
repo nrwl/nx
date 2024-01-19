@@ -17,7 +17,7 @@ In any Nx workspace, you can install `@nx/eslint-plugin` by running the followin
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/eslint-plugin
+npm add -D @nx/eslint-plugin
 ```
 
 {% /tab %}
@@ -31,7 +31,7 @@ yarn add -D @nx/eslint-plugin
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/eslint-plugin
+pnpm add -D @nx/eslint-plugin
 ```
 
 {% /tab %}

@@ -14,7 +14,7 @@ If the `@nx/playwright` package is not installed, install the version that match
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/playwright
+npm add -D @nx/playwright
 ```
 
 {% /tab %}
@@ -28,7 +28,7 @@ yarn add -D @nx/playwright
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/playwright
+pnpm add -D @nx/playwright
 ```
 
 {% /tab %}

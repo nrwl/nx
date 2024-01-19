@@ -12,7 +12,7 @@ To add the Node plugin to an existing workspace, run one of the following:
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/node
+npm add -D @nx/node
 ```
 
 {% /tab %}
@@ -26,7 +26,7 @@ yarn add -D @nx/node
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/node
+pnpm add -D @nx/node
 ```
 
 {% /tab %}

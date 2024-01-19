@@ -41,7 +41,7 @@ If the `@nx/detox` package is not installed, install the version that matches yo
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/detox
+npm add -D @nx/detox
 ```
 
 {% /tab %}
@@ -55,7 +55,7 @@ yarn add -D @nx/detox
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/detox
+pnpm add -D @nx/detox
 ```
 
 {% /tab %}

@@ -30,7 +30,7 @@ Make sure to install the `@nx/angular` or `@nx/react` versions that matches the 
 
 {% tab label="Angular" %}
 
-```{% command="npm install --save-dev @nx/angular" path="~/myorg" %}
+```{% command="npm add -D @nx/angular" path="~/myorg" %}
 
 ```
 
@@ -38,7 +38,7 @@ Make sure to install the `@nx/angular` or `@nx/react` versions that matches the 
 
 {% tab label="React" %}
 
-```{% command="npm install --save-dev @nx/react" path="~/myorg" %}
+```{% command="npm add -D @nx/react" path="~/myorg" %}
 
 ```
 

@@ -22,7 +22,7 @@ Make sure to install the `@nx/expo` version that matches the version of `nx` in 
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/expo
+npm add -D @nx/expo
 ```
 
 {% /tab %}
@@ -36,7 +36,7 @@ yarn add -D @nx/expo
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/expo
+pnpm add -D @nx/expo
 ```
 
 {% /tab %}

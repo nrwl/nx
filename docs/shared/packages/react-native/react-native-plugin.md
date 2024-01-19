@@ -38,7 +38,7 @@ Make sure to install the `@nx/react-native` version that matches the version of 
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/react-native
+npm add -D @nx/react-native
 ```
 
 {% /tab %}
@@ -52,7 +52,7 @@ yarn add -D @nx/react-native
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/react-native
+pnpm add -D @nx/react-native
 ```
 
 {% /tab %}

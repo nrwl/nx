@@ -19,7 +19,7 @@ Make sure to install the `@nx/storybook` version that matches the version of `nx
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/storybook
+npm add -D @nx/storybook
 ```
 
 {% /tab %}
@@ -33,7 +33,7 @@ yarn add -D @nx/storybook
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/storybook
+pnpm add -D @nx/storybook
 ```
 
 {% /tab %}

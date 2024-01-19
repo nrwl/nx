@@ -19,7 +19,7 @@ If the `@nx/cypress` package is not installed, install the version that matches 
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/cypress
+npm add -D @nx/cypress
 ```
 
 {% /tab %}
@@ -33,7 +33,7 @@ yarn add -D @nx/cypress
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/cypress
+pnpm add -D @nx/cypress
 ```
 
 {% /tab %}

@@ -29,7 +29,7 @@ Adding the Angular plugin to an existing Nx workspace can be done with the follo
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/angular
+npm add -D @nx/angular
 ```
 
 {% /tab %}
@@ -43,7 +43,7 @@ yarn add -D @nx/angular
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/angular
+pnpm add -D @nx/angular
 ```
 
 {% /tab %}

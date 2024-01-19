@@ -21,7 +21,7 @@ To add the esbuild plugin to an existing workspace, run the following:
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/esbuild
+npm add -D @nx/esbuild
 ```
 
 {% /tab %}
@@ -35,7 +35,7 @@ yarn add -D @nx/esbuild
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/esbuild
+pnpm add -D @nx/esbuild
 ```
 
 {% /tab %}

@@ -31,7 +31,7 @@ To add the Nest plugin to an existing workspace, run one the following commands:
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/nest
+npm add -D @nx/nest
 ```
 
 {% /tab %}
@@ -45,7 +45,7 @@ yarn add -D @nx/nest
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/nest
+pnpm add -D @nx/nest
 ```
 
 {% /tab %}

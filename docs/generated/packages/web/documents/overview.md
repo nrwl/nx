@@ -18,7 +18,7 @@ To add the web plugin to an existing workspace, run one of the following:
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/web
+npm add -D @nx/web
 ```
 
 {% /tab %}
@@ -32,7 +32,7 @@ yarn add -D @nx/web
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/web
+pnpm add -D @nx/web
 ```
 
 {% /tab %}

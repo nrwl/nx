@@ -24,7 +24,7 @@ Adding the Remix plugin to an existing Nx workspace can be done with the followi
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/remix
+npm add -D @nx/remix
 ```
 
 {% /tab %}
@@ -38,7 +38,7 @@ yarn add -D @nx/remix
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/remix
+pnpm add -D @nx/remix
 ```
 
 {% /tab %}
