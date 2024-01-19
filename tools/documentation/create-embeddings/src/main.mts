@@ -569,16 +569,7 @@ class MarkdownEmbeddingSourceForNxApi extends BaseEmbeddingSourceForNxAPI {
 type EmbeddingSourceForNxApi = MarkdownEmbeddingSourceForNxApi;
 
 export async function generateEmbeddingsForNxAPI(supabaseClient) {
-  const argv = await yargs().option('refresh', {
-    alias: 'r',
-    description: 'Refresh data',
-    type: 'boolean',
-  }).argv;
-
-  const shouldRefresh = argv.refresh;
-
   let allFilesPaths = [...getAllFilesWithItemList(manifestsPackages, true)];
-  console.log(allFilesPaths);
   allFilesPaths = allFilesPaths.filter(
     (entry) =>
       !entry.path.includes('sitemap') && !entry.path.includes('deprecated')
@@ -596,17 +587,31 @@ export async function generateEmbeddingsForNxAPI(supabaseClient) {
 
   console.log(`Discovered ${embeddingSources.length} pages`);
 
-  if (!shouldRefresh) {
-    console.log('Checking which pages are new or have changed');
-  } else {
-    console.log('Refresh flag set, re-generating all pages');
-  }
-
   for (const [index, embeddingSource] of embeddingSources.entries()) {
     const { type, source, path, url_partial } = embeddingSource;
 
     try {
       const { checksum, contents } = await embeddingSource.load();
+
+      // Check if the page already exists and the checksum matches
+      const { data: existingPage, error: fetchPageError } = await supabaseClient
+        .from('nx_api_docs')
+        .select('checksum')
+        .filter('path', 'eq', path)
+        .limit(1)
+        .maybeSingle();
+
+      if (fetchPageError) {
+        throw fetchPageError;
+      }
+
+      // Skip the upsert if the checksums match
+      if (existingPage && existingPage.checksum === checksum) {
+        console.log(
+          `#${index}: [${path}] No changes detected, skipping update.`
+        );
+        continue;
+      }
 
       // OpenAI processing for embeddings
       const input = contents.replace(/\n/g, ' ');
@@ -653,7 +658,7 @@ export async function generateEmbeddingsForNxAPI(supabaseClient) {
 }
 
 async function main() {
-  await generateEmbeddings();
+  // await generateEmbeddings();
   await generateEmbeddingsForNxAPI(supabaseClient);
 }
 
