@@ -37,6 +37,7 @@ export async function aiHandler(args: ListArgs): Promise<void> {
 
   if (args.prompt) {
     const response = await getResponseFromAI(args.prompt);
+    console.log(response);
   } else {
     const corePlugins = fetchCorePlugins();
 

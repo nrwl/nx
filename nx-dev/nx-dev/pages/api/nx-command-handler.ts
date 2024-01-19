@@ -3,9 +3,7 @@ import {
   ChatItem,
   CustomError,
   getSupabaseClient,
-  getLastAssistantMessageContent,
   getOpenAI,
-  getUserQuery,
   extractErrorMessage,
 } from '@nx/nx-dev/util-ai';
 import { SupabaseClient } from '@supabase/supabase-js';
@@ -25,18 +23,15 @@ export default async function handler(request: NextRequest) {
     const supabaseClient: SupabaseClient<any, 'public', any> =
       getSupabaseClient(supabaseUrl, supabaseServiceKey);
 
-    const { messages } = (await request.json()) as { messages: ChatItem[] };
+    const { query } = (await request.json()) as { query: string };
 
-    const query: string | null = getUserQuery(messages);
     const sanitizedQuery = query.trim();
 
     const embeddingResponse: OpenAI.Embeddings.CreateEmbeddingResponse =
       await openai.embeddings.create({
         model: 'text-embedding-ada-002',
-        input: sanitizedQuery + getLastAssistantMessageContent(messages),
+        input: sanitizedQuery,
       });
-
-    console.log('sanitizedQuery', sanitizedQuery);
 
     const {
       data: [{ embedding }],
@@ -72,12 +67,7 @@ export default async function handler(request: NextRequest) {
 
     contextText += `${content.trim()}\n---\n`;
 
-    const { chatMessages } = initializeChat(
-      messages,
-      query,
-      contextText,
-      PROMPT
-    );
+    const { chatMessages } = initializeChat(query, contextText, PROMPT);
 
     const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo-16k',
@@ -85,7 +75,7 @@ export default async function handler(request: NextRequest) {
       temperature: 0,
       stream: false,
     });
-
+    console.log(response);
     return response;
   } catch (err: unknown) {
     console.error('Error: ', err);
@@ -100,7 +90,6 @@ export default async function handler(request: NextRequest) {
 }
 
 export function initializeChat(
-  messages: ChatItem[],
   query: string,
   contextText: string,
   prompt: string
@@ -123,14 +112,13 @@ The command should be ready to be put into the terminal, so ONLY return the comm
   // and restructure the user query to include the instructions and context.
   // Add the system prompt as the first message of the array
   // and add the user query as the last message of the array.
-  messages.pop();
-  messages = [
+
+  const messages = [
     { role: 'system', content: prompt },
-    ...(messages ?? []),
     { role: 'user', content: finalQuery },
   ];
 
-  return { chatMessages: messages };
+  return { chatMessages: messages as ChatItem[] };
 }
 
 export const DEFAULT_MATCH_THRESHOLD = 0.78;
