@@ -10,29 +10,11 @@ Make sure to install the `@nx/eslint` version that matches the version of `nx` i
 
 In any Nx workspace, you can install `@nx/eslint` by running the following command:
 
-{% tabs %}
-{%tab label="npm"%}
-
 ```shell
-npm i -D @nx/eslint
+nx add @nx/eslint
 ```
 
-{% /tab %}
-{%tab label="yarn"%}
-
-```shell
-yarn add -D @nx/eslint
-```
-
-{% /tab %}
-{%tab label="pnpm"%}
-
-```shell
-pnpm add -D @nx/eslint
-```
-
-{% /tab %}
-{% /tabs %}
+This command will install the correct version of `@nx/eslint` and optionally set up inferred tasks.
 
 ### Enable Inferred Tasks
 
@@ -40,7 +22,7 @@ pnpm add -D @nx/eslint
 In Nx version 17.3, the `@nx/eslint` plugin can create [inferred tasks](/concepts/inferred-tasks) for projects that have an ESLint configuration file present. This means you can run `nx lint my-project` for that project, even if there is no `lint` task defined in `package.json` or `project.json`.
 {% /callout %}
 
-To enable inferred tasks, add `@nx/eslint/plugin` to the `plugins` array in `nx.json`.
+To enable inferred tasks, run the `nx add @nx/eslint` command and it will add `@nx/eslint/plugin` to the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
@@ -68,6 +50,8 @@ The `@nx/eslint` plugin will create a task for any project that has an ESLint co
 - `.eslintrc.yml`
 - `.eslintrc.json`
 - `eslint.config.js`
+
+ESLint tasks will also be inferred for any project that has an ESLint configuration file in a parent directory. So, if there is an ESLint configuration file in the root of the repository, every project will have an inferred ESLint task.
 
 #### Name the Inferred Task
 
