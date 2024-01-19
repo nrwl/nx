@@ -1719,6 +1719,16 @@
               "file": "nx-cloud/concepts/parallelization-distribution"
             },
             {
+              "name": "Automatically Split E2E Tasks by File",
+              "id": "split-e2e-tasks",
+              "file": "nx-cloud/concepts/split-e2e-tasks"
+            },
+            {
+              "name": "Identify and Re-run Flaky Tasks",
+              "id": "flaky-tasks",
+              "file": "nx-cloud/concepts/flaky-tasks"
+            },
+            {
               "name": "Cache Security",
               "id": "cache-security",
               "file": "nx-cloud/concepts/cache-security"

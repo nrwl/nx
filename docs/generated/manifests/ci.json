@@ -286,6 +286,28 @@
         "tags": ["distribute-task-execution"]
       },
       {
+        "id": "split-e2e-tasks",
+        "name": "Automatically Split E2E Tasks by File",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/concepts/split-e2e-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/split-e2e-tasks",
+        "tags": []
+      },
+      {
+        "id": "flaky-tasks",
+        "name": "Identify and Re-run Flaky Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/concepts/flaky-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/flaky-tasks",
+        "tags": []
+      },
+      {
         "id": "cache-security",
         "name": "Cache Security",
         "description": "",
@@ -333,6 +355,28 @@
     "isExternal": false,
     "path": "/ci/concepts/parallelization-distribution",
     "tags": ["distribute-task-execution"]
+  },
+  "/ci/concepts/split-e2e-tasks": {
+    "id": "split-e2e-tasks",
+    "name": "Automatically Split E2E Tasks by File",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/concepts/split-e2e-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/split-e2e-tasks",
+    "tags": []
+  },
+  "/ci/concepts/flaky-tasks": {
+    "id": "flaky-tasks",
+    "name": "Identify and Re-run Flaky Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/concepts/flaky-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/flaky-tasks",
+    "tags": []
   },
   "/ci/concepts/cache-security": {
     "id": "cache-security",
