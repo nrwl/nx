@@ -177,4 +177,60 @@ describe('updatePackageScripts', () => {
       'nx build && PORT=4000 nx start --experimental-https'
     );
   });
+
+  it('should exclude all package.json scripts when none are excluded', async () => {
+    tree.write('next.config.js', '');
+    writeJson(tree, 'package.json', {
+      name: 'app1',
+      scripts: {
+        build: 'next build',
+      },
+    });
+
+    await updatePackageScripts(tree, [
+      '**/next.config.{js,cjs,mjs}',
+      () => ({
+        projects: {
+          app1: {
+            targets: {
+              build: { command: 'next build' },
+            },
+          },
+        },
+      }),
+    ]);
+
+    const { nx } = readJson<PackageJson>(tree, 'package.json');
+    expect(nx).toStrictEqual({ includedScripts: [] });
+  });
+
+  it('should exclude replaced package.json scripts from nx if they are initially included', async () => {
+    tree.write('next.config.js', '');
+    writeJson(tree, 'package.json', {
+      name: 'app1',
+      scripts: {
+        build: 'next build',
+        foo: 'echo "foo"',
+      },
+      nx: {
+        includedScripts: ['build', 'foo'],
+      },
+    });
+
+    await updatePackageScripts(tree, [
+      '**/next.config.{js,cjs,mjs}',
+      () => ({
+        projects: {
+          app1: {
+            targets: {
+              build: { command: 'next build' },
+            },
+          },
+        },
+      }),
+    ]);
+
+    const { nx } = readJson<PackageJson>(tree, 'package.json');
+    expect(nx).toStrictEqual({ includedScripts: ['foo'] });
+  });
 });

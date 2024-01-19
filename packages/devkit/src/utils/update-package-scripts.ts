@@ -60,6 +60,10 @@ async function processProject(
     return;
   }
 
+  // exclude package.json scripts from nx
+  packageJson.nx ??= {};
+  packageJson.nx.includedScripts ??= [];
+
   for (const targetCommand of targetCommands) {
     const { command, target, configuration } = targetCommand;
     const targetCommandRegex = new RegExp(
@@ -75,6 +79,7 @@ async function processProject(
             ? `$1nx ${target} --configuration=${configuration}$3`
             : `$1nx ${target}$3`
         );
+        excludeScriptFromPackageJson(packageJson, scriptName);
       } else {
         /**
          * Parse script and command to handle the following:
@@ -144,16 +149,17 @@ async function processProject(
               ? `$1nx ${target} --configuration=${configuration}$4`
               : `$1nx ${target}$4`
           );
-          continue;
+        } else {
+          // there are different args or the script has extra args, replace with the command leaving the args
+          packageJson.scripts[scriptName] = script.replace(
+            commandRegex,
+            configuration
+              ? `$1nx ${target} --configuration=${configuration}$3`
+              : `$1nx ${target}$3`
+          );
         }
 
-        // there are different args or the script has extra args, replace with the command leaving the args
-        packageJson.scripts[scriptName] = script.replace(
-          commandRegex,
-          configuration
-            ? `$1nx ${target} --configuration=${configuration}$3`
-            : `$1nx ${target}$3`
-        );
+        excludeScriptFromPackageJson(packageJson, scriptName);
       }
     }
   }
@@ -206,4 +212,13 @@ function getInferredTargetCommands(result: CreateNodesResult): TargetCommand[] {
   }
 
   return targetCommands;
+}
+
+function excludeScriptFromPackageJson(
+  packageJson: PackageJson,
+  scriptName: string
+) {
+  packageJson.nx.includedScripts = packageJson.nx.includedScripts.filter(
+    (s) => s !== scriptName
+  );
 }
