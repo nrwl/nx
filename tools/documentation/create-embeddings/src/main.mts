@@ -653,7 +653,7 @@ export async function generateEmbeddingsForNxAPI(supabaseClient) {
 }
 
 async function main() {
-  // await generateEmbeddings();
+  await generateEmbeddings();
   await generateEmbeddingsForNxAPI(supabaseClient);
 }
 
