@@ -1,24 +1,24 @@
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { NxJsonConfiguration, readNxJson } from '../src/config/nx-json';
-import { ProjectConfiguration } from '../src/config/workspace-json-project-json';
-import { toProjectName } from '../src/config/workspaces';
-import { readJsonFile, readYamlFile } from '../src/utils/fileutils';
-import { combineGlobPatterns } from '../src/utils/globs';
-import { NX_PREFIX } from '../src/utils/logger';
-import { NxPluginV2 } from '../src/utils/nx-plugin';
-import { output } from '../src/utils/output';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
+import { toProjectName } from '../../config/workspaces';
+import { readJsonFile, readYamlFile } from '../../utils/fileutils';
+import { combineGlobPatterns } from '../../utils/globs';
+import { NX_PREFIX } from '../../utils/logger';
+import { NxPluginV2 } from '../../utils/nx-plugin';
+import { output } from '../../utils/output';
 import {
   PackageJson,
   readTargetsFromPackageJson,
-} from '../src/utils/package-json';
-import { joinPathFragments } from '../src/utils/path';
+} from '../../utils/package-json';
+import { joinPathFragments } from '../../utils/path';
 
 export function getNxPackageJsonWorkspacesPlugin(root: string): NxPluginV2 {
   const readJson = (f) => readJsonFile(join(root, f));
   return {
-    name: 'nx-core-build-package-json-nodes',
+    name: 'nx/core/package-json-workspaces',
     createNodes: [
       combineGlobPatterns(
         getGlobPatternsFromPackageManagerWorkspaces(root, readJson)
