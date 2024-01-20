@@ -12,7 +12,6 @@ import {
 import { filterReleaseGroups } from './config/filter-release-groups';
 import { releasePublish } from './publish';
 import { gitCommit, gitTag } from './utils/git';
-import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
   createCommitMessageValues,
   createGitTagValues,
@@ -33,24 +32,6 @@ export async function release(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
-  const hasVersionGitConfig =
-    Object.keys(nxJson.release?.version?.git ?? {}).length > 0;
-  const hasChangelogGitConfig =
-    Object.keys(nxJson.release?.changelog?.git ?? {}).length > 0;
-  if (hasVersionGitConfig || hasChangelogGitConfig) {
-    const jsonConfigErrorPath = hasVersionGitConfig
-      ? ['release', 'version', 'git']
-      : ['release', 'changelog', 'git'];
-    const nxJsonMessage = await resolveNxJsonConfigErrorMessage(
-      jsonConfigErrorPath
-    );
-    output.error({
-      title: `The 'release' top level command cannot be used with granular git configuration. Instead, configure git options in the 'release.git' property in nx.json.`,
-      bodyLines: [nxJsonMessage],
-    });
-    process.exit(1);
-  }
-
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
@@ -61,18 +42,20 @@ export async function release(
     return await handleNxReleaseConfigError(configError);
   }
 
-  // Since git.commit and git.tag default to true, we only need to
-  // disable committing and tagging if they are explicitly set to false.
-  const shouldCommit = nxJson.release?.git?.commit ?? true;
-  const shouldTag = nxJson.release?.git?.tag ?? true;
+  const shouldCommit =
+    nxReleaseConfig.version.git.commit || nxReleaseConfig.changelog.git.commit;
 
-  // We should stage the changes only if this command
-  // will actually be committing the files, or if stageChanges is explicitly set.
-  const stageChanges = shouldCommit || nxReleaseConfig.git?.stageChanges;
+  const shouldStage =
+    shouldCommit ||
+    nxReleaseConfig.version.git.stageChanges ||
+    nxReleaseConfig.changelog.git.stageChanges;
+
+  const shouldTag =
+    nxReleaseConfig.version.git.tag || nxReleaseConfig.changelog.git.tag;
 
   const versionResult: NxReleaseVersionResult = await releaseVersion({
     ...args,
-    stageChanges,
+    stageChanges: shouldStage,
     gitCommit: false,
     gitTag: false,
   });
@@ -84,7 +67,7 @@ export async function release(
     workspaceChangelog:
       versionResult.workspaceVersion !== undefined &&
       !!nxReleaseConfig.changelog.workspaceChangelog,
-    stageChanges,
+    stageChanges: shouldStage,
     gitCommit: false,
     gitTag: false,
   });
