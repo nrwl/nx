@@ -132,7 +132,7 @@ export interface NxReleaseGitConfiguration {
    */
   commitArgs?: string;
   /**
-   * Whether or not to stage the changes made by this command. Assumed to be true if commit is true.
+   * Whether or not to stage the changes made by this command. Always treated as true if commit is true.
    */
   stageChanges?: boolean;
   /**

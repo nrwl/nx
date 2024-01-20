@@ -104,7 +104,7 @@ export const yargsReleaseCommand: CommandModule<
       .option('first-release', {
         type: 'boolean',
         description:
-          'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence the package to publish.',
+          'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.',
       })
       .check((argv) => {
         if (argv.groups && argv.projects) {
@@ -347,7 +347,7 @@ function withGitCommitAndGitTagOptions<T>(
     })
     .option('stage-changes', {
       describe:
-        'Whether or not to stage the changes made by this command. Assumed to be true if git-commit is true.',
+        'Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.',
       type: 'boolean',
     });
 }
