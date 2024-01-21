@@ -1,5 +1,6 @@
 import {
   NxJsonConfiguration,
+  PackageManager,
   readJson,
   Tree,
   updateJson,
@@ -7,6 +8,24 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ciWorkflowGenerator } from './ci-workflow';
+import { vol } from 'memfs';
+
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
+  workspaceRoot: '/root',
+}));
+
+jest.mock('fs', () => {
+  const memFs = require('memfs').fs;
+  const actualFs = jest.requireActual<any>('fs');
+  return {
+    ...jest.requireActual<any>('fs'),
+    existsSync: (p) =>
+      p.endsWith('yarn.lock') || p.endsWith('pnpm-lock.yaml')
+        ? memFs.existsSync(p)
+        : actualFs.existsSync(p),
+  };
+});
 
 describe('CI Workflow generator', () => {
   let tree: Tree;
@@ -15,15 +34,22 @@ describe('CI Workflow generator', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  ['npm', 'yarn', 'pnpm'].forEach((packageManager) => {
+  afterEach(() => {
+    vol.reset();
+  });
+
+  ['npm', 'yarn', 'pnpm'].forEach((packageManager: PackageManager) => {
     describe(`with ${packageManager}`, () => {
       beforeEach(() => {
-        jest.mock('@nx/devkit', () => ({
-          ...jest.requireActual<any>('@nx/devkit'),
-          detectPackageManager: jest
-            .fn()
-            .mockImplementation(() => packageManager),
-        }));
+        let fileSys;
+        if (packageManager === 'yarn') {
+          fileSys = { 'yarn.lock': '' };
+        } else if (packageManager === 'pnpm') {
+          fileSys = { 'pnpm-lock.yaml': '' };
+        } else {
+          fileSys = { 'package-lock.json': '' };
+        }
+        vol.fromJSON(fileSys, '');
       });
 
       it('should generate github CI config', async () => {

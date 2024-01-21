@@ -6,6 +6,7 @@ import {
   exportComponentInEntryPoint,
   findModuleFromOptions,
   normalizeOptions,
+  setGeneratorDefaults,
 } from './lib';
 import type { Schema } from './schema';
 
@@ -92,6 +93,7 @@ export async function componentGeneratorInternal(
   }
 
   exportComponentInEntryPoint(tree, options);
+  setGeneratorDefaults(tree, options);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

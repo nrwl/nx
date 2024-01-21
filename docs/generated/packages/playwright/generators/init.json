@@ -20,9 +20,10 @@
         "description": "Do not add dependencies to `package.json`.",
         "x-priority": "internal"
       },
-      "skipInstall": {
+      "keepExistingVersions": {
         "type": "boolean",
-        "description": "Skip running `playwright install`. This is to ensure that playwright browsers are installed.",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
         "default": false
       }
     },

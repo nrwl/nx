@@ -24,8 +24,9 @@ import {
   vitestCoverageV8Version,
 } from '../../utils/versions';
 
-import { addTsLibDependencies } from '@nx/js';
+import { addTsLibDependencies, initGenerator as jsInitGenerator } from '@nx/js';
 import { join } from 'path';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function vitestGenerator(
   tree: Tree,
@@ -53,11 +54,11 @@ export async function vitestGenerator(
       'test';
     addOrChangeTestTarget(tree, schema, testTarget);
   }
-  const initTask = await initGenerator(tree, {
-    uiFramework: schema.uiFramework,
-    testEnvironment: schema.testEnvironment,
-  });
+
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
+  const initTask = await initGenerator(tree, { skipFormat: true });
   tasks.push(initTask);
+  tasks.push(ensureDependencies(tree, schema));
 
   if (!schema.skipViteConfig) {
     if (schema.uiFramework === 'react') {

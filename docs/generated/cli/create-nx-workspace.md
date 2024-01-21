@@ -37,14 +37,6 @@ Type: `string`
 
 Bundler to be used to build the app
 
-### ci
-
-Type: `string`
-
-Choices: [github, circleci, azure, bitbucket-pipelines, gitlab]
-
-Generate a CI workflow file
-
 ### commit.email
 
 Type: `string`
@@ -119,11 +111,19 @@ Type: `boolean`
 
 Enable the App Router for Next.js
 
-### nxCloud
+### nextSrcDir
 
 Type: `boolean`
 
-Enable distributed caching to make your CI faster
+Generate a 'src/' directory for Next.js
+
+### nxCloud
+
+Type: `string`
+
+Choices: [yes, github, circleci, skip]
+
+Do you want Nx Cloud to make your CI fast?
 
 ### packageManager
 

@@ -60,7 +60,7 @@ npx create-nx-workspace@latest
 {% link-card title="Express" appearance="small" url="/nx-api/express" icon="express" /%}
 {% link-card title="Vue" appearance="small" url="/nx-api/vue" icon="vue" /%}
 {% link-card title="Next" appearance="small" url="/nx-api/next" icon="nextjs" /%}
-{% link-card title="Nuxt" appearance="small" url="/showcase/example-repos/add-nuxt" icon="nuxt" /%}
+{% link-card title="Nuxt" appearance="small" url="/nx-api/nuxt" icon="nuxt" /%}
 {% link-card title="Nest" appearance="small" url="/nx-api/nest" icon="nestjs" /%}
 {% link-card title="Remix" appearance="small" url="/nx-api/remix" icon="remix" /%}
 {% link-card title="Expo" appearance="small" url="/nx-api/expo" icon="expo" /%}

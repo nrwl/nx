@@ -73,11 +73,7 @@ For the maximum control and power over your release process, it is recommended t
 Here is a full working example of creating a custom script which processes its own CLI arguments (with `--dry-run` true by default) and then calls the `nx release` programmatic API.
 
 ```ts {% fileName="tools/scripts/release.ts" %}
-import {
-  releaseChangelog,
-  releasePublish,
-  releaseVersion,
-} from 'nx/src/command-line/release';
+import { releaseChangelog, releasePublish, releaseVersion } from 'nx/release';
 import * as yargs from 'yargs';
 
 (async () => {
@@ -105,8 +101,6 @@ import * as yargs from 'yargs';
 
   const { workspaceVersion, projectsVersionData } = await releaseVersion({
     specifier: options.version,
-    // stage package.json updates to be committed later by the changelog command
-    stageChanges: true,
     dryRun: options.dryRun,
     verbose: options.verbose,
   });

@@ -42,7 +42,7 @@ describe('Next.js Applications', () => {
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
-    checkFilesExist(`${appName}/app/page.tsx`);
+    checkFilesExist(`${appName}/src/app/page.tsx`);
     // check build works
     expect(runCLI(`build ${appName}`)).toContain(
       `Successfully ran target build for project ${appName}`
@@ -179,7 +179,7 @@ describe('Next.js Applications', () => {
       `generate @nx/next:app ${appName} --no-interactive --js --appDir=false`
     );
 
-    checkFilesExist(`apps/${appName}/pages/index.js`);
+    checkFilesExist(`apps/${appName}/src/pages/index.js`);
 
     await checkApp(appName, {
       checkUnitTest: true,
@@ -195,7 +195,7 @@ describe('Next.js Applications', () => {
       `generate @nx/next:lib ${libName} --no-interactive --style=none --js`
     );
 
-    const mainPath = `apps/${appName}/pages/index.js`;
+    const mainPath = `apps/${appName}/src/pages/index.js`;
     updateFile(
       mainPath,
       `import '@${proj}/${libName}';\n` + readFile(mainPath)

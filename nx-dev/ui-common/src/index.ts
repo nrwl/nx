@@ -7,7 +7,6 @@ export * from './lib/champion-perks';
 export * from './lib/header';
 export * from './lib/flip-card';
 export * from './lib/footer';
-export * from './lib/selector';
 export * from './lib/sidebar-container';
 export * from './lib/sidebar';
 export * from './lib/nx-users-showcase';

@@ -11,11 +11,11 @@ import {
 } from '@nx/devkit';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { loadConfigFromFile, UserConfig } from 'vite';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
+import { loadViteDynamicImport } from '../utils/executor-utils';
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -92,6 +92,7 @@ async function buildViteTargets(
   options: VitePluginOptions,
   context: CreateNodesContext
 ) {
+  const { loadConfigFromFile } = await loadViteDynamicImport();
   const viteConfig = await loadConfigFromFile(
     {
       command: 'build',
@@ -100,7 +101,7 @@ async function buildViteTargets(
     configFilePath
   );
 
-  const { buildOutputs, testOutputs } = getOutputs(
+  const { buildOutputs, testOutputs, hasTest } = getOutputs(
     viteConfig?.config,
     projectRoot
   );
@@ -109,6 +110,7 @@ async function buildViteTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
+  // If file is not vitest.config, create targets for build, serve, preview and serve-static
   if (!configFilePath.includes('vitest.config')) {
     targets[options.buildTargetName] = await buildTarget(
       options.buildTargetName,
@@ -124,11 +126,14 @@ async function buildViteTargets(
     targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
   }
 
-  targets[options.testTargetName] = await testTarget(
-    namedInputs,
-    testOutputs,
-    projectRoot
-  );
+  // if file is vitest.config or vite.config has definition for test, create target for test
+  if (configFilePath.includes('vitest.config') || hasTest) {
+    targets[options.testTargetName] = await testTarget(
+      namedInputs,
+      testOutputs,
+      projectRoot
+    );
+  }
 
   return targets;
 }
@@ -215,11 +220,12 @@ function serveStaticTarget(options: VitePluginOptions) {
 }
 
 function getOutputs(
-  viteConfig: UserConfig,
+  viteConfig: Record<string, any> | undefined,
   projectRoot: string
 ): {
   buildOutputs: string[];
   testOutputs: string[];
+  hasTest: boolean;
 } {
   const { build, test } = viteConfig;
 
@@ -238,6 +244,7 @@ function getOutputs(
   return {
     buildOutputs: [buildOutputPath],
     testOutputs: [reportsDirectoryPath],
+    hasTest: !!test,
   };
 }
 

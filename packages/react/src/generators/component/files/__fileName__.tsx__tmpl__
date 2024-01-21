@@ -64,7 +64,7 @@ const Styled<%= className %> = styled.div`
         <% } %>
       </<%= wrapper %>>
     );
-  };
+  }
   <% } %>
 
   export default <%= className %>;

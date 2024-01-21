@@ -121,6 +121,13 @@ module.exports = composePlugins(
 To add the `css-loader` to your config, install it and add the rule.
 
 {% tabs %}
+{% tab label="npm" %}
+
+```shell
+npm add -D css-loader
+```
+
+{% /tab %}
 {% tab label="yarn" %}
 
 ```shell
@@ -128,10 +135,10 @@ yarn add -D css-loader
 ```
 
 {% /tab %}
-{% tab label="npm" %}
+{% tab label="pnpm" %}
 
 ```shell
-npm install -D css-loader
+pnpm add -D css-loader
 ```
 
 {% /tab %}

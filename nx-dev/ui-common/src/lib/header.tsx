@@ -32,10 +32,10 @@ export function Header(): JSX.Element {
       href: '/core-features',
     },
     {
-      name: 'Nx Cache',
+      name: 'Nx Replay',
       description:
         'Built-in local and remote caching to speed up your tasks and save you time and money.',
-      href: '/ci/features/nx-agents',
+      href: '/core-features/cache-task-results',
     },
     {
       name: 'Recipes',
@@ -204,14 +204,14 @@ export function Header(): JSX.Element {
               Plugins registry
             </Link>
             <Link
-              href="/conf"
-              title="Check Nx conference"
+              href="/launch-nx"
+              title="Launch Nx"
               className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
               {/*  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />*/}
               {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
-              {/*</span>*/}Nx Conf
+              {/*</span>*/}Launch Nx
             </Link>
           </nav>
         </div>

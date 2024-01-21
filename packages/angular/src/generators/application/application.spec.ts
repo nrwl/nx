@@ -12,8 +12,11 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import * as enquirer from 'enquirer';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
+  angularDevkitVersion,
+  angularVersion,
   autoprefixerVersion,
   postcssVersion,
   tailwindVersion,
@@ -46,6 +49,36 @@ describe('app', () => {
       .fn()
       .mockReturnValue(Promise.resolve({ 'standalone-components': true }));
     appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
+  it('should add angular dependencies', async () => {
+    // ACT
+    await generateApp(appTree);
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(appTree, 'package.json');
+
+    expect(dependencies['@angular/animations']).toBe(angularVersion);
+    expect(dependencies['@angular/common']).toBe(angularVersion);
+    expect(dependencies['@angular/compiler']).toBe(angularVersion);
+    expect(dependencies['@angular/core']).toBe(angularVersion);
+    expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
+    expect(dependencies['@angular/platform-browser-dynamic']).toBe(
+      angularVersion
+    );
+    expect(dependencies['@angular/router']).toBe(angularVersion);
+    expect(dependencies['rxjs']).toBeDefined();
+    expect(dependencies['tslib']).toBeDefined();
+    expect(dependencies['zone.js']).toBeDefined();
+    expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
+    expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
+    expect(devDependencies['@angular/language-service']).toBe(angularVersion);
+    expect(devDependencies['@angular-devkit/build-angular']).toBe(
+      angularDevkitVersion
+    );
+
+    // codelyzer should no longer be there by default
+    expect(devDependencies['codelyzer']).toBeUndefined();
   });
 
   describe('not nested', () => {
@@ -507,18 +540,12 @@ describe('app', () => {
           .toMatchInlineSnapshot(`
           {
             "executor": "@nx/eslint:lint",
-            "outputs": [
-              "{options.outputFile}",
-            ],
           }
         `);
         expect(readProjectConfiguration(appTree, 'my-app-e2e').targets.lint)
           .toMatchInlineSnapshot(`
           {
             "executor": "@nx/eslint:lint",
-            "outputs": [
-              "{options.outputFile}",
-            ],
           }
         `);
       });
@@ -1124,6 +1151,60 @@ describe('app', () => {
           '@angular/core': '~15.2.0',
         },
       }));
+    });
+
+    it('should add angular dependencies', async () => {
+      // ACT
+      await generateApp(appTree, 'my-app');
+
+      // ASSERT
+      const { dependencies, devDependencies } = readJson(
+        appTree,
+        'package.json'
+      );
+
+      expect(dependencies['@angular/animations']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/common']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/compiler']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/core']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/platform-browser']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/platform-browser-dynamic']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/router']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['rxjs']).toEqual(
+        backwardCompatibleVersions.angularV15.rxjsVersion
+      );
+      expect(dependencies['zone.js']).toEqual(
+        backwardCompatibleVersions.angularV15.zoneJsVersion
+      );
+      expect(devDependencies['@angular/cli']).toEqual(
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
+      );
+      expect(devDependencies['@angular/compiler-cli']).toEqual(
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
+      );
+      expect(devDependencies['@angular/language-service']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(devDependencies['@angular-devkit/build-angular']).toEqual(
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
+      );
+
+      // codelyzer should no longer be there by default
+      expect(devDependencies['codelyzer']).toBeUndefined();
     });
 
     it('should import "ApplicationConfig" from "@angular/platform-browser"', async () => {

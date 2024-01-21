@@ -3,16 +3,16 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 
 let tsModule: typeof import('typescript');
 
-export function updateViteTestSetup(
+export function updateVitestTestSetup(
   tree: Tree,
-  pathToViteConfig: string,
+  pathToVitestConfig: string,
   pathToTestSetup: string
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
   const { tsquery } = require('@phenomnomnominal/tsquery');
-  const fileContents = tree.read(pathToViteConfig, 'utf-8');
+  const fileContents = tree.read(pathToVitestConfig, 'utf-8');
 
   const ast = tsquery.ast(fileContents);
 
@@ -50,7 +50,7 @@ export function updateViteTestSetup(
     }
   }
 
-  tree.write(pathToViteConfig, updatedFileContents);
+  tree.write(pathToVitestConfig, updatedFileContents);
 }
 
 export function updateJestTestSetup(
@@ -100,16 +100,16 @@ export function updateJestTestSetup(
   }
 }
 
-export function updateViteTestIncludes(
+export function updateVitestTestIncludes(
   tree: Tree,
-  pathToViteConfig: string,
+  pathToVitestConfig: string,
   includesString: string
 ) {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
   const { tsquery } = require('@phenomnomnominal/tsquery');
-  const fileContents = tree.read(pathToViteConfig, 'utf-8');
+  const fileContents = tree.read(pathToVitestConfig, 'utf-8');
 
   const ast = tsquery.ast(fileContents);
 
@@ -123,6 +123,6 @@ export function updateViteTestIncludes(
       nodes[0].getStart()
     )}include: ["${includesString}"]${fileContents.slice(nodes[0].getEnd())}`;
 
-    tree.write(pathToViteConfig, updatedFileContents);
+    tree.write(pathToVitestConfig, updatedFileContents);
   }
 }

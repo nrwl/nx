@@ -16,11 +16,11 @@
       "description": "Do not add dependencies to `package.json`.",
       "x-priority": "internal"
     },
-    "framework": {
-      "type": "string",
-      "description": "App framework to test",
-      "enum": ["react-native", "expo"],
-      "default": "react-native"
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
     }
   },
   "required": []

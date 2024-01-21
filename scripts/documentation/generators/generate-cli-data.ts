@@ -17,7 +17,7 @@ import {
 
 const importFresh = require('import-fresh');
 
-const sharedCommands = ['generate', 'run'];
+const sharedCommands = ['generate', 'run', 'exec'];
 
 export async function generateCliDocumentation(
   commandsOutputDirectory: string
