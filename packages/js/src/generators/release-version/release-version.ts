@@ -439,9 +439,13 @@ To fix this you will either need to add a package.json file at that location, or
             'package.json'
           ),
           (json) => {
-            let versionPrefix = options.versionPrefix || '';
+            // Auto (i.e.infer existing) by default
+            let versionPrefix = options.versionPrefix ?? 'auto';
+
             // For auto, we infer the prefix based on the current version of the dependent
             if (versionPrefix === 'auto') {
+              versionPrefix = ''; // we don't want to end up printing auto
+
               const current =
                 json[dependentProject.dependencyCollection][packageName];
               if (current) {
