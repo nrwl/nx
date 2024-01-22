@@ -1,3 +1,4 @@
+import { checkUnknownRules } from 'ajv/dist/compile/util';
 import { PseudoTtyProcess } from '../../utils/child-process';
 import { runCommand } from '../index';
 
@@ -26,23 +27,26 @@ describe('runCommand', () => {
   it('should subscribe to output', (done) => {
     const childProcess = runCommand('echo "hello world"', process.cwd());
 
-    childProcess.onOutput((output) => {
-      expect(output.trim()).toEqual('hello world');
+    let output = '';
+    childProcess.onOutput((chunk) => {
+      output += chunk;
     });
-
+    
     childProcess.onExit(() => {
+      expect(output.trim()).toEqual('hello world');
       done();
     });
   });
 
   it('should be tty', (done) => {
     const childProcess = runCommand('node -p "process.stdout.isTTY"');
+    let output = '';
     childProcess.onOutput((out) => {
-      let output = JSON.stringify(out.trim());
+      output += out.trim();
       // check to make sure that we have ansi sequence characters only available in tty terminals
-      expect(output).toMatchInlineSnapshot(`""\\u001b[33mtrue\\u001b[39m""`);
     });
     childProcess.onExit((_) => {
+      expect(JSON.stringify(output)).toMatchInlineSnapshot(`""\\u001b[33mtrue\\u001b[39m""`);
       done();
     });
   });

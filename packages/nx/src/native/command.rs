@@ -6,6 +6,7 @@ use std::{
 use anyhow::anyhow;
 use crossbeam_channel::{bounded, unbounded, Receiver};
 use crossterm::terminal::{self, disable_raw_mode, enable_raw_mode};
+use crossterm::tty::IsTty;
 use napi::threadsafe_function::ErrorStrategy::Fatal;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
@@ -189,13 +190,15 @@ pub fn run_command(
     let mut writer = pair.master.take_writer()?;
 
     // Stdin -> pty stdin
-    std::thread::spawn(move || {
-        enable_raw_mode().expect("Failed to enter raw terminal mode");
-        let mut stdin = std::io::stdin();
-        #[allow(clippy::redundant_pattern_matching)]
-        // ignore errors that come from copying the stream
-        if let Ok(_) = std::io::copy(&mut stdin, &mut writer) {}
-    });
+    if std::io::stdout().is_tty() {
+        std::thread::spawn(move || {
+            enable_raw_mode().expect("Failed to enter raw terminal mode");
+            let mut stdin = std::io::stdin();
+            #[allow(clippy::redundant_pattern_matching)]
+            // ignore errors that come from copying the stream
+            if let Ok(_) = std::io::copy(&mut stdin, &mut writer) {}
+        });
+    }
 
     std::thread::spawn(move || {
         let exit = child.wait().unwrap();
