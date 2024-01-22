@@ -7,8 +7,10 @@ import {
   addDependenciesToPackageJson,
   runTasksInSerial,
 } from '@nx/devkit';
-import { type Schema } from './schema';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes } from '../../plugins/plugin';
 import { nxVersion, remixVersion } from '../../utils/versions';
+import { type Schema } from './schema';
 
 function addPlugin(tree) {
   const nxJson = readNxJson(tree);
@@ -58,6 +60,10 @@ export async function remixInitGenerator(tree: Tree, options: Schema) {
 
   if (process.env.NX_PCV3 === 'true') {
     addPlugin(tree);
+  }
+
+  if (options.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!options.skipFormat) {

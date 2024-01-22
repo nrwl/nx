@@ -16,8 +16,8 @@ describe('@nx/eslint:init', () => {
     process.env.NX_PCV3 = envV3;
   });
 
-  it('should add the root eslint config to the lint targetDefaults for lint', () => {
-    lintInitGenerator(tree, {});
+  it('should add the root eslint config to the lint targetDefaults for lint', async () => {
+    await lintInitGenerator(tree, {});
 
     expect(readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']).toEqual(
       {
@@ -32,22 +32,22 @@ describe('@nx/eslint:init', () => {
     );
   });
 
-  it('should not generate the global eslint config if it already exist', () => {
+  it('should not generate the global eslint config if it already exist', async () => {
     tree.write('.eslintrc.js', '{}');
 
-    lintInitGenerator(tree, {});
+    await lintInitGenerator(tree, {});
 
     expect(tree.exists('.eslintrc.json')).toBe(false);
   });
 
-  it('should setup lint target defaults', () => {
+  it('should setup lint target defaults', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default'];
       return json;
     });
 
-    lintInitGenerator(tree, {});
+    await lintInitGenerator(tree, {});
 
     expect(
       readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
@@ -64,7 +64,7 @@ describe('@nx/eslint:init', () => {
     });
   });
 
-  it('should setup @nx/eslint/plugin', () => {
+  it('should setup @nx/eslint/plugin', async () => {
     process.env.NX_PCV3 = 'true';
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
@@ -72,7 +72,7 @@ describe('@nx/eslint:init', () => {
       return json;
     });
 
-    lintInitGenerator(tree, {});
+    await lintInitGenerator(tree, {});
 
     expect(
       readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
@@ -92,14 +92,14 @@ describe('@nx/eslint:init', () => {
     `);
   });
 
-  it('should add @nx/eslint/plugin in subsequent step', () => {
+  it('should add @nx/eslint/plugin in subsequent step', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default'];
       return json;
     });
 
-    lintInitGenerator(tree, {});
+    await lintInitGenerator(tree, {});
     expect(
       readJson<NxJsonConfiguration>(tree, 'nx.json').plugins
     ).not.toBeDefined();

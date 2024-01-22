@@ -9,7 +9,9 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { gte } from 'semver';
+import { createNodes } from '../../plugins/plugin';
 import {
   addPlugin,
   getInstalledStorybookVersion,
@@ -98,6 +100,10 @@ export async function initGenerator(tree: Tree, schema: Schema) {
   if (!schema.skipPackageJson) {
     tasks.push(moveToDevDependencies(tree));
     tasks.push(checkDependenciesInstalled(tree, schema));
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!schema.skipFormat) {

@@ -27,7 +27,6 @@
         "default": false
       }
     },
-    "additionalProperties": false,
     "required": [],
     "presets": []
   },
