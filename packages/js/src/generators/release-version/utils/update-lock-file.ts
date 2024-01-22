@@ -4,8 +4,9 @@ import {
   getPackageManagerVersion,
   output,
 } from '@nx/devkit';
-import { getLockFileName } from '@nx/js';
 import { execSync } from 'child_process';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { gte } from 'semver';
 
 export function updateLockFile(
