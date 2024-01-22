@@ -25,6 +25,7 @@ export interface InitArgs {
   useDotNxInstallation?: boolean;
   integrated?: boolean; // For Angular projects only
 }
+(globalThis as any).defineNuxtConfig = (c: any) => c;
 
 export async function initHandler(options: InitArgs): Promise<void> {
   const version =

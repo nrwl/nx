@@ -26,6 +26,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { nxVersion } from '../../utils/versions';
 
 export const name = 'nx/js/dependencies-and-lockfile';
+(globalThis as any).defineNuxtConfig = (c: any) => c;
 
 interface ParsedLockFile {
   externalNodes?: ProjectGraph['externalNodes'];

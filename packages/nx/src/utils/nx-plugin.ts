@@ -43,6 +43,7 @@ import { ProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/p
 import { PackageJsonProjectsNextToProjectJsonPlugin } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
 import { TargetDefaultsPlugin } from '../plugins/target-defaults/target-defaults-plugin';
+(globalThis as any).defineNuxtConfig = (c: any) => c;
 
 /**
  * Context for {@link CreateNodesFunction}

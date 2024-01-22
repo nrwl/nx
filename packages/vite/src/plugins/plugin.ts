@@ -54,6 +54,7 @@ export const createDependencies: CreateDependencies = () => {
 export const createNodes: CreateNodes<VitePluginOptions> = [
   '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
   async (configFilePath, options, context) => {
+    (globalThis as any).defineNuxtConfig = (c: any) => c;
     const projectRoot = dirname(configFilePath);
     // Do not create a project if package.json and project.json isn't there.
     const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));

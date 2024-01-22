@@ -44,6 +44,7 @@ export type {
 export { Workspaces } from './config/workspaces';
 
 export { workspaceLayout } from './config/configuration';
+(globalThis as any).defineNuxtConfig = (c: any) => c;
 
 export type {
   NxPlugin,

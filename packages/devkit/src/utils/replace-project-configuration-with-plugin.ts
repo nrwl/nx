@@ -38,6 +38,7 @@ export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   });
   updateNxJson(tree, nxJson);
 
+  (globalThis as any).defineNuxtConfig = (c: any) => c;
   const [pluginGlob, createNodesFunction] = createNodes;
   const configFiles = glob(tree, [pluginGlob]);
 
