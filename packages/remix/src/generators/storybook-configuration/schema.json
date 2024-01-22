@@ -85,5 +85,5 @@
       "description": "Add a Storybook Test-Runner target."
     }
   },
-  "required": ["name"]
+  "required": ["project"]
 }
