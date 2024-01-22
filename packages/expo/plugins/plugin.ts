@@ -22,7 +22,6 @@ export interface ExpoPluginOptions {
   runIosTargetName?: string;
   runAndroidTargetName?: string;
   exportTargetName?: string;
-  exportWebTargetName?: string;
   prebuildTargetName?: string;
   installTargetName?: string;
   buildTargetName?: string;
@@ -127,14 +126,6 @@ function buildExpoTargets(
       inputs: getInputs(namedInputs),
       outputs: [getOutputs(projectRoot, 'dist')],
     },
-    [options.exportWebTargetName]: {
-      command: `expo export:web`,
-      options: { cwd: projectRoot },
-      cache: true,
-      dependsOn: [`^${options.exportWebTargetName}`],
-      inputs: getInputs(namedInputs),
-      outputs: [getOutputs(projectRoot, 'web-build')],
-    },
     [options.installTargetName]: {
       command: `expo install`,
       options: { cwd: workspaceRoot }, // install at workspace root
@@ -149,8 +140,6 @@ function buildExpoTargets(
     },
     [options.submitTargetName]: {
       executor: `@nx/expo:submit`,
-      dependsOn: [`^${options.submitTargetName}`],
-      inputs: getInputs(namedInputs),
     },
   };
 
@@ -175,7 +164,7 @@ function getInputs(
       ? ['default', '^production']
       : ['default', '^default']),
     {
-      externalDependencies: ['react-native'],
+      externalDependencies: ['expo'],
     },
   ];
 }
@@ -210,7 +199,6 @@ function normalizeOptions(options: ExpoPluginOptions): ExpoPluginOptions {
   options.runIosTargetName ??= 'run-ios';
   options.runAndroidTargetName ??= 'run-android';
   options.exportTargetName ??= 'export';
-  options.exportWebTargetName ??= 'export-web';
   options.prebuildTargetName ??= 'prebuild';
   options.installTargetName ??= 'install';
   options.buildTargetName ??= 'build';
