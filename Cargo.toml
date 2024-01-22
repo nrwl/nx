@@ -1,6 +1,9 @@
 
 [workspace]
-members = ['packages/nx']
+resolver = '2'
+members = [
+	'packages/nx',
+]
 
 [profile.release]
 lto = true

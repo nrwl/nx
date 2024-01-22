@@ -1,5 +1,5 @@
-import { Tree, updateJson } from '@nrwl/devkit';
-import { getRootTsConfigPathInTree } from '@nrwl/js';
+import { Tree, updateJson } from '@nx/devkit';
+import { getRootTsConfigPathInTree } from '@nx/js';
 import { NormalizedGeneratorOptions } from '../schema';
 
 export function addPathMapping(

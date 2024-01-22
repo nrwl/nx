@@ -1,19 +1,13 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { addDependenciesToPackageJson, readJson } from '@nrwl/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { addDependenciesToPackageJson, readJson } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
+import {
+  backwardCompatibleVersions,
+  type PackageCompatVersions,
+  type PackageLatestVersions,
+} from '../../utils/backward-compatible-versions';
+import * as latestVersions from '../../utils/versions';
 import { angularVersion } from '../../utils/versions';
-
-export function getGeneratorDirectoryForInstalledAngularVersion(
-  tree: Tree
-): string | null {
-  const majorAngularVersion = getInstalledAngularMajorVersion(tree);
-
-  const directoryDictionary = {
-    14: 'angular-v14',
-  };
-
-  return directoryDictionary[majorAngularVersion] ?? null;
-}
 
 export function getInstalledAngularVersion(tree: Tree): string {
   const pkgJson = readJson(tree, 'package.json');
@@ -90,4 +84,18 @@ export function addDependenciesToPackageJsonIfDontExist(
     devDepsToAdd,
     packageJsonPath
   );
+}
+
+export function versions(
+  tree: Tree
+): PackageLatestVersions | PackageCompatVersions {
+  const majorAngularVersion = getInstalledAngularMajorVersion(tree);
+  switch (majorAngularVersion) {
+    case 15:
+      return backwardCompatibleVersions.angularV15;
+    case 16:
+      return backwardCompatibleVersions.angularV16;
+    default:
+      return latestVersions;
+  }
 }

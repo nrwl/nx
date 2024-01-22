@@ -1,0 +1,17 @@
+{
+  "builders": {
+    "eslint": {
+      "implementation": "@nx/eslint/src/executors/lint/compat",
+      "schema": "@nx/eslint/src/executors/lint/schema.json",
+      "description": "Run ESLint on a project."
+    }
+  },
+  "executors": {
+    "eslint": {
+      "implementation": "@nx/eslint/src/executors/lint/lint.impl",
+      "schema": "@nx/eslint/src/executors/lint/schema.json",
+      "hasher": "@nx/eslint/src/executors/lint/hasher",
+      "description": "Run ESLint on a project."
+    }
+  }
+}

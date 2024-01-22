@@ -24,7 +24,7 @@ describe('fileutils', () => {
     });
     it('should return false for absolute imports', () => {
       expect(isRelativePath('file')).toEqual(false);
-      expect(isRelativePath('@nrwl/angular')).toEqual(false);
+      expect(isRelativePath('@nx/angular')).toEqual(false);
     });
   });
 });

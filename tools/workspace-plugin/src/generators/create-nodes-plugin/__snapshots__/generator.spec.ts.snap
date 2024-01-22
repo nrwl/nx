@@ -1,0 +1,277 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`create-nodes-plugin/generator generator should add the plugin path to package.json exports 1`] = `
+"{
+  "name": "@nx/eslint",
+  "version": "0.0.1",
+  "private": false,
+  "description": "Some description",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/eslint"
+  },
+  "keywords": [
+    "Monorepo",
+    "eslint",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "@nx/devkit": "file:../devkit"
+  },
+  "peerDependencies": {},
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./executors": "./executors.js",
+    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
+    "./src/executors/*.impl": "./src/executors/*.impl.js",
+    "./src/executors/*/compat": "./src/executors/*/compat.js",
+    "./plugin": "./plugin.js"
+  }
+}
+"
+`;
+
+exports[`create-nodes-plugin/generator generator should run successfully 1`] = `
+"import {
+  CreateNodes,
+  CreateNodesContext,
+  TargetConfiguration,
+} from '@nx/devkit';
+import { basename, dirname, extname, join, resolve } from 'path';
+import { registerTsProject } from '@nx/js/src/internal';
+
+import { getRootTsConfigPath } from '@nx/js';
+
+import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
+import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
+import { readdirSync } from 'fs';
+
+export interface EslintPluginOptions {
+  targetName?: string;
+}
+
+export const createNodes: CreateNodes<EslintPluginOptions> = [
+  '**/TODO',
+  (configFilePath, options, context) => {
+    const projectRoot = dirname(configFilePath);
+
+    // Do not create a project if package.json and project.json isn't there.
+    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
+    if (
+      !siblingFiles.includes('package.json') &&
+      !siblingFiles.includes('project.json')
+    ) {
+      return {};
+    }
+
+    options = normalizeOptions(options);
+
+    return {
+      projects: {
+        [projectRoot]: {
+          root: projectRoot,
+          projectType: 'library',
+          targets: buildEslintTargets(
+            configFilePath,
+            projectRoot,
+            options,
+            context
+          ),
+        },
+      },
+    };
+  },
+];
+
+function buildEslintTargets(
+  configFilePath: string,
+  projectRoot: string,
+  options: EslintPluginOptions,
+  context: CreateNodesContext
+) {
+  const eslintConfig = getEslintConfig(configFilePath, context);
+
+  const targetDefaults = readTargetDefaultsForTarget(
+    options.targetName,
+    context.nxJsonConfiguration.targetDefaults,
+    'executorName'
+  );
+
+  const namedInputs = getNamedInputs(projectRoot, context);
+
+  const targets: Record<string, TargetConfiguration<ExecutorOptions>> = {};
+
+  const baseTargetConfig: TargetConfiguration<ExecutorOptions> = {
+    executor: 'executorName',
+    options: {
+      config: configFilePath,
+      ...targetDefaults?.options,
+    },
+  };
+
+  targets[options.targetName] = {
+    ...baseTargetConfig,
+    cache: targetDefaults?.cache ?? true,
+    inputs:
+      targetDefaults?.inputs ?? 'production' in namedInputs
+        ? ['default', '^production']
+        : ['default', '^default'],
+    outputs: targetDefaults?.outputs ?? getOutputs(projectRoot),
+    options: {
+      ...baseTargetConfig.options,
+    },
+  };
+
+  return targets;
+}
+
+function getEslintConfig(
+  configFilePath: string,
+  context: CreateNodesContext
+): any {
+  const resolvedPath = join(context.workspaceRoot, configFilePath);
+
+  let module: any;
+  if (extname(configFilePath) === '.ts') {
+    const tsConfigPath = getRootTsConfigPath();
+
+    if (tsConfigPath) {
+      const unregisterTsProject = registerTsProject(tsConfigPath);
+      try {
+        module = require(resolvedPath);
+      } finally {
+        unregisterTsProject();
+      }
+    } else {
+      module = require(resolvedPath);
+    }
+  } else {
+    module = require(resolvedPath);
+  }
+  return module.default ?? module;
+}
+
+function getOutputs(projectRoot: string): string[] {
+  function getOutput(path: string): string {
+    if (path.startsWith('..')) {
+      return join('{workspaceRoot}', join(projectRoot, path));
+    } else {
+      return join('{projectRoot}', path);
+    }
+  }
+
+  const outputs = [];
+
+  return outputs;
+}
+
+function normalizeOptions(options: EslintPluginOptions): EslintPluginOptions {
+  options ??= {};
+  options.targetName ??= 'TODO';
+  return options;
+}
+"
+`;
+
+exports[`create-nodes-plugin/generator generator should run successfully 2`] = `
+"import { CreateNodesContext } from '@nx/devkit';
+
+import { createNodes } from './plugin';
+
+describe('@nx/eslint/plugin', () => {
+  let createNodesFunction = createNodes[1];
+  let context: CreateNodesContext;
+
+  beforeEach(async () => {
+    context = {
+      nxJsonConfiguration: {
+        namedInputs: {
+          default: ['{projectRoot}/**/*'],
+          production: ['!{projectRoot}/**/*.spec.ts'],
+        },
+      },
+      workspaceRoot: '',
+    };
+  });
+
+  afterEach(() => {
+    jest.resetModules();
+  });
+
+  it('should create nodes', () => {
+    mockEslintConfig({});
+    const nodes = createNodesFunction(
+      'TODO',
+      {
+        targetName: 'target',
+      },
+      context
+    );
+
+    expect(nodes).toMatchInlineSnapshot();
+  });
+});
+
+function mockEslintConfig(config: any) {
+  jest.mock(
+    'TODO',
+    () => ({
+      default: config,
+    }),
+    {
+      virtual: true,
+    }
+  );
+}
+"
+`;
+
+exports[`create-nodes-plugin/generator generator should run successfully 3`] = `
+"import { formatFiles, getProjects, Tree } from '@nx/devkit';
+import { createNodes } from '../../plugins/plugin';
+
+import { createProjectRootMappingsFromProjectConfigurations } from 'nx/src/project-graph/utils/find-project-for-path';
+import { replaceProjectConfigurationsWithPlugin } from '@nx/devkit/src/utils/replace-project-configuration-with-plugin';
+
+export default async function update(tree: Tree) {
+  const proj = Object.fromEntries(getProjects(tree).entries());
+
+  const rootMappings = createProjectRootMappingsFromProjectConfigurations(proj);
+
+  await replaceProjectConfigurationsWithPlugin(
+    tree,
+    rootMappings,
+    '@nx/eslint/plugin',
+    createNodes,
+    {
+      targetName: 'TODO',
+    }
+  );
+
+  await formatFiles(tree);
+}
+"
+`;

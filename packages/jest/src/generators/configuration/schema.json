@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxJestProject",
+  "cli": "nx",
+  "title": "Add Jest Configuration to a project",
+  "description": "Add Jest Configuration to a project.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project.",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-priority": "important"
+    },
+    "skipSetupFile": {
+      "type": "boolean",
+      "description": "Skips the setup file required for angular.",
+      "default": false,
+      "x-deprecated": "Use `--setup-file` instead."
+    },
+    "setupFile": {
+      "type": "string",
+      "enum": ["none", "angular", "web-components"],
+      "description": "The setup file to be generated.",
+      "default": "none",
+      "x-priority": "important"
+    },
+    "skipSerializers": {
+      "type": "boolean",
+      "description": "Skips the serializers required to snapshot angular templates.",
+      "default": false
+    },
+    "supportTsx": {
+      "type": "boolean",
+      "description": "Setup `tsx` support.",
+      "default": false,
+      "x-priority": "important"
+    },
+    "testEnvironment": {
+      "type": "string",
+      "enum": ["jsdom", "node", "none"],
+      "description": "The test environment for jest.",
+      "default": "jsdom",
+      "x-priority": "important"
+    },
+    "compiler": {
+      "type": "string",
+      "enum": ["tsc", "babel", "swc"],
+      "description": "The compiler to use for source and tests.",
+      "default": "tsc"
+    },
+    "babelJest": {
+      "type": "boolean",
+      "alias": "babel-jest",
+      "description": "Use `babel-jest` instead of `ts-jest`.",
+      "x-deprecated": "Use `--compiler=babel` instead.",
+      "default": false
+    },
+    "skipFormat": {
+      "description": "Skip formatting files",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "js": {
+      "type": "boolean",
+      "default": false,
+      "description": "Use JavaScript instead of TypeScript for config files"
+    }
+  },
+  "required": []
+}

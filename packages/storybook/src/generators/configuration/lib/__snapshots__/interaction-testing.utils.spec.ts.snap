@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Helper functions for the Storybook 7 migration generator should add addon-interactions in main.ts if it does not exist 1`] = `
+"import type { StorybookConfig } from '@storybook/angular';
+    
+            const config: StorybookConfig = {
+              stories: ['../**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+              addons: ['@storybook/addon-interactions', '@storybook/addon-essentials'],
+              framework: {
+                name: '@storybook/angular',
+                options: {},
+              },
+            };
+            
+            export default config;"
+`;
+
+exports[`Helper functions for the Storybook 7 migration generator should do nothing if addon-interactions already exists in main.ts 1`] = `
+"import type { StorybookConfig } from '@storybook/angular';
+    
+            const config: StorybookConfig = {
+              stories: ['../**/*.stories.@(js|jsx|ts|tsx|mdx)'],
+              addons: ['@storybook/addon-essentials', '@storybook/addon-interactions'],
+              framework: {
+                name: '@storybook/angular',
+                options: {},
+              },
+            };
+            
+            export default config;"
+`;

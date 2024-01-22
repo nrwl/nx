@@ -1,13 +1,13 @@
 import {
   getProjects,
+  joinPathFragments,
   names,
+  normalizePath,
   readProjectConfiguration,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
-import { getNewProjectName } from '@nrwl/workspace/src/generators/move/lib/utils';
-import { join } from 'path';
-import { Schema } from '../schema';
+} from '@nx/devkit';
+import type { MoveImplOptions } from './types';
 
 /**
  * Updates the Angular module name (including the spec file and index.ts)
@@ -19,9 +19,15 @@ import { Schema } from '../schema';
  */
 export function updateModuleName(
   tree: Tree,
-  { projectName, destination }: Schema
+  { oldProjectName, newProjectName }: MoveImplOptions
 ): void {
-  const newProjectName = getNewProjectName(destination);
+  const unscopedNewProjectName = newProjectName.startsWith('@')
+    ? newProjectName.split('/')[1]
+    : newProjectName;
+
+  if (oldProjectName === unscopedNewProjectName) {
+    return;
+  }
 
   const project = readProjectConfiguration(tree, newProjectName);
 
@@ -32,15 +38,15 @@ export function updateModuleName(
   }
 
   const moduleName = {
-    from: names(projectName).className,
-    to: names(newProjectName).className,
+    from: `${names(oldProjectName).className}Module`,
+    to: `${names(unscopedNewProjectName).className}Module`,
   };
 
   const findModuleName = new RegExp(`\\b${moduleName.from}`, 'g');
 
   const moduleFile = {
-    from: `${projectName}.module`,
-    to: `${newProjectName}.module`,
+    from: `${oldProjectName}.module`,
+    to: `${unscopedNewProjectName}.module`,
   };
 
   const findFileName = new RegExp(`\\b${moduleFile.from}`, 'g');
@@ -81,7 +87,7 @@ export function updateModuleName(
   });
 
   // update index file
-  const indexFile = join(project.sourceRoot, 'index.ts');
+  const indexFile = joinPathFragments(project.sourceRoot, 'index.ts');
   if (tree.exists(indexFile)) {
     updateFileContent(tree, replacements, indexFile);
   }
@@ -91,13 +97,14 @@ export function updateModuleName(
   // Update any files which import the module
   for (const [, definition] of getProjects(tree)) {
     visitNotIgnoredFiles(tree, definition.root, (file) => {
-      // skip files that were already modified
+      const normalizedFile = normalizePath(file);
 
-      if (skipFiles.includes(file)) {
+      // skip files that were already modified
+      if (skipFiles.includes(normalizedFile)) {
         return;
       }
 
-      updateFileContent(tree, replacements, file);
+      updateFileContent(tree, replacements, normalizedFile);
     });
   }
 }
@@ -108,7 +115,7 @@ function updateFileContent(
   fileName: string,
   newFileName?: string
 ): void {
-  let content = tree.read(fileName)?.toString('utf-8');
+  let content = tree.read(fileName, 'utf-8');
 
   if (content) {
     let updated = false;

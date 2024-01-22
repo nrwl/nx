@@ -11,9 +11,47 @@ import { NxJsonConfiguration } from './nx-json';
 export interface FileData {
   file: string;
   hash: string;
-  /** @deprecated this field will be removed in v17. Use {@link dependencies} instead */
-  deps?: string[];
-  dependencies?: ProjectGraphDependency[];
+  /**
+   * An array of dependencies. If an element is just a string,
+   * the dependency is assumed to be a static dependency targetting
+   * that string. If the element is a tuple with two elements, the first element
+   * inside of it is the target project, with the second element being the type of dependency.
+   * If the tuple has 3 elements, the first is preceded by a source.
+   */
+  deps?: FileDataDependency[];
+}
+
+/**
+ * A file data dependency, as stored in the cache. If just a string,
+ * the dependency is assumed to be a static dependency targetting
+ * that string. If it is a tuple with two elements, the first element
+ * inside of it is the target project, with the second element being the type of dependency.
+ * If the tuple has 3 elements, the first is preceded by a source.
+ */
+export type FileDataDependency =
+  | string
+  | [target: string, type: DependencyType]
+  | [source: string, target: string, type: DependencyType];
+
+export function fileDataDepTarget(dep: FileDataDependency) {
+  return typeof dep === 'string'
+    ? dep
+    : Array.isArray(dep) && dep.length === 2
+    ? dep[0]
+    : dep[1];
+}
+
+export function fileDataDepType(dep: FileDataDependency) {
+  return typeof dep === 'string'
+    ? 'static'
+    : Array.isArray(dep) && dep.length === 2
+    ? dep[1]
+    : dep[2];
+}
+
+export interface FileMap {
+  nonProjectFiles: FileData[];
+  projectFileMap: ProjectFileMap;
 }
 
 /**
@@ -30,8 +68,6 @@ export interface ProjectGraph {
   nodes: Record<string, ProjectGraphProjectNode>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
   dependencies: Record<string, ProjectGraphDependency[]>;
-  // this is optional otherwise it might break folks who use project graph creation
-  allWorkspaceFiles?: FileData[];
   version?: string;
 }
 
@@ -68,11 +104,6 @@ export interface ProjectGraphProjectNode {
    * Additional metadata about a project
    */
   data: ProjectConfiguration & {
-    /**
-     * Files associated to the project
-     */
-    files: FileData[];
-
     description?: string;
   };
 }
@@ -114,6 +145,7 @@ export interface ProjectGraphDependency {
 
 /**
  * Additional information to be used to process a project graph
+ * @deprecated The {@link ProjectGraphProcessor} is deprecated. This will be removed in Nx 18.
  */
 export interface ProjectGraphProcessorContext {
   /**
@@ -139,6 +171,7 @@ export interface ProjectGraphProcessorContext {
 
 /**
  * A function that produces an updated ProjectGraph
+ * @deprecated Use {@link CreateNodes} and {@link CreateDependencies} instead. This will be removed in Nx 18.
  */
 export type ProjectGraphProcessor = (
   currentGraph: ProjectGraph,

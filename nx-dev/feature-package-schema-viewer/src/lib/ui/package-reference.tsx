@@ -4,9 +4,9 @@ import {
   DocumentIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
-import { FileMetadata } from '@nrwl/nx-dev/models-package';
-import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
+import { DocumentMetadata } from '@nx/nx-dev/models-document';
+import { FileMetadata } from '@nx/nx-dev/models-package';
+import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import Link from 'next/link';
 import React from 'react';
 
@@ -16,17 +16,15 @@ export function DocumentList({
   documents: DocumentMetadata[];
 }): JSX.Element {
   return (
-    <>
-      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-        {!!documents.length ? (
-          documents.map((guide) => (
-            <DocumentListItem key={guide.id} document={guide} />
-          ))
-        ) : (
-          <EmptyList type="document" />
-        )}
-      </ul>
-    </>
+    <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+      {!!documents.length ? (
+        documents.map((guide) => (
+          <DocumentListItem key={guide.id} document={guide} />
+        ))
+      ) : (
+        <EmptyList type="document" />
+      )}
+    </ul>
   );
 }
 
@@ -63,17 +61,15 @@ export function SchemaList({
   type: 'executor' | 'generator';
 }): JSX.Element {
   return (
-    <>
-      <ul className="divide-y divide-slate-100 dark:divide-slate-800">
-        {!!files.length ? (
-          files.map((schema) => (
-            <SchemaListItem key={schema.name} file={schema} />
-          ))
-        ) : (
-          <EmptyList type={type} />
-        )}
-      </ul>
-    </>
+    <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+      {!!files.length ? (
+        files.map((schema) => (
+          <SchemaListItem key={schema.name} file={schema} />
+        ))
+      ) : (
+        <EmptyList type={type} />
+      )}
+    </ul>
   );
 }
 
@@ -124,7 +120,7 @@ function EmptyList({
     <li className="relative flex px-2 py-2 transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-slate-50 dark:focus-within:ring-sky-500 dark:hover:bg-slate-800/60">
       <div className="flex-shrink-0 self-start rounded-lg border-slate-200 bg-slate-100 p-2 dark:border-slate-600 dark:bg-slate-700">
         <InformationCircleIcon
-          className="h-5 w-5 flex-shrink-0 rounded-md border-slate-100 bg-slate-50 dark:bg-slate-800 dark:bg-slate-700"
+          className="h-5 w-5 flex-shrink-0 rounded-md border-slate-200 bg-slate-50 dark:bg-slate-800 dark:bg-slate-700"
           role="img"
         />
       </div>

@@ -3,7 +3,7 @@ import {
   Tree,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function updateModuleFederationE2eProject(
   host: Tree,

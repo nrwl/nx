@@ -1,16 +1,16 @@
-import type { Tree } from '@nrwl/devkit';
-import { findNodes } from 'nx/src/utils/typescript';
-import { getSourceNodes } from '@nrwl/workspace/src/utilities/typescript';
+import type { Tree } from '@nx/devkit';
+import { findNodes, getSourceNodes } from '@nx/js';
 import type { PropertyDeclaration } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
-export type KnobType = 'text' | 'boolean' | 'number' | 'select';
+export type ArgType = 'text' | 'boolean' | 'number' | 'select';
+
 export interface InputDescriptor {
   name: string;
-  type: KnobType;
+  type: ArgType;
   defaultValue?: string;
 }
 
@@ -62,7 +62,7 @@ export function getComponentProps(
             : node.name.getText()
           : node.name.getText();
 
-      const type = getKnobType(node);
+      const type = getArgType(node);
       const defaultValue = getArgsDefaultValueFn(node);
 
       return {
@@ -76,27 +76,27 @@ export function getComponentProps(
   return props;
 }
 
-export function getKnobType(property: PropertyDeclaration): KnobType {
+export function getArgType(property: PropertyDeclaration): ArgType {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
   if (property.type) {
     const typeName = property.type.getText();
-    const typeNameToKnobType: Record<string, KnobType> = {
+    const typeNameToArgType: Record<string, ArgType> = {
       string: 'text',
       number: 'number',
       boolean: 'boolean',
     };
-    return typeNameToKnobType[typeName] || 'text';
+    return typeNameToArgType[typeName] || 'text';
   }
   if (property.initializer) {
-    const initializerKindToKnobType: Record<number, KnobType> = {
+    const initializerKindToArgType: Record<number, ArgType> = {
       [tsModule.SyntaxKind.StringLiteral]: 'text',
       [tsModule.SyntaxKind.NumericLiteral]: 'number',
       [tsModule.SyntaxKind.TrueKeyword]: 'boolean',
       [tsModule.SyntaxKind.FalseKeyword]: 'boolean',
     };
-    return initializerKindToKnobType[property.initializer.kind] || 'text';
+    return initializerKindToArgType[property.initializer.kind] || 'text';
   }
   return 'text';
 }

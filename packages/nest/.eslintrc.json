@@ -24,7 +24,7 @@
           "@angular-devkit/architect",
           "@angular-devkit/core",
           "@angular-devkit/schematics",
-          "@nrwl/workspace"
+          "@nx/workspace"
         ]
       }
     },
@@ -32,7 +32,26 @@
       "files": ["./package.json", "./generators.json", "./migrations.json"],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/nx-plugin-checks": "error"
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              "eslint",
+              "nest",
+              "@nestjs/schematics"
+            ]
+          }
+        ]
       }
     }
   ]

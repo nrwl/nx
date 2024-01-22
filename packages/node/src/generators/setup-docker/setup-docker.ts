@@ -1,6 +1,4 @@
 import {
-  addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
@@ -8,11 +6,13 @@ import {
   logger,
   readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+} from '@nx/devkit';
+
 import { SetUpDockerOptions } from './schema';
+import { join } from 'path';
 
 function normalizeOptions(
   tree: Tree,
@@ -39,7 +39,7 @@ function addDocker(tree: Tree, options: SetUpDockerOptions) {
   } else {
     const outputPath =
       project.targets[`${options.buildTarget}`]?.options.outputPath;
-    generateFiles(tree, joinPathFragments(__dirname, './files'), project.root, {
+    generateFiles(tree, join(__dirname, './files'), project.root, {
       tmpl: '',
       app: project.sourceRoot,
       buildLocation: outputPath,
@@ -80,4 +80,3 @@ export async function setupDockerGenerator(
 }
 
 export default setupDockerGenerator;
-export const setupDockerSchematic = convertNxGenerator(setupDockerGenerator);

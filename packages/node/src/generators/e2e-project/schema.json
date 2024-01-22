@@ -18,6 +18,11 @@
       "type": "string",
       "x-priority": "important"
     },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
+    },
     "name": {
       "description": "The name of the e2e project. Defaults to the project name with '-e2e' suffix.",
       "type": "string"
@@ -39,6 +44,13 @@
       "enum": ["eslint", "none"],
       "default": "eslint"
     },
+    "isNest": {
+      "description": "Is the E2E server project nest",
+      "type": "boolean",
+      "default": false,
+      "hidden": true,
+      "x-priority": "internal"
+    },
     "rootProject": {
       "description": "Create node application at the root of the workspace.",
       "type": "boolean",
@@ -46,10 +58,10 @@
       "hidden": true,
       "x-priority": "internal"
     },
-    "formatFiles": {
-      "description": "Format generated files.",
+    "skipFormat": {
+      "description": "Skip formatting files.",
       "type": "boolean",
-      "default": true,
+      "default": false,
       "hidden": true,
       "x-priority": "internal"
     }

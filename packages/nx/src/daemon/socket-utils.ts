@@ -1,7 +1,7 @@
 import { unlinkSync } from 'fs';
 import { platform } from 'os';
-import { resolve } from 'path';
-import { DAEMON_SOCKET_PATH } from './tmp-dir';
+import { join, resolve } from 'path';
+import { DAEMON_SOCKET_PATH, socketDir } from './tmp-dir';
 
 export const isWindows = platform() === 'win32';
 
@@ -14,6 +14,11 @@ export const isWindows = platform() === 'win32';
 export const FULL_OS_SOCKET_PATH = isWindows
   ? '\\\\.\\pipe\\nx\\' + resolve(DAEMON_SOCKET_PATH)
   : resolve(DAEMON_SOCKET_PATH);
+
+export const FORKED_PROCESS_OS_SOCKET_PATH = (id: string) => {
+  let path = resolve(join(socketDir, 'fp' + id + '.sock'));
+  return isWindows ? '\\\\.\\pipe\\nx\\' + resolve(path) : resolve(path);
+};
 
 export function killSocketOrPath(): void {
   try {
@@ -32,10 +37,11 @@ function serializeError(error: Error | null): string | null {
 // Prepare a serialized project graph result for sending over IPC from the server to the client
 export function serializeResult(
   error: Error | null,
-  serializedProjectGraph: string | null
+  serializedProjectGraph: string | null,
+  serializedSourceMaps: string | null
 ): string | null {
   // We do not want to repeat work `JSON.stringify`ing an object containing the potentially large project graph so merge as strings
   return `{ "error": ${serializeError(
     error
-  )}, "projectGraph": ${serializedProjectGraph} }`;
+  )}, "projectGraph": ${serializedProjectGraph}, "sourceMaps": ${serializedSourceMaps} }`;
 }

@@ -1,18 +1,17 @@
-import {
-  extractLayoutDirectory,
-  getWorkspaceLayout,
-  joinPathFragments,
-  names,
-  Tree,
-} from '@nrwl/devkit';
-import { getImportPath } from 'nx/src/utils/path';
+import { names, Tree } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
+import { Linter } from '@nx/eslint';
+import { UnitTestRunner } from '../../../utils/test-runners';
+import { normalizeNewProjectPrefix } from '../../utils/project';
 import { Schema } from '../schema';
 import { NormalizedSchema } from './normalized-schema';
-import { Linter } from '@nrwl/linter';
-import { UnitTestRunner } from '../../../utils/test-runners';
-import { normalizePrefix } from '../../utils/project';
 
-export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
+export async function normalizeOptions(
+  host: Tree,
+  schema: Schema
+): Promise<NormalizedSchema> {
+  schema.standalone = schema.standalone ?? true;
   // Create a schema with populated default values
   const options: Schema = {
     buildable: false,
@@ -29,39 +28,32 @@ export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
     ...schema,
   };
 
-  const name = names(options.name).fileName;
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const fullProjectDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${name}`.replace(/\/+/g, '/')
-    : name;
-
   const {
-    libsDir: defaultLibsDirectory,
-    npmScope,
-    standaloneAsDefault,
-  } = getWorkspaceLayout(host);
-  const libsDir = layoutDirectory ?? defaultLibsDirectory;
+    projectName,
+    names: projectNames,
+    projectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'library',
+    directory: options.directory,
+    importPath: options.importPath,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+    callingGenerator: '@nx/angular:library',
+  });
 
-  const projectName = fullProjectDirectory
-    .replace(new RegExp('/', 'g'), '-')
-    .replace(/-\d+/g, '');
-  const fileName =
-    options.simpleName || options.simpleModuleName ? name : projectName;
-  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
+  const fileName = options.simpleName
+    ? projectNames.projectSimpleName
+    : projectNames.projectFileName;
 
   const moduleName = `${names(fileName).className}Module`;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
   const modulePath = `${projectRoot}/src/lib/${fileName}.module.ts`;
-  const prefix = normalizePrefix(options.prefix, npmScope);
 
-  options.standaloneConfig = options.standaloneConfig ?? standaloneAsDefault;
-
-  const importPath =
-    options.importPath || getImportPath(npmScope, fullProjectDirectory);
+  const npmScope = getNpmScope(host);
+  const prefix = normalizeNewProjectPrefix(options.prefix, npmScope, 'lib');
 
   const ngCliSchematicLibRoot = projectName;
   const allNormalizedOptions = {
@@ -73,13 +65,14 @@ export function normalizeOptions(host: Tree, schema: Schema): NormalizedSchema {
     projectRoot,
     entryFile: 'index',
     moduleName,
-    projectDirectory: fullProjectDirectory,
     modulePath,
     parsedTags,
     fileName,
     importPath,
     ngCliSchematicLibRoot,
-    standaloneComponentName: `${names(name).className}Component`,
+    standaloneComponentName: `${
+      names(projectNames.projectSimpleName).className
+    }Component`,
   };
 
   const {

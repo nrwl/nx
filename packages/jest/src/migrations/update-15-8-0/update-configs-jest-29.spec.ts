@@ -1,16 +1,16 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   ProjectGraph,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { updateConfigsJest29 } from './update-configs-jest-29';
-import { libraryGenerator } from '@nrwl/workspace';
+import { libraryGenerator } from '@nx/js';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest.fn().mockImplementation(async () => {
     return projectGraph;
   }),
@@ -55,9 +55,9 @@ describe('Jest Migration - jest 29 update configs', () => {
 module.exports = {
   ...nxPreset,
   testMatch: ['**/+(*.)+(spec|test).+(ts|js)?(x)'],
-  globals: { 
+  globals: {
     'ts-jest': {
-        tsconfig: '<rootDir>/tsconfig.spec.json' 
+        tsconfig: '<rootDir>/tsconfig.spec.json'
     },
     something: 'else',
     abc: [1234, true, {abc: 'yes'}]
@@ -307,8 +307,8 @@ module.exports = {
     '^.+\\\\.[tj]sx?$': 'babel-jest',
   },
   globals: {
-      'ts-jest': { 
-          tsconfig: '<rootDir>/tsconfig.spec.json' 
+      'ts-jest': {
+          tsconfig: '<rootDir>/tsconfig.spec.json'
       },
       something: 'else',
       abc: [1234, true, {abc: 'yes'}]
@@ -331,8 +331,8 @@ module.exports = {
   testEnvironment: 'node',
   preset: '../../jest.preset.js',
   globals: {
-      'ts-jest': { 
-          tsconfig: '<rootDir>/tsconfig.spec.json' 
+      'ts-jest': {
+          tsconfig: '<rootDir>/tsconfig.spec.json'
       },
       something: 'else',
       abc: [1234, true, {abc: 'yes'}]
@@ -391,6 +391,7 @@ async function setup(tree: Tree, name: string, existingGraph?: ProjectGraph) {
   const projectConfig = readProjectConfiguration(tree, name);
   projectConfig.targets['test'] = {
     ...projectConfig.targets['test'],
+    executor: '@nrwl/jest:jest',
     configurations: {
       ci: {
         ci: true,
@@ -430,9 +431,9 @@ transform: {
 },
 // I am a comment and shouldn't be removed
 moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-globals: { 
+globals: {
     'ts-jest': {
-        tsconfig: '<rootDir>/tsconfig.spec.json' 
+        tsconfig: '<rootDir>/tsconfig.spec.json'
     },
     something: 'else',
     abc: [1234, true, {abc: 'yes'}]
@@ -445,6 +446,22 @@ testEnvironment: 'node',
 preset: '../../jest.preset.js'
 };
 `
+  );
+
+  tree.write(
+    'jest.config.ts',
+    tree
+      .read('jest.config.ts')
+      .toString()
+      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest')
+  );
+
+  tree.write(
+    'jest.preset.js',
+    tree
+      .read('jest.preset.js')
+      .toString()
+      .replace(new RegExp('@nx/jest', 'g'), '@nrwl/jest')
   );
 
   projectGraph = {

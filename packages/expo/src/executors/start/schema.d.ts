@@ -19,12 +19,4 @@ export interface ExpoStartOptions {
   localhost?: boolean;
   tunnel?: boolean;
   offline?: boolean;
-  /**
-   * @deprecated
-   */
-  sendTo?: string; // deprecated from @expo/cli
-  /**
-   * @deprecated
-   */
-  webpack?: boolean; // deprecated from @expo/cli
 }

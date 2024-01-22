@@ -29,7 +29,7 @@ export const InstallNxConsole = () => (
               className="block text-xs font-medium opacity-80"
             >
               <span className="absolute inset-0" aria-hidden="true"></span>
-              The official VSCode plugin for Nx.
+              The official VSCode extension for Nx.
             </a>
           </p>
         </div>

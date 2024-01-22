@@ -11,5 +11,5 @@ export interface ExpoEasUpdateOptions {
   json: boolean; // default is false
   auto: boolean; // default is false
   privateKeyPath?: string;
-  nonInteractive: boolean; // default is false
+  interactive: boolean; // default is false
 }

@@ -1,4 +1,4 @@
-import { createProjectGraphAsync, ProjectGraph, reverse } from '@nrwl/devkit';
+import { createProjectGraphAsync, ProjectGraph, reverse } from '@nx/devkit';
 import { Schema } from '../schema';
 
 /**
@@ -21,7 +21,7 @@ export async function checkDependencies(_, schema: Schema): Promise<void> {
     throw new Error(
       `${
         schema.projectName
-      } is still depended on by the following projects:\n${deps
+      } is still a dependency of the following projects:\n${deps
         .map((x) => x.target)
         .join('\n')}`
     );

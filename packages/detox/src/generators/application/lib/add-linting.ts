@@ -1,13 +1,16 @@
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
   joinPathFragments,
+  runTasksInSerial,
   Tree,
-  updateJson,
-} from '@nrwl/devkit';
-import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
+} from '@nx/devkit';
+import { extraEslintDependencies } from '@nx/react';
 import { NormalizedSchema } from './normalize-options';
+import {
+  addExtendsToLintConfig,
+  isEslintConfigSupported,
+} from '@nx/eslint/src/generators/utils/eslint-file';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === Linter.None) {
@@ -20,15 +23,12 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     tsConfigPaths: [
       joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
     ],
-    eslintFilePatterns: [`${options.e2eProjectRoot}/**/*.{ts,tsx,js,jsx}`],
     skipFormat: true,
   });
 
-  updateJson(
-    host,
-    joinPathFragments(options.e2eProjectRoot, '.eslintrc.json'),
-    extendReactEslintJson
-  );
+  if (isEslintConfigSupported(host)) {
+    addExtendsToLintConfig(host, options.e2eProjectRoot, 'plugin:@nx/react');
+  }
 
   const installTask = addDependenciesToPackageJson(
     host,

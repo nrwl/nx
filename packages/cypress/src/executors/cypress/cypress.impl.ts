@@ -1,16 +1,9 @@
-import {
-  ExecutorContext,
-  logger,
-  parseTargetString,
-  readTargetOptions,
-  runExecutor,
-  stripIndents,
-} from '@nrwl/devkit';
-import 'dotenv/config';
-import { existsSync, unlinkSync } from 'fs';
-import { basename, dirname, join } from 'path';
+import { ExecutorContext, logger, stripIndents } from '@nx/devkit';
+import { existsSync, readdirSync, unlinkSync } from 'fs';
+import { basename, dirname } from 'path';
 import { getTempTailwindPath } from '../../utils/ct-helpers';
 import { installedCypressVersion } from '../../utils/cypress-version';
+import { startDevServer } from '../../utils/start-dev-server';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
 
@@ -19,7 +12,6 @@ export type Json = { [k: string]: any };
 export interface CypressExecutorOptions extends Json {
   cypressConfig: string;
   watch?: boolean;
-  tsConfig?: string;
   devServerTarget?: string;
   headed?: boolean;
   /**
@@ -40,17 +32,22 @@ export interface CypressExecutorOptions extends Json {
   copyFiles?: string;
   ciBuildId?: string | number;
   group?: string;
-  ignoreTestFiles?: string;
+  ignoreTestFiles?: string | string[];
   reporter?: string;
-  reporterOptions?: string;
+  reporterOptions?: string | Json;
   skipServe?: boolean;
   testingType?: 'component' | 'e2e';
   tag?: string;
+  port?: number | 'cypress-auto';
+  quiet?: boolean;
+  runnerUi?: boolean;
 }
 
 interface NormalizedCypressExecutorOptions extends CypressExecutorOptions {
   ctTailwindPath?: string;
+  portLockFilePath?: string;
 }
+
 export default async function cypressExecutor(
   options: CypressExecutorOptions,
   context: ExecutorContext
@@ -60,9 +57,12 @@ export default async function cypressExecutor(
   process.env.NX_CYPRESS_TARGET_CONFIGURATION = context.configurationName;
   let success;
 
-  for await (const baseUrl of startDevServer(options, context)) {
+  for await (const devServerValues of startDevServer(options, context)) {
     try {
-      success = await runCypress(baseUrl, options);
+      success = await runCypress(devServerValues.baseUrl, {
+        ...options,
+        portLockFilePath: devServerValues.portLockFilePath,
+      });
       if (!options.watch) break;
     } catch (e) {
       logger.error(e.message);
@@ -79,11 +79,6 @@ function normalizeOptions(
   context: ExecutorContext
 ): NormalizedCypressExecutorOptions {
   options.env = options.env || {};
-  if (options.tsConfig) {
-    const tsConfigPath = join(context.root, options.tsConfig);
-    options.env.tsConfig = tsConfigPath;
-    process.env.TS_NODE_PROJECT = tsConfigPath;
-  }
   if (options.testingType === 'component') {
     const project = context?.projectGraph?.nodes?.[context.projectName];
     if (project?.data?.root) {
@@ -144,55 +139,9 @@ function warnDeprecatedCypressVersion() {
   if (installedCypressVersion() < 10) {
     logger.warn(stripIndents`
 NOTE:
-Support for Cypress versions < 10 is deprecated. Please upgrade to at least Cypress version 10. 
+Support for Cypress versions < 10 is deprecated. Please upgrade to at least Cypress version 10.
 A generator to migrate from v8 to v10 is provided. See https://nx.dev/cypress/v10-migration-guide
 `);
-  }
-}
-
-async function* startDevServer(
-  opts: CypressExecutorOptions,
-  context: ExecutorContext
-) {
-  // no dev server, return the provisioned base url
-  if (!opts.devServerTarget || opts.skipServe) {
-    yield opts.baseUrl;
-    return;
-  }
-
-  const { project, target, configuration } = parseTargetString(
-    opts.devServerTarget
-  );
-  const devServerTargetOpts = readTargetOptions(
-    { project, target, configuration },
-    context
-  );
-  const targetSupportsWatchOpt =
-    Object.keys(devServerTargetOpts).includes('watch');
-
-  for await (const output of await runExecutor<{
-    success: boolean;
-    baseUrl?: string;
-    info?: { port: number; baseUrl?: string };
-  }>(
-    { project, target, configuration },
-    // @NOTE: Do not forward watch option if not supported by the target dev server,
-    // this is relevant for running Cypress against dev server target that does not support this option,
-    // for instance @nguniversal/builders:ssr-dev-server.
-    targetSupportsWatchOpt ? { watch: opts.watch } : {},
-    context
-  )) {
-    if (!output.success && !opts.watch)
-      throw new Error('Could not compile application files');
-    if (
-      !opts.baseUrl &&
-      !output.baseUrl &&
-      !output.info?.baseUrl &&
-      output.info?.port
-    ) {
-      output.baseUrl = `http://localhost:${output.info.port}`;
-    }
-    yield opts.baseUrl || output.baseUrl || output.info?.baseUrl;
   }
 }
 
@@ -222,7 +171,10 @@ async function runCypress(
   }
 
   if (opts.env) {
-    options.env = opts.env;
+    options.env = {
+      ...options.env,
+      ...opts.env,
+    };
   }
   if (opts.spec) {
     options.spec = opts.spec;
@@ -231,6 +183,7 @@ async function runCypress(
   options.tag = opts.tag;
   options.exit = opts.exit;
   options.headed = opts.headed;
+  options.runnerUi = opts.runnerUi;
 
   if (opts.headless) {
     options.headless = opts.headless;
@@ -258,6 +211,9 @@ async function runCypress(
   if (opts.reporterOptions) {
     options.reporterOptions = opts.reporterOptions;
   }
+  if (opts.quiet) {
+    options.quiet = opts.quiet;
+  }
 
   options.testingType = opts.testingType;
 
@@ -265,13 +221,32 @@ async function runCypress(
     ? Cypress.open(options)
     : Cypress.run(options));
 
-  if (opts.ctTailwindPath && existsSync(opts.ctTailwindPath)) {
-    unlinkSync(opts.ctTailwindPath);
+  cleanupTmpFile(opts.ctTailwindPath);
+  cleanupTmpFile(opts.portLockFilePath);
+
+  if (process.env.NX_VERBOSE_LOGGING === 'true' && opts.portLockFilePath) {
+    readdirSync(dirname(opts.portLockFilePath)).forEach((f) => {
+      if (f.endsWith('.txt')) {
+        logger.debug(`Lock file ${f} still present`);
+      }
+    });
   }
+
   /**
    * `cypress.open` is returning `0` and is not of the same type as `cypress.run`.
    * `cypress.open` is the graphical UI, so it will be obvious to know what wasn't
    * working. Forcing the build to success when `cypress.open` is used.
    */
   return !result.totalFailed && !result.failures;
+}
+
+function cleanupTmpFile(path: string) {
+  try {
+    if (path && existsSync(path)) {
+      unlinkSync(path);
+    }
+    return true;
+  } catch (err) {
+    return false;
+  }
 }

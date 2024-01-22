@@ -1,10 +1,8 @@
-import { Tree } from 'nx/src/generators/tree';
-import { NormalizedSchema } from './normalized-schema';
-import componentGenerator from '../../component/component';
-import { joinPathFragments } from 'nx/src/utils/path';
-import { names } from '@nrwl/devkit';
-import { addLoadChildren } from './add-load-children';
+import { joinPathFragments, type Tree } from '@nx/devkit';
+import { componentGenerator } from '../../component/component';
 import { addChildren } from './add-children';
+import { addLoadChildren } from './add-load-children';
+import type { NormalizedSchema } from './normalized-schema';
 
 export async function addStandaloneComponent(
   tree: Tree,
@@ -13,45 +11,19 @@ export async function addStandaloneComponent(
   await componentGenerator(tree, {
     ...componentOptions,
     name: componentOptions.name,
+    directory: joinPathFragments(
+      libraryOptions.projectRoot,
+      'src',
+      'lib',
+      componentOptions.flat ? '' : componentOptions.name
+    ),
+    nameAndDirectoryFormat: 'as-provided',
     standalone: true,
     export: true,
-    project: libraryOptions.name,
-    flat: componentOptions.flat,
+    skipFormat: true,
   });
 
   if (libraryOptions.routing) {
-    const pathToRoutes = joinPathFragments(
-      libraryOptions.projectRoot,
-      'src/lib/lib.routes.ts'
-    );
-
-    const routesContents = `import { Route } from '@angular/router';
-    import { ${
-      libraryOptions.standaloneComponentName
-    } } from './${joinPathFragments(
-      componentOptions.flat ? '' : libraryOptions.fileName,
-      `${libraryOptions.fileName}.component`
-    )}';
-    
-        export const ${
-          names(libraryOptions.name).propertyName
-        }Routes: Route[] = [
-          {path: '', component: ${libraryOptions.standaloneComponentName}}
-        ];`;
-    tree.write(pathToRoutes, routesContents);
-
-    const pathToEntryFile = joinPathFragments(
-      libraryOptions.projectRoot,
-      'src',
-      `${libraryOptions.entryFile}.ts`
-    );
-    const entryFileContents = tree.read(pathToEntryFile, 'utf-8');
-    tree.write(
-      pathToEntryFile,
-      `${entryFileContents}
-        export * from './lib/lib.routes'`
-    );
-
     if (libraryOptions.parent) {
       if (libraryOptions.lazy) {
         addLoadChildren(tree, libraryOptions);

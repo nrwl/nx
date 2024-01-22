@@ -1,12 +1,12 @@
-import { TagsApi } from '@nrwl/nx-dev/data-access-documents/node-only';
-import { DocumentMetadata } from '@nrwl/nx-dev/models-document';
+import { TagsApi } from '@nx/nx-dev/data-access-documents/node-only';
+import { DocumentMetadata } from '@nx/nx-dev/models-document';
 import {
   FileMetadata,
   IntrinsicPackageMetadata,
   ProcessedPackageMetadata,
   SchemaMetadata,
-} from '@nrwl/nx-dev/models-package';
-import { readFileSync } from 'fs';
+} from '@nx/nx-dev/models-package';
+import { readFileSync, lstatSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 interface StaticDocumentPaths {
@@ -92,6 +92,32 @@ export class PackagesApi {
       Object.keys(p.documents).map((path) =>
         experiment.documents.push(generateSegments(path, this.options.prefix))
       );
+      if (p.name === 'devkit') {
+        readdirSync('../../docs/generated/devkit').forEach((fileName) => {
+          if (fileName.endsWith('.md')) {
+            experiment.documents.push(
+              generateSegments(
+                `packages/devkit/documents/${fileName.replace('.md', '')}`,
+                this.options.prefix
+              )
+            );
+          } else {
+            readdirSync('../../docs/generated/devkit/' + fileName).forEach(
+              (subFileName) => {
+                experiment.documents.push(
+                  generateSegments(
+                    `packages/devkit/documents/${fileName}/${subFileName.replace(
+                      '.md',
+                      ''
+                    )}`,
+                    this.options.prefix
+                  )
+                );
+              }
+            );
+          }
+        });
+      }
 
       Object.keys(p.executors).forEach((path) =>
         experiment.executors.push(generateSegments(path, this.options.prefix))

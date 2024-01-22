@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import type { Tree } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 export function parseASTOfWebpackConfig(
   tree: Tree,

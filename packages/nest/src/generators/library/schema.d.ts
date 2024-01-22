@@ -1,11 +1,13 @@
-import { Linter } from '@nrwl/linter';
-import { UnitTestRunner } from '../utils';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import type { Linter } from '@nx/eslint';
+import type { UnitTestRunner } from '../utils';
 
 export interface LibraryGeneratorOptions {
   name: string;
   buildable?: boolean;
   controller?: boolean;
   directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   global?: boolean;
   importPath?: string;
   linter?: Linter;
@@ -24,20 +26,20 @@ export interface LibraryGeneratorOptions {
     | 'es2017'
     | 'es2018'
     | 'es2019'
-    | 'es2020';
+    | 'es2020'
+    | 'es2021';
   testEnvironment?: 'jsdom' | 'node';
   unitTestRunner?: UnitTestRunner;
   standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
+  simpleName?: boolean;
 }
 
 export interface NormalizedOptions extends LibraryGeneratorOptions {
   fileName: string;
   parsedTags: string[];
   prefix: string;
-  projectDirectory: string;
   projectName: string;
   projectRoot: Path;
-  libsDir: string;
 }

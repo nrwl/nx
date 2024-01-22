@@ -31,8 +31,11 @@ export class GraphService {
   constructor(
     container: string | HTMLElement,
     theme: 'light' | 'dark',
-    renderMode?: 'nx-console' | 'nx-docs',
-    rankDir: 'TB' | 'LR' = 'TB'
+    public renderMode?: 'nx-console' | 'nx-docs',
+    rankDir: 'TB' | 'LR' = 'TB',
+    public getTaskInputs: (
+      taskId: string
+    ) => Promise<Record<string, string[]>> = undefined
   ) {
     use(cytoscapeDagre);
     use(popper);
@@ -82,6 +85,7 @@ export class GraphService {
         this.renderGraph.collapseEdges = event.collapseEdges;
         this.broadcast({ type: 'GraphRegenerated' });
         this.projectTraversalGraph.initGraph(
+          event.fileMap,
           event.projects,
           event.groupByFolder,
           event.workspaceLayout,
@@ -95,6 +99,7 @@ export class GraphService {
         this.renderGraph.collapseEdges = event.collapseEdges;
         this.broadcast({ type: 'GraphRegenerated' });
         this.projectTraversalGraph.initGraph(
+          event.fileMap,
           event.projects,
           event.groupByFolder,
           event.workspaceLayout,
@@ -229,6 +234,11 @@ export class GraphService {
     switch (event.type) {
       case 'notifyTaskGraphSetProjects':
         this.taskTraversalGraph.setProjects(event.projects, event.taskGraphs);
+        break;
+      case 'notifyTaskGraphSetTasks':
+        elementsToSendToRender = this.taskTraversalGraph.setTasks(
+          event.taskIds
+        );
         break;
       case 'notifyTaskGraphTasksSelected':
         elementsToSendToRender = this.taskTraversalGraph.selectTask(

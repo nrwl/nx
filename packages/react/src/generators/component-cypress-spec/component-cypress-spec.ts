@@ -1,10 +1,10 @@
 import {
-  convertNxGenerator,
+  formatFiles,
   generateFiles,
   getProjects,
   joinPathFragments,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename, join } from 'path';
 import type * as ts from 'typescript';
 import {
@@ -12,7 +12,7 @@ import {
   getComponentNode,
   getComponentPropsInterface,
 } from '../../utils/ast-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -21,13 +21,18 @@ export interface CreateComponentSpecFileSchema {
   componentPath: string;
   js?: boolean;
   cypressProject?: string;
+  skipFormat?: boolean;
 }
 
-export function componentCypressGenerator(
+export async function componentCypressGenerator(
   host: Tree,
   schema: CreateComponentSpecFileSchema
 ) {
   createComponentSpecFile(host, schema);
+
+  if (!schema.skipFormat) {
+    await formatFiles(host);
+  }
 }
 
 // TODO: candidate to refactor with the angular component story
@@ -171,6 +176,3 @@ function findPropsAndGenerateFileForCypress(
 }
 
 export default componentCypressGenerator;
-export const componentCypressSchematic = convertNxGenerator(
-  componentCypressGenerator
-);

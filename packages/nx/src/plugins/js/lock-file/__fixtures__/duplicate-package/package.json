@@ -1,0 +1,10 @@
+{
+  "name": "double-versions",
+  "version": "0.0.0",
+  "license": "MIT",
+  "dependencies": {
+    "nx": "15.4.0",
+    "@nrwl/devkit": "^14.8.0",
+    "@nrwl/workspace": "^14.8.0"
+  }
+}

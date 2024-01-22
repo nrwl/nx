@@ -1,6 +1,11 @@
 # Adding Nx to your Existing Project
 
-Nx can be added to any type of project, not just monorepos. The main benefit is to get caching abilties for the package scripts. Each project usually has a set of scripts in the `package.json`:
+{% youtube
+src="https://www.youtube.com/embed/VmGCZ77ao_I"
+title="Add Nx to any project"
+width="100%" /%}
+
+Nx can be added to any type of project, not just monorepos. The main benefit is to get caching abilities for the package scripts. Each project usually has a set of scripts in the `package.json`:
 
 ```json {% fileName="package.json" %}
 {
@@ -41,12 +46,31 @@ This process adds `nx` to your `package.json` at the root of your workspace:
   ...
   "devDependencies": {
     ...
-    "nx": "15.3.0"
+    "nx": "17.2.0"
   }
 }
 ```
 
-In addition it generates a `nx.json` based on your answers during the setup process. This includes cacheable operations as well as some initial definition of the task pipeline. Here is an example:
+In addition it generates a `nx.json` based on your answers during the setup process. This includes cacheable targets as well as some initial definition of the task pipeline. Here is an example:
+
+{% tabs %}
+{% tab label="Nx >= 17" %}
+
+```json {% fileName="nx.json" %}
+{
+  "targetDefaults": {
+    "build": {
+      "cache": true
+    },
+    "lint": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
 
 ```json {% fileName="nx.json" %}
 {
@@ -60,6 +84,9 @@ In addition it generates a `nx.json` based on your answers during the setup proc
   }
 }
 ```
+
+{% /tab %}
+{% /tabs %}
 
 ## Wrapping Cacheable Scripts
 
@@ -79,7 +106,7 @@ Here's an example of a `build` and `lint` script being wrapped by Nx:
   },
   "devDependencies": {
     ...
-    "nx": "15.3.0"
+    "nx": "17.2.0"
   }
 }
 ```
@@ -109,16 +136,28 @@ For example, excluding markdown files from the `lint` task cache:
 
 This includes all TypeScript files, but excludes markdown files. As a result, changing your README won't invalidate your "lint cache".
 
-Learn more about [Nx Inputs](/more-concepts/customizing-inputs).
+Learn more about [Nx Inputs](/recipes/running-tasks/customizing-inputs).
 
 ## Learn More
 
 {% cards %}
 
-{% card title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" type="documentation" url="/more-concepts/customizing-inputs" /%}
+{% card title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" type="documentation" url="/recipes/running-tasks/customizing-inputs" /%}
 
 {% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="/core-features/cache-task-results" /%}
 
 {% card title="Adding Nx to NPM/Yarn/PNPM Workspace" description="Learn more about how to add Nx to an existing monorepo" type="documentation" url="/recipes/adopting-nx/adding-to-monorepo" /%}
 
 {% /cards %}
+
+{% short-embeds %}
+{% short-video
+title="Nx Tips: Nx Init"
+embedUrl="https://www.youtube.com/embed/Wpj3KSpN0Xw" /%}
+{% short-video
+title="How Long Does It Take To Add Nx?"
+embedUrl="https://www.youtube.com/embed/fPt_pFP6hn8" /%}
+{% short-video
+title="Nx is Complicated?"
+embedUrl="https://www.youtube.com/embed/AQbSwPtPBiw" /%}
+{% /short-embeds %}

@@ -2,11 +2,11 @@
  * Adapted from the original ng-packagr.
  *
  * Changes made:
- * - Change the package.json metadata to only use the ESM2020 output as it's the only one generated.
- * - Remove package exports.
+ * - Change the package.json metadata to only use the ESM2022 output.
+ * - Change the package.json metadata to only use the ESM2020 output (Angular < 16).
  */
 
-import { logger } from '@nrwl/devkit';
+import { logger } from '@nx/devkit';
 import { BuildGraph } from 'ng-packagr/lib/graph/build-graph';
 import { Node } from 'ng-packagr/lib/graph/node';
 import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
@@ -33,6 +33,10 @@ import { globFiles } from 'ng-packagr/lib/utils/glob';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
 import { AssetPattern } from 'ng-packagr/ng-package.schema';
 import * as path from 'path';
+import {
+  getInstalledAngularVersionInfo,
+  VersionInfo,
+} from '../../../../utilities/angular-version-utils';
 
 export const nxWritePackageTransform = (options: NgPackagrOptions) =>
   transformFromPromise(async (graph) => {
@@ -42,33 +46,59 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
     const ngPackage = ngPackageNode.data;
     const { destinationFiles } = entryPoint.data;
 
+    const angularVersion = getInstalledAngularVersionInfo();
+
     if (!ngEntryPoint.isSecondaryEntryPoint) {
       logger.log('Copying assets');
 
       try {
-        await copyAssets(graph, entryPoint, ngPackageNode);
+        await copyAssets(graph, entryPoint, ngPackageNode, angularVersion);
       } catch (error) {
         throw error;
       }
     }
 
     // 6. WRITE PACKAGE.JSON
-    // As of APF 14 only the primary entrypoint has a package.json
+    const relativeUnixFromDestPath = (filePath: string) =>
+      ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
+
     if (!ngEntryPoint.isSecondaryEntryPoint) {
       try {
         logger.info('Writing package manifest');
-        const relativeUnixFromDestPath = (filePath: string) =>
-          ensureUnixPath(path.relative(ngEntryPoint.destinationPath, filePath));
+        if (!options.watch) {
+          const primary = ngPackageNode.data.primary;
+          await writeFile(
+            path.join(primary.destinationPath, '.npmignore'),
+            `# Nested package.json's are only needed for development.\n**/package.json`
+          );
+        }
 
         await writePackageJson(
           ngEntryPoint,
           ngPackage,
           {
-            module: relativeUnixFromDestPath(destinationFiles.esm2020),
-            es2020: relativeUnixFromDestPath(destinationFiles.esm2020),
-            esm2020: relativeUnixFromDestPath(destinationFiles.esm2020),
+            // backward compat for Angular < 16
+            ...(angularVersion.major < 16
+              ? {
+                  module: relativeUnixFromDestPath(
+                    (destinationFiles as any).esm2020
+                  ),
+                  es2020: relativeUnixFromDestPath(
+                    (destinationFiles as any).esm2020
+                  ),
+                  esm2020: relativeUnixFromDestPath(
+                    (destinationFiles as any).esm2020
+                  ),
+                }
+              : {
+                  module: relativeUnixFromDestPath(destinationFiles.esm2022),
+                }),
             typings: relativeUnixFromDestPath(destinationFiles.declarations),
-            exports: generatePackageExports(ngEntryPoint, graph),
+            exports: generatePackageExports(
+              ngEntryPoint,
+              graph,
+              angularVersion
+            ),
             // webpack v4+ specific flag to enable advanced optimizations and code splitting
             sideEffects: ngEntryPoint.packageJson.sideEffects ?? false,
           },
@@ -77,26 +107,45 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
       } catch (error) {
         throw error;
       }
-    } else if (options.watch) {
-      // update the watch version of the primary entry point `package.json` file.
-      // this is needed because of Webpack's 5 `cachemanagedpaths`
-      // https://github.com/ng-packagr/ng-packagr/issues/2069
-      const primary = ngPackageNode.data.primary;
-      const packageJsonPath = path.join(
-        primary.destinationPath,
-        'package.json'
-      );
+    } else if (ngEntryPoint.isSecondaryEntryPoint) {
+      if (options.watch) {
+        // Update the watch version of the primary entry point `package.json` file.
+        // this is needed because of Webpack's 5 `cachemanagedpaths`
+        // https://github.com/ng-packagr/ng-packagr/issues/2069
+        const primary = ngPackageNode.data.primary;
+        const packageJsonPath = path.join(
+          primary.destinationPath,
+          'package.json'
+        );
 
-      if (await exists(packageJsonPath)) {
-        const packageJson = JSON.parse(
-          await readFile(packageJsonPath, { encoding: 'utf8' })
-        );
-        packageJson.version = generateWatchVersion();
-        await writeFile(
-          path.join(primary.destinationPath, 'package.json'),
-          JSON.stringify(packageJson, undefined, 2)
-        );
+        if (await exists(packageJsonPath)) {
+          const packageJson = JSON.parse(
+            await readFile(packageJsonPath, { encoding: 'utf8' })
+          );
+          packageJson.version = generateWatchVersion();
+          await writeFile(
+            path.join(primary.destinationPath, 'package.json'),
+            JSON.stringify(packageJson, undefined, 2)
+          );
+        }
       }
+
+      // Write a package.json in each secondary entry-point
+      // This is need for esbuild to secondary entry-points in dist correctly.
+      await writeFile(
+        path.join(ngEntryPoint.destinationPath, 'package.json'),
+        JSON.stringify(
+          {
+            module: relativeUnixFromDestPath(
+              angularVersion.major < 16
+                ? (destinationFiles as any).esm2020
+                : destinationFiles.esm2022
+            ),
+          },
+          undefined,
+          2
+        )
+      );
     }
 
     logger.info(`Built ${ngEntryPoint.moduleId}`);
@@ -109,7 +158,8 @@ type AssetEntry = Exclude<AssetPattern, string>;
 async function copyAssets(
   graph: BuildGraph,
   entryPointNode: EntryPointNode,
-  ngPackageNode: PackageNode
+  ngPackageNode: PackageNode,
+  angularVersion: VersionInfo
 ): Promise<void> {
   const ngPackage = ngPackageNode.data;
 
@@ -164,14 +214,24 @@ async function copyAssets(
   }
 
   for (const asset of assets) {
-    const filePaths = await globFiles(asset.glob, {
+    const globOptions: Parameters<typeof globFiles>[1] = {
       cwd: asset.input,
       ignore: [...(asset.ignore ?? []), ...globsForceIgnored],
-      cache: ngPackageNode.cache.globCache,
       dot: true,
-      nodir: true,
-      follow: asset.followSymlinks,
-    });
+    };
+
+    if (angularVersion.major < 16) {
+      // versions lower than v16 support these properties
+      (globOptions as any).cache = (ngPackageNode.cache as any).globCache;
+      (globOptions as any).nodir = true;
+      (globOptions as any).follow = asset.followSymlinks;
+    } else {
+      // starting in v16 these properties are supported
+      globOptions.onlyFiles = true;
+      globOptions.followSymbolicLinks = asset.followSymlinks;
+    }
+
+    const filePaths = await globFiles(asset.glob, globOptions);
     for (const filePath of filePaths) {
       const fileSrcFullPath = path.join(asset.input, filePath);
       const fileDestFullPath = path.join(asset.output, filePath);
@@ -334,12 +394,16 @@ type PackageExports = Record<string, ConditionalExport>;
  * https://nodejs.org/api/packages.html#packages_conditional_exports
  */
 type ConditionalExport = {
-  node?: string;
   types?: string;
+  esm2022?: string;
+  esm?: string;
+  default?: string;
+
+  // backward compat for Angular < 16
+  node?: string;
   esm2020?: string;
   es2020?: string;
   es2015?: string;
-  default?: string;
 };
 
 /**
@@ -348,7 +412,8 @@ type ConditionalExport = {
  */
 function generatePackageExports(
   { destinationPath, packageJson }: NgEntryPoint,
-  graph: BuildGraph
+  graph: BuildGraph,
+  angularVersion: VersionInfo
 ): PackageExports {
   const exports: PackageExports = packageJson.exports
     ? JSON.parse(JSON.stringify(packageJson.exports))
@@ -358,20 +423,15 @@ function generatePackageExports(
     subpath: string,
     mapping: ConditionalExport
   ) => {
-    if (exports[subpath] === undefined) {
-      exports[subpath] = {};
-    }
-
+    exports[subpath] ??= {};
     const subpathExport = exports[subpath];
 
     // Go through all conditions that should be inserted. If the condition is already
     // manually set of the subpath export, we throw an error. In general, we allow for
     // additional conditions to be set. These will always precede the generated ones.
-    for (const conditionName of Object.keys(mapping) as [
-      keyof ConditionalExport
-    ]) {
+    for (const conditionName of Object.keys(mapping)) {
       if (subpathExport[conditionName] !== undefined) {
-        throw Error(
+        logger.warn(
           `Found a conflicting export condition for "${subpath}". The "${conditionName}" ` +
             `condition would be overridden by ng-packagr. Please unset it.`
         );
@@ -396,12 +456,26 @@ function generatePackageExports(
       ? `./${destinationFiles.directory}`
       : '.';
 
-    insertMappingOrError(subpath, {
-      types: relativeUnixFromDestPath(destinationFiles.declarations),
-      es2020: relativeUnixFromDestPath(destinationFiles.esm2020),
-      esm2020: relativeUnixFromDestPath(destinationFiles.esm2020),
-      default: relativeUnixFromDestPath(destinationFiles.esm2020),
-    });
+    // backward compat for Angular < 16
+    const mapping =
+      angularVersion.major < 16
+        ? {
+            types: relativeUnixFromDestPath(destinationFiles.declarations),
+            es2020: relativeUnixFromDestPath((destinationFiles as any).esm2020),
+            esm2020: relativeUnixFromDestPath(
+              (destinationFiles as any).esm2020
+            ),
+            default: relativeUnixFromDestPath(
+              (destinationFiles as any).esm2020
+            ),
+          }
+        : {
+            esm2022: relativeUnixFromDestPath(destinationFiles.esm2022),
+            esm: relativeUnixFromDestPath(destinationFiles.esm2022),
+            default: relativeUnixFromDestPath(destinationFiles.esm2022),
+          };
+
+    insertMappingOrError(subpath, mapping);
   }
 
   return exports;

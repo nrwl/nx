@@ -1,7 +1,7 @@
-import type { Tree } from '@nrwl/devkit';
-import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { applicationGenerator } from '../application/application';
+import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { generateTestApplication } from '../utils/testing';
 import { webWorkerGenerator } from './web-worker';
 
 describe('webWorker generator', () => {
@@ -10,33 +10,45 @@ describe('webWorker generator', () => {
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await applicationGenerator(tree, { name: appName });
+    await generateTestApplication(tree, { name: appName, skipFormat: true });
     jest.clearAllMocks();
   });
 
   it('should generate files', async () => {
-    await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
+    await webWorkerGenerator(tree, {
+      name: 'test-worker',
+      project: appName,
+      skipFormat: true,
+    });
 
-    expect(tree.exists(`apps/${appName}/tsconfig.worker.json`));
-    expect(tree.exists(`apps/${appName}/src/app/test-worker.worker.ts`));
+    expect(tree.exists(`${appName}/tsconfig.worker.json`));
+    expect(tree.exists(`${appName}/src/app/test-worker.worker.ts`));
   });
 
   it('should extend from tsconfig.base.json', async () => {
-    await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
+    await webWorkerGenerator(tree, {
+      name: 'test-worker',
+      project: appName,
+      skipFormat: true,
+    });
 
-    expect(
-      tree.read(`apps/${appName}/tsconfig.worker.json`, 'utf-8')
-    ).toContain('"extends": "../../tsconfig.base.json"');
+    expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
+      '"extends": "../tsconfig.base.json"'
+    );
   });
 
   it('should extend from tsconfig.json when used instead of tsconfig.base.json', async () => {
     tree.rename('tsconfig.base.json', 'tsconfig.json');
 
-    await webWorkerGenerator(tree, { name: 'test-worker', project: appName });
+    await webWorkerGenerator(tree, {
+      name: 'test-worker',
+      project: appName,
+      skipFormat: true,
+    });
 
-    expect(
-      tree.read(`apps/${appName}/tsconfig.worker.json`, 'utf-8')
-    ).toContain('"extends": "../../tsconfig.json"');
+    expect(tree.read(`${appName}/tsconfig.worker.json`, 'utf-8')).toContain(
+      '"extends": "../tsconfig.json"'
+    );
   });
 
   it('should format files', async () => {
@@ -57,5 +69,44 @@ describe('webWorker generator', () => {
     });
 
     expect(devkit.formatFiles).not.toHaveBeenCalled();
+  });
+
+  it('should add the snippet correctly', async () => {
+    // ARRANGE
+    tree.write(`${appName}/src/app/test-worker.ts`, ``);
+
+    // ACT
+    await webWorkerGenerator(tree, {
+      name: 'test-worker',
+      project: appName,
+      snippet: true,
+      skipFormat: true,
+    });
+
+    // ASSERT
+    expect(tree.read(`${appName}/src/app/test-worker.ts`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "if (typeof Worker !== 'undefined') {
+      // Create a new
+      const worker = new Worker(new URL('./test-worker.worker', import.meta.url));
+      worker.onmessage = ({ data }) => {
+      console.log(\`page got message \${data}\`);
+      };
+      worker.postMessage('hello');
+      } else {
+      // Web Workers are not supported in this environment.
+      // You should add a fallback so that your program still executes correctly.
+      }"
+    `);
+    expect(tree.read(`${appName}/src/app/test-worker.worker.ts`, 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "/// <reference lib="webworker" />
+
+      addEventListener('message', ({ data }) => {
+        const response = \`worker response to \${data}\`;
+        postMessage(response);
+      });
+      "
+    `);
   });
 });

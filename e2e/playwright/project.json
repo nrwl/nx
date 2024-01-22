@@ -1,0 +1,10 @@
+{
+  "name": "e2e-playwright",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/playwright",
+  "projectType": "application",
+  "targets": {
+    "e2e": {}
+  },
+  "implicitDependencies": ["playwright"]
+}

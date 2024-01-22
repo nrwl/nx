@@ -1,19 +1,15 @@
 import * as esbuild from 'esbuild';
 import * as path from 'path';
-import { join, parse } from 'path';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import {
-  normalizePath,
   ExecutorContext,
   joinPathFragments,
+  normalizePath,
   ProjectGraphProjectNode,
-} from '@nrwl/devkit';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+} from '@nx/devkit';
 
 import { getClientEnvironment } from '../../../utils/environment-variables';
-import {
-  EsBuildExecutorOptions,
-  NormalizedEsBuildExecutorOptions,
-} from '../schema';
+import { NormalizedEsBuildExecutorOptions } from '../schema';
 import { getEntryPoints } from '../../../utils/get-entry-points';
 
 const ESM_FILE_EXTENSION = '.js';
@@ -25,20 +21,27 @@ export function buildEsbuildOptions(
   context: ExecutorContext
 ): esbuild.BuildOptions {
   const outExtension = getOutExtension(format, options);
+
   const esbuildOptions: esbuild.BuildOptions = {
-    ...options.esbuildOptions,
+    ...options.userDefinedBuildOptions,
     entryNames:
       options.outputHashing === 'all' ? '[dir]/[name].[hash]' : '[dir]/[name]',
     bundle: options.bundle,
     // Cannot use external with bundle option
     external: options.bundle
-      ? [...(options.esbuildOptions?.external ?? []), ...options.external]
+      ? [
+          ...(options.userDefinedBuildOptions?.external ?? []),
+          ...options.external,
+        ]
       : undefined,
     minify: options.minify,
     platform: options.platform,
     target: options.target,
     metafile: options.metafile,
     tsconfig: options.tsConfig,
+    sourcemap:
+      (options.sourcemap ?? options.userDefinedBuildOptions?.sourcemap) ||
+      false,
     format,
     outExtension: {
       '.js': outExtension,
@@ -49,10 +52,12 @@ export function buildEsbuildOptions(
     esbuildOptions.define = getClientEnvironment();
   }
 
-  if (options.singleEntry && options.bundle) {
-    esbuildOptions.outfile = getOutfile(format, options, context);
-  } else {
-    esbuildOptions.outdir = options.outputPath;
+  if (!esbuildOptions.outfile && !esbuildOptions.outdir) {
+    if (options.singleEntry && options.bundle && !esbuildOptions.splitting) {
+      esbuildOptions.outfile = getOutfile(format, options, context);
+    } else {
+      esbuildOptions.outdir = options.outputPath;
+    }
   }
 
   const entryPoints = options.additionalEntryPoints
@@ -69,6 +74,7 @@ export function buildEsbuildOptions(
       context.projectName,
       context,
       {
+        initialTsConfigFileName: options.tsConfig,
         initialEntryPoints: entryPoints,
         recursive: true,
       }
@@ -103,6 +109,7 @@ export function buildEsbuildOptions(
   } else {
     // Otherwise, just transpile the project source files. Any workspace lib will need to be published separately.
     esbuildOptions.entryPoints = getEntryPoints(context.projectName, context, {
+      initialTsConfigFileName: options.tsConfig,
       initialEntryPoints: entryPoints,
       recursive: false,
     });
@@ -113,9 +120,9 @@ export function buildEsbuildOptions(
 
 export function getOutExtension(
   format: 'cjs' | 'esm',
-  options: EsBuildExecutorOptions
+  options: NormalizedEsBuildExecutorOptions
 ): '.cjs' | '.mjs' | '.js' {
-  const userDefinedExt = options.esbuildOptions?.outExtension?.['.js'];
+  const userDefinedExt = options.userDefinedBuildOptions?.outExtension?.['.js'];
   // Allow users to change the output extensions from default CJS and ESM extensions.
   // CJS -> .js
   // ESM -> .mjs
@@ -130,7 +137,7 @@ export function getOutExtension(
 
 export function getOutfile(
   format: 'cjs' | 'esm',
-  options: EsBuildExecutorOptions,
+  options: NormalizedEsBuildExecutorOptions,
   context: ExecutorContext
 ) {
   const ext = getOutExtension(format, options);
@@ -138,7 +145,7 @@ export function getOutfile(
     context.target.options.outputPath,
     options.outputFileName
   );
-  const { dir, name } = parse(candidate);
+  const { dir, name } = path.parse(candidate);
   return `${dir}/${name}${ext}`;
 }
 
@@ -219,7 +226,7 @@ export function getRegisterFileContent(
       // Path specifies a single entry point e.g. "a/b/src/index.ts".
       // This is the default setup.
       const { dir, name } = path.parse(pattern);
-      exactMatch = path.join(dir, `${name}${outExtension}`);
+      exactMatch = joinPathFragments(dir, `${name}${outExtension}`);
     }
     acc.push({ module: k, exactMatch, pattern });
     return acc;
@@ -299,7 +306,7 @@ function getTsConfigCompilerPaths(context: ExecutorContext): {
 
 function getRootTsConfigPath(context: ExecutorContext): string | null {
   for (const tsConfigName of ['tsconfig.base.json', 'tsconfig.json']) {
-    const tsConfigPath = join(context.root, tsConfigName);
+    const tsConfigPath = path.join(context.root, tsConfigName);
     if (existsSync(tsConfigPath)) {
       return tsConfigPath;
     }

@@ -1,6 +1,6 @@
 /**
  * These minimal smoke tests are here to ensure that we do not break assumptions on the lerna side
- * when making updates to nx or @nrwl/devkit.
+ * when making updates to nx or @nx/devkit.
  */
 
 import {
@@ -9,7 +9,7 @@ import {
   runLernaCLI,
   tmpProjPath,
   updateJson,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {

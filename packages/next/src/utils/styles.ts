@@ -2,33 +2,21 @@ import {
   addDependenciesToPackageJson,
   GeneratorCallback,
   Tree,
-  updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import { CSS_IN_JS_DEPENDENCIES } from '@nrwl/react/src/utils/styled';
+import { lessVersion } from '@nx/react/src/utils/versions';
+import {
+  cssInJsDependenciesBabel,
+  cssInJsDependenciesSwc,
+} from '@nx/react/src/utils/styled';
 import {
   babelPluginStyledComponentsVersion,
   emotionServerVersion,
   lessLoader,
   sassVersion,
-  stylusLoader,
 } from './versions';
 
-export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
-  'styled-components': {
-    dependencies: CSS_IN_JS_DEPENDENCIES['styled-components'].dependencies,
-    devDependencies: {
-      ...CSS_IN_JS_DEPENDENCIES['styled-components'].devDependencies,
-      'babel-plugin-styled-components': babelPluginStyledComponentsVersion,
-    },
-  },
-  '@emotion/styled': {
-    dependencies: {
-      ...CSS_IN_JS_DEPENDENCIES['@emotion/styled'].dependencies,
-      '@emotion/server': emotionServerVersion,
-    },
-    devDependencies: CSS_IN_JS_DEPENDENCIES['@emotion/styled'].devDependencies,
-  },
+const nextSpecificStyleDependenciesCommon = {
   css: {
     dependencies: {},
     devDependencies: {},
@@ -40,39 +28,62 @@ export const NEXT_SPECIFIC_STYLE_DEPENDENCIES = {
   less: {
     dependencies: {},
     devDependencies: {
+      less: lessVersion,
       'less-loader': lessLoader,
     },
   },
-  styl: {
-    dependencies: {
-      'stylus-loader': stylusLoader,
+};
+
+export const nextSpecificStyleDependenciesBabel = {
+  ...nextSpecificStyleDependenciesCommon,
+  'styled-components': {
+    dependencies: cssInJsDependenciesBabel['styled-components'].dependencies,
+    devDependencies: {
+      ...cssInJsDependenciesBabel['styled-components'].devDependencies,
+      'babel-plugin-styled-components': babelPluginStyledComponentsVersion,
     },
-    devDependencies: {},
+  },
+  '@emotion/styled': {
+    dependencies: {
+      ...cssInJsDependenciesBabel['@emotion/styled'].dependencies,
+      '@emotion/server': emotionServerVersion,
+    },
+    devDependencies:
+      cssInJsDependenciesBabel['@emotion/styled'].devDependencies,
+  },
+};
+
+export const nextSpecificStyleDependenciesSwc = {
+  ...nextSpecificStyleDependenciesCommon,
+  'styled-components': {
+    dependencies: cssInJsDependenciesSwc['styled-components'].dependencies,
+    devDependencies: {
+      ...cssInJsDependenciesSwc['styled-components'].devDependencies,
+      'babel-plugin-styled-components': babelPluginStyledComponentsVersion,
+    },
+  },
+  '@emotion/styled': {
+    dependencies: {
+      ...cssInJsDependenciesSwc['@emotion/styled'].dependencies,
+      '@emotion/server': emotionServerVersion,
+    },
+    devDependencies: cssInJsDependenciesSwc['@emotion/styled'].devDependencies,
   },
 };
 
 export function addStyleDependencies(
   host: Tree,
-  style: string
+  options: { style?: string; swc?: boolean }
 ): GeneratorCallback {
-  const extraDependencies = NEXT_SPECIFIC_STYLE_DEPENDENCIES[style];
+  const extraDependencies = options.swc
+    ? nextSpecificStyleDependenciesSwc[options.style]
+    : nextSpecificStyleDependenciesBabel[options.style];
 
-  if (!extraDependencies) return () => {};
-
-  const installTask = addDependenciesToPackageJson(
-    host,
-    extraDependencies.dependencies,
-    extraDependencies.devDependencies
-  );
-
-  // @zeit/next-less & @zeit/next-stylus internal configuration is working only
-  // for specific CSS loader version, causing PNPM resolution to fail.
-  if (host.exists('pnpm-lock.yaml') && (style === 'less' || style === 'styl')) {
-    updateJson(host, `package.json`, (json) => {
-      json.resolutions = { ...json.resolutions, 'css-loader': '1.0.1' };
-      return json;
-    });
-  }
-
-  return installTask;
+  return extraDependencies
+    ? addDependenciesToPackageJson(
+        host,
+        extraDependencies.dependencies,
+        extraDependencies.devDependencies
+      )
+    : () => {};
 }

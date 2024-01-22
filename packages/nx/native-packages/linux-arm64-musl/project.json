@@ -1,0 +1,4 @@
+{
+  "name": "linux-arm64-musl",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json"
+}

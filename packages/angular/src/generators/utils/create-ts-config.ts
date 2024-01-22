@@ -1,9 +1,8 @@
-import type { Tree } from '@nrwl/devkit';
-import { writeJson } from '@nrwl/devkit';
-import { tsConfigBaseOptions } from '@nrwl/js';
-import { getInstalledAngularMajorVersion } from './version-utils';
+import type { Tree } from '@nx/devkit';
+import { writeJson } from '@nx/devkit';
+import { tsConfigBaseOptions } from '@nx/js';
 
-export { extractTsConfigBase } from '@nrwl/js';
+export { extractTsConfigBase } from '@nx/js';
 
 export function createTsConfig(
   host: Tree,
@@ -14,15 +13,15 @@ export function createTsConfig(
     style?: string;
     bundler?: string;
     rootProject?: boolean;
+    esModuleInterop?: boolean;
   },
   relativePathToRootTsConfig: string
 ) {
-  const majorAngularVersion = getInstalledAngularMajorVersion(host);
-
   const json = {
     compilerOptions: {
-      target: majorAngularVersion === 14 ? 'es2020' : 'es2022',
+      target: 'es2022',
       useDefineForClassFields: false,
+      esModuleInterop: options.esModuleInterop ? true : undefined,
     },
     files: [],
     include: [],

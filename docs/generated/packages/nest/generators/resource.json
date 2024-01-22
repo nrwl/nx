@@ -1,6 +1,6 @@
 {
   "name": "resource",
-  "factory": "./src/generators/resource/resource",
+  "factory": "./src/generators/resource/resource#resourceGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "NxNestResourceGenerator",
@@ -20,10 +20,10 @@
         "type": "string",
         "$default": { "$source": "projectName" },
         "alias": "p",
-        "x-prompt": "What Nest project would you like to target?"
+        "x-deprecated": "Provide The `directory` option instead and use the `as-provided` format. the project will be determined from the directory provided. it will be removed in nx v18."
       },
       "directory": {
-        "description": "Directory where the generated files are placed.",
+        "description": "Directory where the generated files are placed. when `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. otherwise, it will be relative to the workspace root.",
         "type": "string",
         "aliases": ["dir", "path"]
       },
@@ -41,6 +41,7 @@
       },
       "flat": {
         "description": "Flag to indicate if a directory is created.",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18.",
         "type": "boolean",
         "default": false
       },
@@ -91,11 +92,11 @@
       }
     },
     "additionalProperties": false,
-    "required": ["name", "project"],
+    "required": ["name"],
     "presets": []
   },
   "description": "Run the `resource` NestJS generator with Nx project support.",
-  "implementation": "/packages/nest/src/generators/resource/resource.ts",
+  "implementation": "/packages/nest/src/generators/resource/resource#resourceGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/nest/src/generators/resource/schema.json",

@@ -1,9 +1,9 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import webpackConfigSetup from './webpack-config-setup';
 
 describe('15.6.3 migration (setup webpack.config file for React apps)', () => {

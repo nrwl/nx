@@ -35,18 +35,18 @@ The `apps` directory is the place where your top-level applications will be stor
 {% tab label="Angular" %}
 
 ```shell
-npm install --save-dev @nrwl/angular
+npm add -D @nx/angular
 # then
-nx generate @nrwl/angular:application my-application
+nx generate @nx/angular:application my-application
 ```
 
 {% /tab %}
 {% tab label="React" %}
 
 ```shell
-npm install --save-dev @nrwl/react
+npm add -D @nx/react
 # then
-nx generate @nrwl/react:application my-application
+nx generate @nx/react:application my-application
 ```
 
 {% /tab %}
@@ -54,8 +54,8 @@ nx generate @nrwl/react:application my-application
 
 There are a lot of options when creating your application. If you want to follow Nx recommendations, you can accept the defaults. If you have a well-established codebase, you can configure those options at the time of application generation. You can find documentation for these options for the different frameworks here:
 
-- [Angular](/packages/angular/generators/application)
-- [React](/packages/react/generators/application)
+- [Angular](/nx-api/angular/generators/application)
+- [React](/nx-api/react/generators/application)
 
 You may also find it useful to use the [Nx Console](/core-features/integrate-with-editors) in Visual Studio Code. This will give you a visual way to generate your application with all of the options laid out in front of you.
 
@@ -69,11 +69,11 @@ In general, you should not replace the configuration files provided for you. You
 
 In addition to configuration files for external libraries, your Nx workspace will have configuration files for Nx itself. This will be `angular.json` for workspaces using the Angular CLI and `project.json` files for workspaces using the Nx CLI. This file will define all of the individual projects in your workspace (of which your application is one) and the tasks available for them.
 
-For example, your generated application should have four [tasks available](/plugin-features/use-task-executors) for it: `build`, `serve`, `lint`, and `test`. Each of these comes with its own configuration. If you find you need to adjust the configuration of a task for your codebase, this is the place to begin looking.
+For example, your generated application should have four [tasks available](/core-features/plugin-features/use-task-executors) for it: `build`, `serve`, `lint`, and `test`. Each of these comes with its own configuration. If you find you need to adjust the configuration of a task for your codebase, this is the place to begin looking.
 
 These workspace configuration files can seem a little long and intimidating. The Nx Console can help you navigate it more easily with its Workspace JSON panel. By clicking on a project in your workspace, it will navigate you to the right place in the workspace file to begin making edits.
 
-Additionally, there is an `nx.json` file that contains metadata about your projects. [This metadata includes tags](/core-features/enforce-project-boundaries) that can help you impose constraints on your applications and library dependencies.
+Additionally, there is an `nx.json` file that contains metadata about your projects. [This metadata includes tags](/core-features/enforce-module-boundaries) that can help you impose constraints on your applications and library dependencies.
 
 ## Migrating your code
 
@@ -151,17 +151,17 @@ Nx uses Prettier to ensure standard formatting across your codebase. Prettier co
 nx format:write
 ```
 
-[Learn more about formatting](/packages/nx/documents/format-write)
+[Learn more about formatting](/nx-api/nx/documents/format-write)
 
 ### Adding tasks
 
 Nx offers built-in tasks for the most common needs: `serve`, `build`, `test`, `e2e`, and `lint`. You likely have additional tasks that are needed to manage or deploy your codebase. These tasks might include deployment, i18n workflows, or uploading assets to CDNs. These tasks can be set up as scripts that you run manually with node, ts-node, or npm scripts. You can migrate those tasks over as-is, to begin with.
 
-You should consider implementing them as Nx tasks which should be a quick transition with the `run-commands` builder. [The `run-commands` executor](/recipes/executors/run-commands-executor) will allow you to run any custom commands you need as an Nx task. By implementing these commands in an Nx task, they are able to take advantage of the project graph in Nx and only run when necessary. They are also able to be cached and only be re-run when necessary.
+You should consider implementing them as Nx tasks which should be a quick transition with the `run-commands` builder. [The `run-commands` executor](/recipes/running-tasks/run-commands-executor) will allow you to run any custom commands you need as an Nx task. By implementing these commands in an Nx task, they are able to take advantage of the project graph in Nx and only run when necessary. They are also able to be cached and only be re-run when necessary.
 
 Your use-case may also be covered by one of our community plugins. Plugin authors are able to extend the functionality of Nx through our plugin API.
 
-[Learn more about the `run-commands` executor](/packages/nx/executors/run-commands)
+[Learn more about the `run-commands` executor](/nx-api/nx/executors/run-commands)
 
 [Learn more about caching](/concepts/how-caching-works)
 
@@ -175,14 +175,14 @@ If your code is divided into libraries, you should also generate libraries for y
 {% tab label="Angular" %}
 
 ```shell
-nx generate @nrwl/angular:library
+nx generate @nx/angular:library
 ```
 
 {% /tab %}
 {% tab label="React" %}
 
 ```shell
-nx generate @nrwl/react:library
+nx generate @nx/react:library
 ```
 
 {% /tab %}
@@ -196,4 +196,4 @@ It’s important to remember: don’t just drop your code anywhere! Always gener
 
 If you’re consolidating multiple repositories or libraries into a single Nx workspace, you may have concerns about code boundaries. Previously, you may have had well-established boundaries by separating code into different repositories or having a public API for a library. Nx features a tagging system that allows you to enforce these code boundaries in a granular way. Each project can be tagged, and you can constrain dependencies based on these tags.
 
-[Learn more about tags and dependency constraints](/core-features/enforce-project-boundaries)
+[Learn more about tags and dependency constraints](/core-features/enforce-module-boundaries)

@@ -1,15 +1,14 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   updateJson,
-  convertNxGenerator,
   generateFiles,
-  joinPathFragments,
   logger,
   offsetFromRoot,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { CustomServerSchema } from './schema';
+import { join } from 'path';
 
 export async function customServerGenerator(
   host: Tree,
@@ -17,15 +16,18 @@ export async function customServerGenerator(
 ): Promise<void> {
   const project = readProjectConfiguration(host, options.project);
 
-  if (project.targets?.build?.executor !== '@nrwl/next:build') {
+  if (
+    project.targets?.build?.executor !== '@nx/next:build' &&
+    project.targets?.build?.executor !== '@nrwl/next:build'
+  ) {
     logger.error(
-      `Project ${options.project} is not a Next.js project. Did you generate it with "nx g @nrwl/next:app"?`
+      `Project ${options.project} is not a Next.js project. Did you generate it with "nx g @nx/next:app"?`
     );
     return;
   }
 
   const outputPath = project.targets?.build?.options?.outputPath;
-  const root = project.targets?.build?.options?.root;
+  const root = project.root;
 
   if (
     !root ||
@@ -34,7 +36,7 @@ export async function customServerGenerator(
     !project.targets?.build?.configurations?.production
   ) {
     logger.error(
-      `Project ${options.project} has invalid config. Did you generate it with "nx g @nrwl/next:app"?`
+      `Project ${options.project} has invalid config. Did you generate it with "nx g @nx/next:app"?`
     );
     return;
   }
@@ -49,7 +51,7 @@ export async function customServerGenerator(
     return;
   }
 
-  generateFiles(host, joinPathFragments(__dirname, 'files'), project.root, {
+  generateFiles(host, join(__dirname, 'files'), project.root, {
     ...options,
     offsetFromRoot: offsetFromRoot(project.root),
     projectRoot: project.root,
@@ -62,7 +64,7 @@ export async function customServerGenerator(
   project.targets.serve.configurations.production.customServerTarget = `${options.project}:serve-custom-server:production`;
 
   project.targets['build-custom-server'] = {
-    executor: '@nrwl/js:tsc',
+    executor: '@nx/js:tsc',
     defaultConfiguration: 'production',
     options: {
       outputPath,
@@ -78,8 +80,8 @@ export async function customServerGenerator(
   };
 
   project.targets['serve-custom-server'] = {
-    executor: '@nrwl/js:node',
-    defaultConfiguration: 'development',
+    executor: '@nx/js:node',
+    defaultConfiguration: 'production',
     options: {
       buildTarget: `${options.project}:build-custom-server`,
     },
@@ -96,14 +98,19 @@ export async function customServerGenerator(
   updateProjectConfiguration(host, options.project, project);
 
   updateJson(host, 'nx.json', (json) => {
-    json.tasksRunnerOptions ??= {};
-    json.tasksRunnerOptions.default ??= { options: {} };
-    json.tasksRunnerOptions.default.options.cacheableOperations = [
-      ...json.tasksRunnerOptions.default.options.cacheableOperations,
-      'build-custom-server',
-    ];
+    if (
+      !json.tasksRunnerOptions?.default?.options?.cacheableOperations?.includes(
+        'build-custom-server'
+      ) &&
+      json.tasksRunnerOptions?.default?.options?.cacheableOperations
+    ) {
+      json.tasksRunnerOptions.default.options.cacheableOperations.push(
+        'build-custom-server'
+      );
+    }
+    json.targetDefaults ??= {};
+    json.targetDefaults['build-custom-server'] ??= {};
+    json.targetDefaults['build-custom-server'].cache ??= true;
     return json;
   });
 }
-
-export const customServerSchematic = convertNxGenerator(customServerGenerator);

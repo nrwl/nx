@@ -1,0 +1,81 @@
+import { Tree } from '../../generators/tree';
+import { getProjects } from '../../generators/utils/project-configuration';
+
+/**
+ * This function escapes dollar sign in env variables
+ * It will go through:
+ * - '.env', '.local.env', '.env.local'
+ * - .env.[target-name], .[target-name].env
+ * - .env.[target-name].[configuration-name], .[target-name].[configuration-name].env
+ * - .env.[configuration-name], .[configuration-name].env
+ * at each project root and workspace root
+ * @param tree
+ */
+export default function escapeDollarSignEnvVariables(tree: Tree) {
+  const envFiles = ['.env', '.local.env', '.env.local'];
+  for (const [_, configuration] of getProjects(tree).entries()) {
+    envFiles.push(
+      `${configuration.root}/.env`,
+      `${configuration.root}/.local.env`,
+      `${configuration.root}/.env.local`
+    );
+    for (const targetName in configuration.targets) {
+      const task = configuration.targets[targetName];
+      envFiles.push(
+        `.env.${targetName}`,
+        `.${targetName}.env`,
+        `${configuration.root}/.env.${targetName}`,
+        `${configuration.root}/.${targetName}.env`
+      );
+
+      if (task.configurations) {
+        for (const configurationName in task.configurations) {
+          envFiles.push(
+            `.env.${targetName}.${configurationName}`,
+            `.${targetName}.${configurationName}.env`,
+            `.env.${configurationName}`,
+            `.${configurationName}.env`,
+            `${configuration.root}/.env.${targetName}.${configurationName}`,
+            `${configuration.root}/.${targetName}.${configurationName}.env`,
+            `${configuration.root}/.env.${configurationName}`,
+            `${configuration.root}/.${configurationName}.env`
+          );
+        }
+      }
+    }
+  }
+  for (const envFile of new Set(envFiles)) {
+    parseEnvFile(tree, envFile);
+  }
+}
+
+/**
+ * This function parse the env file and escape dollar sign
+ * @param tree
+ * @param envFilePath
+ * @returns
+ */
+function parseEnvFile(tree: Tree, envFilePath: string) {
+  if (!tree.exists(envFilePath)) {
+    return;
+  }
+  let envFileContent = tree.read(envFilePath, 'utf-8');
+  envFileContent = envFileContent
+    .split('\n')
+    .map((line) => {
+      line = line.trim();
+
+      if (!line.includes('$')) {
+        return line;
+      }
+
+      const declarations = line.split('=');
+      if (declarations[1].includes('$') && !declarations[1].includes(`\\$`)) {
+        declarations[1] = declarations[1].replace('$', `\\$`);
+        line = declarations.join('=');
+      }
+      return line;
+    })
+    .join('\n');
+  tree.write(envFilePath, envFileContent);
+}

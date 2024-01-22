@@ -5,6 +5,8 @@ description: 'Graph dependencies affected by changes'
 
 # affected:graph
 
+**Deprecated:** Use `nx graph --affected`, or `nx affected --graph` instead depending on which best suits your use case. The `affected:graph` command will be removed in Nx 18.
+
 Graph dependencies affected by changes
 
 ## Usage
@@ -54,12 +56,6 @@ Open the project graph of the workspace in the browser, highlight the projects a
 ```
 
 ## Options
-
-### all
-
-Type: `boolean`
-
-All projects
 
 ### base
 
@@ -129,6 +125,12 @@ Type: `number`
 
 Bind the project graph server to a specific port.
 
+### targets
+
+Type: `string`
+
+The target to show tasks for in the task graph
+
 ### uncommitted
 
 Type: `boolean`
@@ -146,6 +148,16 @@ Untracked changes
 Type: `boolean`
 
 Show version number
+
+### view
+
+Type: `string`
+
+Choices: [projects, tasks]
+
+Default: `projects`
+
+Choose whether to view the projects or task graph
 
 ### watch
 

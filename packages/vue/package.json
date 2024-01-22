@@ -1,0 +1,43 @@
+{
+  "name": "@nx/vue",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Vue plugin for Nx contains executors and generators for managing Vue applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/vue"
+  },
+  "keywords": [
+    "Monorepo",
+    "Vue",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "nx-migrations": {
+    "migrations": "./migrations.json"
+  },
+  "dependencies": {
+    "minimatch": "9.0.3",
+    "tslib": "^2.3.0",
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
+    "@nx/eslint": "file:../eslint",
+    "@nx/vite": "file:../vite",
+    "@nx/web": "file:../web"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {}
+}

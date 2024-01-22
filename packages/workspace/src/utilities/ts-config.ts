@@ -1,6 +1,7 @@
-import { offsetFromRoot, Tree, workspaceRoot } from '@nrwl/devkit';
+import { offsetFromRoot, Tree, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
+import type { Node, SyntaxKind } from 'typescript';
 import { ensureTypescript } from './typescript';
 
 let tsModule: typeof import('typescript');
@@ -48,8 +49,37 @@ export function getRootTsConfigFileName(): string | null {
   return null;
 }
 
-export function getRootTsConfigPath(): string | null {
-  const tsConfigFileName = getRootTsConfigFileName();
+export function findNodes(
+  node: Node,
+  kind: SyntaxKind | SyntaxKind[],
+  max = Infinity
+): Node[] {
+  if (!node || max == 0) {
+    return [];
+  }
 
-  return tsConfigFileName ? join(workspaceRoot, tsConfigFileName) : null;
+  const arr: Node[] = [];
+  const hasMatch = Array.isArray(kind)
+    ? kind.includes(node.kind)
+    : node.kind === kind;
+  if (hasMatch) {
+    arr.push(node);
+    max--;
+  }
+  if (max > 0) {
+    for (const child of node.getChildren()) {
+      findNodes(child, kind, max).forEach((node) => {
+        if (max > 0) {
+          arr.push(node);
+        }
+        max--;
+      });
+
+      if (max <= 0) {
+        break;
+      }
+    }
+  }
+
+  return arr;
 }

@@ -2,12 +2,17 @@
 
 Create-React-App (CRA) is one of the most widely used tool for creating, building and testing a React app. This guide will show you how to move an app generated with CRA into an Nx workspace. Once the migration process is complete, you'll be able to take advantage of all of Nx's features without needing to completely recreate your build process.
 
+{% youtube
+src="https://www.youtube.com/embed/zvYb7XCLQzU"
+title="From CRA to Vite in 10 seconds"
+width="100%" /%}
+
 ## Automated migration
 
 The easiest way to setup Nx in your CRA project is to use the automated migration tool.
 
 ```shell
-npx nx init
+npx nx@latest init
 ```
 
 {% callout type="note" title="Want to migrate to a monorepo instead?" %}
@@ -25,7 +30,7 @@ You will notice that the project now uses [Vite](https://vitejs.dev/) and [Vites
 test your application. Vite is a next-gen tooling for building frontend applications, and is much faster than Webpack (
 which CRA uses).
 
-If you do not want to use Vite, you can run `npx nx init --vite=false` instead.
+If you do not want to use Vite, you can run `npx nx@latest init --vite=false` instead.
 {% /callout %}
 
 ## Try Nx

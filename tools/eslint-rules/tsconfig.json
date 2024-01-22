@@ -1,7 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs"
+    "moduleResolution": "node16",
+    "module": "node16"
   },
   "files": [],
   "include": [],

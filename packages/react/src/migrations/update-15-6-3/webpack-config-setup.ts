@@ -4,10 +4,10 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { basename } from 'path';
-import type { WebpackExecutorOptions } from '@nrwl/webpack';
+import type { WebpackExecutorOptions } from '@nx/webpack';
 
 export default async function (tree: Tree) {
   // Since projects can have multiple configurations, we need to know if the default options
@@ -73,7 +73,7 @@ export default async function (tree: Tree) {
               // Note: This was added by an Nx migration.
               // You should consider inlining the logic into this file.
               // For more information on webpack config and Nx see:
-              // https://nx.dev/packages/webpack/documents/webpack-config-setup
+              // https://nx.dev/recipes/webpack/webpack-config-setup
               return require('./${justTheFileName}')(config, context);
             });
             `
@@ -93,7 +93,7 @@ export default async function (tree: Tree) {
           You should consider inlining the logic from ${oldName} into ${options['webpackConfig']}.
           You can read our guide on how to do this here: 
           
-          https://nx.dev/packages/webpack/documents/webpack-config-setup
+          https://nx.dev/recipes/webpack/webpack-config-setup
           `
         );
       } else {
@@ -122,7 +122,7 @@ export default async function (tree: Tree) {
             // Update the webpack config as needed here.
             // e.g. config.plugins.push(new MyPlugin())
             // For more information on webpack config and Nx see:
-            // https://nx.dev/packages/webpack/documents/webpack-config-setup
+            // https://nx.dev/recipes/webpack/webpack-config-setup
             return config;
           });
         `

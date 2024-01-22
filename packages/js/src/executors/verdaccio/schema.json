@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "version": 2,
+  "title": "Verdaccio Local Registry",
+  "description": "Start a local registry with Verdaccio.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "location": {
+      "type": "string",
+      "description": "Location option for npm config",
+      "default": "user",
+      "enum": ["global", "user", "project", "none"]
+    },
+    "storage": {
+      "type": "string",
+      "description": "Path to the custom storage directory for Verdaccio"
+    },
+    "port": {
+      "type": "number",
+      "description": "Port of local registry that Verdaccio should listen to",
+      "default": 4873
+    },
+    "config": {
+      "type": "string",
+      "description": "Path to the custom Verdaccio config file"
+    },
+    "clear": {
+      "type": "boolean",
+      "description": "Clear local registry storage before starting Verdaccio",
+      "default": true
+    }
+  },
+  "required": ["port"]
+}

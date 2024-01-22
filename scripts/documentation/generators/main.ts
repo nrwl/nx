@@ -14,13 +14,14 @@ async function generate() {
   try {
     console.log(`${chalk.blue('i')} Generating Documentation`);
 
+    const generatedOutputDirectory = join(workspaceRoot, 'docs', 'generated');
+    removeSync(generatedOutputDirectory);
     const commandsOutputDirectory = join(
       workspaceRoot,
       'docs',
       'generated',
       'cli'
     );
-    removeSync(commandsOutputDirectory);
     await generateCnwDocumentation(commandsOutputDirectory);
     await generateCliDocumentation(commandsOutputDirectory);
 

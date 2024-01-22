@@ -3,8 +3,8 @@ import {
   removePropertyFromJestConfig,
 } from './update-config';
 import { jestConfigObject } from './functions';
-import { Tree } from '@nrwl/devkit';
-import { createTree } from '@nrwl/devkit/testing';
+import { Tree } from '@nx/devkit';
+import { createTree } from '@nx/devkit/testing';
 
 describe('Update jest.config.js', () => {
   let host: Tree;
@@ -183,7 +183,7 @@ describe('Update jest.config.js', () => {
       host.write(
         'jest.config.js',
         String.raw`
-       const { nxPreset } = require('@nrwl/jest/preset');
+       const { nxPreset } = require('@nx/jest/preset');
         
       module.exports = {
         ...nxPreset,
@@ -278,7 +278,7 @@ describe('Update jest.config.js', () => {
       host.write(
         'jest.config.js',
         String.raw`
-       const { nxPreset } = require('@nrwl/jest/preset');
+       const { nxPreset } = require('@nx/jest/preset');
         
       module.exports = {
         ...nxPreset,
@@ -320,7 +320,7 @@ describe('Update jest.config.js', () => {
       host.write(
         'jest.config.js',
         String.raw`
-       const { nxPreset } = require('@nrwl/jest/preset');
+       const { nxPreset } = require('@nx/jest/preset');
         
       module.exports = {
         ...nxPreset,

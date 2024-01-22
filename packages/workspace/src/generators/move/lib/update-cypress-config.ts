@@ -1,4 +1,4 @@
-import { ProjectConfiguration, Tree } from '@nrwl/devkit';
+import { ProjectConfiguration, Tree } from '@nx/devkit';
 import * as path from 'path';
 import { NormalizedSchema } from '../schema';
 
@@ -28,14 +28,20 @@ export function updateCypressConfig(
     const cypressJson = JSON.parse(
       tree.read(cypressJsonPath).toString('utf-8')
     ) as PartialCypressJson;
-    cypressJson.videosFolder = cypressJson.videosFolder.replace(
-      project.root,
-      schema.relativeToRootDestination
-    );
-    cypressJson.screenshotsFolder = cypressJson.screenshotsFolder.replace(
-      project.root,
-      schema.relativeToRootDestination
-    );
+    // videosFolder is not required because videos can be turned off - it also has a default
+    if (cypressJson.videosFolder) {
+      cypressJson.videosFolder = cypressJson.videosFolder.replace(
+        project.root,
+        schema.relativeToRootDestination
+      );
+    }
+    // screenshotsFolder is not required as it has a default
+    if (cypressJson.screenshotsFolder) {
+      cypressJson.screenshotsFolder = cypressJson.screenshotsFolder.replace(
+        project.root,
+        schema.relativeToRootDestination
+      );
+    }
 
     tree.write(cypressJsonPath, JSON.stringify(cypressJson));
     return tree;
@@ -45,7 +51,9 @@ export function updateCypressConfig(
     schema.relativeToRootDestination,
     'cypress.config.ts'
   );
-  if (tree.exists(cypressConfigPath)) {
+  // Search and replace for "e2e" directory is not safe, and will result in an invalid config file.
+  // Leave it and let users fix the config if needed.
+  if (project.root !== 'e2e' && tree.exists(cypressConfigPath)) {
     const oldContent = tree.read(cypressConfigPath, 'utf-8');
     const findName = new RegExp(`'${schema.projectName}'`, 'g');
     const findDir = new RegExp(project.root, 'g');

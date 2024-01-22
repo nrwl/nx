@@ -1,0 +1,6 @@
+<template>
+  <NxWelcome title="<%= title %>" />
+</template>
+
+
+

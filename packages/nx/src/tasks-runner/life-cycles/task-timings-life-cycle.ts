@@ -27,8 +27,10 @@ export class TaskTimingsLifeCycle implements LifeCycle {
     }>
   ): void {
     for (let tr of taskResults) {
-      if (tr.task.endTime && tr.task.startTime) {
+      if (tr.task.startTime) {
         this.timings[tr.task.id].start = tr.task.startTime;
+      }
+      if (tr.task.endTime) {
         this.timings[tr.task.id].end = tr.task.endTime;
       } else {
         this.timings[tr.task.id].end = new Date().getTime();

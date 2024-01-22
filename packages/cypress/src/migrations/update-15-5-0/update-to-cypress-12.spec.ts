@@ -1,10 +1,10 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   stripIndents,
   Tree,
   readJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   shouldNotOverrideCommands,
   shouldNotUseCyInShouldCB,
@@ -98,7 +98,7 @@ describe('Cypress 12 Migration', () => {
         * More Info: https://docs.cypress.io/guides/references/migration-guide#-should
         **/
         cy.should(($s) => {
-              cy.task(\\"\\");
+              cy.task("");
             })
             /**
         * TODO(@nrwl/cypress): Nesting Cypress commands in a should assertion now throws.
@@ -106,7 +106,7 @@ describe('Cypress 12 Migration', () => {
         * More Info: https://docs.cypress.io/guides/references/migration-guide#-should
         **/
         cy.should(function($el) {
-              cy.task(\\"\\");
+              cy.task("");
             })
           })
         })

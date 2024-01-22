@@ -1,9 +1,9 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   normalizePath,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { GeneratorOptions } from '../../schema';
 import type {
   MigrationProjectConfiguration,

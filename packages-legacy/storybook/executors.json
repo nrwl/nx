@@ -1,0 +1,26 @@
+{
+  "builders": {
+    "storybook": {
+      "implementation": "@nx/storybook/src/executors/storybook/compat",
+      "schema": "@nx/storybook/src/executors/storybook/schema.json",
+      "description": "Serve Storybook."
+    },
+    "build": {
+      "implementation": "@nx/storybook/src/executors/build-storybook/compat",
+      "schema": "@nx/storybook/src/executors/build-storybook/schema.json",
+      "description": "Build Storybook."
+    }
+  },
+  "executors": {
+    "storybook": {
+      "implementation": "@nx/storybook/src/executors/storybook/storybook.impl",
+      "schema": "@nx/storybook/src/executors/storybook/schema.json",
+      "description": "Serve Storybook."
+    },
+    "build": {
+      "implementation": "@nx/storybook/src/executors/build-storybook/build-storybook.impl",
+      "schema": "@nx/storybook/src/executors/build-storybook/schema.json",
+      "description": "Build Storybook."
+    }
+  }
+}

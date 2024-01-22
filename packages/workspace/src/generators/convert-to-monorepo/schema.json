@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxWorkspaceConvertToMonorepo",
+  "cli": "nx",
+  "title": "Nx Convert to Monorepo",
+  "description": "Convert an Nx project to a monorepo.",
+  "type": "object",
+  "examples": [
+    {
+      "command": "nx g @nx/workspace:monorepo",
+      "description": "Convert an Nx standalone project to a monorepo."
+    }
+  ],
+  "properties": {},
+  "required": []
+}

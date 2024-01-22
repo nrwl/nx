@@ -1,11 +1,10 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, normalizePath } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, normalizePath } from '@nx/devkit';
 import { basename, dirname } from 'path';
 import type { NormalizedSchema } from '../schema';
 
-// Adapted from https://github.com/angular/angular-cli/blob/main/packages/schematics/angular/utility/find-module.ts#L29
-// to match the logic in the component schematic. It doesn't throw if it can't
-// find a module since the schematic would have thrown before getting here.
+// Adapted from https://github.com/angular/angular-cli/blob/732aab5fa7e63618c89dfbbb6f78753f706d7014/packages/schematics/angular/utility/find-module.ts#L29
+// to match the logic from the Angular CLI component schematic.
 const moduleExt = '.module.ts';
 const routingModuleExt = '-routing.module.ts';
 
@@ -13,17 +12,15 @@ export function findModuleFromOptions(
   tree: Tree,
   options: NormalizedSchema,
   projectRoot: string
-): string | null {
+): string {
   if (!options.module) {
-    const pathToCheck = joinPathFragments(options.path, options.name);
-
-    return normalizePath(findModule(tree, pathToCheck, projectRoot));
+    return normalizePath(findModule(tree, options.directory, projectRoot));
   } else {
-    const modulePath = joinPathFragments(options.path, options.module);
-    const componentPath = joinPathFragments(options.path, options.name);
+    const modulePath = joinPathFragments(options.directory, options.module);
+    const componentPath = options.directory;
     const moduleBaseName = basename(modulePath);
 
-    const candidateSet = new Set<string>([options.path]);
+    const candidateSet = new Set<string>([options.directory]);
 
     const projectRootParent = dirname(projectRoot);
     for (let dir = modulePath; dir !== projectRootParent; dir = dirname(dir)) {
@@ -39,6 +36,7 @@ export function findModuleFromOptions(
     for (const c of candidatesDirs) {
       const candidateFiles = [
         '',
+        moduleBaseName,
         `${moduleBaseName}.ts`,
         `${moduleBaseName}${moduleExt}`,
       ].map((x) => joinPathFragments(c, x));
@@ -50,7 +48,12 @@ export function findModuleFromOptions(
       }
     }
 
-    return null;
+    throw new Error(
+      `Specified module '${options.module}' does not exist.\n` +
+        `Looked in the following directories:\n    ${candidatesDirs.join(
+          '\n    '
+        )}`
+    );
   }
 }
 
@@ -58,7 +61,7 @@ function findModule(
   tree: Tree,
   generateDir: string,
   projectRoot: string
-): string | null {
+): string {
   let dir = generateDir;
   const projectRootParent = dirname(projectRoot);
 
@@ -74,11 +77,15 @@ function findModule(
     if (filteredMatches.length == 1) {
       return filteredMatches[0];
     } else if (filteredMatches.length > 1) {
-      return null;
+      throw new Error(
+        "Found more than one candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option."
+      );
     }
 
     dir = dirname(dir);
   }
 
-  return null;
+  throw new Error(
+    "Could not find a candidate module to add the component to. Please specify which module the component should be added to by using the '--module' option, or pass '--standalone' to generate a standalone component."
+  );
 }

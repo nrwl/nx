@@ -1,4 +1,4 @@
-import { readJson, Tree } from '@nrwl/devkit';
+import { readJson, Tree } from '@nx/devkit';
 import * as path from 'path';
 import { NormalizedSchema } from '../schema';
 
@@ -12,6 +12,10 @@ interface PartialPackageJson {
  * @param schema The options provided to the schematic
  */
 export function updatePackageJson(tree: Tree, schema: NormalizedSchema) {
+  if (!schema.importPath) {
+    return;
+  }
+
   const packageJsonPath = path.join(
     schema.relativeToRootDestination,
     'package.json'

@@ -1,0 +1,58 @@
+import { <%= className %>Entity } from './<%= relativeFileName %>.models';
+import { <%= propertyName %>Adapter, <%= className %>PartialState, initial<%= className %>State } from './<%= relativeFileName %>.reducer';
+import * as <%= className %>Selectors from './<%= relativeFileName %>.selectors';
+
+describe('<%= className %> Selectors', () => {
+  const ERROR_MSG = 'No Error Available';
+  const get<%= className %>Id = (it: <%= className %>Entity) => it.id;
+  const create<%= className %>Entity = (id: string, name = '') => ({
+    id,
+    name: name || `name-${id}`
+  }) as <%= className %>Entity;
+
+  let state: <%= className %>PartialState;
+
+  beforeEach(() => {
+    state = {
+      <%= propertyName %>: <%= propertyName %>Adapter.setAll([
+        create<%= className %>Entity('PRODUCT-AAA'),
+        create<%= className %>Entity('PRODUCT-BBB'),
+        create<%= className %>Entity('PRODUCT-CCC')
+      ], {
+        ...initial<%= className %>State,
+        selectedId: 'PRODUCT-BBB',
+        error: ERROR_MSG,
+        loaded: true
+      })
+    };
+  });
+
+  describe('<%= className %> Selectors', () => {
+    it('selectAll<%= className %>() should return the list of <%= className %>', () => {
+      const results = <%= className %>Selectors.selectAll<%= className %>(state);
+      const selId = get<%= className %>Id(results[1]);
+
+      expect(results.length).toBe(3);
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('selectEntity() should return the selected Entity', () => {
+      const result = <%= className %>Selectors.selectEntity(state) as <%= className %>Entity;
+      const selId = get<%= className %>Id(result);
+
+      expect(selId).toBe('PRODUCT-BBB');
+    });
+
+    it('select<%= className %>Loaded() should return the current "loaded" status', () => {
+      const result = <%= className %>Selectors.select<%= className %>Loaded(state);
+
+      expect(result).toBe(true);
+    });
+
+    it('select<%= className %>Error() should return the current "error" state', () => {
+      const result = <%= className %>Selectors.select<%= className %>Error(state);
+
+      expect(result).toBe(ERROR_MSG);
+    });
+  });
+});

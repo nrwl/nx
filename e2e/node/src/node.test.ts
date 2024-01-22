@@ -1,5 +1,5 @@
 import { stripIndents } from '@angular-devkit/core/src/utils/literals';
-import { joinPathFragments } from '@nrwl/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
@@ -14,7 +14,6 @@ import {
   packageManagerLockFile,
   promisifiedTreeKill,
   readFile,
-  readJson,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -22,12 +21,14 @@ import {
   tmpProjPath,
   uniq,
   updateFile,
-  updateProjectConfig,
-} from '@nrwl/e2e/utils';
+  updateJson,
+  setMaxWorkers,
+} from '@nx/e2e/utils';
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
-import { getLockFileName } from 'nx/src/lock-file/lock-file';
+import { getLockFileName } from '@nx/js';
 import { satisfies } from 'semver';
+import { join } from 'path';
 
 function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
@@ -49,14 +50,19 @@ function getData(port, path = '/api'): Promise<any> {
 }
 
 describe('Node Applications', () => {
-  beforeEach(() => newProject());
+  beforeAll(() =>
+    newProject({
+      packages: ['@nx/node', '@nx/express', '@nx/nest'],
+    })
+  );
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should be able to generate an empty application', async () => {
     const nodeapp = uniq('nodeapp');
 
-    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+    runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
+    setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -73,9 +79,10 @@ describe('Node Applications', () => {
 
   it('should be able to generate the correct outputFileName in options', async () => {
     const nodeapp = uniq('nodeapp');
-    runCLI(`generate @nrwl/node:app ${nodeapp} --linter=eslint`);
+    runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
+    setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
-    updateProjectConfig(nodeapp, (config) => {
+    updateJson(join('apps', nodeapp, 'project.json'), (config) => {
       config.targets.build.options.outputFileName = 'index.js';
       return config;
     });
@@ -88,13 +95,14 @@ describe('Node Applications', () => {
     const nodeapp = uniq('nodeapp');
 
     runCLI(
-      `generate @nrwl/node:app ${nodeapp} --linter=eslint --bundler=webpack`
+      `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack`
     );
+    setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
 
-    updateProjectConfig(nodeapp, (config) => {
+    updateJson(join('apps', nodeapp, 'project.json'), (config) => {
       config.targets.build.options.additionalEntryPoints = [
         {
           entryName: 'additional-main',
@@ -108,17 +116,28 @@ describe('Node Applications', () => {
       `apps/${nodeapp}/src/additional-main.ts`,
       `console.log('Hello Additional World!');`
     );
-    updateFile(`apps/${nodeapp}/src/main.ts`, `console.log('Hello World!');`);
+    updateFile(
+      `apps/${nodeapp}/src/main.ts`,
+      `console.log('Hello World!');
+    console.log('env: ' + process.env['NODE_ENV']);
+    `
+    );
+
     await runCLIAsync(`build ${nodeapp}`);
 
     checkFilesExist(
       `dist/apps/${nodeapp}/main.js`,
       `dist/apps/${nodeapp}/additional-main.js`
     );
-    const result = execSync(`node dist/apps/${nodeapp}/main.js`, {
-      cwd: tmpProjPath(),
-    }).toString();
+
+    const result = execSync(
+      `NODE_ENV=development && node dist/apps/${nodeapp}/main.js`,
+      {
+        cwd: tmpProjPath(),
+      }
+    ).toString();
     expect(result).toContain('Hello World!');
+    expect(result).toContain('env: development');
 
     const additionalResult = execSync(
       `node dist/apps/${nodeapp}/additional-main.js`,
@@ -127,15 +146,53 @@ describe('Node Applications', () => {
       }
     ).toString();
     expect(additionalResult).toContain('Hello Additional World!');
+  }, 300_000);
+
+  it('should be able to generate an empty application with variable in .env file', async () => {
+    const originalEnvPort = process.env.PORT;
+    const port = 3457;
+    process.env.PORT = `${port}`;
+    const nodeapp = uniq('nodeapp');
+
+    runCLI(
+      `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack --framework=none`
+    );
+    setMaxWorkers(join('apps', nodeapp, 'project.json'));
+
+    updateFile('.env', `NX_FOOBAR="test foo bar"`);
+
+    updateFile(
+      `apps/${nodeapp}/src/main.ts`,
+      `console.log('foobar: ' + process.env['NX_FOOBAR']);`
+    );
+
+    await runCLIAsync(`build ${nodeapp}`);
+    checkFilesExist(`dist/apps/${nodeapp}/main.js`);
+
+    // check serving
+    const p = await runCommandUntil(
+      `serve ${nodeapp} --port=${port} --watch=false`,
+      (output) => {
+        process.stdout.write(output);
+        return output.includes(`foobar: test foo bar`);
+      }
+    );
+    try {
+      await promisifiedTreeKill(p.pid, 'SIGKILL');
+      await killPorts(port);
+    } finally {
+      process.env.port = originalEnvPort;
+    }
   }, 60000);
 
   it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
     const originalEnvPort = process.env.PORT;
-    const port = 3333;
+    const port = 3456;
     process.env.PORT = `${port}`;
 
-    runCLI(`generate @nrwl/express:app ${nodeapp} --linter=eslint`);
+    runCLI(`generate @nx/express:app ${nodeapp} --linter=eslint`);
+    setMaxWorkers(join('apps', nodeapp, 'project.json'));
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting.');
 
@@ -176,7 +233,8 @@ describe('Node Applications', () => {
   xit('should be able to generate a nest application', async () => {
     const nestapp = uniq('nestapp');
     const port = 3335;
-    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+    runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
+    setMaxWorkers(join('apps', nestapp, 'project.json'));
 
     const lintResults = runCLI(`lint ${nestapp}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -231,18 +289,66 @@ describe('Node Applications', () => {
       expect(err).toBeFalsy();
     }
   }, 120000);
+
+  it('should be able to run ESM applications', async () => {
+    const esmapp = uniq('esmapp');
+
+    runCLI(
+      `generate @nrwl/node:app ${esmapp} --linter=eslint --framework=none --bundler=webpack`
+    );
+    setMaxWorkers(join('apps', esmapp, 'project.json'));
+    updateJson(`apps/${esmapp}/tsconfig.app.json`, (config) => {
+      config.module = 'esnext';
+      config.target = 'es2020';
+      return config;
+    });
+    updateJson(join('apps', esmapp, 'project.json'), (config) => {
+      config.targets.build.options.outputFileName = 'main.mjs';
+      config.targets.build.options.assets = [];
+      return config;
+    });
+    updateFile(
+      `apps/${esmapp}/webpack.config.js`,
+      `
+        const { composePlugins, withNx } = require('@nx/webpack');
+        module.exports = composePlugins(withNx(), (config) => {
+          config.experiments = {
+            ...config.experiments,
+            outputModule: true,
+            topLevelAwait: true,
+          };
+          config.output = {
+            path: config.output.path,
+            chunkFormat: 'module',
+            library: { type: 'module' }
+          }
+          return config;
+        });
+      `
+    );
+    await runCLIAsync(`build ${esmapp}`);
+    const p = await runCommandUntil(`serve ${esmapp}`, (output) => {
+      return output.includes('Hello World');
+    });
+    p.kill();
+  }, 300000);
 });
 
 describe('Build Node apps', () => {
-  beforeEach(() => newProject());
+  let scope: string;
+  beforeAll(() => {
+    scope = newProject({
+      packages: ['@nx/node', '@nx/express', '@nx/nest'],
+    });
+  });
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should generate a package.json with the `--generatePackageJson` flag', async () => {
-    const scope = newProject();
     const packageManager = detectPackageManager(tmpProjPath());
     const nestapp = uniq('nestapp');
-    runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+    runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
+    setMaxWorkers(join('apps', nestapp, 'project.json'));
 
     await runCLIAsync(`build ${nestapp} --generatePackageJson`);
 
@@ -303,10 +409,11 @@ describe('Build Node apps', () => {
     });
 
     const nodeapp = uniq('nodeapp');
-    runCLI(`generate @nrwl/node:app ${nodeapp} --bundler=webpack`);
+    runCLI(`generate @nx/node:app ${nodeapp} --bundler=webpack`);
+    setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
     const jslib = uniq('jslib');
-    runCLI(`generate @nrwl/js:lib ${jslib} --buildable`);
+    runCLI(`generate @nx/js:lib ${jslib} --bundler=tsc`);
 
     updateFile(
       `apps/${nodeapp}/src/main.ts`,
@@ -343,7 +450,8 @@ ${jslib}();
   it('should remove previous output before building with the --deleteOutputPath option set', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nrwl/node:app ${appName} --no-interactive`);
+    runCLI(`generate @nx/node:app ${appName} --no-interactive`);
+    setMaxWorkers(join('apps', appName, 'project.json'));
 
     // deleteOutputPath should default to true
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -375,15 +483,61 @@ ${jslib}();
     checkFilesExist(`dist/apps/_should_keep.txt`);
   }, 120000);
 
+  it('should support generating projects with the new name and root format', () => {
+    const appName = uniq('app1');
+    const libName = uniq('@my-org/lib1');
+
+    runCLI(
+      `generate @nx/node:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("apps/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${appName}/src/main.ts`);
+    // check build works
+    expect(runCLI(`build ${appName}`)).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+    // check tests pass
+    const appTestResult = runCLI(`test ${appName}`);
+    expect(appTestResult).toContain(
+      `Successfully ran target test for project ${appName}`
+    );
+
+    // assert scoped project names are not supported when --project-name-and-root-format=derived
+    expect(() =>
+      runCLI(
+        `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=derived --no-interactive`
+      )
+    ).toThrow();
+
+    runCLI(
+      `generate @nx/node:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check files are generated without the layout directory ("libs/") and
+    // using the project name as the directory when no directory is provided
+    checkFilesExist(`${libName}/src/index.ts`);
+    // check build works
+    expect(runCLI(`build ${libName}`)).toContain(
+      `Successfully ran target build for project ${libName}`
+    );
+    // check tests pass
+    const libTestResult = runCLI(`test ${libName}`);
+    expect(libTestResult).toContain(
+      `Successfully ran target test for project ${libName}`
+    );
+  }, 500_000);
+
   describe('NestJS', () => {
     it('should have plugin output if specified in `tsPlugins`', async () => {
-      newProject();
       const nestapp = uniq('nestapp');
-      runCLI(`generate @nrwl/nest:app ${nestapp} --linter=eslint`);
+      runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
+      setMaxWorkers(join('apps', nestapp, 'project.json'));
 
-      packageInstall('@nestjs/swagger', undefined, '^6.0.0');
+      packageInstall('@nestjs/swagger', undefined, '^7.0.0');
 
-      updateProjectConfig(nestapp, (config) => {
+      updateJson(join('apps', nestapp, 'project.json'), (config) => {
         config.targets.build.options.tsPlugins = ['@nestjs/swagger/plugin'];
         return config;
       });
@@ -429,115 +583,112 @@ ${jslib}();
       expect(mainJs).toContain('_OPENAPI_METADATA_FACTORY');
     }, 300000);
   });
-});
 
-describe('nest libraries', function () {
-  beforeEach(() => newProject());
+  describe('nest libraries', function () {
+    it('should be able to generate a nest library', async () => {
+      const nestlib = uniq('nestlib');
+      runCLI(`generate @nx/nest:lib ${nestlib}`);
 
-  it('should be able to generate a nest library', async () => {
-    const nestlib = uniq('nestlib');
-    runCLI(`generate @nrwl/nest:lib ${nestlib}`);
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
 
-    const lintResults = runCLI(`lint ${nestlib}`);
-    expect(lintResults).toContain('All files pass linting.');
+      const testResults = runCLI(`test ${nestlib}`);
+      expect(testResults).toContain(
+        `Successfully ran target test for project ${nestlib}`
+      );
+    }, 60000);
 
-    const testResults = runCLI(`test ${nestlib}`);
-    expect(testResults).toContain(
-      `Successfully ran target test for project ${nestlib}`
-    );
-  }, 60000);
+    it('should be able to generate a nest library w/ service', async () => {
+      const nestlib = uniq('nestlib');
 
-  it('should be able to generate a nest library w/ service', async () => {
-    const nestlib = uniq('nestlib');
+      runCLI(`generate @nx/nest:lib ${nestlib} --service`);
 
-    runCLI(`generate @nrwl/nest:lib ${nestlib} --service`);
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
 
-    const lintResults = runCLI(`lint ${nestlib}`);
-    expect(lintResults).toContain('All files pass linting.');
+      const jestResult = await runCLIAsync(`test ${nestlib}`);
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
+    }, 200000);
 
-    const jestResult = await runCLIAsync(`test ${nestlib}`);
-    expect(jestResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-  }, 200000);
+    it('should be able to generate a nest library w/ controller', async () => {
+      const nestlib = uniq('nestlib');
 
-  it('should be able to generate a nest library w/ controller', async () => {
-    const nestlib = uniq('nestlib');
+      runCLI(`generate @nx/nest:lib ${nestlib} --controller`);
 
-    runCLI(`generate @nrwl/nest:lib ${nestlib} --controller`);
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
 
-    const lintResults = runCLI(`lint ${nestlib}`);
-    expect(lintResults).toContain('All files pass linting.');
+      const jestResult = await runCLIAsync(`test ${nestlib}`);
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
+    }, 200000);
 
-    const jestResult = await runCLIAsync(`test ${nestlib}`);
-    expect(jestResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-  }, 200000);
+    it('should be able to generate a nest library w/ controller and service', async () => {
+      const nestlib = uniq('nestlib');
 
-  it('should be able to generate a nest library w/ controller and service', async () => {
-    const nestlib = uniq('nestlib');
+      runCLI(`generate @nx/nest:lib ${nestlib} --controller --service`);
 
-    runCLI(`generate @nrwl/nest:lib ${nestlib} --controller --service`);
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
 
-    const lintResults = runCLI(`lint ${nestlib}`);
-    expect(lintResults).toContain('All files pass linting.');
+      const jestResult = await runCLIAsync(`test ${nestlib}`);
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 2 passed, 2 total'
+      );
+    }, 200000);
 
-    const jestResult = await runCLIAsync(`test ${nestlib}`);
-    expect(jestResult.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
-    );
-  }, 200000);
+    it('should have plugin output if specified in `transformers`', async () => {
+      const nestlib = uniq('nestlib');
+      runCLI(`generate @nx/nest:lib ${nestlib} --buildable`);
 
-  it('should have plugin output if specified in `transformers`', async () => {
-    newProject();
-    const nestlib = uniq('nestlib');
-    runCLI(`generate @nrwl/nest:lib ${nestlib} --buildable`);
+      packageInstall('@nestjs/swagger', undefined, '^7.0.0');
 
-    packageInstall('@nestjs/swagger', undefined, '~6.0.0');
-
-    updateProjectConfig(nestlib, (config) => {
-      config.targets.build.options.transformers = [
-        {
-          name: '@nestjs/swagger/plugin',
-          options: {
-            dtoFileNameSuffix: ['.model.ts'],
+      updateJson(join('libs', nestlib, 'project.json'), (config) => {
+        config.targets.build.options.transformers = [
+          {
+            name: '@nestjs/swagger/plugin',
+            options: {
+              dtoFileNameSuffix: ['.model.ts'],
+            },
           },
-        },
-      ];
-      return config;
-    });
+        ];
+        return config;
+      });
 
-    updateFile(
-      `libs/${nestlib}/src/lib/foo.model.ts`,
-      `
+      updateFile(
+        `libs/${nestlib}/src/lib/foo.model.ts`,
+        `
 export class FooModel {
-  foo: string;
-  bar: number;
+  foo?: string;
+  bar?: number;
 }`
-    );
+      );
 
-    await runCLIAsync(`build ${nestlib}`);
+      await runCLIAsync(`build ${nestlib}`);
 
-    const fooModelJs = readFile(`dist/libs/${nestlib}/src/lib/foo.model.js`);
-    expect(stripIndents`${fooModelJs}`).toContain(
-      stripIndents`
+      const fooModelJs = readFile(`dist/libs/${nestlib}/src/lib/foo.model.js`);
+      expect(stripIndents`${fooModelJs}`).toContain(
+        stripIndents`
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FooModel = void 0;
 const openapi = require("@nestjs/swagger");
 class FooModel {
     static _OPENAPI_METADATA_FACTORY() {
-        return { foo: { required: true, type: () => String }, bar: { required: true, type: () => Number } };
+        return { foo: { required: false, type: () => String }, bar: { required: false, type: () => Number } };
     }
 }
 exports.FooModel = FooModel;
 //# sourceMappingURL=foo.model.js.map
         `
-    );
-  }, 300000);
+      );
+    }, 300000);
 
-  it('should run default jest tests', async () => {
-    await expectJestTestsToPass('@nrwl/node:lib');
-  }, 100000);
+    it('should run default jest tests', async () => {
+      await expectJestTestsToPass('@nx/node:lib');
+    }, 100000);
+  });
 });

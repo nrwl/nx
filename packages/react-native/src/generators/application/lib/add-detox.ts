@@ -1,7 +1,7 @@
-import { detoxApplicationGenerator } from '@nrwl/detox';
-import { Tree } from '@nrwl/devkit';
+import { detoxApplicationGenerator } from '@nx/detox';
+import { Tree } from '@nx/devkit';
 import { NormalizedSchema } from './normalize-options';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/eslint';
 
 export async function addDetox(host: Tree, options: NormalizedSchema) {
   if (options?.e2eTestRunner !== 'detox') {
@@ -11,11 +11,13 @@ export async function addDetox(host: Tree, options: NormalizedSchema) {
   return detoxApplicationGenerator(host, {
     ...options,
     linter: Linter.EsLint,
-    e2eName: `${options.name}-e2e`,
-    e2eDirectory: options.directory,
+    e2eName: `${options.projectName}-e2e`,
+    e2eDirectory: `${options.appProjectRoot}-e2e`,
+    projectNameAndRootFormat: 'as-provided',
     appProject: options.projectName,
     appDisplayName: options.displayName,
     appName: options.name,
     framework: 'react-native',
+    skipFormat: true,
   });
 }

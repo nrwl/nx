@@ -1,3 +1,4 @@
+import { parseJson } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -5,20 +6,25 @@ import {
   newProject,
   readJson,
   runCLI,
+  setMaxWorkers,
   uniq,
   updateFile,
-  updateProjectConfig,
-} from '@nrwl/e2e/utils';
+  readFile,
+  updateJson,
+} from '@nx/e2e/utils';
+import { join } from 'path';
 
 describe('Extra Nx Misc Tests', () => {
-  beforeAll(() => newProject());
+  beforeAll(() => newProject({ packages: ['@nx/web', '@nx/js', '@nx/react'] }));
   afterAll(() => cleanupProject());
 
   describe('Output Style', () => {
     it('should stream output', async () => {
       const myapp = 'abcdefghijklmon';
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      updateProjectConfig(myapp, (c) => {
+      runCLI(`generate @nx/web:app ${myapp}`);
+      setMaxWorkers(join('apps', myapp, 'project.json'));
+
+      updateJson(join('apps', myapp, 'project.json'), (c) => {
         c.targets['inner'] = {
           command: 'echo inner',
         };
@@ -56,7 +62,7 @@ describe('Extra Nx Misc Tests', () => {
         `
       module.exports = {
         processProjectGraph: (graph) => {
-          const Builder = require('@nrwl/devkit').ProjectGraphBuilder;
+          const Builder = require('@nx/devkit').ProjectGraphBuilder;
           const builder = new Builder(graph);
           builder.addNode({
             name: 'plugin-node',
@@ -99,7 +105,7 @@ describe('Extra Nx Misc Tests', () => {
   describe('Run Commands', () => {
     const mylib = uniq('lib');
     beforeAll(() => {
-      runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
     });
 
     it('should not override environment variables already set when setting a custom env file path', async () => {
@@ -115,14 +121,14 @@ describe('Extra Nx Misc Tests', () => {
 
       const envFile = `apps/${mylib}/.custom.env`;
       runCLI(
-        `generate @nrwl/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${mylib}`
+        `generate @nx/workspace:run-commands echoEnvVariables --command=echo --envFile=${envFile} --project=${mylib}`
       );
 
       const command =
         process.platform === 'win32'
           ? `%SHARED_VAR% %ROOT_ONLY% %NESTED_ONLY%` // Windows
           : `$SHARED_VAR $ROOT_ONLY $NESTED_ONLY`;
-      updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets.echoEnvVariables.options.command += ` ${command}`;
         return config;
       });
@@ -135,7 +141,7 @@ describe('Extra Nx Misc Tests', () => {
     }, 120000);
 
     it('should pass options', async () => {
-      updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets.echo = {
           command: 'echo --var1={args.var1}',
           options: {
@@ -151,7 +157,7 @@ describe('Extra Nx Misc Tests', () => {
 
     it('should interpolate provided arguments', async () => {
       const echoTarget = uniq('echo');
-      updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets[echoTarget] = {
           executor: 'nx:run-commands',
           options: {
@@ -186,7 +192,7 @@ describe('Extra Nx Misc Tests', () => {
     }, 120000);
 
     it('should fail when a process exits non-zero', async () => {
-      updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets.error = {
           executor: 'nx:run-commands',
           options: {
@@ -200,14 +206,14 @@ describe('Extra Nx Misc Tests', () => {
         runCLI(`run ${mylib}:error`);
         fail('Should error if process errors');
       } catch (e) {
-        expect(e.stdout.toString()).toContain(
-          'Something went wrong in run-commands - Command failed: exit 1'
+        expect(e.stderr.toString()).toContain(
+          'command "exit 1" exited with non-zero status code'
         );
       }
     });
 
     it('run command should not break if output property is missing in options and arguments', async () => {
-      updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         config.targets.lint.outputs = ['{options.outputFile}'];
         return config;
       });
@@ -229,10 +235,10 @@ describe('Extra Nx Misc Tests', () => {
 
       const folder = `dist/libs/${mylib}/some-folder`;
 
-      runCLI(`generate @nrwl/workspace:lib ${mylib}`);
+      runCLI(`generate @nx/js:lib ${mylib}`);
 
       runCLI(
-        `generate @nrwl/workspace:run-commands build --command=echo --outputs=${folder}/ --project=${mylib}`
+        `generate @nx/workspace:run-commands build --command=echo --outputs=${folder}/ --project=${mylib}`
       );
 
       const commands = [
@@ -241,7 +247,7 @@ describe('Extra Nx Misc Tests', () => {
           : `mkdir -p ${folder}`,
         `echo dummy > ${folder}/dummy.txt`,
       ];
-      updateProjectConfig(mylib, (config) => {
+      updateJson(join('libs', mylib, 'project.json'), (config) => {
         delete config.targets.build.options.command;
         config.targets.build.options = {
           ...config.targets.build.options,
@@ -259,5 +265,166 @@ describe('Extra Nx Misc Tests', () => {
       runCLI(`build ${mylib}`);
       checkFilesExist(`${folder}/dummy.txt`);
     }, 120000);
+  });
+
+  describe('generate --quiet', () => {
+    it('should not log tree operations or install tasks', () => {
+      const output = runCLI('generate @nx/react:app --quiet test-project', {
+        verbose: false,
+      });
+      expect(output).not.toContain('CREATE');
+      expect(output).not.toContain('Installed');
+    });
+  });
+
+  describe('Env File', () => {
+    it('should have the right env', () => {
+      const appName = uniq('app');
+      runCLI(
+        `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive`
+      );
+      updateFile(
+        '.env',
+        `FIRSTNAME="firstname"
+  LASTNAME="lastname"
+  NX_USERNAME=$FIRSTNAME $LASTNAME`
+      );
+      updateFile(
+        `apps/${appName}/src/app/app.tsx`,
+        `
+      import NxWelcome from './nx-welcome';
+  
+      export function App() {
+        return (
+          <>
+            <NxWelcome title={process.env.NX_USERNAME} />
+          </>
+        );
+      }
+  
+      export default App;
+    `
+      );
+      updateFile(
+        `apps/${appName}/src/app/app.spec.tsx`,
+        `import { render } from '@testing-library/react';
+  
+    import App from './app';
+    
+    describe('App', () => {
+      it('should have a greeting as the title', () => {
+        const { getByText } = render(<App />);
+        expect(getByText(/Welcome firstname lastname/gi)).toBeTruthy();
+      });
+    });
+  `
+      );
+      const unitTestsOutput = runCLI(`test ${appName}`);
+      expect(unitTestsOutput).toContain('Successfully ran target test');
+    });
+  });
+
+  describe('task graph inputs', () => {
+    const readExpandedTaskInputResponse = (): Record<
+      string,
+      Record<string, string[]>
+    > =>
+      parseJson(
+        readFile('static/environment.js').match(
+          /window\.expandedTaskInputsResponse\s*=\s*(.*?);/
+        )[1]
+      );
+
+    const baseLib = 'lib-base-123';
+    beforeAll(() => {
+      runCLI(`generate @nx/js:lib ${baseLib}`);
+    });
+
+    it('should correctly expand default task inputs', () => {
+      runCLI('graph --file=graph.html');
+
+      expect(readExpandedTaskInputResponse()[`${baseLib}:build`])
+        .toMatchInlineSnapshot(`
+        {
+          "external": [
+            "npm:@nx/js",
+            "npm:tslib",
+          ],
+          "general": [
+            ".gitignore",
+            "nx.json",
+          ],
+          "lib-base-123": [
+            "libs/lib-base-123/README.md",
+            "libs/lib-base-123/package.json",
+            "libs/lib-base-123/project.json",
+            "libs/lib-base-123/src/index.ts",
+            "libs/lib-base-123/src/lib/lib-base-123.ts",
+            "libs/lib-base-123/tsconfig.json",
+            "libs/lib-base-123/tsconfig.lib.json",
+          ],
+        }
+      `);
+    });
+
+    it('should correctly expand dependent task inputs', () => {
+      const dependentLib = 'lib-dependent-123';
+      runCLI(`generate @nx/js:lib ${dependentLib}`);
+
+      updateJson(join('libs', baseLib, 'project.json'), (config) => {
+        config.targets['build'].inputs = ['default', '^default'];
+        config.implicitDependencies = [dependentLib];
+        return config;
+      });
+
+      updateJson('nx.json', (json) => {
+        json.namedInputs = {
+          ...json.namedInputs,
+          default: ['{projectRoot}/**/*'],
+        };
+        return json;
+      });
+      runCLI('graph --file=graph.html');
+
+      expect(readExpandedTaskInputResponse()[`${baseLib}:build`])
+        .toMatchInlineSnapshot(`
+        {
+          "external": [
+            "npm:@nx/js",
+            "npm:tslib",
+          ],
+          "general": [
+            ".gitignore",
+            "nx.json",
+          ],
+          "lib-base-123": [
+            "libs/lib-base-123/.eslintrc.json",
+            "libs/lib-base-123/README.md",
+            "libs/lib-base-123/jest.config.ts",
+            "libs/lib-base-123/package.json",
+            "libs/lib-base-123/project.json",
+            "libs/lib-base-123/src/index.ts",
+            "libs/lib-base-123/src/lib/lib-base-123.spec.ts",
+            "libs/lib-base-123/src/lib/lib-base-123.ts",
+            "libs/lib-base-123/tsconfig.json",
+            "libs/lib-base-123/tsconfig.lib.json",
+            "libs/lib-base-123/tsconfig.spec.json",
+          ],
+          "lib-dependent-123": [
+            "libs/lib-dependent-123/.eslintrc.json",
+            "libs/lib-dependent-123/README.md",
+            "libs/lib-dependent-123/jest.config.ts",
+            "libs/lib-dependent-123/package.json",
+            "libs/lib-dependent-123/project.json",
+            "libs/lib-dependent-123/src/index.ts",
+            "libs/lib-dependent-123/src/lib/lib-dependent-123.spec.ts",
+            "libs/lib-dependent-123/src/lib/lib-dependent-123.ts",
+            "libs/lib-dependent-123/tsconfig.json",
+            "libs/lib-dependent-123/tsconfig.lib.json",
+            "libs/lib-dependent-123/tsconfig.spec.json",
+          ],
+        }
+      `);
+    });
   });
 });

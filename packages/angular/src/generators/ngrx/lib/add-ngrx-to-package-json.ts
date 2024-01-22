@@ -1,28 +1,19 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { addDependenciesToPackageJson, readJson } from '@nrwl/devkit';
-import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { addDependenciesToPackageJson } from '@nx/devkit';
 import { gte } from 'semver';
-import { getPkgVersionForAngularMajorVersion } from '../../../utils/version-utils';
-import { rxjsVersion as defaultRxjsVersion } from '../../../utils/versions';
-import { getInstalledAngularMajorVersion } from '../../utils/version-utils';
+import { versions } from '../../utils/version-utils';
+import { NormalizedNgRxGeneratorOptions } from './normalize-options';
 
-export function addNgRxToPackageJson(tree: Tree): GeneratorCallback {
-  let rxjsVersion: string;
-  try {
-    rxjsVersion = checkAndCleanWithSemver(
-      'rxjs',
-      readJson(tree, 'package.json').dependencies['rxjs']
-    );
-  } catch {
-    rxjsVersion = checkAndCleanWithSemver('rxjs', defaultRxjsVersion);
-  }
-  const jasmineMarblesVersion = gte(rxjsVersion, '7.0.0') ? '~0.9.1' : '~0.8.3';
+export function addNgRxToPackageJson(
+  tree: Tree,
+  options: NormalizedNgRxGeneratorOptions
+): GeneratorCallback {
+  const jasmineMarblesVersion = gte(options.rxjsVersion, '7.0.0')
+    ? '~0.9.1'
+    : '~0.8.3';
+  const ngrxVersion = versions(tree).ngrxVersion;
 
-  const angularMajorVersion = getInstalledAngularMajorVersion(tree);
-  const ngrxVersion = getPkgVersionForAngularMajorVersion(
-    'ngrxVersion',
-    angularMajorVersion
-  );
+  process.env.npm_config_legacy_peer_deps ??= 'true';
 
   return addDependenciesToPackageJson(
     tree,

@@ -4,14 +4,17 @@ import {
   TaskNodeTooltipProps,
   ProjectNodeToolTipProps,
   ProjectEdgeNodeTooltipProps,
-} from '@nrwl/graph/ui-tooltips';
+} from '@nx/graph/ui-tooltips';
 import { TooltipEvent } from './interfaces';
+import { GraphInteractionEvents } from './graph-interaction-events';
+import { getExternalApiService } from '@nx/graph/shared';
 
 export class GraphTooltipService {
   private subscribers: Set<Function> = new Set();
+  private externalApiService = getExternalApiService();
 
   constructor(graph: GraphService) {
-    graph.listen((event) => {
+    graph.listen((event: GraphInteractionEvents) => {
       switch (event.type) {
         case 'GraphRegenerated':
           this.hideAll();
@@ -28,16 +31,53 @@ export class GraphTooltipService {
           });
           break;
         case 'TaskNodeClick':
+          const runTaskCallback =
+            graph.renderMode === 'nx-console'
+              ? () =>
+                  this.externalApiService.postEvent({
+                    type: 'run-task',
+                    payload: {
+                      taskId: event.data.id,
+                    },
+                  })
+              : undefined;
           this.openTaskNodeTooltip(event.ref, {
             ...event.data,
+            runTaskCallback,
           });
+          if (graph.getTaskInputs) {
+            graph.getTaskInputs(event.data.id).then((inputs) => {
+              if (
+                this.currentTooltip.type === 'taskNode' &&
+                this.currentTooltip.props.id === event.data.id
+              ) {
+                this.openTaskNodeTooltip(event.ref, {
+                  ...event.data,
+                  runTaskCallback,
+                  inputs,
+                });
+              }
+            });
+          }
           break;
         case 'EdgeClick':
+          const callback =
+            graph.renderMode === 'nx-console'
+              ? (url) =>
+                  this.externalApiService.postEvent({
+                    type: 'file-click',
+                    payload: {
+                      sourceRoot: event.data.sourceRoot,
+                      file: url,
+                    },
+                  })
+              : undefined;
           this.openEdgeToolTip(event.ref, {
             type: event.data.type,
             target: event.data.target,
             source: event.data.source,
             fileDependencies: event.data.fileDependencies,
+            fileClickCallback: callback,
           });
           break;
       }
@@ -57,7 +97,11 @@ export class GraphTooltipService {
   }
 
   openEdgeToolTip(ref: VirtualElement, props: ProjectEdgeNodeTooltipProps) {
-    this.currentTooltip = { type: 'projectEdge', ref, props };
+    this.currentTooltip = {
+      type: 'projectEdge',
+      ref,
+      props,
+    };
     this.broadcastChange();
   }
 

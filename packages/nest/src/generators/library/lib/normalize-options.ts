@@ -1,47 +1,51 @@
-import { extractLayoutDirectory, Tree } from '@nrwl/devkit';
-import { getWorkspaceLayout, joinPathFragments, names } from '@nrwl/devkit';
-import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nrwl/js/src/utils/schema';
-import { Linter } from '@nrwl/linter';
+import { Tree } from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
+import type { LibraryGeneratorSchema as JsLibraryGeneratorSchema } from '@nx/js/src/utils/schema';
+import { Linter } from '@nx/eslint';
 import type { LibraryGeneratorOptions, NormalizedOptions } from '../schema';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorOptions
-): NormalizedOptions {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const { libsDir: defaultLibsDir, npmScope } = getWorkspaceLayout(tree);
-  const libsDir = layoutDirectory ?? defaultLibsDir;
-  const name = names(options.name).fileName;
-  const fullProjectDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${name}`
-    : name;
+): Promise<NormalizedOptions> {
+  const {
+    projectName,
+    names: projectNames,
+    projectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(tree, {
+    name: options.name,
+    projectType: 'library',
+    directory: options.directory,
+    importPath: options.importPath,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+    callingGenerator: '@nx/nest:library',
+  });
 
-  const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
-  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
-
+  const fileName = options.simpleName
+    ? projectNames.projectSimpleName
+    : projectNames.projectFileName;
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
 
   const normalized: NormalizedOptions = {
     ...options,
+    strict: options.strict ?? true,
     controller: options.controller ?? false,
     fileName,
     global: options.global ?? false,
     linter: options.linter ?? Linter.EsLint,
     parsedTags,
-    prefix: npmScope, // we could also allow customizing this
-    projectDirectory: fullProjectDirectory,
+    prefix: getNpmScope(tree), // we could also allow customizing this
     projectName,
     projectRoot,
+    importPath,
     service: options.service ?? false,
     target: options.target ?? 'es6',
     testEnvironment: options.testEnvironment ?? 'node',
     unitTestRunner: options.unitTestRunner ?? 'jest',
-    libsDir,
   };
 
   return normalized;
@@ -52,7 +56,7 @@ export function toJsLibraryGeneratorOptions(
 ): JsLibraryGeneratorSchema {
   return {
     name: options.name,
-    buildable: options.buildable,
+    bundler: options?.buildable ? 'tsc' : 'none',
     directory: options.directory,
     importPath: options.importPath,
     linter: options.linter,
@@ -65,5 +69,6 @@ export function toJsLibraryGeneratorOptions(
     unitTestRunner: options.unitTestRunner,
     config: options.standaloneConfig ? 'project' : 'workspace',
     setParserOptionsProject: options.setParserOptionsProject,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
   };
 }

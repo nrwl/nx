@@ -1,8 +1,12 @@
 # Advanced Angular Micro Frontends with Dynamic Module Federation
 
+{% callout type="caution" title="Caution" %}
+This guide has not been updated for Angular 17. We will be updating it shortly.
+{% /callout %}
+
 Dynamic Module Federation is a technique that allows an application to determine the location of its remote applications at runtime. It helps to achieve the use case of **“Build once, deploy everywhere”**.
 
-“Build once, deploy everywhere” is the concept of being able to create a single build artefact of your application and deploy it to multiple environments such as staging and production.
+“Build once, deploy everywhere” is the concept of being able to create a single build artifact of your application and deploy it to multiple environments such as staging and production.
 
 The difficulty in achieving this with a Micro Frontend Architecture using Static Module Federation is that our Remote applications will have a different location (or URL) in each environment. Previously, to account for this, we would have had to specify the deployed location of the Remote applications and rebuild the application for the target environment.
 
@@ -52,12 +56,12 @@ We'll start with the Admin Dashboard application which will act as a host applic
 
 ```shell
 # Npm
-npx nx g @nrwl/angular:host dashboard
+npx nx g @nx/angular:host dashboard
 ```
 
 ```shell
 # Yarn
-yarn nx g @nrwl/angular:host dashboard
+yarn nx g @nx/angular:host dashboard
 ```
 
 The application generator will create and modify the files needed to set up the Angular application.
@@ -66,12 +70,12 @@ Now, let's generate the Login application as a remote application.
 
 ```shell
 # Npm
-npx nx g @nrwl/angular:remote login --host=dashboard
+npx nx g @nx/angular:remote login --host=dashboard
 ```
 
 ```shell
 # Yarn
-yarn nx g @nrwl/angular:remote login --host=dashboard
+yarn nx g @nx/angular:remote login --host=dashboard
 ```
 
 {% callout type="note" title="--host" %}
@@ -94,8 +98,8 @@ For both applications, the generator did the following:
 - Added a `bootstrap.ts` file
 - Moved the code that is normally in `main.ts` to `bootstrap.ts`
 - Changed `main.ts` to dynamically import `bootstrap.ts` _(this is required for the Module Federation to correct load versions of shared libraries)_
-- Updated the `build` target in the `project.json` to use the `@nrwl/angular:webpack-browser` executor _(this is required as it supports passing a custom Webpack configuration to the Angular compiler)_
-- Updated the `serve` target to use `@nrwl/angular:webpack-dev-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
+- Updated the `build` target in the `project.json` to use the `@nx/angular:webpack-browser` executor _(this is required as it supports passing a custom Webpack configuration to the Angular compiler)_
+- Updated the `serve` target to use `@nx/angular:dev-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
 
 The key differences reside within the configuration of the Module Federation Plugin within each application's `module-federation.config.js`.
 
@@ -118,7 +122,7 @@ Taking a look at each property of the configuration in turn:
 This config is then used in the `webpack.config.js` file:
 
 ```js
-const { withModuleFederation } = require('@nrwl/angular/module-federation');
+const { withModuleFederation } = require('@nx/angular/module-federation');
 const config = require('./module-federation.config');
 module.exports = withModuleFederation(config);
 ```
@@ -147,7 +151,7 @@ We'll start by building the Login application, which will consist of a login for
 Let's create a user data-access library that will be shared between the host application and the remote application. This will be used to determine if there is an authenticated user as well as providing logic for authenticating the user.
 
 ```shell
-nx g @nrwl/angular:lib shared/data-access-user
+nx g @nx/angular:lib shared/data-access-user
 ```
 
 This will scaffold a new library for us to use.
@@ -155,7 +159,7 @@ This will scaffold a new library for us to use.
 We need an Angular Service that we will use to hold state:
 
 ```shell
-nx g @nrwl/angular:service user --project=shared-data-access-user
+nx g @nx/angular:service user --project=shared-data-access-user
 ```
 
 This will create a file `user.service.ts` under the `shared/data-access-user` library. Change its contents to match:
@@ -385,7 +389,7 @@ We’ll start by creating this file. Add a `module-federation.manifest.json` fil
 Next, open `main.ts` under the `src/`folder and replace it with the following:
 
 ```typescript {% fileName="src/main.ts" %}
-import { setRemoteDefinitions } from '@nrwl/angular/mf';
+import { setRemoteDefinitions } from '@nx/angular/mf';
 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
@@ -439,7 +443,7 @@ Replace it with the following:
 You will also need to add the following import to the top of the file:
 
 ```typescript
-import { loadRemoteModule } from '@nrwl/angular/mf';
+import { loadRemoteModule } from '@nx/angular/mf';
 ```
 
 The `loadRemoteModule` helper method simply hides some logic that will check if the Remote application has been loaded, and if not, load it, and then requests the correct exposed module from it.
@@ -473,7 +477,7 @@ To showcase this, let’s create a new Host application that will use our previo
 Run the following command to generate a new Host application that is preconfigured for Dynamic Federation and add specify the Login Remote application we want to add:
 
 ```shell
-nx g @nrwl/angular:host employee --remotes=login --dynamic
+nx g @nx/angular:host employee --remotes=login --dynamic
 ```
 
 This will generate:
@@ -491,7 +495,7 @@ You should take a look at the files generated and see how the Login Remote appli
 We’re going to demonstrate how when specifying a dynamic Host when adding a new Remote application, the Remote application will be added to the Host’s Micro Frontend Manifest file correctly.
 
 ```shell
-nx g @nrwl/angular:remote todo --host=employee
+nx g @nx/angular:remote todo --host=employee
 ```
 
 You’ll note that this will generate the same output as the Login Remote application in the previous guide. There’s one difference.

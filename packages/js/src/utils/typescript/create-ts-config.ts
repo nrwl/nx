@@ -11,10 +11,11 @@ export const tsConfigBaseOptions = {
   importHelpers: true,
   target: 'es2015',
   module: 'esnext',
-  lib: ['es2017', 'dom'],
+  lib: ['es2020', 'dom'],
   skipLibCheck: true,
   skipDefaultLibCheck: true,
   baseUrl: '.',
+  paths: {},
 };
 
 export function extractTsConfigBase(host: Tree) {
@@ -22,6 +23,7 @@ export function extractTsConfigBase(host: Tree) {
 
   const tsconfig = readJson(host, 'tsconfig.json');
   const baseCompilerOptions = {} as any;
+
   for (let compilerOption of Object.keys(tsConfigBaseOptions)) {
     baseCompilerOptions[compilerOption] =
       tsconfig.compilerOptions[compilerOption];

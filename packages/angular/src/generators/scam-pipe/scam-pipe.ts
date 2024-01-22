@@ -1,56 +1,27 @@
-import type { Tree } from '@nrwl/devkit';
-import {
-  formatFiles,
-  normalizePath,
-  readNxJson,
-  readProjectConfiguration,
-} from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { formatFiles } from '@nx/devkit';
+import { pipeGenerator } from '../pipe/pipe';
 import { exportScam } from '../utils/export-scam';
-import { getPipeFileInfo } from '../utils/file-info';
-import { pathStartsWith } from '../utils/path';
 import { convertPipeToScam, normalizeOptions } from './lib';
 import type { Schema } from './schema';
 
 export async function scamPipeGenerator(tree: Tree, rawOptions: Schema) {
-  const options = normalizeOptions(tree, rawOptions);
-  const { inlineScam, projectSourceRoot, ...schematicOptions } = options;
-
-  checkPathUnderProjectRoot(tree, options);
-
-  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
-  const angularPipeSchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'pipe'
-  );
-  await angularPipeSchematic(tree, {
-    ...schematicOptions,
+  const options = await normalizeOptions(tree, rawOptions);
+  await pipeGenerator(tree, {
+    ...options,
     skipImport: true,
     export: false,
     standalone: false,
+    skipFormat: true,
+    // options are already normalize, use them as is
+    nameAndDirectoryFormat: 'as-provided',
   });
 
-  const pipeFileInfo = getPipeFileInfo(tree, options);
-  convertPipeToScam(tree, pipeFileInfo, options);
-  exportScam(tree, pipeFileInfo, options);
+  convertPipeToScam(tree, options);
+  exportScam(tree, options);
 
-  await formatFiles(tree);
-}
-
-function checkPathUnderProjectRoot(tree: Tree, options: Partial<Schema>) {
-  if (!options.path) {
-    return;
-  }
-
-  const project = options.project ?? readNxJson(tree).defaultProject;
-  const { root } = readProjectConfiguration(tree, project);
-
-  let pathToPipe = normalizePath(options.path);
-  pathToPipe = pathToPipe.startsWith('/') ? pathToPipe.slice(1) : pathToPipe;
-
-  if (!pathStartsWith(pathToPipe, root)) {
-    throw new Error(
-      `The path provided for the SCAM (${options.path}) does not exist under the project root (${root}).`
-    );
+  if (!options.skipFormat) {
+    await formatFiles(tree);
   }
 }
 

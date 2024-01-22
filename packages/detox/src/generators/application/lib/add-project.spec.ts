@@ -2,9 +2,9 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/eslint';
 import { addProject } from './add-project';
 
 describe('Add Project', () => {
@@ -31,7 +31,6 @@ describe('Add Project', () => {
       addProject(tree, {
         e2eName: 'my-app-e2e',
         e2eProjectName: 'my-app-e2e',
-        e2eProjectDirectory: 'apps',
         e2eProjectRoot: 'apps/my-app-e2e',
         appProject: 'my-app',
         appFileName: 'my-app',
@@ -61,16 +60,16 @@ describe('Add Project', () => {
       const project = readProjectConfiguration(tree, 'my-app-e2e');
       expect(project.targets).toMatchObject({
         'build-ios': {
-          executor: '@nrwl/detox:build',
+          executor: '@nx/detox:build',
         },
         'test-ios': {
-          executor: '@nrwl/detox:test',
+          executor: '@nx/detox:test',
         },
         'build-android': {
-          executor: '@nrwl/detox:build',
+          executor: '@nx/detox:build',
         },
         'test-android': {
-          executor: '@nrwl/detox:test',
+          executor: '@nx/detox:test',
         },
       });
     });
@@ -81,7 +80,6 @@ describe('Add Project', () => {
       addProject(tree, {
         e2eName: 'my-dir-my-app-e2e',
         e2eProjectName: 'my-dir-my-app-e2e',
-        e2eProjectDirectory: 'apps',
         e2eProjectRoot: 'apps/my-dir/my-app-e2e',
         appProject: 'my-dir-my-app',
         appFileName: 'my-app',
@@ -112,16 +110,16 @@ describe('Add Project', () => {
       const project = readProjectConfiguration(tree, 'my-dir-my-app-e2e');
       expect(project.targets).toMatchObject({
         'build-ios': {
-          executor: '@nrwl/detox:build',
+          executor: '@nx/detox:build',
         },
         'test-ios': {
-          executor: '@nrwl/detox:test',
+          executor: '@nx/detox:test',
         },
         'build-android': {
-          executor: '@nrwl/detox:build',
+          executor: '@nx/detox:build',
         },
         'test-android': {
-          executor: '@nrwl/detox:test',
+          executor: '@nx/detox:test',
         },
       });
     });

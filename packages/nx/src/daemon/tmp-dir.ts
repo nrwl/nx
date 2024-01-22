@@ -21,7 +21,7 @@ export const DAEMON_OUTPUT_LOG_FILE = join(
   'daemon.log'
 );
 
-const socketDir = createSocketDir();
+export const socketDir = process.env.NX_DAEMON_SOCKET_DIR || createSocketDir();
 
 export const DAEMON_SOCKET_PATH = join(
   socketDir,
@@ -50,7 +50,7 @@ export function isDaemonDisabled() {
 
 function socketDirName() {
   const hasher = createHash('sha256');
-  hasher.update(workspaceRoot);
+  hasher.update(workspaceRoot.toLowerCase());
   const unique = hasher.digest('hex').substring(0, 20);
   return join(tmpdir, unique);
 }

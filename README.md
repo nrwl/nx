@@ -1,27 +1,27 @@
 <p style="text-align: center;">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-dark.svg">
-    <img alt="Nx - Smart, Fast and Extensible Build System" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
+    <img alt="Nx - Smart Monorepos · Fast CI" src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-light.svg" width="100%">
   </picture>
 </p>
 
 <div style="text-align: center;">
 
 [![CircleCI](https://circleci.com/gh/nrwl/nx.svg?style=svg)](https://circleci.com/gh/nrwl/nx)
-[![License](https://img.shields.io/npm/l/@nrwl/workspace.svg?style=flat-square)]()
-[![NPM Version](https://badge.fury.io/js/%40nrwl%2Fworkspace.svg)](https://www.npmjs.com/@nrwl/workspace)
+[![License](https://img.shields.io/npm/l/nx.svg?style=flat-square)]()
+[![NPM Version](https://badge.fury.io/js/nx.svg)](https://www.npmjs.com/package/nx)
 [![Semantic Release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg?style=flat-square)]()
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![Join the chat at https://gitter.im/nrwl-nx/community](https://badges.gitter.im/nrwl-nx/community.svg)](https://gitter.im/nrwl-nx/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Join us @nrwl/community on slack](https://img.shields.io/badge/slack-%40nrwl%2Fcommunity-brightgreen)](https://go.nrwl.io/join-slack)
+[![Join the Official Nx Discord Server](https://img.shields.io/discord/1143497901675401286?label=discord)](https://go.nx.dev/community)
 
 </div>
 
 <hr>
 
-# Smart, Fast and Extensible Build System
+# Smart Monorepos · Fast CI
 
-Nx is a next generation build system with first class monorepo support and powerful integrations.
+Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.
 
 A few links to help you get started:
 
@@ -32,11 +32,11 @@ A few links to help you get started:
 - [Blog Posts About Nx](https://blog.nrwl.io/nx/home)
 
 <p style="text-align: center;"><a href="https://nx.dev/#learning-materials" target="_blank" rel="noreferrer"><img src="./images/nx-courses-and-videos.svg" 
-width="100%" alt="Nx - Smart, Fast and Extensible Build System"></a></p>
+width="100%" alt="Nx - Smart Monorepos · Fast CI"></a></p>
 
 # Engage with the Core Team and the Community
 
-- [Nx.Dev Community Page: Community Slack Channel, Newsletter, etc.](https://nx.dev/community)
+- [Nx.Dev Community Page: Community Discord Channel, Newsletter, etc.](https://nx.dev/community)
 - [The Nx Show Playlist on YouTube](https://www.youtube.com/playlist?list=PLakNactNC1dE8KLQ5zd3fQwu_yQHjTmR5). It's a
   regular YouTube stream where we talk all things Nx. Join the stream, ask questions, etc.
 - [Follow Nx on Twitter](https://twitter.com/NxDevTools)
@@ -73,7 +73,7 @@ help you get started.
 | ![Emily Xiong](https://avatars.githubusercontent.com/u/16211801?s=160) | ![Miroslav Jonaš](https://avatars.githubusercontent.com/u/881612?s=160) | ![Leosvel Pérez Espinosa](https://avatars.githubusercontent.com/u/12051310?s=160) | ![Zachary DeRose](https://avatars.githubusercontent.com/u/3788405?s=160) |
 | [xiongemi](https://github.com/xiongemi)                                | [meeroslav](https://github.com/meeroslav)                               | [leosvelperez](https://github.com/leosvelperez)                                   | [ZackDeRose](https://github.com/ZackDeRose)                              |
 
-| Craigory Coppola                                                           | Chau Tran                                                            | Nicholas Cunningham                                                          |
-| -------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| ![Craigory Coppola](https://avatars.githubusercontent.com/u/6933928?s=160) | ![Chau Tran](https://avatars.githubusercontent.com/u/25516557?s=160) | ![Nicholas Cunningham](https://avatars.githubusercontent.com/u/338948?s=160) |
-| [AgentEnder](https://github.com/AgentEnder)                                | [nartc](https://github.com/nartc)                                    | [ndcunningham](https://github.com/ndcunningham)                              |
+| Craigory Coppola                                                           | Chau Tran                                                            | Nicholas Cunningham                                                          | Max Kless                                                            |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| ![Craigory Coppola](https://avatars.githubusercontent.com/u/6933928?s=160) | ![Chau Tran](https://avatars.githubusercontent.com/u/25516557?s=160) | ![Nicholas Cunningham](https://avatars.githubusercontent.com/u/338948?s=160) | ![Max Kless](https://avatars.githubusercontent.com/u/34165455?s=160) |
+| [AgentEnder](https://github.com/AgentEnder)                                | [nartc](https://github.com/nartc)                                    | [ndcunningham](https://github.com/ndcunningham)                              | [MaxKless](https://github.com/MaxKless)                              |

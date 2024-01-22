@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`init should add vue dependencies 1`] = `
+{
+  "dependencies": {
+    "vue": "^3.3.4",
+  },
+  "devDependencies": {
+    "@nx/vue": "0.0.1",
+  },
+  "name": "@proj/source",
+}
+`;

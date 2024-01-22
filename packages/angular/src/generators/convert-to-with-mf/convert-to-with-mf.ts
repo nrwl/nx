@@ -4,7 +4,7 @@ import {
   logger,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from './schema';
 import { getMFProjects } from '../../utils/get-mf-projects';
 import {
@@ -58,7 +58,9 @@ export async function convertToWithMF(tree: Tree, schema: Schema) {
     mfConfig
   );
 
-  await formatFiles(tree);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 }
 
 export default convertToWithMF;

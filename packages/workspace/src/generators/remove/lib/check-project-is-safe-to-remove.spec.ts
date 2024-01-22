@@ -1,9 +1,9 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { checkProjectIsSafeToRemove } from './check-project-is-safe-to-remove';
 
 describe('checkProjectIsSafeToRemove', () => {
@@ -48,5 +48,26 @@ describe('checkProjectIsSafeToRemove', () => {
         readProjectConfiguration(tree, 'parent-project')
       );
     }).toThrow();
+  });
+
+  it('should be able to remove e2e project in standalone', () => {
+    addProjectConfiguration(tree, 'e2e', {
+      root: 'e2e',
+    });
+    addProjectConfiguration(tree, 'root', {
+      root: '.',
+    });
+
+    expect(() => {
+      checkProjectIsSafeToRemove(
+        tree,
+        {
+          projectName: 'e2e',
+          forceRemove: false,
+          skipFormat: false,
+        },
+        readProjectConfiguration(tree, 'e2e')
+      );
+    }).not.toThrow();
   });
 });

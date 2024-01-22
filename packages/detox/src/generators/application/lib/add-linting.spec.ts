@@ -1,6 +1,6 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/eslint';
 import { addLinting } from './add-linting';
 import { addProject } from './add-project';
 
@@ -12,7 +12,6 @@ describe('Add Linting', () => {
     addProject(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
-      e2eProjectDirectory: 'apps',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
@@ -29,7 +28,6 @@ describe('Add Linting', () => {
     addLinting(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
-      e2eProjectDirectory: 'apps',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',
@@ -43,14 +41,13 @@ describe('Add Linting', () => {
     const project = readProjectConfiguration(tree, 'my-app-e2e');
 
     expect(project.targets.lint).toBeDefined();
-    expect(project.targets.lint.executor).toEqual('@nrwl/linter:eslint');
+    expect(project.targets.lint.executor).toEqual('@nx/eslint:lint');
   });
 
   it('should not add lint target when "none" is passed', async () => {
     addLinting(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
-      e2eProjectDirectory: 'apps',
       e2eProjectRoot: 'apps/my-app-e2e',
       appProject: 'my-app',
       appFileName: 'my-app',

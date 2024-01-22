@@ -1,0 +1,36 @@
+{
+  "name": "@nrwl/webpack",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Nx Plugin for Webpack contains executors and generators that support building applications using Webpack.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages-legacy/webpack"
+  },
+  "keywords": [
+    "Monorepo",
+    "Webpack",
+    "Web",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "dependencies": {
+    "@nx/webpack": "file:../../packages/webpack"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "nx-migrations": {
+    "migrations": "@nx/webpack/migrations.json"
+  }
+}

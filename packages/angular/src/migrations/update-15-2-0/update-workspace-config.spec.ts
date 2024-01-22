@@ -1,17 +1,23 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import applicationGenerator from '../../generators/application/application';
-import updateWorkspaceConfig from './update-workspace-config';
+import * as devkit from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Builders } from '@schematics/angular/utility/workspace-models';
 import {
   readProjectConfiguration,
   updateProjectConfiguration,
 } from 'nx/src/generators/utils/project-configuration';
-import { Builders } from '@schematics/angular/utility/workspace-models';
+import { generateTestApplication } from '../../generators/utils/testing';
+import updateWorkspaceConfig from './update-workspace-config';
 
 describe(`Migration to remove bundleDependencies`, () => {
   it(`should remove 'bundleDependencies'`, async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await applicationGenerator(tree, {
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
+    await generateTestApplication(tree, {
       name: 'test',
+      projectNameAndRootFormat: 'derived',
+      skipFormat: true,
     });
 
     const project = readProjectConfiguration(tree, 'test');

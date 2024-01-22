@@ -1,16 +1,13 @@
 import { addInitialRoutes } from '../../../utils/ast-utils';
 import { NormalizedSchema } from '../schema';
-import {
-  reactRouterDomVersion,
-  typesReactRouterDomVersion,
-} from '../../../utils/versions';
+import { reactRouterDomVersion } from '../../../utils/versions';
 import {
   joinPathFragments,
   Tree,
   applyChangesToString,
   addDependenciesToPackageJson,
-} from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+} from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -44,7 +41,7 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
     return addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
-      { '@types/react-router-dom': typesReactRouterDomVersion }
+      {}
     );
   }
 

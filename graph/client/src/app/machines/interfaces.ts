@@ -1,8 +1,11 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
+  ProjectFileMap,
   ProjectGraphDependency,
   ProjectGraphProjectNode,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { TracingAlgorithmType } from '../feature-projects/machines/interfaces';
 
 // The events that the graph actor handles
@@ -10,6 +13,7 @@ export type GraphRenderEvents =
   | {
       type: 'notifyGraphInitGraph';
       projects: ProjectGraphProjectNode[];
+      fileMap: ProjectFileMap;
       dependencies: Record<string, ProjectGraphDependency[]>;
       affectedProjects: string[];
       workspaceLayout: {
@@ -22,6 +26,7 @@ export type GraphRenderEvents =
   | {
       type: 'notifyGraphUpdateGraph';
       projects: ProjectGraphProjectNode[];
+      fileMap: ProjectFileMap;
       dependencies: Record<string, ProjectGraphDependency[]>;
       affectedProjects: string[];
       workspaceLayout: {

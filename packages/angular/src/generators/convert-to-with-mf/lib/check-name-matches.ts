@@ -1,5 +1,5 @@
 import type { SourceFile } from 'typescript';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 export function checkOutputNameMatchesProjectName(
   ast: SourceFile,

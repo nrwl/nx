@@ -6,7 +6,7 @@
     "projectType": "application",
     "targets": {
       "build": {
-        "executor": "@nrwl/next:build",
+        "executor": "@nx/next:build",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
         "options": {
@@ -19,7 +19,7 @@
         }
       },
       "serve": {
-        "executor": "@nrwl/next:server",
+        "executor": "@nx/next:server",
         "defaultConfiguration": "development",
         "options": { "buildTarget": "nextapp:build", "dev": true },
         "configurations": {
@@ -34,11 +34,11 @@
         }
       },
       "export": {
-        "executor": "@nrwl/next:export",
+        "executor": "@nx/next:export",
         "options": { "buildTarget": "nextapp:build:production" }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "apps/nextapp/jest.config.ts",
@@ -47,12 +47,12 @@
         "configurations": { "ci": { "ci": true, "codeCoverage": true } }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["apps/nextapp/**/*.{ts,tsx,js,jsx}"] }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -61,7 +61,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputDir}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -81,7 +81,7 @@
     "projectType": "application",
     "targets": {
       "build": {
-        "executor": "@nrwl/next:build",
+        "executor": "@nx/next:build",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
         "options": {
@@ -94,7 +94,7 @@
         }
       },
       "serve": {
-        "executor": "@nrwl/next:server",
+        "executor": "@nx/next:server",
         "defaultConfiguration": "development",
         "options": { "buildTarget": "nextapp-ts:build", "dev": true },
         "configurations": {
@@ -109,11 +109,11 @@
         }
       },
       "export": {
-        "executor": "@nrwl/next:export",
+        "executor": "@nx/next:export",
         "options": { "buildTarget": "nextapp-ts:build:production" }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "apps/nextapp-ts/jest.config.ts",
@@ -122,14 +122,14 @@
         "configurations": { "ci": { "ci": true, "codeCoverage": true } }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["apps/nextapp-ts/**/*.{ts,tsx,js,jsx}"]
         }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -138,7 +138,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputDir}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -211,14 +211,14 @@
         "options": { "browserTarget": "ngapp:build" }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": ["apps/ngapp/**/*.ts", "apps/ngapp/**/*.html"]
         }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "apps/ngapp/jest.config.ts",
@@ -314,7 +314,7 @@
         "options": { "browserTarget": "ngapp-ts:build" }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": {
           "lintFilePatterns": [
@@ -324,7 +324,7 @@
         }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "apps/ngapp-ts/jest.config.ts",
@@ -364,7 +364,7 @@
     "projectType": "application",
     "targets": {
       "build": {
-        "executor": "@nrwl/vite:build",
+        "executor": "@nx/vite:build",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
         "options": { "outputPath": "dist/apps/rv1" },
@@ -374,7 +374,7 @@
         }
       },
       "serve": {
-        "executor": "@nrwl/vite:dev-server",
+        "executor": "@nx/vite:dev-server",
         "defaultConfiguration": "development",
         "options": { "buildTarget": "rv1:build" },
         "configurations": {
@@ -386,7 +386,7 @@
         }
       },
       "preview": {
-        "executor": "@nrwl/vite:preview-server",
+        "executor": "@nx/vite:preview-server",
         "defaultConfiguration": "development",
         "options": { "buildTarget": "rv1:build" },
         "configurations": {
@@ -395,7 +395,7 @@
         }
       },
       "test": {
-        "executor": "@nrwl/vite:test",
+        "executor": "@nx/vite:test",
         "outputs": ["coverage/apps/rv1"],
         "options": {
           "passWithNoTests": true,
@@ -403,12 +403,12 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["apps/rv1/**/*.{ts,tsx,js,jsx}"] }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -417,7 +417,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputDir}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -437,7 +437,7 @@
     "projectType": "application",
     "targets": {
       "build": {
-        "executor": "@nrwl/vite:build",
+        "executor": "@nx/vite:build",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
         "options": { "outputPath": "dist/apps/rv2-ts" },
@@ -447,7 +447,7 @@
         }
       },
       "serve": {
-        "executor": "@nrwl/vite:dev-server",
+        "executor": "@nx/vite:dev-server",
         "defaultConfiguration": "development",
         "options": { "buildTarget": "rv2-ts:build" },
         "configurations": {
@@ -462,7 +462,7 @@
         }
       },
       "preview": {
-        "executor": "@nrwl/vite:preview-server",
+        "executor": "@nx/vite:preview-server",
         "defaultConfiguration": "development",
         "options": { "buildTarget": "rv2-ts:build" },
         "configurations": {
@@ -471,7 +471,7 @@
         }
       },
       "test": {
-        "executor": "@nrwl/vite:test",
+        "executor": "@nx/vite:test",
         "outputs": ["coverage/apps/rv2-ts"],
         "options": {
           "passWithNoTests": true,
@@ -479,12 +479,12 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["apps/rv2-ts/**/*.{ts,tsx,js,jsx}"] }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -493,7 +493,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputDir}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -513,7 +513,7 @@
     "projectType": "application",
     "targets": {
       "build": {
-        "executor": "@nrwl/webpack:webpack",
+        "executor": "@nx/webpack:webpack",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
         "options": {
@@ -553,7 +553,7 @@
         }
       },
       "serve": {
-        "executor": "@nrwl/webpack:dev-server",
+        "executor": "@nx/webpack:dev-server",
         "defaultConfiguration": "development",
         "options": { "buildTarget": "rw1:build", "hmr": true },
         "configurations": {
@@ -562,12 +562,12 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["apps/rw1/**/*.{ts,tsx,js,jsx}"] }
       },
       "test": {
-        "executor": "@nrwl/jest:jest",
+        "executor": "@nx/jest:jest",
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
         "options": {
           "jestConfig": "apps/rw1/jest.config.ts",
@@ -576,7 +576,7 @@
         "configurations": { "ci": { "ci": true, "codeCoverage": true } }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/react",
           "port": 4400,
@@ -585,7 +585,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputDir}"],
         "options": {
           "uiFramework": "@storybook/react",
@@ -606,7 +606,7 @@
     "tags": [],
     "targets": {
       "build": {
-        "executor": "@nrwl/vite:build",
+        "executor": "@nx/vite:build",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
         "options": { "outputPath": "dist/apps/wv1" },
@@ -616,7 +616,7 @@
         }
       },
       "serve": {
-        "executor": "@nrwl/vite:dev-server",
+        "executor": "@nx/vite:dev-server",
         "defaultConfiguration": "development",
         "options": { "buildTarget": "wv1:build" },
         "configurations": {
@@ -628,7 +628,7 @@
         }
       },
       "preview": {
-        "executor": "@nrwl/vite:preview-server",
+        "executor": "@nx/vite:preview-server",
         "defaultConfiguration": "development",
         "options": { "buildTarget": "wv1:build" },
         "configurations": {
@@ -637,7 +637,7 @@
         }
       },
       "test": {
-        "executor": "@nrwl/vite:test",
+        "executor": "@nx/vite:test",
         "outputs": ["coverage/apps/wv1"],
         "options": {
           "passWithNoTests": true,
@@ -645,12 +645,12 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["apps/wv1/**/*.ts"] }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/web-components",
           "port": 4400,
@@ -659,7 +659,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputDir}"],
         "options": {
           "uiFramework": "@storybook/web-components",
@@ -679,7 +679,7 @@
     "tags": [],
     "targets": {
       "build": {
-        "executor": "@nrwl/webpack:webpack",
+        "executor": "@nx/webpack:webpack",
         "outputs": ["{options.outputPath}"],
         "defaultConfiguration": "production",
         "options": {
@@ -712,14 +712,14 @@
         }
       },
       "serve": {
-        "executor": "@nrwl/webpack:dev-server",
+        "executor": "@nx/webpack:dev-server",
         "options": { "buildTarget": "ww1:build" },
         "configurations": {
           "production": { "buildTarget": "ww1:build:production" }
         }
       },
       "test": {
-        "executor": "@nrwl/vite:test",
+        "executor": "@nx/vite:test",
         "outputs": ["coverage/apps/ww1"],
         "options": {
           "passWithNoTests": true,
@@ -727,12 +727,12 @@
         }
       },
       "lint": {
-        "executor": "@nrwl/linter:eslint",
+        "executor": "@nx/linter:eslint",
         "outputs": ["{options.outputFile}"],
         "options": { "lintFilePatterns": ["apps/ww1/**/*.ts"] }
       },
       "storybook": {
-        "executor": "@nrwl/storybook:storybook",
+        "executor": "@nx/storybook:storybook",
         "options": {
           "uiFramework": "@storybook/web-components",
           "port": 4400,
@@ -741,7 +741,7 @@
         "configurations": { "ci": { "quiet": true } }
       },
       "build-storybook": {
-        "executor": "@nrwl/storybook:build",
+        "executor": "@nx/storybook:build",
         "outputs": ["{options.outputDir}"],
         "options": {
           "uiFramework": "@storybook/web-components",

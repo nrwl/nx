@@ -1,21 +1,21 @@
 {
   "web": {
     "build": {
-      "executor": "@nrwl/next:build",
+      "executor": "@nx/next:build",
       "options": {
         "root": "apps/web",
         "outputPath": "dist/apps/web"
       }
     },
     "serve": {
-      "executor": "@nrwl/next:server",
+      "executor": "@nx/next:server",
       "options": {
         "buildTarget": "web:build",
         "dev": true
       }
     },
     "storybook": {
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "uiFramework": "@storybook/react",
         "port": 4400,
@@ -25,7 +25,7 @@
       }
     },
     "build-storybook": {
-      "executor": "@nrwl/storybook:build",
+      "executor": "@nx/storybook:build",
       "outputs": ["{options.outputPath}"],
       "options": {
         "uiFramework": "@storybook/react",
@@ -38,7 +38,7 @@
   },
   "react": {
     "build": {
-      "executor": "@nrwl/web:webpack",
+      "executor": "@nx/web:webpack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
@@ -47,7 +47,7 @@
       }
     },
     "storybook": {
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "uiFramework": "@storybook/react",
         "port": 4400,
@@ -57,7 +57,7 @@
       }
     },
     "build-storybook": {
-      "executor": "@nrwl/storybook:build",
+      "executor": "@nx/storybook:build",
       "outputs": ["{options.outputPath}"],
       "options": {
         "uiFramework": "@storybook/react",
@@ -70,7 +70,7 @@
   },
   "nextlib": {
     "build": {
-      "executor": "@nrwl/web:rollup",
+      "executor": "@nx/rollup:rollup",
       "outputs": ["{options.outputPath}"],
       "options": {
         "outputPath": "dist/libs/next-lib-buildable",
@@ -78,14 +78,14 @@
         "project": "libs/next-lib-buildable/package.json",
         "entryFile": "libs/next-lib-buildable/src/index.ts",
         "external": ["react/jsx-runtime"],
-        "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+        "rollupConfig": "@nx/react/plugins/bundle-rollup",
         "compiler": "babel"
       }
     }
   },
   "nextapp": {
     "build": {
-      "executor": "@nrwl/next:build",
+      "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
@@ -94,7 +94,7 @@
       }
     },
     "serve": {
-      "executor": "@nrwl/next:server",
+      "executor": "@nx/next:server",
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "nextapp:build",
@@ -116,7 +116,6 @@
         "styles": ["apps/ngapp/src/styles.css"],
         "scripts": []
       },
-
       "defaultConfiguration": "production"
     },
     "serve": {
@@ -131,7 +130,6 @@
       },
       "defaultConfiguration": "development"
     },
-
     "storybook": {
       "executor": "@storybook/angular:start-storybook",
       "options": {
@@ -154,7 +152,7 @@
   },
   "nglib": {
     "build": {
-      "executor": "@nrwl/angular:ng-packagr-lite",
+      "executor": "@nx/angular:ng-packagr-lite",
       "outputs": ["dist/libs/nglibuild"],
       "options": {
         "project": "libs/nglibuild/ng-package.json"
@@ -162,18 +160,12 @@
       "defaultConfiguration": "production"
     },
     "lint": {
-      "executor": "@nrwl/linter:eslint",
-      "options": {
-        "lintFilePatterns": [
-          "libs/nglibuild/**/*.ts",
-          "libs/nglibuild/**/*.html"
-        ]
-      }
+      "executor": "@nx/eslint:lint"
     }
   },
   "react-swc": {
     "build": {
-      "executor": "@nrwl/web:webpack",
+      "executor": "@nx/web:webpack",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
@@ -182,7 +174,7 @@
       }
     },
     "storybook": {
-      "executor": "@nrwl/storybook:storybook",
+      "executor": "@nx/storybook:storybook",
       "options": {
         "uiFramework": "@storybook/react",
         "port": 4400,
@@ -192,7 +184,7 @@
       }
     },
     "build-storybook": {
-      "executor": "@nrwl/storybook:build",
+      "executor": "@nx/storybook:build",
       "outputs": ["{options.outputPath}"],
       "options": {
         "uiFramework": "@storybook/react",
@@ -205,7 +197,7 @@
   },
   "nextapp-swc": {
     "build": {
-      "executor": "@nrwl/next:build",
+      "executor": "@nx/next:build",
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
@@ -215,7 +207,7 @@
       }
     },
     "serve": {
-      "executor": "@nrwl/next:server",
+      "executor": "@nx/next:server",
       "defaultConfiguration": "development",
       "options": {
         "buildTarget": "nextapp:build",

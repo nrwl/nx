@@ -1,4 +1,4 @@
-import { MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
+import { MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 
 export function getBasicNxSection(items: MenuItem[]): MenuSection {
   return {
@@ -10,9 +10,9 @@ export function getBasicNxSection(items: MenuItem[]): MenuSection {
         (m) =>
           m.id === 'getting-started' ||
           m.id === 'core-features' ||
-          m.id === 'plugin-features' ||
           m.id === 'concepts' ||
           m.id === 'recipes' ||
+          m.id === 'showcase' ||
           m.id === 'reference'
       )
       .map((m) => {
@@ -40,15 +40,28 @@ export function getBasicRecipesSection(items: MenuItem[]): MenuSection {
   };
 }
 
+export function getBasicPluginsSection(items: MenuItem[]): MenuSection {
+  return {
+    id: 'basic',
+    name: 'Basic',
+    hideSectionHeader: true,
+    itemList: items
+      // .filter((m) => m.id === 'getting-started')
+      .map((m) => {
+        return {
+          ...m,
+          disableCollapsible: true,
+        };
+      }),
+  };
+}
+
 export function getPackagesSections(items: MenuItem[]): MenuSection[] {
   return items
     .filter(
       (m) =>
-        m.id !== 'add-nx-to-monorepo' &&
-        m.id !== 'cra-to-nx' &&
         m.id !== 'create-nx-plugin' &&
         m.id !== 'create-nx-workspace' &&
-        m.id !== 'make-angular-cli-faster' &&
         m.id !== 'tao'
     )
     .map((m) => ({
@@ -66,7 +79,12 @@ export function getBasicNxCloudSection(items: MenuItem[]): MenuSection {
     hideSectionHeader: true,
     itemList: items
       .filter(
-        (m) => m.id === 'intro' || m.id === 'set-up' || m.id === 'account'
+        (m) =>
+          m.id === 'intro' ||
+          m.id === 'features' ||
+          m.id === 'concepts' ||
+          m.id === 'recipes' ||
+          m.id === 'reference'
       )
       .map((m) => {
         return {
@@ -83,7 +101,7 @@ export function getDeepDiveNxCloudSection(items: MenuItem[]): MenuSection {
     name: 'Deep Dive',
     hideSectionHeader: false,
     itemList: items
-      .filter((m) => m.id === 'private-cloud' || m.id === 'reference')
+      .filter((m) => m.id === 'private-cloud')
       .map((m) => ({
         ...m,
         disableCollapsible: true,

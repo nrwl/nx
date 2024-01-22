@@ -2,17 +2,18 @@ import {
   Tree,
   names,
   generateFiles,
-  joinPathFragments,
   getPackageManagerCommand,
   readJson,
   NxJsonConfiguration,
   formatFiles,
   writeJson,
-} from '@nrwl/devkit';
+  detectPackageManager,
+} from '@nx/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
+import { join } from 'path';
 
 export interface Schema {
-  name?: string;
+  name: string;
   ci: 'github' | 'azure' | 'circleci' | 'bitbucket-pipelines' | 'gitlab';
 }
 
@@ -21,9 +22,11 @@ export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
   const options = normalizeOptions(schema);
 
   const nxJson: NxJsonConfiguration = readJson(host, 'nx.json');
-  const nxCloudUsed = Object.values(nxJson.tasksRunnerOptions).find(
-    (r) => r.runner == '@nrwl/nx-cloud'
-  );
+  const nxCloudUsed =
+    nxJson.nxCloudAccessToken ??
+    Object.values(nxJson.tasksRunnerOptions ?? {}).find(
+      (r) => r.runner == '@nrwl/nx-cloud' || r.runner == 'nx-cloud'
+    );
   if (!nxCloudUsed) {
     throw new Error('This workspace is not connected to Nx Cloud.');
   }
@@ -32,7 +35,7 @@ export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
     writeJson(host, 'nx.json', appendOriginPrefix(nxJson));
   }
 
-  generateFiles(host, joinPathFragments(__dirname, 'files', ci), '', options);
+  generateFiles(host, join(__dirname, 'files', ci), '', options);
   await formatFiles(host);
 }
 
@@ -40,6 +43,7 @@ interface Substitutes {
   mainBranch: string;
   workflowName: string;
   workflowFileName: string;
+  packageManager: string;
   packageManagerInstall: string;
   packageManagerPrefix: string;
   tmpl: '';
@@ -47,13 +51,15 @@ interface Substitutes {
 
 function normalizeOptions(options: Schema): Substitutes {
   const { name: workflowName, fileName: workflowFileName } = names(
-    options.name || 'CI'
+    options.name
   );
+  const packageManager = detectPackageManager();
   const { exec: packageManagerPrefix, ciInstall: packageManagerInstall } =
-    getPackageManagerCommand();
+    getPackageManagerCommand(packageManager);
   return {
     workflowName,
     workflowFileName,
+    packageManager,
     packageManagerInstall,
     packageManagerPrefix,
     mainBranch: deduceDefaultBase(),

@@ -20,8 +20,7 @@ import * as log from 'ng-packagr/lib/utils/log';
 import { dirname, extname, join } from 'path';
 import * as postcssPresetEnv from 'postcss-preset-env';
 import * as postcssUrl from 'postcss-url';
-import { pathToFileURL } from 'url';
-import { getInstalledAngularVersionInfo } from '../../../utilities/angular-version-utils';
+import { pathToFileURL } from 'node:url';
 import {
   getTailwindPostCssPlugins,
   getTailwindSetup,
@@ -244,19 +243,6 @@ export class StylesheetProcessor {
     switch (ext) {
       case '.sass':
       case '.scss': {
-        const angularVersion = getInstalledAngularVersionInfo();
-        if (angularVersion && angularVersion.major < 15) {
-          return (await import('sass'))
-            .renderSync({
-              file: filePath,
-              data: css,
-              indentedSyntax: '.sass' === ext,
-              importer: customSassImporter,
-              includePaths: this.styleIncludePaths,
-            })
-            .css.toString();
-        }
-
         return (await import('sass'))
           .compileString(css, {
             url: pathToFileURL(filePath),
@@ -270,7 +256,6 @@ export class StylesheetProcessor {
           await import('less')
         ).render(css, {
           filename: filePath,
-          math: 'always',
           javascriptEnabled: true,
           paths: this.styleIncludePaths,
         });

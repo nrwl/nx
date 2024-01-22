@@ -1,7 +1,12 @@
 export enum Preset {
   Apps = 'apps',
-  Empty = 'empty', // same as apps, deprecated
-  Core = 'core', // same as npm, deprecated
+  // TODO(v18): Remove Empty and Core presets
+  /** @deprecated Use Apps instead
+   */
+  Empty = 'empty',
+  /** @deprecated Use NPM instead
+   */
+  Core = 'core',
   NPM = 'npm',
   TS = 'ts',
   WebComponents = 'web-components',
@@ -9,10 +14,17 @@ export enum Preset {
   AngularStandalone = 'angular-standalone',
   ReactMonorepo = 'react-monorepo',
   ReactStandalone = 'react-standalone',
+  NextJsStandalone = 'nextjs-standalone',
   ReactNative = 'react-native',
+  VueMonorepo = 'vue-monorepo',
+  VueStandalone = 'vue-standalone',
+  Nuxt = 'nuxt',
+  NuxtStandalone = 'nuxt-standalone',
   Expo = 'expo',
   NextJs = 'next',
   Nest = 'nest',
   Express = 'express',
-  NodeServer = 'node-server',
+  NodeStandalone = 'node-standalone',
+  NodeMonorepo = 'node-monorepo',
+  TsStandalone = 'ts-standalone',
 }

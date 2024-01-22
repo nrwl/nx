@@ -1,17 +1,21 @@
 import { Preset } from '../utils/presets';
-import { PackageManager } from '@nrwl/devkit';
+import { PackageManager } from '@nx/devkit';
 
 export interface Schema {
   name: string;
-  npmScope?: string;
+  preset: Preset;
   style?: string;
   linter?: string;
-  preset: Preset;
   standaloneConfig?: boolean;
   framework?: string;
   packageManager?: PackageManager;
-  bundler?: 'vite' | 'webpack';
+  bundler?: 'vite' | 'webpack' | 'rspack' | 'esbuild';
   docker?: boolean;
+  nextAppDir?: boolean;
+  nextSrcDir?: boolean;
   routing?: boolean;
   standaloneApi?: boolean;
+  e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
+  js?: boolean;
+  ssr?: boolean;
 }

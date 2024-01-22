@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Cypress Component Configuration should add base cypress component testing config 1`] = `
+{
+  "executor": "@nx/cypress:cypress",
+  "options": {
+    "cypressConfig": "libs/cool-lib/cypress.config.ts",
+    "testingType": "component",
+  },
+}
+`;
+
+exports[`Cypress Component Configuration should not error when rerunning on an existing project 1`] = `
+{
+  "executor": "@nx/cypress:cypress",
+  "options": {
+    "cypressConfig": "libs/cool-lib/cypress.config.ts",
+    "testingType": "component",
+  },
+}
+`;

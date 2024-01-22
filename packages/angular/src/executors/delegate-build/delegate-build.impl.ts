@@ -1,21 +1,18 @@
-import type { ExecutorContext } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
+import { joinPathFragments, parseTargetString, runExecutor } from '@nx/devkit';
 import {
-  joinPathFragments,
-  parseTargetString,
-  runExecutor,
-} from '@nrwl/devkit';
-import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
 import type { DelegateBuildExecutorSchema } from './schema';
 
 export async function* delegateBuildExecutor(
   options: DelegateBuildExecutorSchema,
   context: ExecutorContext
 ) {
-  const { target, dependencies } = calculateProjectDependencies(
+  const { target, dependencies } = calculateProjectBuildableDependencies(
+    context.taskGraph,
     context.projectGraph,
     context.root,
     context.projectName,
@@ -42,7 +39,7 @@ export async function* delegateBuildExecutor(
   }
 
   const { buildTarget, ...targetOptions } = options;
-  const delegateTarget = parseTargetString(buildTarget, context.projectGraph);
+  const delegateTarget = parseTargetString(buildTarget, context);
 
   yield* await runExecutor(delegateTarget, targetOptions, context);
 }

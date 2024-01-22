@@ -2,6 +2,7 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { resolve } from 'path';
 
 /**
+ * @deprecated TODO(v17) use bundler: 'metro' instead, will be removed in 16.0.0
  * This function add additional rules to expo's webpack config to make expo web working
  */
 export async function withNxWebpack(config) {
@@ -12,11 +13,11 @@ export async function withNxWebpack(config) {
       test: /\.(mjs|[jt]sx?)$/,
       exclude: /node_modules/,
       use: {
-        loader: require.resolve('@nrwl/webpack/src/utils/web-babel-loader.js'),
+        loader: require.resolve('@nx/webpack/src/utils/web-babel-loader.js'),
         options: {
           presets: [
             [
-              '@nrwl/react/babel',
+              '@nx/react/babel',
               {
                 runtime: 'automatic',
               },

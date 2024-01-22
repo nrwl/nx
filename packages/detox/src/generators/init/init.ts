@@ -1,26 +1,27 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
+  readNxJson,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { jestVersion, typesNodeVersion } from '@nrwl/jest/src/utils/versions';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+  updateNxJson,
+} from '@nx/devkit';
+import { DetoxPluginOptions } from '../../plugins/plugin';
+import { detoxVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import {
-  detoxVersion,
-  nxVersion,
-  testingLibraryJestDom,
-} from '../../utils/versions';
 
 export async function detoxInitGenerator(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host));
+    tasks.push(updateDependencies(host, schema));
+  }
+
+  if (process.env.NX_PCV3 === 'true') {
+    addPlugin(host);
   }
 
   if (!schema.skipFormat) {
@@ -30,23 +31,45 @@ export async function detoxInitGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree) {
+export function updateDependencies(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     host,
     {},
     {
-      '@nrwl/detox': nxVersion,
+      '@nx/detox': nxVersion,
       detox: detoxVersion,
-      '@testing-library/jest-dom': testingLibraryJestDom,
-      '@types/node': typesNodeVersion,
-      'jest-circus': jestVersion,
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 
 function moveDependency(host: Tree) {
-  return removeDependenciesFromPackageJson(host, ['@nrwl/detox'], []);
+  return removeDependenciesFromPackageJson(host, ['@nx/detox'], []);
+}
+
+function addPlugin(host: Tree) {
+  const nxJson = readNxJson(host);
+  nxJson.plugins ??= [];
+
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/detox/plugin'
+        : plugin.plugin === '@nx/detox/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/detox/plugin',
+    options: {
+      buildTargetName: 'build',
+      testTargetName: 'test',
+    } as DetoxPluginOptions,
+  });
+  updateNxJson(host, nxJson);
 }
 
 export default detoxInitGenerator;
-export const detoxInitSchematic = convertNxGenerator(detoxInitGenerator);

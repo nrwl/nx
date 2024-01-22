@@ -1,17 +1,13 @@
-// part of options from https://github.com/react-native-community/cli/blob/master/packages/platform-android/src/commands/runAndroid/index.ts#L314
-export interface ReactNativeRunAndroidOptions {
-  variant: string;
+import { ReactNativeBuildAndroidOptions } from '../build-android/schema';
+import { ReactNativeStartOptions } from '../start/schema';
+
+// part of options from https://github.com/react-native-community/cli/blob/main/packages/cli-platform-android/src/commands/runAndroid/index.ts
+export interface ReactNativeRunAndroidOptions
+  extends ReactNativeBuildAndroidOptions {
   appId: string;
   appIdSuffix: string;
   mainActiviy: string;
   deviceId: string;
-  tasks?: string;
-  jetifier: boolean;
-  sync: boolean;
-  port: number;
-  terminal?: string;
-  packager: boolean; // default is true
-  resetCache: boolean; // default is false
-  interactive: boolean; // default is true
-  activeArchOnly?: boolean;
+  listDevices?: boolean;
+  binaryPath?: string;
 }

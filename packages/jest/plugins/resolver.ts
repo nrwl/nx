@@ -1,4 +1,4 @@
-import { dirname, extname } from 'path';
+import { dirname, extname, join } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
 import type defaultResolver from 'jest-resolve/build/defaultResolver';
 
@@ -40,13 +40,7 @@ function getCompilerSetup(rootDir: string) {
 
 module.exports = function (path: string, options: ResolveOptions) {
   const ext = extname(path);
-  if (
-    ext === '.css' ||
-    ext === '.scss' ||
-    ext === '.sass' ||
-    ext === '.less' ||
-    ext === '.styl'
-  ) {
+  if (ext === '.css' || ext === '.scss' || ext === '.sass' || ext === '.less') {
     return require.resolve('identity-obj-proxy');
   }
   try {
@@ -81,7 +75,11 @@ module.exports = function (path: string, options: ResolveOptions) {
     ts = ts || require('typescript');
     compilerSetup = compilerSetup || getCompilerSetup(options.rootDir);
     const { compilerOptions, host } = compilerSetup;
-    return ts.resolveModuleName(path, options.basedir, compilerOptions, host)
-      .resolvedModule.resolvedFileName;
+    return ts.resolveModuleName(
+      path,
+      join(options.basedir, 'fake-placeholder.ts'),
+      compilerOptions,
+      host
+    ).resolvedModule.resolvedFileName;
   }
 };

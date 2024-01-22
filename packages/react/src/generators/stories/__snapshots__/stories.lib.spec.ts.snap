@@ -1,0 +1,100 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`react:stories for libraries should create the stories with interaction tests 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { TestUiLib } from './test-ui-lib';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof TestUiLib> = {
+  component: TestUiLib,
+  title: 'TestUiLib',
+};
+export default meta;
+type Story = StoryObj<typeof TestUiLib>;
+
+export const Primary = {
+  args: {},
+};
+
+export const Heading: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to TestUiLib!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:stories for libraries should create the stories with interaction tests 2`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './another-cmp';
+
+import { within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+
+export const Heading: Story = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByText(/Welcome to Test!/gi)).toBeTruthy();
+  },
+};
+"
+`;
+
+exports[`react:stories for libraries should create the stories without interaction tests 1`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { TestUiLib } from './test-ui-lib';
+
+const meta: Meta<typeof TestUiLib> = {
+  component: TestUiLib,
+  title: 'TestUiLib',
+};
+export default meta;
+type Story = StoryObj<typeof TestUiLib>;
+
+export const Primary = {
+  args: {},
+};
+"
+`;
+
+exports[`react:stories for libraries should create the stories without interaction tests 2`] = `
+"import type { Meta, StoryObj } from '@storybook/react';
+import { Test } from './another-cmp';
+
+const meta: Meta<typeof Test> = {
+  component: Test,
+  title: 'Test',
+};
+export default meta;
+type Story = StoryObj<typeof Test>;
+
+export const Primary = {
+  args: {
+    name: '',
+    displayAge: false,
+  },
+};
+"
+`;

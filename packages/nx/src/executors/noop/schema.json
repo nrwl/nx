@@ -6,5 +6,5 @@
   "cli": "nx",
   "outputCapture": "pipe",
   "properties": {},
-  "additionalProperties": false
+  "additionalProperties": true
 }

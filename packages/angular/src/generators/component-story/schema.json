@@ -29,6 +29,13 @@
       "examples": ["awesome.component"],
       "x-priority": "important"
     },
+    "interactionTests": {
+      "type": "boolean",
+      "description": "Set up Storybook interaction tests.",
+      "x-prompt": "Do you want to set up Storybook interaction tests?",
+      "x-priority": "important",
+      "default": true
+    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",

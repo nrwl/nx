@@ -6,7 +6,6 @@ import { workspaceRoot } from './workspace-root';
 
 /**
  * An array of glob patterns that should always be ignored.
- * Uses path/posix, since fast-glob requires unix paths.
  */
 export const ALWAYS_IGNORE = getAlwaysIgnore();
 
@@ -14,7 +13,7 @@ export function getIgnoredGlobs(
   root: string = workspaceRoot,
   prependRoot: boolean = true
 ) {
-  const files = ['.nxignore', '.gitignore'];
+  const files = ['.gitignore', '.nxignore'];
   if (prependRoot) {
     return [
       ...getAlwaysIgnore(root),
@@ -37,7 +36,9 @@ export function getAlwaysIgnore(root?: string) {
   return root ? paths.map((x) => joinPathFragments(root, x)) : paths;
 }
 
-export function getIgnoreObject(root: string = workspaceRoot) {
+export function getIgnoreObject(
+  root: string = workspaceRoot
+): ReturnType<typeof ignore> {
   const ig = ignore();
   ig.add(readFileIfExisting(`${root}/.gitignore`));
   ig.add(readFileIfExisting(`${root}/.nxignore`));

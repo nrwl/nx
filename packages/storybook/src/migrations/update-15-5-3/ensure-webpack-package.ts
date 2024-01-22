@@ -3,10 +3,10 @@ import {
   getProjects,
   joinPathFragments,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 
-// Add @nrwl/webpack as needed.
+// Add @nx/webpack as needed.
 // See: https://github.com/nrwl/nx/issues/14455
 export default async function update(tree: Tree) {
   const projects = getProjects(tree);

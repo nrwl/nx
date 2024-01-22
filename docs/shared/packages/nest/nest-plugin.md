@@ -21,22 +21,42 @@ Yarn users can use the following command instead:
 yarn create nx-workspace my-workspace --preset=nest
 ```
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/nest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 To add the Nest plugin to an existing workspace, run one the following commands:
 
-```shell
-npm install -D @nrwl/nest
-```
+{% tabs %}
+{% tab label="npm" %}
 
 ```shell
-yarn add -D @nrwl/nest
+npm add -D @nx/nest
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @nx/nest
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @nx/nest
+```
+
+{% /tab %}
+{% /tabs %}
 
 ### Create Applications
 
 You can add a new Nest application with the following command:
 
 ```shell
-nx g @nrwl/nest:app my-nest-app
+nx g @nx/nest:app my-nest-app
 ```
 
 #### Application Proxies
@@ -44,7 +64,7 @@ nx g @nrwl/nest:app my-nest-app
 Generating Nest applications has an option to configure other projects in the workspace to proxy API requests. This can be done by passing the `--frontendProject` with the project name you wish to enable proxy support for.
 
 ```shell
-nx g @nrwl/nest:app my-nest-app --frontendProject my-angular-app
+nx g @nx/nest:app my-nest-app --frontendProject my-angular-app
 ```
 
 ### Create Libraries
@@ -52,22 +72,22 @@ nx g @nrwl/nest:app my-nest-app --frontendProject my-angular-app
 You can add a new Nest library with the following command:
 
 ```shell
-nx g @nrwl/nest:lib my-nest-lib
+nx g @nx/nest:lib my-nest-lib
 ```
 
 To make the library `buildable`, use the following command:
 
 ```shell
-nx g @nrwl/nest:lib my-nest-lib --buildable
+nx g @nx/nest:lib my-nest-lib --buildable
 ```
 
 To make the library `publishable`, use the following command:
 
 ```shell
-nx g @nrwl/nest:lib my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
+nx g @nx/nest:lib my-nest-lib --publishable --importPath=@my-workspace/my-nest-lib
 ```
 
-> Read more about [building and publishing libraries here](/more-concepts/buildable-and-publishable-libraries).
+> Read more about [building and publishing libraries here](/concepts/more-concepts/buildable-and-publishable-libraries).
 
 ### Nest Generators
 
@@ -93,7 +113,7 @@ nx build my-nest-lib
 
 #### Waiting for other builds
 
-Setting the `waitUntilTargets` option with an array of projects (with the following format: `"project:architect"`) will execute those commands before serving the Nest application.
+Setting the `waitUntilTargets` option with an array of projects (with the following format: `"project:target"`) will execute those commands before serving the Nest application.
 
 ### Serve
 
@@ -145,4 +165,4 @@ nx test my-nest-lib
 
 ## More Documentation
 
-- [Using Jest](/packages/jest)
+- [Using Jest](/nx-api/jest)

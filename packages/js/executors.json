@@ -3,6 +3,7 @@
   "executors": {
     "tsc": {
       "implementation": "./src/executors/tsc/tsc.impl",
+      "batchImplementation": "./src/executors/tsc/tsc.batch-impl",
       "schema": "./src/executors/tsc/schema.json",
       "description": "Build a project using TypeScript."
     },
@@ -15,23 +16,17 @@
       "implementation": "./src/executors/node/node.impl",
       "schema": "./src/executors/node/schema.json",
       "description": "Execute a Node application."
-    }
-  },
-  "builders": {
-    "tsc": {
-      "implementation": "./src/executors/tsc/compat",
-      "schema": "./src/executors/tsc/schema.json",
-      "description": "Build a project using TypeScript."
     },
-    "swc": {
-      "implementation": "./src/executors/swc/compat",
-      "schema": "./src/executors/swc/schema.json",
-      "description": "Build a project using SWC."
+    "release-publish": {
+      "implementation": "./src/executors/release-publish/release-publish.impl",
+      "schema": "./src/executors/release-publish/schema.json",
+      "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
+      "hidden": true
     },
-    "node": {
-      "implementation": "./src/executors/node/compat",
-      "schema": "./src/executors/node/schema.json",
-      "description": "Execute a Node application."
+    "verdaccio": {
+      "implementation": "./src/executors/verdaccio/verdaccio.impl",
+      "schema": "./src/executors/verdaccio/schema.json",
+      "description": "Start local registry with verdaccio"
     }
   }
 }

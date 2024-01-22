@@ -1,7 +1,9 @@
+import type { NameAndDirectoryFormat } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+
 export interface Schema {
   name: string;
-  path?: string;
-  project?: string;
+  directory?: string;
+  nameAndDirectoryFormat?: NameAndDirectoryFormat;
   displayBlock?: boolean;
   inlineStyle?: boolean;
   inlineTemplate?: boolean;
@@ -11,16 +13,36 @@ export interface Schema {
   style?: 'css' | 'scss' | 'sass' | 'less' | 'none';
   skipTests?: boolean;
   type?: string;
-  flat?: boolean;
   skipImport?: boolean;
   selector?: string;
   module?: string;
   skipSelector?: boolean;
   export?: boolean;
+  prefix?: string;
+  skipFormat?: boolean;
+
+  /**
+   * @deprecated Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18.
+   */
+  flat?: boolean;
+  /**
+   * @deprecated Provide the `directory` option instead. It will be removed in Nx v18.
+   */
+  path?: string;
+  /**
+   * @deprecated Provide the `directory` option instead. The project will be determined from the directory provided. It will be removed in Nx v18.
+   */
+  project?: string;
 }
 
 export interface NormalizedSchema extends Schema {
-  path: string;
-  project: string;
+  directory: string;
+  filePath: string;
+  projectName: string;
   projectSourceRoot: string;
+  projectRoot: string;
+  selector: string;
+
+  fileName: string;
+  symbolName: string;
 }

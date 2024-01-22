@@ -1,0 +1,53 @@
+{
+  "name": "@nx/eslint",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The ESLint plugin for Nx contains executors, generators and utilities used for linting JavaScript/TypeScript projects within an Nx workspace.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages/eslint"
+  },
+  "keywords": [
+    "Monorepo",
+    "Web",
+    "Lint",
+    "ESLint",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "ng-update": {
+    "requirements": {},
+    "migrations": "./migrations.json"
+  },
+  "generators": "./generators.json",
+  "executors": "./executors.json",
+  "peerDependencies": {
+    "eslint": "^8.0.0",
+    "js-yaml": "4.1.0"
+  },
+  "dependencies": {
+    "@nx/devkit": "file:../devkit",
+    "@nx/js": "file:../js",
+    "tslib": "^2.3.0",
+    "typescript": "~5.2.2"
+  },
+  "peerDependenciesMeta": {
+    "eslint": {
+      "optional": true
+    },
+    "js-yaml": {
+      "optional": true
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

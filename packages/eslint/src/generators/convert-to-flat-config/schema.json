@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "ConvertToFlatConfig",
+  "cli": "nx",
+  "description": "Convert an Nx workspace's ESLint configs to use Flat Config.",
+  "type": "object",
+  "properties": {
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files.",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "additionalProperties": false,
+  "required": []
+}

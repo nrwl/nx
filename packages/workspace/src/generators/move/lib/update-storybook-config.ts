@@ -1,5 +1,5 @@
-import { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import { workspaceRoot } from '@nrwl/devkit';
+import { ProjectConfiguration, Tree } from '@nx/devkit';
+import { workspaceRoot } from '@nx/devkit';
 import * as path from 'path';
 import { join } from 'path';
 import { NormalizedSchema } from '../schema';

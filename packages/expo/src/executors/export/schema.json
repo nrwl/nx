@@ -31,11 +31,11 @@
       "description": "Maximum number of tasks to allow Metro to spawn"
     },
     "dumpAssetmap": {
-      "type": "string",
+      "type": "boolean",
       "description": "Dump the asset map for further processing"
     },
     "dumpSourcemap": {
-      "type": "string",
+      "type": "boolean",
       "description": "Dump the source map for debugging the JS bundle"
     },
     "bundler": {

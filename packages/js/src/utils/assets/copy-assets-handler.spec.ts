@@ -118,70 +118,54 @@ describe('AssetInputOutputHandler', () => {
     deletedMockedWatchedFile(path.join(projectDir, 'docs/test1.md'));
     deletedMockedWatchedFile(path.join(projectDir, 'docs/test2.md'));
 
-    expect(callback.mock.calls).toEqual([
-      [
-        [
-          {
-            type: 'create',
-            src: path.join(rootDir, 'LICENSE'),
-            dest: path.join(rootDir, 'dist/mylib/LICENSE'),
-          },
-        ],
-      ],
-      [
-        [
-          {
-            type: 'create',
-            src: path.join(rootDir, 'mylib/README.md'),
-            dest: path.join(rootDir, 'dist/mylib/README.md'),
-          },
-        ],
-      ],
-      [
-        [
-          {
-            type: 'create',
-            src: path.join(rootDir, 'mylib/docs/test1.md'),
-            dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
-          },
-        ],
-      ],
-      [
-        [
-          {
-            type: 'create',
-            src: path.join(rootDir, 'mylib/docs/test2.md'),
-            dest: path.join(rootDir, 'dist/mylib/docs/test2.md'),
-          },
-        ],
-      ],
-      [
-        [
-          {
-            type: 'update',
-            src: path.join(rootDir, 'mylib/docs/test1.md'),
-            dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
-          },
-        ],
-      ],
-      [
-        [
-          {
-            type: 'delete',
-            src: path.join(rootDir, 'mylib/docs/test1.md'),
-            dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
-          },
-        ],
-      ],
-      [
-        [
-          {
-            type: 'delete',
-            src: path.join(rootDir, 'mylib/docs/test2.md'),
-            dest: path.join(rootDir, 'dist/mylib/docs/test2.md'),
-          },
-        ],
-      ],
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'LICENSE'),
+        dest: path.join(rootDir, 'dist/mylib/LICENSE'),
+      },
+    ]);
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'mylib/README.md'),
+        dest: path.join(rootDir, 'dist/mylib/README.md'),
+      },
+    ]);
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'mylib/docs/test1.md'),
+        dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
+      },
+    ]);
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'mylib/docs/test2.md'),
+        dest: path.join(rootDir, 'dist/mylib/docs/test2.md'),
+      },
+    ]);
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'update',
+        src: path.join(rootDir, 'mylib/docs/test1.md'),
+        dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
+      },
+    ]);
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'delete',
+        src: path.join(rootDir, 'mylib/docs/test1.md'),
+        dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
+      },
+    ]);
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'delete',
+        src: path.join(rootDir, 'mylib/docs/test2.md'),
+        dest: path.join(rootDir, 'dist/mylib/docs/test2.md'),
+      },
     ]);
 
     dispose();
@@ -202,39 +186,31 @@ describe('AssetInputOutputHandler', () => {
 
     await sut.processAllAssetsOnce();
 
-    expect(callback.mock.calls).toEqual([
-      [
-        [
-          {
-            type: 'create',
-            src: path.join(rootDir, 'LICENSE'),
-            dest: path.join(rootDir, 'dist/mylib/LICENSE'),
-          },
-        ],
-      ],
-      [
-        [
-          {
-            type: 'create',
-            src: path.join(rootDir, 'mylib/README.md'),
-            dest: path.join(rootDir, 'dist/mylib/README.md'),
-          },
-        ],
-      ],
-      [
-        [
-          {
-            type: 'create',
-            src: path.join(rootDir, 'mylib/docs/test1.md'),
-            dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
-          },
-          {
-            type: 'create',
-            src: path.join(rootDir, 'mylib/docs/test2.md'),
-            dest: path.join(rootDir, 'dist/mylib/docs/test2.md'),
-          },
-        ],
-      ],
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'LICENSE'),
+        dest: path.join(rootDir, 'dist/mylib/LICENSE'),
+      },
+    ]);
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'mylib/README.md'),
+        dest: path.join(rootDir, 'dist/mylib/README.md'),
+      },
+    ]);
+    expect(callback).toHaveBeenCalledWith([
+      {
+        type: 'create',
+        src: path.join(rootDir, 'mylib/docs/test1.md'),
+        dest: path.join(rootDir, 'dist/mylib/docs/test1.md'),
+      },
+      {
+        type: 'create',
+        src: path.join(rootDir, 'mylib/docs/test2.md'),
+        dest: path.join(rootDir, 'dist/mylib/docs/test2.md'),
+      },
     ]);
   });
 });

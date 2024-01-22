@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { addProjectConfiguration, names, updateJson } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { addProjectConfiguration, names, updateJson } from '@nx/devkit';
 
 export interface AppConfig {
   appName: string; // name of app
@@ -32,55 +32,53 @@ export function createApp(
   // save for getAppDir() lookup by external *.spec.ts tests
   appConfig = {
     appName,
-    appModule: `/apps/${appName}/src/app/app.module.ts`,
+    appModule: `${appName}/src/app/app.module.ts`,
   };
 
   tree.write(
     appConfig.appModule,
-    `
-     import { NgModule } from '@angular/core';
-     import { BrowserModule } from '@angular/platform-browser';
-     ${routing ? "import { RouterModule } from '@angular/router'" : ''};
-     import { AppComponent } from './app.component';
-     @NgModule({
-       imports: [BrowserModule, ${routing ? 'RouterModule.forRoot([])' : ''}],
-       declarations: [AppComponent],
-       bootstrap: [AppComponent]
-     })
-     export class AppModule {}
+    `import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+${routing ? "import { RouterModule } from '@angular/router'" : ''};
+import { AppComponent } from './app.component';
+@NgModule({
+  imports: [BrowserModule, ${routing ? 'RouterModule.forRoot([])' : ''}],
+  declarations: [AppComponent],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+`
+  );
+  tree.write(
+    `${appName}/src/main.ts`,
+    `import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+
+import { AppModule } from './app/app.module';
+
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
+  .catch(err => console.log(err));
   `
   );
   tree.write(
-    `/apps/${appName}/src/main.ts`,
-    `
-    import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
-    import { AppModule } from './app/app.module';
-
-    platformBrowserDynamic()
-      .bootstrapModule(AppModule)
-      .catch(err => console.log(err));
-  `
-  );
-  tree.write(
-    `/apps/${appName}/tsconfig.app.json`,
+    `${appName}/tsconfig.app.json`,
     JSON.stringify({
       include: ['**/*.ts'],
     })
   );
   tree.write(
-    `/apps/${appName}-e2e/tsconfig.e2e.json`,
+    `${appName}-e2e/tsconfig.e2e.json`,
     JSON.stringify({
       include: ['../**/*.ts'],
     })
   );
   addProjectConfiguration(tree, appName, {
-    root: `apps/${appName}`,
-    sourceRoot: `apps/${appName}/src`,
+    root: `${appName}`,
+    sourceRoot: `${appName}/src`,
     targets: {
       build: {
         options: {
-          main: `apps/${appName}/src/main.ts`,
+          main: `${appName}/src/main.ts`,
         },
       },
       serve: {
@@ -96,28 +94,26 @@ export function createLib(tree: Tree, libName: string) {
 
   libConfig = {
     name,
-    module: `/libs/${propertyName}/src/lib/${fileName}.module.ts`,
-    barrel: `/libs/${propertyName}/src/index.ts`,
+    module: `${propertyName}/src/lib/${fileName}.module.ts`,
+    barrel: `${propertyName}/src/index.ts`,
   };
 
   tree.write(
     libConfig.module,
-    `
-      import { NgModule } from '@angular/core';
-      import { CommonModule } from '@angular/common';
-      @NgModule({
-        imports: [
-          CommonModule
-        ],
-        providers: []
-      })
-      export class ${className}Module { }
+    `import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+@NgModule({
+  imports: [
+    CommonModule
+  ],
+  providers: []
+})
+export class ${className}Module { }
   `
   );
   tree.write(
     libConfig.barrel,
-    `
-    export * from './lib/${fileName}.module';
-  `
+    `export * from './lib/${fileName}.module';
+`
   );
 }

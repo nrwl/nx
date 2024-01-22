@@ -1,37 +1,28 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, names } from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import type { FileInfo } from '../../utils/file-info';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, names } from '@nx/devkit';
+import { insertImport } from '@nx/js';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type { NormalizedSchema } from '../schema';
 
 let tsModule: typeof import('typescript');
 
 export function convertDirectiveToScam(
   tree: Tree,
-  directiveFileInfo: FileInfo,
   options: NormalizedSchema
 ): void {
-  if (!tree.exists(directiveFileInfo.filePath)) {
+  if (!tree.exists(options.filePath)) {
     throw new Error(
-      `Couldn't find directive at path ${directiveFileInfo.filePath} to add SCAM setup.`
+      `Couldn't find directive at path ${options.filePath} to add SCAM setup.`
     );
   }
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
 
-  const directiveNames = names(options.name);
-  const typeNames = names('directive');
-  const directiveClassName = `${directiveNames.className}${typeNames.className}`;
-
   if (options.inlineScam) {
-    const currentDirectiveContents = tree.read(
-      directiveFileInfo.filePath,
-      'utf-8'
-    );
+    const currentDirectiveContents = tree.read(options.filePath, 'utf-8');
     let source = tsModule.createSourceFile(
-      directiveFileInfo.filePath,
+      options.filePath,
       currentDirectiveContents,
       tsModule.ScriptTarget.Latest,
       true
@@ -40,35 +31,35 @@ export function convertDirectiveToScam(
     source = insertImport(
       tree,
       source,
-      directiveFileInfo.filePath,
+      options.filePath,
       'NgModule',
       '@angular/core'
     );
     source = insertImport(
       tree,
       source,
-      directiveFileInfo.filePath,
+      options.filePath,
       'CommonModule',
       '@angular/common'
     );
 
     let updatedDirectiveSource = source.getText();
     updatedDirectiveSource = `${updatedDirectiveSource}${getNgModuleDeclaration(
-      directiveClassName
+      options.symbolName
     )}`;
 
-    tree.write(directiveFileInfo.filePath, updatedDirectiveSource);
+    tree.write(options.filePath, updatedDirectiveSource);
     return;
   }
 
   const scamFilePath = joinPathFragments(
-    directiveFileInfo.directory,
-    `${directiveNames.fileName}.module.ts`
+    options.directory,
+    `${options.name}.module.ts`
   );
 
   tree.write(
     scamFilePath,
-    getModuleFileContent(directiveClassName, directiveFileInfo.fileName)
+    getModuleFileContent(options.symbolName, options.fileName)
   );
 }
 
@@ -89,5 +80,6 @@ function getNgModuleDeclaration(directiveClassName: string): string {
   declarations: [${directiveClassName}],
   exports: [${directiveClassName}],
 })
-export class ${directiveClassName}Module {}`;
+export class ${directiveClassName}Module {}
+`;
 }

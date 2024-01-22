@@ -1,34 +1,25 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, names } from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import type { FileInfo } from '../../utils/file-info';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, names } from '@nx/devkit';
+import { insertImport } from '@nx/js';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type { NormalizedSchema } from '../schema';
 
 let tsModule: typeof import('typescript');
 
-export function convertPipeToScam(
-  tree: Tree,
-  pipeFileInfo: FileInfo,
-  options: NormalizedSchema
-) {
-  if (!tree.exists(pipeFileInfo.filePath)) {
+export function convertPipeToScam(tree: Tree, options: NormalizedSchema) {
+  if (!tree.exists(options.filePath)) {
     throw new Error(
-      `Couldn't find pipe at path ${pipeFileInfo.filePath} to add SCAM setup.`
+      `Couldn't find pipe at path ${options.filePath} to add SCAM setup.`
     );
   }
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
 
-  const pipeNames = names(options.name);
-  const typeNames = names('pipe');
-  const pipeClassName = `${pipeNames.className}${typeNames.className}`;
-
   if (options.inlineScam) {
-    const currentPipeContents = tree.read(pipeFileInfo.filePath, 'utf-8');
+    const currentPipeContents = tree.read(options.filePath, 'utf-8');
     let source = tsModule.createSourceFile(
-      pipeFileInfo.filePath,
+      options.filePath,
       currentPipeContents,
       tsModule.ScriptTarget.Latest,
       true
@@ -37,35 +28,35 @@ export function convertPipeToScam(
     source = insertImport(
       tree,
       source,
-      pipeFileInfo.filePath,
+      options.filePath,
       'NgModule',
       '@angular/core'
     );
     source = insertImport(
       tree,
       source,
-      pipeFileInfo.filePath,
+      options.filePath,
       'CommonModule',
       '@angular/common'
     );
 
     let updatedPipeSource = source.getText();
     updatedPipeSource = `${updatedPipeSource}${getNgModuleDeclaration(
-      pipeClassName
+      options.symbolName
     )}`;
 
-    tree.write(pipeFileInfo.filePath, updatedPipeSource);
+    tree.write(options.filePath, updatedPipeSource);
     return;
   }
 
   const scamFilePath = joinPathFragments(
-    pipeFileInfo.directory,
-    `${pipeNames.fileName}.module.ts`
+    options.directory,
+    `${options.name}.module.ts`
   );
 
   tree.write(
     scamFilePath,
-    getModuleFileContent(pipeClassName, pipeFileInfo.fileName)
+    getModuleFileContent(options.symbolName, options.fileName)
   );
 }
 
@@ -86,5 +77,6 @@ function getNgModuleDeclaration(pipeClassName: string): string {
   declarations: [${pipeClassName}],
   exports: [${pipeClassName}],
 })
-export class ${pipeClassName}Module {}`;
+export class ${pipeClassName}Module {}
+`;
 }

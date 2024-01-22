@@ -1,0 +1,15 @@
+import { Component<% if(viewEncapsulation) { %>, ViewEncapsulation<% } %> } from '@angular/core';
+
+@Component({
+  selector: '<%= rootSelector %>',<% if(!inlineTemplate) { %>
+  templateUrl: './app.component.html',<% } else { %>
+  template: `<% if(minimal) { %><h1>Welcome <%= appName %></h1><% } else { %><<%= nxWelcomeSelector %>></<%= nxWelcomeSelector %>><% } %> <% if(routing) { %><router-outlet></router-outlet><% } %>`,<% } %><% if (angularMajorVersion < 17) { if(!inlineStyle) { %>
+  styleUrls: ['./app.component.<%= style %>'],<% } else { %>
+  styles: [``],<% } %><% } else { if(!inlineStyle) { %>
+  styleUrl: './app.component.<%= style %>',<% } else { %>
+  styles: ``,<% } %><% } %><% if(viewEncapsulation) { %>
+  encapsulation: ViewEncapsulation.<%= viewEncapsulation %>,<% } %>
+})
+export class AppComponent {<% if(!minimal) { %>
+  title = '<%= appName %>';
+<% } %>}

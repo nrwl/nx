@@ -1,10 +1,10 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   readNxJson,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import addJestInputs from './add-jest-inputs';
 
 describe('15.0.0 migration (add-jest-inputs)', () => {
@@ -44,30 +44,30 @@ describe('15.0.0 migration (add-jest-inputs)', () => {
 
     const updated = readNxJson(tree);
     expect(updated).toMatchInlineSnapshot(`
-      Object {
-        "namedInputs": Object {
-          "default": Array [
+      {
+        "namedInputs": {
+          "default": [
             "{projectRoot}/**/*",
             "sharedGlobals",
           ],
-          "production": Array [
+          "production": [
             "default",
             "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
             "!{projectRoot}/tsconfig.spec.json",
             "!{projectRoot}/jest.config.[jt]s",
           ],
-          "sharedGlobals": Array [],
+          "sharedGlobals": [],
         },
-        "targetDefaults": Object {
-          "test": Object {
-            "inputs": Array [
+        "targetDefaults": {
+          "test": {
+            "inputs": [
               "default",
               "^production",
               "{workspaceRoot}/jest.preset.js",
             ],
           },
-          "test2": Object {
-            "inputs": Array [
+          "test2": {
+            "inputs": [
               "default",
               "^production",
               "{workspaceRoot}/jest.preset.js",

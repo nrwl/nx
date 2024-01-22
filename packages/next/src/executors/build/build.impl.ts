@@ -1,30 +1,26 @@
-import 'dotenv/config';
 import {
+  detectPackageManager,
   ExecutorContext,
+  logger,
   readJsonFile,
-  workspaceLayout,
   workspaceRoot,
   writeJsonFile,
-} from '@nrwl/devkit';
-import { createLockFile, createPackageJson } from '@nrwl/js';
-import build from 'next/dist/build';
-import { join, resolve } from 'path';
+} from '@nx/devkit';
+import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
+import { join, resolve as pathResolve } from 'path';
 import { copySync, existsSync, mkdir, writeFileSync } from 'fs-extra';
 import { gte } from 'semver';
-import { directoryExists } from '@nrwl/workspace/src/utilities/fileutils';
-import {
-  calculateProjectDependencies,
-  DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-import { checkAndCleanWithSemver } from '@nrwl/workspace/src/utilities/version-utils';
+import { directoryExists } from '@nx/workspace/src/utilities/fileutils';
+import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
 
-import { prepareConfig } from '../../utils/config';
 import { updatePackageJson } from './lib/update-package-json';
 import { createNextConfigFile } from './lib/create-next-config-file';
 import { checkPublicDirectory } from './lib/check-project';
 import { NextBuildBuilderOptions } from '../../utils/types';
-import { PHASE_PRODUCTION_BUILD } from '../../utils/constants';
-import { getLockFileName } from 'nx/src/lock-file/lock-file';
+import { ChildProcess, fork } from 'child_process';
+import { createCliOptions } from '../../utils/create-cli-options';
+
+let childProcess: ChildProcess;
 
 export default async function buildExecutor(
   options: NextBuildBuilderOptions,
@@ -33,29 +29,16 @@ export default async function buildExecutor(
   // Cast to any to overwrite NODE_ENV
   (process.env as any).NODE_ENV ||= 'production';
 
-  let dependencies: DependentBuildableProjectNode[] = [];
-  const root = resolve(context.root, options.root);
-  const libsDir = join(context.root, workspaceLayout().libsDir);
+  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
 
-  checkPublicDirectory(root);
-
-  if (!options.buildLibsFromSource && context.targetName) {
-    const result = calculateProjectDependencies(
-      context.projectGraph,
-      context.root,
-      context.projectName,
-      context.targetName,
-      context.configurationName
-    );
-    dependencies = result.dependencies;
-  }
+  checkPublicDirectory(projectRoot);
 
   // Set `__NEXT_REACT_ROOT` based on installed ReactDOM version
-  const packageJsonPath = join(root, 'package.json');
+  const packageJsonPath = join(projectRoot, 'package.json');
   const packageJson = existsSync(packageJsonPath)
     ? readJsonFile(packageJsonPath)
     : undefined;
-  const rootPackageJson = readJsonFile(join(workspaceRoot, 'package.json'));
+  const rootPackageJson = readJsonFile(join(context.root, 'package.json'));
   const reactDomVersion =
     packageJson?.dependencies?.['react-dom'] ??
     rootPackageJson.dependencies?.['react-dom'];
@@ -63,18 +46,20 @@ export default async function buildExecutor(
     reactDomVersion &&
     gte(checkAndCleanWithSemver('react-dom', reactDomVersion), '18.0.0');
   if (hasReact18) {
-    (process.env as any).__NEXT_REACT_ROOT ||= 'true';
+    process.env['__NEXT_REACT_ROOT'] ||= 'true';
   }
 
-  const config = await prepareConfig(
-    PHASE_PRODUCTION_BUILD,
-    options,
-    context,
-    dependencies,
-    libsDir
-  );
-
-  await build(root, config as any);
+  try {
+    await runCliBuild(workspaceRoot, projectRoot, options);
+  } catch (error) {
+    logger.error(`Error occurred while trying to run the build command`);
+    logger.error(error);
+    return { success: false };
+  } finally {
+    if (childProcess) {
+      childProcess.kill();
+    }
+  }
 
   if (!directoryExists(options.outputPath)) {
     mkdir(options.outputPath);
@@ -84,23 +69,84 @@ export default async function buildExecutor(
     context.projectName,
     context.projectGraph,
     {
+      target: context.targetName,
       root: context.root,
       isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
     }
   );
+
+  // Update `package.json` to reflect how users should run the build artifacts
+  builtPackageJson.scripts = {
+    start: 'next start',
+  };
+
   updatePackageJson(builtPackageJson, context);
   writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
 
   if (options.generateLockfile) {
-    const lockFile = createLockFile(builtPackageJson);
-    writeFileSync(`${options.outputPath}/${getLockFileName()}`, lockFile, {
-      encoding: 'utf-8',
-    });
+    const packageManager = detectPackageManager(context.root);
+    const lockFile = createLockFile(
+      builtPackageJson,
+      context.projectGraph,
+      packageManager
+    );
+    writeFileSync(
+      `${options.outputPath}/${getLockFileName(packageManager)}`,
+      lockFile,
+      {
+        encoding: 'utf-8',
+      }
+    );
   }
 
-  createNextConfigFile(options, context);
-
-  copySync(join(root, 'public'), join(options.outputPath, 'public'));
-
+  // If output path is different from source path, then copy over the config and public files.
+  // This is the default behavior when running `nx build <app>`.
+  if (options.outputPath.replace(/\/$/, '') !== projectRoot) {
+    createNextConfigFile(options, context);
+    copySync(join(projectRoot, 'public'), join(options.outputPath, 'public'), {
+      dereference: true,
+    });
+  }
   return { success: true };
+}
+
+function runCliBuild(
+  workspaceRoot: string,
+  projectRoot: string,
+  options: NextBuildBuilderOptions
+) {
+  const { experimentalAppOnly, profile, debug, outputPath } = options;
+
+  // Set output path here since it can also be set via CLI
+  // We can retrieve it inside plugins/with-nx
+  process.env.NX_NEXT_OUTPUT_PATH ??= outputPath;
+
+  const args = createCliOptions({ experimentalAppOnly, profile, debug });
+  return new Promise((resolve, reject) => {
+    childProcess = fork(
+      require.resolve('next/dist/bin/next'),
+      ['build', ...args],
+      {
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        stdio: 'inherit',
+        env: process.env,
+      }
+    );
+
+    // Ensure the child process is killed when the parent exits
+    process.on('exit', () => childProcess.kill());
+    process.on('SIGTERM', () => childProcess.kill());
+
+    childProcess.on('error', (err) => {
+      reject(err);
+    });
+
+    childProcess.on('exit', (code) => {
+      if (code === 0) {
+        resolve(code);
+      } else {
+        reject(code);
+      }
+    });
+  });
 }

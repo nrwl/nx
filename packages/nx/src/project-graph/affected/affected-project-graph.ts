@@ -3,37 +3,42 @@ import {
   getImplicitlyTouchedProjects,
   getTouchedProjects,
 } from './locators/workspace-projects';
-import { getTouchedNpmPackages } from './locators/npm-packages';
-import { getImplicitlyTouchedProjectsByJsonChanges } from './locators/implicit-json-changes';
+import { getTouchedProjects as getJSTouchedProjects } from '../../plugins/js/project-graph/affected/touched-projects';
 import {
   AffectedProjectGraphContext,
   TouchedProjectLocator,
 } from './affected-project-graph-models';
-import { getTouchedProjectsFromTsConfig } from './locators/tsconfig-json-changes';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { ProjectGraph } from '../../config/project-graph';
 import { reverse } from '../operators';
 import { readNxJson } from '../../config/configuration';
 import { getTouchedProjectsFromProjectGlobChanges } from './locators/project-glob-changes';
 
-export function filterAffected(
+export async function filterAffected(
   graph: ProjectGraph,
   touchedFiles: FileChange[],
   nxJson: NxJsonConfiguration = readNxJson(),
   packageJson: any = readPackageJson()
-): ProjectGraph {
+): Promise<ProjectGraph> {
   // Additional affected logic should be in this array.
   const touchedProjectLocators: TouchedProjectLocator[] = [
     getTouchedProjects,
     getImplicitlyTouchedProjects,
-    getTouchedNpmPackages,
-    getImplicitlyTouchedProjectsByJsonChanges,
-    getTouchedProjectsFromTsConfig,
     getTouchedProjectsFromProjectGlobChanges,
+    getJSTouchedProjects,
   ];
-  const touchedProjects = touchedProjectLocators.reduce((acc, f) => {
-    return acc.concat(f(touchedFiles, graph.nodes, nxJson, packageJson, graph));
-  }, [] as string[]);
+
+  const touchedProjects = [];
+  for (const locator of touchedProjectLocators) {
+    const projects = await locator(
+      touchedFiles,
+      graph.nodes,
+      nxJson,
+      packageJson,
+      graph
+    );
+    touchedProjects.push(...projects);
+  }
 
   return filterAffectedProjects(graph, {
     projectGraphNodes: graph.nodes,

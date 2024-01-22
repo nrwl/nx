@@ -1,6 +1,6 @@
-import { addProjectConfiguration } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { componentGenerator } from '../../component/component';
 import { convertComponentToScam } from './convert-component-to-scam';
 
 describe('convertComponentToScam', () => {
@@ -13,34 +13,27 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/example',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/example/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app/example',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/example/example.component.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      inlineScam: true,
+      path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
+    });
 
     // ASSERT
     const componentSource = tree.read(
@@ -52,20 +45,19 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
+        styleUrl: './example.component.css'
       })
-      export class ExampleComponent {
-
-      }
+      export class ExampleComponent {}
 
       @NgModule({
         imports: [CommonModule],
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -78,34 +70,27 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/example',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/example/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: false,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app/example',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/example/example.component.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      inlineScam: false,
+      path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
+    });
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -122,7 +107,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -135,36 +121,29 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: true,
-        flat: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/example.component.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      inlineScam: true,
+      flat: true,
+      path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
+    });
 
     // ASSERT
     const componentSource = tree.read(
@@ -176,20 +155,19 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
+        styleUrl: './example.component.css'
       })
-      export class ExampleComponent {
-
-      }
+      export class ExampleComponent {}
 
       @NgModule({
         imports: [CommonModule],
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -202,36 +180,29 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: false,
-        flat: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/example.component.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      inlineScam: false,
+      flat: true,
+      path: 'apps/app1/src/app',
+      symbolName: 'ExampleComponent',
+    });
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -248,7 +219,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -261,38 +233,31 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: true,
       type: 'random',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.random',
-        filePath: 'apps/app1/src/app/example.random.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: true,
-        flat: true,
-        type: 'random',
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.random',
+      filePath: 'apps/app1/src/app/example.random.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      inlineScam: true,
+      flat: true,
+      type: 'random',
+      path: 'apps/app1/src/app',
+      symbolName: 'ExampleRandom',
+    });
 
     // ASSERT
     const componentSource = tree.read(
@@ -304,20 +269,19 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.random.html',
-        styleUrls: ['./example.random.css']
+        styleUrl: './example.random.css'
       })
-      export class ExampleRandom {
-
-      }
+      export class ExampleRandom {}
 
       @NgModule({
         imports: [CommonModule],
         declarations: [ExampleRandom],
         exports: [ExampleRandom],
       })
-      export class ExampleRandomModule {}"
+      export class ExampleRandomModule {}
+      "
     `);
   });
 
@@ -330,38 +294,31 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: true,
       type: 'random',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.random',
-        filePath: 'apps/app1/src/app/example.random.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: false,
-        flat: true,
-        type: 'random',
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.random',
+      filePath: 'apps/app1/src/app/example.random.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      inlineScam: false,
+      flat: true,
+      type: 'random',
+      path: 'apps/app1/src/app',
+      symbolName: 'ExampleRandom',
+    });
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -378,7 +335,8 @@ describe('convertComponentToScam', () => {
         declarations: [ExampleRandom],
         exports: [ExampleRandom],
       })
-      export class ExampleRandomModule {}"
+      export class ExampleRandomModule {}
+      "
     `);
   });
 
@@ -391,37 +349,30 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: false,
       path: 'apps/app1/src/app/random',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/random/example',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/random/example/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: true,
-        path: 'apps/app1/src/app/random',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app/random/example',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/random/example/example.component.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: true,
+      path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleComponent',
+    });
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -433,20 +384,19 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
+        styleUrl: './example.component.css'
       })
-      export class ExampleComponent {
-
-      }
+      export class ExampleComponent {}
 
       @NgModule({
         imports: [CommonModule],
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 
@@ -459,37 +409,30 @@ describe('convertComponentToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularComponentSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'component'
-    );
-    await angularComponentSchematic(tree, {
+    await componentGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: true,
       path: 'apps/app1/src/app/random',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertComponentToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/random',
-        fileName: 'example.component',
-        filePath: 'apps/app1/src/app/random/example.component.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: true,
-        inlineScam: true,
-        path: 'apps/app1/src/app/random',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertComponentToScam(tree, {
+      directory: 'apps/app1/src/app/random',
+      fileName: 'example.component',
+      filePath: 'apps/app1/src/app/random/example.component.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      flat: true,
+      inlineScam: true,
+      path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleComponent',
+    });
 
     // ASSERT
     const componentModuleSource = tree.read(
@@ -501,20 +444,19 @@ describe('convertComponentToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Component({
-        selector: 'example',
+        selector: 'proj-example',
         templateUrl: './example.component.html',
-        styleUrls: ['./example.component.css']
+        styleUrl: './example.component.css'
       })
-      export class ExampleComponent {
-
-      }
+      export class ExampleComponent {}
 
       @NgModule({
         imports: [CommonModule],
         declarations: [ExampleComponent],
         exports: [ExampleComponent],
       })
-      export class ExampleComponentModule {}"
+      export class ExampleComponentModule {}
+      "
     `);
   });
 });

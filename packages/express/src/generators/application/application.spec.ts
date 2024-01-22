@@ -1,5 +1,5 @@
-import { readJson, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readJson, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
 
@@ -7,69 +7,70 @@ describe('app', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    appTree = createTreeWithEmptyWorkspace();
   });
 
   it('should generate files', async () => {
     await applicationGenerator(appTree, {
-      name: 'myNodeApp',
+      name: 'my-node-app',
+      projectNameAndRootFormat: 'as-provided',
     } as Schema);
 
-    const mainFile = appTree.read('apps/my-node-app/src/main.ts').toString();
+    const mainFile = appTree.read('my-node-app/src/main.ts').toString();
     expect(mainFile).toContain(`import express from 'express';`);
 
-    const tsconfig = readJson(appTree, 'apps/my-node-app/tsconfig.json');
+    const tsconfig = readJson(appTree, 'my-node-app/tsconfig.json');
     expect(tsconfig).toMatchInlineSnapshot(`
-      Object {
-        "compilerOptions": Object {
+      {
+        "compilerOptions": {
           "esModuleInterop": true,
         },
-        "extends": "../../tsconfig.base.json",
-        "files": Array [],
-        "include": Array [],
-        "references": Array [
-          Object {
+        "extends": "../tsconfig.base.json",
+        "files": [],
+        "include": [],
+        "references": [
+          {
             "path": "./tsconfig.app.json",
           },
-          Object {
+          {
             "path": "./tsconfig.spec.json",
           },
         ],
       }
     `);
 
-    const eslintrcJson = readJson(appTree, 'apps/my-node-app/.eslintrc.json');
+    const eslintrcJson = readJson(appTree, 'my-node-app/.eslintrc.json');
     expect(eslintrcJson).toMatchInlineSnapshot(`
-      Object {
-        "extends": Array [
-          "../../.eslintrc.json",
+      {
+        "extends": [
+          "../.eslintrc.json",
         ],
-        "ignorePatterns": Array [
+        "ignorePatterns": [
           "!**/*",
         ],
-        "overrides": Array [
-          Object {
-            "files": Array [
+        "overrides": [
+          {
+            "files": [
               "*.ts",
               "*.tsx",
               "*.js",
               "*.jsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
-          Object {
-            "files": Array [
+          {
+            "files": [
               "*.ts",
               "*.tsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
-          Object {
-            "files": Array [
+          {
+            "files": [
               "*.js",
               "*.jsx",
             ],
-            "rules": Object {},
+            "rules": {},
           },
         ],
       }
@@ -78,55 +79,54 @@ describe('app', () => {
 
   it('should add types to the tsconfig.app.json', async () => {
     await applicationGenerator(appTree, {
-      name: 'myNodeApp',
+      name: 'my-node-app',
+      projectNameAndRootFormat: 'as-provided',
     } as Schema);
-    const tsconfig = readJson(appTree, 'apps/my-node-app/tsconfig.app.json');
+    const tsconfig = readJson(appTree, 'my-node-app/tsconfig.app.json');
     expect(tsconfig.compilerOptions.types).toContain('express');
     expect(tsconfig).toMatchInlineSnapshot(`
-Object {
-  "compilerOptions": Object {
-    "module": "commonjs",
-    "outDir": "../../dist/out-tsc",
-    "types": Array [
-      "node",
-      "express",
-    ],
-  },
-  "exclude": Array [
-    "jest.config.ts",
-    "src/**/*.spec.ts",
-    "src/**/*.test.ts",
-  ],
-  "extends": "./tsconfig.json",
-  "include": Array [
-    "src/**/*.ts",
-  ],
-}
-`);
+      {
+        "compilerOptions": {
+          "module": "commonjs",
+          "outDir": "../dist/out-tsc",
+          "types": [
+            "node",
+            "express",
+          ],
+        },
+        "exclude": [
+          "jest.config.ts",
+          "src/**/*.spec.ts",
+          "src/**/*.test.ts",
+        ],
+        "extends": "./tsconfig.json",
+        "include": [
+          "src/**/*.ts",
+        ],
+      }
+    `);
   });
 
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await applicationGenerator(appTree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         js: true,
+        projectNameAndRootFormat: 'as-provided',
       } as Schema);
 
-      expect(appTree.exists('apps/my-node-app/src/main.js')).toBeTruthy();
-      expect(appTree.read('apps/my-node-app/src/main.js').toString()).toContain(
+      expect(appTree.exists('my-node-app/src/main.js')).toBeTruthy();
+      expect(appTree.read('my-node-app/src/main.js').toString()).toContain(
         `import express from 'express';`
       );
 
-      const tsConfig = readJson(appTree, 'apps/my-node-app/tsconfig.json');
+      const tsConfig = readJson(appTree, 'my-node-app/tsconfig.json');
       expect(tsConfig.compilerOptions).toEqual({
         allowJs: true,
         esModuleInterop: true,
       });
 
-      const tsConfigApp = readJson(
-        appTree,
-        'apps/my-node-app/tsconfig.app.json'
-      );
+      const tsConfigApp = readJson(appTree, 'my-node-app/tsconfig.app.json');
       expect(tsConfigApp.include).toEqual(['src/**/*.ts', 'src/**/*.js']);
       expect(tsConfigApp.exclude).toEqual([
         'jest.config.ts',

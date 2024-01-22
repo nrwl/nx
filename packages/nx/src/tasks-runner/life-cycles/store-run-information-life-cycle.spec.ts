@@ -1,4 +1,4 @@
-import { Task } from 'nx/src/config/task-graph';
+import { Task } from '../../config/task-graph';
 import { TaskStatus } from '../tasks-runner';
 import { StoreRunInformationLifeCycle } from './store-run-information-life-cycle';
 describe('StoreRunInformationLifeCycle', () => {
@@ -41,15 +41,15 @@ describe('StoreRunInformationLifeCycle', () => {
 
     store.endCommand();
     expect(runDetails).toMatchInlineSnapshot(`
-      Object {
-        "run": Object {
+      {
+        "run": {
           "command": "nx run-many --target=test",
           "endTime": "DATE",
           "inner": false,
           "startTime": "DATE",
         },
-        "tasks": Array [
-          Object {
+        "tasks": [
+          {
             "cacheStatus": "cache-miss",
             "endTime": "DATE",
             "hash": "hash1",
@@ -60,7 +60,7 @@ describe('StoreRunInformationLifeCycle', () => {
             "target": "test",
             "taskId": "proj1:test",
           },
-          Object {
+          {
             "cacheStatus": "cache-miss",
             "endTime": "DATE",
             "hash": "hash2",

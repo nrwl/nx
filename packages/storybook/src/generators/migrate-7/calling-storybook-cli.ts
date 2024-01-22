@@ -1,20 +1,21 @@
-import { output } from '@nrwl/devkit';
+import { getPackageManagerCommand, output } from '@nx/devkit';
 import { execSync } from 'child_process';
 import { Schema } from './schema';
 
 export function callUpgrade(schema: Schema): 1 | Buffer {
+  const pm = getPackageManagerCommand();
   try {
     output.log({
       title: `Calling sb upgrade`,
       bodyLines: [
         `ℹ️ Nx will call the Storybook CLI to upgrade your @storybook/* packages to the latest version.`,
-        `📖 You can read more about the Storybook upgrade command here: https://storybook.js.org/docs/7.0/react/configure/upgrading`,
+        `📖 You can read more about the Storybook upgrade command here: https://storybook.js.org/docs/react/configure/upgrading`,
       ],
       color: 'blue',
     });
 
     execSync(
-      `npx storybook@next upgrade --prerelease ${
+      `${pm.dlx} storybook@latest upgrade ${
         schema.autoAcceptAllPrompts ? '--yes' : ''
       }`,
       {
@@ -36,7 +37,7 @@ export function callUpgrade(schema: Schema): 1 | Buffer {
       bodyLines: [
         `🚨 The Storybook CLI failed to upgrade your @storybook/* packages to the latest version.`,
         `Please try running the sb upgrade command manually:`,
-        `npx storybook@next upgrade --prerelease`,
+        `${pm.exec} storybook@latest upgrade`,
       ],
       color: 'red',
     });
@@ -59,7 +60,7 @@ export function callAutomigrate(
     title: `⚙️ Calling sb automigrate`,
     bodyLines: [
       `ℹ️  Nx will call the Storybook CLI to automigrate the Storybook configuration of all your projects that use Storybook.`,
-      `📖 You can read more about the Storybook automigrate command here: https://storybook.js.org/docs/7.0/react/configure/upgrading#automigrate-script`,
+      `📖 You can read more about the Storybook automigrate command here: https://storybook.js.org/docs/react/configure/upgrading#automigrate-script`,
     ],
     color: 'green',
   });
@@ -71,7 +72,8 @@ export function callAutomigrate(
 
   Object.entries(allStorybookProjects).forEach(
     ([projectName, storybookProjectInfo]) => {
-      const commandToRun = `npx sb@next automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
+      const pm = getPackageManagerCommand();
+      const commandToRun = `${pm.dlx} storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
       try {
         output.log({
           title: `Calling sb automigrate for ${projectName}`,
@@ -79,24 +81,14 @@ export function callAutomigrate(
           color: 'green',
         });
 
-        const result = execSync(
+        execSync(
           `${commandToRun}  ${schema.autoAcceptAllPrompts ? '--yes' : ''}`,
           {
-            stdio: [0, 1, 2],
+            stdio: 'inherit',
           }
         );
 
-        const outputResult = result?.toString();
-
-        if (
-          outputResult?.includes(
-            `The migration failed to update your ${storybookProjectInfo.configDir}`
-          )
-        ) {
-          resultOfMigration.failedProjects[projectName] = commandToRun;
-        } else {
-          resultOfMigration.successfulProjects[projectName] = commandToRun;
-        }
+        resultOfMigration.successfulProjects[projectName] = commandToRun;
       } catch (e) {
         output.error({
           title: 'Migration failed',

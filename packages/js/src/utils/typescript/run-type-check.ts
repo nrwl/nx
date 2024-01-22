@@ -122,7 +122,8 @@ async function setupTypeScript(options: TypeCheckOptions) {
     options;
   const config = readTsConfig(tsConfigPath);
   if (config.errors.length) {
-    throw new Error(`Invalid config file: ${config.errors}`);
+    const errorMessages = config.errors.map((e) => e.messageText).join('\n');
+    throw new Error(`Invalid config file due to following: ${errorMessages}`);
   }
 
   const emitOptions =

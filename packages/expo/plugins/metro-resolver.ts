@@ -5,7 +5,7 @@ import * as chalk from 'chalk';
 import { CachedInputFileSystem, ResolverFactory } from 'enhanced-resolve';
 import { dirname, join } from 'path';
 import * as fs from 'fs';
-import { workspaceRoot } from '@nrwl/devkit';
+import { workspaceRoot } from '@nx/devkit';
 
 /*
  * Use tsconfig to resolve additional workspace libs.
@@ -133,17 +133,16 @@ function tsconfigPathsResolver(
   platform: string,
   debug: boolean
 ) {
-  const tsConfigPathMatcher = getMatcher(debug);
-  const match = tsConfigPathMatcher(
-    realModuleName,
-    undefined,
-    undefined,
-    extensions.map((ext) => `.${ext}`)
-  );
-
-  if (match) {
+  try {
+    const tsConfigPathMatcher = getMatcher(debug);
+    const match = tsConfigPathMatcher(
+      realModuleName,
+      undefined,
+      undefined,
+      extensions.map((ext) => `.${ext}`)
+    );
     return metroResolver.resolve(context, match, platform);
-  } else {
+  } catch {
     if (debug) {
       console.log(
         chalk.red(`[Nx] Failed to resolve ${chalk.bold(realModuleName)}`)
@@ -204,6 +203,8 @@ function getPnpmResolver(extensions: string[]) {
       useSyncFileSystemCalls: true,
       modules: [join(workspaceRoot, 'node_modules'), 'node_modules'],
       conditionNames: ['native', 'browser', 'require', 'default'],
+      mainFields: ['react-native', 'browser', 'main'],
+      aliasFields: ['browser'],
     });
   }
   return resolver;

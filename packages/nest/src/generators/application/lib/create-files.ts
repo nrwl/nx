@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { generateFiles, joinPathFragments } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { generateFiles, joinPathFragments } from '@nx/devkit';
 import type { NormalizedOptions } from '../schema';
 
 export function createFiles(tree: Tree, options: NormalizedOptions): void {
@@ -9,7 +9,7 @@ export function createFiles(tree: Tree, options: NormalizedOptions): void {
     joinPathFragments(options.appProjectRoot, 'src'),
     {
       tmpl: '',
-      name: options.name,
+      name: options.appProjectName,
       root: options.appProjectRoot,
     }
   );

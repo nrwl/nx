@@ -1,31 +1,32 @@
-import type { Tree } from '@nrwl/devkit';
-import { logger, readProjectConfiguration, stripIndents } from '@nrwl/devkit';
-import { getComponentFileInfo } from '../../utils/file-info';
+import type { Tree } from '@nx/devkit';
+import { logger, readProjectConfiguration, stripIndents } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import type { StringLiteral } from 'typescript';
 import { locateLibraryEntryPointFromDirectory } from '../../utils/entry-point';
 import { getRelativeImportToFile } from '../../utils/path';
 import type { NormalizedSchema } from '../schema';
-import { shouldExportInEntryPoint } from './entry-point';
 import { findModuleFromOptions } from './module';
 
 export function exportComponentInEntryPoint(
   tree: Tree,
   schema: NormalizedSchema
 ): void {
-  if (!schema.export || (schema.skipImport && !schema.standalone)) {
+  if (!schema.export || schema.skipImport) {
     return;
   }
 
-  const { root, projectType } = readProjectConfiguration(tree, schema.project);
+  const { root, projectType } = readProjectConfiguration(
+    tree,
+    schema.projectName
+  );
 
   if (projectType === 'application') {
     return;
   }
 
-  const { directory, filePath } = getComponentFileInfo(tree, schema);
-
   const entryPointPath = locateLibraryEntryPointFromDirectory(
     tree,
-    directory,
+    schema.directory,
     root,
     schema.projectSourceRoot
   );
@@ -47,13 +48,36 @@ export function exportComponentInEntryPoint(
 
   const relativePathFromEntryPoint = getRelativeImportToFile(
     entryPointPath,
-    filePath
+    schema.filePath
   );
   const updateEntryPointContent = stripIndents`${tree.read(
     entryPointPath,
     'utf-8'
   )}
-    export * from "${relativePathFromEntryPoint}";`;
+    export * from '${relativePathFromEntryPoint}';`;
 
   tree.write(entryPointPath, updateEntryPointContent);
+}
+
+function shouldExportInEntryPoint(
+  tree: Tree,
+  entryPoint: string,
+  modulePath: string
+): boolean {
+  if (!modulePath) {
+    return false;
+  }
+
+  ensureTypescript();
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const moduleImportPath = getRelativeImportToFile(entryPoint, modulePath);
+  const entryPointContent = tree.read(entryPoint, 'utf-8');
+  const entryPointAst = tsquery.ast(entryPointContent);
+  const moduleExport = tsquery(
+    entryPointAst,
+    `ExportDeclaration StringLiteral[value='${moduleImportPath}']`,
+    { visitAllChildren: true }
+  )[0] as StringLiteral;
+
+  return Boolean(moduleExport);
 }

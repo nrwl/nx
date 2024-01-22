@@ -1,6 +1,6 @@
-import { addProjectConfiguration } from '@nrwl/devkit';
-import { wrapAngularDevkitSchematic } from '@nrwl/devkit/ngcli-adapter';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { directiveGenerator } from '../../directive/directive';
 import { convertDirectiveToScam } from './convert-directive-to-scam';
 
 describe('convertDirectiveToScam', () => {
@@ -13,36 +13,29 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: false,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/example',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/example/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app/example',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/example/example.directive.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: true,
+      path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
+    });
 
     // ASSERT
     const directiveSource = tree.read(
@@ -54,12 +47,10 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[projExample]'
       })
       export class ExampleDirective {
-
-        constructor() { }
-
+        constructor() {}
       }
 
       @NgModule({
@@ -67,7 +58,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -80,36 +72,29 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: false,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/example',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/example/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: false,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app/example',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/example/example.directive.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: false,
+      path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
+    });
 
     // ASSERT
     const directiveModuleSource = tree.read(
@@ -126,7 +111,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -139,36 +125,29 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: true,
-        flat: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/example.directive.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      inlineScam: true,
+      flat: true,
+      path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
+    });
 
     // ASSERT
     const directiveSource = tree.read(
@@ -180,12 +159,10 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[projExample]'
       })
       export class ExampleDirective {
-
-        constructor() { }
-
+        constructor() {}
       }
 
       @NgModule({
@@ -193,7 +170,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -206,36 +184,29 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: true,
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        inlineScam: false,
-        flat: true,
-        path: 'apps/app1/src/app',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/example.directive.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      inlineScam: false,
+      flat: true,
+      path: 'apps/app1/src/app',
+      symbolName: 'ExampleDirective',
+    });
 
     // ASSERT
     const directiveModuleSource = tree.read(
@@ -252,7 +223,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -265,37 +237,30 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: false,
       path: 'apps/app1/src/app/random',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/random/example',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/random/example/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: false,
-        inlineScam: true,
-        path: 'apps/app1/src/app/random',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app/random/example',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/random/example/example.directive.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      flat: false,
+      inlineScam: true,
+      path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleDirective',
+    });
 
     // ASSERT
     const directiveModuleSource = tree.read(
@@ -307,12 +272,10 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[projExample]'
       })
       export class ExampleDirective {
-
-        constructor() { }
-
+        constructor() {}
       }
 
       @NgModule({
@@ -320,7 +283,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 
@@ -333,37 +297,30 @@ describe('convertDirectiveToScam', () => {
       root: 'apps/app1',
     });
 
-    const angularDirectiveSchematic = wrapAngularDevkitSchematic(
-      '@schematics/angular',
-      'directive'
-    );
-    await angularDirectiveSchematic(tree, {
+    await directiveGenerator(tree, {
       name: 'example',
       project: 'app1',
       skipImport: true,
       export: false,
       flat: true,
       path: 'apps/app1/src/app/random',
+      standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    convertDirectiveToScam(
-      tree,
-      {
-        directory: 'apps/app1/src/app/random',
-        fileName: 'example.directive',
-        filePath: 'apps/app1/src/app/random/example.directive.ts',
-      },
-      {
-        name: 'example',
-        project: 'app1',
-        export: false,
-        flat: true,
-        inlineScam: true,
-        path: 'apps/app1/src/app/random',
-        projectSourceRoot: 'apps/app1/src',
-      }
-    );
+    convertDirectiveToScam(tree, {
+      directory: 'apps/app1/src/app/random',
+      fileName: 'example.directive',
+      filePath: 'apps/app1/src/app/random/example.directive.ts',
+      name: 'example',
+      projectName: 'app1',
+      export: false,
+      flat: true,
+      inlineScam: true,
+      path: 'apps/app1/src/app/random',
+      symbolName: 'ExampleDirective',
+    });
 
     // ASSERT
     const directiveModuleSource = tree.read(
@@ -375,12 +332,10 @@ describe('convertDirectiveToScam', () => {
       import { CommonModule } from '@angular/common';
 
       @Directive({
-        selector: '[example]'
+        selector: '[projExample]'
       })
       export class ExampleDirective {
-
-        constructor() { }
-
+        constructor() {}
       }
 
       @NgModule({
@@ -388,7 +343,8 @@ describe('convertDirectiveToScam', () => {
         declarations: [ExampleDirective],
         exports: [ExampleDirective],
       })
-      export class ExampleDirectiveModule {}"
+      export class ExampleDirectiveModule {}
+      "
     `);
   });
 });

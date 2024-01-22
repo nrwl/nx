@@ -20,6 +20,9 @@
         "type": "array",
         "description": "Paths to ignore when looking for components.",
         "items": { "type": "string", "description": "Path to ignore." },
+        "default": [
+          "*.stories.ts,*.stories.tsx,*.stories.js,*.stories.jsx,*.stories.mdx"
+        ],
         "examples": [
           "apps/my-app/src/not-stories/**",
           "**/**/src/**/not-stories/**",
@@ -27,6 +30,12 @@
           "**/**/src/**/*.other.*",
           "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
         ]
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "required": ["project"],

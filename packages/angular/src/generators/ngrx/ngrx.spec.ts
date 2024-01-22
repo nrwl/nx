@@ -1,7 +1,8 @@
-import type { Tree } from '@nrwl/devkit';
-import * as devkit from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { dirname } from 'path';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import {
   AppConfig,
   createApp,
@@ -10,10 +11,9 @@ import {
   getLibConfig,
 } from '../../utils/nx-devkit/testing';
 import { ngrxVersion } from '../../utils/versions';
+import { generateTestApplication } from '../utils/testing';
 import { ngrxGenerator } from './ngrx';
-import applicationGenerator from '../application/application';
 import type { NgRxGeneratorOptions } from './schema';
-import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 
 describe('ngrx', () => {
   let appConfig: AppConfig;
@@ -23,22 +23,25 @@ describe('ngrx', () => {
   const defaultOptions: NgRxGeneratorOptions = {
     directory: '+state',
     minimal: true,
-    parent: 'apps/myapp/src/app/app.module.ts',
+    parent: 'myapp/src/app/app.module.ts',
     name: 'users',
+    skipFormat: true,
   };
 
   const defaultStandaloneOptions: NgRxGeneratorOptions = {
     directory: '+state',
     minimal: true,
-    parent: 'apps/my-app/src/main.ts',
+    parent: 'my-app/src/app/app.config.ts',
     name: 'users',
+    skipFormat: true,
   };
 
   const defaultModuleOptions: NgRxGeneratorOptions = {
     directory: '+state',
     minimal: true,
-    module: 'apps/myapp/src/app/app.module.ts',
+    module: 'myapp/src/app/app.module.ts',
     name: 'users',
+    skipFormat: true,
   };
 
   const expectFileToExist = (file: string) =>
@@ -85,7 +88,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -96,24 +99,18 @@ describe('ngrx', () => {
         minimal: true,
       });
 
-      expect(tree.exists('/apps/myapp/src/app/+state/users.actions.ts')).toBe(
+      expect(tree.exists('myapp/src/app/+state/users.actions.ts')).toBe(false);
+      expect(tree.exists('myapp/src/app/+state/users.effects.ts')).toBe(false);
+      expect(tree.exists('myapp/src/app/+state/users.effects.spec.ts')).toBe(
         false
       );
-      expect(tree.exists('/apps/myapp/src/app/+state/users.effects.ts')).toBe(
+      expect(tree.exists('myapp/src/app/+state/users.reducer.ts')).toBe(false);
+      expect(tree.exists('myapp/src/app/+state/users.selectors.ts')).toBe(
         false
       );
-      expect(
-        tree.exists('/apps/myapp/src/app/+state/users.effects.spec.ts')
-      ).toBe(false);
-      expect(tree.exists('/apps/myapp/src/app/+state/users.reducer.ts')).toBe(
+      expect(tree.exists('myapp/src/app/+state/users.selectors.spec.ts')).toBe(
         false
       );
-      expect(tree.exists('/apps/myapp/src/app/+state/users.selectors.ts')).toBe(
-        false
-      );
-      expect(
-        tree.exists('/apps/myapp/src/app/+state/users.selectors.spec.ts')
-      ).toBe(false);
     });
 
     it('should add a root module with feature module when minimal is set to false', async () => {
@@ -124,7 +121,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -136,7 +133,7 @@ describe('ngrx', () => {
       });
 
       expect(
-        tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -145,12 +142,12 @@ describe('ngrx', () => {
 
       await ngrxGenerator(tree, {
         ...defaultOptions,
-        module: 'apps/no-router-app/src/app/app.module.ts',
+        module: 'no-router-app/src/app/app.module.ts',
         root: true,
       });
 
       const appModule = tree.read(
-        '/apps/no-router-app/src/app/app.module.ts',
+        'no-router-app/src/app/app.module.ts',
         'utf-8'
       );
       expect(appModule).not.toContain('StoreRouterConnectingModule.forRoot()');
@@ -164,7 +161,7 @@ describe('ngrx', () => {
         facade: true,
       });
 
-      expect(tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')).toContain(
+      expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).toContain(
         'providers: [UsersFacade]'
       );
     });
@@ -177,9 +174,9 @@ describe('ngrx', () => {
         facade: false,
       });
 
-      expect(
-        tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')
-      ).not.toContain('providers: [UsersFacade]');
+      expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).not.toContain(
+        'providers: [UsersFacade]'
+      );
     });
 
     it('should not add facade provider when minimal is true', async () => {
@@ -190,9 +187,9 @@ describe('ngrx', () => {
         facade: true,
       });
 
-      expect(
-        tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')
-      ).not.toContain('providers: [UsersFacade]');
+      expect(tree.read('myapp/src/app/app.module.ts', 'utf-8')).not.toContain(
+        'providers: [UsersFacade]'
+      );
     });
 
     it('should not generate imports when skipImport is true', async () => {
@@ -202,14 +199,14 @@ describe('ngrx', () => {
         skipImport: true,
       });
 
-      expectFileToExist('/apps/myapp/src/app/+state/users.actions.ts');
-      expectFileToExist('/apps/myapp/src/app/+state/users.effects.ts');
-      expectFileToExist('/apps/myapp/src/app/+state/users.effects.spec.ts');
-      expectFileToExist('/apps/myapp/src/app/+state/users.reducer.ts');
-      expectFileToExist('/apps/myapp/src/app/+state/users.selectors.ts');
-      expectFileToExist('/apps/myapp/src/app/+state/users.selectors.spec.ts');
+      expectFileToExist('myapp/src/app/+state/users.actions.ts');
+      expectFileToExist('myapp/src/app/+state/users.effects.ts');
+      expectFileToExist('myapp/src/app/+state/users.effects.spec.ts');
+      expectFileToExist('myapp/src/app/+state/users.reducer.ts');
+      expectFileToExist('myapp/src/app/+state/users.selectors.ts');
+      expectFileToExist('myapp/src/app/+state/users.selectors.spec.ts');
       expect(
-        tree.read('/apps/myapp/src/app/app.module.ts', 'utf-8')
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -356,7 +353,7 @@ describe('ngrx', () => {
     });
 
     it('should generate with custom directory', async () => {
-      statePath = '/apps/myapp/src/app/my-custom-directory';
+      statePath = 'myapp/src/app/my-custom-directory';
 
       await ngrxGenerator(tree, {
         ...defaultOptions,
@@ -423,9 +420,27 @@ describe('ngrx', () => {
     it('should format files', async () => {
       jest.spyOn(devkit, 'formatFiles');
 
-      await ngrxGenerator(tree, defaultOptions);
+      await ngrxGenerator(tree, { ...defaultOptions, skipFormat: false });
 
       expect(devkit.formatFiles).toHaveBeenCalled();
+      expect(
+        tree.read('myapp/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.actions.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.models.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.reducer.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        tree.read('myapp/src/app/+state/users.selectors.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should not format files when skipFormat is true', async () => {
@@ -496,26 +511,29 @@ describe('ngrx', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await applicationGenerator(tree, {
+      await generateTestApplication(tree, {
         name: 'my-app',
         standalone: true,
         routing: true,
+        skipFormat: true,
       });
       tree.write(
-        'apps/my-app/src/app/app.component.html',
+        'my-app/src/app/app.component.html',
         '<router-outlet></router-outlet>'
       );
       tree.write(
-        'apps/my-app/src/app/app.routes.ts',
+        'my-app/src/app/app.routes.ts',
         `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-      export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];
+`
       );
     });
 
     it('should throw when the parent cannot be found', async () => {
       // ARRANGE
-      const parentPath = 'apps/my-app/src/app/non-existent.routes.ts';
+      const parentPath = 'my-app/src/app/non-existent.routes.ts';
 
       // ACT & ASSERT
       await expect(
@@ -533,25 +551,22 @@ describe('ngrx', () => {
         minimal: true,
       });
 
-      expect(tree.read('/apps/my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
-      expect(tree.exists('/apps/my-app/src/app/+state/users.actions.ts')).toBe(
+      expect(tree.read('my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(tree.exists('my-app/src/app/+state/users.actions.ts')).toBe(false);
+      expect(tree.exists('my-app/src/app/+state/users.effects.ts')).toBe(false);
+      expect(tree.exists('my-app/src/app/+state/users.effects.spec.ts')).toBe(
         false
       );
-      expect(tree.exists('/apps/my-app/src/app/+state/users.effects.ts')).toBe(
+      expect(tree.exists('my-app/src/app/+state/users.reducer.ts')).toBe(false);
+      expect(tree.exists('my-app/src/app/+state/users.selectors.ts')).toBe(
         false
       );
-      expect(
-        tree.exists('/apps/my-app/src/app/+state/users.effects.spec.ts')
-      ).toBe(false);
-      expect(tree.exists('/apps/my-app/src/app/+state/users.reducer.ts')).toBe(
+      expect(tree.exists('my-app/src/app/+state/users.selectors.spec.ts')).toBe(
         false
       );
-      expect(
-        tree.exists('/apps/my-app/src/app/+state/users.selectors.ts')
-      ).toBe(false);
-      expect(
-        tree.exists('/apps/my-app/src/app/+state/users.selectors.spec.ts')
-      ).toBe(false);
     });
 
     it('should add a root module with feature module when minimal is set to false', async () => {
@@ -561,7 +576,10 @@ describe('ngrx', () => {
         minimal: false,
       });
 
-      expect(tree.read('/apps/my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should add a feature module when route is undefined', async () => {
@@ -569,31 +587,33 @@ describe('ngrx', () => {
         ...defaultStandaloneOptions,
         root: false,
         route: undefined,
-        parent: 'apps/my-app/src/app/app.routes.ts',
+        parent: 'my-app/src/app/app.routes.ts',
       });
 
       expect(
-        tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
+        tree.read('my-app/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
     it('should add a feature module when route is non-empty', async () => {
       tree.write(
-        'apps/my-app/src/app/app.routes.ts',
+        'my-app/src/app/app.routes.ts',
         `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-      export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];`
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+export const appRoutes: Routes = [{ path: 'home', component: NxWelcomeComponent }];
+`
       );
 
       await ngrxGenerator(tree, {
         ...defaultStandaloneOptions,
         root: false,
         route: 'home',
-        parent: 'apps/my-app/src/app/app.routes.ts',
+        parent: 'my-app/src/app/app.routes.ts',
       });
 
       expect(
-        tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
+        tree.read('my-app/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -602,11 +622,11 @@ describe('ngrx', () => {
         ...defaultStandaloneOptions,
         root: false,
         route: '',
-        parent: 'apps/my-app/src/app/app.routes.ts',
+        parent: 'my-app/src/app/app.routes.ts',
       });
 
       expect(
-        tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
+        tree.read('my-app/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
     });
 
@@ -618,7 +638,10 @@ describe('ngrx', () => {
         facade: true,
       });
 
-      expect(tree.read('/apps/my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-app/src/main.ts', 'utf-8')).toMatchSnapshot();
+      expect(
+        tree.read('my-app/src/app/app.config.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
 
     it('should add facade provider when facade is true and --root is false', async () => {
@@ -627,180 +650,85 @@ describe('ngrx', () => {
         root: false,
         minimal: false,
         facade: true,
-        parent: 'apps/my-app/src/app/app.routes.ts',
+        parent: 'my-app/src/app/app.routes.ts',
       });
 
       expect(
-        tree.read('/apps/my-app/src/app/app.routes.ts', 'utf-8')
+        tree.read('my-app/src/app/app.routes.ts', 'utf-8')
       ).toMatchSnapshot();
     });
   });
 
-  describe('angular v14 support', () => {
+  describe('angular v15 support', () => {
     beforeEach(async () => {
       jest.clearAllMocks();
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await applicationGenerator(tree, { name: 'myapp' });
+      await generateTestApplication(tree, {
+        name: 'myapp',
+        standalone: false,
+        skipFormat: true,
+      });
       devkit.updateJson(tree, 'package.json', (json) => ({
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '14.0.0',
+          '@angular/core': '15.0.0',
         },
       }));
     });
 
-    it('should install the ngrx 14 packages', async () => {
+    it('should install the ngrx 15 packages', async () => {
       await ngrxGenerator(tree, defaultOptions);
 
       const packageJson = devkit.readJson(tree, 'package.json');
       expect(packageJson.dependencies['@ngrx/store']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/effects']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/entity']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/router-store']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.dependencies['@ngrx/component-store']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/schematics']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.devDependencies['@ngrx/store-devtools']).toEqual(
-        backwardCompatibleVersions.angularV14.ngrxVersion
+        backwardCompatibleVersions.angularV15.ngrxVersion
       );
       expect(packageJson.devDependencies['jasmine-marbles']).toBeDefined();
     });
+  });
 
-    it('should generate the ngrx effects with no usage of "inject"', async () => {
+  describe('rxjs v6 support', () => {
+    beforeEach(async () => {
+      tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, {
+        name: 'myapp',
+        standalone: false,
+        skipFormat: true,
+      });
+      devkit.updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          rxjs: '~6.6.7',
+        },
+      }));
+    });
+
+    it('should generate the ngrx effects using rxjs operators imported from "rxjs/operators"', async () => {
       await ngrxGenerator(tree, defaultOptions);
 
       expect(
-        tree.read('apps/myapp/src/app/+state/users.effects.ts', 'utf-8')
+        tree.read('myapp/src/app/+state/users.effects.ts', 'utf-8')
       ).toMatchSnapshot();
-    });
-
-    it('should generate the ngrx effects using "inject" for versions >= 14.1.0', async () => {
-      devkit.updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '14.1.0',
-        },
-      }));
-
-      await ngrxGenerator(tree, defaultOptions);
-
-      expect(
-        tree.read('apps/myapp/src/app/+state/users.effects.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should generate the ngrx facade with no usage of "inject"', async () => {
-      await ngrxGenerator(tree, { ...defaultOptions, facade: true });
-
-      expect(
-        tree.read('apps/myapp/src/app/+state/users.facade.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should generate the ngrx facade using "inject" for versions >= 14.1.0', async () => {
-      devkit.updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '14.1.0',
-        },
-      }));
-
-      await ngrxGenerator(tree, { ...defaultOptions, facade: true });
-
-      expect(
-        tree.read('apps/myapp/src/app/+state/users.facade.ts', 'utf-8')
-      ).toMatchSnapshot();
-    });
-
-    it('should throw when Angular version < 14.1 and NgRx < 15 but path to routes file is provided', async () => {
-      const parentPath = 'apps/myapp/src/app/app.routes.ts';
-      tree.write(
-        parentPath,
-        `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-        export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
-      );
-
-      devkit.updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '14.1.0',
-          '@ngrx/store': '14.1.0',
-        },
-      }));
-
-      // ACT & ASSERT
-      await expect(
-        ngrxGenerator(tree, {
-          ...defaultStandaloneOptions,
-          parent: parentPath,
-        })
-      ).rejects.toThrowError(
-        `The provided parent path "${parentPath}" does not contain an "NgModule".`
-      );
-    });
-
-    it('should throw when Angular version < 15 and NgRx is not currently installed but path to routes file is provided', async () => {
-      const parentPath = 'apps/myapp/src/app/app.routes.ts';
-      tree.write(
-        parentPath,
-        `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-        export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
-      );
-
-      devkit.updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '14.2.0',
-        },
-      }));
-
-      // ACT & ASSERT
-      await expect(
-        ngrxGenerator(tree, {
-          ...defaultStandaloneOptions,
-          parent: parentPath,
-        })
-      ).rejects.toThrowError(
-        `The provided parent path "${parentPath}" does not contain an "NgModule".`
-      );
-    });
-
-    it('should throw when the provided parent does not have an NgModule', async () => {
-      const parentPath = 'apps/myapp/src/app/app.routes.ts';
-      tree.write(
-        parentPath,
-        `import { Routes } from '@angular/router';
-        import { NxWelcomeComponent } from './nx-welcome.component'; 
-        export const appRoutes: Routes = [{ path: '', component: NxWelcomeComponent }];`
-      );
-
-      // ACT & ASSERT
-      await expect(
-        ngrxGenerator(tree, {
-          ...defaultStandaloneOptions,
-          parent: parentPath,
-        })
-      ).rejects.toThrowError(
-        `The provided parent path "${parentPath}" does not contain an "NgModule".`
-      );
     });
   });
 });

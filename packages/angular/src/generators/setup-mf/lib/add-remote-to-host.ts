@@ -5,12 +5,12 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import type { Schema } from '../schema';
 import { ArrayLiteralExpression } from 'typescript';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import { insertImport } from '@nx/js';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -35,25 +35,34 @@ export function addRemoteToHost(tree: Tree, options: Schema) {
       pathToMFManifest
     );
 
+    const isHostUsingTypescriptConfig = tree.exists(
+      joinPathFragments(hostProject.root, 'module-federation.config.ts')
+    );
+
     if (hostFederationType === 'static') {
-      addRemoteToStaticHost(tree, options, hostProject);
+      addRemoteToStaticHost(
+        tree,
+        options,
+        hostProject,
+        isHostUsingTypescriptConfig
+      );
     } else if (hostFederationType === 'dynamic') {
       addRemoteToDynamicHost(tree, options, pathToMFManifest);
     }
 
-    const declarationFilePath = joinPathFragments(
-      hostProject.sourceRoot,
-      'remotes.d.ts'
-    );
-
-    const declarationFileContent =
-      (tree.exists(declarationFilePath)
-        ? tree.read(declarationFilePath, 'utf-8')
-        : '') +
-      `\ndeclare module '${options.appName}/${
-        options.standalone ? `Routes` : `Module`
-      }';`;
-    tree.write(declarationFilePath, declarationFileContent);
+    // const declarationFilePath = joinPathFragments(
+    //   hostProject.sourceRoot,
+    //   'remotes.d.ts'
+    // );
+    //
+    // const declarationFileContent =
+    //   (tree.exists(declarationFilePath)
+    //     ? tree.read(declarationFilePath, 'utf-8')
+    //     : '') +
+    //   `\ndeclare module '${options.appName}/${
+    //     options.standalone ? `Routes` : `Module`
+    //   }';`;
+    // tree.write(declarationFilePath, declarationFileContent);
 
     addLazyLoadedRouteToHostAppModule(tree, options, hostFederationType);
   }
@@ -69,16 +78,19 @@ function determineHostFederationType(
 function addRemoteToStaticHost(
   tree: Tree,
   options: Schema,
-  hostProject: ProjectConfiguration
+  hostProject: ProjectConfiguration,
+  isHostUsingTypescrpt: boolean
 ) {
   const hostMFConfigPath = joinPathFragments(
     hostProject.root,
-    'module-federation.config.js'
+    isHostUsingTypescrpt
+      ? 'module-federation.config.ts'
+      : 'module-federation.config.js'
   );
 
   if (!hostMFConfigPath || !tree.exists(hostMFConfigPath)) {
     throw new Error(
-      `The selected host application, ${options.host}, does not contain a module-federation.config.js or module-federation.manifest.json file. Are you sure it has been set up as a host application?`
+      `The selected host application, ${options.host}, does not contain a module-federation.config.{ts,js} or module-federation.manifest.json file. Are you sure it has been set up as a host application?`
     );
   }
 
@@ -146,7 +158,7 @@ function addLazyLoadedRouteToHostAppModule(
       sourceFile,
       pathToHostRootRouting,
       'loadRemoteModule',
-      '@nrwl/angular/mf'
+      '@nx/angular/mf'
     );
   }
 
@@ -181,7 +193,7 @@ function addLazyLoadedRouteToHostAppModule(
     const newAppComponent = `${appComponent.slice(
       0,
       indexOfClosingMenuTag
-    )}<li><a routerLink='${options.appName}'>${
+    )}<li><a routerLink="${options.appName}">${
       names(options.appName).className
     }</a></li>\n${appComponent.slice(indexOfClosingMenuTag)}`;
     tree.write(pathToAppComponentTemplate, newAppComponent);

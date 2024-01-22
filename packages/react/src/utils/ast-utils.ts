@@ -1,12 +1,7 @@
 import type * as ts from 'typescript';
-import { findNodes } from 'nx/src/utils/typescript';
-import {
-  ChangeType,
-  logger,
-  StringChange,
-  StringInsertion,
-} from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { findNodes } from '@nx/js';
+import { ChangeType, logger, StringChange, StringInsertion } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

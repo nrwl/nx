@@ -1,16 +1,26 @@
-export function getNpmPackageVersion(packageName: string): string | null {
+export function getNpmPackageVersion(
+  packageName: string,
+  packageVersion?: string
+): string | null {
   try {
     const version = require('child_process').execSync(
-      `npm view ${packageName} version`,
+      `npm view ${packageName}${
+        packageVersion ? '@' + packageVersion : ''
+      } version --json`,
       { stdio: ['pipe', 'pipe', 'ignore'] }
     );
 
     if (version) {
-      return version
-        .toString()
-        .trim()
-        .replace(/^\n*|\n*$/g, '');
+      // package@1.12 => ["1.12.0", "1.12.1"]
+      // package@1.12.1 => "1.12.1"
+      // package@latest => "1.12.1"
+      const versionOrArray = JSON.parse(version.toString());
+
+      if (typeof versionOrArray === 'string') {
+        return versionOrArray;
+      }
+      return versionOrArray.pop();
     }
   } catch (err) {}
-  return null;
+  return packageVersion ?? null;
 }

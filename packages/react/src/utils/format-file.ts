@@ -1,5 +1,5 @@
 import { format } from 'prettier';
-import { stripIndents } from '@nrwl/devkit';
+import { stripIndents } from '@nx/devkit';
 
 export function formatFile(content, ...values) {
   return format(stripIndents(content, values), {

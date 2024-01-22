@@ -1,0 +1,22 @@
+import { Injectable, inject } from '@angular/core';
+import { createEffect, Actions, ofType } from '@ngrx/effects';<% if (!importFromOperators) { %>
+import { switchMap, catchError, of } from 'rxjs';<% } else { %>
+import { of } from 'rxjs';
+import { switchMap, catchError } from 'rxjs/operators';<% } %>
+import * as <%= className %>Actions from './<%= fileName %>.actions';
+import * as <%= className %>Feature from './<%= fileName %>.reducer';
+
+@Injectable()
+export class <%= className %>Effects {
+  private actions$ = inject(Actions);
+
+  init$ = createEffect(() => this.actions$.pipe(
+    ofType(<%= className %>Actions.init<%= className %>),
+    switchMap(() => of(<%= className %>Actions.load<%= className %>Success({ <%= propertyName %>: [] }))),
+    catchError((error) => {
+        console.error('Error', error);
+        return of(<%= className %>Actions.load<%= className %>Failure({ error }));
+      }
+    )
+  ));
+}

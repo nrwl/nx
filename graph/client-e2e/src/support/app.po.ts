@@ -45,3 +45,12 @@ export const getToggleAllButtonForFolder = (folderName: string) =>
 
 export const getSelectTargetDropdown = () =>
   cy.get('[data-cy=selected-target-dropdown]');
+
+export const openTooltipForNode = (nodeId: string) =>
+  cy.window().then((window) => {
+    // @ts-ignore - we will access private methods only in this e2e test
+    const pos = window.externalApi._graphService.renderGraph.cy
+      .$(nodeId)
+      .renderedPosition();
+    cy.get('#cytoscape-graph').click(pos.x, pos.y);
+  });

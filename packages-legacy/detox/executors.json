@@ -1,0 +1,14 @@
+{
+  "executors": {
+    "build": {
+      "implementation": "@nx/detox/src/executors/build/build.impl",
+      "schema": "@nx/detox/src/executors/build/schema.json",
+      "description": "Run the command defined in build property of the specified configuration."
+    },
+    "test": {
+      "implementation": "@nx/detox/src/executors/test/test.impl",
+      "schema": "@nx/detox/src/executors/test/schema.json",
+      "description": "Initiating your detox test suite."
+    }
+  }
+}

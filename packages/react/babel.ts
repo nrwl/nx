@@ -3,6 +3,7 @@
  */
 
 interface NxReactBabelOptions {
+  development?: boolean;
   runtime?: string;
   importSource?: string;
   useBuiltIns?: boolean | string;
@@ -10,6 +11,9 @@ interface NxReactBabelOptions {
     decoratorsBeforeExport?: boolean;
     legacy?: boolean;
   };
+  loose?: boolean;
+  /** @deprecated Use `loose` option instead of `classProperties.loose`
+   */
   classProperties?: {
     loose?: boolean;
   };
@@ -23,7 +27,7 @@ module.exports = function (api: any, options: NxReactBabelOptions) {
    */
   const isNextJs = api.caller((caller) => caller?.pagesDir);
 
-  const presets: any[] = [['@nrwl/js/babel', options]];
+  const presets: any[] = [[require.resolve('@nx/js/babel'), options]];
 
   /**
    * Next.js already includes the preset-react, and including it
@@ -51,10 +55,16 @@ module.exports = function (api: any, options: NxReactBabelOptions) {
   };
 };
 
-function getReactPresetOptions({ presetOptions, env }) {
+function getReactPresetOptions({
+  presetOptions,
+  env,
+}: {
+  env: string;
+  presetOptions: NxReactBabelOptions;
+}) {
   const reactPresetOptions: Record<string, string | boolean> = {
     runtime: presetOptions.runtime ?? 'automatic',
-    development: env !== 'production',
+    development: presetOptions.development ?? env !== 'production',
   };
 
   // JSX spread is transformed into object spread in `@babel/plugin-transform-react-jsx`

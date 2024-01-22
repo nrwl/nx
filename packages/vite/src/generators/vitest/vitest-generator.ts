@@ -1,31 +1,37 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   generateFiles,
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   addOrChangeTestTarget,
-  findExistingTargetsInProject,
   createOrEditViteConfig,
+  findExistingTargetsInProject,
 } from '../../utils/generator-utils';
 import { VitestGeneratorSchema } from './schema';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+
 import initGenerator from '../init/init';
 import {
-  vitestCoverageC8Version,
   vitestCoverageIstanbulVersion,
+  vitestCoverageV8Version,
 } from '../../utils/versions';
+
+import { addTsLibDependencies, initGenerator as jsInitGenerator } from '@nx/js';
+import { join } from 'path';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function vitestGenerator(
   tree: Tree,
-  schema: VitestGeneratorSchema
+  schema: VitestGeneratorSchema,
+  hasPlugin = false
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -33,47 +39,77 @@ export async function vitestGenerator(
     tree,
     schema.project
   );
-  let testTarget =
-    schema.testTarget ??
-    findExistingTargetsInProject(targets).validFoundTargetName.test ??
-    'test';
 
-  addOrChangeTestTarget(tree, schema, testTarget);
+  const nxJson = readNxJson(tree);
+  const hasPluginCheck = nxJson.plugins?.some(
+    (p) =>
+      (typeof p === 'string'
+        ? p === '@nx/vite/plugin'
+        : p.plugin === '@nx/vite/plugin') || hasPlugin
+  );
+  if (!hasPluginCheck) {
+    const testTarget =
+      schema.testTarget ??
+      findExistingTargetsInProject(targets).validFoundTargetName.test ??
+      'test';
+    addOrChangeTestTarget(tree, schema, testTarget);
+  }
 
-  const initTask = initGenerator(tree, {
-    uiFramework: schema.uiFramework,
-  });
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
+  const initTask = await initGenerator(tree, { skipFormat: true });
   tasks.push(initTask);
+  tasks.push(ensureDependencies(tree, schema));
 
   if (!schema.skipViteConfig) {
-    createOrEditViteConfig(
-      tree,
-      {
-        ...schema,
-        includeVitest: true,
-        includeLib: projectType === 'library',
-      },
-      true
-    );
+    if (schema.uiFramework === 'react') {
+      createOrEditViteConfig(
+        tree,
+        {
+          project: schema.project,
+          includeLib: projectType === 'library',
+          includeVitest: true,
+          inSourceTests: schema.inSourceTests,
+          rollupOptionsExternal: [
+            "'react'",
+            "'react-dom'",
+            "'react/jsx-runtime'",
+          ],
+          imports: [`import react from '@vitejs/plugin-react'`],
+          plugins: ['react()'],
+          coverageProvider: schema.coverageProvider,
+        },
+        true
+      );
+    } else {
+      createOrEditViteConfig(
+        tree,
+        {
+          ...schema,
+          includeVitest: true,
+          includeLib: projectType === 'library',
+        },
+        true
+      );
+    }
   }
 
   createFiles(tree, schema, root);
   updateTsConfig(tree, schema, root);
 
+  const coverageProviderDependency = getCoverageProviderDependency(
+    schema.coverageProvider
+  );
+
   const installCoverageProviderTask = addDependenciesToPackageJson(
     tree,
     {},
-    schema.coverageProvider === 'istanbul'
-      ? {
-          '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
-        }
-      : {
-          '@vitest/coverage-c8': vitestCoverageC8Version,
-        }
+    coverageProviderDependency
   );
   tasks.push(installCoverageProviderTask);
 
-  await formatFiles(tree);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 
   return runTasksInSerial(...tasks);
 }
@@ -83,26 +119,55 @@ function updateTsConfig(
   options: VitestGeneratorSchema,
   projectRoot: string
 ) {
-  updateJson(tree, joinPathFragments(projectRoot, 'tsconfig.json'), (json) => {
-    if (
-      json.references &&
-      !json.references.some((r) => r.path === './tsconfig.spec.json')
-    ) {
-      json.references.push({
-        path: './tsconfig.spec.json',
-      });
-    }
-
-    if (!json.compilerOptions?.types?.includes('vitest')) {
-      if (json.compilerOptions?.types) {
-        json.compilerOptions.types.push('vitest');
-      } else {
-        json.compilerOptions ??= {};
-        json.compilerOptions.types = ['vitest'];
+  if (tree.exists(joinPathFragments(projectRoot, 'tsconfig.spec.json'))) {
+    updateJson(
+      tree,
+      joinPathFragments(projectRoot, 'tsconfig.spec.json'),
+      (json) => {
+        if (!json.compilerOptions?.types?.includes('vitest')) {
+          if (json.compilerOptions?.types) {
+            json.compilerOptions.types.push('vitest');
+          } else {
+            json.compilerOptions ??= {};
+            json.compilerOptions.types = ['vitest'];
+          }
+        }
+        return json;
       }
-    }
-    return json;
-  });
+    );
+
+    updateJson(
+      tree,
+      joinPathFragments(projectRoot, 'tsconfig.json'),
+      (json) => {
+        if (
+          json.references &&
+          !json.references.some((r) => r.path === './tsconfig.spec.json')
+        ) {
+          json.references.push({
+            path: './tsconfig.spec.json',
+          });
+        }
+        return json;
+      }
+    );
+  } else {
+    updateJson(
+      tree,
+      joinPathFragments(projectRoot, 'tsconfig.json'),
+      (json) => {
+        if (!json.compilerOptions?.types?.includes('vitest')) {
+          if (json.compilerOptions?.types) {
+            json.compilerOptions.types.push('vitest');
+          } else {
+            json.compilerOptions ??= {};
+            json.compilerOptions.types = ['vitest'];
+          }
+        }
+        return json;
+      }
+    );
+  }
 
   if (options.inSourceTests) {
     const tsconfigLibPath = joinPathFragments(projectRoot, 'tsconfig.lib.json');
@@ -126,6 +191,8 @@ function updateTsConfig(
         }
       );
     }
+
+    addTsLibDependencies(tree);
   }
 }
 
@@ -134,7 +201,7 @@ function createFiles(
   options: VitestGeneratorSchema,
   projectRoot: string
 ) {
-  generateFiles(tree, joinPathFragments(__dirname, 'files'), projectRoot, {
+  generateFiles(tree, join(__dirname, 'files'), projectRoot, {
     tmpl: '',
     ...options,
     projectRoot,
@@ -142,5 +209,23 @@ function createFiles(
   });
 }
 
+function getCoverageProviderDependency(
+  coverageProvider: VitestGeneratorSchema['coverageProvider']
+) {
+  switch (coverageProvider) {
+    case 'v8':
+      return {
+        '@vitest/coverage-v8': vitestCoverageV8Version,
+      };
+    case 'istanbul':
+      return {
+        '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
+      };
+    default:
+      return {
+        '@vitest/coverage-v8': vitestCoverageV8Version,
+      };
+  }
+}
+
 export default vitestGenerator;
-export const vitestSchematic = convertNxGenerator(vitestGenerator);

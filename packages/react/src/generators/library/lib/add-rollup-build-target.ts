@@ -1,12 +1,13 @@
 import { Tree } from 'nx/src/generators/tree';
 import {
+  GeneratorCallback,
   addDependenciesToPackageJson,
   ensurePackage,
-  getWorkspaceLayout,
   joinPathFragments,
   readProjectConfiguration,
+  runTasksInSerial,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { maybeJs } from './maybe-js';
 import { NormalizedSchema } from '../schema';
@@ -20,22 +21,37 @@ export async function addRollupBuildTarget(
   host: Tree,
   options: NormalizedSchema
 ) {
-  const { rollupInitGenerator } = ensurePackage('@nrwl/rollup', nxVersion);
+  const tasks: GeneratorCallback[] = [];
 
-  // These are used in `@nrwl/react/plugins/bundle-rollup`
-  addDependenciesToPackageJson(
-    host,
-    {},
-    {
-      '@rollup/plugin-url': rollupPluginUrlVersion,
-      '@svgr/rollup': svgrRollupVersion,
-    }
+  const { configurationGenerator } = ensurePackage<typeof import('@nx/rollup')>(
+    '@nx/rollup',
+    nxVersion
   );
+  tasks.push(
+    await configurationGenerator(host, {
+      ...options,
+      project: options.name,
+      skipFormat: true,
+    })
+  );
+
+  if (!options.skipPackageJson) {
+    // These are used in `@nx/react/plugins/bundle-rollup`
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        {
+          '@rollup/plugin-url': rollupPluginUrlVersion,
+          '@svgr/rollup': svgrRollupVersion,
+        }
+      )
+    );
+  }
 
   const { targets } = readProjectConfiguration(host, options.name);
 
-  const { libsDir } = getWorkspaceLayout(host);
-  const external: string[] = [];
+  const external: string[] = ['react', 'react-dom'];
 
   if (options.style === '@emotion/styled') {
     external.push('@emotion/react/jsx-runtime');
@@ -44,18 +60,15 @@ export async function addRollupBuildTarget(
   }
 
   targets.build = {
-    executor: '@nrwl/rollup:rollup',
+    executor: '@nx/rollup:rollup',
     outputs: ['{options.outputPath}'],
     options: {
-      outputPath:
-        libsDir !== '.'
-          ? `dist/${libsDir}/${options.projectDirectory}`
-          : `dist/${options.projectDirectory}`,
+      outputPath: joinPathFragments('dist', options.projectRoot),
       tsConfig: `${options.projectRoot}/tsconfig.lib.json`,
       project: `${options.projectRoot}/package.json`,
       entryFile: maybeJs(options, `${options.projectRoot}/src/index.ts`),
       external,
-      rollupConfig: `@nrwl/react/plugins/bundle-rollup`,
+      rollupConfig: `@nx/react/plugins/bundle-rollup`,
       compiler: options.compiler ?? 'babel',
       assets: [
         {
@@ -75,5 +88,5 @@ export async function addRollupBuildTarget(
     targets,
   });
 
-  return rollupInitGenerator(host, options);
+  return runTasksInSerial(...tasks);
 }

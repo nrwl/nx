@@ -1,0 +1,39 @@
+{
+  "name": "linter-nx-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages-legacy/linter-nx",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "outputs": ["{workspaceRoot}/build/packages/{projectName}/README.md"],
+      "command": "node ./scripts/copy-readme.js linter-nx-legacy"
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "dependsOn": ["^build-base"],
+      "options": {
+        "main": "packages-legacy/linter-nx/index.ts",
+        "tsConfig": "packages-legacy/linter-nx/tsconfig.json",
+        "outputPath": "build/packages/linter-nx-legacy",
+        "assets": [
+          {
+            "input": "packages-legacy/linter-nx",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages-legacy/linter-nx",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,8 +1,8 @@
 import {
   PackageMetadata,
   ProcessedPackageMetadata,
-} from '@nrwl/nx-dev/models-package';
-import { Breadcrumbs, Footer } from '@nrwl/nx-dev/ui-common';
+} from '@nx/nx-dev/models-package';
+import { Breadcrumbs, Footer } from '@nx/nx-dev/ui-common';
 import { NextSeo } from 'next-seo';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -62,7 +62,7 @@ export function PackageSchemaSubList({
               url: vm.seo.imageUrl,
               width: 1600,
               height: 800,
-              alt: 'Nx: Smart, Fast and Extensible Build System',
+              alt: 'Nx: Smart Monorepos · Fast CI',
               type: 'image/jpeg',
             },
           ],
@@ -87,21 +87,15 @@ export function PackageSchemaSubList({
             </p>
 
             {vm.type === 'document' ? (
-              <>
-                <DocumentList documents={vm.package.documents} />
-              </>
+              <DocumentList documents={vm.package.documents} />
             ) : null}
 
             {vm.type === 'executor' ? (
-              <>
-                <SchemaList files={vm.package.executors} type={'executor'} />
-              </>
+              <SchemaList files={vm.package.executors} type={'executor'} />
             ) : null}
 
             {vm.type === 'generator' ? (
-              <>
-                <SchemaList files={vm.package.generators} type={'generator'} />
-              </>
+              <SchemaList files={vm.package.generators} type={'generator'} />
             ) : null}
           </div>
         </div>

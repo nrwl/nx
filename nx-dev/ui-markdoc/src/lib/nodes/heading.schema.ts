@@ -1,6 +1,6 @@
 import { RenderableTreeNode, Schema, Tag } from '@markdoc/markdoc';
 
-function generateID(
+export function generateID(
   children: RenderableTreeNode[],
   attributes: Record<string, any>
 ) {
@@ -10,9 +10,12 @@ function generateID(
   return children
     .filter((child) => typeof child === 'string')
     .join(' ')
-    .replace(/[?]/g, '')
-    .replace(/\s+/g, '-')
-    .toLowerCase();
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
 }
 
 export const heading: Schema = {

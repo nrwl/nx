@@ -1,18 +1,20 @@
 import {
   addProjectConfiguration,
   DependencyType,
+  formatFiles,
   ProjectGraph,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateRouterInitialNavigation from './update-router-initial-navigation';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),
+  formatFiles: jest.fn(),
 }));
 
 describe('update-router-initial-navigation migration', () => {
@@ -42,6 +44,31 @@ describe('update-router-initial-navigation migration', () => {
     tree.write(
       'apps/app1/src/app/app.module.ts',
       `import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterModule } from '@angular/router';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot([], {
+      relativeLinkResolution: 'legacy',
+      initialNavigation: 'enabled',
+    }),
+  ],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+`
+    );
+
+    await updateRouterInitialNavigation(tree);
+
+    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
       import { BrowserModule } from '@angular/platform-browser';
       import { AppComponent } from './app.component';
       import { NxWelcomeComponent } from './nx-welcome.component';
@@ -51,33 +78,17 @@ describe('update-router-initial-navigation migration', () => {
         declarations: [AppComponent, NxWelcomeComponent],
         imports: [
           BrowserModule,
-          RouterModule.forRoot([], { relativeLinkResolution: 'legacy', initialNavigation: 'enabled' }),
+          RouterModule.forRoot([], {
+            relativeLinkResolution: 'legacy',
+            initialNavigation: 'enabledBlocking',
+          }),
         ],
         bootstrap: [AppComponent],
       })
-      export class AppModule {}`
-    );
-
-    await updateRouterInitialNavigation(tree);
-
-    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
-      .toMatchInlineSnapshot(`
-      "import { NgModule } from '@angular/core';
-            import { BrowserModule } from '@angular/platform-browser';
-            import { AppComponent } from './app.component';
-            import { NxWelcomeComponent } from './nx-welcome.component';
-            import { RouterModule } from '@angular/router';
-
-            @NgModule({
-              declarations: [AppComponent, NxWelcomeComponent],
-              imports: [
-                BrowserModule,
-                RouterModule.forRoot([], { relativeLinkResolution: 'legacy', initialNavigation: 'enabledBlocking' }),
-              ],
-              bootstrap: [AppComponent],
-            })
-            export class AppModule {}"
+      export class AppModule {}
+      "
     `);
+    expect(formatFiles).toHaveBeenCalled();
   });
 
   it('should do nothing when "initialNavigation" is not set to "enabled"', async () => {
@@ -98,27 +109,50 @@ describe('update-router-initial-navigation migration', () => {
       sourceRoot: 'apps/app1/src',
     });
     const moduleContent = `import { NgModule } from '@angular/core';
-    import { BrowserModule } from '@angular/platform-browser';
-    import { AppComponent } from './app.component';
-    import { NxWelcomeComponent } from './nx-welcome.component';
-    import { RouterModule } from '@angular/router';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterModule } from '@angular/router';
 
-    @NgModule({
-      declarations: [AppComponent, NxWelcomeComponent],
-      imports: [
-        BrowserModule,
-        RouterModule.forRoot([], { relativeLinkResolution: 'legacy', initialNavigation: 'enabledNonBlocking' }),
-      ],
-      bootstrap: [AppComponent],
-    })
-    export class AppModule {}`;
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot([], {
+      relativeLinkResolution: 'legacy',
+      initialNavigation: 'enabledNonBlocking',
+    }),
+  ],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+`;
     tree.write('apps/app1/src/app/app.module.ts', moduleContent);
 
     await updateRouterInitialNavigation(tree);
 
-    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8')).toBe(
-      moduleContent
-    );
+    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { BrowserModule } from '@angular/platform-browser';
+      import { AppComponent } from './app.component';
+      import { NxWelcomeComponent } from './nx-welcome.component';
+      import { RouterModule } from '@angular/router';
+
+      @NgModule({
+        declarations: [AppComponent, NxWelcomeComponent],
+        imports: [
+          BrowserModule,
+          RouterModule.forRoot([], {
+            relativeLinkResolution: 'legacy',
+            initialNavigation: 'enabledNonBlocking',
+          }),
+        ],
+        bootstrap: [AppComponent],
+      })
+      export class AppModule {}
+      "
+    `);
   });
 
   it('should do nothing when "initialNavigation" is not set', async () => {
@@ -139,27 +173,44 @@ describe('update-router-initial-navigation migration', () => {
       sourceRoot: 'apps/app1/src',
     });
     const moduleContent = `import { NgModule } from '@angular/core';
-    import { BrowserModule } from '@angular/platform-browser';
-    import { AppComponent } from './app.component';
-    import { NxWelcomeComponent } from './nx-welcome.component';
-    import { RouterModule } from '@angular/router';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterModule } from '@angular/router';
 
-    @NgModule({
-      declarations: [AppComponent, NxWelcomeComponent],
-      imports: [
-        BrowserModule,
-        RouterModule.forRoot([], { relativeLinkResolution: 'legacy' }),
-      ],
-      bootstrap: [AppComponent],
-    })
-    export class AppModule {}`;
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot([], { relativeLinkResolution: 'legacy' }),
+  ],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+`;
     tree.write('apps/app1/src/app/app.module.ts', moduleContent);
 
     await updateRouterInitialNavigation(tree);
 
-    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8')).toBe(
-      moduleContent
-    );
+    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { BrowserModule } from '@angular/platform-browser';
+      import { AppComponent } from './app.component';
+      import { NxWelcomeComponent } from './nx-welcome.component';
+      import { RouterModule } from '@angular/router';
+
+      @NgModule({
+        declarations: [AppComponent, NxWelcomeComponent],
+        imports: [
+          BrowserModule,
+          RouterModule.forRoot([], { relativeLinkResolution: 'legacy' }),
+        ],
+        bootstrap: [AppComponent],
+      })
+      export class AppModule {}
+      "
+    `);
   });
 
   it('should do nothing when not passing extra options to "RouterModule.forRoot" call', async () => {
@@ -180,24 +231,38 @@ describe('update-router-initial-navigation migration', () => {
       sourceRoot: 'apps/app1/src',
     });
     const moduleContent = `import { NgModule } from '@angular/core';
-    import { BrowserModule } from '@angular/platform-browser';
-    import { AppComponent } from './app.component';
-    import { NxWelcomeComponent } from './nx-welcome.component';
-    import { RouterModule } from '@angular/router';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterModule } from '@angular/router';
 
-    @NgModule({
-      declarations: [AppComponent, NxWelcomeComponent],
-      imports: [BrowserModule, RouterModule.forRoot([])],
-      bootstrap: [AppComponent],
-    })
-    export class AppModule {}`;
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [BrowserModule, RouterModule.forRoot([])],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+`;
     tree.write('apps/app1/src/app/app.module.ts', moduleContent);
 
     await updateRouterInitialNavigation(tree);
 
-    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8')).toBe(
-      moduleContent
-    );
+    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { BrowserModule } from '@angular/platform-browser';
+      import { AppComponent } from './app.component';
+      import { NxWelcomeComponent } from './nx-welcome.component';
+      import { RouterModule } from '@angular/router';
+
+      @NgModule({
+        declarations: [AppComponent, NxWelcomeComponent],
+        imports: [BrowserModule, RouterModule.forRoot([])],
+        bootstrap: [AppComponent],
+      })
+      export class AppModule {}
+      "
+    `);
   });
 
   it('should no update "initialNavigation" when using a different module ".forRoot" call with similar API to "RouterModule.forRoot"', async () => {
@@ -218,22 +283,40 @@ describe('update-router-initial-navigation migration', () => {
       sourceRoot: 'apps/app1/src',
     });
     const moduleContent = `import { NgModule } from '@angular/core';
-    import { OtherModule } from '@foo/bar';
-    import { FooComponent } from './foo.component';
+import { OtherModule } from '@foo/bar';
+import { FooComponent } from './foo.component';
 
-    @NgModule({
-      declarations: [AppComponent, NxWelcomeComponent],
-      imports: [BrowserModule, OtherModule.forRoot([], { initialNavigation: 'enabled' })],
-      bootstrap: [AppComponent],
-    })
-    export class FooModule {}`;
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [
+    BrowserModule,
+    OtherModule.forRoot([], { initialNavigation: 'enabled' }),
+  ],
+  bootstrap: [AppComponent],
+})
+export class FooModule {}
+`;
     tree.write('apps/app1/src/app/app.module.ts', moduleContent);
 
     await updateRouterInitialNavigation(tree);
 
-    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8')).toBe(
-      moduleContent
-    );
+    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { OtherModule } from '@foo/bar';
+      import { FooComponent } from './foo.component';
+
+      @NgModule({
+        declarations: [AppComponent, NxWelcomeComponent],
+        imports: [
+          BrowserModule,
+          OtherModule.forRoot([], { initialNavigation: 'enabled' }),
+        ],
+        bootstrap: [AppComponent],
+      })
+      export class FooModule {}
+      "
+    `);
   });
 
   it('should do nothing when not using "@angular/router"', async () => {
@@ -254,23 +337,36 @@ describe('update-router-initial-navigation migration', () => {
       sourceRoot: 'apps/app1/src',
     });
     const moduleContent = `import { NgModule } from '@angular/core';
-    import { BrowserModule } from '@angular/platform-browser';
-    import { AppComponent } from './app.component';
-    import { NxWelcomeComponent } from './nx-welcome.component';
+import { BrowserModule } from '@angular/platform-browser';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
 
-    @NgModule({
-      declarations: [AppComponent, NxWelcomeComponent],
-      imports: [BrowserModule],
-      bootstrap: [AppComponent],
-    })
-    export class AppModule {}`;
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [BrowserModule],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+`;
     tree.write('apps/app1/src/app/app.module.ts', moduleContent);
 
     await updateRouterInitialNavigation(tree);
 
-    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8')).toBe(
-      moduleContent
-    );
+    expect(tree.read('apps/app1/src/app/app.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { BrowserModule } from '@angular/platform-browser';
+      import { AppComponent } from './app.component';
+      import { NxWelcomeComponent } from './nx-welcome.component';
+
+      @NgModule({
+        declarations: [AppComponent, NxWelcomeComponent],
+        imports: [BrowserModule],
+        bootstrap: [AppComponent],
+      })
+      export class AppModule {}
+      "
+    `);
   });
 
   it('should do nothing when using a "RouterModule.forChild" call', async () => {
@@ -291,21 +387,33 @@ describe('update-router-initial-navigation migration', () => {
       sourceRoot: 'apps/app1/src',
     });
     const moduleContent = `import { NgModule } from '@angular/core';
-    import { RouterModule } from '@angular/router';
-    import { FooComponent } from './foo.component';
+import { RouterModule } from '@angular/router';
+import { FooComponent } from './foo.component';
 
-    @NgModule({
-      declarations: [FooComponent],
-      imports: [CommonModule, RouterModule.forChild([])],
-      exports: [FooComponent],
-    })
-    export class FooModule {}`;
+@NgModule({
+  declarations: [FooComponent],
+  imports: [CommonModule, RouterModule.forChild([])],
+  exports: [FooComponent],
+})
+export class FooModule {}
+`;
     tree.write('apps/app1/src/app/foo/foo.module.ts', moduleContent);
 
     await updateRouterInitialNavigation(tree);
 
-    expect(tree.read('apps/app1/src/app/foo/foo.module.ts', 'utf-8')).toBe(
-      moduleContent
-    );
+    expect(tree.read('apps/app1/src/app/foo/foo.module.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "import { NgModule } from '@angular/core';
+      import { RouterModule } from '@angular/router';
+      import { FooComponent } from './foo.component';
+
+      @NgModule({
+        declarations: [FooComponent],
+        imports: [CommonModule, RouterModule.forChild([])],
+        exports: [FooComponent],
+      })
+      export class FooModule {}
+      "
+    `);
   });
 });

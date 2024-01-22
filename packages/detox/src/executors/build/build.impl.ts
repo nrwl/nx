@@ -1,5 +1,5 @@
-import { ExecutorContext } from '@nrwl/devkit';
-import { join } from 'path';
+import { ExecutorContext } from '@nx/devkit';
+import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
 import { DetoxBuildOptions } from './schema';
@@ -35,10 +35,11 @@ export function runCliBuild(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/detox/local-cli/cli.js'),
+      require.resolve('detox/local-cli/cli.js'),
       ['build', ...createDetoxBuildOptions(options)],
       {
-        cwd: join(workspaceRoot, projectRoot),
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        env: process.env,
       }
     );
 

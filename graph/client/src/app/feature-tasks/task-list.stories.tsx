@@ -1,7 +1,7 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { TaskList, TaskListProps } from './task-list';
 
-const Story: ComponentMeta<typeof TaskList> = {
+const meta: Meta<typeof TaskList> = {
   component: TaskList,
   title: 'TaskList',
   argTypes: {
@@ -10,13 +10,10 @@ const Story: ComponentMeta<typeof TaskList> = {
     },
   },
 };
-export default Story;
 
-const Template: ComponentStory<typeof TaskList> = (args) => (
-  <TaskList {...args} />
-);
+export default meta;
+type Story = StoryObj<typeof TaskList>;
 
-export const Primary = Template.bind({});
 const args: Partial<TaskListProps> = {
   projects: [
     {
@@ -40,7 +37,7 @@ const args: Partial<TaskListProps> = {
         root: 'apps/nested/app',
         targets: { build: { configurations: { production: {} } } },
         files: [],
-      },
+      } as any,
     },
     {
       name: 'app1-e2e',
@@ -49,7 +46,7 @@ const args: Partial<TaskListProps> = {
         root: 'apps/app1-e2e',
         targets: { e2e: { configurations: { production: {} } } },
         files: [],
-      },
+      } as any,
     },
     {
       name: 'lib1',
@@ -58,7 +55,7 @@ const args: Partial<TaskListProps> = {
         root: 'libs/lib1',
         targets: { lint: { configurations: { production: {} } } },
         files: [],
-      },
+      } as any,
     },
   ],
 
@@ -71,4 +68,7 @@ const args: Partial<TaskListProps> = {
     'app1:build': 'Missing executor',
   },
 };
-Primary.args = args;
+
+export const Primary: Story = {
+  args,
+};

@@ -1,5 +1,5 @@
 import { Dialog, Transition } from '@headlessui/react';
-import { Menu, MenuItem, MenuSection } from '@nrwl/nx-dev/models-menu';
+import { Menu, MenuItem, MenuSection } from '@nx/nx-dev/models-menu';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -107,7 +107,7 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
           </>
         )}
       </h5>
-      <ul className={cx('mb-6', collapsed ? 'hidden' : '')}>
+      <ul className={cx('mb-6 ml-3', collapsed ? 'hidden' : '')}>
         {(item.children as MenuItem[]).map((subItem, index) => {
           const isActiveLink = subItem.path === withoutAnchors(router.asPath);
           if (isActiveLink && collapsed) {
@@ -119,21 +119,25 @@ function SidebarSectionItems({ item }: { item: MenuItem }): JSX.Element {
               key={subItem.id + '-' + index}
               data-testid={`section-li:${subItem.id}`}
             >
-              <Link
-                href={subItem.path}
-                className={cx(
-                  'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
-                )}
-              >
-                <span
-                  className={cx('relative', {
-                    'text-md font-medium text-blue-500 dark:text-sky-500':
-                      isActiveLink,
-                  })}
+              {subItem.children.length ? (
+                <SidebarSectionItems item={subItem} />
+              ) : (
+                <Link
+                  href={subItem.path}
+                  className={cx(
+                    'relative block py-1 text-slate-500 transition-colors duration-200 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-300'
+                  )}
                 >
-                  {subItem.name}
-                </span>
-              </Link>
+                  <span
+                    className={cx('relative', {
+                      'text-md font-medium text-blue-500 dark:text-sky-500':
+                        isActiveLink,
+                    })}
+                  >
+                    {subItem.name}
+                  </span>
+                </Link>
+              )}
             </li>
           );
         })}
@@ -151,7 +155,7 @@ function CollapsibleIcon({
     <svg
       xmlns="http://www.w3.org/2000/svg"
       className={cx(
-        'h-3.5 w-3.5 text-slate-600 transition-all dark:text-slate-400',
+        'w-3.5 text-slate-600 transition-all dark:text-slate-400',
         !isCollapsed && 'rotate-90 transform'
       )}
       fill="none"
@@ -173,34 +177,41 @@ export function SidebarMobile({
   navIsOpen,
 }: FloatingSidebarProps): JSX.Element {
   const router = useRouter();
-  const isNxCloud: boolean = router.asPath.startsWith('/nx-cloud');
-  const isPackages: boolean = router.asPath.startsWith('/packages');
-  const isPlugins: boolean = router.asPath.startsWith('/plugins');
-  const isRecipes: boolean = router.asPath.startsWith('/recipes');
-  const isNx: boolean = !isNxCloud && !isPackages && !isPlugins && !isRecipes;
+  const isCI: boolean = router.asPath.startsWith('/ci');
+  const isAPI: boolean = router.asPath.startsWith('/nx-api');
+  const isPlugins: boolean = router.asPath.startsWith('/extending-nx');
+  const isChangelog: boolean = router.asPath.startsWith('/changelog');
+  const isAiChat: boolean = router.asPath.startsWith('/ai-chat');
+  const isNx: boolean =
+    !isCI && !isAPI && !isPlugins && !isChangelog && !isAiChat;
 
   const sections = [
     { name: 'Home', href: '/', current: false },
     { name: 'Nx', href: '/getting-started/intro', current: isNx },
     {
-      name: 'Nx Cloud',
-      href: '/nx-cloud/intro/what-is-nx-cloud',
-      current: isNxCloud,
+      name: 'CI',
+      href: '/ci/intro/ci-with-nx',
+      current: isCI,
     },
     {
-      name: 'Packages',
-      href: '/packages',
-      current: isPackages,
-    },
-    {
-      name: 'Plugins',
-      href: '/community#plugin-directory',
+      name: 'Extending Nx',
+      href: '/extending-nx/intro/getting-started',
       current: isPlugins,
     },
     {
-      name: 'Recipes',
-      href: '/recipes',
-      current: isRecipes,
+      name: 'API',
+      href: '/nx-api',
+      current: isAPI,
+    },
+    {
+      name: 'Changelog',
+      href: '/changelog',
+      current: isChangelog,
+    },
+    {
+      name: 'AI Chat (beta)',
+      href: '/ai-chat',
+      current: isAiChat,
     },
   ];
   return (

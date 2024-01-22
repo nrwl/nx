@@ -1,12 +1,18 @@
-import path = require('path');
 import json = require('./migrations.json');
 
-describe('Vite migrations', () => {
-  it('should have valid paths', () => {
-    Object.values(json.schematics).forEach((m) => {
-      expect(() =>
-        require.resolve(path.join(__dirname, `${m.factory}.ts`))
-      ).not.toThrow();
+import { assertValidMigrationPaths } from '@nx/devkit/internal-testing-utils';
+import { MigrationsJson } from '@nx/devkit';
+
+jest.mock('vite', () => ({
+  loadConfigFromFile: jest.fn().mockImplementation(() => {
+    return Promise.resolve({
+      path: 'vite.config.ts',
+      config: {},
+      dependencies: [],
     });
-  });
+  }),
+}));
+
+describe('vite migrations', () => {
+  assertValidMigrationPaths(json as MigrationsJson, __dirname);
 });

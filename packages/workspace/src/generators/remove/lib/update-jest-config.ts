@@ -3,7 +3,7 @@ import {
   ChangeType,
   ProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getSourceNodes } from '../../../utilities/typescript/get-source-nodes';
 
 import { Schema } from '../schema';
@@ -19,6 +19,15 @@ let tsModule: typeof import('typescript');
 
 function isUsingUtilityFunction(host: Tree) {
   return host.read('jest.config.ts').toString().includes('getJestProjects()');
+}
+
+/**
+ * in a standalone project, the root jest.config.ts is a project config instead
+ * of multi-project config.
+ * in that case we do not need to edit it to remove it
+ **/
+function isMonorepoConfig(tree: Tree) {
+  return tree.read('jest.config.ts', 'utf-8').includes('projects:');
 }
 
 /**
@@ -44,7 +53,8 @@ export function updateJestConfig(
   if (
     !tree.exists('jest.config.ts') ||
     !tree.exists(join(projectConfig.root, 'jest.config.ts')) ||
-    isUsingUtilityFunction(tree)
+    isUsingUtilityFunction(tree) ||
+    !isMonorepoConfig(tree)
   ) {
     return;
   }

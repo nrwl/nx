@@ -3,7 +3,7 @@
 {% youtube
 src="https://www.youtube.com/embed/hzTMKuE3CDw"
 title="Tutorial: Getting Started with Package-Based Repos"
-width="100%" /%}
+/%}
 
 {% github-repository url="https://github.com/nrwl/nx-recipes/tree/main/package-based" /%}
 
@@ -67,9 +67,29 @@ export const isEven = (x: number) => x % 2 === 0;
 
 Next install TypeScript (notice we're using `tsc` for the `build` script in `package.json` above). While we could install TypeScript at the package-level, it is more convenient to have it globally for the entire monorepo. Run the following command at the root of your workspace.
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm i typescript -D -W
+npm add -D typescript
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D typescript
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D typescript
+```
+
+{% /tab %}
+{% /tabs %}
 
 Next run your `build` script with:
 
@@ -136,9 +156,29 @@ The `workspaces` property in the root-level `package.json` tells NPM to create l
 
 At the root of your workspace run:
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
 npm install
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install
+```
+
+{% /tab %}
+{% /tabs %}
 
 NPM will create a Symbolic Link in your file system at: `node_modules/is-even` and `node_modules/is-odd`, so they reflect changes to your `packages/is-even` and `packages/is-odd` directories as they happen.
 
@@ -195,7 +235,7 @@ Note that the cache for the `build` script was already populated when we ran it 
 
 To run the `build` target for all the packages in the workspace, use:
 
-```{% command="npx nx run-many --target=build" %}
+```{% command="npx nx run-many -t build" %}
     ✔  nx run is-even:build  [existing outputs match the cache, left as is]
     ✔  nx run is-odd:build  [existing outputs match the cache, left as is]
 
@@ -208,7 +248,7 @@ To run the `build` target for all the packages in the workspace, use:
 
 Notice that both builds are replayed from cache. We can skip the cache by adding the `--skip-nx-cache` option:
 
-```{% command="npx nx run-many --target=build --skip-nx-cache" %}
+```{% command="npx nx run-many -t build --skip-nx-cache" %}
     ✔  nx run is-even:build (1s)
     ✔  nx run is-odd:build (1s)
 
@@ -221,7 +261,7 @@ Notice that using this method, the `is-even` build ran before the `is-odd` build
 
 You can also only run tasks on packages that got changed by using the command:
 
-```{% command="npx nx affected --target=build" %}
+```{% command="npx nx affected -t build" %}
 
  >  NX   Affected criteria defaulted to --base=main --head=HEAD
 

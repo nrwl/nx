@@ -10,9 +10,10 @@ export function writeNewWebpackConfig(
   mfType: IsHostRemoteConfigResult,
   projectName: string
 ) {
-  const webpackConfig = `const { withModuleFederation } = require('@nrwl/angular/module-federation');
-  const config = require('./module-federation.config');
-  module.exports = withModuleFederation(config);`;
+  const webpackConfig = `const { withModuleFederation } = require('@nx/angular/module-federation');
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config);
+`;
 
   let mfeConfig = '';
   if (!mfType) {

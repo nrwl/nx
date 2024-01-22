@@ -1,13 +1,23 @@
 import { join } from 'path';
-import type { ProjectsConfigurations } from '@nrwl/devkit';
+import type { ProjectsConfigurations } from '@nx/devkit';
 import { readWorkspaceConfig } from 'nx/src/project-graph/file-utils';
-
-const JEST_RUNNER_TOKEN = '@nrwl/jest:jest';
 
 function getJestConfigProjectPath(projectJestConfigPath: string): string {
   return join('<rootDir>', projectJestConfigPath);
 }
 
+/**
+ * Get a list of paths to all the jest config files
+ * using the Nx Jest executor.
+ *
+ * This is used to configure Jest multi-project support.
+ *
+ * To add a project not using the Nx Jest executor:
+ * export default {
+ *   projects: [...getJestProjects(), '<rootDir>/path/to/jest.config.ts'];
+ * }
+ *
+ **/
 export function getJestProjects() {
   const ws = readWorkspaceConfig({
     format: 'nx',
@@ -18,7 +28,10 @@ export function getJestProjects() {
       continue;
     }
     for (const targetConfiguration of Object.values(projectConfig.targets)) {
-      if (targetConfiguration.executor !== JEST_RUNNER_TOKEN) {
+      if (
+        targetConfiguration.executor !== '@nx/jest:jest' &&
+        targetConfiguration.executor !== '@nrwl/jest:jest'
+      ) {
         continue;
       }
       if (targetConfiguration.options?.jestConfig) {

@@ -1,5 +1,3 @@
-import { Workspaces } from '../config/workspaces';
-
 import {
   calculateReverseDeps,
   getExecutorForTask,
@@ -7,11 +5,8 @@ import {
   removeTasksFromTaskGraph,
 } from './utils';
 import { DefaultTasksRunnerOptions } from './default-tasks-runner';
-import { Hasher } from '../hasher/hasher';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph } from '../config/project-graph';
-import { NxJsonConfiguration } from '../config/nx-json';
-import { hashTask } from '../hasher/hash-task';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';
 import { reverse } from '../project-graph/operators';
 
@@ -25,29 +20,20 @@ export class TasksSchedule {
   private reverseTaskDeps = calculateReverseDeps(this.taskGraph);
   private reverseProjectGraph = reverse(this.projectGraph);
   private scheduledBatches: Batch[] = [];
-
   private scheduledTasks: string[] = [];
-
   private completedTasks = new Set<string>();
+  private scheduleRequestsExecutionChain = Promise.resolve();
 
   constructor(
-    private readonly hasher: Hasher,
-    private readonly nxJson: NxJsonConfiguration,
     private readonly projectGraph: ProjectGraph,
     private readonly taskGraph: TaskGraph,
-    private readonly workspaces: Workspaces,
     private readonly options: DefaultTasksRunnerOptions
   ) {}
 
   public async scheduleNextTasks() {
-    if (process.env.NX_BATCH_MODE === 'true') {
-      this.scheduleBatches();
-    }
-    for (let root of this.notScheduledTaskGraph.roots) {
-      if (this.canBeScheduled(root)) {
-        await this.scheduleTask(root);
-      }
-    }
+    this.scheduleRequestsExecutionChain =
+      this.scheduleRequestsExecutionChain.then(() => this.scheduleTasks());
+    await this.scheduleRequestsExecutionChain;
   }
 
   public hasTasks() {
@@ -69,6 +55,13 @@ export class TasksSchedule {
     );
   }
 
+  public getAllScheduledTasks() {
+    return {
+      scheduledTasks: this.scheduledTasks,
+      scheduledBatches: this.scheduledBatches,
+    };
+  }
+
   public nextTask() {
     if (this.scheduledTasks.length > 0) {
       return this.taskGraph.tasks[this.scheduledTasks.shift()];
@@ -83,24 +76,22 @@ export class TasksSchedule {
       : null;
   }
 
-  private async scheduleTask(taskId: string) {
-    const task = this.taskGraph.tasks[taskId];
-
-    if (!task.hash) {
-      await hashTask(
-        this.workspaces,
-        this.hasher,
-        this.projectGraph,
-        this.taskGraph,
-        task
-      );
+  private async scheduleTasks() {
+    if (this.options.batch || process.env.NX_BATCH_MODE === 'true') {
+      await this.scheduleBatches();
     }
+    for (let root of this.notScheduledTaskGraph.roots) {
+      if (this.canBeScheduled(root)) {
+        await this.scheduleTask(root);
+      }
+    }
+  }
 
+  private async scheduleTask(taskId: string) {
     this.notScheduledTaskGraph = removeTasksFromTaskGraph(
       this.notScheduledTaskGraph,
       [taskId]
     );
-    this.options.lifeCycle.scheduleTask(task);
     this.scheduledTasks = this.scheduledTasks
       .concat(taskId)
       // NOTE: sort task by most dependent on first
@@ -128,16 +119,15 @@ export class TasksSchedule {
       });
   }
 
-  private scheduleBatches() {
+  private async scheduleBatches() {
     const batchMap: Record<string, TaskGraph> = {};
     for (const root of this.notScheduledTaskGraph.roots) {
       const rootTask = this.notScheduledTaskGraph.tasks[root];
-      const executorName = getExecutorNameForTask(
+      const executorName = await getExecutorNameForTask(
         rootTask,
-        this.nxJson,
         this.projectGraph
       );
-      this.processTaskForBatches(batchMap, rootTask, executorName, true);
+      await this.processTaskForBatches(batchMap, rootTask, executorName, true);
     }
     for (const [executorName, taskGraph] of Object.entries(batchMap)) {
       this.scheduleBatch({ executorName, taskGraph });
@@ -154,23 +144,21 @@ export class TasksSchedule {
     this.scheduledBatches.push({ executorName, taskGraph });
   }
 
-  private processTaskForBatches(
+  private async processTaskForBatches(
     batches: Record<string, TaskGraph>,
     task: Task,
     rootExecutorName: string,
     isRoot: boolean
   ) {
-    const { batchImplementationFactory } = getExecutorForTask(
+    if (!this.canBatchTaskBeScheduled(task.id, batches[rootExecutorName])) {
+      return;
+    }
+
+    const { batchImplementationFactory } = await getExecutorForTask(
       task,
-      this.workspaces,
-      this.projectGraph,
-      this.nxJson
-    );
-    const executorName = getExecutorNameForTask(
-      task,
-      this.nxJson,
       this.projectGraph
     );
+    const executorName = await getExecutorNameForTask(task, this.projectGraph);
     if (rootExecutorName !== executorName) {
       return;
     }
@@ -196,8 +184,23 @@ export class TasksSchedule {
 
     for (const dep of this.reverseTaskDeps[task.id]) {
       const depTask = this.taskGraph.tasks[dep];
-      this.processTaskForBatches(batches, depTask, rootExecutorName, false);
+      await this.processTaskForBatches(
+        batches,
+        depTask,
+        rootExecutorName,
+        false
+      );
     }
+  }
+
+  private canBatchTaskBeScheduled(
+    taskId: string,
+    batchTaskGraph: TaskGraph | undefined
+  ): boolean {
+    // all deps have either completed or belong to the same batch
+    return this.taskGraph.dependencies[taskId].every(
+      (id) => this.completedTasks.has(id) || !!batchTaskGraph?.tasks[id]
+    );
   }
 
   private canBeScheduled(taskId: string) {

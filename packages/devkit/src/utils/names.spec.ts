@@ -47,5 +47,6 @@ describe('names', () => {
     expect(names('foo-@bar').constantName).toEqual('FOO_BAR');
     expect(names(' foo bar').constantName).toEqual('FOO_BAR');
     expect(names('_foo_bar').constantName).toEqual('FOO_BAR');
+    expect(names('FOO_BAR').constantName).toEqual('FOO_BAR');
   });
 });

@@ -3,8 +3,8 @@ import {
   readNxJson,
   Tree,
   updateNxJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { NormalizedSchema } from '../schema';
 import { updateDefaultProject } from './update-default-project';
 

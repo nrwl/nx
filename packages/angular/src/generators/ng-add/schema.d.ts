@@ -1,11 +1,8 @@
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/eslint';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import type { Styles } from '../utils/types';
 
 export interface GeneratorOptions {
-  skipInstall?: boolean;
-  npmScope?: string;
-  preserveAngularCliLayout?: boolean;
   defaultBase?: string;
 
   unitTestRunner?: UnitTestRunner;

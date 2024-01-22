@@ -4,20 +4,31 @@ The JS plugin contains executors and generators that are useful for JavaScript/T
 
 ### Installation
 
-In any Nx workspace, you can install `@nrwl/js` by running the following commands if `@nrwl/js` package is not installed:
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/js` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
+In any Nx workspace, you can install `@nx/js` by running the following commands if `@nx/js` package is not installed:
 
 {% tabs %}
-{%tab label="npm"%}
+{% tab label="npm" %}
 
 ```shell
-npm i --save-dev @nrwl/js
+npm add -D @nx/js
 ```
 
 {% /tab %}
-{%tab label="yarn"%}
+{% tab label="yarn" %}
 
 ```shell
-yarn add --dev @nrwl/js
+yarn add -D @nx/js
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @nx/js
 ```
 
 {% /tab %}
@@ -25,7 +36,7 @@ yarn add --dev @nrwl/js
 
 ### `ts` Preset
 
-When initializing a new Nx workspace, specifying `--preset=ts` will generate a workspace with `@nrwl/js` pre-installed.
+When initializing a new Nx workspace, specifying `--preset=ts` will generate a workspace with `@nx/js` pre-installed.
 
 {% tabs %}
 {%tab label="npm"%}
@@ -49,18 +60,18 @@ yarn create nx-workspace my-org --preset=ts
 You can add a new JS/TS library with the following command:
 
 ```shell
-nx g @nrwl/js:lib my-lib
+nx g @nx/js:lib my-lib
 ```
 
 ## Build
 
-You can `build` libraries that are generated with `--buildable` flag.
+You can `build` libraries that are generated with a bundler specified.
 
 ```shell
-nx g @nrwl/js:lib my-buildable-lib --buildable
+nx g @nx/js:lib my-buildable-lib --bundler=rollup
 ```
 
-Generating a library with `--buildable` will add a `build` target to the library's `project.json` file allows the library to be built.
+Generating a library with `--bundler` specified will add a `build` target to the library's `project.json` file allows the library to be built.
 
 ```shell
 nx build my-buildable-lib
@@ -84,9 +95,9 @@ nx lint my-lib
 
 ## Compiler
 
-By default, `@nrwl/js` uses [TypeScript Compiler (TSC)](https://www.typescriptlang.org/docs/handbook/2/basic-types.html#tsc-the-typescript-compiler), via `@nrwl/js:tsc` executor, to compile your libraries. Optionally, you can switch `tsc` out for a different compiler with `--compiler` flag when executing the generators.
+By default, `@nx/js` uses [TypeScript Compiler (TSC)](https://www.typescriptlang.org/docs/handbook/2/basic-types.html#tsc-the-typescript-compiler), via `@nx/js:tsc` executor, to compile your libraries. Optionally, you can switch `tsc` out for a different compiler with `--compiler` flag when executing the generators.
 
-Currently, `@nrwl/js` supports the following compilers:
+Currently, `@nx/js` supports the following compilers:
 
 - [Speedy Web Compiler (SWC)](https://swc.rs)
 
@@ -95,15 +106,15 @@ Currently, `@nrwl/js` supports the following compilers:
 - Create a buildable library with `swc`
 
 ```shell
-nx g @nrwl/js:lib my-swc-lib --compiler=swc --buildable
+nx g @nx/js:lib my-swc-lib --bundler=swc
 ```
 
 - Convert a `tsc` library to use `swc`
 
 ```shell
-nx g @nrwl/js:convert-to-swc my-buildable-lib
+nx g @nx/js:convert-to-swc my-buildable-lib
 ```
 
-Now the `build` command will use `@nrwl/js:swc` executor to compile your libraries.
+Now the `build` command will use `@nx/js:swc` executor to compile your libraries.
 
-> The first time you generate a `swc` library or convert a `tsc` library over to `swc`, `@nrwl/js` will install the necessary dependencies to use `swc`.
+> The first time you generate a `swc` library or convert a `tsc` library over to `swc`, `@nx/js` will install the necessary dependencies to use `swc`.

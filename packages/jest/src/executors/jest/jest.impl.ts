@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import { runCLI } from 'jest';
 import { readConfig, readConfigs } from 'jest-config';
 import { utils as jestReporterUtils } from '@jest/reporters';
@@ -12,7 +11,7 @@ import {
   stripIndents,
   TaskGraph,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getSummary } from './summary';
 import { readFileSync } from 'fs';
 import type { BatchResults } from 'nx/src/tasks-runner/batch/batch-messages';
@@ -71,6 +70,7 @@ export async function jestConfigParser(
     ci: options.ci,
     color: options.color,
     detectOpenHandles: options.detectOpenHandles,
+    forceExit: options.forceExit,
     logHeapUsage: options.logHeapUsage,
     detectLeaks: options.detectLeaks,
     json: options.json,
@@ -94,6 +94,7 @@ export async function jestConfigParser(
     useStderr: options.useStderr,
     watch: options.watch,
     watchAll: options.watchAll,
+    randomize: options.randomize,
   };
 
   if (!multiProjects) {

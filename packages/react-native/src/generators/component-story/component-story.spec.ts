@@ -1,7 +1,7 @@
-import { getProjects, Tree, updateProjectConfiguration } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { getProjects, Tree, updateProjectConfiguration } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import componentStoryGenerator from './component-story';
-import { Linter } from '@nrwl/linter';
+import { Linter } from '@nx/eslint';
 
 import { formatFile } from '../../utils/format-file';
 import libraryGenerator from '../library/library';
@@ -9,9 +9,8 @@ import componentGenerator from '../component/component';
 
 describe('react-native:component-story', () => {
   let appTree: Tree;
-  let cmpPath = 'libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.tsx';
-  let storyFilePath =
-    'libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx';
+  let cmpPath = 'test-ui-lib/src/lib/test-ui-lib/test-ui-lib.tsx';
+  let storyFilePath = 'test-ui-lib/src/lib/test-ui-lib/test-ui-lib.stories.tsx';
 
   describe('default setup', () => {
     beforeEach(async () => {
@@ -34,7 +33,7 @@ describe('react-native:component-story', () => {
           });
         } catch (e) {
           expect(e.message).toContain(
-            'Could not find any React Native component in file libs/test-ui-lib/src/lib/test-ui-lib/test-ui-lib.tsx'
+            'Could not find any React Native component in file test-ui-lib/src/lib/test-ui-lib/test-ui-lib.tsx'
           );
         }
       });
@@ -56,27 +55,29 @@ describe('react-native:component-story', () => {
         expect(
           formatFile`${appTree.read(storyFilePath, 'utf-8').replace('·', '')}`
         ).toContain(formatFile`
-          import { storiesOf } from '@storybook/react-native';
-          import React from 'react';
-          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-          const props: TestUiLibProps = {};
-          storiesOf('TestUiLib', module)            
-            .add('Primary', () => <TestUiLib {...props} />);
+        import type { Meta } from '@storybook/react-native';
+        import { TestUiLib } from './test-ui-lib';
+        const Story: Meta<typeof TestUiLib> = {
+          component: TestUiLib,
+          title: 'TestUiLib',
+        };
+        export default Story;
+        export const Primary = { args: {} };
           `);
       });
     });
 
     describe('when using plain JS components', () => {
       let storyFilePathPlain =
-        'libs/test-ui-lib/src/lib/test-ui-libplain.stories.jsx';
+        'test-ui-lib/src/lib/test-ui-libplain.stories.jsx';
 
       beforeEach(async () => {
         appTree.write(
-          'libs/test-ui-lib/src/lib/test-ui-libplain.jsx',
+          'test-ui-lib/src/lib/test-ui-libplain.jsx',
           `import React from 'react';
-  
+
           import './test.scss';
-          
+
           export const Test = () => {
             return (
               <div>
@@ -84,8 +85,8 @@ describe('react-native:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -102,14 +103,9 @@ describe('react-native:component-story', () => {
       it('should properly set up the story', () => {
         expect(formatFile`${appTree.read(storyFilePathPlain, 'utf-8')}`)
           .toContain(formatFile`
-    import { storiesOf } from '@storybook/react-native';
-    import React from 'react';
-    import { Test } from './test-ui-libplain';
-
-    const props = {};
-
-    storiesOf('Test', module)
-      .add('Primary', () => <Test {...props} />);
+          import Test from './test-ui-libplain';
+          export default { component: Test, title: 'Test' };
+          export const Primary = { args: {} };
           `);
       });
     });
@@ -121,7 +117,7 @@ describe('react-native:component-story', () => {
           `import React from 'react';
 
           import { View, Text } from 'react-native';
-          
+
           export function Test() {
             return (
               <View>
@@ -129,8 +125,8 @@ describe('react-native:component-story', () => {
               </View>
             );
           }
-          
-          export default Test;   
+
+          export default Test;
           `
         );
         await componentStoryGenerator(appTree, {
@@ -142,12 +138,11 @@ describe('react-native:component-story', () => {
       it('should create a story without controls', () => {
         expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
           .toContain(formatFile`
-          import { storiesOf } from '@storybook/react-native';
-          import React from 'react';
+          import type { Meta } from '@storybook/react-native';
           import { Test } from './test-ui-lib';
-          const props = {};
-          storiesOf('Test', module)
-            .add('Primary', () => <Test {...props} />);
+          const Story: Meta<typeof Test> = { component: Test, title: 'Test' };
+          export default Story;
+          export const Primary = { args: {} };
           `);
       });
     });
@@ -164,12 +159,14 @@ describe('react-native:component-story', () => {
         expect(
           formatFile`${appTree.read(storyFilePath, 'utf-8').replace('·', '')}`
         ).toContain(formatFile`
-          import { storiesOf } from '@storybook/react-native';
-          import React from 'react';
-          import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-          const props: TestUiLibProps = {};
-          storiesOf('TestUiLib', module)
-            .add('Primary', () => <TestUiLib {...props} />);
+        import type { Meta } from '@storybook/react-native';
+        import { TestUiLib } from './test-ui-lib';
+        const Story: Meta<typeof TestUiLib> = {
+          component: TestUiLib,
+          title: 'TestUiLib',
+        };
+        export default Story;
+        export const Primary = { args: {} };
           `);
       });
     });
@@ -181,14 +178,14 @@ describe('react-native:component-story', () => {
           `import React from 'react';
 
           export type ButtonStyle = 'default' | 'primary' | 'warning';
-          
+
           export interface TestProps {
             name: string;
             displayAge: boolean;
             someAction: (e: unknown) => void;
             style: ButtonStyle;
           }
-          
+
           export const Test = (props: TestProps) => {
             return (
               <div>
@@ -197,8 +194,8 @@ describe('react-native:component-story', () => {
               </div>
             );
           };
-          
-          export default Test;        
+
+          export default Test;
           `
         );
 
@@ -212,14 +209,15 @@ describe('react-native:component-story', () => {
         expect(
           formatFile`${appTree.read(storyFilePath, 'utf-8').replace('·', '')}`
         ).toContain(formatFile`
-        import { action } from '@storybook/addon-actions';
-        import { storiesOf } from '@storybook/react-native';
-        import React from 'react';
-        import { Test, TestProps } from './test-ui-lib';
-        const actions = { someAction: action('someAction executed!') };
-        const props: TestProps = { name: '', displayAge: false };
-        storiesOf('Test', module)
-          .add('Primary', () => <Test {...props} {...actions} />);
+        import type { Meta } from '@storybook/react-native';
+        import { Test } from './test-ui-lib';
+        const Story: Meta<typeof Test> = {
+          component: Test,
+          title: 'Test',
+          argTypes: { someAction: { action: 'someAction executed!' } },
+        };
+        export default Story;
+        export const Primary = { args: { name: '', displayAge: false } };
           `);
       });
     });
@@ -339,12 +337,12 @@ describe('react-native:component-story', () => {
           appTree.write(
             cmpPath,
             `import React from 'react';
-            
+
             export interface TestProps {
               name: string;
               displayAge: boolean;
             }
-            
+
             ${config.src}
             `
           );
@@ -359,15 +357,11 @@ describe('react-native:component-story', () => {
           expect(
             formatFile`${appTree.read(storyFilePath, 'utf-8').replace('·', '')}`
           ).toContain(formatFile`
-    import { storiesOf } from '@storybook/react-native';
-    import React from 'react';
-    import { Test, TestProps } from './test-ui-lib';
-    const props: TestProps = {
-      name: '',
-      displayAge: false,
-    };
-    storiesOf('Test', module)
-      .add('Primary', () => <Test {...props} />);
+    import type { Meta } from '@storybook/react-native';
+    import { Test } from './test-ui-lib';
+    const Story: Meta<typeof Test> = { component: Test, title: 'Test' };
+    export default Story;
+    export const Primary = { args: { name: '', displayAge: false } };
           `);
         });
       });
@@ -391,21 +385,21 @@ describe('react-native:component-story', () => {
     it('should properly set up the story', () => {
       expect(formatFile`${appTree.read(storyFilePath, 'utf-8')}`)
         .toContain(formatFile`
-        import { storiesOf } from '@storybook/react-native';
-        import React from 'react';
-        import { TestUiLib, TestUiLibProps } from './test-ui-lib';
-
-        const props: TestUiLibProps = {};
-
-        storiesOf('TestUiLib', module)
-          .add('Primary', () => <TestUiLib {...props} />);
+    import type { Meta } from '@storybook/react-native';
+    import { TestUiLib } from './test-ui-lib';
+    const Story: Meta<typeof TestUiLib> = {
+      component: TestUiLib,
+      title: 'TestUiLib',
+    };
+    export default Story;
+    export const Primary = { args: {} };
         `);
     });
   });
 });
 
 export async function createTestUILib(libName: string): Promise<Tree> {
-  let appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  let appTree = createTreeWithEmptyWorkspace();
   appTree.write('.gitignore', '');
 
   await libraryGenerator(appTree, {
@@ -414,6 +408,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'jest',
+    projectNameAndRootFormat: 'as-provided',
   });
 
   await componentGenerator(appTree, {
@@ -425,7 +420,6 @@ export async function createTestUILib(libName: string): Promise<Tree> {
   const currentWorkspaceJson = getProjects(appTree);
 
   const projectConfig = currentWorkspaceJson.get(libName);
-  projectConfig.targets.lint.options.linter = 'eslint';
 
   updateProjectConfiguration(appTree, libName, projectConfig);
 

@@ -1,8 +1,8 @@
-import { readNxJson, Tree, updateNxJson } from '@nrwl/devkit';
+import { readNxJson, Tree, updateNxJson } from '@nx/devkit';
 import { NormalizedSchema } from '../schema';
 
 export function setDefaults(host: Tree, options: NormalizedSchema) {
-  if (options.skipWorkspaceJson) {
+  if (options.skipNxJson) {
     return;
   }
 
@@ -13,11 +13,12 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
   }
 
   nxJson.generators = nxJson.generators || {};
-  nxJson.generators['@nrwl/react'] = nxJson.generators['@nrwl/react'] || {};
+  nxJson.generators['@nx/react'] = nxJson.generators['@nx/react'] || {};
 
-  const prev = { ...nxJson.generators['@nrwl/react'] };
+  const prev = { ...nxJson.generators['@nx/react'] };
 
   const appDefaults = {
+    babel: true,
     style: options.style,
     linter: options.linter,
     bundler: options.bundler,
@@ -35,7 +36,7 @@ export function setDefaults(host: Tree, options: NormalizedSchema) {
 
   nxJson.generators = {
     ...nxJson.generators,
-    '@nrwl/react': {
+    '@nx/react': {
       ...prev,
       application: appDefaults,
       component: componentDefaults,

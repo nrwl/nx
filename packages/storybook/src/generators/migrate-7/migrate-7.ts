@@ -1,25 +1,25 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   readJson,
+  runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+} from '@nx/devkit';
+
 import { output } from 'nx/src/utils/output';
 import { litVersion } from '../../utils/versions';
 import { callAutomigrate, callUpgrade } from './calling-storybook-cli';
 import {
-  removeUiFrameworkFromProjectJson,
-  getAllStorybookInfo,
-  prepareFiles,
-  handleMigrationResult,
   afterMigration,
-  checkWebComponentsInstalled,
   checkStorybookInstalled,
+  checkWebComponentsInstalled,
+  getAllStorybookInfo,
+  handleMigrationResult,
   logResult,
   onlyShowGuide,
+  prepareFiles,
+  removeUiFrameworkFromProjectJson,
 } from './helper-functions';
 import { Schema } from './schema';
 
@@ -67,9 +67,9 @@ export async function migrate7Generator(tree: Tree, schema: Schema) {
 
       migrateResult = callAutomigrate(allStorybookProjects, schema);
 
-      handleMigrationResult(
+      migrateResult = handleMigrationResult(
         migrateResult,
-        Object.keys(allStorybookProjects).length
+        allStorybookProjects
       );
     }
   }
@@ -106,4 +106,3 @@ export async function migrate7Generator(tree: Tree, schema: Schema) {
 }
 
 export default migrate7Generator;
-export const migrate7Schematic = convertNxGenerator(migrate7Generator);

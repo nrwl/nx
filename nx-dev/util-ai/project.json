@@ -1,0 +1,30 @@
+{
+  "name": "nx-dev-util-ai",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "nx-dev/util-ai/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/nx-dev/util-ai",
+        "main": "nx-dev/util-ai/src/index.ts",
+        "tsConfig": "nx-dev/util-ai/tsconfig.lib.json",
+        "assets": ["nx-dev/util-ai/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "nx-dev/util-ai/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,38 +1,43 @@
-import {
-  extendReactEslintJson,
-  extraEslintDependencies,
-} from '../../utils/lint';
+import { extraEslintDependencies } from '../../utils/lint';
 import { NormalizedSchema, Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
-import { addProject } from './lib/add-project';
-import { addCypress } from './lib/add-cypress';
+import { addProject, maybeJs } from './lib/add-project';
 import { addJest } from './lib/add-jest';
 import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
 import { addStyledModuleDependencies } from '../../rules/add-styled-dependencies';
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   ensurePackage,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  logger,
+  runTasksInSerial,
+  stripIndents,
   Tree,
-  updateJson,
-} from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+} from '@nx/devkit';
+
 import reactInitGenerator from '../init/init';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { mapLintPattern } from '@nrwl/linter/src/generators/lint-project/lint-project';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import {
+  babelLoaderVersion,
+  nxRspackVersion,
   nxVersion,
-  swcCoreVersion,
-  swcLoaderVersion,
 } from '../../utils/versions';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import * as chalk from 'chalk';
+import { showPossibleWarnings } from './lib/show-possible-warnings';
+import { addE2e } from './lib/add-e2e';
+import {
+  addExtendsToLintConfig,
+  isEslintConfigSupported,
+} from '@nx/eslint/src/generators/utils/eslint-file';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -44,37 +49,24 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
         joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [
-        mapLintPattern(
-          options.appProjectRoot,
-          '{ts,tsx,js,jsx}',
-          options.rootProject
-        ),
-      ],
       skipFormat: true,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
     });
     tasks.push(lintTask);
 
-    updateJson(
-      host,
-      joinPathFragments(options.appProjectRoot, '.eslintrc.json'),
-      extendReactEslintJson
-    );
+    if (isEslintConfigSupported(host)) {
+      addExtendsToLintConfig(host, options.appProjectRoot, 'plugin:@nx/react');
+    }
 
     if (!options.skipPackageJson) {
-      const installTask = await addDependenciesToPackageJson(
+      const installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        {
-          ...extraEslintDependencies.devDependencies,
-          ...(options.compiler === 'swc'
-            ? { '@swc/core': swcCoreVersion, 'swc-loader': swcLoaderVersion }
-            : {}),
-        }
+        extraEslintDependencies.devDependencies
       );
-      tasks.push(installTask);
+      const addSwcTask = addSwcDependencies(host);
+      tasks.push(installTask, addSwcTask);
     }
   }
   return runTasksInSerial(...tasks);
@@ -84,18 +76,50 @@ export async function applicationGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  return await applicationGeneratorInternal(host, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(
+  host: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
   const tasks = [];
 
-  const options = normalizeOptions(host, schema);
+  const options = await normalizeOptions(host, schema);
+  showPossibleWarnings(host, options);
+
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
 
   const initTask = await reactInitGenerator(host, {
     ...options,
     skipFormat: true,
-    skipBabelConfig: options.bundler === 'vite',
-    skipHelperLibs: options.bundler === 'vite',
   });
-
   tasks.push(initTask);
+
+  if (options.bundler === 'webpack') {
+    const { webpackInitGenerator } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    const webpackInitTask = await webpackInitGenerator(host, {
+      skipPackageJson: options.skipPackageJson,
+      skipFormat: true,
+    });
+    tasks.push(webpackInitTask);
+    if (!options.skipPackageJson) {
+      const { ensureDependencies } = await import(
+        '@nx/webpack/src/utils/ensure-dependencies'
+      );
+      tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
+    }
+  }
 
   if (!options.rootProject) {
     extractTsConfigBase(host);
@@ -105,10 +129,8 @@ export async function applicationGenerator(
   addProject(host, options);
 
   if (options.bundler === 'vite') {
-    const { viteConfigurationGenerator } = ensurePackage(
-      '@nrwl/vite',
-      nxVersion
-    );
+    const { createOrEditViteConfig, viteConfigurationGenerator } =
+      ensurePackage<typeof import('@nx/vite')>('@nx/vite', nxVersion);
     // We recommend users use `import.meta.env.MODE` and other variables in their code to differentiate between production and development.
     // See: https://vitejs.dev/guide/env-and-mode.html
     if (
@@ -125,26 +147,84 @@ export async function applicationGenerator(
       newProject: true,
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
+      compiler: options.compiler,
+      skipFormat: true,
     });
     tasks.push(viteTask);
-  } else if (options.bundler === 'webpack') {
-    const { webpackInitGenerator } = ensurePackage('@nrwl/webpack', nxVersion);
-    const webpackInitTask = await webpackInitGenerator(host, {
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: options.unitTestRunner === 'vitest',
+        inSourceTests: options.inSourceTests,
+        rollupOptionsExternal: [
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
+        ],
+        imports: [
+          options.compiler === 'swc'
+            ? `import react from '@vitejs/plugin-react-swc'`
+            : `import react from '@vitejs/plugin-react'`,
+        ],
+        plugins: ['react()'],
+      },
+      false
+    );
+  } else if (options.bundler === 'rspack') {
+    const { configurationGenerator } = ensurePackage(
+      '@nx/rspack',
+      nxRspackVersion
+    );
+    const rspackTask = await configurationGenerator(host, {
+      project: options.projectName,
+      main: joinPathFragments(
+        options.appProjectRoot,
+        maybeJs(options, `src/main.tsx`)
+      ),
+      tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      target: 'web',
+      newProject: true,
       uiFramework: 'react',
     });
-    tasks.push(webpackInitTask);
+    tasks.push(rspackTask);
   }
 
   if (options.bundler !== 'vite' && options.unitTestRunner === 'vitest') {
-    const { vitestGenerator } = ensurePackage('@nrwl/vite', nxVersion);
+    const { createOrEditViteConfig, vitestGenerator } = ensurePackage<
+      typeof import('@nx/vite')
+    >('@nx/vite', nxVersion);
 
     const vitestTask = await vitestGenerator(host, {
       uiFramework: 'react',
-      coverageProvider: 'c8',
+      coverageProvider: 'v8',
       project: options.projectName,
       inSourceTests: options.inSourceTests,
+      skipFormat: true,
     });
     tasks.push(vitestTask);
+    createOrEditViteConfig(
+      host,
+      {
+        project: options.projectName,
+        includeLib: false,
+        includeVitest: true,
+        inSourceTests: options.inSourceTests,
+        rollupOptionsExternal: [
+          "'react'",
+          "'react-dom'",
+          "'react/jsx-runtime'",
+        ],
+        imports: [
+          options.compiler === 'swc'
+            ? `import react from '@vitejs/plugin-react-swc'`
+            : `import react from '@vitejs/plugin-react'`,
+        ],
+        plugins: ['react()'],
+      },
+      true
+    );
   }
 
   if (
@@ -162,8 +242,8 @@ export async function applicationGenerator(
   const lintTask = await addLinting(host, options);
   tasks.push(lintTask);
 
-  const cypressTask = await addCypress(host, options);
-  tasks.push(cypressTask);
+  const e2eTask = await addE2e(host, options);
+  tasks.push(e2eTask);
 
   if (options.unitTestRunner === 'jest') {
     const jestTask = await addJest(host, options);
@@ -174,11 +254,51 @@ export async function applicationGenerator(
   updateSpecConfig(host, options);
   const stylePreprocessorTask = installCommonDependencies(host, options);
   tasks.push(stylePreprocessorTask);
-  const styledTask = addStyledModuleDependencies(host, options.styledModule);
+  const styledTask = addStyledModuleDependencies(host, options);
   tasks.push(styledTask);
   const routingTask = addRouting(host, options);
   tasks.push(routingTask);
   setDefaults(host, options);
+
+  if (options.bundler === 'rspack' && options.style === 'styled-jsx') {
+    logger.warn(
+      `${chalk.bold('styled-jsx')} is not supported by ${chalk.bold(
+        'Rspack'
+      )}. We've added ${chalk.bold(
+        'babel-loader'
+      )} to your project, but using babel will slow down your build.`
+    );
+
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {},
+        { 'babel-loader': babelLoaderVersion }
+      )
+    );
+
+    host.write(
+      joinPathFragments(options.appProjectRoot, 'rspack.config.js'),
+      stripIndents`
+        const { composePlugins, withNx, withWeb } = require('@nx/rspack');
+        module.exports = composePlugins(withNx(), withWeb(), (config) => {
+          config.module.rules.push({
+            test: /\\.[jt]sx$/i,
+            use: [
+              {
+                loader: 'babel-loader',
+                options: {
+                  presets: ['@babel/preset-typescript'],
+                  plugins: ['styled-jsx/babel'],
+                },
+              },
+            ],
+          });
+          return config;
+        });
+        `
+    );
+  }
 
   if (!options.skipFormat) {
     await formatFiles(host);
@@ -188,4 +308,3 @@ export async function applicationGenerator(
 }
 
 export default applicationGenerator;
-export const applicationSchematic = convertNxGenerator(applicationGenerator);

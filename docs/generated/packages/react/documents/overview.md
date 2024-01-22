@@ -8,24 +8,48 @@ It provides:
 
 ## Setting Up React
 
-To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react`.
+To create a new workspace with React, run `npx create-nx-workspace@latest --preset=react-standalone`.
+
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/react` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
 
 To add the React plugin to an existing workspace, run one of the following:
 
-```shell
-# For npm users
-npm install -D @nrwl/react
+{% tabs %}
+{% tab label="npm" %}
 
-# For yarn users
-yarn add -D @nrwl/react
+```shell
+npm add -D @nx/react
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @nx/react
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @nx/react
+```
+
+{% /tab %}
+{% /tabs %}
+
+{% callout type="note" title="React Tutorials" %}
+For a full tutorial experience, follow the [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial) or the [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+{% /callout %}
 
 ### Creating Applications and Libraries
 
 You can add a new application with the following:
 
 ```shell
-nx g @nrwl/react:app my-new-app
+nx g @nx/react:app my-new-app
 ```
 
 To start the application in development mode, run `nx serve my-new-app`.
@@ -33,28 +57,29 @@ To start the application in development mode, run `nx serve my-new-app`.
 And add a new library as follows:
 
 ```shell
-nx g @nrwl/react:lib my-new-lib
+nx g @nx/react:lib my-new-lib
 
 # If you want the library to be buildable or publishable to npm
-nx g @nrwl/react:lib my-new-lib --buildable
-nx g @nrwl/react:lib my-new-lib \
+nx g @nx/react:lib my-new-lib --bundler=vite
+nx g @nx/react:lib my-new-lib --bundler=rollup
+nx g @nx/react:lib my-new-lib \
 --publishable \
 --importPath=@myorg/my-new-lib
 ```
 
-Read more about [building and publishing libraries here](/more-concepts/buildable-and-publishable-libraries).
+Read more about [building and publishing libraries here](/concepts/more-concepts/buildable-and-publishable-libraries).
 
 ### Creating Components
 
 Adding a component to an existing project can be done with:
 
 ```shell
-nx g @nrwl/react:component my-new-component \
+nx g @nx/react:component my-new-component \
 --project=my-new-app
 
 # Note: If you want to export the component
 # from the library use  --export
-nx g @nrwl/react:component my-new-component \
+nx g @nx/react:component my-new-component \
 --project=my-new-lib \
 --export
 ```
@@ -66,7 +91,7 @@ Replace `my-new-app` and `my-new-lib` with the name of your projects.
 If you want to add a new hook, run the following
 
 ```shell
-nx g @nrwl/react:hook my-new-hook --project=my-new-lib
+nx g @nx/react:hook my-new-hook --project=my-new-lib
 ```
 
 Replace `my-new-lib` with the name of your project.
@@ -100,7 +125,7 @@ React applications can be build with:
 nx build my-new-app
 ```
 
-And if you generated a library with `--buildable`, then you can build a library as well:
+And if you generated a library with `--bundler` specified, then you can build a library as well:
 
 ```shell
 nx build my-new-lib
@@ -119,6 +144,8 @@ The library in `dist` is publishable to npm or a private registry.
 
 ## More Documentation
 
-- [Using Cypress](/packages/cypress)
-- [Using Jest](/packages/jest)
-- [Using Storybook](/packages/storybook/documents/overview-react)
+- [React Standalone Tutorial](/getting-started/tutorials/react-standalone-tutorial)
+- [React Monorepo Tutorial](/getting-started/tutorials/react-monorepo-tutorial)
+- [Using Cypress](/nx-api/cypress)
+- [Using Jest](/nx-api/jest)
+- [Using Storybook](/recipes/storybook/overview-react)

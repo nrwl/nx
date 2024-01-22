@@ -2,15 +2,15 @@ import type {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   joinPathFragments,
   offsetFromRoot,
   readJson,
   updateJson,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { hasRulesRequiringTypeChecking } from '@nrwl/linter';
+} from '@nx/devkit';
+import { hasRulesRequiringTypeChecking } from '@nx/eslint';
 import { dirname } from 'path';
 import type { Logger, ProjectMigrationInfo } from '../../utilities';
 import { BuilderMigrator } from './builder.migrator';
@@ -69,7 +69,7 @@ export class AngularEslintLintMigrator extends BuilderMigrator {
     targetName: string,
     target: TargetConfiguration
   ): Promise<void> {
-    target.executor = '@nrwl/linter:eslint';
+    target.executor = '@nx/eslint:lint';
 
     if (!target.options) {
       this.logger.warn(

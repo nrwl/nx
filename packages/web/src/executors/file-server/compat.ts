@@ -1,5 +1,4 @@
-import { convertNxExecutor } from '@nrwl/devkit';
+import { convertNxExecutor } from '@nx/devkit';
+import fileServer from './file-server.impl';
 
-import fileServerExecutor from './file-server.impl';
-
-export default convertNxExecutor(fileServerExecutor);
+export default convertNxExecutor(fileServer);

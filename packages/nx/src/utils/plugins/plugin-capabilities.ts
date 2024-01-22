@@ -6,8 +6,14 @@ import type { PluginCapabilities } from './models';
 import { hasElements } from './shared';
 import { readJsonFile } from '../fileutils';
 import { getPackageManagerCommand } from '../package-manager';
-import { loadNxPlugin, readPluginPackageJson } from '../nx-plugin';
+import {
+  loadNxPluginAsync,
+  NxPlugin,
+  readPluginPackageJson,
+} from '../nx-plugin';
 import { getNxRequirePaths } from '../installation-directory';
+import { PackageJson } from '../package-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 function tryGetCollection<T extends object>(
   packageJsonPath: string,
@@ -26,54 +32,107 @@ function tryGetCollection<T extends object>(
   }
 }
 
-export function getPluginCapabilities(
+export async function getPluginCapabilities(
   workspaceRoot: string,
-  pluginName: string
-): PluginCapabilities | null {
+  pluginName: string,
+  projects: Record<string, ProjectConfiguration>,
+  includeRuntimeCapabilities = false
+): Promise<PluginCapabilities | null> {
   try {
-    const { json: packageJson, path: packageJsonPath } = readPluginPackageJson(
-      pluginName,
-      getNxRequirePaths(workspaceRoot)
-    );
-    const pluginModule = loadNxPlugin(
-      pluginName,
-      getNxRequirePaths(workspaceRoot),
-      workspaceRoot
-    );
+    const { json: packageJson, path: packageJsonPath } =
+      await readPluginPackageJson(
+        pluginName,
+        projects,
+        getNxRequirePaths(workspaceRoot)
+      );
+    const pluginModule = includeRuntimeCapabilities
+      ? await tryGetModule(packageJson, workspaceRoot, projects)
+      : ({} as Record<string, unknown>);
     return {
       name: pluginName,
-      generators:
-        tryGetCollection(
+      generators: {
+        ...tryGetCollection(
+          packageJsonPath,
+          packageJson.schematics,
+          'schematics'
+        ),
+        ...tryGetCollection(
+          packageJsonPath,
+          packageJson.generators,
+          'schematics'
+        ),
+        ...tryGetCollection(
+          packageJsonPath,
+          packageJson.schematics,
+          'generators'
+        ),
+        ...tryGetCollection(
           packageJsonPath,
           packageJson.generators,
           'generators'
-        ) ||
-        tryGetCollection(
+        ),
+      },
+      executors: {
+        ...tryGetCollection(packageJsonPath, packageJson.builders, 'builders'),
+        ...tryGetCollection(packageJsonPath, packageJson.executors, 'builders'),
+        ...tryGetCollection(packageJsonPath, packageJson.builders, 'executors'),
+        ...tryGetCollection(
           packageJsonPath,
-          packageJson.schematics,
-          'generators'
-        ) ||
-        tryGetCollection(
-          packageJsonPath,
-          packageJson.schematics,
-          'generators'
-        ) ||
-        tryGetCollection(packageJsonPath, packageJson.schematics, 'schematics'),
-      executors:
-        tryGetCollection(packageJsonPath, packageJson.executors, 'executors') ||
-        tryGetCollection(packageJsonPath, packageJson.executors, 'builders') ||
-        tryGetCollection(packageJsonPath, packageJson.builders, 'executors') ||
-        tryGetCollection(packageJsonPath, packageJson.builders, 'builders'),
-      projectGraphExtension: !!pluginModule.processProjectGraph,
-      projectInference: !!pluginModule.projectFilePatterns,
+          packageJson.executors,
+          'executors'
+        ),
+      },
+      projectGraphExtension:
+        pluginModule &&
+        ('processProjectGraph' in pluginModule ||
+          'createNodes' in pluginModule ||
+          'createDependencies' in pluginModule),
+      projectInference:
+        pluginModule &&
+        ('projectFilePatterns' in pluginModule ||
+          'createNodes' in pluginModule),
     };
   } catch {
     return null;
   }
 }
 
-export function listPluginCapabilities(pluginName: string) {
-  const plugin = getPluginCapabilities(workspaceRoot, pluginName);
+async function tryGetModule(
+  packageJson: PackageJson,
+  workspaceRoot: string,
+  projects: Record<string, ProjectConfiguration>
+): Promise<NxPlugin | null> {
+  try {
+    return packageJson.generators ??
+      packageJson.executors ??
+      packageJson['nx-migrations'] ??
+      packageJson['schematics'] ??
+      packageJson['builders']
+      ? (
+          await loadNxPluginAsync(
+            packageJson.name,
+            getNxRequirePaths(workspaceRoot),
+            projects,
+            workspaceRoot
+          )
+        ).plugin
+      : ({
+          name: packageJson.name,
+        } as NxPlugin);
+  } catch {
+    return null;
+  }
+}
+
+export async function listPluginCapabilities(
+  pluginName: string,
+  projects: Record<string, ProjectConfiguration>
+) {
+  const plugin = await getPluginCapabilities(
+    workspaceRoot,
+    pluginName,
+    projects
+  );
 
   if (!plugin) {
     const pmc = getPackageManagerCommand();

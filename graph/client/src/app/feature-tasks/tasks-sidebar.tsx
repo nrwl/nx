@@ -1,28 +1,32 @@
-import { TaskList } from './task-list';
 import {
   useNavigate,
   useParams,
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
+import { TaskList } from './task-list';
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import type {
   ProjectGraphClientResponse,
   TaskGraphClientResponse,
-} from 'nx/src/command-line/dep-graph';
+} from 'nx/src/command-line/graph/graph';
+/* eslint-enable @nx/enforce-module-boundaries */
+import { useEffect, useMemo } from 'react';
 import { getGraphService } from '../machines/graph.service';
-import { useEffect, useState } from 'react';
 import { CheckboxPanel } from '../ui-components/checkbox-panel';
 
-import { Dropdown } from '@nrwl/graph/ui-components';
-import { ShowHideAll } from '../ui-components/show-hide-all';
+import { useRouteConstructor } from '@nx/graph/shared';
+import { Dropdown } from '@nx/graph/ui-components';
 import { useCurrentPath } from '../hooks/use-current-path';
-import { createTaskName, useRouteConstructor } from '../util';
+import { ShowHideAll } from '../ui-components/show-hide-all';
+import { createTaskName } from '../util';
 
 export function TasksSidebar() {
   const graphService = getGraphService();
   const navigate = useNavigate();
   const params = useParams();
+  const createRoute = useRouteConstructor();
 
   const [searchParams, setSearchParams] = useSearchParams();
   const groupByProject = searchParams.get('groupByProject') === 'true';
@@ -40,10 +44,23 @@ export function TasksSidebar() {
 
   const selectedTarget = params['selectedTarget'] ?? targets[0];
 
-  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
-
   const currentRoute = useCurrentPath();
-  const routeContructor = useRouteConstructor();
+  const isAllRoute =
+    currentRoute.currentPath === `/tasks/${selectedTarget}/all`;
+
+  const allProjectsWithTargetAndNoErrors = projects.filter(
+    (project) =>
+      project.data.targets?.hasOwnProperty(selectedTarget) &&
+      !errors?.hasOwnProperty(createTaskName(project.name, selectedTarget))
+  );
+
+  const selectedProjects = useMemo(
+    () =>
+      isAllRoute
+        ? allProjectsWithTargetAndNoErrors.map(({ name }) => name)
+        : searchParams.get('projects')?.split(' ') ?? [],
+    [allProjectsWithTargetAndNoErrors, searchParams, isAllRoute]
+  );
 
   function selectTarget(target: string) {
     if (target === selectedTarget) return;
@@ -72,36 +89,25 @@ export function TasksSidebar() {
   }
 
   function selectProject(project: string) {
-    setSelectedProjects([...selectedProjects, project]);
-
-    const taskId = createTaskName(project, selectedTarget);
-
-    graphService.handleTaskEvent({
-      type: 'notifyTaskGraphTasksSelected',
-      taskIds: [taskId],
-    });
-  }
-
-  function selectAllProjects() {
-    navigate(
-      routeContructor(`/tasks/${encodeURIComponent(selectedTarget)}/all`, true)
-    );
-  }
-
-  function hideAllProjects() {
-    setSelectedProjects([]);
-
-    const allProjects = projects.map(
-      (project) => `${project.name}:${selectedTarget}`
-    );
-
-    graphService.handleTaskEvent({
-      type: 'notifyTaskGraphTasksDeselected',
-      taskIds: allProjects,
-    });
+    const newSelectedProjects = [...selectedProjects, project];
+    const allProjectsSelected =
+      newSelectedProjects.length === allProjectsWithTargetAndNoErrors.length;
+    if (allProjectsSelected) {
+      searchParams.delete('projects');
+    } else {
+      searchParams.set('projects', newSelectedProjects.join(' '));
+    }
 
     navigate(
-      routeContructor(`/tasks/${encodeURIComponent(selectedTarget)}`, true)
+      createRoute(
+        {
+          pathname: allProjectsSelected
+            ? `/tasks/${encodeURIComponent(selectedTarget)}/all`
+            : `/tasks/${encodeURIComponent(selectedTarget)}`,
+          search: searchParams.toString(),
+        },
+        false
+      )
     );
   }
 
@@ -109,22 +115,49 @@ export function TasksSidebar() {
     const newSelectedProjects = selectedProjects.filter(
       (selectedProject) => selectedProject !== project
     );
-    setSelectedProjects(newSelectedProjects);
-
-    const taskId = `${project}:${selectedTarget}`;
-
-    graphService.handleTaskEvent({
-      type: 'notifyTaskGraphTasksDeselected',
-      taskIds: [taskId],
-    });
-
+    if (newSelectedProjects.length === 0) {
+      searchParams.delete('projects');
+    } else {
+      searchParams.set('projects', newSelectedProjects.join(' '));
+    }
     navigate(
-      routeContructor(`/tasks/${encodeURIComponent(selectedTarget)}`, true)
+      createRoute(
+        {
+          pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
+          search: searchParams.toString(),
+        },
+        false
+      )
+    );
+  }
+
+  function selectAllProjects() {
+    searchParams.delete('projects');
+    navigate(
+      createRoute(
+        {
+          pathname: `/tasks/${encodeURIComponent(selectedTarget)}/all`,
+          search: searchParams.toString(),
+        },
+        false
+      )
+    );
+  }
+
+  function hideAllProjects() {
+    searchParams.delete('projects');
+    navigate(
+      createRoute(
+        {
+          pathname: `/tasks/${encodeURIComponent(selectedTarget)}`,
+          search: searchParams.toString(),
+        },
+        false
+      )
     );
   }
 
   useEffect(() => {
-    setSelectedProjects([]);
     graphService.handleTaskEvent({
       type: 'notifyTaskGraphSetProjects',
       projects: selectedWorkspaceRouteData.projects,
@@ -147,25 +180,11 @@ export function TasksSidebar() {
   }, [searchParams]);
 
   useEffect(() => {
-    switch (currentRoute.currentPath) {
-      case `/tasks/${selectedTarget}/all`:
-        const allProjectsWithSelectedTarget = projects.filter((project) =>
-          project.data.targets.hasOwnProperty(selectedTarget)
-        );
-
-        setSelectedProjects(
-          allProjectsWithSelectedTarget.map((project) => project.name)
-        );
-
-        graphService.handleTaskEvent({
-          type: 'notifyTaskGraphTasksSelected',
-          taskIds: allProjectsWithSelectedTarget.map(
-            (project) => `${project.name}:${selectedTarget}`
-          ),
-        });
-        break;
-    }
-  }, [currentRoute]);
+    graphService.handleTaskEvent({
+      type: 'notifyTaskGraphSetTasks',
+      taskIds: selectedProjects.map((p) => createTaskName(p, selectedTarget)),
+    });
+  }, [graphService, selectedProjects, selectedTarget]);
 
   function groupByProjectChanged(checked) {
     setSearchParams(

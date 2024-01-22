@@ -1,6 +1,6 @@
-import { Lookup } from '@nrwl/nx-dev/data-access-packages';
-import { JsonSchema } from '@nrwl/nx-dev/models-package';
-import { renderMarkdown } from '@nrwl/nx-dev/ui-markdoc';
+import { Lookup } from '@nx/nx-dev/data-access-packages';
+import { JsonSchema } from '@nx/nx-dev/models-package';
+import { renderMarkdown } from '@nx/nx-dev/ui-markdoc';
 import { getParameterMetadata } from './parameter-metadata';
 import { getEnum } from './types/get-enum';
 import { Type } from './types/type';
@@ -37,6 +37,14 @@ export const ParameterView = (props: {
         {props.deprecated && (
           <span className="relative -top-0.5 inline-flex rounded-md bg-red-100 px-2 text-xs font-semibold uppercase leading-5 text-red-800 dark:bg-red-800 dark:text-red-100">
             Deprecated
+          </span>
+        )}
+        {props.schema['x-priority'] === 'internal' && (
+          <span
+            data-tooltip="Intended for use by other generators"
+            className="relative -top-0.5 inline-flex rounded-md bg-yellow-300 px-2 text-xs font-semibold uppercase leading-5 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+          >
+            Internal
           </span>
         )}
         {((props.schema as any)['hidden'] as boolean) && (

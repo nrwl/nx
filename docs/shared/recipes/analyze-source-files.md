@@ -5,7 +5,7 @@ If you want to disable detecting dependencies from source code and want to only 
 ```json {% fileName="nx.json" %}
 {
   "pluginsConfig": {
-    "@nrwl/js": {
+    "@nx/js": {
       "analyzeSourceFiles": false
     }
   }

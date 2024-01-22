@@ -1,7 +1,7 @@
 import { interpolateName } from 'loader-utils';
 import * as path from 'path';
 import type { Declaration } from 'postcss';
-import * as url from 'url';
+import * as url from 'node:url';
 import { LoaderContext } from 'webpack';
 
 function wrapUrl(url: string): string {
@@ -161,7 +161,6 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
           const inputFile = decl.source && decl.source.input.file;
           const context =
             (inputFile && path.dirname(inputFile)) || loader.context;
-          // tslint:disable-next-line:no-conditional-assignment
           while ((match = urlRegex.exec(value))) {
             const originalUrl = match[1] || match[2] || match[3];
             let processedUrl;

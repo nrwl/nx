@@ -4,17 +4,17 @@
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "SchematicsConvertToNxProject",
-    "title": "@nrwl/workspace:fix-configuration",
+    "title": "@nx/workspace:fix-configuration",
     "description": "Migrates v1 config to v2 standalone configuration.",
     "type": "object",
     "cli": "nx",
     "examples": [
       {
-        "command": "nx g @nrwl/workspace:convert-to-nx-project --project my-feature-lib",
+        "command": "nx g @nx/workspace:convert-to-nx-project --project my-feature-lib",
         "description": "Convert the `my-feature-lib` project to use `project.json` file instead of `workspace.json`"
       },
       {
-        "command": "nx g @nrwl/workspace:convert-to-nx-project --all",
+        "command": "nx g @nx/workspace:convert-to-nx-project --all",
         "description": "Convert all projects in `workspace.json` to separate `project.json` files"
       }
     ],

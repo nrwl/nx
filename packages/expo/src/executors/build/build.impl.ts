@@ -1,8 +1,6 @@
-import { ExecutorContext, names } from '@nrwl/devkit';
-import { join } from 'path';
+import { ExecutorContext, names } from '@nx/devkit';
+import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
-
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 
 import { ExpoEasBuildOptions } from './schema';
 
@@ -18,7 +16,6 @@ export default async function* buildExecutor(
 ): AsyncGenerator<ReactNativeBuildOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
     await runCliBuild(context.root, projectRoot, options);
@@ -37,9 +34,12 @@ function runCliBuild(
 ) {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      join(workspaceRoot, './node_modules/eas-cli/bin/run'),
+      require.resolve('eas-cli/bin/run'),
       ['build', ...createBuildOptions(options)],
-      { cwd: join(workspaceRoot, projectRoot), env: process.env }
+      {
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        env: process.env,
+      }
     );
 
     // Ensure the child process is killed when the parent exits
@@ -63,12 +63,19 @@ function createBuildOptions(options: ExpoEasBuildOptions) {
   return Object.keys(options).reduce((acc, k) => {
     const v = options[k];
     if (typeof v === 'boolean') {
-      if (v === true) {
+      if (k === 'interactive') {
+        if (v === false) {
+          acc.push('--non-interactive'); // when is false, the flag is --non-interactive
+        }
+      } else if (k === 'wait') {
+        if (v === false) {
+          acc.push('--no-wait'); // when is false, the flag is --no-wait
+        } else {
+          acc.push('--wait');
+        }
+      } else if (v === true) {
         // when true, does not need to pass the value true, just need to pass the flag in kebob case
         acc.push(`--${names(k).fileName}`);
-      }
-      if (v === false && k === 'wait') {
-        acc.push('--no-wait');
       }
     } else {
       acc.push(`--${names(k).fileName}`, v);

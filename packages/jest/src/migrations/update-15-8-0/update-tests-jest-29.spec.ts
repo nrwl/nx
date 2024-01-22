@@ -3,14 +3,14 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { libraryGenerator } from '@nrwl/workspace';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { libraryGenerator } from '@nx/js';
 import { updateTestsJest29 } from './update-tests-jest-29';
 
 let projectGraph: ProjectGraph;
-jest.mock('@nrwl/devkit', () => ({
-  ...jest.requireActual<any>('@nrwl/devkit'),
+jest.mock('@nx/devkit', () => ({
+  ...jest.requireActual<any>('@nx/devkit'),
   createProjectGraphAsync: jest
     .fn()
     .mockImplementation(async () => projectGraph),
@@ -73,6 +73,7 @@ async function setup(tree: Tree, name: string) {
   const projectConfig = readProjectConfiguration(tree, name);
   projectConfig.targets['test'] = {
     ...projectConfig.targets['test'],
+    executor: '@nrwl/jest:jest',
     configurations: {
       ci: {
         ci: true,
@@ -92,9 +93,9 @@ transform: {
   '^.+\\\\.[tj]sx?$': 'ts-jest'
 },
 moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html'],
-globals: { 
+globals: {
     'ts-jest': {
-        tsconfig: '<rootDir>/tsconfig.spec.json' 
+        tsconfig: '<rootDir>/tsconfig.spec.json'
     }
   },
 displayName: 'jest',

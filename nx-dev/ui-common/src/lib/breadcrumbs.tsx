@@ -20,6 +20,10 @@ export function Breadcrumbs({ path }: { path: string }): JSX.Element {
   ];
   const hasRef = path.includes('?') ? path.slice(0, path.indexOf('?')) : '';
 
+  if (pages.length === 1) {
+    return <></>;
+  }
+
   return (
     <div>
       <nav className="flex" aria-labelledby="breadcrumb">

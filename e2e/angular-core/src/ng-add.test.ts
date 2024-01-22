@@ -11,7 +11,7 @@ import {
   runNgNew,
   uniq,
   updateFile,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { PackageManager } from 'nx/src/utils/package-manager';
 
 describe('convert Angular CLI workspace to an Nx workspace', () => {
@@ -64,11 +64,12 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   }
 
   beforeEach(() => {
-    project = uniq('proj');
     packageManager = getSelectedPackageManager();
     // TODO: solve issues with pnpm and remove this fallback
     packageManager = packageManager === 'pnpm' ? 'yarn' : packageManager;
-    runNgNew(project, packageManager);
+    project = runNgNew(packageManager);
+    packageInstall('nx', null, 'latest');
+    packageInstall('@nx/angular', null, 'latest');
   });
 
   afterEach(() => {
@@ -102,18 +103,20 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     ];
     updateFile('angular.json', JSON.stringify(angularJson, null, 2));
 
-    // confirm that @nrwl dependencies do not exist yet
-    expect(packageJson.devDependencies['@nrwl/workspace']).not.toBeDefined();
+    // confirm that @nx dependencies do not exist yet
+    expect(packageJson.devDependencies['@nx/workspace']).not.toBeDefined();
 
     // run ng add
-    runNgAdd('@nrwl/angular', '--npm-scope projscope --default-base main');
+    runCLI('g @nx/angular:ng-add --default-base main');
 
     // check that prettier config exits and that files have been moved
     checkFilesExist(
       '.vscode/extensions.json',
       '.prettierrc',
       `apps/${project}/src/main.ts`,
-      `apps/${project}/src/app/app.module.ts`
+      `apps/${project}/src/app/app.config.ts`,
+      `apps/${project}/src/app/app.component.ts`,
+      `apps/${project}/src/app/app.routes.ts`
     );
 
     // check the right VSCode extensions are recommended
@@ -134,7 +137,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       watch: 'nx build --watch --configuration development',
       test: 'nx test',
     });
-    expect(updatedPackageJson.devDependencies['@nrwl/workspace']).toBeDefined();
+    expect(updatedPackageJson.devDependencies['@nx/workspace']).toBeDefined();
     expect(updatedPackageJson.devDependencies['@angular/cli']).toBeDefined();
 
     // check nx.json
@@ -142,15 +145,6 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(nxJson).toEqual({
       affected: {
         defaultBase: 'main',
-      },
-      npmScope: 'projscope',
-      tasksRunnerOptions: {
-        default: {
-          options: {
-            cacheableOperations: ['build', 'test', 'e2e'],
-          },
-          runner: 'nx/tasks-runners/default',
-        },
       },
       namedInputs: {
         default: ['{projectRoot}/**/*', 'sharedGlobals'],
@@ -166,12 +160,15 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
         build: {
           dependsOn: ['^build'],
           inputs: ['production', '^production'],
+          cache: true,
         },
         e2e: {
           inputs: ['default', '^production'],
+          cache: true,
         },
         test: {
           inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
+          cache: true,
         },
       },
     });
@@ -183,11 +180,11 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     const projectConfig = readJson(`apps/${project}/project.json`);
     expect(projectConfig.sourceRoot).toEqual(`apps/${project}/src`);
     expect(projectConfig.targets.build).toStrictEqual({
-      executor: '@angular-devkit/build-angular:browser',
+      executor: '@angular-devkit/build-angular:application',
       options: {
         outputPath: `dist/apps/${project}`,
         index: `apps/${project}/src/index.html`,
-        main: `apps/${project}/src/main.ts`,
+        browser: `apps/${project}/src/main.ts`,
         polyfills: [`zone.js`],
         tsConfig: `apps/${project}/tsconfig.app.json`,
         assets: [
@@ -214,12 +211,9 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
           outputHashing: 'all',
         },
         development: {
-          buildOptimizer: false,
           optimization: false,
-          vendorChunk: true,
           extractLicenses: false,
           sourceMap: true,
-          namedChunks: true,
         },
       },
       defaultConfiguration: 'production',
@@ -227,8 +221,8 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(projectConfig.targets.serve).toEqual({
       executor: '@angular-devkit/build-angular:dev-server',
       configurations: {
-        production: { browserTarget: `${project}:build:production` },
-        development: { browserTarget: `${project}:build:development` },
+        production: { buildTarget: `${project}:build:production` },
+        development: { buildTarget: `${project}:build:development` },
       },
       defaultConfiguration: 'development',
     });
@@ -263,13 +257,13 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     });
 
     runCLI(`build ${project} --configuration production --outputHashing none`);
-    checkFilesExist(`dist/apps/${project}/main.js`);
+    checkFilesExist(`dist/apps/${project}/browser/main.js`);
   });
 
   it('should handle a workspace with cypress v9', () => {
     addCypress9();
 
-    runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install');
+    runCLI('g @nx/angular:ng-add --skip-install');
 
     const e2eProject = `${project}-e2e`;
     //check e2e project files
@@ -298,7 +292,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check e2e project config
     const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
     expect(e2eProjectConfig.targets['cypress-run']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         devServerTarget: `${project}:serve`,
         cypressConfig: `apps/${e2eProject}/cypress.json`,
@@ -310,7 +304,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
     });
     expect(e2eProjectConfig.targets['cypress-open']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         watch: true,
         headless: false,
@@ -318,7 +312,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
     });
     expect(e2eProjectConfig.targets.e2e).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         devServerTarget: `${project}:serve`,
         watch: true,
@@ -336,7 +330,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   it('should handle a workspace with cypress v10', () => {
     addCypress10();
 
-    runNgAdd('@nrwl/angular', '--npm-scope projscope --skip-install');
+    runCLI('g @nx/angular:ng-add --skip-install');
 
     const e2eProject = `${project}-e2e`;
     //check e2e project files
@@ -365,7 +359,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     // check e2e project config
     const e2eProjectConfig = readJson(`apps/${project}-e2e/project.json`);
     expect(e2eProjectConfig.targets['cypress-run']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         devServerTarget: `${project}:serve`,
         cypressConfig: `apps/${e2eProject}/cypress.config.ts`,
@@ -377,7 +371,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
     });
     expect(e2eProjectConfig.targets['cypress-open']).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         watch: true,
         headless: false,
@@ -385,7 +379,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
       },
     });
     expect(e2eProjectConfig.targets.e2e).toEqual({
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         devServerTarget: `${project}:serve`,
         watch: true,
@@ -401,24 +395,18 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
   });
 
   // TODO(leo): The current Verdaccio setup fails to resolve older versions
-  // of @nrwl/* packages, the @angular-eslint/builder package depends on an
-  // older version of @nrwl/devkit so we skip this test for now.
+  // of @nx/* packages, the @angular-eslint/builder package depends on an
+  // older version of @nx/devkit so we skip this test for now.
   it.skip('should handle a workspace with ESLint', () => {
     addEsLint();
 
-    runNgAdd('@nrwl/angular', '--npm-scope projscope');
+    runCLI('g @nx/angular:ng-add');
 
     checkFilesExist(`apps/${project}/.eslintrc.json`, `.eslintrc.json`);
 
     const projectConfig = readJson(`apps/${project}/project.json`);
     expect(projectConfig.targets.lint).toStrictEqual({
-      executor: '@nrwl/linter:eslint',
-      options: {
-        lintFilePatterns: [
-          `apps/${project}/src/**/*.ts`,
-          `apps/${project}/src/**/*.html`,
-        ],
-      },
+      executor: '@nx/eslint:lint',
     });
 
     let output = runCLI(`lint ${project}`);
@@ -436,57 +424,14 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     );
   });
 
-  it('should support a workspace with multiple libraries', () => {
-    // add some libraries
-    const lib1 = uniq('lib1');
-    const lib2 = uniq('lib2');
-    runCommand(`ng g @schematics/angular:library ${lib1}`);
-    runCommand(`ng g @schematics/angular:library ${lib2}`);
-
-    runNgAdd('@nrwl/angular', '--npm-scope projscope');
-
-    // check angular.json does not exist
-    checkFilesDoNotExist('angular.json');
-
-    // check building lib1
-    let output = runCLI(`build ${lib1}`);
-    expect(output).toContain(`> nx run ${lib1}:build:production`);
-    expect(output).toContain(
-      `Successfully ran target build for project ${lib1}`
-    );
-    checkFilesExist(`dist/${lib1}/package.json`);
-
-    output = runCLI(`build ${lib1}`);
-    expect(output).toContain(
-      `> nx run ${lib1}:build:production  [local cache]`
-    );
-    expect(output).toContain(
-      `Successfully ran target build for project ${lib1}`
-    );
-
-    // check building lib2
-    output = runCLI(`build ${lib2}`);
-    expect(output).toContain(`> nx run ${lib2}:build:production`);
-    expect(output).toContain(
-      `Successfully ran target build for project ${lib2}`
-    );
-    checkFilesExist(`dist/${lib2}/package.json`);
-
-    output = runCLI(`build ${lib2}`);
-    expect(output).toContain(
-      `> nx run ${lib2}:build:production  [local cache]`
-    );
-    expect(output).toContain(
-      `Successfully ran target build for project ${lib2}`
-    );
-  });
-
-  it('should support a workspace with multiple applications', () => {
-    // add another app
+  it('should support a workspace with multiple projects', () => {
+    // add other projects
     const app1 = uniq('app1');
-    runCommand(`ng g @schematics/angular:application ${app1}`);
+    const lib1 = uniq('lib1');
+    runCommand(`ng g @schematics/angular:application ${app1} --no-interactive`);
+    runCommand(`ng g @schematics/angular:library ${lib1} --no-interactive`);
 
-    runNgAdd('@nrwl/angular', '--npm-scope projscope');
+    runCLI('g @nx/angular:ng-add');
 
     // check angular.json does not exist
     checkFilesDoNotExist('angular.json');
@@ -499,7 +444,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(output).toContain(
       `Successfully ran target build for project ${project}`
     );
-    checkFilesExist(`dist/apps/${project}/main.js`);
+    checkFilesExist(`dist/apps/${project}/browser/main.js`);
 
     output = runCLI(`build ${project} --outputHashing none`);
     expect(output).toContain(
@@ -517,7 +462,7 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(output).toContain(
       `Successfully ran target build for project ${app1}`
     );
-    checkFilesExist(`dist/apps/${app1}/main.js`);
+    checkFilesExist(`dist/apps/${app1}/browser/main.js`);
 
     output = runCLI(`build ${app1} --outputHashing none`);
     expect(output).toContain(
@@ -526,49 +471,21 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     expect(output).toContain(
       `Successfully ran target build for project ${app1}`
     );
-  });
-
-  it('should support --preserve-angular-cli-layout', () => {
-    // add another app and a library
-    runCommand(`ng g @schematics/angular:application app2`);
-    runCommand(`ng g @schematics/angular:library lib1`);
-
-    runNgAdd('@nrwl/angular', '--preserve-angular-cli-layout');
-
-    // check project configs
-    const projectJson = readJson('project.json');
-    expect(projectJson.sourceRoot).toEqual('src');
-    const app2ProjectJson = readJson('projects/app2/project.json');
-    expect(app2ProjectJson.sourceRoot).toEqual('projects/app2/src');
-    const lib1ProjectJson = readJson('projects/lib1/project.json');
-    expect(lib1ProjectJson.sourceRoot).toEqual('projects/lib1/src');
-
-    // check building an app
-    let output = runCLI(`build ${project} --outputHashing none`);
-    expect(output).toContain(
-      `> nx run ${project}:build:production --outputHashing none`
-    );
-    expect(output).toContain(
-      `Successfully ran target build for project ${project}`
-    );
-    checkFilesExist(`dist/${project}/main.js`);
-
-    output = runCLI(`build ${project} --outputHashing none`);
-    expect(output).toContain(
-      `> nx run ${project}:build:production --outputHashing none  [local cache]`
-    );
-    expect(output).toContain(
-      `Successfully ran target build for project ${project}`
-    );
 
     // check building lib1
-    output = runCLI('build lib1');
-    expect(output).toContain('> nx run lib1:build:production');
-    expect(output).toContain('Successfully ran target build for project lib1');
-    checkFilesExist('dist/lib1/package.json');
+    output = runCLI(`build ${lib1}`);
+    expect(output).toContain(`> nx run ${lib1}:build:production`);
+    expect(output).toContain(
+      `Successfully ran target build for project ${lib1}`
+    );
+    checkFilesExist(`dist/${lib1}/package.json`);
 
-    output = runCLI('build lib1');
-    expect(output).toContain('> nx run lib1:build:production  [local cache]');
-    expect(output).toContain('Successfully ran target build for project lib1');
+    output = runCLI(`build ${lib1}`);
+    expect(output).toContain(
+      `> nx run ${lib1}:build:production  [local cache]`
+    );
+    expect(output).toContain(
+      `Successfully ran target build for project ${lib1}`
+    );
   });
 });

@@ -1,58 +1,60 @@
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import {
   addDependenciesToPackageJson,
-  joinPathFragments,
+  GeneratorCallback,
+  runTasksInSerial,
   Tree,
-  updateJson,
-} from '@nrwl/devkit';
-import { extendReactEslintJson, extraEslintDependencies } from '@nrwl/react';
-import type { Linter as ESLintLinter } from 'eslint';
+} from '@nx/devkit';
+import { extraEslintDependencies } from '@nx/react/src/utils/lint';
+import {
+  addExtendsToLintConfig,
+  addIgnoresToLintConfig,
+  isEslintConfigSupported,
+} from '@nx/eslint/src/generators/utils/eslint-file';
 
-export async function addLinting(
-  host: Tree,
-  projectName: string,
-  appProjectRoot: string,
-  tsConfigPaths: string[],
-  linter: Linter,
-  setParserOptionsProject?: boolean
-) {
-  if (linter === Linter.None) {
+interface NormalizedSchema {
+  linter?: Linter;
+  projectName: string;
+  projectRoot: string;
+  setParserOptionsProject?: boolean;
+  tsConfigPaths: string[];
+  skipPackageJson?: boolean;
+}
+
+export async function addLinting(host: Tree, options: NormalizedSchema) {
+  if (options.linter === Linter.None) {
     return () => {};
   }
+  const tasks: GeneratorCallback[] = [];
 
   const lintTask = await lintProjectGenerator(host, {
-    linter,
-    project: projectName,
-    tsConfigPaths,
-    eslintFilePatterns: [`${appProjectRoot}/**/*.{ts,tsx,js,jsx}`],
+    linter: options.linter,
+    project: options.projectName,
+    tsConfigPaths: options.tsConfigPaths,
     skipFormat: true,
-    setParserOptionsProject,
+    skipPackageJson: options.skipPackageJson,
   });
 
-  updateJson(
-    host,
-    joinPathFragments(appProjectRoot, '.eslintrc.json'),
-    (json: ESLintLinter.Config) => {
-      json = extendReactEslintJson(json);
+  tasks.push(lintTask);
 
-      json.ignorePatterns = [
-        ...json.ignorePatterns,
-        '.expo',
-        'node_modules',
-        'web-build',
-        'cache',
-      ];
+  if (isEslintConfigSupported(host)) {
+    addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
+    addIgnoresToLintConfig(host, options.projectRoot, [
+      '.expo',
+      'web-build',
+      'cache',
+      'dist',
+    ]);
+  }
 
-      return json;
-    }
-  );
+  if (!options.skipPackageJson) {
+    const installTask = await addDependenciesToPackageJson(
+      host,
+      extraEslintDependencies.dependencies,
+      extraEslintDependencies.devDependencies
+    );
+    tasks.push(installTask);
+  }
 
-  const installTask = await addDependenciesToPackageJson(
-    host,
-    extraEslintDependencies.dependencies,
-    extraEslintDependencies.devDependencies
-  );
-
-  return runTasksInSerial(lintTask, installTask);
+  return runTasksInSerial(...tasks);
 }

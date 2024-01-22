@@ -4,168 +4,75 @@ version: 2.1
 #        ORBS
 # -------------------------
 orbs:
-  nx: nrwl/nx@1.6.1
-  node: circleci/node@5.0.2
+  nx: nrwl/nx@1.6.2
   rust: circleci/rust@1.6.0
-  browser-tools: circleci/browser-tools@1.4.0
-
-# -------------------------
-#        DEFAULTS
-# -------------------------
-machine:
-  pre:
-    - mkdir ~/.cache/yarn
-    - mkdir ~/.cache/Cypress
-    - mkdir ~/Library/Caches/Homebrew
-    - mkdir /usr/local/Homebrew
-
-dependencies:
-  cache_directories:
-    - ~/.cache/yarn
-    - ~/.cache/Cypress
-    - /usr/local/Homebrew
-    - ~/Library/Caches/Homebrew
-  override:
-    - yarn install
-    - brew install
-
-defaults: &defaults
-  working_directory: ~/repo
+  browser-tools: circleci/browser-tools@1.4.6
 
 # -------------------------
 #        EXECUTORS
 # -------------------------
+
+defaults: &defaults
+  working_directory: ~/repo
+
 executors:
   linux:
     <<: *defaults
     docker:
-      - image: cimg/rust:1.66.1-browsers
+      - image: cimg/rust:1.73.0-browsers
     resource_class: medium+
 
   macos:
     <<: *defaults
+    resource_class: macos.m1.medium.gen1
     macos:
-      xcode: &_XCODE_VERSION '13.0.0'
+      xcode: '14.2.0'
 
 # -------------------------
 #        COMMANDS
 # -------------------------
 commands:
-  run-yarn-install:
+  run-pnpm-install:
     parameters:
       os:
         type: string
     steps:
       - restore_cache:
-          name: Restore Yarn Package Cache
+          name: Restore pnpm Package Cache
           keys:
-            - node-deps-{{ arch }}-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
-      - run:
-          name: Install dependencies
-          command: yarn install --prefer-offline --frozen-lockfile --non-interactive --cache-folder ~/.cache/yarn
-      - save_cache:
-          name: Save Yarn Package Cache
-          key: node-deps-{{ arch }}-v1-{{ checksum "package.json" }}-{{ checksum "yarn.lock" }}
-          paths:
-            - node_modules
-            - ~/.cache/yarn
-            - ~/.cache/Cypress
-  install-pnpm:
-    steps:
-      - run:
-          name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g pnpm@6.32.4
-
-  setup:
-    parameters:
-      os:
-        type: string
-    steps:
-      - checkout
+            - node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
+      - when:
+          condition:
+            equal: [<< parameters.os >>, linux]
+          steps:
+            - run:
+                name: Install pnpm package manager (linux)
+                command: |
+                  npm install --prefix=$HOME/.local -g @pnpm/exe@8.14
       - when:
           condition:
             equal: [<< parameters.os >>, macos]
           steps:
-            - restore_cache:
-                name: Restore Homebrew packages
-                keys:
-                  - nrwl-nx-homebrew-packages
             - run:
-                name: Configure Detox Environment, Install applesimutils
+                name: Install pnpm package manager (macos)
                 command: |
-                  HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-                  HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-                  xcrun simctl shutdown all && xcrun simctl erase all
-                no_output_timeout: 20m
-            - save_cache:
-                name: Save Homebrew Cache
-                key: nrwl-nx-homebrew-packages
-                paths:
-                  - /usr/local/Homebrew
-                  - ~/Library/Caches/Homebrew
-      - when:
-          condition:
-            equal: [<< parameters.os >>, linux]
-          steps:
-            - run:
-                command: sudo apt-get install -y ca-certificates
-            - browser-tools/install-chrome
-            - browser-tools/install-chromedriver
-      - node/install:
-          # Use LTS version
-          node-version: ''
-      - run-yarn-install:
-          os: << parameters.os >>
-      - when:
-          condition:
-            equal: [<< parameters.os >>, linux]
-          steps:
-            - install-pnpm
-
+                  npm install -g @pnpm/exe@8.14
+      - run:
+          name: Install Dependencies
+          command: |
+            pnpm install --frozen-lockfile
+            pnpm playwright install --with-deps firefox webkit chrome
+      - save_cache:
+          name: Save pnpm Package Cache
+          key: node-deps-{{ arch }}-v3-{{ checksum "pnpm-lock.yaml" }}
+          paths:
+            - ~/.pnpm-store
+            - ~/.cache/Cypress
+            - node_modules
 # -------------------------
 #          JOBS
 # -------------------------
 jobs:
-  # -------------------------
-  #     JOBS: Agent
-  # -------------------------
-  agent:
-    parameters:
-      os:
-        type: string
-        default: 'linux'
-      pm:
-        type: string
-        default: 'pnpm'
-    executor: << parameters.os >>
-    environment:
-      GIT_AUTHOR_EMAIL: test@test.com
-      GIT_AUTHOR_NAME: Test
-      GIT_COMMITTER_EMAIL: test@test.com
-      GIT_COMMITTER_NAME: Test
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-<< parameters.os >>
-      SELECTED_PM: << parameters.pm >>
-      NX_E2E_RUN_CYPRESS: 'true'
-      NX_VERBOSE_LOGGING: 'false'
-      NX_PERF_LOGGING: 'false'
-      NX_NATIVE_HASHER: 'true'
-    steps:
-      - run:
-          name: Configure git metadata (needed for lerna smoke tests)
-          command: |
-            git config --global user.email test@test.com
-            git config --global user.name "Test Test"
-      - run:
-          name: Set dynamic nx run variable
-          command: |
-            echo "export NX_RUN_GROUP=\"run-group-<< parameters.os >>-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
-      - setup:
-          os: << parameters.os >>
-      - run:
-          name: Agent
-          command: npx nx-cloud start-agent
-          no_output_timeout: 60m
-
   # -------------------------
   #     JOBS: Main Linux
   # -------------------------
@@ -173,23 +80,27 @@ jobs:
     executor: linux
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-linux
-      NX_VERBOSE_LOGGING: 'false'
       NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
-      NX_NATIVE_HASHER: 'true'
+      NX_NATIVE_LOGGING: 'false'
+      NX_E2E_RUN_E2E: 'true'
+      NX_CI_EXECUTION_ENV: 'linux'
     steps:
+      - checkout
+      - run: npx nx-cloud@next start-ci-run --distributes-on="8 linux-medium" --stop-agents-after="e2e"
       - run:
-          name: Set dynamic nx run variable
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-linux-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
-      - setup:
+            sudo apt-get update
+            sudo apt-get install -y ca-certificates lsof
+      - browser-tools/install-chrome
+      - browser-tools/install-chromedriver
+      - run-pnpm-install:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run: npx nx-cloud start-ci-run --stop-agents-after="e2e"
       - run:
           name: Check Documentation
-          command: npx nx documentation --no-dte
+          command: pnpm nx documentation --no-dte
           no_output_timeout: 20m
       - run:
           name: Run Checks/Lint/Test/Build
@@ -197,18 +108,14 @@ jobs:
           command: |
             pids=()
 
-            npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
+            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
             pids+=($!)
 
-            npx nx run-many -t root-lint check-imports check-commit check-lock-files depcheck --parallel=1 --no-dte &
+            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
             pids+=($!)
 
-            yarn nx affected --target=lint --base=$NX_BASE --head=$NX_HEAD --parallel=3 &
-            pids+=($!)
-            yarn nx affected --target=test --base=$NX_BASE --head=$NX_HEAD --parallel=1 &
-            pids+=($!)
-            (yarn nx affected --target=build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            npx nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --exclude=e2e-storybook,e2e-storybook-angular --parallel=1) &
+            (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
+            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
@@ -221,22 +128,42 @@ jobs:
     executor: macos
     environment:
       NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
-      NX_DAEMON: 'true'
       NX_PERF_LOGGING: 'false'
-      NX_NATIVE_HASHER: 'true'
+      NX_CI_EXECUTION_ENV: 'macos'
+      SELECTED_PM: 'npm' # explicitly define npm for macOS tests
     steps:
+      - checkout
+      - restore_cache:
+          name: Restore Homebrew packages
+          keys:
+            - nrwl-nx-homebrew-packages
       - run:
-          name: Set dynamic nx run variable
+          name: Configure Detox Environment, Install applesimutils
           command: |
-            echo "export NX_RUN_GROUP=\"run-group-macos-$CIRCLE_WORKFLOW_ID\";" >> $BASH_ENV
-      - setup:
+            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+            xcrun simctl shutdown all && xcrun simctl erase all
+          no_output_timeout: 20m
+      - save_cache:
+          name: Save Homebrew Cache
+          key: nrwl-nx-homebrew-packages
+          paths:
+            - /usr/local/Homebrew
+            - ~/Library/Caches/Homebrew
+      - run-pnpm-install:
           os: macos
       - rust/install
+      - nx/set-shas:
+          main-branch-name: 'master'
       - run:
           name: Run E2E Tests for macOS
-          # FIXME: remove --exclude=e2e-detox once we have a fix for the detox tests
           command: |
-            npx nx run-many -t e2e-macos --parallel=1 --exclude=e2e-detox
+            pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+          no_output_timeout: 45m
+      - run:
+          name: Close CI group
+          command: |
+            pnpm nx-cloud stop-all-agents
           no_output_timeout: 45m
 
 # -------------------------
@@ -247,22 +174,6 @@ workflows:
 
   build:
     jobs:
-      - agent:
-          name: 'agent1'
-      - agent:
-          name: 'agent2'
-      - agent:
-          name: 'agent3'
-      - agent:
-          name: 'agent4'
-      - agent:
-          name: 'agent5'
-      - agent:
-          name: 'agent6'
-      - agent:
-          name: 'agent7'
-      - agent:
-          name: 'agent8'
       - main-linux
       - mainmacos:
           name: main-macos-e2e

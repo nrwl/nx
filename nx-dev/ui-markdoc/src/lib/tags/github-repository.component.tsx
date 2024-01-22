@@ -1,6 +1,12 @@
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
-export function GithubRepository({ url }: { url: string }): JSX.Element {
+export function GithubRepository({
+  url,
+  title,
+}: {
+  url: string;
+  title?: string;
+}): JSX.Element {
   return (
     <div className="not-prose group relative my-12 mx-auto flex w-full max-w-md items-center gap-3 overflow-hidden rounded-lg bg-slate-50 shadow-md transition hover:text-white dark:bg-slate-800/60">
       <div className="absolute inset-0 z-0 w-2 bg-blue-500 transition-all duration-150 group-hover:w-full dark:bg-sky-500"></div>
@@ -20,7 +26,7 @@ export function GithubRepository({ url }: { url: string }): JSX.Element {
 
         <div className="mx-3">
           <p>
-            Example repository
+            {title ? title : 'Example repository'}
             <a
               href={url}
               target="_blank"

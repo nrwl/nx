@@ -1,43 +1,29 @@
-import { ModuleFederationConfig } from '@nrwl/devkit';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { ModuleFederationConfig } from '@nx/webpack/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
+import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
-import type { AsyncNxWebpackPlugin, NxWebpackPlugin } from '@nrwl/webpack';
 
-function determineRemoteUrl(remote: string) {
-  const remoteConfiguration = readCachedProjectConfiguration(remote);
-  const serveTarget = remoteConfiguration?.targets?.serve;
-
-  if (!serveTarget) {
-    throw new Error(
-      `Cannot automatically determine URL of remote (${remote}). Looked for property "host" in the project's "serve" target.\n
-      You can also use the tuple syntax in your webpack config to configure your remotes. e.g. \`remotes: [['remote1', 'http://localhost:4201']]\``
-    );
-  }
-
-  const host = serveTarget.options?.host ?? 'http://localhost';
-  const port = serveTarget.options?.port ?? 4201;
-  return `${
-    host.endsWith('/') ? host.slice(0, -1) : host
-  }:${port}/remoteEntry.js`;
-}
+const isVarOrWindow = (libType?: string) =>
+  libType === 'var' || libType === 'window';
 
 /**
  * @param {ModuleFederationConfig} options
- * @return {Promise<AsyncNxWebpackPlugin>}
+ * @return {Promise<AsyncNxComposableWebpackPlugin>}
  */
 export async function withModuleFederation(
   options: ModuleFederationConfig
-): Promise<AsyncNxWebpackPlugin> {
-  const reactWebpackConfig = require('../../plugins/webpack');
-
+): Promise<AsyncNxComposableWebpackPlugin> {
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
-    await getModuleFederationConfig(options, determineRemoteUrl);
+    await getModuleFederationConfig(options);
+  const isGlobal = isVarOrWindow(options.library?.type);
 
   return (config, ctx) => {
-    config = reactWebpackConfig(config, ctx);
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
+
+    if (isGlobal) {
+      config.output.scriptType = 'text/javascript';
+    }
 
     config.optimization = {
       runtimeChunk: false,
@@ -45,7 +31,7 @@ export async function withModuleFederation(
 
     config.experiments = {
       ...config.experiments,
-      outputModule: true,
+      outputModule: !isGlobal,
     };
 
     config.plugins.push(
@@ -58,6 +44,13 @@ export async function withModuleFederation(
         shared: {
           ...sharedDependencies,
         },
+        /**
+         * remoteType: 'script' is required for the remote to be loaded as a script tag.
+         * remotes will need to be defined as:
+         *  { appX: 'appX@http://localhost:3001/remoteEntry.js' }
+         *  { appY: 'appY@http://localhost:3002/remoteEntry.js' }
+         */
+        ...(isGlobal ? { remoteType: 'script' } : {}),
       }),
       sharedLibraries.getReplacementPlugin()
     );

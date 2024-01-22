@@ -1,20 +1,16 @@
 import { output } from '../utils/output';
-import { Workspaces } from '../config/workspaces';
-import { mergeNpmScriptsWithTargets } from '../utils/project-graph-utils';
-import { existsSync } from 'fs';
-import { join, relative } from 'path';
-import {
-  loadNxPlugins,
-  mergePluginTargetsWithNxTargets,
-} from '../utils/nx-plugin';
+import { relative } from 'path';
 import { Task, TaskGraph } from '../config/task-graph';
 import { ProjectGraph, ProjectGraphProjectNode } from '../config/project-graph';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { workspaceRoot } from '../utils/workspace-root';
-import { NxJsonConfiguration } from '../config/nx-json';
 import { joinPathFragments } from '../utils/path';
 import { isRelativePath } from '../utils/fileutils';
 import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-into-command-line';
+import { splitByColons } from '../utils/split-target';
+import { getExecutorInformation } from '../command-line/run/executor-utils';
+import { CustomHasher } from '../config/misc-interfaces';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
@@ -26,20 +22,21 @@ export function getDependencyConfigs(
   defaultDependencyConfigs: Record<string, (TargetDependencyConfig | string)[]>,
   projectGraph: ProjectGraph
 ): TargetDependencyConfig[] | undefined {
-  const dependencyConfigs = expandDependencyConfigSyntaxSugar(
+  const dependencyConfigs = (
     projectGraph.nodes[project].data?.targets[target]?.dependsOn ??
-      defaultDependencyConfigs[target] ??
-      []
+    defaultDependencyConfigs[target] ??
+    []
+  ).map((config) =>
+    typeof config === 'string'
+      ? expandDependencyConfigSyntaxSugar(config, projectGraph)
+      : config
   );
   for (const dependencyConfig of dependencyConfigs) {
-    if (
-      dependencyConfig.projects !== 'dependencies' &&
-      dependencyConfig.projects !== 'self'
-    ) {
+    if (dependencyConfig.projects && dependencyConfig.dependencies) {
       output.error({
         title: `dependsOn is improperly configured for ${project}:${target}`,
         bodyLines: [
-          `dependsOn.projects is "${dependencyConfig.projects}" but should be "self" or "dependencies"`,
+          `dependsOn.projects and dependsOn.dependencies cannot be used together.`,
         ],
       });
       process.exit(1);
@@ -48,27 +45,51 @@ export function getDependencyConfigs(
   return dependencyConfigs;
 }
 
-function expandDependencyConfigSyntaxSugar(
-  deps: (TargetDependencyConfig | string)[]
-): TargetDependencyConfig[] {
-  return deps.map((d) => {
-    if (typeof d === 'string') {
-      if (d.startsWith('^')) {
-        return { projects: 'dependencies', target: d.substring(1) };
-      } else {
-        return { projects: 'self', target: d };
-      }
-    } else {
-      return d;
-    }
-  });
+export function expandDependencyConfigSyntaxSugar(
+  dependencyConfigString: string,
+  graph: ProjectGraph
+): TargetDependencyConfig {
+  const [dependencies, targetString] = dependencyConfigString.startsWith('^')
+    ? [true, dependencyConfigString.substring(1)]
+    : [false, dependencyConfigString];
+
+  // Support for `project:target` syntax doesn't make sense for
+  // dependencies, so we only support `target` syntax for dependencies.
+  if (dependencies) {
+    return {
+      target: targetString,
+      dependencies: true,
+    };
+  }
+
+  // Support for both `project:target` and `target:with:colons` syntax
+  const [maybeProject, ...segments] = splitByColons(targetString);
+
+  // if no additional segments are provided, then the string references
+  // a target of the same project
+  if (!segments.length) {
+    return { target: maybeProject };
+  }
+
+  return {
+    // Only the first segment could be a project. If it is, the rest is a target.
+    // If its not, then the whole targetString was a target with colons in its name.
+    target: maybeProject in graph.nodes ? segments.join(':') : targetString,
+    // If the first segment is a project, then we have a specific project. Otherwise, we don't.
+    projects: maybeProject in graph.nodes ? [maybeProject] : undefined,
+  };
 }
 
 export function getOutputs(
   p: Record<string, ProjectGraphProjectNode>,
-  task: Task
+  target: Task['target'],
+  overrides: Task['overrides']
 ) {
-  return getOutputsForTargetAndConfiguration(task, p[task.target.project]);
+  return getOutputsForTargetAndConfiguration(
+    target,
+    overrides,
+    p[target.project]
+  );
 }
 
 class InvalidOutputsError extends Error {
@@ -87,7 +108,7 @@ export function validateOutputs(outputs: string[]) {
   const invalidOutputs = new Set<string>();
 
   for (const output of outputs) {
-    if (!/^{[\s\S]+}/.test(output)) {
+    if (!/^!?{[\s\S]+}/.test(output)) {
       invalidOutputs.add(output);
     }
   }
@@ -105,51 +126,63 @@ export function transformLegacyOutputs(
       return output;
     }
 
-    const relativePath = isRelativePath(output)
+    let [isNegated, outputPath] = output.startsWith('!')
+      ? [true, output.substring(1)]
+      : [false, output];
+
+    const relativePath = isRelativePath(outputPath)
       ? output
-      : relative(projectRoot, output);
+      : relative(projectRoot, outputPath);
 
     const isWithinProject = !relativePath.startsWith('..');
-    return joinPathFragments(
-      isWithinProject ? '{projectRoot}' : '{workspaceRoot}',
-      isWithinProject ? relativePath : output
+    return (
+      (isNegated ? '!' : '') +
+      joinPathFragments(
+        isWithinProject ? '{projectRoot}' : '{workspaceRoot}',
+        isWithinProject ? relativePath : outputPath
+      )
     );
   });
 }
 
 /**
- * Returns the list of outputs that will be cached.
- * @param task target + overrides
- * @param node ProjectGraphProjectNode object that the task runs against
+ * @deprecated Pass the target and overrides instead. This will be removed in v18.
  */
 export function getOutputsForTargetAndConfiguration(
-  task: Pick<Task, 'target' | 'overrides'>,
+  task: Task,
   node: ProjectGraphProjectNode
+): string[];
+export function getOutputsForTargetAndConfiguration(
+  target: Task['target'] | Task,
+  overrides: Task['overrides'] | ProjectGraphProjectNode,
+  node: ProjectGraphProjectNode
+): string[];
+/**
+ * Returns the list of outputs that will be cached.
+ */
+export function getOutputsForTargetAndConfiguration(
+  taskTargetOrTask: Task['target'] | Task,
+  overridesOrNode: Task['overrides'] | ProjectGraphProjectNode,
+  node?: ProjectGraphProjectNode
 ): string[] {
-  const { target, configuration } = task.target;
+  const taskTarget =
+    'id' in taskTargetOrTask ? taskTargetOrTask.target : taskTargetOrTask;
+  const overrides =
+    'id' in taskTargetOrTask ? taskTargetOrTask.overrides : overridesOrNode;
+  node = 'id' in taskTargetOrTask ? overridesOrNode : node;
+
+  const { target, configuration } = taskTarget;
 
   const targetConfiguration = node.data.targets[target];
 
   const options = {
     ...targetConfiguration.options,
     ...targetConfiguration?.configurations?.[configuration],
-    ...task.overrides,
+    ...overrides,
   };
 
   if (targetConfiguration?.outputs) {
-    try {
-      validateOutputs(targetConfiguration.outputs);
-    } catch (error) {
-      if (error instanceof InvalidOutputsError) {
-        // TODO(v16): start warning for invalid outputs
-        targetConfiguration.outputs = transformLegacyOutputs(
-          node.data.root,
-          error
-        );
-      } else {
-        throw error;
-      }
-    }
+    validateOutputs(targetConfiguration.outputs);
 
     return targetConfiguration.outputs
       .map((output: string) => {
@@ -160,7 +193,10 @@ export function getOutputsForTargetAndConfiguration(
           options,
         });
       })
-      .filter((output) => !!output && !output.match(/{.*}/));
+      .filter(
+        (output) =>
+          !!output && !output.match(/{(projectRoot|workspaceRoot|(options.*))}/)
+      );
   }
 
   // Keep backwards compatibility in case `outputs` doesn't exist
@@ -212,50 +248,34 @@ export function interpolate(template: string, data: any): string {
   });
 }
 
-export function getExecutorNameForTask(
+export async function getExecutorNameForTask(
   task: Task,
-  nxJson: NxJsonConfiguration,
   projectGraph: ProjectGraph
 ) {
   const project = projectGraph.nodes[task.target.project].data;
-
-  const projectRoot = join(workspaceRoot, project.root);
-  if (existsSync(join(projectRoot, 'package.json'))) {
-    project.targets = mergeNpmScriptsWithTargets(projectRoot, project.targets);
-  }
-  project.targets = mergePluginTargetsWithNxTargets(
-    project.root,
-    project.targets,
-    loadNxPlugins(nxJson.plugins)
-  );
-
   return project.targets[task.target.target].executor;
 }
 
-export function getExecutorForTask(
+export async function getExecutorForTask(
   task: Task,
-  workspace: Workspaces,
-  projectGraph: ProjectGraph,
-  nxJson: NxJsonConfiguration
-) {
-  const executor = getExecutorNameForTask(task, nxJson, projectGraph);
-  const [nodeModule, executorName] = executor.split(':');
-
-  return workspace.readExecutor(nodeModule, executorName);
-}
-
-export function getCustomHasher(
-  task: Task,
-  workspace: Workspaces,
-  nxJson: NxJsonConfiguration,
   projectGraph: ProjectGraph
 ) {
-  const factory = getExecutorForTask(
-    task,
-    workspace,
-    projectGraph,
-    nxJson
-  ).hasherFactory;
+  const executor = await getExecutorNameForTask(task, projectGraph);
+  const [nodeModule, executorName] = executor.split(':');
+
+  return getExecutorInformation(
+    nodeModule,
+    executorName,
+    workspaceRoot,
+    readProjectsConfigurationFromProjectGraph(projectGraph).projects
+  );
+}
+
+export async function getCustomHasher(
+  task: Task,
+  projectGraph: ProjectGraph
+): Promise<CustomHasher> | null {
+  const factory = (await getExecutorForTask(task, projectGraph)).hasherFactory;
   return factory ? factory() : null;
 }
 
@@ -263,19 +283,39 @@ export function removeTasksFromTaskGraph(
   graph: TaskGraph,
   ids: string[]
 ): TaskGraph {
-  const tasks = {};
+  const newGraph = removeIdsFromGraph<Task>(graph, ids, graph.tasks);
+  return {
+    dependencies: newGraph.dependencies,
+    roots: newGraph.roots,
+    tasks: newGraph.mapWithIds,
+  };
+}
+
+export function removeIdsFromGraph<T>(
+  graph: {
+    roots: string[];
+    dependencies: Record<string, string[]>;
+  },
+  ids: string[],
+  mapWithIds: Record<string, T>
+): {
+  mapWithIds: Record<string, T>;
+  roots: string[];
+  dependencies: Record<string, string[]>;
+} {
+  const filteredMapWithIds = {};
   const dependencies = {};
   const removedSet = new Set(ids);
-  for (let taskId of Object.keys(graph.tasks)) {
-    if (!removedSet.has(taskId)) {
-      tasks[taskId] = graph.tasks[taskId];
-      dependencies[taskId] = graph.dependencies[taskId].filter(
-        (depTaskId) => !removedSet.has(depTaskId)
+  for (let id of Object.keys(mapWithIds)) {
+    if (!removedSet.has(id)) {
+      filteredMapWithIds[id] = mapWithIds[id];
+      dependencies[id] = graph.dependencies[id].filter(
+        (depId) => !removedSet.has(depId)
       );
     }
   }
   return {
-    tasks,
+    mapWithIds: filteredMapWithIds,
     dependencies: dependencies,
     roots: Object.keys(dependencies).filter(
       (k) => dependencies[k].length === 0
@@ -330,11 +370,7 @@ export function getSerializedArgsForTask(task: Task, isVerbose: boolean) {
 
 export function shouldStreamOutput(
   task: Task,
-  initiatingProject: string | null,
-  options: {
-    cacheableOperations?: string[] | null;
-    cacheableTargets?: string[] | null;
-  }
+  initiatingProject: string | null
 ): boolean {
   if (process.env.NX_STREAM_OUTPUT === 'true') return true;
   if (longRunningTask(task)) return true;
@@ -349,6 +385,10 @@ export function isCacheableTask(
     cacheableTargets?: string[] | null;
   }
 ): boolean {
+  if (task.cache !== undefined && !longRunningTask(task)) {
+    return task.cache;
+  }
+
   const cacheable = options.cacheableOperations || options.cacheableTargets;
   return (
     cacheable &&

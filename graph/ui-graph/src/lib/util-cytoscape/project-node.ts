@@ -1,5 +1,7 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphProjectNode } from '@nrwl/devkit';
+import type { ProjectFileMap, ProjectGraphProjectNode } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import * as cy from 'cytoscape';
 import { parseParentDirectoriesFromFilePath } from '../util';
 
@@ -22,6 +24,7 @@ export class ProjectNode {
   focused = false;
 
   constructor(
+    private fileMap: ProjectFileMap,
     private project: ProjectGraphProjectNode,
     private workspaceRoot: string
   ) {}
@@ -48,7 +51,7 @@ export class ProjectNode {
         groupByFolder && this.project.data.hasOwnProperty('root')
           ? this.getParentId()
           : null,
-      files: this.project.data.files,
+      files: (this.fileMap || {})[this.project.data.name] || [],
       root: this.project.data.root,
       description: this.project.data.description,
     };

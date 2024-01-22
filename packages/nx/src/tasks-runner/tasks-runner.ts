@@ -2,7 +2,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { NxArgs } from '../utils/command-line-utils';
-import { Hasher } from '../hasher/hasher';
+import { TaskHasher } from '../hasher/task-hasher';
 import { DaemonClient } from '../daemon/client/client';
 
 export type TaskStatus =
@@ -27,7 +27,7 @@ export type TasksRunner<T = unknown> = (
     nxJson: NxJsonConfiguration;
     nxArgs: NxArgs;
     taskGraph?: TaskGraph;
-    hasher?: Hasher;
+    hasher?: TaskHasher;
     daemon?: DaemonClient;
   }
 ) => any | Promise<{ [id: string]: TaskStatus }>;

@@ -1,8 +1,10 @@
 import { basename, dirname, join, relative, resolve } from 'path';
+import { sync as globSync } from 'fast-glob';
 import { statSync } from 'fs';
-import { normalizePath } from '@nrwl/devkit';
+import { ExecutorContext, normalizePath } from '@nx/devkit';
 
 import type { AssetGlobPattern, RollupExecutorOptions } from '../schema';
+import { createEntryPoints } from '@nx/js';
 
 export interface NormalizedRollupExecutorOptions extends RollupExecutorOptions {
   entryRoot: string;
@@ -13,9 +15,10 @@ export interface NormalizedRollupExecutorOptions extends RollupExecutorOptions {
 
 export function normalizeRollupExecutorOptions(
   options: RollupExecutorOptions,
-  root: string,
+  context: ExecutorContext,
   sourceRoot: string
 ): NormalizedRollupExecutorOptions {
+  const { root } = context;
   const main = `${root}/${options.main}`;
   const entryRoot = dirname(main);
   const project = options.project
@@ -23,10 +26,6 @@ export function normalizeRollupExecutorOptions(
     : join(root, 'package.json');
   const projectRoot = dirname(project);
   const outputPath = `${root}/${options.outputPath}`;
-
-  if (options.buildableProjectDepsInPackageJsonType == undefined) {
-    options.buildableProjectDepsInPackageJsonType = 'peerDependencies';
-  }
 
   return {
     ...options,
@@ -44,6 +43,11 @@ export function normalizeRollupExecutorOptions(
     project,
     projectRoot,
     outputPath,
+    skipTypeCheck: options.skipTypeCheck || false,
+    additionalEntryPoints: createEntryPoints(
+      options.additionalEntryPoints,
+      context.root
+    ),
   };
 }
 

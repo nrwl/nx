@@ -7,8 +7,9 @@ import { readJsonFile } from '../fileutils';
 import { PackageJson, readModulePackageJson } from '../package-json';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
-import { NxJsonConfiguration } from '../../config/nx-json';
+import { readNxJson } from '../../config/nx-json';
 import { getNxRequirePaths } from '../installation-directory';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 export function findInstalledPlugins(): PackageJson[] {
   const packageJsonDeps = getDependenciesFromPackageJson();
@@ -21,7 +22,7 @@ export function findInstalledPlugins(): PackageJson[] {
       result.push(pluginPackageJson);
     }
   }
-  return result;
+  return result.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function getNxPluginPackageJsonOrNull(pkg: string): PackageJson | null {
@@ -56,24 +57,27 @@ function getDependenciesFromPackageJson(
 }
 
 function getDependenciesFromNxJson(): string[] {
-  const { installation } = readJsonFile<NxJsonConfiguration>(
-    join(workspaceRoot, 'nx.json')
-  );
+  const { installation } = readNxJson();
   if (!installation) {
     return [];
   }
   return ['nx', ...Object.keys(installation.plugins || {})];
 }
 
-export function getInstalledPluginsAndCapabilities(
-  workspaceRoot: string
-): Map<string, PluginCapabilities> {
+export async function getInstalledPluginsAndCapabilities(
+  workspaceRoot: string,
+  projects: Record<string, ProjectConfiguration>
+): Promise<Map<string, PluginCapabilities>> {
   const plugins = findInstalledPlugins().map((p) => p.name);
 
   const result = new Map<string, PluginCapabilities>();
   for (const plugin of Array.from(plugins).sort()) {
     try {
-      const capabilities = getPluginCapabilities(workspaceRoot, plugin);
+      const capabilities = await getPluginCapabilities(
+        workspaceRoot,
+        plugin,
+        projects
+      );
       if (
         capabilities &&
         (capabilities.executors ||

@@ -4,7 +4,7 @@ import {
   getPackageManagerCommand,
   getPublishedVersion,
   runCLI,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 
@@ -27,19 +27,19 @@ describe('nx init (for NestCLI)', () => {
         cwd: e2eCwd,
         encoding: 'utf-8',
         env: process.env,
-        stdio: ['pipe', 'pipe', 'pipe'],
+        stdio: 'pipe',
       }
     );
 
     const output = execSync(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init -y --cacheable=format`,
+      } nx@${getPublishedVersion()} init --cacheable=format --no-interactive`,
       {
         cwd: projectRoot,
         encoding: 'utf-8',
         env: process.env,
-        stdio: ['pipe', 'pipe', 'pipe'],
+        stdio: 'pipe',
       }
     );
 

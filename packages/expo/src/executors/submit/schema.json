@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "version": 2,
+  "title": "EXPO EAS Submit Executor",
+  "description": "Submit app binary to App Store and/or Play Store.",
+  "type": "object",
+  "presets": [
+    {
+      "name": "Submit for a specific platform",
+      "keys": ["platform"]
+    },
+    {
+      "name": "Submit using a specific profile",
+      "keys": ["profile"]
+    }
+  ],
+  "properties": {
+    "profile": {
+      "type": "string",
+      "description": "Name of the build profile from eas.json. Defaults to \"production\" if defined in eas.json.",
+      "examples": ["production", "development", "preview"],
+      "x-priority": "important"
+    },
+    "platform": {
+      "enum": ["ios", "android", "all"],
+      "alias": "p",
+      "description": "The platform to build the app, example values: ios, android, all.",
+      "x-priority": "important"
+    },
+    "id": {
+      "type": "string",
+      "description": "Build ID to submit"
+    },
+    "path": {
+      "type": "string",
+      "description": "Path to the .apk/.aab/.ipa file"
+    },
+    "url": {
+      "type": "string",
+      "description": "URL to the .apk/.aab/.ipa file, app archive url"
+    },
+    "latest": {
+      "type": "boolean",
+      "description": "Submit the latest build for specified platform"
+    },
+    "interactive": {
+      "type": "boolean",
+      "description": "Run command in interactive mode",
+      "default": true
+    },
+    "wait": {
+      "type": "boolean",
+      "description": "Wait for build(s) to complete",
+      "default": true
+    }
+  }
+}

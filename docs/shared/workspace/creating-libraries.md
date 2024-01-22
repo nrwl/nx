@@ -8,7 +8,7 @@ There are three main benefits to breaking your code up into more libraries.
 
 ### 1. Faster Commands
 
-The more granular your libraries are, the more effective `nx affected` and Nx's computation cache will be. For example, if `libraryA` contains 10 tests, but only 5 of them were affected by a particular code change, all 10 tests will be run by `nx affected --target=test`. If you can predict which 5 tests are usually run together, you can split all the related code into a separate library to allow the two groups of 5 tests to be executed independently.
+The more granular your libraries are, the more effective `nx affected` and Nx's computation cache will be. For example, if `libraryA` contains 10 tests, but only 5 of them were affected by a particular code change, all 10 tests will be run by `nx affected -t test`. If you can predict which 5 tests are usually run together, you can split all the related code into a separate library to allow the two groups of 5 tests to be executed independently.
 
 ### 2. Visualizing Architecture
 
@@ -16,7 +16,7 @@ The `nx graph` command generates a graph of how apps and libraries depend on eac
 
 ### 3. Enforcing Constraints
 
-You can enforce constraints on how different types of libraries depend on each other [using tags](/core-features/enforce-project-boundaries). Following pre-determined conventions on what kind of code can go in different types of libraries allows your tagging system to enforce good architectural patterns.
+You can enforce constraints on how different types of libraries depend on each other [using tags](/core-features/enforce-module-boundaries). Following pre-determined conventions on what kind of code can go in different types of libraries allows your tagging system to enforce good architectural patterns.
 
 Also, each library defines its own API, which allows for encapsulating logic that other parts of codebase can not access. You can even use a [CODEOWNERS file](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/about-code-owners) to assign ownership of a certain library to a user or team.
 

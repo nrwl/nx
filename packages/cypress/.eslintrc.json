@@ -10,7 +10,7 @@
       "files": ["**/*.ts"],
       "excludedFiles": ["./src/migrations/**"],
       "rules": {
-        "no-restricted-imports": ["error", "@nrwl/workspace"]
+        "no-restricted-imports": ["error", "@nx/workspace"]
       }
     },
     {
@@ -22,7 +22,27 @@
       ],
       "parser": "jsonc-eslint-parser",
       "rules": {
-        "@nrwl/nx/nx-plugin-checks": "error"
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "typescript",
+              // Type imports only
+              "eslint",
+              "rollup",
+              "vite"
+            ]
+          }
+        ]
       }
     }
   ],

@@ -2,16 +2,21 @@ import {
   applyChangesToString,
   ChangeType,
   generateFiles,
+  getPackageManagerCommand,
   joinPathFragments,
   output,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+  workspaceRoot,
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import ts = require('typescript');
 import * as fs from 'fs';
+import { fileExists } from 'nx/src/utils/fileutils';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 export function onlyShowGuide(storybookProjects: {
   [key: string]: {
@@ -20,27 +25,29 @@ export function onlyShowGuide(storybookProjects: {
     viteConfigFilePath?: string;
   };
 }) {
+  const pm = getPackageManagerCommand();
+
   output.log({
     title: 'Storybook 7 Migration Guide',
     bodyLines: [
       `You can run the following commands manually to upgrade your Storybook projects to Storybook 7:`,
       ``,
       `1. Call the Storybook upgrade script:`,
-      `npx storybook@next upgrade --prerelease`,
+      `${pm.exec} storybook@latest upgrade`,
       ``,
       `2. Call the Nx generator to prepare your files for migration:`,
-      `nx g @nrwl/storybook:migrate-7 --onlyPrepare`,
+      `nx g @nx/storybook:migrate-7 --onlyPrepare`,
       ``,
       `3. Call the Storybook automigrate scripts:`,
       `Run the following commands for each Storybook project:`,
       ...Object.entries(storybookProjects).map(
         ([_projectName, storybookProjectInfo]) => {
-          return `npx sb@next automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
+          return `${pm.exec} storybook@latest automigrate --config-dir ${storybookProjectInfo.configDir} --renderer ${storybookProjectInfo.uiFramework}`;
         }
       ),
       ``,
       `4. Call the Nx generator to finish the migration:`,
-      `nx g @nrwl/storybook:migrate-7 --afterMigration`,
+      `nx g @nx/storybook:migrate-7 --afterMigration`,
     ],
   });
 }
@@ -332,7 +339,7 @@ export function removeTypecastFromMainTs(
 export function removeUiFrameworkFromProjectJson(tree: Tree) {
   forEachExecutorOptions(
     tree,
-    '@nrwl/storybook:build',
+    '@nx/storybook:build',
     (options, projectName, targetName) => {
       if (projectName && options?.['uiFramework']) {
         const projectConfiguration = readProjectConfiguration(
@@ -347,7 +354,7 @@ export function removeUiFrameworkFromProjectJson(tree: Tree) {
 
   forEachExecutorOptions(
     tree,
-    '@nrwl/storybook:storybook',
+    '@nx/storybook:storybook',
     (options, projectName, targetName) => {
       if (projectName && options?.['uiFramework']) {
         const projectConfiguration = readProjectConfiguration(
@@ -434,7 +441,7 @@ export function getAllStorybookInfo(tree: Tree): {
   const allStorybookDirs = {};
   forEachExecutorOptions(
     tree,
-    '@nrwl/storybook:build',
+    '@nx/storybook:build',
     (options, projectName) => {
       if (projectName && options?.['configDir']) {
         const projectConfiguration = readProjectConfiguration(
@@ -530,10 +537,37 @@ export function handleMigrationResult(
     successfulProjects: {};
     failedProjects: {};
   },
-  allStorybookProjectsLength: number
-) {
+  allStorybookProjects: {
+    [key: string]: {
+      configDir: string;
+      uiFramework: string;
+      viteConfigFilePath?: string;
+    };
+  }
+): { successfulProjects: {}; failedProjects: {} } {
   if (
-    allStorybookProjectsLength ===
+    fileExists(join(workspaceRoot, 'migration-storybook.log')) &&
+    Object.keys(migrateResult.successfulProjects)?.length
+  ) {
+    const sbLogFile = readFileSync(
+      join(workspaceRoot, 'migration-storybook.log'),
+      'utf-8'
+    );
+    Object.keys(migrateResult.successfulProjects).forEach((projectName) => {
+      if (
+        sbLogFile.includes(
+          `The migration failed to update your ${allStorybookProjects[projectName].configDir}`
+        )
+      ) {
+        migrateResult.failedProjects[projectName] =
+          migrateResult.successfulProjects[projectName];
+        delete migrateResult.successfulProjects[projectName];
+      }
+    });
+  }
+
+  if (
+    Object.keys(allStorybookProjects)?.length ===
       Object.keys(migrateResult.successfulProjects)?.length ||
     Object.keys(migrateResult.failedProjects)?.length === 0
   ) {
@@ -578,13 +612,16 @@ export function handleMigrationResult(
       });
     }
   }
+  return migrateResult;
 }
 
 export function checkStorybookInstalled(packageJson): boolean {
   return (
     (packageJson.dependencies['@storybook/core-server'] ||
       packageJson.devDependencies['@storybook/core-server']) &&
-    (packageJson.dependencies['@nrwl/storybook'] ||
+    (packageJson.dependencies['@nx/storybook'] ||
+      packageJson.devDependencies['@nx/storybook'] ||
+      packageJson.dependencies['@nrwl/storybook'] ||
       packageJson.devDependencies['@nrwl/storybook'])
   );
 }
@@ -649,22 +686,17 @@ export function logResult(
     color: 'green',
   });
 
-  generateFiles(
-    tree,
-    'packages/storybook/src/generators/migrate-7/templates',
-    '.',
-    {
-      tmpl: '',
-      successfulProjects: Object.entries(
-        migrationSummary?.successfulProjects
-      )?.map(([_projectName, command]) => command),
-      failedProjects: Object.entries(migrationSummary?.failedProjects)?.map(
-        ([_projectName, command]) => command
-      ),
-      hasFailedProjects:
-        Object.keys(migrationSummary?.failedProjects)?.length > 0,
-      hasSuccessfulProjects:
-        Object.keys(migrationSummary?.successfulProjects)?.length > 0,
-    }
-  );
+  generateFiles(tree, join(__dirname, 'files'), '.', {
+    tmpl: '',
+    successfulProjects: Object.entries(
+      migrationSummary?.successfulProjects
+    )?.map(([_projectName, command]) => command),
+    failedProjects: Object.entries(migrationSummary?.failedProjects)?.map(
+      ([_projectName, command]) => command
+    ),
+    hasFailedProjects:
+      Object.keys(migrationSummary?.failedProjects)?.length > 0,
+    hasSuccessfulProjects:
+      Object.keys(migrationSummary?.successfulProjects)?.length > 0,
+  });
 }

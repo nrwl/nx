@@ -1,22 +1,17 @@
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
-import { readJson, readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
-import { libraryGenerator } from '@nrwl/workspace/generators';
+import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/eslint';
+import { libraryGenerator } from '@nx/js';
 import { cypressProjectGenerator } from './cypress-project';
 
-jest.mock('@nrwl/cypress/src/utils/cypress-version');
-describe('@nrwl/storybook:cypress-project', () => {
+describe('@nx/storybook:cypress-project', () => {
   let tree: Tree;
-  let mockedInstalledCypressVersion: jest.Mock<
-    ReturnType<typeof installedCypressVersion>
-  > = installedCypressVersion as never;
 
   beforeEach(async () => {
-    mockedInstalledCypressVersion.mockReturnValue(10);
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await libraryGenerator(tree, {
       name: 'test-ui-lib',
+      projectNameAndRootFormat: 'as-provided',
     });
   });
   afterEach(() => jest.clearAllMocks());
@@ -33,19 +28,6 @@ describe('@nrwl/storybook:cypress-project', () => {
       'utf-8'
     );
     expect(cypressConfig).toMatchSnapshot();
-  });
-
-  it('should update cypress.json file if present', async () => {
-    mockedInstalledCypressVersion.mockReturnValue(9);
-
-    await cypressProjectGenerator(tree, {
-      name: 'test-ui-lib',
-      linter: Linter.EsLint,
-    });
-
-    expect(tree.exists('apps/test-ui-lib-e2e/cypress.json')).toBeTruthy();
-    const cypressConfig = readJson(tree, 'apps/test-ui-lib-e2e/cypress.json');
-    expect(cypressConfig.baseUrl).toEqual('http://localhost:4400');
   });
 
   it('should update `angular.json` file', async () => {
@@ -76,24 +58,6 @@ describe('@nrwl/storybook:cypress-project', () => {
     ).toBeDefined();
     expect(
       tree.exists('apps/one/two/test-ui-lib-e2e/cypress.config.ts')
-    ).toBeTruthy();
-  });
-
-  it('should make sure the cypress packages are installed', async () => {
-    expect(
-      readJson(tree, 'package.json').devDependencies['cypress']
-    ).toBeFalsy();
-    await cypressProjectGenerator(tree, {
-      name: 'test-ui-lib',
-      directory: 'one/two',
-      linter: Linter.EsLint,
-    });
-    expect(
-      readJson(tree, 'package.json').devDependencies['cypress']
-    ).toBeTruthy();
-
-    expect(
-      readJson(tree, 'package.json').devDependencies['@nrwl/cypress']
     ).toBeTruthy();
   });
 });

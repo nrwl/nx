@@ -4,8 +4,8 @@ import {
   normalizePath,
   Tree,
   visitNotIgnoredFiles,
-} from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+} from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { basename, dirname, extname, relative } from 'path';
 import type { Identifier, SourceFile, Statement } from 'typescript';
 import { getTsSourceFile } from '../../../utils/nx-devkit/ast-utils';
@@ -30,37 +30,39 @@ export function getComponentsInfo(
   moduleFilePaths: string[],
   projectName: string
 ): ComponentInfo[] {
-  return moduleFilePaths.flatMap((moduleFilePath) => {
-    const file = getTsSourceFile(tree, moduleFilePath);
-    const declaredComponents = getModuleDeclaredComponents(
-      file,
-      moduleFilePath,
-      projectName
-    );
-    if (declaredComponents.length === 0) {
-      return undefined;
-    }
-
-    if (!tsModule) {
-      tsModule = ensureTypescript();
-    }
-    const imports = file.statements.filter(
-      (statement) => statement.kind === tsModule.SyntaxKind.ImportDeclaration
-    );
-
-    const componentsInfo = declaredComponents.map((componentName) =>
-      getComponentInfo(
-        tree,
-        entryPoint,
+  return moduleFilePaths
+    .flatMap((moduleFilePath) => {
+      const file = getTsSourceFile(tree, moduleFilePath);
+      const declaredComponents = getModuleDeclaredComponents(
         file,
-        imports,
         moduleFilePath,
-        componentName
-      )
-    );
+        projectName
+      );
+      if (declaredComponents.length === 0) {
+        return undefined;
+      }
 
-    return componentsInfo;
-  });
+      if (!tsModule) {
+        tsModule = ensureTypescript();
+      }
+      const imports = file.statements.filter(
+        (statement) => statement.kind === tsModule.SyntaxKind.ImportDeclaration
+      );
+
+      const componentsInfo = declaredComponents.map((componentName) =>
+        getComponentInfo(
+          tree,
+          entryPoint,
+          file,
+          imports,
+          moduleFilePath,
+          componentName
+        )
+      );
+
+      return componentsInfo;
+    })
+    .filter((f) => f !== undefined);
 }
 
 export function getStandaloneComponentsInfo(

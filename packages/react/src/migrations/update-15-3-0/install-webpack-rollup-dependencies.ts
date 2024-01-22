@@ -1,4 +1,4 @@
-import { addDependenciesToPackageJson, getProjects, Tree } from '@nrwl/devkit';
+import { addDependenciesToPackageJson, getProjects, Tree } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 export function installWebpackRollupDependencies(tree: Tree) {
   const projects = getProjects(tree);

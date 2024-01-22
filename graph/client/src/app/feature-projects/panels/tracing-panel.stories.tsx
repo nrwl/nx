@@ -1,7 +1,7 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react';
 import { TracingPanel } from './tracing-panel';
 
-export default {
+const meta: Meta<typeof TracingPanel> = {
   component: TracingPanel,
   title: 'Project Graph/TracingPanel',
   argTypes: {
@@ -9,15 +9,15 @@ export default {
     resetStart: { action: 'resetStart' },
     setAlgorithm: { action: 'setAlgorithm' },
   },
-} as ComponentMeta<typeof TracingPanel>;
+};
 
-const Template: ComponentStory<typeof TracingPanel> = (args) => (
-  <TracingPanel {...args} />
-);
+export default meta;
+type Story = StoryObj<typeof TracingPanel>;
 
-export const Primary = Template.bind({});
-Primary.args = {
-  end: 'shared-ui',
-  start: 'store',
-  algorithm: 'shortest',
+export const Primary: Story = {
+  args: {
+    end: 'shared-ui',
+    start: 'store',
+    algorithm: 'shortest',
+  },
 };

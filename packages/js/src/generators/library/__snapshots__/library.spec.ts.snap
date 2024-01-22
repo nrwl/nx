@@ -1,29 +1,118 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`lib --bundler=vite should add build and test targets with vite and vitest 1`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+
+## Running unit tests
+
+Run \`nx test my-lib\` to execute the unit tests via [Vitest](https://vitest.dev/).
+"
+`;
+
+exports[`lib --bundler=vite should add build and test targets with vite and vitest 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["vite.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+"
+`;
+
+exports[`lib --bundler=vite should respect unitTestRunner if passed 1`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+"
+`;
+
+exports[`lib --bundler=vite should respect unitTestRunner if passed 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+"
+`;
+
+exports[`lib --bundler=vite should respect unitTestRunner if passed 3`] = `
+"# my-lib
+
+This library was generated with [Nx](https://nx.dev).
+
+## Building
+
+Run \`nx build my-lib\` to build the library.
+
+## Running unit tests
+
+Run \`nx test my-lib\` to execute the unit tests via [Jest](https://jestjs.io).
+"
+`;
+
+exports[`lib --bundler=vite should respect unitTestRunner if passed 4`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "declaration": true,
+    "types": ["node", "vite/client"]
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}
+"
+`;
+
 exports[`lib --unit-test-runner jest should generate test configuration with swc and js 1`] = `
 "/* eslint-disable */
-const { readFileSync } = require('fs')
+const { readFileSync } = require('fs');
 
-// Reading the SWC compilation config and remove the \\"exclude\\"
+// Reading the SWC compilation config and remove the "exclude"
 // for the test files to be compiled by SWC
 const { exclude: _, ...swcJestConfig } = JSON.parse(
   readFileSync(\`\${__dirname}/.swcrc\`, 'utf-8')
 );
 
 // disable .swcrc look-up by SWC core because we're passing in swcJestConfig ourselves.
-// If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to \\"exclude\\"
+// If we do not disable this, SWC Core will read .swcrc and won't transform our test files due to "exclude"
 if (swcJestConfig.swcrc === undefined) {
-    swcJestConfig.swcrc = false;
+  swcJestConfig.swcrc = false;
 }
+
+// Uncomment if using global setup/teardown files being transformed via swc
+// https://nx.dev/packages/jest/documents/overview#global-setup/teardown-with-nx-libraries
+// jest needs EsModule Interop to find the default exported setup/teardown functions
+// swcJestConfig.module.noInterop = false;
 
 module.exports = {
   displayName: 'my-lib',
-  preset: '../../jest.preset.js',
+  preset: '../jest.preset.js',
   transform: {
-    '^.+\\\\\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
+    '^.+\\\\.[tj]s$': ['@swc/jest', swcJestConfig],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/libs/my-lib'
+  testEnvironment: 'jsdom',
+  coverageDirectory: '../coverage/my-lib',
 };
 "
 `;

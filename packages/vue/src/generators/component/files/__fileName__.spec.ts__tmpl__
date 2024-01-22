@@ -1,0 +1,9 @@
+import { mount } from '@vue/test-utils'
+import <%= className %> from './<%= fileName %>.vue';
+
+describe('<%= className %>', () => {
+  it('renders properly', () => {
+    const wrapper = mount(<%= className %>, {})
+    expect(wrapper.text()).toContain('Welcome to <%= className %>')
+  })
+});

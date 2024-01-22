@@ -1,17 +1,19 @@
+/* eslint-disable @nx/enforce-module-boundaries */
 /* nx-ignore-next-line */
 import type {
   ProjectGraphProjectNode,
   ProjectGraphDependency,
+  ProjectFileMap,
 } from 'nx/src/config/project-graph';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { useEffect, useRef, useState } from 'react';
 import { GraphService } from './graph';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
 import {
   ProjectEdgeNodeTooltip,
   ProjectNodeToolTip,
   TaskNodeTooltip,
   Tooltip,
-} from '@nrwl/graph/ui-tooltips';
+} from '@nx/graph/ui-tooltips';
 import { GraphTooltipService } from './tooltip-service';
 import { TooltipEvent } from './interfaces';
 
@@ -19,6 +21,7 @@ type Theme = 'light' | 'dark' | 'system';
 
 export interface GraphUiGraphProps {
   projects: ProjectGraphProjectNode[];
+  fileMap: ProjectFileMap;
   groupByFolder: boolean;
   workspaceLayout: { appsDir: string; libsDir: string };
   dependencies: Record<string, ProjectGraphDependency[]>;
@@ -39,6 +42,7 @@ function resolveTheme(theme: Theme): 'dark' | 'light' {
 
 export function NxProjectGraphViz({
   projects,
+  fileMap,
   groupByFolder,
   workspaceLayout,
   dependencies,
@@ -76,6 +80,7 @@ export function NxProjectGraphViz({
           );
           graph.handleProjectEvent({
             type: 'notifyGraphInitGraph',
+            fileMap,
             projects,
             groupByFolder,
             workspaceLayout,

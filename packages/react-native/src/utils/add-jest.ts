@@ -1,5 +1,5 @@
-import { Tree } from '@nrwl/devkit';
-import { jestProjectGenerator } from '@nrwl/jest';
+import { Tree, offsetFromRoot } from '@nx/devkit';
+import { configurationGenerator } from '@nx/jest';
 
 export async function addJest(
   host: Tree,
@@ -13,7 +13,7 @@ export async function addJest(
     return () => {};
   }
 
-  const jestTask = await jestProjectGenerator(host, {
+  const jestTask = await configurationGenerator(host, {
     js,
     project: projectName,
     supportTsx: true,
@@ -21,6 +21,7 @@ export async function addJest(
     setupFile: 'none',
     compiler: 'babel',
     skipPackageJson,
+    skipFormat: true,
   });
 
   // overwrite the jest.config.ts file because react native needs to have special transform property
@@ -28,12 +29,15 @@ export async function addJest(
   const content = `module.exports = {
   displayName: '${projectName}',
   preset: 'react-native',
-  resolver: '@nrwl/jest/plugins/resolver',
+  resolver: '@nx/jest/plugins/resolver',
   moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
   setupFilesAfterEnv: ['<rootDir>/test-setup.${js ? 'js' : 'ts'}'],
   moduleNameMapper: {
-    '\\\\.svg$': '@nrwl/react-native/plugins/jest/svg-mock'
-  }
+    '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock'
+  },
+  coverageDirectory: '${offsetFromRoot(
+    appProjectRoot
+  )}coverage/${appProjectRoot}'
 };`;
   host.write(configPath, content);
 

@@ -1,0 +1,9 @@
+import { Directive } from '@angular/core';
+
+@Directive({
+  selector: '[<%= selector %>]'<% if(standalone) {%>,
+  standalone: true<%}%>
+})
+export class <%= symbolName %> {
+  constructor() {}
+}

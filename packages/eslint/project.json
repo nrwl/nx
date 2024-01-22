@@ -1,0 +1,60 @@
+{
+  "name": "eslint",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/eslint",
+  "projectType": "library",
+  "targets": {
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "assets": [
+          {
+            "input": "packages/eslint",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/eslint",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "outputs": ["{workspaceRoot}/build/packages/eslint"],
+      "options": {
+        "command": "node ./scripts/copy-readme.js eslint"
+      }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js eslint @nx/linter @nrwl/linter"
+    },
+    "lint": {}
+  },
+  "implicitDependencies": ["eslint-plugin"]
+}

@@ -1,12 +1,11 @@
 import {
   addProjectConfiguration,
-  convertNxGenerator,
   formatFiles,
   readJson,
   Tree,
   updateProjectConfiguration,
   writeJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { join } from 'path';
 import { Schema } from './schema';
 import { toNewFormat, toOldFormat } from 'nx/src/adapter/angular-json';
@@ -101,7 +100,3 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
 }
 
 export default convertToNxProjectGenerator;
-
-export const convertToNxProjectSchematic = convertNxGenerator(
-  convertToNxProjectGenerator
-);

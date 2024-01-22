@@ -1,9 +1,10 @@
-import { exec, execSync } from 'child_process';
+import { exec } from 'child_process';
 import * as path from 'path';
 import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import * as chalk from 'chalk';
+import { runCommand } from '../../native';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -20,7 +21,9 @@ async function loadEnvVars(path?: string) {
   }
 }
 
-export type Json = { [k: string]: any };
+export type Json = {
+  [k: string]: any;
+};
 
 export interface RunCommandsOptions extends Json {
   command?: string;
@@ -43,9 +46,9 @@ export interface RunCommandsOptions extends Json {
   parallel?: boolean;
   readyWhen?: string;
   cwd?: string;
+  env?: Record<string, string>;
   args?: string;
   envFile?: string;
-  outputPath?: string;
   __unparsed__: string[];
 }
 
@@ -58,7 +61,6 @@ const propKeys = [
   'cwd',
   'args',
   'envFile',
-  'outputPath',
 ];
 
 export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
@@ -66,13 +68,17 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
     command: string;
     forwardAllArgs?: boolean;
   }[];
-  parsedArgs: { [k: string]: any };
+  parsedArgs: {
+    [k: string]: any;
+  };
 }
 
 export default async function (
   options: RunCommandsOptions,
   context: ExecutorContext
-): Promise<{ success: boolean }> {
+): Promise<{
+  success: boolean;
+}> {
   await loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
@@ -115,7 +121,9 @@ async function runInParallel(
       c,
       options.readyWhen,
       options.color,
-      calculateCwd(options.cwd, context)
+      calculateCwd(options.cwd, context),
+      options.env ?? {},
+      true
     ).then((result) => ({
       result,
       command: c.command,
@@ -176,16 +184,26 @@ async function runSerially(
   context: ExecutorContext
 ) {
   for (const c of options.commands) {
-    createSyncProcess(
-      c.command,
+    const success = await createProcess(
+      c,
+      undefined,
       options.color,
-      calculateCwd(options.cwd, context)
+      calculateCwd(options.cwd, context),
+      options.env ?? {},
+      false
     );
+    if (!success) {
+      process.stderr.write(
+        `Warning: run-commands command "${c.command}" exited with non-zero status code`
+      );
+      return false;
+    }
   }
+
   return true;
 }
 
-function createProcess(
+async function createProcess(
   commandConfig: {
     command: string;
     color?: string;
@@ -194,20 +212,64 @@ function createProcess(
   },
   readyWhen: string,
   color: boolean,
-  cwd: string
+  cwd: string,
+  env: Record<string, string>,
+  isParallel: boolean
+): Promise<boolean> {
+  env = processEnv(color, cwd, env);
+  // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
+  // currently does not work properly in windows
+  if (
+    process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
+    process.stdout.isTTY &&
+    !commandConfig.prefix &&
+    !isParallel
+  ) {
+    const cp = runCommand(commandConfig.command, cwd, env);
+
+    return new Promise((res) => {
+      cp.onOutput((output) => {
+        if (readyWhen && output.indexOf(readyWhen) > -1) {
+          res(true);
+        }
+      });
+
+      cp.onExit((code) => res(code === 0));
+    });
+  }
+
+  return nodeProcess(commandConfig, color, cwd, env, readyWhen);
+}
+
+function nodeProcess(
+  commandConfig: {
+    command: string;
+    color?: string;
+    bgColor?: string;
+    prefix?: string;
+  },
+  color: boolean,
+  cwd: string,
+  env: Record<string, string>,
+  readyWhen: string
 ): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(commandConfig.command, {
       maxBuffer: LARGE_BUFFER,
-      env: processEnv(color),
+      env,
       cwd,
     });
     /**
      * Ensure the child process is killed when the parent exits
      */
-    const processExitListener = () => childProcess.kill();
+    const processExitListener = (signal?: number | NodeJS.Signals) =>
+      childProcess.kill(signal);
+
     process.on('exit', processExitListener);
     process.on('SIGTERM', processExitListener);
+    process.on('SIGINT', processExitListener);
+    process.on('SIGQUIT', processExitListener);
+
     childProcess.stdout.on('data', (data) => {
       process.stdout.write(addColorAndPrefix(data, commandConfig));
       if (readyWhen && data.toString().indexOf(readyWhen) > -1) {
@@ -219,6 +281,10 @@ function createProcess(
       if (readyWhen && err.toString().indexOf(readyWhen) > -1) {
         res(true);
       }
+    });
+    childProcess.on('error', (err) => {
+      process.stderr.write(addColorAndPrefix(err.toString(), commandConfig));
+      res(false);
     });
     childProcess.on('exit', (code) => {
       if (!readyWhen) {
@@ -253,15 +319,6 @@ function addColorAndPrefix(
   return out;
 }
 
-function createSyncProcess(command: string, color: boolean, cwd: string) {
-  execSync(command, {
-    env: processEnv(color),
-    stdio: ['inherit', 'inherit', 'inherit'],
-    maxBuffer: LARGE_BUFFER,
-    cwd,
-  });
-}
-
 function calculateCwd(
   cwd: string | undefined,
   context: ExecutorContext
@@ -271,28 +328,34 @@ function calculateCwd(
   return path.join(context.root, cwd);
 }
 
-function processEnv(color: boolean) {
-  const env = {
+function processEnv(color: boolean, cwd: string, env: Record<string, string>) {
+  const res = {
     ...process.env,
-    ...appendLocalEnv(),
+    ...appendLocalEnv({ cwd: cwd ?? process.cwd() }),
+    ...env,
   };
 
   if (color) {
-    env.FORCE_COLOR = `${color}`;
+    res.FORCE_COLOR = `${color}`;
   }
-  return env;
+  return res;
 }
 
 export function interpolateArgsIntoCommand(
   command: string,
-  opts: NormalizedRunCommandsOptions,
+  opts: Pick<
+    NormalizedRunCommandsOptions,
+    'args' | 'parsedArgs' | '__unparsed__'
+  >,
   forwardAllArgs: boolean
 ) {
   if (command.indexOf('{args.') > -1) {
     const regex = /{args\.([^}]+)}/g;
-    return command.replace(regex, (_, group: string) => opts.parsedArgs[group]);
+    return command.replace(regex, (_, group: string) =>
+      opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
+    );
   } else if (forwardAllArgs) {
-    return `${command}${
+    return `${command}${opts.args ? ' ' + opts.args : ''}${
       opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
     }`;
   } else {
@@ -306,7 +369,15 @@ function parseArgs(options: RunCommandsOptions) {
     const unknownOptionsTreatedAsArgs = Object.keys(options)
       .filter((p) => propKeys.indexOf(p) === -1)
       .reduce((m, c) => ((m[c] = options[c]), m), {});
-    return unknownOptionsTreatedAsArgs;
+
+    const unparsedCommandArgs = yargsParser(options.__unparsed__, {
+      configuration: {
+        'parse-numbers': false,
+        'parse-positional-numbers': false,
+        'dot-notation': false,
+      },
+    });
+    return { ...unknownOptionsTreatedAsArgs, ...unparsedCommandArgs };
   }
   return yargsParser(args.replace(/(^"|"$)/g, ''), {
     configuration: { 'camel-case-expansion': false },

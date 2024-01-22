@@ -1,0 +1,38 @@
+{
+  "name": "@nrwl/react",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The React plugin for Nx contains executors and generators for managing React applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, components, hooks, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages-legacy/react"
+  },
+  "keywords": [
+    "Monorepo",
+    "React",
+    "Web",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "builders": "./executors.json",
+  "schematics": "./generators.json",
+  "dependencies": {
+    "@nx/react": "file:../../packages/react"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "nx-migrations": {
+    "migrations": "@nx/react/migrations.json"
+  }
+}

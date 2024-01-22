@@ -1,0 +1,68 @@
+{
+  "name": "nuxt",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/nuxt",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/nuxt/jest.config.ts"
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/nuxt"]
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "build/packages/nuxt",
+        "tsConfig": "packages/nuxt/tsconfig.lib.json",
+        "main": "packages/nuxt/index.ts",
+        "generateExportsField": true,
+        "additionalEntryPoints": [
+          "{projectRoot}/{executors,generators,migrations}.json",
+          "{projectRoot}/plugin.ts"
+        ],
+        "assets": [
+          {
+            "input": "packages/nuxt",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/nuxt",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/nuxt",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/nuxt",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/nuxt",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "command": "node ./scripts/copy-readme.js nuxt",
+      "outputs": ["{workspaceRoot}/build/packages/nuxt"]
+    },
+    "lint": {}
+  }
+}

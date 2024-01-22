@@ -1,12 +1,35 @@
 import { Canvas, Image, SKRSContext2D } from '@napi-rs/canvas';
 import { PackageMetadata } from '../../../nx-dev/models-package/src/lib/package.models';
-import { ensureDir, readFile, readJSONSync, writeFileSync } from 'fs-extra';
+import {
+  ensureDir,
+  readFile,
+  readJSONSync,
+  writeFileSync,
+  copyFileSync,
+} from 'fs-extra';
 import { resolve } from 'path';
 
 const mapJson = readJSONSync('./docs/map.json', 'utf8').content;
 
 const documents: any[] = [
-  ...mapJson.find((x) => x.id === 'nx-documentation')?.['itemList'],
+  ...mapJson
+    .find((x) => x.id === 'nx-documentation')
+    ?.['itemList'].map((item) => {
+      item.sidebarId = '';
+      return item;
+    }),
+  ...mapJson
+    .find((x) => x.id === 'extending-nx')
+    ?.['itemList'].map((item) => {
+      item.sidebarId = 'extending-nx';
+      return item;
+    }),
+  ...mapJson
+    .find((x) => x.id === 'ci')
+    ?.['itemList'].map((item) => {
+      item.sidebarId = 'ci';
+      return item;
+    }),
 ].filter(Boolean);
 
 const packages: PackageMetadata[] = readJSONSync(
@@ -18,20 +41,38 @@ const targetFolder: string = resolve(
   `./nx-dev/nx-dev/public/images/open-graph`
 );
 
-const data: { title: string; content: string; filename: string }[] = [];
-documents.map((category) => {
+const data: {
+  title: string;
+  content: string;
+  mediaImage?: string;
+  filename: string;
+}[] = [];
+documents.forEach((category) => {
   data.push({
     title: category.name,
     content: category.description,
-    filename: [category.id].join('-'),
+    filename: [category.sidebarId, category.id].filter(Boolean).join('-'),
   });
-  category.itemList.map((item) =>
+  category.itemList.forEach((item) => {
     data.push({
       title: item.name,
-      content: category.name,
-      filename: [category.id, item.id].join('-'),
-    })
-  );
+      content: item.description || category.name,
+      mediaImage: item.mediaImage,
+      filename: [category.sidebarId, category.id, item.id]
+        .filter(Boolean)
+        .join('-'),
+    });
+    item.itemList?.forEach((subItem) => {
+      data.push({
+        title: subItem.name,
+        content: subItem.description || category.name,
+        mediaImage: subItem.mediaImage,
+        filename: [category.sidebarId, category.id, item.id, subItem.id]
+          .filter(Boolean)
+          .join('-'),
+      });
+    });
+  });
 });
 packages.map((pkg) => {
   data.push({
@@ -62,6 +103,9 @@ packages.map((pkg) => {
   });
 });
 
+const TITLE_LINE_HEIGHT = 60;
+const SUB_LINE_HEIGHT = 38;
+
 function createOpenGraphImage(
   backgroundImagePath: string,
   targetFolder: string,
@@ -86,17 +130,24 @@ function createOpenGraphImage(
     context.font = 'bold 50px system-ui';
     context.textAlign = 'center';
     context.textBaseline = 'top';
-    context.fillStyle = '#0F172A';
-    context.fillText(title.toUpperCase(), 600, 220);
+    context.fillStyle = '#FFFFFF';
+    const titleLines = splitLines(context, title.toUpperCase(), 1100);
+    titleLines.forEach((line, index) => {
+      context.fillText(line, 600, 220 + index * TITLE_LINE_HEIGHT);
+    });
 
     context.font = 'normal 32px system-ui';
     context.textAlign = 'center';
     context.textBaseline = 'top';
-    context.fillStyle = '#334155';
+    context.fillStyle = '#F8FAFC';
 
     const lines = splitLines(context, content, 1100);
     lines.forEach((line, index) => {
-      context.fillText(line, 600, 310 + index * 55);
+      context.fillText(
+        line,
+        600,
+        310 + index * SUB_LINE_HEIGHT + titleLines.length * TITLE_LINE_HEIGHT
+      );
     });
 
     console.log('Generating: ', `${filename}.jpg`);
@@ -106,6 +157,19 @@ function createOpenGraphImage(
       canvas.toBuffer('image/jpeg')
     );
   });
+}
+
+function copyImage(
+  backgroundImagePath: string,
+  targetFolder: string,
+  filename: string
+) {
+  const splits = backgroundImagePath.split('.');
+  const extension = splits[splits.length - 1];
+  copyFileSync(
+    backgroundImagePath,
+    resolve(targetFolder, `./${filename}.${extension}`)
+  );
 }
 
 function splitLines(
@@ -118,7 +182,7 @@ function splitLines(
   if (words.length <= 1) {
     return words;
   }
-  const lines = [];
+  const lines: string[] = [];
   let currentLine = words[0];
 
   for (let i = 1; i < words.length; i++) {
@@ -142,12 +206,18 @@ console.log(
 );
 ensureDir(targetFolder).then(() =>
   data.map((item) =>
-    createOpenGraphImage(
-      resolve(__dirname, './media.jpg'),
-      targetFolder,
-      item.title,
-      item.content,
-      item.filename
-    )
+    item.mediaImage
+      ? copyImage(
+          resolve(__dirname, '../../../docs/' + item.mediaImage),
+          targetFolder,
+          item.filename
+        )
+      : createOpenGraphImage(
+          resolve(__dirname, './media.jpg'),
+          targetFolder,
+          item.title,
+          item.content,
+          item.filename
+        )
   )
 );

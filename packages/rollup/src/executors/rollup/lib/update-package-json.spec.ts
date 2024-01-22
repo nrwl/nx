@@ -14,15 +14,6 @@ describe('updatePackageJson', () => {
     rollupConfig: [],
   };
 
-  const sharedContext = {
-    isVerbose: false,
-    projectsConfigurations: { version: 2, projects: {} },
-    nxJsonConfiguration: {},
-    root: '',
-    cwd: '',
-  };
-
-  // TODO(jack): In Nx 15 we want this field to always generate.
   describe('generateExportsField: true', () => {
     it('should support ESM', () => {
       const spy = jest.spyOn(utils, 'writeJsonFile');
@@ -33,23 +24,17 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['esm'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         exports: {
-          '.': {
-            types: './index.d.ts',
-            import: './index.js',
-          },
+          './package.json': './package.json',
+          '.': './index.esm.js',
         },
-        main: './index.js',
-        module: './index.js',
+        main: './index.esm.js',
+        module: './index.esm.js',
         type: 'module',
-        types: './index.d.ts',
       });
 
       spy.mockRestore();
@@ -64,22 +49,16 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['cjs'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         exports: {
-          '.': {
-            types: './index.d.ts',
-            require: './index.cjs',
-          },
+          './package.json': './package.json',
+          '.': './index.cjs.js',
         },
-        main: './index.cjs',
+        main: './index.cjs.js',
         type: 'commonjs',
-        types: './index.d.ts',
       });
 
       spy.mockRestore();
@@ -94,24 +73,20 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['esm', 'cjs'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         exports: {
+          './package.json': './package.json',
           '.': {
-            types: './index.d.ts',
-            import: './index.js',
-            require: './index.cjs',
+            module: './index.esm.js',
+            import: './index.cjs.mjs',
+            default: './index.cjs.js',
           },
         },
-        main: './index.cjs',
-        module: './index.js',
-        type: 'module',
-        types: './index.d.ts',
+        main: './index.cjs.js',
+        module: './index.esm.js',
       });
 
       spy.mockRestore();
@@ -126,32 +101,23 @@ describe('updatePackageJson', () => {
           generateExportsField: true,
           format: ['esm'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {
           exports: {
-            './foo': {
-              import: './foo.js',
-            },
+            './foo': './foo.esm.js',
           },
         } as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
         exports: {
-          '.': {
-            types: './index.d.ts',
-            import: './index.js',
-          },
-          './foo': {
-            import: './foo.js',
-          },
+          './package.json': './package.json',
+          '.': './index.esm.js',
+
+          './foo': './foo.esm.js',
         },
-        main: './index.js',
-        module: './index.js',
+        main: './index.esm.js',
+        module: './index.esm.js',
         type: 'module',
-        types: './index.d.ts',
       });
 
       spy.mockRestore();
@@ -167,17 +133,13 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['esm'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
-        main: './index.js',
-        module: './index.js',
+        main: './index.esm.js',
+        module: './index.esm.js',
         type: 'module',
-        types: './index.d.ts',
       });
 
       spy.mockRestore();
@@ -191,16 +153,12 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['cjs'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
-        main: './index.cjs',
+        main: './index.cjs.js',
         type: 'commonjs',
-        types: './index.d.ts',
       });
 
       spy.mockRestore();
@@ -214,17 +172,12 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['esm', 'cjs'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {} as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
-        main: './index.cjs',
-        module: './index.js',
-        type: 'module',
-        types: './index.d.ts',
+        main: './index.cjs.js',
+        module: './index.esm.js',
       });
 
       spy.mockRestore();
@@ -238,27 +191,19 @@ describe('updatePackageJson', () => {
           ...commonOptions,
           format: ['esm'],
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
         {
           exports: {
-            './foo': {
-              import: './foo.js',
-            },
+            './foo': './foo.esm.js',
           },
         } as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
-        main: './index.js',
-        module: './index.js',
+        main: './index.esm.js',
+        module: './index.esm.js',
         type: 'module',
-        types: './index.d.ts',
         exports: {
-          './foo': {
-            import: './foo.js',
-          },
+          './foo': './foo.esm.js',
         },
       });
 
@@ -267,7 +212,7 @@ describe('updatePackageJson', () => {
   });
 
   describe('skipTypeField', () => {
-    it('should not add "type" field in package.json', () => {
+    it('should not include type field if skipTypeField is true', () => {
       const spy = jest.spyOn(utils, 'writeJsonFile');
 
       updatePackageJson(
@@ -276,16 +221,74 @@ describe('updatePackageJson', () => {
           format: ['esm'],
           skipTypeField: true,
         },
-        sharedContext,
-        { type: 'app', name: 'test', data: {} as any },
-        [],
-        {} as unknown as PackageJson
+        {
+          exports: {
+            './foo': './foo.esm.js',
+          },
+        } as unknown as PackageJson
       );
 
       expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
-        main: './index.js',
-        module: './index.js',
-        types: './index.d.ts',
+        main: './index.esm.js',
+        module: './index.esm.js',
+        exports: {
+          './foo': './foo.esm.js',
+        },
+      });
+
+      spy.mockRestore();
+    });
+
+    it('should include type field if skipTypeField is undefined', () => {
+      const spy = jest.spyOn(utils, 'writeJsonFile');
+
+      updatePackageJson(
+        {
+          ...commonOptions,
+          format: ['esm'],
+        },
+        {
+          exports: {
+            './foo': './foo.esm.js',
+          },
+        } as unknown as PackageJson
+      );
+
+      expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
+        main: './index.esm.js',
+        module: './index.esm.js',
+        type: 'module',
+        exports: {
+          './foo': './foo.esm.js',
+        },
+      });
+
+      spy.mockRestore();
+    });
+
+    it('should include type field if skipTypeField is false', () => {
+      const spy = jest.spyOn(utils, 'writeJsonFile');
+
+      updatePackageJson(
+        {
+          ...commonOptions,
+          format: ['esm'],
+          skipTypeField: false,
+        },
+        {
+          exports: {
+            './foo': './foo.esm.js',
+          },
+        } as unknown as PackageJson
+      );
+
+      expect(utils.writeJsonFile).toHaveBeenCalledWith(expect.anything(), {
+        main: './index.esm.js',
+        module: './index.esm.js',
+        type: 'module',
+        exports: {
+          './foo': './foo.esm.js',
+        },
       });
 
       spy.mockRestore();

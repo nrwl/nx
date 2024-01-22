@@ -5,14 +5,12 @@ import {
   Tree,
   updateJson,
   workspaceRoot,
-} from '@nrwl/devkit';
-import { getNewProjectName } from '@nrwl/workspace/src/generators/move/lib/utils';
+} from '@nx/devkit';
 import { join, relative } from 'path';
-import { Schema } from '../schema';
+import type { MoveImplOptions } from './types';
 
-export function updateNgPackage(tree: Tree, schema: Schema): void {
-  const newProjectName = getNewProjectName(schema.destination);
-  const project = readProjectConfiguration(tree, newProjectName);
+export function updateNgPackage(tree: Tree, schema: MoveImplOptions): void {
+  const project = readProjectConfiguration(tree, schema.newProjectName);
 
   if (project.projectType === 'application') {
     return;
@@ -28,14 +26,12 @@ export function updateNgPackage(tree: Tree, schema: Schema): void {
   );
   const outputs = getOutputsForTargetAndConfiguration(
     {
-      target: {
-        project: newProjectName,
-        target: 'build',
-      },
-      overrides: {},
+      project: schema.newProjectName,
+      target: 'build',
     },
+    {},
     {
-      name: newProjectName,
+      name: schema.newProjectName,
       type: 'lib',
       data: {
         root: project.root,

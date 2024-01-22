@@ -8,33 +8,22 @@
     "description": "Add Nx Expo Schematics.",
     "type": "object",
     "properties": {
-      "unitTestRunner": {
-        "description": "Adds the specified unit test runner",
-        "type": "string",
-        "enum": ["jest", "none"],
-        "default": "jest"
-      },
       "skipFormat": {
         "description": "Skip formatting files",
         "type": "boolean",
         "default": false,
         "x-priority": "internal"
       },
-      "e2eTestRunner": {
-        "description": "Adds the specified e2e test runner",
-        "type": "string",
-        "enum": ["detox", "none"],
-        "default": "detox"
-      },
       "skipPackageJson": {
         "type": "boolean",
         "default": false,
         "description": "Do not add dependencies to `package.json`."
       },
-      "js": {
+      "keepExistingVersions": {
         "type": "boolean",
-        "default": false,
-        "description": "Use JavaScript instead of TypeScript"
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
       }
     },
     "required": [],

@@ -1,21 +1,33 @@
-import { Workspaces } from '../config/workspaces';
 import { execSync } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
 import { extname, join, relative, sep } from 'path';
 import { readNxJson } from '../config/configuration';
 import { FileData } from '../config/project-graph';
-import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import {
+  ProjectConfiguration,
+  ProjectsConfigurations,
+} from '../config/workspace-json-project-json';
 import type { NxArgs } from '../utils/command-line-utils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readJsonFile } from '../utils/fileutils';
 import { jsonDiff } from '../utils/json-diff';
-import ignore from 'ignore';
 import {
   readCachedProjectGraph,
   readProjectsConfigurationFromProjectGraph,
 } from './project-graph';
 import { toOldFormat } from '../adapter/angular-json';
 import { getIgnoreObject } from '../utils/ignore';
+import { retrieveProjectConfigurationPaths } from './utils/retrieve-workspace-files';
+import {
+  mergeProjectConfigurationIntoRootMap,
+  readProjectConfigurationsFromRootMap,
+} from './utils/project-configuration-utils';
+import { NxJsonConfiguration } from '../config/nx-json';
+import { getDefaultPluginsSync } from '../utils/nx-plugin.deprecated';
+import { minimatch } from 'minimatch';
+import { CreateNodesResult } from '../devkit-exports';
+import { PackageJsonProjectsNextToProjectJsonPlugin } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
+import { LoadedNxPlugin } from '../utils/nx-plugin';
 
 export interface Change {
   type: string;
@@ -51,7 +63,7 @@ export function calculateFileChanges(
     f: string,
     r: void | string
   ) => string = defaultReadFileAtRevision,
-  ignore = getIgnoreObject()
+  ignore = getIgnoreObject() as ReturnType<typeof ignore>
 ): FileChange[] {
   files = files.filter((f) => !ignore.ignores(f));
 
@@ -120,20 +132,28 @@ function defaultReadFileAtRevision(
   }
 }
 
+/**
+ * TODO(v18): Remove this function
+ * @deprecated To get projects use {@link retrieveProjectConfigurations} instead
+ */
 export function readWorkspaceConfig(opts: {
   format: 'angularCli' | 'nx';
   path?: string;
 }): ProjectsConfigurations {
   let configuration: ProjectsConfigurations | null = null;
+  const root = opts.path || process.cwd();
+  const nxJson = readNxJson(root);
   try {
     const projectGraph = readCachedProjectGraph();
     configuration = {
-      ...readNxJson(),
+      ...nxJson,
       ...readProjectsConfigurationFromProjectGraph(projectGraph),
     };
   } catch {
-    const ws = new Workspaces(opts.path || process.cwd());
-    configuration = ws.readProjectsConfigurations();
+    configuration = {
+      version: 2,
+      projects: getProjectsSyncNoInference(root, nxJson).projects,
+    };
   }
   if (opts.format === 'angularCli') {
     return toOldFormat(configuration);
@@ -155,10 +175,48 @@ export function readPackageJson(): any {
 }
 // Original Exports
 export { FileData };
+// TODO(17): Remove these exports
+export { readNxJson, workspaceLayout } from '../config/configuration';
 
-// TODO(v16): Remove these exports
-export {
-  readNxJson,
-  readAllWorkspaceConfiguration,
-  workspaceLayout,
-} from '../config/configuration';
+/**
+ * TODO(v18): Remove this function.
+ */
+function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
+  const projectFiles = retrieveProjectConfigurationPaths(
+    root,
+    getDefaultPluginsSync(root)
+  );
+  const plugins: LoadedNxPlugin[] = [
+    { plugin: PackageJsonProjectsNextToProjectJsonPlugin },
+    ...getDefaultPluginsSync(root),
+  ];
+
+  const projectRootMap: Map<string, ProjectConfiguration> = new Map();
+
+  // We iterate over plugins first - this ensures that plugins specified first take precedence.
+  for (const { plugin, options } of plugins) {
+    const [pattern, createNodes] = plugin.createNodes ?? [];
+    if (!pattern) {
+      continue;
+    }
+    for (const file of projectFiles) {
+      if (minimatch(file, pattern, { dot: true })) {
+        let r = createNodes(file, options, {
+          nxJsonConfiguration: nxJson,
+          workspaceRoot: root,
+        }) as CreateNodesResult;
+        for (const node in r.projects) {
+          const project = {
+            root: node,
+            ...r.projects[node],
+          };
+          mergeProjectConfigurationIntoRootMap(projectRootMap, project);
+        }
+      }
+    }
+  }
+
+  return {
+    projects: readProjectConfigurationsFromRootMap(projectRootMap),
+  };
+}

@@ -7,6 +7,24 @@
   "title": "Offline JS Bundle for React Native",
   "description": "JS Bundle target options.",
   "type": "object",
+  "presets": [
+    {
+      "name": "Bundle for a specific platform",
+      "keys": ["platform"]
+    },
+    {
+      "name": "Bundle a development build",
+      "keys": ["dev"]
+    },
+    {
+      "name": "Bundle to a specific output path",
+      "keys": ["bundleOutput"]
+    },
+    {
+      "name": "Bundle without global cache",
+      "keys": ["resetCache"]
+    }
+  ],
   "properties": {
     "entryFile": {
       "type": "string",
@@ -65,7 +83,7 @@
     },
     "readGlobalCache": {
       "type": "boolean",
-      "description": "Removes cached files.",
+      "description": "Try to fetch transformed JS code from the global cache, if configured.",
       "default": false
     }
   },

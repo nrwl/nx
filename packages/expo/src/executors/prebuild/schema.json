@@ -16,7 +16,7 @@
     "install": {
       "type": "boolean",
       "description": "Installing npm packages and CocoaPods.",
-      "default": false,
+      "default": true,
       "x-priority": "internal"
     },
     "platform": {
@@ -30,5 +30,6 @@
       "type": "string",
       "description": "Project template to clone from. File path pointing to a local tar file or a github repo"
     }
-  }
+  },
+  "examplesFile": "../../../docs/prebuild-examples.md"
 }

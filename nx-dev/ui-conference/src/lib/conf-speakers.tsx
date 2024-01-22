@@ -1,4 +1,5 @@
-import { Member, MemberCard } from '@nrwl/nx-dev/ui-member-card';
+import { Member } from '@nx/nx-dev/ui-member-card';
+import { Speakers } from './components/speakers';
 
 export function ConfSpeakers(): JSX.Element {
   const speakers: Array<Member> = [
@@ -18,157 +19,99 @@ export function ConfSpeakers(): JSX.Element {
       description:
         'Lara is a Software Engineering technical Leader on the Customer Experience Angular team at Cisco. Most of Lara’s career has been spent working in the full stack as a Software Consultant and she enjoys sharing the knowledge and experience she has gained with others through talks, blogs, or pairing with teammates. When she is not coding or teaching, Lara enjoys trail running, fostering rescue kittens, and traveling with her family.',
       imageUrl: '/images/conf/lara-newsom.webp',
-      name: 'Lara Newsom',
+      name: 'Lara Newsom (MC)',
       twitter: 'LaraNerdsom',
     },
     {
       description:
-        'Santosh works as a Senior Software Engineer at Celonis and is a GDE for Angular, GitHub Star, and an Auth0 Ambassador, he loves contributing to Angular and its eco-system. He is co-founder of This is Learning. He is also the author of the Ngx-Builders package and part of NestJsAddOns core Team. He is also running This is Tech Talks talk show, where he invites industry experts to discuss different technologies.',
-      imageUrl: '/images/conf/santosh-yadav.webp',
-      name: 'Santosh Yadav',
-      twitter: 'SantoshYadavDev',
+        'Philip Fulcher is a senior engineer with Nrwl and an Nx core team member. He works with Fortune 500 clients to modernize their development practices with a monorepo approach. Philip lives in Colorado with his wife (who is much smarter than him) and two great kids.',
+      imageUrl: '/images/conf/philip-fulcher.webp',
+      name: 'Philip Fulcher (MC)',
+      twitter: 'philipjfulcher',
     },
     {
       description:
-        'Jordan is a Developer Experience Engineer at Cypress. He is passionate about writing "good code" that is easy to read, test and maintain over time. He has over a decade of experience in software development, marketing, design, and video production. Jordan also serves as the CEO & Co-Founder for the non-profit Dream On: Global. When he is not working, he spends his time as a husband, father and Cleveland sports fan.',
-      imageUrl: '/images/conf/jordan-powell.webp',
-      name: 'Jordan Powell',
-      twitter: 'JordanPowell88',
-    },
-    {
-      description:
-        'Based in Montreal, Ben is an architect at Nrwl and a part of the Nx Core Team. He works with Fortune 500 companies across different industries to enable them to develop like Google, Microsoft, and Facebook. Astrophysics enthusiast.',
-      imageUrl: '/images/conf/benjamin-cabanes.webp',
-      name: 'Benjamin Cabanes',
-      twitter: 'bencabanes',
-    },
-    {
-      description:
-        'Core contributor to Nx, and engineering manager at Nrwl. Jack has been doing web development for two decades, and has worked with both small and large organizations. He is passionate about helping teams achieve a high level of productivity through smart tooling and good architecture.',
-      imageUrl: '/images/conf/jack-hsu.webp',
-      name: 'Jack Hsu',
-      twitter: 'jay_soo',
-    },
-    {
-      description:
-        "Based in Atlanta, GA, Altan is a senior engineer at Nrwl and works primarily on Nx Cloud. He's passionate about developer experience and helping organizations move quickly. When not building software, you can find him working on his keyboard or on a hike.",
-      imageUrl: '/images/conf/altan-stalker.webp',
-      name: 'Altan Stalker',
-      twitter: 'StalkAltan',
-    },
-    {
-      description:
-        'Jon is the lead developer for the official Nx Console extension. He has been working as a developer for 15 years; building websites, web apps and server applications. He loves to write Typescript, and dabbles in a bit of Rust. Born and raised in Canada, he’ll always have a recommendation on what to put maple syrup on.',
+        'Jonathan Cammisuli is the lead developer on Nx Console, and a key member of the Nx core team. He is also a passionate advocate for the Rust programming language within the core of Nx.',
       imageUrl: '/images/conf/jonathan-cammisuli.webp',
       name: 'Jonathan Cammisuli',
       twitter: 'jcammisuli',
     },
     {
-      description:
-        'Software engineer at Ionic working on the Cloud Team. Maintainer of the Ionic and Capacitor Nx plugins.',
-      imageUrl: '/images/conf/devin-shoemaker.webp',
-      name: 'Devin Shoemaker',
-      twitter: 'paranoidcoder',
+      description: `Max Kless is a senior software engineer at Nx, focussed on building Nx Console and breaking Jon's code.`,
+      imageUrl: '/images/conf/max-kless.webp',
+      name: 'Max Kless',
+      twitter: 'MaxKless',
+    },
+    {
+      description: `As Sr. Director of Developer Experience at Nx, Juri Strumpflohner helps to shape the evolution of Nx. He loves to break down complex topics and teach them in a simple, digestible form, leveraging his 15+ years of expertise working from backend to frontend systems and consulting as architect for some of the world's biggest companies. Juri is a Google Developer Expert, an international speaker and an Egghead instructor.`,
+      imageUrl: '/images/conf/juri-strumpflohner.webp',
+      name: 'Juri Strumpflohner',
+      twitter: 'juristr',
+    },
+    {
+      description: `Simon Critchley is a Senior Software Architect at Nx and has been working on developing Nx Cloud Workflows since he joined in February 2023. In previous roles he's architected large scale web services handling billions of HTTP requests per day.`,
+      imageUrl: '/images/conf/simon-critchley.webp',
+      name: 'Simon Critchley',
+      // twitter: 'MrJamesHenry',
     },
     {
       description:
-        'From the faraway lands of Scotland (but without the Scottish accent), Rareș works at Nrwl.io on NxCloud, helping teams speed up and scale their development practices. He enjoys learning by teaching and has multiple courses on Egghead.io and is a Scotland organiser for Codebar.io.',
-      imageUrl: '/images/conf/rares-matei.webp',
-      name: 'Rareş Matei',
-      twitter: '__rares',
-    },
-    {
-      description:
-        'James leverages his expert knowledge of Nx to help the biggest enterprises on the planet provide maximum value to their customers. He is a prolific open-source contributor, ESLint Core Team Alum, and has worked on a number of projects alongside the TypeScript Team.',
+        'As Director of Engineering at Nx, James manages our European Nxians and leads our efforts on the Lerna project. He is a prolific open-source contributor, 5x Microsoft MVP, ESLint Core Team Alum, and has worked on a number of projects alongside the TypeScript Team.',
       imageUrl: '/images/conf/james-henry.webp',
       name: 'James Henry',
       twitter: 'MrJamesHenry',
     },
     {
-      description:
-        "Miro is a senior engineer at Nrwl.io and a core member of the Nx team. He's interested in the front end of things, helping companies build scalable and performant applications. He enjoys sharing with the community, speaking, contributing to open source, and organizing events. Miro is co-founder of Angular Austria and co-organizer of Angular Vienna and ViennaJS meetups.",
+      description: `Miro is a core member of the Nx team, helping companies build scalable and performant applications. He enjoys sharing with the community so much that he co-founded Angular Austria Association and co-organizes the Vienna JS and ArmadaJS. 
+        Despite the name, he is not a visual collaboration platform.`,
       imageUrl: '/images/conf/miroslav-jonas.webp',
       name: 'Miroslav Jonas',
       twitter: 'meeroslav',
     },
     {
       description:
-        'Zack is a Google Developer Expert in Angular, and a Senior Engineer and Engineering Manager for Nrwl, living in the desserts of San Tan Valley, Arizona. Zack particularly enjoys teaching other engineers, breaking down problems into manageable pieces, and building awesome stuff.',
-      imageUrl: '/images/conf/zack-derose.webp',
-      name: 'Zack DeRose',
-      twitter: 'zackderose',
-    },
-    {
-      description:
-        'Senior Software Engineer at Nrwl, Nx core team, open source contributor, GDE for Angular/Web Technologies/Google Maps platform, WTM Ambassador, AngularAthens meetup co-founder. Mentoring women into tech, speaking about the cool things I do, climbing mountains and serving cats for life. More at psyber.city.',
+        'Senior Engineer at Nx, open source contributor, GDE for Angular/Web Technologies/Google Maps platform, WTM Ambassador, AngularAthens meetup co-founder. Mentoring women into tech, speaking about the cool things I do, climbing mountains and serving cats for life.',
       imageUrl: '/images/conf/katerina-skroumpelou.webp',
       name: 'Katerina Skroumpelou',
       twitter: 'psybercity',
     },
     {
-      description:
-        'Philip Fulcher is a senior engineer with Nrwl and an Nx core team member. He works with Fortune 500 clients to modernize their development practices with a monorepo approach. Philip lives in Colorado with his wife (who is much smarter than him) and two great kids.',
-      imageUrl: '/images/conf/philip-fulcher.webp',
-      name: 'Philip Fulcher',
-      twitter: 'philipjfulcher',
+      description: `Isaac is an Architect at Nx. He loves introducing devs to the ways that Nx can improve their software development process. He writes docs on nx.dev, gives workshops and joins forces with Nx Champions.
+      Isaac has never been to the moon, but he lives in Ohio - where Neil Armstrong was born.`,
+      imageUrl: '/images/conf/isaac-mann.webp',
+      name: 'Isaac Mann',
+      twitter: 'MannIsaac',
     },
     {
-      description:
-        'Mike Ryan is a principal architect at LiveLoveApp, helping companies find absolute joy in shipping apps. He is a Google Developer Expert in Web Technologies and one of the co-creators of NgRx, an open-source collection of high-quality reactive extensions for Angular.',
-      imageUrl: '/images/conf/mike-ryan.webp',
-      name: 'Mike Ryan',
-      twitter: 'MikeRyanDev',
+      description: `Brandon is an OSS Advocate, focused on community engagement, content creation, and collaboration. He enjoys learning new things, helping other developers be successful, speaking at conferences, and contributing to open source. He is a GDE, technical writer, maintainer of the NgRx project building libraries for reactive Angular applications, and creator of the AnalogJS meta-framework.`,
+      imageUrl: '/images/conf/brandon-roberts.webp',
+      name: 'Brandon Roberts',
+      twitter: 'brandontroberts',
     },
     {
-      description:
-        'Based out of State College, PA, Ryan is an Engineering Architect at Cisco, where he works in the Customer and Partner Experience team to help drive engineering excellence using Nx, Angular, and NgRx.  Outside of work, he enjoys spending time with his family, enjoying various sports, and the outdoors.',
-      imageUrl: '/images/conf/ryan-diehl.webp',
-      name: 'Ryan Diehl',
-      twitter: 'DiehlWithRyan',
+      description: `Meet Craigory, a member on the Nx Core Team for the past two years and the innovator behind the .NET plugin for Nx. Residing in Kentucky, he contributes primarily to Nx's core and plugin support. When he's not immersed in code, Craigory engages in woodworking, electronics, gaming, and cherishes his role as a father. Join him as he explores the intricacies of the new project inference API in Nx, illuminating its flexibility and power.`,
+      imageUrl: '/images/conf/craigory-coppola.webp',
+      name: 'Craigory Coppola',
+      twitter: 'enderagent',
     },
     {
-      description: 'Senior Engineer II @ Carvana',
-      imageUrl: '/images/conf/kennie-davis.webp',
-      name: 'Kennie Davis',
-      twitter: 'kenniejaydavis',
+      description: `Johanna is a software architect, problem-solver and science groupie. She has a firm belief that people are always the most interesting component of any system, and a fascination with how we learn and why we often tend to guard too closely the information we acquire.`,
+      imageUrl: '/images/conf/johanna-pearce.webp',
+      name: 'Johanna Pearce',
+      twitter: 'jhannapearce',
+    },
+    {
+      description: `Michael Hladky is a Google Developer Expert (GDE), Microsoft MVP, Nx Champion, trainer, and consultant with a focus on Angular and RxJS. For years he has been helping companies and developers to set up scalable architectures and performant processes enabling teams to keep up with state-of-the-art development. A vibrant member of the tech community, he organizes multiple community events and workshops each year to give back.`,
+      imageUrl: '/images/conf/michael-hladky.webp',
+      name: 'Michael Hladky',
+      twitter: 'Michael_Hladky',
+    },
+    {
+      description: `Adrian is a Chicagoland-based Senior Software Engineer at Cisco who loves to focus on developer experience. He helped shape the Cisco CPX enterprise solution since first migrating it to an Nx monorepo and has been involved in most efforts around Nx utilization and DX, especially for linting and CI/CD. When he isn't dabbling with software, he's out hiking, training Muay Thai, or reading a novel by James Rollins.`,
+      imageUrl: '/images/conf/adrian-baran.webp',
+      name: 'Adrian Baran',
     },
   ];
 
-  function chunkList<ITEM>(itemList: ITEM[], chunkSize: number): Array<ITEM[]> {
-    const result: Array<ITEM[]> = [];
-    for (let i = 0; i < itemList.length; i += chunkSize)
-      result.push(itemList.slice(i, i + chunkSize));
-    return result;
-  }
-  const rows = chunkList(speakers, 2);
-  return (
-    <div className="border-t border-slate-200 dark:border-slate-700">
-      {rows.map((row, rowIndex) => (
-        <div
-          key={'speaker-row--' + rowIndex}
-          className="border-b border-slate-200 dark:border-slate-700"
-        >
-          <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
-            <div className="grid grid-cols-1 md:grid-cols-2">
-              {row.map((speaker) => (
-                <div
-                  key={speaker.name}
-                  className="border-slate-200 py-8 odd:border-b dark:border-slate-700 md:odd:border-r md:odd:border-b-0 md:odd:pr-12 md:even:pl-12"
-                >
-                  <div className="px-5">
-                    <MemberCard
-                      imageUrl={speaker.imageUrl}
-                      name={speaker.name}
-                      description={speaker.description}
-                      twitter={speaker.twitter}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  return Speakers(speakers);
 }

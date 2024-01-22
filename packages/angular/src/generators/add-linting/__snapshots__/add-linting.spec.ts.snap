@@ -1,34 +1,34 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`addLinting generator should correctly generate the .eslintrc.json file 1`] = `
-Object {
-  "extends": Array [
+{
+  "extends": [
     "../../.eslintrc.json",
   ],
-  "ignorePatterns": Array [
+  "ignorePatterns": [
     "!**/*",
   ],
-  "overrides": Array [
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular",
+  "overrides": [
+    {
+      "extends": [
+        "plugin:@nx/angular",
         "plugin:@angular-eslint/template/process-inline-templates",
       ],
-      "files": Array [
+      "files": [
         "*.ts",
       ],
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
+      "rules": {
+        "@angular-eslint/component-selector": [
           "error",
-          Object {
+          {
             "prefix": "my-org",
             "style": "kebab-case",
             "type": "element",
           },
         ],
-        "@angular-eslint/directive-selector": Array [
+        "@angular-eslint/directive-selector": [
           "error",
-          Object {
+          {
             "prefix": "myOrg",
             "style": "camelCase",
             "type": "attribute",
@@ -36,63 +36,14 @@ Object {
         ],
       },
     },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular-template",
+    {
+      "extends": [
+        "plugin:@nx/angular-template",
       ],
-      "files": Array [
+      "files": [
         "*.html",
       ],
-      "rules": Object {},
-    },
-  ],
-}
-`;
-
-exports[`addLinting generator support angular v14 should correctly generate the .eslintrc.json file 1`] = `
-Object {
-  "extends": Array [
-    "../../.eslintrc.json",
-  ],
-  "ignorePatterns": Array [
-    "!**/*",
-  ],
-  "overrides": Array [
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular",
-        "plugin:@angular-eslint/template/process-inline-templates",
-      ],
-      "files": Array [
-        "*.ts",
-      ],
-      "rules": Object {
-        "@angular-eslint/component-selector": Array [
-          "error",
-          Object {
-            "prefix": "my-org",
-            "style": "kebab-case",
-            "type": "element",
-          },
-        ],
-        "@angular-eslint/directive-selector": Array [
-          "error",
-          Object {
-            "prefix": "myOrg",
-            "style": "camelCase",
-            "type": "attribute",
-          },
-        ],
-      },
-    },
-    Object {
-      "extends": Array [
-        "plugin:@nrwl/nx/angular-template",
-      ],
-      "files": Array [
-        "*.html",
-      ],
-      "rules": Object {},
+      "rules": {},
     },
   ],
 }

@@ -53,6 +53,28 @@ export function readJsonFile<T extends object = any>(
   }
 }
 
+interface YamlReadOptions {
+  /**
+   * Compatibility with JSON.parse behaviour. If true, then duplicate keys in a mapping will override values rather than throwing an error.
+   */
+  json?: boolean;
+}
+
+/**
+ * Reads a YAML file and returns the object the YAML content represents.
+ *
+ * @param path A path to a file.
+ * @returns
+ */
+export function readYamlFile<T extends object = any>(
+  path: string,
+  options?: YamlReadOptions
+): T {
+  const content = readFileSync(path, 'utf-8');
+  const { load } = require('js-yaml');
+  return load(content, { ...options, filename: path }) as T;
+}
+
 /**
  * Serializes the given data to JSON and writes it to a file.
  *

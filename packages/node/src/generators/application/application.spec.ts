@@ -1,18 +1,16 @@
-import * as devkit from '@nrwl/devkit';
+import * as devkit from '@nx/devkit';
 import {
   getProjects,
   readJson,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 // nx-ignore-next-line
-import { applicationGenerator as angularApplicationGenerator } from '@nrwl/angular/generators';
+import { applicationGenerator as angularApplicationGenerator } from '@nx/angular/generators';
 import { Schema } from './schema';
 import { applicationGenerator } from './application';
-import { overrideCollectionResolutionForTesting } from '@nrwl/devkit/ngcli-adapter';
-import { join } from 'path';
 
 describe('app', () => {
   let tree: Tree;
@@ -20,59 +18,48 @@ describe('app', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
 
-    overrideCollectionResolutionForTesting({
-      '@nrwl/cypress': join(__dirname, '../../../../cypress/generators.json'),
-      '@nrwl/jest': join(__dirname, '../../../../jest/generators.json'),
-      '@nrwl/workspace': join(
-        __dirname,
-        '../../../../workspace/generators.json'
-      ),
-      '@nrwl/angular': join(__dirname, '../../../../angular/generators.json'),
-    });
     jest.clearAllMocks();
-  });
-
-  afterEach(() => {
-    overrideCollectionResolutionForTesting(null);
   });
 
   describe('not nested', () => {
     it('should update project config', async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         bundler: 'webpack',
+        projectNameAndRootFormat: 'as-provided',
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
       expect(project.root).toEqual('my-node-app');
       expect(project.targets).toEqual(
         expect.objectContaining({
           build: {
-            executor: '@nrwl/webpack:webpack',
+            executor: '@nx/webpack:webpack',
             outputs: ['{options.outputPath}'],
+            defaultConfiguration: 'production',
             options: {
               target: 'node',
               compiler: 'tsc',
               outputPath: 'dist/my-node-app',
               main: 'my-node-app/src/main.ts',
               tsConfig: 'my-node-app/tsconfig.app.json',
-              isolatedConfig: true,
               webpackConfig: 'my-node-app/webpack.config.js',
               assets: ['my-node-app/src/assets'],
             },
             configurations: {
-              production: {
-                optimization: true,
-                extractLicenses: true,
-                inspect: false,
-              },
+              development: {},
+              production: {},
             },
           },
           serve: {
-            executor: '@nrwl/js:node',
+            executor: '@nx/js:node',
+            defaultConfiguration: 'development',
             options: {
               buildTarget: 'my-node-app:build',
             },
             configurations: {
+              development: {
+                buildTarget: 'my-node-app:build:development',
+              },
               production: {
                 buildTarget: 'my-node-app:build:production',
               },
@@ -81,11 +68,7 @@ describe('app', () => {
         })
       );
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-node-app/**/*.ts'],
-        },
+        executor: '@nx/eslint:lint',
       });
       expect(() =>
         readProjectConfiguration(tree, 'my-node-app-e2e')
@@ -94,8 +77,9 @@ describe('app', () => {
 
     it('should update tags', async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         tags: 'one,two',
+        projectNameAndRootFormat: 'as-provided',
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
@@ -107,25 +91,26 @@ describe('app', () => {
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
+        projectNameAndRootFormat: 'as-provided',
       });
       expect(tree.exists(`my-node-app/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('my-node-app/src/main.ts')).toBeTruthy();
 
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');
       expect(tsconfig).toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "esModuleInterop": true,
           },
           "extends": "../tsconfig.base.json",
-          "files": Array [],
-          "include": Array [],
-          "references": Array [
-            Object {
+          "files": [],
+          "include": [],
+          "references": [
+            {
               "path": "./tsconfig.app.json",
             },
-            Object {
+            {
               "path": "./tsconfig.spec.json",
             },
           ],
@@ -142,36 +127,36 @@ describe('app', () => {
       ]);
       const eslintrc = readJson(tree, 'my-node-app/.eslintrc.json');
       expect(eslintrc).toMatchInlineSnapshot(`
-        Object {
-          "extends": Array [
+        {
+          "extends": [
             "../.eslintrc.json",
           ],
-          "ignorePatterns": Array [
+          "ignorePatterns": [
             "!**/*",
           ],
-          "overrides": Array [
-            Object {
-              "files": Array [
+          "overrides": [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.ts",
                 "*.tsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
-            Object {
-              "files": Array [
+            {
+              "files": [
                 "*.js",
                 "*.jsx",
               ],
-              "rules": Object {},
+              "rules": {},
             },
           ],
         }
@@ -182,7 +167,8 @@ describe('app', () => {
       tree.rename('tsconfig.base.json', 'tsconfig.json');
 
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');
@@ -193,29 +179,26 @@ describe('app', () => {
   describe('nested', () => {
     it('should update project config', async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
-        directory: 'myDir',
+        name: 'my-node-app',
+        directory: 'my-dir/my-node-app',
+        projectNameAndRootFormat: 'as-provided',
       });
-      const project = readProjectConfiguration(tree, 'my-dir-my-node-app');
+      const project = readProjectConfiguration(tree, 'my-node-app');
 
       expect(project.root).toEqual('my-dir/my-node-app');
 
       expect(project.targets.lint).toEqual({
-        executor: '@nrwl/linter:eslint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-dir/my-node-app/**/*.ts'],
-        },
+        executor: '@nx/eslint:lint',
       });
 
       expect(() =>
-        readProjectConfiguration(tree, 'my-dir-my-node-app-e2e')
-      ).toThrow(/Cannot find/);
+        readProjectConfiguration(tree, 'my-node-app-e2e')
+      ).not.toThrow();
     });
 
     it('should update tags', async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         directory: 'myDir',
         tags: 'one,two',
       });
@@ -234,7 +217,7 @@ describe('app', () => {
         expect(lookupFn(config)).toEqual(expectedValue);
       };
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         directory: 'myDir',
       });
 
@@ -279,7 +262,7 @@ describe('app', () => {
   describe('--unit-test-runner none', () => {
     it('should not generate test configuration', async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         unitTestRunner: 'none',
       });
       expect(tree.exists('jest.config.ts')).toBeFalsy();
@@ -290,16 +273,8 @@ describe('app', () => {
       const project = readProjectConfiguration(tree, 'my-node-app');
       expect(project.targets.test).toBeUndefined();
       expect(project.targets.lint).toMatchInlineSnapshot(`
-        Object {
-          "executor": "@nrwl/linter:eslint",
-          "options": Object {
-            "lintFilePatterns": Array [
-              "my-node-app/**/*.ts",
-            ],
-          },
-          "outputs": Array [
-            "{options.outputFile}",
-          ],
+        {
+          "executor": "@nx/eslint:lint",
         }
       `);
     });
@@ -310,7 +285,7 @@ describe('app', () => {
       await angularApplicationGenerator(tree, { name: 'my-frontend' });
 
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         frontendProject: 'my-frontend',
       });
 
@@ -345,7 +320,7 @@ describe('app', () => {
       await angularApplicationGenerator(tree, { name: 'myFrontend' });
 
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         frontendProject: 'myFrontend',
       });
 
@@ -356,10 +331,36 @@ describe('app', () => {
     });
   });
 
-  describe('--babelJest', () => {
+  describe('--swcJest', () => {
+    it('should use @swc/jest for jest', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-node-app',
+        tags: 'one,two',
+        swcJest: true,
+      } as Schema);
+
+      expect(tree.read(`my-node-app/jest.config.ts`, 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "/* eslint-disable */
+        export default {
+          displayName: 'my-node-app',
+          preset: '../jest.preset.js',
+          testEnvironment: 'node',
+          transform: {
+            '^.+\\\\.[tj]s$': '@swc/jest',
+          },
+          moduleFileExtensions: ['ts', 'js', 'html'],
+          coverageDirectory: '../coverage/my-node-app',
+        };
+        "
+      `);
+    });
+  });
+
+  describe('--babelJest (deprecated)', () => {
     it('should use babel for jest', async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         tags: 'one,two',
         babelJest: true,
       } as Schema);
@@ -372,19 +373,20 @@ describe('app', () => {
           preset: '../jest.preset.js',
           testEnvironment: 'node',
           transform: {
-            '^.+\\\\\\\\.[tj]s$': 'babel-jest'
+            '^.+\\\\.[tj]s$': 'babel-jest',
           },
           moduleFileExtensions: ['ts', 'js', 'html'],
-          coverageDirectory: '../coverage/my-node-app'
+          coverageDirectory: '../coverage/my-node-app',
         };
         "
       `);
     });
   });
+
   describe('--js flag', () => {
     it('should generate js files instead of ts files', async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         js: true,
       } as Schema);
 
@@ -410,7 +412,7 @@ describe('app', () => {
 
     it('should add project config', async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         js: true,
       } as Schema);
       const project = readProjectConfiguration(tree, 'my-node-app');
@@ -421,7 +423,7 @@ describe('app', () => {
 
     it('should generate js files for nested libs as well', async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         directory: 'myDir',
         js: true,
       } as Schema);
@@ -433,7 +435,7 @@ describe('app', () => {
   describe('--pascalCaseFiles', () => {
     it(`should notify that this flag doesn't do anything`, async () => {
       await applicationGenerator(tree, {
-        name: 'myNodeApp',
+        name: 'my-node-app',
         pascalCaseFiles: true,
       } as Schema);
 
@@ -446,7 +448,7 @@ describe('app', () => {
     it('should format files by default', async () => {
       jest.spyOn(devkit, 'formatFiles');
 
-      await applicationGenerator(tree, { name: 'myNodeApp' });
+      await applicationGenerator(tree, { name: 'my-node-app' });
 
       expect(devkit.formatFiles).toHaveBeenCalled();
     });
@@ -454,7 +456,10 @@ describe('app', () => {
     it('should not format files when --skipFormat=true', async () => {
       jest.spyOn(devkit, 'formatFiles');
 
-      await applicationGenerator(tree, { name: 'myNodeApp', skipFormat: true });
+      await applicationGenerator(tree, {
+        name: 'my-node-app',
+        skipFormat: true,
+      });
 
       expect(devkit.formatFiles).not.toHaveBeenCalled();
     });
@@ -464,6 +469,7 @@ describe('app', () => {
     ['fastify' as const, true],
     ['express' as const, false],
     ['koa' as const, false],
+    ['nest' as const, false],
   ])('--unitTestRunner', (framework, checkSpecFile) => {
     it('should generate test target and spec file by default', async () => {
       await applicationGenerator(tree, {

@@ -1,5 +1,5 @@
-import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { addProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { formatFile } from '../../../utils/format-file';
 
@@ -9,19 +9,19 @@ describe('addResolverMainFieldsToMetroConfig', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
 
     addProjectConfiguration(tree, 'products', {
-      root: 'apps/products',
-      sourceRoot: 'apps/products/src',
+      root: 'products',
+      sourceRoot: 'products/src',
     });
   });
 
   it(`should update metro.config.js and add key projectRoot`, async () => {
     tree.write(
-      'apps/products/metro.config.js',
+      'products/metro.config.js',
       formatFile`
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 const exclusionList = require('metro-config/src/defaults/exclusionList');
 
@@ -55,10 +55,10 @@ module.exports = (async () => {
     });
 
     expect(
-      formatFile`${tree.read('apps/products/metro.config.js', 'utf-8')}`
+      formatFile`${tree.read('products/metro.config.js', 'utf-8')}`
     ).toEqual(
       formatFile`
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 const exclusionList = require('metro-config/src/defaults/exclusionList');
 
@@ -91,9 +91,9 @@ module.exports = (async () => {
 
   it(`should not udpate metro.config.js if projectRoot already exists`, async () => {
     tree.write(
-      'apps/products/metro.config.js',
+      'products/metro.config.js',
       `
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 
 module.exports = (async () => {
@@ -126,9 +126,9 @@ module.exports = (async () => {
       name: 'products',
     });
 
-    expect(tree.read('apps/products/metro.config.js', 'utf-8')).toEqual(
+    expect(tree.read('products/metro.config.js', 'utf-8')).toEqual(
       `
-const { withNxMetro } = require('@nrwl/react-native');
+const { withNxMetro } = require('@nx/react-native');
 const { getDefaultConfig } = require('metro-config');
 
 module.exports = (async () => {

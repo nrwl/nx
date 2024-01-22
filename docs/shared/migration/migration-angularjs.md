@@ -34,16 +34,36 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 
 ```shell
 ? What to create in the new workspace empty             [an empty workspace with a layout that works best for building apps]
-? Set up distributed caching using Nx Cloud (It's free and doesn't require registration.) Yes [Faster builds, run details, GitHub integration. Learn more at https://nx.app]
+? Set up remote caching using Nx Cloud (It's free and doesn't require registration.) Yes [Faster builds, run details, GitHub integration. Learn more at https://nx.app]
 ```
 
 ## Creating your app
 
 Your new workspace won’t have much in it because of the `apps` preset. You’ll need to generate an application to have some structure created. Add the Angular plugin to your workspace:
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install -D @nrwl/angular
+npm add -D @nx/angular
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @nx/angular
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @nx/angular
+```
+
+{% /tab %}
+{% /tabs %}
 
 For this example, we will use Karma and Protractor, the most common unit test runner and e2e test runner for AngularJS.
 
@@ -53,8 +73,12 @@ Codebases with existing unit and e2e tests should continue to use whatever runne
 
 With the Angular capability added, generate your application:
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
+{% /callout %}
+
 ```shell
-nx generate @nrwl/angular:application --name=realworld --unitTestRunner=karma --e2eTestRunner=protractor
+nx generate @nx/angular:application --name=realworld --directory=apps/realword --unitTestRunner=karma --e2eTestRunner=protractor
 ```
 
 Accept the default options for each prompt:
@@ -361,11 +385,31 @@ So far, you’ve mostly gotten already existing code and processes to work. This
 
 But migrating AngularJS code means we need to switch some of our tools to a more modern tool stack. Specifically, using webpack and babel is going to allow us to take advantage of Nx more easily. Becoming an expert in these build tools is outside the scope of this article, but I’ll address some AngularJS specific concerns. To get started, install these new dependencies:
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install -D @nrwl/web babel-plugin-angularjs-annotate
+npm add -D @nx/web babel-plugin-angularjs-annotate
 ```
 
-Nx already has most of what you need for webpack added as a dependency. `@nrwl/web` contains the [executors](/plugin-features/use-task-executors) we need to use to build and serve the application with webpack and
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @nx/web babel-plugin-angularjs-annotate
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @nx/web babel-plugin-angularjs-annotate
+```
+
+{% /tab %}
+{% /tabs %}
+
+Nx already has most of what you need for webpack added as a dependency. `@nx/web` contains the [executors](/core-features/plugin-features/use-task-executors) we need to use to build and serve the application with webpack and
 `babel-plugin-angularjs-annotate` is going to accomplish the same thing that `browserify-ngannotate` previously did in gulp: add dependency injection annotations.
 
 Start with a `webpack.config.js` file in your application’s root directory:
@@ -407,7 +451,7 @@ To use webpack instead of gulp, go back to your `apps/realworld/project.json` fi
 ```jsonc {% fileName="apps/realworld/project.json" %}
 ...
 "build": {
-  "executor": "@nrwl/web:webpack",
+  "executor": "@nx/web:webpack",
   "options": {
     "outputPath": "dist/apps/realworld",
     "index": "apps/realworld/src/index.html",
@@ -449,7 +493,7 @@ To use webpack instead of gulp, go back to your `apps/realworld/project.json` fi
   }
 },
 "serve": {
-  "executor": "@nrwl/web:dev-server",
+  "executor": "@nx/web:dev-server",
   "options": {
     "buildTarget": "realworld:build"
   }
@@ -568,9 +612,29 @@ Unit testing can be an important part of any code migration. If you migrate your
 
 You need a few dependencies for AngularJS unit testing that Nx doesn’t provide by default:
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install -D angular-mocks@1.5.11 karma-webpack
+npm add -D angular-mocks@1.5.11 karma-webpack
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D angular-mocks@1.5.11 karma-webpack
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D angular-mocks@1.5.11 karma-webpack
+```
+
+{% /tab %}
+{% /tabs %}
 
 Earlier, you configured this app to use Karma as its unit test runner. Nx has provided a Karma config file for you, but you’ll need to modify it to work with AngularJS:
 
@@ -682,7 +746,7 @@ nx test
 
 You should see green text as your test passes.
 
-![Unit tests passing](./migration-angularjs-unit-tests-passing.png)
+![Unit tests passing](/shared/migration/migration-angularjs-unit-tests-passing.png)
 
 ## End to End testing
 

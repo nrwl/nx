@@ -1,5 +1,5 @@
-import { getSchemaFromResult, Lookup } from '@nrwl/nx-dev/data-access-packages';
-import { JsonSchema, JsonSchema1 } from '@nrwl/nx-dev/models-package';
+import { getSchemaFromResult, Lookup } from '@nx/nx-dev/data-access-packages';
+import { JsonSchema, JsonSchema1 } from '@nx/nx-dev/models-package';
 import { shouldShowInStage, Stage } from './stage';
 import { getOrInferType } from './types/type-inference';
 
@@ -275,7 +275,7 @@ function generateJsonExampleForHelper(
       return inferExample(
         schema,
         (x) => typeof x === 'boolean',
-        () => Example.of(true)
+        () => Example.of(schema.default ?? true)
       );
     } else if (type === 'integer' || type === 'number') {
       return inferExample(

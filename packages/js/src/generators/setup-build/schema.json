@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "SetupBuild",
+  "title": "Setup Build",
+  "description": "Sets up build target for a project.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Project to add the build target to.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "Which project do you want to add build to?",
+      "x-dropdown": "projects",
+      "x-priority": "important"
+    },
+    "bundler": {
+      "description": "The bundler to use to build the project.",
+      "type": "string",
+      "enum": ["tsc", "swc", "rollup", "vite", "esbuild"],
+      "default": "tsc",
+      "x-prompt": "Which bundler would you like to use to build the project?",
+      "x-priority": "important"
+    },
+    "main": {
+      "description": "The path to the main entry file, relative to workspace root. Defaults to <project>/src/index.ts or <project>/src/main.ts.",
+      "type": "string"
+    },
+    "tsConfig": {
+      "description": "The path to the tsConfig file, relative to workspace root. Defaults to <project>/tsconfig.lib.json or <project>/tsconfig.app.json depending on project type.",
+      "type": "string"
+    },
+    "buildTarget": {
+      "description": "The build target to add.",
+      "type": "string",
+      "default": "build"
+    }
+  },
+  "required": ["project", "bundler"]
+}

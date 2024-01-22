@@ -4,13 +4,13 @@ import {
   readJson,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { nxVersion } from '../../utils/versions';
 
 import { initGenerator } from './init';
 
-describe('@nrwl/vite:init', () => {
+describe('@nx/vite:init', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -18,17 +18,15 @@ describe('@nrwl/vite:init', () => {
   });
 
   describe('dependencies for package.json', () => {
-    it('should add vite packages and react-related dependencies for vite', async () => {
+    it('should add required packages', async () => {
       const existing = 'existing';
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
         tree,
-        { '@nrwl/vite': nxVersion, [existing]: existingVersion },
+        { '@nx/vite': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
-      await initGenerator(tree, {
-        uiFramework: 'react',
-      });
+      await initGenerator(tree, {});
       const packageJson = readJson(tree, 'package.json');
 
       expect(packageJson).toMatchSnapshot();
@@ -43,11 +41,13 @@ describe('@nrwl/vite:init', () => {
         return json;
       });
 
-      initGenerator(tree, { uiFramework: 'react' });
+      await initGenerator(tree, {});
 
       const productionNamedInputs = readJson(tree, 'nx.json').namedInputs
         .production;
-      const testDefaults = readJson(tree, 'nx.json').targetDefaults.test;
+      const vitestDefaults = readJson(tree, 'nx.json').targetDefaults[
+        '@nx/vite:test'
+      ];
 
       expect(productionNamedInputs).toContain(
         '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
@@ -55,7 +55,8 @@ describe('@nrwl/vite:init', () => {
       expect(productionNamedInputs).toContain(
         '!{projectRoot}/tsconfig.spec.json'
       );
-      expect(testDefaults).toEqual({
+      expect(vitestDefaults).toEqual({
+        cache: true,
         inputs: ['default', '^production'],
       });
     });

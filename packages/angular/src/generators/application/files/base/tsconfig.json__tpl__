@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "useDefineForClassFields": false<% if (isUsingApplicationBuilder) { %>,
+    "esModuleInterop": true<% } %>
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    }
+  ],
+  "extends": "<%= rootTsConfig %>"
+}

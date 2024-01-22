@@ -1,9 +1,9 @@
 import { applicationGenerator } from '../application/application';
 import { componentGenerator } from './component';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Tree } from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/react';
-import { Linter } from '@nrwl/linter';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Tree } from '@nx/devkit';
+import { libraryGenerator } from '@nx/react';
+import { Linter } from '@nx/eslint';
 
 describe('component', () => {
   let tree: Tree;
@@ -11,10 +11,11 @@ describe('component', () => {
   const libName = 'my-lib';
 
   beforeEach(async () => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
     await applicationGenerator(tree, {
       name: appName,
       style: 'css',
+      projectNameAndRootFormat: 'as-provided',
     });
     await libraryGenerator(tree, {
       name: libName,
@@ -23,6 +24,7 @@ describe('component', () => {
       skipFormat: true,
       skipTsConfig: false,
       unitTestRunner: 'jest',
+      projectNameAndRootFormat: 'as-provided',
     });
   });
 
@@ -33,12 +35,10 @@ describe('component', () => {
       style: 'css',
     });
 
-    expect(tree.exists('apps/my-app/components/hello/hello.tsx')).toBeTruthy();
+    expect(tree.exists('my-app/components/hello/hello.tsx')).toBeTruthy();
+    expect(tree.exists('my-app/components/hello/hello.spec.tsx')).toBeTruthy();
     expect(
-      tree.exists('apps/my-app/components/hello/hello.spec.tsx')
-    ).toBeTruthy();
-    expect(
-      tree.exists('apps/my-app/components/hello/hello.module.css')
+      tree.exists('my-app/components/hello/hello.module.css')
     ).toBeTruthy();
   });
 
@@ -49,13 +49,9 @@ describe('component', () => {
       style: 'css',
     });
 
-    expect(tree.exists('libs/my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
-    expect(
-      tree.exists('libs/my-lib/src/lib/hello/hello.spec.tsx')
-    ).toBeTruthy();
-    expect(
-      tree.exists('libs/my-lib/src/lib/hello/hello.module.css')
-    ).toBeTruthy();
+    expect(tree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
+    expect(tree.exists('my-lib/src/lib/hello/hello.spec.tsx')).toBeTruthy();
+    expect(tree.exists('my-lib/src/lib/hello/hello.module.css')).toBeTruthy();
   });
 
   it('should allow directory override', async () => {
@@ -72,15 +68,35 @@ describe('component', () => {
       style: 'css',
     });
 
-    expect(tree.exists('apps/my-app/foo/hello/hello.tsx')).toBeTruthy();
-    expect(tree.exists('apps/my-app/foo/hello/hello.spec.tsx')).toBeTruthy();
-    expect(tree.exists('apps/my-app/foo/hello/hello.module.css')).toBeTruthy();
-    expect(tree.exists('libs/my-lib/src/bar/world/world.tsx')).toBeTruthy();
-    expect(
-      tree.exists('libs/my-lib/src/bar/world/world.spec.tsx')
-    ).toBeTruthy();
-    expect(
-      tree.exists('libs/my-lib/src/bar/world/world.module.css')
-    ).toBeTruthy();
+    expect(tree.exists('my-app/foo/hello/hello.tsx')).toBeTruthy();
+    expect(tree.exists('my-app/foo/hello/hello.spec.tsx')).toBeTruthy();
+    expect(tree.exists('my-app/foo/hello/hello.module.css')).toBeTruthy();
+    expect(tree.exists('my-lib/src/bar/world/world.tsx')).toBeTruthy();
+    expect(tree.exists('my-lib/src/bar/world/world.spec.tsx')).toBeTruthy();
+    expect(tree.exists('my-lib/src/bar/world/world.module.css')).toBeTruthy();
+  });
+
+  it('should work with path as-provided', async () => {
+    await componentGenerator(tree, {
+      name: 'hello',
+      directory: 'my-lib/src/foo',
+      nameAndDirectoryFormat: 'as-provided',
+      style: 'css',
+    });
+
+    expect(tree.exists('my-lib/src/foo/hello.tsx')).toBeTruthy();
+    expect(tree.exists('my-lib/src/foo/hello.spec.tsx')).toBeTruthy();
+    expect(tree.exists('my-lib/src/foo/hello.module.css')).toBeTruthy();
+  });
+
+  it('should work with directory as a part of the component name', async () => {
+    await componentGenerator(tree, {
+      name: `${libName}/src/btn/btn`,
+      project: appName,
+      style: 'css',
+      nameAndDirectoryFormat: 'as-provided',
+    });
+
+    expect(tree.exists(`${libName}/src/btn/btn.tsx`)).toBeTruthy();
   });
 });

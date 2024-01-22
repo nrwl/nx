@@ -1,4 +1,4 @@
-import { ProjectConfiguration, Tree, visitNotIgnoredFiles } from '@nrwl/devkit';
+import { ProjectConfiguration, Tree, visitNotIgnoredFiles } from '@nx/devkit';
 
 /**
  * Removes (deletes) a project's files from the folder tree

@@ -1,6 +1,4 @@
-# Using ESLint in Nx Workspaces
-
-## Rules requiring type information
+# Configuring ESLint with Typescript
 
 ESLint is powerful linter by itself, able to work on the syntax of your source files and assert things about based on the rules you configure. It gets even more powerful, however, when TypeScript type-checker is layered on top of it when analyzing TypeScript files, which is something that `@typescript-eslint` allows us to do.
 
@@ -10,7 +8,7 @@ Let's take an example of an ESLint config that Nx might generate for you out of 
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
-  "extends": ["plugin:@nrwl/nx/react", "../../.eslintrc.json"],
+  "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {
@@ -35,7 +33,7 @@ If we now come in and add a rule which does require type information, for exampl
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
-  "extends": ["plugin:@nrwl/nx/react", "../../.eslintrc.json"],
+  "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {
@@ -76,7 +74,7 @@ The solution is to update our config once more, this time to set `parserOptions.
 
 ```jsonc {% fileName="apps/tuskdesk/.eslintrc.json" %}
 {
-  "extends": ["plugin:@nrwl/nx/react", "../../.eslintrc.json"],
+  "extends": ["plugin:@nx/react", "../../.eslintrc.json"],
   "ignorePatterns": ["!**/*"],
   "overrides": [
     {

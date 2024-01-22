@@ -3,32 +3,12 @@
   "$id": "SchematicsAngularModuleInit",
   "cli": "nx",
   "title": "Init Angular Plugin",
-  "description": "Initializes the `@nrwl/angular` plugin. NOTE: Does not work in the `--dry-run` mode.",
+  "description": "Initializes the `@nx/angular` plugin. NOTE: Does not work in the `--dry-run` mode.",
   "type": "object",
-  "examples": [
-    {
-      "command": "nx g @nrwl/angular:init --style=scss",
-      "description": "Installs angular dependencies and initializes the `@nrwl/angular` plugin with the `scss` stylesheet format."
-    }
-  ],
   "properties": {
-    "unitTestRunner": {
-      "type": "string",
-      "enum": ["karma", "jest", "none"],
-      "description": "Test runner to use for unit tests.",
-      "default": "jest",
-      "x-priority": "important"
-    },
-    "e2eTestRunner": {
-      "type": "string",
-      "enum": ["protractor", "cypress", "none"],
-      "description": "Test runner to use for end to end (e2e) tests.",
-      "default": "cypress",
-      "x-priority": "important"
-    },
     "skipInstall": {
       "type": "boolean",
-      "description": "Skip installing after adding `@nrwl/workspace`.",
+      "description": "Skip installing after adding `@nx/workspace`.",
       "default": false,
       "x-priority": "internal"
     },
@@ -38,46 +18,17 @@
       "default": false,
       "x-priority": "internal"
     },
-    "linter": {
-      "description": "The tool to use for running lint checks.",
-      "type": "string",
-      "enum": ["eslint", "none"],
-      "default": "eslint",
-      "x-priority": "important"
-    },
-    "style": {
-      "description": "The file extension to be used for style files.",
-      "type": "string",
-      "default": "css",
-      "enum": ["css", "scss", "sass", "less"],
-      "x-prompt": {
-        "message": "Which stylesheet format would you like to use?",
-        "type": "list",
-        "items": [
-          {
-            "value": "css",
-            "label": "CSS"
-          },
-          {
-            "value": "scss",
-            "label": "SASS(.scss)  [ http://sass-lang.com   ]"
-          },
-          {
-            "value": "sass",
-            "label": "SASS(.sass)  [ http://sass-lang.com   ]"
-          },
-          {
-            "value": "less",
-            "label": "LESS         [ http://lesscss.org     ]"
-          }
-        ]
-      }
-    },
     "skipPackageJson": {
       "type": "boolean",
       "default": false,
       "description": "Do not add dependencies to `package.json`.",
       "x-priority": "internal"
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
     }
   },
   "additionalProperties": false

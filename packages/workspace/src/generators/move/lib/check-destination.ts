@@ -1,6 +1,5 @@
-import { ProjectConfiguration, Tree } from '@nrwl/devkit';
-import { Schema } from '../schema';
-import { getDestination } from './utils';
+import type { Tree } from '@nx/devkit';
+import type { NormalizedSchema } from '../schema';
 
 /**
  * Checks whether the destination folder is valid
@@ -12,18 +11,16 @@ import { getDestination } from './utils';
  */
 export function checkDestination(
   tree: Tree,
-  schema: Schema,
-  projectConfig: ProjectConfiguration
+  schema: NormalizedSchema,
+  providedDestination: string
 ) {
-  const INVALID_DESTINATION = `Invalid destination: [${schema.destination}]`;
+  const INVALID_DESTINATION = `Invalid destination: [${providedDestination}]`;
 
-  if (schema.destination.includes('..')) {
+  if (providedDestination.includes('..')) {
     throw new Error(`${INVALID_DESTINATION} - Please specify explicit path.`);
   }
 
-  const destination = getDestination(tree, schema, projectConfig);
-
-  if (tree.children(destination).length > 0) {
+  if (tree.children(schema.relativeToRootDestination).length > 0) {
     throw new Error(`${INVALID_DESTINATION} - Path is not empty.`);
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "Nx Express",
   "version": "0.1",
-  "extends": ["@nrwl/workspace"],
+  "extends": ["@nx/workspace"],
   "generators": {
     "init": {
       "factory": "./src/generators/init/init#initGenerator",
@@ -10,26 +10,8 @@
       "aliases": ["ng-add"],
       "hidden": true
     },
-
     "application": {
-      "factory": "./src/generators/application/application#applicationGenerator",
-      "schema": "./src/generators/application/schema.json",
-      "aliases": ["app"],
-      "x-type": "application",
-      "description": "Create an Express application."
-    }
-  },
-  "schematics": {
-    "init": {
-      "factory": "./src/generators/init/init#initSchematic",
-      "schema": "./src/generators/init/schema.json",
-      "description": "Initialize the `@nrwl/express` plugin.",
-      "aliases": ["ng-add"],
-      "hidden": true
-    },
-
-    "application": {
-      "factory": "./src/generators/application/application#applicationSchematic",
+      "factory": "./src/generators/application/application#applicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "aliases": ["app"],
       "x-type": "application",

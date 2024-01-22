@@ -12,9 +12,5 @@ export default {
     ],
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
-  coverageDirectory: '../../coverage/tools/eslint-rules',
-  moduleNameMapper: {
-    '@eslint/eslintrc': '@eslint/eslintrc/dist/eslintrc-universal.cjs',
-  },
   preset: '../../jest.preset.js',
 };

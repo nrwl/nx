@@ -15,7 +15,7 @@ jest.mock('jest-config', () => ({
   readConfig,
 }));
 
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 import { jestExecutor } from './jest.impl';
 import { JestExecutorOptions } from './schema';
 
@@ -44,17 +44,15 @@ describe('Jest Executor', () => {
             root: 'proj',
             targets: {
               test: {
-                executor: '@nrwl/jest:jest',
+                executor: '@nx/jest:jest',
               },
             },
           },
         },
       },
-      nxJsonConfiguration: {
-        npmScope: 'test',
-      },
+      nxJsonConfiguration: {},
       target: {
-        executor: '@nrwl/jest:jest',
+        executor: '@nx/jest:jest',
       },
       cwd: '/root',
       isVerbose: true,

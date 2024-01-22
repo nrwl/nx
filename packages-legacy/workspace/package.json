@@ -1,0 +1,41 @@
+{
+  "name": "@nrwl/workspace",
+  "version": "0.0.1",
+  "private": false,
+  "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nrwl/nx.git",
+    "directory": "packages-legacy/workspace"
+  },
+  "keywords": [
+    "Monorepo",
+    "Angular",
+    "React",
+    "Web",
+    "Node",
+    "Nest",
+    "Jest",
+    "Cypress",
+    "CLI"
+  ],
+  "main": "./index",
+  "typings": "./index.d.ts",
+  "author": "Victor Savkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nrwl/nx/issues"
+  },
+  "homepage": "https://nx.dev",
+  "schematics": "./generators.json",
+  "builders": "./executors.json",
+  "dependencies": {
+    "@nx/workspace": "file:../../packages/workspace"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "nx-migrations": {
+    "migrations": "@nx/workspace/migrations.json"
+  }
+}

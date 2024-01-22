@@ -1,6 +1,10 @@
-import 'dotenv/config';
-import { ExecutorContext, logger } from '@nrwl/devkit';
-import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
+import {
+  ExecutorContext,
+  logger,
+  stripIndents,
+  targetToTargetString,
+} from '@nx/devkit';
+import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
 import {
@@ -12,19 +16,24 @@ import {
 } from 'rxjs/operators';
 import { resolve } from 'path';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
-
-import { getWebpackConfig } from './lib/get-webpack-config';
+} from '@nx/js/src/utils/buildable-libs-utils';
 import { runWebpack } from './lib/run-webpack';
 import { deleteOutputDir } from '../../utils/fs';
-import { resolveCustomWebpackConfig } from '../../utils/webpack/custom-webpack';
+import { resolveUserDefinedWebpackConfig } from '../../utils/webpack/resolve-user-defined-webpack-config';
 import type {
   NormalizedWebpackExecutorOptions,
   WebpackExecutorOptions,
 } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
+import {
+  composePluginsSync,
+  isNxWebpackComposablePlugin,
+} from '../../utils/config';
+import { withNx } from '../../utils/with-nx';
+import { getRootTsConfigPath } from '@nx/js';
+import { withWeb } from '../../utils/with-web';
 
 async function getWebpackConfigs(
   options: NormalizedWebpackExecutorOptions,
@@ -36,31 +45,40 @@ async function getWebpackConfigs(
     );
   }
 
-  let customWebpack = null;
-
+  let userDefinedWebpackConfig = null;
   if (options.webpackConfig) {
-    customWebpack = resolveCustomWebpackConfig(
+    userDefinedWebpackConfig = resolveUserDefinedWebpackConfig(
       options.webpackConfig,
-      options.tsConfig
+      getRootTsConfigPath()
     );
 
-    if (typeof customWebpack.then === 'function') {
-      customWebpack = await customWebpack;
+    if (typeof userDefinedWebpackConfig.then === 'function') {
+      userDefinedWebpackConfig = await userDefinedWebpackConfig;
     }
   }
 
   const config = options.isolatedConfig
     ? {}
-    : getWebpackConfig(context, options);
+    : (options.target === 'web'
+        ? composePluginsSync(withNx(options), withWeb(options))
+        : withNx(options))({}, { options, context });
 
-  if (customWebpack) {
-    return await customWebpack(config, {
+  if (
+    typeof userDefinedWebpackConfig === 'function' &&
+    (isNxWebpackComposablePlugin(userDefinedWebpackConfig) ||
+      !options.standardWebpackConfigFunction)
+  ) {
+    // Old behavior, call the Nx-specific webpack config function that user exports
+    return await userDefinedWebpackConfig(config, {
       options,
       context,
       configuration: context.configurationName, // backwards compat
     });
+  } else if (userDefinedWebpackConfig) {
+    // New behavior, we want the webpack config to export object
+    return userDefinedWebpackConfig;
   } else {
-    // If the user has no webpackConfig specified then we always have to apply
+    // Fallback case, if we cannot find a webpack config path
     return config;
   }
 }
@@ -81,6 +99,9 @@ export async function* webpackExecutor(
   _options: WebpackExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<WebpackExecutorEvent, WebpackExecutorEvent, undefined> {
+  // Default to production build.
+  process.env['NODE_ENV'] ||= 'production';
+
   const metadata = context.projectsConfigurations.projects[context.projectName];
   const sourceRoot = metadata.sourceRoot;
   const options = normalizeOptions(
@@ -96,7 +117,16 @@ export async function* webpackExecutor(
       ? options.optimization.scripts
       : false;
 
-  process.env.NODE_ENV ||= isScriptOptimizeOn ? 'production' : 'development';
+  (process.env as any).NODE_ENV ||= isScriptOptimizeOn
+    ? 'production'
+    : 'development';
+
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${options.buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = targetToTargetString({
+    project: context.projectName,
+    target: context.targetName,
+    configuration: context.configurationName,
+  });
 
   if (options.compiler === 'swc') {
     try {
@@ -108,18 +138,14 @@ export async function* webpackExecutor(
       );
       return {
         success: false,
-        outfile: resolve(
-          context.root,
-          options.outputPath,
-          options.outputFileName
-        ),
         options,
       };
     }
   }
 
   if (!options.buildLibsFromSource && context.targetName) {
-    const { dependencies } = calculateProjectDependencies(
+    const { dependencies } = calculateProjectBuildableDependencies(
+      context.taskGraph,
       context.projectGraph,
       context.root,
       context.projectName,
@@ -132,11 +158,19 @@ export async function* webpackExecutor(
       metadata.root,
       dependencies
     );
+    process.env.NX_TSCONFIG_PATH = options.tsConfig;
   }
 
   // Delete output path before bundling
-  if (options.deleteOutputPath) {
+  if (options.deleteOutputPath && options.outputPath) {
     deleteOutputDir(context.root, options.outputPath);
+  }
+
+  if (options.generatePackageJson && metadata.projectType !== 'application') {
+    logger.warn(
+      stripIndents`The project ${context.projectName} is using the 'generatePackageJson' option which is deprecated for library projects. It should only be used for applications.
+        For libraries, configure the project to use the '@nx/dependency-checks' ESLint rule instead (https://nx.dev/packages/eslint-plugin/documents/dependency-checks).`
+    );
   }
 
   const configs = await getWebpackConfigs(options, context);
@@ -166,6 +200,8 @@ export async function* webpackExecutor(
         const success = results.every(
           (result) => Boolean(result) && !result.hasErrors()
         );
+        // TODO(jack): This should read output from webpack config if provided.
+        // The outfile is only used by NestJS, where `@nx/js:node` executor requires it to run the file.
         return {
           success,
           outfile: resolve(

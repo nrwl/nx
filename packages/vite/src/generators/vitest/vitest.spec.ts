@@ -1,9 +1,9 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   Tree,
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import generator from './vitest-generator';
 import { VitestGeneratorSchema } from './schema';
@@ -17,7 +17,7 @@ describe('vitest generator', () => {
   const options: VitestGeneratorSchema = {
     project: 'my-test-react-app',
     uiFramework: 'react',
-    coverageProvider: 'c8',
+    coverageProvider: 'v8',
   };
 
   beforeEach(() => {
@@ -29,12 +29,12 @@ describe('vitest generator', () => {
     await generator(appTree, options);
     const config = readProjectConfiguration(appTree, 'my-test-react-app');
     expect(config.targets['test']).toMatchInlineSnapshot(`
-      Object {
-        "executor": "@nrwl/vite:test",
-        "options": Object {
+      {
+        "executor": "@nx/vite:test",
+        "options": {
           "passWithNoTests": true,
         },
-        "outputs": Array [
+        "outputs": [
           "{workspaceRoot}/coverage/{projectRoot}",
         ],
       }
@@ -52,14 +52,13 @@ describe('vitest generator', () => {
     await generator(appTree, options);
     const config = readProjectConfiguration(appTree, 'my-test-react-app');
     expect(config.targets['test']).toMatchInlineSnapshot(`
-      Object {
-        "executor": "@nrwl/vite:test",
-        "options": Object {
-          "passWithNoTests": true,
+      {
+        "executor": "@nx/vite:test",
+        "options": {
           "reportsDirectory": "../../coverage/apps/my-test-react-app",
         },
-        "outputs": Array [
-          "coverage/apps/my-test-react-app",
+        "outputs": [
+          "{options.reportsDirectory}",
         ],
       }
     `);
@@ -73,34 +72,36 @@ describe('vitest generator', () => {
         appTree.read('apps/my-test-react-app/tsconfig.json')?.toString() ?? '{}'
       );
       expect(tsconfig.references).toMatchInlineSnapshot(`
-              Array [
-                Object {
-                  "path": "./tsconfig.app.json",
-                },
-                Object {
-                  "path": "./tsconfig.spec.json",
-                },
-              ]
-          `);
+        [
+          {
+            "path": "./tsconfig.app.json",
+          },
+          {
+            "path": "./tsconfig.spec.json",
+          },
+        ]
+      `);
 
       const tsconfigSpec = JSON.parse(
         appTree.read('apps/my-test-react-app/tsconfig.spec.json')?.toString() ??
           '{}'
       );
       expect(tsconfigSpec).toMatchInlineSnapshot(`
-        Object {
-          "compilerOptions": Object {
+        {
+          "compilerOptions": {
             "outDir": "../../dist/out-tsc",
-            "types": Array [
+            "types": [
               "vitest/globals",
               "vitest/importMeta",
               "vite/client",
               "node",
+              "vitest",
             ],
           },
           "extends": "./tsconfig.json",
-          "include": Array [
+          "include": [
             "vite.config.ts",
+            "vitest.config.ts",
             "src/**/*.test.ts",
             "src/**/*.spec.ts",
             "src/**/*.test.tsx",
@@ -123,7 +124,7 @@ describe('vitest generator', () => {
           '{}'
       );
       expect(tsconfig.compilerOptions.types).toMatchInlineSnapshot(`
-        Array [
+        [
           "vitest/importMeta",
         ]
       `);

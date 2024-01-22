@@ -1,0 +1,2 @@
+<% if (!skipModule) { %>export * from './lib/<%= libFileName %>.module';<% } %><% if(routing) { %>
+export * from './lib/lib.routes';<% } %>

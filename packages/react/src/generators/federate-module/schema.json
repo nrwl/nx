@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "cli": "nx",
+  "$id": "NxReactFederateModule",
+  "title": "Federate Module",
+  "description": "Create a federated module, which can be loaded by a remote host.",
+  "examples": [
+    {
+      "command": "nx g federate-module MyModule --path=./src/component/my-cmp.ts --remote=my-remote-app --remoteDirectory=apps/my-remote-app",
+      "description": "Create a federated module from my-remote-app, that exposes my-cmp from ./src/component/my-cmp.ts as MyModule."
+    }
+  ],
+  "type": "object",
+  "properties": {
+    "path": {
+      "type": "string",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "description": "The path to locate the federated module. This path should be relative to the workspace root and the file should exist.",
+      "x-prompt": "What is the path to the module to be federated?"
+    },
+    "name": {
+      "description": "The name of the module.",
+      "type": "string",
+      "x-prompt": "What name would you like to use for the module?",
+      "pattern": "^[a-zA-Z][^:]*$",
+      "x-priority": "important"
+    },
+    "remote": {
+      "type": "string",
+      "description": "The name of the remote.",
+      "x-prompt": "What is/should the remote be named?"
+    },
+    "remoteDirectory": {
+      "description": "The directory of the new remote application if one needs to be created.",
+      "type": "string"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
+    },
+    "style": {
+      "description": "The file extension to be used for style files.",
+      "type": "string",
+      "default": "none",
+      "alias": "s"
+    },
+    "linter": {
+      "description": "The tool to use for running lint checks.",
+      "type": "string",
+      "enum": ["eslint"],
+      "default": "eslint"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "unitTestRunner": {
+      "type": "string",
+      "enum": ["jest", "none"],
+      "description": "Test runner to use for unit tests.",
+      "default": "jest"
+    },
+    "e2eTestRunner": {
+      "type": "string",
+      "enum": ["cypress", "playwright", "none"],
+      "description": "Test runner to use for end to end (e2e) tests.",
+      "default": "cypress"
+    },
+    "host": {
+      "type": "string",
+      "description": "The host / shell application for this remote."
+    }
+  },
+  "required": ["name", "path", "remote"],
+  "additionalProperties": false
+}

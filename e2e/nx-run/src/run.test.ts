@@ -4,33 +4,43 @@ import {
   fileExists,
   isWindows,
   newProject,
-  readFile,
   readJson,
-  readProjectConfig,
   removeFile,
   runCLI,
   runCLIAsync,
   runCommand,
+  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
   updateJson,
-  updateProjectConfig,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
+import { join } from 'path';
 
 describe('Nx Running Tests', () => {
   let proj: string;
-  beforeAll(() => (proj = newProject()));
+  beforeAll(
+    () => (proj = newProject({ packages: ['@nx/js', '@nx/web', '@nx/node'] }))
+  );
   afterAll(() => cleanupProject());
+
+  // Ensures that nx.json is restored to its original state after each test
+  let existingNxJson;
+  beforeEach(() => {
+    existingNxJson = readJson('nx.json');
+  });
+  afterEach(() => {
+    updateFile('nx.json', JSON.stringify(existingNxJson, null, 2));
+  });
 
   describe('running targets', () => {
     describe('(forwarding params)', () => {
       let proj = uniq('proj');
       beforeAll(() => {
-        runCLI(`generate @nrwl/workspace:lib ${proj}`);
-        updateProjectConfig(proj, (c) => {
+        runCLI(`generate @nx/js:lib ${proj}`);
+        updateJson(`libs/${proj}/project.json`, (c) => {
           c.targets['echo'] = {
             command: 'echo ECHO:',
           };
@@ -54,12 +64,12 @@ describe('Nx Running Tests', () => {
       });
     });
 
-    it('should execute long running tasks', async () => {
+    it('should execute long running tasks', () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
-      updateProjectConfig(myapp, (c) => {
+      runCLI(`generate @nx/web:app ${myapp}`);
+      updateJson(`apps/${myapp}/project.json`, (c) => {
         c.targets['counter'] = {
-          executor: '@nrwl/workspace:counter',
+          executor: '@nx/workspace:counter',
           options: {
             to: 2,
           },
@@ -76,11 +86,11 @@ describe('Nx Running Tests', () => {
 
     it('should run npm scripts', async () => {
       const mylib = uniq('mylib');
-      runCLI(`generate @nrwl/node:lib ${mylib}`);
+      runCLI(`generate @nx/node:lib ${mylib}`);
 
       // Used to restore targets to lib after test
-      const original = readProjectConfig(mylib);
-      updateProjectConfig(mylib, (j) => {
+      const original = readJson(`libs/${mylib}/project.json`);
+      updateJson(`libs/${mylib}/project.json`, (j) => {
         delete j.targets;
         return j;
       });
@@ -113,23 +123,91 @@ describe('Nx Running Tests', () => {
         `Cannot find configuration for task ${mylib}:echo:fail`
       );
 
-      updateProjectConfig(mylib, (c) => original);
+      updateJson(`libs/${mylib}/project.json`, (c) => original);
     }, 1000000);
+
+    describe('tokens support', () => {
+      let app: string;
+
+      beforeAll(async () => {
+        app = uniq('myapp');
+        runCLI(`generate @nx/web:app ${app}`);
+        setMaxWorkers(join('apps', app, 'project.json'));
+      });
+
+      it('should support using {projectRoot} in options blocks in project.json', async () => {
+        updateJson(`apps/${app}/project.json`, (c) => {
+          c.targets['echo'] = {
+            command: `node -e 'console.log("{projectRoot}")'`,
+          };
+          return c;
+        });
+
+        const output = runCLI(`echo ${app}`);
+        expect(output).toContain(`apps/${app}`);
+      });
+
+      it('should support using {projectName} in options blocks in project.json', () => {
+        updateJson(`apps/${app}/project.json`, (c) => {
+          c.targets['echo'] = {
+            command: `node -e 'console.log("{projectName}")'`,
+          };
+          return c;
+        });
+
+        const output = runCLI(`echo ${app}`);
+        expect(output).toContain(app);
+      });
+
+      it('should support using {projectRoot} in targetDefaults', async () => {
+        updateJson(`nx.json`, (json) => {
+          json.targetDefaults = {
+            echo: {
+              command: `node -e 'console.log("{projectRoot}")'`,
+            },
+          };
+          return json;
+        });
+        updateJson(`apps/${app}/project.json`, (c) => {
+          c.targets['echo'] = {};
+          return c;
+        });
+        const output = runCLI(`echo ${app}`);
+        expect(output).toContain(`apps/${app}`);
+      });
+
+      it('should support using {projectName} in targetDefaults', () => {
+        updateJson(`nx.json`, (json) => {
+          json.targetDefaults = {
+            echo: {
+              command: `node -e 'console.log("{projectName}")'`,
+            },
+          };
+          return json;
+        });
+        updateJson(`apps/${app}/project.json`, (c) => {
+          c.targets['echo'] = {};
+          return c;
+        });
+        const output = runCLI(`echo ${app}`);
+        expect(output).toContain(app);
+      });
+    });
   });
 
   describe('Nx Bail', () => {
     it('should stop executing all tasks when one of the tasks fails', async () => {
       const myapp1 = uniq('a');
       const myapp2 = uniq('b');
-      runCLI(`generate @nrwl/web:app ${myapp1}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
-      updateProjectConfig(myapp1, (c) => {
+      runCLI(`generate @nx/web:app ${myapp1}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
+      updateJson(`apps/${myapp1}/project.json`, (c) => {
         c.targets['error'] = {
           command: 'echo boom1 && exit 1',
         };
         return c;
       });
-      updateProjectConfig(myapp2, (c) => {
+      updateJson(`apps/${myapp2}/project.json`, (c) => {
         c.targets['error'] = {
           executor: 'nx:run-commands',
           options: {
@@ -139,7 +217,7 @@ describe('Nx Running Tests', () => {
         return c;
       });
 
-      let withoutBail = runCLI(`run-many --target=error --all --parallel=1`, {
+      let withoutBail = runCLI(`run-many --target=error --parallel=1`, {
         silenceError: true,
       })
         .split('\n')
@@ -150,12 +228,9 @@ describe('Nx Running Tests', () => {
       expect(withoutBail).toContain(`- ${myapp1}:error`);
       expect(withoutBail).toContain(`- ${myapp2}:error`);
 
-      let withBail = runCLI(
-        `run-many --target=error --all --parallel=1 --nx-bail`,
-        {
-          silenceError: true,
-        }
-      )
+      let withBail = runCLI(`run-many --target=error --parallel=1 --nx-bail`, {
+        silenceError: true,
+      })
         .split('\n')
         .map((r) => r.trim())
         .filter((r) => r);
@@ -173,14 +248,14 @@ describe('Nx Running Tests', () => {
   describe('run-one', () => {
     it('should build a specific project', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
 
       runCLI(`build ${myapp}`);
     }, 10000);
 
     it('should support project name positional arg non-consecutive to target', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
 
       runCLI(`build --verbose ${myapp}`);
     }, 10000);
@@ -189,25 +264,44 @@ describe('Nx Running Tests', () => {
       const myapp = uniq('app');
       const target = uniq('script');
       const expectedOutput = uniq('myEchoedString');
+      const expectedEnvOutput = uniq('myEnvString');
 
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
       updateFile(
         `apps/${myapp}/package.json`,
         JSON.stringify({
           name: myapp,
           scripts: {
-            [target]: `echo ${expectedOutput}`,
+            [target]: `echo ${expectedOutput} $ENV_VAR`,
+          },
+          nx: {
+            targets: {
+              [target]: {
+                configurations: {
+                  production: {},
+                },
+              },
+            },
           },
         })
       );
 
+      updateFile(
+        `apps/${myapp}/.env.production`,
+        `ENV_VAR=${expectedEnvOutput}`
+      );
+
       expect(runCLI(`${target} ${myapp}`)).toContain(expectedOutput);
+      expect(runCLI(`${target} ${myapp}`)).not.toContain(expectedEnvOutput);
+      expect(runCLI(`${target} ${myapp} --configuration production`)).toContain(
+        expectedEnvOutput
+      );
     }, 10000);
 
     it('should run targets inferred from plugin-specified project files', () => {
       // Setup an app to extend
       const myapp = uniq('app');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
 
       // Register an Nx plugin
       const plugin = `module.exports = {
@@ -236,16 +330,16 @@ describe('Nx Running Tests', () => {
 
     it('should build a specific project with the daemon disabled', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
 
       const buildWithDaemon = runCLI(`build ${myapp}`, {
-        env: { ...process.env, NX_DAEMON: 'false' },
+        env: { NX_DAEMON: 'false' },
       });
 
       expect(buildWithDaemon).toContain('Successfully ran target build');
 
       const buildAgain = runCLI(`build ${myapp}`, {
-        env: { ...process.env, NX_DAEMON: 'false' },
+        env: { NX_DAEMON: 'false' },
       });
 
       expect(buildAgain).toContain('[local cache]');
@@ -253,7 +347,7 @@ describe('Nx Running Tests', () => {
 
     it('should build the project when within the project root', () => {
       const myapp = uniq('app');
-      runCLI(`generate @nrwl/web:app ${myapp}`);
+      runCLI(`generate @nx/web:app ${myapp}`);
 
       // Should work within the project directory
       expect(runCommand(`cd apps/${myapp}/src && npx nx build`)).toContain(
@@ -332,9 +426,9 @@ describe('Nx Running Tests', () => {
         myapp = uniq('myapp');
         mylib1 = uniq('mylib1');
         mylib2 = uniq('mylib1');
-        runCLI(`generate @nrwl/web:app ${myapp}`);
-        runCLI(`generate @nrwl/web:lib ${mylib1} --buildable`);
-        runCLI(`generate @nrwl/web:lib ${mylib2} --buildable`);
+        runCLI(`generate @nx/web:app ${myapp}`);
+        runCLI(`generate @nx/js:lib ${mylib1}`);
+        runCLI(`generate @nx/js:lib ${mylib2}`);
 
         updateFile(
           `apps/${myapp}/src/main.ts`,
@@ -345,9 +439,9 @@ describe('Nx Running Tests', () => {
         );
       });
 
-      it('should be able to include deps using target dependencies', () => {
-        const originalWorkspace = readProjectConfig(myapp);
-        updateProjectConfig(myapp, (config) => {
+      it('should be able to include deps using dependsOn', async () => {
+        const originalWorkspace = readJson(`apps/${myapp}/project.json`);
+        updateJson(`apps/${myapp}/project.json`, (config) => {
           config.targets.prep = {
             executor: 'nx:run-commands',
             options: {
@@ -367,31 +461,12 @@ describe('Nx Running Tests', () => {
         expect(output).toContain(mylib2);
         expect(output).toContain('PREP');
 
-        updateProjectConfig(myapp, () => originalWorkspace);
+        updateJson(`apps/${myapp}/project.json`, () => originalWorkspace);
       }, 10000);
 
-      it('should be able to include deps using target dependencies defined at the root', () => {
-        const originalNxJson = readFile('nx.json');
+      it('should be able to include deps using target defaults defined at the root', async () => {
         const nxJson = readJson('nx.json');
-        nxJson.targetDependencies = {
-          build: ['^build', '^e2e-extra-entry-to-bust-cache'],
-        };
-        updateFile('nx.json', JSON.stringify(nxJson));
-
-        const output = runCLI(`build ${myapp}`);
-        expect(output).toContain(
-          `NX   Running target build for project ${myapp} and 2 tasks it depends on`
-        );
-        expect(output).toContain(myapp);
-        expect(output).toContain(mylib1);
-        expect(output).toContain(mylib2);
-
-        updateFile('nx.json', originalNxJson);
-      }, 10000);
-
-      it('should be able to include deps using target defaults defined at the root', () => {
-        const nxJson = readJson('nx.json');
-        updateProjectConfig(myapp, (config) => {
+        updateJson(`apps/${myapp}/project.json`, (config) => {
           config.targets.prep = {
             command: 'echo PREP > one.txt',
           };
@@ -401,16 +476,14 @@ describe('Nx Running Tests', () => {
           return config;
         });
 
-        nxJson.tasksRunnerOptions.default.options.cacheableOperations = [
-          'prep',
-          'outside',
-        ];
         nxJson.targetDefaults = {
           prep: {
             outputs: ['{workspaceRoot}/one.txt'],
+            cache: true,
           },
           outside: {
             dependsOn: ['prep'],
+            cache: true,
           },
         };
         updateFile('nx.json', JSON.stringify(nxJson));
@@ -438,11 +511,15 @@ describe('Nx Running Tests', () => {
       const libC = uniq('libc-rand');
       const libD = uniq('libd-rand');
 
-      runCLI(`generate @nrwl/web:app ${appA}`);
-      runCLI(`generate @nrwl/js:lib ${libA} --buildable --defaults`);
-      runCLI(`generate @nrwl/js:lib ${libB} --buildable --defaults`);
-      runCLI(`generate @nrwl/js:lib ${libC} --buildable --defaults`);
-      runCLI(`generate @nrwl/node:lib ${libD} --defaults`);
+      runCLI(`generate @nx/web:app ${appA}`);
+      runCLI(`generate @nx/js:lib ${libA} --bundler=tsc --defaults`);
+      runCLI(
+        `generate @nx/js:lib ${libB} --bundler=tsc --defaults --tags=ui-a`
+      );
+      runCLI(
+        `generate @nx/js:lib ${libC} --bundler=tsc --defaults --tags=ui-b,shared`
+      );
+      runCLI(`generate @nx/node:lib ${libD} --defaults --tags=api`);
 
       // libA depends on libC
       updateFile(
@@ -462,6 +539,7 @@ describe('Nx Running Tests', () => {
         `run-many --target=build --projects="${libC},${libB}"`
       );
       expect(buildParallel).toContain(`Running target build for 2 projects:`);
+      expect(buildParallel).not.toContain(`- ${appA}`);
       expect(buildParallel).not.toContain(`- ${libA}`);
       expect(buildParallel).toContain(`- ${libB}`);
       expect(buildParallel).toContain(`- ${libC}`);
@@ -480,6 +558,36 @@ describe('Nx Running Tests', () => {
       expect(buildAllParallel).not.toContain(`- ${libD}`);
       expect(buildAllParallel).toContain('Successfully ran target build');
 
+      // testing run many by tags
+      const buildByTagParallel = runCLI(
+        `run-many --target=build --projects="tag:ui*"`
+      );
+      expect(buildByTagParallel).toContain(
+        `Running target build for 2 projects:`
+      );
+      expect(buildByTagParallel).not.toContain(`- ${appA}`);
+      expect(buildByTagParallel).not.toContain(`- ${libA}`);
+      expect(buildByTagParallel).toContain(`- ${libB}`);
+      expect(buildByTagParallel).toContain(`- ${libC}`);
+      expect(buildByTagParallel).not.toContain(`- ${libD}`);
+      expect(buildByTagParallel).toContain('Successfully ran target build');
+
+      // testing run many with exclude
+      const buildWithExcludeParallel = runCLI(
+        `run-many --target=build --exclude="${libD},tag:ui*"`
+      );
+      expect(buildWithExcludeParallel).toContain(
+        `Running target build for 2 projects and 1 task they depend on:`
+      );
+      expect(buildWithExcludeParallel).toContain(`- ${appA}`);
+      expect(buildWithExcludeParallel).toContain(`- ${libA}`);
+      expect(buildWithExcludeParallel).not.toContain(`- ${libB}`);
+      expect(buildWithExcludeParallel).toContain(`${libC}`); // should still include libC as dependency despite exclude
+      expect(buildWithExcludeParallel).not.toContain(`- ${libD}`);
+      expect(buildWithExcludeParallel).toContain(
+        'Successfully ran target build'
+      );
+
       // testing run many when project depends on other projects
       const buildWithDeps = runCLI(
         `run-many --target=build --projects="${libA}"`
@@ -487,6 +595,7 @@ describe('Nx Running Tests', () => {
       expect(buildWithDeps).toContain(
         `Running target build for project ${libA} and 1 task it depends on:`
       );
+      expect(buildWithDeps).not.toContain(`- ${appA}`);
       expect(buildWithDeps).toContain(`- ${libA}`);
       expect(buildWithDeps).toContain(`${libC}`); // build should include libC as dependency
       expect(buildWithDeps).not.toContain(`- ${libB}`);
@@ -507,7 +616,7 @@ describe('Nx Running Tests', () => {
 
       // testing run many with daemon disabled
       const buildWithDaemon = runCLI(`run-many --target=build`, {
-        env: { ...process.env, NX_DAEMON: 'false' },
+        env: { NX_DAEMON: 'false' },
       });
       expect(buildWithDaemon).toContain(`Successfully ran target build`);
     }, 1000000);
@@ -515,8 +624,8 @@ describe('Nx Running Tests', () => {
     it('should run multiple targets', () => {
       const myapp1 = uniq('myapp');
       const myapp2 = uniq('myapp');
-      runCLI(`generate @nrwl/web:app ${myapp1}`);
-      runCLI(`generate @nrwl/web:app ${myapp2}`);
+      runCLI(`generate @nx/web:app ${myapp1}`);
+      runCLI(`generate @nx/web:app ${myapp2}`);
 
       let outputs = runCLI(
         // Options with lists can be specified using multiple args or with a delimiter (comma or space).
@@ -531,13 +640,21 @@ describe('Nx Running Tests', () => {
 
   describe('exec', () => {
     let pkg: string;
+    let pkg2: string;
     let pkgRoot: string;
+    let pkg2Root: string;
     let originalRootPackageJson: PackageJson;
 
     beforeAll(() => {
       originalRootPackageJson = readJson<PackageJson>('package.json');
       pkg = uniq('package');
+      pkg2 = uniq('package');
       pkgRoot = tmpProjPath(path.join('libs', pkg));
+      pkg2Root = tmpProjPath(path.join('libs', pkg2));
+      runCLI(`generate @nx/js:lib ${pkg} --bundler=none --unitTestRunner=none`);
+      runCLI(
+        `generate @nx/js:lib ${pkg2} --bundler=none --unitTestRunner=none`
+      );
 
       updateJson<PackageJson>('package.json', (v) => {
         v.workspaces = ['libs/*'];
@@ -555,6 +672,22 @@ describe('Nx Running Tests', () => {
           },
         })
       );
+
+      updateFile(
+        `libs/${pkg2}/package.json`,
+        JSON.stringify(<PackageJson>{
+          name: pkg2,
+          version: '0.0.1',
+          scripts: {
+            build: "nx exec -- echo '$NX_PROJECT_NAME'",
+          },
+        })
+      );
+
+      updateJson(`libs/${pkg2}/project.json`, (content) => {
+        content['implicitDependencies'] = [pkg];
+        return content;
+      });
     });
 
     afterAll(() => {
@@ -567,6 +700,39 @@ describe('Nx Running Tests', () => {
       });
       expect(output).toContain('HELLO');
       expect(output).toContain(`nx run ${pkg}:build`);
+    });
+
+    it('should run adhoc tasks in topological order', () => {
+      let output = runCLI('exec -- echo HELLO');
+      expect(output).toContain('HELLO');
+
+      output = runCLI(`build ${pkg}`);
+      expect(output).toContain(pkg);
+      expect(output).not.toContain(pkg2);
+
+      output = runCommand('npm run build', {
+        cwd: pkgRoot,
+      });
+      expect(output).toContain(pkg);
+      expect(output).not.toContain(pkg2);
+
+      output = runCLI(`exec -- echo '$NX_PROJECT_NAME'`).replace(/\s+/g, ' ');
+      expect(output).toContain(pkg);
+      expect(output).toContain(pkg2);
+
+      output = runCLI("exec -- echo '$NX_PROJECT_ROOT_PATH'").replace(
+        /\s+/g,
+        ' '
+      );
+      expect(output).toContain(`${path.join('libs', pkg)}`);
+      expect(output).toContain(`${path.join('libs', pkg2)}`);
+
+      output = runCLI(`exec --projects ${pkg} -- echo WORLD`);
+      expect(output).toContain('WORLD');
+
+      output = runCLI(`exec --projects ${pkg} -- echo '$NX_PROJECT_NAME'`);
+      expect(output).toContain(pkg);
+      expect(output).not.toContain(pkg2);
     });
 
     it('should work for npm scripts with delimiter', () => {
@@ -594,7 +760,6 @@ describe('Nx Running Tests', () => {
       });
 
       it('should read outputs', () => {
-        console.log(pkgRoot);
         const nodeCommands = [
           "const fs = require('fs')",
           "fs.mkdirSync('../../tmp/exec-outputs-test', {recursive: true})",
@@ -617,10 +782,9 @@ describe('Nx Running Tests', () => {
             },
           })
         );
-        const out = runCommand('npm run build', {
+        runCommand('npm run build', {
           cwd: pkgRoot,
         });
-        console.log(out);
         expect(
           fileExists(tmpProjPath('tmp/exec-outputs-test/file.txt'))
         ).toBeTruthy();

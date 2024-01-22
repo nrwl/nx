@@ -1,40 +1,26 @@
 import {
   joinPathFragments,
+  normalizePath,
+  parseTargetString,
   ProjectGraph,
   readCachedProjectGraph,
-  stripIndents,
-} from '@nrwl/devkit';
-import { WebpackNxBuildCoordinationPlugin } from '@nrwl/webpack/src/plugins/webpack-nx-build-coordination-plugin';
-import { DependentBuildableProjectNode } from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+  targetToTargetString,
+} from '@nx/devkit';
+import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
+import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
 import { existsSync } from 'fs';
-import { readNxJson } from 'nx/src/project-graph/file-utils';
+import { readNxJson } from 'nx/src/config/configuration';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
+import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
 import {
   mergeCustomWebpackConfig,
   resolveIndexHtmlTransformer,
 } from '../utilities/webpack';
-
-export type BrowserBuilderSchema =
-  import('@angular-devkit/build-angular/src/builders/browser/schema').Schema & {
-    customWebpackConfig?: {
-      path: string;
-    };
-    indexFileTransformer?: string;
-    buildLibsFromSource?: boolean;
-  };
-
-function validateOptions(options: BrowserBuilderSchema): void {
-  const { major, version } = getInstalledAngularVersionInfo();
-  if (major < 15 && Array.isArray(options.polyfills)) {
-    throw new Error(stripIndents`The array syntax for the "polyfills" option is supported from Angular >= 15.0.0. You are currently using ${version}.
-    You can resolve this error by removing the "polyfills" option, setting it to a string value or migrating to Angular 15.0.0.`);
-  }
-}
+import type { BrowserBuilderSchema } from './schema';
 
 function shouldSkipInitialTargetRun(
   projectGraph: ProjectGraph,
@@ -64,7 +50,6 @@ export function executeWebpackBrowserBuilder(
   options: BrowserBuilderSchema,
   context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/architect').BuilderOutput> {
-  validateOptions(options);
   options.buildLibsFromSource ??= true;
 
   const {
@@ -73,6 +58,9 @@ export function executeWebpackBrowserBuilder(
     indexFileTransformer,
     ...delegateBuilderOptions
   } = options;
+
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = targetToTargetString({ ...context.target });
 
   const pathToWebpackConfig =
     customWebpackConfig?.path &&
@@ -103,7 +91,9 @@ export function executeWebpackBrowserBuilder(
         { projectGraph }
       );
     dependencies = foundDependencies;
-    delegateBuilderOptions.tsConfig = tsConfigPath;
+    delegateBuilderOptions.tsConfig = normalizePath(
+      relative(context.workspaceRoot, tsConfigPath)
+    );
   }
 
   return from(import('@angular-devkit/build-angular')).pipe(
@@ -126,6 +116,7 @@ export function executeWebpackBrowserBuilder(
               );
 
               baseWebpackConfig.plugins.push(
+                // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
                 new WebpackNxBuildCoordinationPlugin(
                   `nx run-many --target=${
                     context.target.target

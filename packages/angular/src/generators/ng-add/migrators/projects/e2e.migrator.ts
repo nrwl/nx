@@ -1,28 +1,25 @@
-import { cypressProjectGenerator } from '@nrwl/cypress';
-import { nxE2EPreset } from '@nrwl/cypress/plugins/cypress-preset';
-import { installedCypressVersion } from '@nrwl/cypress/src/utils/cypress-version';
+import { configurationGenerator } from '@nx/cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import type {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   addProjectConfiguration,
   joinPathFragments,
-  names,
   offsetFromRoot,
   readJson,
   readProjectConfiguration,
-  removeProjectConfiguration,
   stripIndents,
   updateJson,
   updateProjectConfiguration,
   visitNotIgnoredFiles,
   writeJson,
-} from '@nrwl/devkit';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import { getRootTsConfigPathInTree } from '@nrwl/js';
+} from '@nx/devkit';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { getRootTsConfigPathInTree, insertImport } from '@nx/js';
 import { basename, relative } from 'path';
 import type {
   Node,
@@ -43,9 +40,9 @@ import type {
   Target,
   ValidationResult,
 } from '../../utilities';
-import { FileChangeRecorder } from '../../utilities';
+import { FileChangeRecorder } from '../../../../utils/file-change-recorder';
 import { ProjectMigrator } from './project.migrator';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 type SupportedTargets = 'e2e';
 const supportedTargets: Record<SupportedTargets, Target> = {
@@ -325,7 +322,6 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       await lintProjectGenerator(this.tree, {
         project: this.project.name,
         linter: Linter.EsLint,
-        eslintFilePatterns: [`${this.project.newRoot}/**/*.{js,ts}`],
         unitTestRunner: this.options.unitTestRunner,
         tsConfigPaths: [
           joinPathFragments(this.project.newRoot, 'tsconfig.json'),
@@ -338,12 +334,21 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   private async migrateCypressE2eProject(): Promise<void> {
     const oldCypressConfigFilePath = this.getOldCypressConfigFilePath();
 
-    await cypressProjectGenerator(this.tree, {
-      name: this.project.name,
-      project: this.appName,
+    addProjectConfiguration(this.tree, this.project.name, {
+      projectType: 'application',
+      root: this.project.newRoot,
+      sourceRoot: this.project.newSourceRoot,
+      targets: {},
+      tags: [],
+      implicitDependencies: [this.appName],
+    });
+    await configurationGenerator(this.tree, {
+      project: this.project.name,
       linter: this.isProjectUsingEsLint ? Linter.EsLint : Linter.None,
-      standaloneConfig: true,
       skipFormat: true,
+      // any target would do, we replace it later with the target existing in the project being migrated
+      devServerTarget: `${this.appName}:serve`,
+      baseUrl: 'http://localhost:4200',
     });
 
     const cypressConfigFilePath = this.updateOrCreateCypressConfigFile(
@@ -389,48 +394,15 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   }
 
   private updateCypressProjectConfiguration(cypressConfigPath: string): void {
-    /**
-     * The `cypressProjectGenerator` function normalizes the project name. The
-     * migration keeps the names for existing projects as-is to avoid any
-     * confusion. The e2e project is technically new, but it's associated
-     * to an existing application, so we keep it familiar.
-     */
-    const generatedProjectName = names(this.project.name).fileName;
-    if (this.project.name !== generatedProjectName) {
-      // If the names are different, we "rename" the newly added project.
-      this.projectConfig = readProjectConfiguration(
-        this.tree,
-        generatedProjectName
-      );
-
-      this.projectConfig.root = this.project.newRoot;
-      this.projectConfig.sourceRoot = this.project.newSourceRoot;
-      removeProjectConfiguration(this.tree, generatedProjectName);
-      addProjectConfiguration(
-        this.tree,
-        this.project.name,
-        { ...this.projectConfig },
-        true
-      );
-    } else {
-      this.projectConfig = readProjectConfiguration(
-        this.tree,
-        this.project.name
-      );
-    }
+    this.projectConfig = readProjectConfiguration(this.tree, this.project.name);
 
     if (this.isProjectUsingEsLint) {
       // the generated cypress project always generates a "lint" target,
       // in case the app was using a different name for it, we use it
-      const lintTarget = this.projectConfig.targets.lint;
       if (this.lintTargetName && this.lintTargetName !== 'lint') {
         this.projectConfig.targets[this.lintTargetName] =
           this.projectConfig.targets.lint;
       }
-      lintTarget.options.lintFilePatterns =
-        lintTarget.options.lintFilePatterns.map((pattern) =>
-          pattern.replace(`apps/${generatedProjectName}`, this.project.newRoot)
-        );
     }
 
     [this.targetNames.e2e, 'cypress-run', 'cypress-open'].forEach((target) => {
@@ -460,7 +432,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
   ): TargetConfiguration {
     const updatedTarget = {
       ...existingTarget,
-      executor: '@nrwl/cypress:cypress',
+      executor: '@nx/cypress:cypress',
       options: {
         ...existingTarget.options,
         cypressConfig,
@@ -782,7 +754,7 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       sourceFile,
       configFilePath,
       'nxE2EPreset',
-      '@nrwl/cypress/plugins/cypress-preset'
+      '@nx/cypress/plugins/cypress-preset'
     );
     // update recorder with the new content from the file
     recorder.setContentToFileContent();

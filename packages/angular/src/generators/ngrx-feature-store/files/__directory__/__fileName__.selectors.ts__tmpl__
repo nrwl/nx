@@ -1,0 +1,38 @@
+import { createFeatureSelector, createSelector } from '@ngrx/store';
+import { <%= constantName %>_FEATURE_KEY, <%= className %>State, <%= propertyName %>Adapter } from './<%= relativeFileName %>.reducer';
+
+// Lookup the '<%= className %>' feature state managed by NgRx
+export const select<%= className %>State = createFeatureSelector<<%= className %>State>(<%= constantName %>_FEATURE_KEY);
+
+const { selectAll, selectEntities } = <%= propertyName %>Adapter.getSelectors();
+
+export const select<%= className %>Loaded = createSelector(
+  select<%= className %>State,
+  (state: <%= className %>State) => state.loaded
+);
+
+export const select<%= className %>Error = createSelector(
+  select<%= className %>State,
+  (state: <%= className %>State) => state.error
+);
+
+export const selectAll<%= className %> = createSelector(
+  select<%= className %>State,
+  (state: <%= className %>State) => selectAll(state)
+);
+
+export const select<%= className %>Entities = createSelector(
+  select<%= className %>State,
+  (state: <%= className %>State) => selectEntities(state)
+);
+
+export const selectSelectedId = createSelector(
+  select<%= className %>State,
+  (state: <%= className %>State) => state.selectedId
+);
+
+export const selectEntity = createSelector(
+  select<%= className %>Entities,
+  selectSelectedId,
+  (entities, selectedId) => (selectedId ? entities[selectedId] : undefined)
+);

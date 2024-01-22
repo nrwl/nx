@@ -4,7 +4,7 @@ import {
   normalizePath,
   ProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Schema } from '../schema';
 import { relative } from 'path';
 
@@ -26,7 +26,7 @@ export function checkProjectIsSafeToRemove(
   for (const [_, p] of getProjects(tree)) {
     if (
       project.name !== p.name &&
-      !normalizePath(relative(project.root, p.root)).startsWith('../')
+      !normalizePath(relative(project.root, p.root)).startsWith('..')
     ) {
       containedProjects.push(p.name);
     }

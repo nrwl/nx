@@ -1,12 +1,14 @@
-import { Linter } from '@nrwl/linter';
-import type { SupportedStyles } from '@nrwl/react';
+import type { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import type { Linter } from '@nx/eslint';
+import type { SupportedStyles } from '@nx/react';
 
 export interface Schema {
   name: string;
   directory?: string;
+  projectNameAndRootFormat?: ProjectNameAndRootFormat;
   style: SupportedStyles;
-  skipTsConfig: boolean;
-  skipFormat: boolean;
+  skipTsConfig?: boolean;
+  skipFormat?: boolean;
   tags?: string;
   pascalCaseFiles?: boolean;
   routing?: boolean;
@@ -21,6 +23,5 @@ export interface Schema {
   globalCss?: boolean;
   strict?: boolean;
   setParserOptionsProject?: boolean;
-  standaloneConfig?: boolean;
   skipPackageJson?: boolean;
 }

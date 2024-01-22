@@ -7,26 +7,30 @@
     "build": {
       "dependsOn": [
         {
-          "target": "build-base",
-          "projects": "self"
+          "target": "build-base"
         }
       ],
       "executor": "nx:run-commands",
       "options": {
-        "outputPath": "dist/nx-dev/nx-dev",
         "commands": [
           "nx run nx-dev:sitemap",
-          "ts-node -P ./scripts/tsconfig.release.json ./scripts/documentation/internal-link-checker.ts"
+          "ts-node -P ./scripts/tsconfig.scripts.json ./scripts/documentation/internal-link-checker.ts"
         ],
         "parallel": false
-      }
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{workspaceRoot}/scripts/tsconfig.scripts.json",
+        "{workspaceRoot}/scripts/documentation/internal-link-checker.ts"
+      ],
+      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev"]
     },
     "sitemap": {
       "executor": "nx:run-commands",
-      "outputs": ["{options.outputPath}"],
+      "outputs": ["{workspaceRoot}/dist/nx-dev/nx-dev/public"],
       "options": {
-        "outputPath": "dist/nx-dev/nx-dev/public",
-        "command": "yarn next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
+        "command": "pnpm next-sitemap --config ./nx-dev/nx-dev/next-sitemap.config.js"
       }
     },
     "sync-documentation": {
@@ -44,7 +48,8 @@
       }
     },
     "build-base": {
-      "executor": "@nrwl/next:build",
+      "executor": "@nx/next:build",
+      "dependsOn": ["copy-docs"],
       "outputs": ["{options.outputPath}"],
       "options": {
         "root": "nx-dev/nx-dev",
@@ -57,8 +62,27 @@
         "production": {}
       }
     },
+    "copy-docs": {
+      "inputs": ["{workspaceRoot}/docs/**/*"],
+      "outputs": ["{projectRoot}/public/documentation"],
+      "command": "node ./copy-docs.js",
+      "options": {
+        "cwd": "nx-dev/nx-dev"
+      }
+    },
+    "serve-docs": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          "nx watch --projects=docs -- nx run nx-dev:copy-docs",
+          "nx run nx-dev:serve"
+        ],
+        "parallel": true
+      }
+    },
     "serve": {
-      "executor": "@nrwl/next:server",
+      "executor": "@nx/next:server",
+      "dependsOn": ["copy-docs"],
       "options": {
         "buildTarget": "nx-dev:build-base",
         "dev": true
@@ -85,6 +109,18 @@
             "description": "OG images generation"
           },
           {
+            "command": "ts-node -P scripts/tsconfig.scripts.json ./scripts/documentation/generators/main.ts",
+            "description": "Pre-generate official package metadata"
+          },
+          {
+            "command": "nx copy-docs nx-dev",
+            "description": "Copy generated docs to build output"
+          },
+          {
+            "command": "npx ts-node scripts/documentation/plugin-quality-indicators.ts",
+            "description": "Fetch plugin data"
+          },
+          {
             "command": "nx run nx-dev:build",
             "description": "NextJs build step"
           }
@@ -94,7 +130,7 @@
       }
     },
     "export": {
-      "executor": "@nrwl/next:export",
+      "executor": "@nx/next:export",
       "options": {
         "buildTarget": "nx-dev:build:production"
       }

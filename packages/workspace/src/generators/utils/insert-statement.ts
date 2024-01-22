@@ -1,4 +1,4 @@
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
+import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
 import { ensureTypescript } from '../../utilities/typescript';
 
 let tsModule: typeof import('typescript');

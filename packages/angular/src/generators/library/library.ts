@@ -1,23 +1,19 @@
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   installPackagesTask,
-  moveFilesToNewDirectory,
-  removeDependenciesFromPackageJson,
+  joinPathFragments,
   Tree,
-} from '@nrwl/devkit';
-import { jestProjectGenerator } from '@nrwl/jest';
-import { Linter } from '@nrwl/linter';
-import { updateRootTsConfig } from '@nrwl/js';
-import { lt } from 'semver';
+} from '@nx/devkit';
+import { Linter } from '@nx/eslint';
+import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import init from '../../generators/init/init';
-import { E2eTestRunner } from '../../utils/test-runners';
-import { getPkgVersionForAngularMajorVersion } from '../../utils/version-utils';
 import addLintingGenerator from '../add-linting/add-linting';
-import karmaProjectGenerator from '../karma-project/karma-project';
 import setupTailwindGenerator from '../setup-tailwind/setup-tailwind';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
+import {
+  addDependenciesToPackageJsonIfDontExist,
+  versions,
+} from '../utils/version-utils';
 import { addBuildableLibrariesPostCssDependencies } from '../utils/dependencies';
 import { addModule } from './lib/add-module';
 import { addStandaloneComponent } from './lib/add-standalone-component';
@@ -28,11 +24,27 @@ import {
 import { normalizeOptions } from './lib/normalize-options';
 import { NormalizedSchema } from './lib/normalized-schema';
 import { updateLibPackageNpmScope } from './lib/update-lib-package-npm-scope';
-import { updateProject } from './lib/update-project';
 import { updateTsConfig } from './lib/update-tsconfig';
 import { Schema } from './schema';
+import { createFiles } from './lib/create-files';
+import { addProject } from './lib/add-project';
+import { addJest } from '../utils/add-jest';
+import { setGeneratorDefaults } from './lib/set-generator-defaults';
+import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
 
 export async function libraryGenerator(
+  tree: Tree,
+  schema: Schema
+): Promise<GeneratorCallback> {
+  return await libraryGeneratorInternal(tree, {
+    // provide a default projectNameAndRootFormat to avoid breaking changes
+    // to external generators invoking this one
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function libraryGeneratorInternal(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
@@ -53,50 +65,22 @@ export async function libraryGenerator(
     );
   }
 
-  const userInstalledAngularVersion = getInstalledAngularVersionInfo(tree);
-  if (lt(userInstalledAngularVersion.version, '14.1.0') && schema.standalone) {
-    throw new Error(
-      `The "--standalone" option is not supported in Angular versions < 14.1.0.`
-    );
-  }
-
-  const options = normalizeOptions(tree, schema);
+  const options = await normalizeOptions(tree, schema);
   const { libraryOptions } = options;
 
-  await init(tree, {
-    ...libraryOptions,
-    skipFormat: true,
-    e2eTestRunner: E2eTestRunner.None,
-  });
+  const pkgVersions = versions(tree);
 
-  const { wrapAngularDevkitSchematic } = require('@nrwl/devkit/ngcli-adapter');
-  const runAngularLibrarySchematic = wrapAngularDevkitSchematic(
-    '@schematics/angular',
-    'library'
-  );
-  await runAngularLibrarySchematic(tree, {
-    name: libraryOptions.name,
-    prefix: libraryOptions.prefix,
-    entryFile: 'index',
-    skipPackageJson:
-      libraryOptions.skipPackageJson ||
-      !(libraryOptions.publishable || libraryOptions.buildable),
-    skipTsConfig: true,
-  });
+  await jsInitGenerator(tree, { ...options, js: false, skipFormat: true });
+  await init(tree, { ...libraryOptions, skipFormat: true });
+  ensureAngularDependencies(tree);
 
-  if (libraryOptions.ngCliSchematicLibRoot !== libraryOptions.projectRoot) {
-    moveFilesToNewDirectory(
-      tree,
-      libraryOptions.ngCliSchematicLibRoot,
-      libraryOptions.projectRoot
-    );
-  }
+  const project = addProject(tree, libraryOptions);
 
-  const { updateProject } = await import('./lib/update-project');
-  await updateProject(tree, libraryOptions);
+  createFiles(tree, options, project);
   updateTsConfig(tree, libraryOptions);
   await addUnitTestRunner(tree, libraryOptions);
   updateNpmScopeIfBuildableOrPublishable(tree, libraryOptions);
+  setGeneratorDefaults(tree, options);
 
   if (!libraryOptions.standalone) {
     addModule(tree, libraryOptions);
@@ -115,21 +99,19 @@ export async function libraryGenerator(
   }
 
   if (libraryOptions.buildable || libraryOptions.publishable) {
-    removeDependenciesFromPackageJson(tree, [], ['ng-packagr']);
-    addDependenciesToPackageJson(
+    addDependenciesToPackageJsonIfDontExist(
       tree,
       {},
       {
-        'ng-packagr': getPkgVersionForAngularMajorVersion(
-          'ngPackagrVersion',
-          userInstalledAngularVersion.major
-        ),
+        'ng-packagr': pkgVersions.ngPackagrVersion,
       }
     );
     addBuildableLibrariesPostCssDependencies(tree);
   }
 
-  updateRootTsConfig(tree, { ...libraryOptions, js: false });
+  addTsConfigPath(tree, libraryOptions.importPath, [
+    joinPathFragments(libraryOptions.projectRoot, './src', 'index.ts'),
+  ]);
 
   if (!libraryOptions.skipFormat) {
     await formatFiles(tree);
@@ -145,18 +127,11 @@ async function addUnitTestRunner(
   options: NormalizedSchema['libraryOptions']
 ) {
   if (options.unitTestRunner === 'jest') {
-    await jestProjectGenerator(host, {
-      project: options.name,
-      setupFile: 'angular',
-      supportTsx: false,
-      skipSerializers: false,
-      skipFormat: true,
+    await addJest(host, {
+      name: options.name,
+      projectRoot: options.projectRoot,
       skipPackageJson: options.skipPackageJson,
-    });
-  } else if (options.unitTestRunner === 'karma') {
-    await karmaProjectGenerator(host, {
-      project: options.name,
-      skipFormat: true,
+      strict: options.strict,
     });
   }
 }

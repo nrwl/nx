@@ -4,7 +4,7 @@ import {
   ProjectGraph,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { getRootTsConfigPathInTree } from '../../../utilities/ts-config';
 import { Schema } from '../schema';
 import {

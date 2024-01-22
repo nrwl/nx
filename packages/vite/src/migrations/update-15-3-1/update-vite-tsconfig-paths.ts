@@ -4,13 +4,12 @@ import {
   formatFiles,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import { findNodes } from 'nx/src/utils/typescript';
-import ts = require('typescript');
+import { findNodes } from '@nx/js';
 import { normalizeViteConfigFilePathWithTree } from '../../utils/generator-utils';
+import ts = require('typescript');
 
 export async function removeProjectsFromViteTsConfigPaths(tree: Tree) {
   findAllProjectsWithViteConfig(tree);
@@ -37,24 +36,26 @@ function findAllProjectsWithViteConfig(tree: Tree): void {
       );
       let startOfProjects, endOfProjects;
 
-      defineConfig?.[0]?.getChildren().forEach((defineConfigContentNode) => {
-        // Make sure it's the one we are looking for
-        // We cannot assume that it's called tsConfigPaths
-        // So make sure it includes `projects` and `root`
-        if (
-          defineConfigContentNode.getText().includes('projects') &&
-          defineConfigContentNode.getText().includes('root')
-        ) {
-          findNodes(defineConfigContentNode, [
-            ts.SyntaxKind.PropertyAssignment,
-          ]).forEach((nodePA) => {
-            if (nodePA.getText().startsWith('projects')) {
-              startOfProjects = nodePA.getStart();
-              endOfProjects = nodePA.getEnd();
-            }
-          });
-        }
-      });
+      defineConfig?.[0]
+        ?.getChildren()
+        .forEach((defineConfigContentNode: any) => {
+          // Make sure it's the one we are looking for
+          // We cannot assume that it's called tsConfigPaths
+          // So make sure it includes `projects` and `root`
+          if (
+            defineConfigContentNode.getText().includes('projects') &&
+            defineConfigContentNode.getText().includes('root')
+          ) {
+            findNodes(defineConfigContentNode, [
+              ts.SyntaxKind.PropertyAssignment,
+            ]).forEach((nodePA) => {
+              if (nodePA.getText().startsWith('projects')) {
+                startOfProjects = nodePA.getStart();
+                endOfProjects = nodePA.getEnd();
+              }
+            });
+          }
+        });
 
       if (startOfProjects && endOfProjects) {
         newContents = applyChangesToString(newContents, [

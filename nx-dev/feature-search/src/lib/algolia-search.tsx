@@ -114,7 +114,7 @@ export function AlgoliaSearch({
         >
           <span
             style={{ opacity: browserDetected ? '1' : '0' }}
-            className="ml-auto block flex-none rounded-md border border-slate-100 bg-slate-50/60 px-1 py-0.5 text-xs font-semibold text-slate-400 transition hover:text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-500 dark:hover:text-slate-400"
+            className="ml-auto block flex-none rounded-md border border-slate-200 bg-slate-50/60 px-1 py-0.5 text-xs font-semibold text-slate-400 transition hover:text-slate-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-500 dark:hover:text-slate-400"
           >
             <span className="sr-only">Press </span>
             <kbd className="font-sans">

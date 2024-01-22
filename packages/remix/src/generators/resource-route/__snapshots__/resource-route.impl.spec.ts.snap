@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`resource route --nameAndDirectoryFormat=as-provided should error if it detects a possible missing route param because of un-escaped dollar sign 1`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`resource route --nameAndDirectoryFormat=as-provided should error if it detects a possible missing route param because of un-escaped dollar sign 3`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`resource route --nameAndDirectoryFormat=as-provided should error if it detects a possible missing route param because of un-escaped dollar sign 4`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`resource route --nameAndDirectoryFormat=as-provided should error if it detects a possible missing route param because of un-escaped dollar sign 6`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`resource route --nameAndDirectoryFormat=derived should error if it detects a possible missing route param because of un-escaped dollar sign 1`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`resource route --nameAndDirectoryFormat=derived should error if it detects a possible missing route param because of un-escaped dollar sign 3`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`resource route --nameAndDirectoryFormat=derived should error if it detects a possible missing route param because of un-escaped dollar sign 4`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`resource route --nameAndDirectoryFormat=derived should error if it detects a possible missing route param because of un-escaped dollar sign 6`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`resource route --nameAndDirectoryFormat=derived should error if it detects a possible missing route param because of un-escaped dollar sign 7`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;
+
+exports[`resource route --nameAndDirectoryFormat=derived should error if it detects a possible missing route param because of un-escaped dollar sign 9`] = `[Error: Your route path has an indicator of an un-escaped dollar sign for a route param. If this was intended, include the --skipChecks flag.]`;

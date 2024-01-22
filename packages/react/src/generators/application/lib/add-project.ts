@@ -4,9 +4,11 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
-} from '@nrwl/devkit';
+  Tree,
+} from '@nx/devkit';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 
-export function addProject(host, options: NormalizedSchema) {
+export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: `${options.appProjectRoot}/src`,
@@ -16,10 +18,12 @@ export function addProject(host, options: NormalizedSchema) {
   };
 
   if (options.bundler === 'webpack') {
-    project.targets = {
-      build: createBuildTarget(options),
-      serve: createServeTarget(options),
-    };
+    if (!hasWebpackPlugin(host)) {
+      project.targets = {
+        build: createBuildTarget(options),
+        serve: createServeTarget(options),
+      };
+    }
   }
 
   addProjectConfiguration(host, options.projectName, {
@@ -27,7 +31,7 @@ export function addProject(host, options: NormalizedSchema) {
   });
 }
 
-function maybeJs(options: NormalizedSchema, path: string): string {
+export function maybeJs(options: NormalizedSchema, path: string): string {
   return options.js && (path.endsWith('.ts') || path.endsWith('.tsx'))
     ? path.replace(/\.tsx?$/, '.js')
     : path;
@@ -35,7 +39,7 @@ function maybeJs(options: NormalizedSchema, path: string): string {
 
 function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/webpack:webpack',
+    executor: '@nx/webpack:webpack',
     outputs: ['{options.outputPath}'],
     defaultConfiguration: 'production',
     options: {
@@ -67,7 +71,6 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
               ),
             ],
       scripts: [],
-      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'
@@ -106,7 +109,7 @@ function createBuildTarget(options: NormalizedSchema): TargetConfiguration {
 
 function createServeTarget(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/webpack:dev-server',
+    executor: '@nx/webpack:dev-server',
     defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.projectName}:build`,

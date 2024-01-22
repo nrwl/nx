@@ -6,7 +6,7 @@ import {
   ProjectGraph,
   readJsonFile,
   writeJsonFile,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
 

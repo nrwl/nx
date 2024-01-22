@@ -16,8 +16,8 @@ To record a command with Nx Cloud:
 
 Commands that Nx Cloud stores will appear under your "Runs" view. For easy identification, the stored output will be displayed as a "record-output" target being invoked on the "nx-cloud-tasks-runner" project.
 
-![nx-cloud record -- nx format:check](/nx-cloud/set-up/record-format-check.png)
+![nx-cloud record -- nx format:check](/nx-cloud/set-up/record-format-check.webp)
 
 If you use the Nx Cloud GitHub Integration, links to recorded output will also be displayed based on the exit code in the summary comment.
 
-![Nx Cloud Report](/nx-cloud/set-up/record-report.png)
+![Nx Cloud Report](/nx-cloud/set-up/record-report.webp)

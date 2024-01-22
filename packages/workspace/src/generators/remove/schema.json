@@ -7,11 +7,11 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nrwl/workspace:remove my-feature-lib",
+      "command": "nx g @nx/workspace:remove my-feature-lib",
       "description": "Remove `my-feature-lib` from the workspace"
     },
     {
-      "command": "nx g @nrwl/workspace:remove my-feature-lib --forceRemove",
+      "command": "nx g @nx/workspace:remove my-feature-lib --forceRemove",
       "description": "Force removal of `my-feature-lib` from the workspace"
     }
   ],

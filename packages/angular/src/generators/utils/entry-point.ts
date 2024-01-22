@@ -1,5 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, readJson } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, readJson } from '@nx/devkit';
 import { dirname } from 'path';
 
 export function locateLibraryEntryPointFromDirectory(

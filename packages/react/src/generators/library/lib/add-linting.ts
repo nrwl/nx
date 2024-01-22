@@ -1,15 +1,14 @@
 import { Tree } from 'nx/src/generators/tree';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { joinPathFragments } from 'nx/src/utils/path';
-import { updateJson } from 'nx/src/generators/utils/json';
-import { addDependenciesToPackageJson } from '@nrwl/devkit';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
+import { addDependenciesToPackageJson, runTasksInSerial } from '@nx/devkit';
 
 import { NormalizedSchema } from '../schema';
+import { extraEslintDependencies } from '../../../utils/lint';
 import {
-  extendReactEslintJson,
-  extraEslintDependencies,
-} from '../../../utils/lint';
+  addExtendsToLintConfig,
+  isEslintConfigSupported,
+} from '@nx/eslint/src/generators/utils/eslint-file';
 
 export async function addLinting(host: Tree, options: NormalizedSchema) {
   if (options.linter === Linter.EsLint) {
@@ -20,20 +19,18 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
         joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
       ],
       unitTestRunner: options.unitTestRunner,
-      eslintFilePatterns: [`${options.projectRoot}/**/*.{ts,tsx,js,jsx}`],
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
+      setParserOptionsProject: options.setParserOptionsProject,
     });
 
-    updateJson(
-      host,
-      joinPathFragments(options.projectRoot, '.eslintrc.json'),
-      extendReactEslintJson
-    );
+    if (isEslintConfigSupported(host)) {
+      addExtendsToLintConfig(host, options.projectRoot, 'plugin:@nx/react');
+    }
 
     let installTask = () => {};
     if (!options.skipPackageJson) {
-      installTask = await addDependenciesToPackageJson(
+      installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
         extraEslintDependencies.devDependencies

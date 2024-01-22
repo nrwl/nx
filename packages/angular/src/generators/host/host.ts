@@ -1,22 +1,28 @@
-import { formatFiles, getProjects, stripIndents, Tree } from '@nrwl/devkit';
-import type { Schema } from './schema';
+import {
+  formatFiles,
+  getProjects,
+  joinPathFragments,
+  runTasksInSerial,
+  Tree,
+} from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { E2eTestRunner } from '../../utils/test-runners';
 import applicationGenerator from '../application/application';
 import remoteGenerator from '../remote/remote';
-import { normalizeProjectName } from '../utils/project';
 import { setupMf } from '../setup-mf/setup-mf';
-import { E2eTestRunner } from '../../utils/test-runners';
-import { addSsr } from './lib';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
-import { lt } from 'semver';
+import { updateSsrSetup } from './lib';
+import type { Schema } from './schema';
 
 export async function host(tree: Tree, options: Schema) {
-  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
+  return await hostInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...options,
+  });
+}
 
-  if (lt(installedAngularVersionInfo.version, '14.1.0') && options.standalone) {
-    throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
-  }
+export async function hostInternal(tree: Tree, schema: Schema) {
+  const { typescriptConfiguration = true, ...options }: Schema = schema;
+  options.standalone = options.standalone ?? true;
 
   const projects = getProjects(tree);
 
@@ -33,20 +39,29 @@ export async function host(tree: Tree, options: Schema) {
     });
   }
 
-  const appName = normalizeProjectName(options.name, options.directory);
+  const { projectName: hostProjectName, projectNameAndRootFormat } =
+    await determineProjectNameAndRootOptions(tree, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      projectNameAndRootFormat: options.projectNameAndRootFormat,
+      callingGenerator: '@nx/angular:host',
+    });
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   const appInstallTask = await applicationGenerator(tree, {
     ...options,
-    standalone: options.standalone ?? false,
+    standalone: options.standalone,
     routing: true,
     port: 4200,
     skipFormat: true,
+    bundler: 'webpack',
   });
 
   const skipE2E =
     !options.e2eTestRunner || options.e2eTestRunner === E2eTestRunner.None;
   await setupMf(tree, {
-    appName,
+    appName: hostProjectName,
     mfType: 'host',
     routing: true,
     port: 4200,
@@ -55,22 +70,46 @@ export async function host(tree: Tree, options: Schema) {
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
     skipE2E,
-    e2eProjectName: skipE2E ? undefined : `${appName}-e2e`,
+    e2eProjectName: skipE2E ? undefined : `${hostProjectName}-e2e`,
+    prefix: options.prefix,
+    typescriptConfiguration,
+    standalone: options.standalone,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 
   let installTasks = [appInstallTask];
   if (options.ssr) {
-    let ssrInstallTask = await addSsr(tree, options, appName);
+    let ssrInstallTask = await updateSsrSetup(
+      tree,
+      options,
+      hostProjectName,
+      typescriptConfiguration
+    );
     installTasks.push(ssrInstallTask);
   }
 
   for (const remote of remotesToGenerate) {
+    let remoteDirectory = options.directory;
+    if (
+      options.projectNameAndRootFormat === 'as-provided' &&
+      options.directory
+    ) {
+      /**
+       * With the `as-provided` format, the provided directory would be the root
+       * of the host application. Append the remote name to the host parent
+       * directory to get the remote directory.
+       */
+      remoteDirectory = joinPathFragments(options.directory, '..', remote);
+    }
+
     await remoteGenerator(tree, {
       ...options,
       name: remote,
-      host: appName,
+      directory: remoteDirectory,
+      host: hostProjectName,
       skipFormat: true,
       standalone: options.standalone,
+      typescriptConfiguration,
     });
   }
 

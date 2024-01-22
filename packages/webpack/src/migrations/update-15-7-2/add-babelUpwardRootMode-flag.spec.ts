@@ -1,9 +1,9 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import addBabelUpwardRootModeFlag from './add-babelUpwardRootMode-flag';
 
 describe('15.7.2 migration (add babelUpwardRootMode flag)', () => {

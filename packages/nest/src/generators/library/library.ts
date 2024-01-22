@@ -1,6 +1,6 @@
-import type { GeneratorCallback, Tree } from '@nrwl/devkit';
-import { convertNxGenerator, formatFiles } from '@nrwl/devkit';
-import { libraryGenerator as jsLibraryGenerator } from '@nrwl/js';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import { formatFiles } from '@nx/devkit';
+import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addDependencies } from '../init/lib';
 import {
   addExportsToBarrelFile,
@@ -12,14 +12,25 @@ import {
   updateTsConfig,
 } from './lib';
 import type { LibraryGeneratorOptions } from './schema';
+import initGenerator from '../init/init';
 
 export async function libraryGenerator(
   tree: Tree,
   rawOptions: LibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
-  const options = normalizeOptions(tree, rawOptions);
+  return await libraryGeneratorInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...rawOptions,
+  });
+}
+
+export async function libraryGeneratorInternal(
+  tree: Tree,
+  rawOptions: LibraryGeneratorOptions
+): Promise<GeneratorCallback> {
+  const options = await normalizeOptions(tree, rawOptions);
   await jsLibraryGenerator(tree, toJsLibraryGeneratorOptions(options));
-  const installDepsTask = addDependencies(tree);
+  const initTask = initGenerator(tree, rawOptions);
   deleteFiles(tree, options);
   createFiles(tree, options);
   addExportsToBarrelFile(tree, options);
@@ -30,9 +41,7 @@ export async function libraryGenerator(
     await formatFiles(tree);
   }
 
-  return installDepsTask;
+  return initTask;
 }
 
 export default libraryGenerator;
-
-export const librarySchematic = convertNxGenerator(libraryGenerator);

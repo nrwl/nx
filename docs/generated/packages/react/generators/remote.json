@@ -1,6 +1,6 @@
 {
   "name": "remote",
-  "factory": "./src/generators/remote/remote#remoteGenerator",
+  "factory": "./src/generators/remote/remote#remoteGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "GeneratorReactRemote",
@@ -14,7 +14,7 @@
         "description": "The name of the remote application to generate the Module Federation configuration",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use as the remote application?",
-        "pattern": "^[a-zA-Z].*$",
+        "pattern": "^[a-zA-Z][^:]*$",
         "x-priority": "important"
       },
       "directory": {
@@ -22,6 +22,17 @@
         "type": "string",
         "alias": "dir",
         "x-priority": "important"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "dynamic": {
+        "type": "boolean",
+        "description": "Should the host application use dynamic federation?",
+        "default": false,
+        "x-priority": "internal"
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -36,10 +47,6 @@
             {
               "value": "scss",
               "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
-            },
-            {
-              "value": "styl",
-              "label": "Stylus(.styl)     [ http://stylus-lang.com                   ]"
             },
             {
               "value": "less",
@@ -78,7 +85,7 @@
         "default": false,
         "x-priority": "internal"
       },
-      "skipWorkspaceJson": {
+      "skipNxJson": {
         "description": "Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).",
         "type": "boolean",
         "default": false,
@@ -92,7 +99,7 @@
       },
       "e2eTestRunner": {
         "type": "string",
-        "enum": ["cypress", "none"],
+        "enum": ["cypress", "playwright", "none"],
         "description": "Test runner to use for end to end (e2e) tests.",
         "default": "cypress"
       },
@@ -133,12 +140,6 @@
         "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
         "default": false
       },
-      "standaloneConfig": {
-        "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
-        "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
-      },
       "compiler": {
         "type": "string",
         "description": "The compiler to use.",
@@ -153,13 +154,17 @@
       "devServerPort": {
         "type": "number",
         "description": "The port for the dev server of the remote app.",
-        "default": 4200,
         "x-priority": "important"
       },
       "ssr": {
         "description": "Whether to configure SSR for the host application",
         "type": "boolean",
         "default": false
+      },
+      "typescriptConfiguration": {
+        "type": "boolean",
+        "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+        "default": true
       }
     },
     "required": ["name"],
@@ -168,7 +173,7 @@
   },
   "x-type": "application",
   "description": "Generate a remote react application",
-  "implementation": "/packages/react/src/generators/remote/remote#remoteGenerator.ts",
+  "implementation": "/packages/react/src/generators/remote/remote#remoteGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/react/src/generators/remote/schema.json",

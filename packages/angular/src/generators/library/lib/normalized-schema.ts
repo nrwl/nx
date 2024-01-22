@@ -1,5 +1,5 @@
 import { UnitTestRunner } from '../../../utils/test-runners';
-import type { Linter } from '@nrwl/linter';
+import type { Linter } from '@nx/eslint';
 
 export interface NormalizedSchema {
   libraryOptions: {
@@ -35,7 +35,6 @@ export interface NormalizedSchema {
     entryFile: string;
     modulePath: string;
     moduleName: string;
-    projectDirectory: string;
     parsedTags: string[];
     ngCliSchematicLibRoot: string;
     standaloneComponentName: string;

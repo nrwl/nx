@@ -1,7 +1,7 @@
 import { Popover, Transition } from '@headlessui/react';
 import { Bars4Icon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { AlgoliaSearch } from '@nrwl/nx-dev/feature-search';
-import { ThemeSwitcher } from '@nrwl/nx-dev/ui-theme';
+import { AlgoliaSearch } from '@nx/nx-dev/feature-search';
+import { ThemeSwitcher } from '@nx/nx-dev/ui-theme';
 import cx from 'classnames';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -16,10 +16,15 @@ export function Header(): JSX.Element {
       href: '/getting-started/intro',
     },
     {
-      name: 'Concepts',
-      description: 'What to know more about how Nx is working?',
-      href: '/concepts',
+      name: 'Nx on CI',
+      description: 'Learn how to efficiently use Nx on CI',
+      href: '/ci/intro/ci-with-nx',
     },
+    // {
+    //   name: 'Concepts',
+    //   description: 'What to know more about how Nx is working?',
+    //   href: '/concepts',
+    // },
     {
       name: 'Core Features',
       description:
@@ -27,15 +32,21 @@ export function Header(): JSX.Element {
       href: '/core-features',
     },
     {
-      name: 'Distributed cache & task execution',
+      name: 'Nx Replay',
       description:
-        'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
-      href: '/nx-cloud/intro/what-is-nx-cloud',
+        'Built-in local and remote caching to speed up your tasks and save you time and money.',
+      href: '/core-features/cache-task-results',
     },
     {
       name: 'Recipes',
       description: 'Follow instructions to do common specific tasks.',
       href: '/recipes',
+    },
+    {
+      name: 'Nx Agents',
+      description:
+        'Executes tasks remotely on different agents in parallel. Enable remote cache in one command.',
+      href: '/ci/features/nx-agents',
     },
     {
       name: 'Nx Console',
@@ -44,16 +55,9 @@ export function Header(): JSX.Element {
       href: '/core-features/integrate-with-editors#vscode',
     },
     {
-      name: 'Packages',
-      description:
-        'Officials packages available for a better developer experience.',
-      href: '/packages',
-    },
-    {
-      name: 'Nx Cloud',
-      description:
-        'Learn everything about remote cache and distributed tasks configuration.',
-      href: '/nx-cloud/intro/what-is-nx-cloud',
+      name: 'Set Up CI',
+      description: 'Configure Nx for your CI provider',
+      href: '/ci/recipes/set-up',
     },
   ];
   const flyoutMobileMenu = [
@@ -63,14 +67,14 @@ export function Header(): JSX.Element {
       href: '/getting-started/intro',
     },
     {
-      name: 'Community',
-      description: "Check how to reach out and be part of Nx' community.",
-      href: '/getting-started/intro',
+      name: 'Blog',
+      description: 'Latest news from the Nx & Nx Cloud core team',
+      href: '/blog',
     },
     {
-      name: 'Plugins registry',
-      description: 'Add capabilities to your workspace with plugins.',
-      href: '/community#plugin-directory',
+      name: 'Community',
+      description: "Check how to reach out and be part of Nx' community.",
+      href: '/community',
     },
     {
       name: 'Nx Conf',
@@ -179,6 +183,13 @@ export function Header(): JSX.Element {
               Enterprise
             </Link>
             <Link
+              href="/blog"
+              title="Blog"
+              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
+            >
+              Blog
+            </Link>
+            <Link
               href="/community"
               title="Nx Community: Join us!"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
@@ -186,21 +197,21 @@ export function Header(): JSX.Element {
               Community
             </Link>
             <Link
-              href="/community#plugin-directory"
+              href="/plugin-registry"
               title="Check Nx available plugins"
               className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               Plugins registry
             </Link>
             <Link
-              href="/conf"
-              title="Check Nx conference"
+              href="/launch-nx"
+              title="Launch Nx"
               className="relative hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 dark:text-slate-200 dark:hover:text-sky-500 md:inline-flex"
             >
               {/*<span className="absolute top-0 right-0 -mt-1 -mr-1 flex h-3 w-3">*/}
               {/*  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-500 opacity-75 dark:bg-sky-500" />*/}
               {/*  <span className="relative inline-flex h-3 w-3 rounded-full bg-blue-500 dark:bg-sky-500" />*/}
-              {/*</span>*/}Nx Conf
+              {/*</span>*/}Launch Nx
             </Link>
           </nav>
         </div>

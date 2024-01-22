@@ -102,8 +102,8 @@ The `docker-build` command is defined as a target in the root `project.json` fil
 
 You can also add a `Dockerfile` to a new node app using the `--docker` flag. Here we're creating an `orders-api` application:
 
-```{% command="npx nx g @nrwl/node:app orders-api --docker" path="~/products-api" %}
->  NX  Generating @nrwl/node:application
+```{% command="npx nx g @nx/node:app orders-api --docker" path="~/products-api" %}
+>  NX  Generating @nx/node:application
 
 ✔ Which framework do you want to use? · express
 CREATE orders-api/src/assets/.gitkeep

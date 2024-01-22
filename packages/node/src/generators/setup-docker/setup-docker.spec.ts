@@ -1,5 +1,5 @@
-import { readProjectConfiguration, Tree } from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { readProjectConfiguration, Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
 describe('setupDockerGenerator', () => {
   let tree: Tree;
@@ -14,6 +14,7 @@ describe('setupDockerGenerator', () => {
         framework: 'express',
         e2eTestRunner: 'none',
         docker: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const project = readProjectConfiguration(tree, 'api');
@@ -37,6 +38,7 @@ describe('setupDockerGenerator', () => {
         framework: 'fastify',
         rootProject: true,
         docker: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const project = readProjectConfiguration(tree, 'api');

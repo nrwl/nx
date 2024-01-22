@@ -1,57 +1,71 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
+  GeneratorCallback,
+  readNxJson,
   Tree,
-} from '@nrwl/devkit';
-import { swcCoreVersion } from '@nrwl/js/src/utils/versions';
-
+  updateNxJson,
+} from '@nx/devkit';
+import { WebpackPluginOptions } from '../../plugins/plugin';
+import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import {
-  nxVersion,
-  reactRefreshVersion,
-  reactRefreshWebpackPluginVersion,
-  svgrWebpackVersion,
-  swcHelpersVersion,
-  swcLoaderVersion,
-  tsLibVersion,
-  urlLoaderVersion,
-} from '../../utils/versions';
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
 
 export async function webpackInitGenerator(tree: Tree, schema: Schema) {
-  if (schema.compiler === 'babel') {
-    addBabelInputs(tree);
-  }
-  const devDependencies = {
-    '@nrwl/webpack': nxVersion,
-  };
-
-  if (schema.compiler === 'swc') {
-    devDependencies['@swc/helpers'] = swcHelpersVersion;
-    devDependencies['@swc/core'] = swcCoreVersion;
-    devDependencies['swc-loader'] = swcLoaderVersion;
+  const shouldAddPlugin = process.env.NX_PCV3 === 'true';
+  if (shouldAddPlugin) {
+    addPlugin(tree);
   }
 
-  if (schema.compiler === 'tsc') {
-    devDependencies['tslib'] = tsLibVersion;
-  }
+  let installTask: GeneratorCallback = () => {};
+  if (!schema.skipPackageJson) {
+    const devDependencies = {
+      '@nx/webpack': nxVersion,
+      '@nx/web': nxVersion,
+    };
 
-  if (schema.uiFramework === 'react') {
-    devDependencies['@pmmmwh/react-refresh-webpack-plugin'] =
-      reactRefreshWebpackPluginVersion;
-    devDependencies['@svgr/webpack'] = svgrWebpackVersion;
-    devDependencies['react-refresh'] = reactRefreshVersion;
-    devDependencies['url-loader'] = urlLoaderVersion;
+    if (shouldAddPlugin) {
+      devDependencies['webpack-cli'] = webpackCliVersion;
+    }
+
+    installTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      devDependencies,
+      undefined,
+      schema.keepExistingVersions
+    );
   }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
 
-  return addDependenciesToPackageJson(tree, {}, devDependencies);
+  return installTask;
+}
+
+function addPlugin(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.plugins ??= [];
+
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/webpack/plugin'
+        : plugin.plugin === '@nx/webpack/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/webpack/plugin',
+    options: {
+      buildTargetName: 'build',
+      serveTargetName: 'serve',
+      previewTargetName: 'preview',
+    } as WebpackPluginOptions,
+  });
+  updateNxJson(tree, nxJson);
 }
 
 export default webpackInitGenerator;
-
-export const webpackInitSchematic = convertNxGenerator(webpackInitGenerator);

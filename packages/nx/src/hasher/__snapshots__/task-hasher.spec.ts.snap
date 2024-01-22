@@ -1,0 +1,472 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TaskHasher dependentTasksOutputFiles should depend on dependent tasks output files 1`] = `
+{
+  "details": {
+    "command": "4062279404379299270",
+    "implicitDeps": {},
+    "nodes": {
+      "**/*.d.ts:dist/libs/child": "10143056223373694518",
+      "**/*.d.ts:dist/libs/grandchild": "10143056223373694518",
+      "AllExternalDependencies": "3244421341483603138",
+      "parent:!{projectRoot}/**/*.spec.ts": "17962802443644575456",
+      "parent:ProjectConfiguration": "16743571606168248002",
+      "parent:TsConfig": "8767608672024750088",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "14131423056691033336",
+}
+`;
+
+exports[`TaskHasher dependentTasksOutputFiles should work with dependent tasks with globs as outputs 1`] = `
+{
+  "details": {
+    "command": "4062279404379299270",
+    "implicitDeps": {},
+    "nodes": {
+      "**/*.d.ts:dist/libs/child/**/*": "10143056223373694518",
+      "**/*.d.ts:dist/libs/grandchild": "10143056223373694518",
+      "AllExternalDependencies": "3244421341483603138",
+      "parent:!{projectRoot}/**/*.spec.ts": "17962802443644575456",
+      "parent:ProjectConfiguration": "16743571606168248002",
+      "parent:TsConfig": "8767608672024750088",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "14131423056691033336",
+}
+`;
+
+exports[`TaskHasher hashTarget should hash entire subtree in a deterministic way 1`] = `
+{
+  "details": {
+    "command": "81188892120010785",
+    "implicitDeps": {},
+    "nodes": {
+      "appA:ProjectConfiguration": "8474322003863204060",
+      "appA:TsConfig": "8767608672024750088",
+      "appA:{projectRoot}/**/*": "3244421341483603138",
+      "npm:@nx/webpack": "$@nx/webpack0.0.0$",
+      "npm:packageA": "$packageA0.0.0$",
+      "npm:packageB": "$packageB0.0.0$",
+      "npm:packageC": "$packageC0.0.0$",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "12756041818139421941",
+}
+`;
+
+exports[`TaskHasher hashTarget should hash entire subtree in a deterministic way 2`] = `
+{
+  "details": {
+    "command": "9096392622609675764",
+    "implicitDeps": {},
+    "nodes": {
+      "appB:ProjectConfiguration": "17724470359684527282",
+      "appB:TsConfig": "8767608672024750088",
+      "appB:{projectRoot}/**/*": "3244421341483603138",
+      "npm:@nx/webpack": "$@nx/webpack0.0.0$",
+      "npm:packageA": "$packageA0.0.0$",
+      "npm:packageB": "$packageB0.0.0$",
+      "npm:packageC": "$packageC0.0.0$",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "15326312070983573452",
+}
+`;
+
+exports[`TaskHasher hashTarget should hash entire subtree of dependencies 1`] = `
+{
+  "details": {
+    "command": "14389236043839781668",
+    "implicitDeps": {},
+    "nodes": {
+      "app:ProjectConfiguration": "12026883044296863450",
+      "app:TsConfig": "8767608672024750088",
+      "app:{projectRoot}/**/*": "3244421341483603138",
+      "npm:@nx/devkit": "$nx/devkit16$",
+      "npm:@nx/webpack": "$nx/webpack16$",
+      "npm:nx": "$nx16$",
+      "npm:webpack": "5.0.0",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "14419327228911184578",
+}
+`;
+
+exports[`TaskHasher hashTarget should hash executor dependencies of @nx packages 1`] = `
+{
+  "details": {
+    "command": "14389236043839781668",
+    "implicitDeps": {},
+    "nodes": {
+      "app:ProjectConfiguration": "12026883044296863450",
+      "app:TsConfig": "8767608672024750088",
+      "app:{projectRoot}/**/*": "3244421341483603138",
+      "npm:@nx/webpack": "16.0.0",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "379625642227035180",
+}
+`;
+
+exports[`TaskHasher hashTarget should use externalDependencies to override nx:run-commands 1`] = `
+{
+  "details": {
+    "command": "14389236043839781668",
+    "implicitDeps": {},
+    "nodes": {
+      "app:ProjectConfiguration": "17956886683554891195",
+      "app:TsConfig": "8767608672024750088",
+      "app:{projectRoot}/**/*": "3244421341483603138",
+      "env:undefined": "3244421341483603138",
+      "npm:react": "17.0.0",
+      "npm:webpack": "5.0.0",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "14779270419297346086",
+}
+`;
+
+exports[`TaskHasher hashTarget should use externalDependencies with empty array to ignore all deps 1`] = `
+{
+  "details": {
+    "command": "14389236043839781668",
+    "implicitDeps": {},
+    "nodes": {
+      "app:ProjectConfiguration": "9179552940021403596",
+      "app:TsConfig": "8767608672024750088",
+      "app:{projectRoot}/**/*": "3244421341483603138",
+      "env:undefined": "3244421341483603138",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "13520777692097937224",
+}
+`;
+
+exports[`TaskHasher should be able to handle multiple filesets per project 1`] = `
+{
+  "details": {
+    "command": "13785966310271077209",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "child:!{projectRoot}/**/*.spec.ts": "17508782620731849000",
+      "child:ProjectConfiguration": "17211930887387929067",
+      "child:TsConfig": "8767608672024750088",
+      "env:MY_TEST_HASH_ENV": "17357374746554314488",
+      "parent:ProjectConfiguration": "11407237178360979685",
+      "parent:TsConfig": "8767608672024750088",
+      "parent:{projectRoot}/**/*": "7263479247245830838",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/global1": "3052102066027208710",
+      "{workspaceRoot}/global2": "8197394511443659629",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "18157475608082023962",
+}
+`;
+
+exports[`TaskHasher should be able to handle multiple filesets per project 2`] = `
+{
+  "details": {
+    "command": "6958627266354933907",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "child:ProjectConfiguration": "17211930887387929067",
+      "child:TsConfig": "8767608672024750088",
+      "child:{projectRoot}/**/*": "2300207741412661544",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/global1": "3052102066027208710",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "13395934251559762209",
+}
+`;
+
+exports[`TaskHasher should be able to include only a part of the base tsconfig 1`] = `
+{
+  "details": {
+    "command": "4062279404379299270",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "parent:ProjectConfiguration": "18166168584521190546",
+      "parent:TsConfig": "4035819825874039301",
+      "parent:{projectRoot}/**/*": "8263681721738113012",
+      "runtime:echo runtime123": "29846575039086708",
+      "runtime:echo runtime456": "9687767313975325934",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "11657880113460718404",
+}
+`;
+
+exports[`TaskHasher should create task hash 1`] = `
+{
+  "details": {
+    "command": "4062279404379299270",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "env:NONEXISTENTENV": "3244421341483603138",
+      "env:TESTENV": "6544740722075256274",
+      "parent:ProjectConfiguration": "12175533918137189298",
+      "parent:TsConfig": "8767608672024750088",
+      "parent:{projectRoot}/**/*": "8263681721738113012",
+      "runtime:echo runtime123": "29846575039086708",
+      "runtime:echo runtime456": "9687767313975325934",
+      "tagged:ProjectConfiguration": "4875698716044094030",
+      "tagged:TsConfig": "8767608672024750088",
+      "tagged:{projectRoot}/**/*": "3244421341483603138",
+      "unrelated:ProjectConfiguration": "9857815511578358695",
+      "unrelated:TsConfig": "8767608672024750088",
+      "unrelated:{projectRoot}/**/*": "10091615118977982257",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "11744133219421970738",
+}
+`;
+
+exports[`TaskHasher should hash missing dependent npm project versions 1`] = `
+{
+  "details": {
+    "command": "14389236043839781668",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "9871338282813031846",
+      "app:ProjectConfiguration": "8128657069648957137",
+      "app:TsConfig": "8767608672024750088",
+      "app:{projectRoot}/**/*": "9104199730100321982",
+      "npm:react": "17.0.0",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "69684997513271647",
+}
+`;
+
+exports[`TaskHasher should hash multiple filesets of a project 1`] = `
+{
+  "details": {
+    "command": "13785966310271077209",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "parent:ProjectConfiguration": "10499856664466672714",
+      "parent:TsConfig": "8767608672024750088",
+      "parent:{projectRoot}/**/*": "7263479247245830838",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "4923065065541230169",
+}
+`;
+
+exports[`TaskHasher should hash multiple filesets of a project 2`] = `
+{
+  "details": {
+    "command": "4062279404379299270",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "parent:!{projectRoot}/**/*.spec.ts": "17962802443644575456",
+      "parent:ProjectConfiguration": "10499856664466672714",
+      "parent:TsConfig": "8767608672024750088",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "4731520952840688799",
+}
+`;
+
+exports[`TaskHasher should hash non-default filesets 1`] = `
+{
+  "details": {
+    "command": "4062279404379299270",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "child:ProjectConfiguration": "8196293273405506196",
+      "child:TsConfig": "8767608672024750088",
+      "child:{projectRoot}/**/*": "2300207741412661544",
+      "parent:!{projectRoot}/**/*.spec.ts": "17962802443644575456",
+      "parent:ProjectConfiguration": "7903062777922836147",
+      "parent:TsConfig": "8767608672024750088",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "2706545192249046366",
+}
+`;
+
+exports[`TaskHasher should hash npm project versions 1`] = `
+{
+  "details": {
+    "command": "14389236043839781668",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "9871338282813031846",
+      "app:ProjectConfiguration": "8128657069648957137",
+      "app:TsConfig": "8767608672024750088",
+      "app:{projectRoot}/**/*": "9104199730100321982",
+      "npm:react": "17.0.0",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "69684997513271647",
+}
+`;
+
+exports[`TaskHasher should hash task where the project has dependencies 1`] = `
+{
+  "details": {
+    "command": "4062279404379299270",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "child:ProjectConfiguration": "8876282510060012181",
+      "child:TsConfig": "8767608672024750088",
+      "child:{projectRoot}/**/*": "5484012818475684626",
+      "parent:ProjectConfiguration": "1818520398670323053",
+      "parent:TsConfig": "8767608672024750088",
+      "parent:{projectRoot}/**/*": "14822394489351823627",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "10890020828938010310",
+}
+`;
+
+exports[`TaskHasher should hash tasks where the project graph has circular dependencies 1`] = `
+{
+  "details": {
+    "command": "4062279404379299270",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "child:ProjectConfiguration": "9892649345820140726",
+      "child:TsConfig": "8767608672024750088",
+      "child:{projectRoot}/**/*": "8973015561538144423",
+      "parent:ProjectConfiguration": "18166168584521190546",
+      "parent:TsConfig": "8767608672024750088",
+      "parent:{projectRoot}/**/*": "9104199730100321982",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "9112654928859037831",
+}
+`;
+
+exports[`TaskHasher should hash tasks where the project graph has circular dependencies 2`] = `
+{
+  "details": {
+    "command": "7833005669885463868",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "child:ProjectConfiguration": "9892649345820140726",
+      "child:TsConfig": "8767608672024750088",
+      "child:{projectRoot}/**/*": "8973015561538144423",
+      "parent:ProjectConfiguration": "18166168584521190546",
+      "parent:TsConfig": "8767608672024750088",
+      "parent:{projectRoot}/**/*": "9104199730100321982",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "144123652661336112",
+}
+`;
+
+exports[`TaskHasher should use targetDefaults from nx.json 1`] = `
+{
+  "details": {
+    "command": "4062279404379299270",
+    "implicitDeps": {},
+    "nodes": {
+      "AllExternalDependencies": "3244421341483603138",
+      "child:!{projectRoot}/**/*.spec.ts": "17508782620731849000",
+      "child:ProjectConfiguration": "9892649345820140726",
+      "child:TsConfig": "8767608672024750088",
+      "parent:!{projectRoot}/**/*.spec.ts": "17962802443644575456",
+      "parent:ProjectConfiguration": "18166168584521190546",
+      "parent:TsConfig": "8767608672024750088",
+      "{workspaceRoot}/.gitignore": "3244421341483603138",
+      "{workspaceRoot}/.nxignore": "3244421341483603138",
+      "{workspaceRoot}/nx.json": "8942239360311677987",
+    },
+    "runtime": {},
+  },
+  "value": "5596126261759417547",
+}
+`;

@@ -1,5 +1,5 @@
 import * as ts from 'typescript';
-import { applyChangesToString, stripIndents } from '@nrwl/devkit';
+import { applyChangesToString, stripIndents } from '@nx/devkit';
 import {
   addRemoteRoute,
   addRemoteDefinition,
@@ -88,6 +88,41 @@ describe('addRemoteToConfig', () => {
     );
 
     expect(result).toEqual(sourceCode);
+  });
+
+  it('should not add comma if the existing array has a trailing comma', async () => {
+    const sourceCode = stripIndents`
+      module.exports = {
+        name: 'shell',
+        remotes: [
+          'app1',
+          'app2',
+        ]
+      };
+    `;
+
+    const source = ts.createSourceFile(
+      '/module-federation.config.js',
+      sourceCode,
+      ts.ScriptTarget.Latest,
+      true
+    );
+
+    const result = applyChangesToString(
+      sourceCode,
+      addRemoteToConfig(source, 'new-app')
+    );
+
+    expect(result).toEqual(stripIndents`
+      module.exports = {
+        name: 'shell',
+        remotes: [
+          'app1',
+          'app2',
+          'new-app',
+        ]
+      };
+    `);
   });
 });
 

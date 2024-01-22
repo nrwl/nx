@@ -1,21 +1,28 @@
-import { formatFiles, getProjects, stripIndents, Tree } from '@nrwl/devkit';
-import type { Schema } from './schema';
-import applicationGenerator from '../application/application';
-import { normalizeProjectName } from '../utils/project';
-import { setupMf } from '../setup-mf/setup-mf';
+import {
+  addDependenciesToPackageJson,
+  formatFiles,
+  getProjects,
+  runTasksInSerial,
+  Tree,
+} from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { E2eTestRunner } from '../../utils/test-runners';
-import { addSsr, findNextAvailablePort } from './lib';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { getInstalledAngularVersionInfo } from '../utils/version-utils';
-import { lt } from 'semver';
+import { applicationGenerator } from '../application/application';
+import { setupMf } from '../setup-mf/setup-mf';
+import { findNextAvailablePort, updateSsrSetup } from './lib';
+import type { Schema } from './schema';
+import { swcHelpersVersion } from '@nx/js/src/utils/versions';
 
 export async function remote(tree: Tree, options: Schema) {
-  const installedAngularVersionInfo = getInstalledAngularVersionInfo(tree);
+  return await remoteInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...options,
+  });
+}
 
-  if (lt(installedAngularVersionInfo.version, '14.1.0') && options.standalone) {
-    throw new Error(stripIndents`The "standalone" option is only supported in Angular >= 14.1.0. You are currently using ${installedAngularVersionInfo.version}.
-    You can resolve this error by removing the "standalone" option or by migrating to Angular 14.1.0.`);
-  }
+export async function remoteInternal(tree: Tree, schema: Schema) {
+  const { typescriptConfiguration = true, ...options }: Schema = schema;
+  options.standalone = options.standalone ?? true;
 
   const projects = getProjects(tree);
   if (options.host && !projects.has(options.host)) {
@@ -24,21 +31,32 @@ export async function remote(tree: Tree, options: Schema) {
     );
   }
 
-  const appName = normalizeProjectName(options.name, options.directory);
+  const { projectName: remoteProjectName, projectNameAndRootFormat } =
+    await determineProjectNameAndRootOptions(tree, {
+      name: options.name,
+      projectType: 'application',
+      directory: options.directory,
+      projectNameAndRootFormat: options.projectNameAndRootFormat,
+      callingGenerator: '@nx/angular:remote',
+    });
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
+
   const port = options.port ?? findNextAvailablePort(tree);
 
   const appInstallTask = await applicationGenerator(tree, {
     ...options,
-    standalone: options.standalone ?? false,
+    standalone: options.standalone,
     routing: true,
     port,
+    skipFormat: true,
+    bundler: 'webpack',
   });
 
   const skipE2E =
     !options.e2eTestRunner || options.e2eTestRunner === E2eTestRunner.None;
 
   await setupMf(tree, {
-    appName,
+    appName: remoteProjectName,
     mfType: 'remote',
     routing: true,
     host: options.host,
@@ -46,13 +64,29 @@ export async function remote(tree: Tree, options: Schema) {
     skipPackageJson: options.skipPackageJson,
     skipFormat: true,
     skipE2E,
-    e2eProjectName: skipE2E ? undefined : `${appName}-e2e`,
+    e2eProjectName: skipE2E ? undefined : `${remoteProjectName}-e2e`,
     standalone: options.standalone,
+    prefix: options.prefix,
+    typescriptConfiguration,
+    setParserOptionsProject: options.setParserOptionsProject,
   });
 
-  let installTasks = [appInstallTask];
+  const installSwcHelpersTask = addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      '@swc/helpers': swcHelpersVersion,
+    }
+  );
+
+  let installTasks = [appInstallTask, installSwcHelpersTask];
   if (options.ssr) {
-    let ssrInstallTask = await addSsr(tree, { appName, port });
+    let ssrInstallTask = await updateSsrSetup(tree, {
+      appName: remoteProjectName,
+      port,
+      typescriptConfiguration,
+      standalone: options.standalone,
+    });
     installTasks.push(ssrInstallTask);
   }
 

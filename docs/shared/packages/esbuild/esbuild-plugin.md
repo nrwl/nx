@@ -5,11 +5,15 @@ Why should you use this plugin?
 - _Fast_ builds using esbuild.
 - Type-checking using TypeScript, which esbuild does not handle.
 - Intelligent `package.json` output.
-- Additional [assets](/packages/esbuild/executors/esbuild#assets) for the output.
+- Additional [assets](/nx-api/esbuild/executors/esbuild#assets) for the output.
 
 ## Setting up esbuild
 
 To create a new workspace, run `npx create-nx-workspace@latest --preset=npm`.
+
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/esbuild` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
 
 To add the esbuild plugin to an existing workspace, run the following:
 
@@ -17,14 +21,21 @@ To add the esbuild plugin to an existing workspace, run the following:
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nrwl/esbuild
+npm add -D @nx/esbuild
 ```
 
 {% /tab %}
 {% tab label="yarn" %}
 
 ```shell
-yarn add -D @nrwl/esbuild
+yarn add -D @nx/esbuild
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @nx/esbuild
 ```
 
 {% /tab %}
@@ -32,26 +43,30 @@ yarn add -D @nrwl/esbuild
 
 ### Creating a new JS library
 
+{% callout type="note" title="Directory Flag Behavior Changes" %}
+The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
+{% /callout %}
+
 You can add a new library that builds using esbuild with:
 
 ```shell
-nx g @nrwl/js:lib mylib --bundler=esbuild
+nx g @nx/js:lib mylib --directory=libs/mylib --bundler=esbuild
 ```
 
-This command will install the esbuild plugin if needed, and set `@nrwl/esbuild:esbuild` executor for the `build` target.
+This command will install the esbuild plugin if needed, and set `@nx/esbuild:esbuild` executor for the `build` target.
 
 ### Adding esbuild target to existing libraries
 
 If you already have a JS project that you want to use esbuild for, run this command:
 
 ```shell
-nx g esbuild-project mylib
+nx g @nx/esbuild:configuration mylib
 ```
 
 This generator validates there isn't an existing `build` target. If you want to overwrite the existing target you can pass the `--skipValidation` option.
 
 ```shell
-nx g esbuild-project mylib --skipValidation
+nx g @nx/esbuild:configuration mylib --skipValidation
 ```
 
 ## Using esbuild
@@ -70,7 +85,7 @@ Assets are non-JS and non-TS files, such as images, CSS, etc. You can add them t
 
 ```jsonc
 "build": {
- "executor": "@nrwl/esbuild:esbuild",
+ "executor": "@nx/esbuild:esbuild",
   "options": {
     //...
     "assets": [
@@ -120,7 +135,7 @@ Extra API options for esbuild can be passed in the `esbuildOptions` object for y
 
 ```jsonc
 "build": {
-  "executor": "@nrwl/esbuild:esbuild",
+  "executor": "@nx/esbuild:esbuild",
   "options": {
     //...
     "esbuildOptions": {
@@ -133,4 +148,4 @@ Extra API options for esbuild can be passed in the `esbuildOptions` object for y
 
 ## More Documentation
 
-- [Using JS](/packages/js)
+- [Using JS](/nx-api/js)

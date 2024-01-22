@@ -1,18 +1,13 @@
-import {
-  addDependenciesToPackageJson,
-  readJson,
-  NxJsonConfiguration,
-  Tree,
-} from '@nrwl/devkit';
+import { addDependenciesToPackageJson, readJson, Tree } from '@nx/devkit';
 import { expressVersion } from '../../utils/versions';
 import initGenerator from './init';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 describe('init', () => {
   let tree: Tree;
 
   beforeEach(() => {
-    tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    tree = createTreeWithEmptyWorkspace();
   });
 
   it('should add dependencies', async () => {
@@ -20,29 +15,18 @@ describe('init', () => {
     const existingVersion = '1.0.0';
     addDependenciesToPackageJson(
       tree,
-      { '@nrwl/express': expressVersion, [existing]: existingVersion },
+      { '@nx/express': expressVersion, [existing]: existingVersion },
       { [existing]: existingVersion }
     );
     await initGenerator(tree, {});
     const packageJson = readJson(tree, 'package.json');
     // add express
     expect(packageJson.dependencies['express']).toBeDefined();
-    // add tslib
-    expect(packageJson.dependencies['tslib']).toBeDefined();
-    // move `@nrwl/express` to dev
-    expect(packageJson.dependencies['@nrwl/express']).toBeUndefined();
-    expect(packageJson.devDependencies['@nrwl/express']).toBeDefined();
-    // add express types
-    expect(packageJson.devDependencies['@types/express']).toBeDefined();
+    // move `@nx/express` to dev
+    expect(packageJson.dependencies['@nx/express']).toBeUndefined();
+    expect(packageJson.devDependencies['@nx/express']).toBeDefined();
     // keep existing packages
     expect(packageJson.devDependencies[existing]).toBeDefined();
     expect(packageJson.dependencies[existing]).toBeDefined();
-  });
-
-  it('should not add jest config if unitTestRunner is none', async () => {
-    await initGenerator(tree, {
-      unitTestRunner: 'none',
-    });
-    expect(tree.exists('jest.config.js')).toEqual(false);
   });
 });

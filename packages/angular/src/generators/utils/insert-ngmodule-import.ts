@@ -1,27 +1,18 @@
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
-import {
+import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
+import type {
   __String,
   CallExpression,
   ClassDeclaration,
-  createSourceFile,
-  Decorator,
-  getDecorators,
   ImportDeclaration,
-  isArrayLiteralExpression,
-  isCallExpression,
-  isClassDeclaration,
-  isIdentifier,
-  isImportDeclaration,
-  isNamedImports,
-  isObjectLiteralExpression,
-  isPropertyAssignment,
   ObjectLiteralExpression,
   PropertyAssignment,
-  ScriptTarget,
   SourceFile,
 } from 'typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
-type ngModuleDecoratorProperty =
+let tsModule: typeof import('typescript');
+
+export type ngModuleDecoratorProperty =
   | 'imports'
   | 'providers'
   | 'declarations'
@@ -33,12 +24,15 @@ export function insertNgModuleProperty(
   name: string,
   property: ngModuleDecoratorProperty
 ) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
   const contents = tree.read(modulePath).toString('utf-8');
 
-  const sourceFile = createSourceFile(
+  const sourceFile = tsModule.createSourceFile(
     modulePath,
     contents,
-    ScriptTarget.ESNext
+    tsModule.ScriptTarget.ESNext
   );
 
   const coreImport = findImport(sourceFile, '@angular/core');
@@ -53,36 +47,15 @@ export function insertNgModuleProperty(
 
   const ngModuleName = ngModuleNamedImport.name.escapedText;
 
-  /**
-   * Ensure backwards compatibility with TS < 4.8 due to the API change in TS4.8.
-   * The getDecorators util is only in TS 4.8, so we need the previous logic to handle TS < 4.8.
-   *
-   * TODO: clean this up using another util or when we don't need to support TS < 4.8 anymore.
-   */
-  let ngModuleClassDeclaration: ClassDeclaration;
-  let ngModuleDecorator: Decorator;
-  try {
-    ngModuleClassDeclaration = findDecoratedClass(sourceFile, ngModuleName);
-    ngModuleDecorator = getDecorators(ngModuleClassDeclaration).find(
-      (decorator) =>
-        isCallExpression(decorator.expression) &&
-        isIdentifier(decorator.expression.expression) &&
-        decorator.expression.expression.escapedText === ngModuleName
-    );
-  } catch {
-    // Support for TS < 4.8
-    ngModuleClassDeclaration = findDecoratedClassLegacy(
-      sourceFile,
-      ngModuleName
-    );
-    // @ts-ignore
-    ngModuleDecorator = ngModuleClassDeclaration.decorators.find(
-      (decorator) =>
-        isCallExpression(decorator.expression) &&
-        isIdentifier(decorator.expression.expression) &&
-        decorator.expression.expression.escapedText === ngModuleName
-    );
-  }
+  const ngModuleClassDeclaration = findDecoratedClass(sourceFile, ngModuleName);
+
+  const { getDecorators } = getTsEsLintTypeUtils();
+  const ngModuleDecorator = getDecorators(ngModuleClassDeclaration).find(
+    (decorator) =>
+      tsModule.isCallExpression(decorator.expression) &&
+      tsModule.isIdentifier(decorator.expression.expression) &&
+      decorator.expression.expression.escapedText === ngModuleName
+  );
 
   const ngModuleCall = ngModuleDecorator.expression as CallExpression;
 
@@ -96,7 +69,7 @@ export function insertNgModuleProperty(
     ]);
     tree.write(modulePath, newContents);
   } else {
-    if (!isObjectLiteralExpression(ngModuleCall.arguments[0])) {
+    if (!tsModule.isObjectLiteralExpression(ngModuleCall.arguments[0])) {
       throw new Error(
         `The NgModule options for ${ngModuleClassDeclaration.name.escapedText} in ${modulePath} is not an object literal`
       );
@@ -111,7 +84,7 @@ export function insertNgModuleProperty(
       let text = `${property}: [${name}]`;
       if (ngModuleOptions.properties.hasTrailingComma) {
         text = `${text},`;
-      } else {
+      } else if (ngModuleOptions.properties.length) {
         text = `, ${text}`;
       }
       const newContents = applyChangesToString(contents, [
@@ -123,7 +96,7 @@ export function insertNgModuleProperty(
       ]);
       tree.write(modulePath, newContents);
     } else {
-      if (!isArrayLiteralExpression(typeProperty.initializer)) {
+      if (!tsModule.isArrayLiteralExpression(typeProperty.initializer)) {
         throw new Error(
           `The NgModule ${property} for ${ngModuleClassDeclaration.name.escapedText} in ${modulePath} is not an array literal`
         );
@@ -132,8 +105,10 @@ export function insertNgModuleProperty(
       let text: string;
       if (typeProperty.initializer.elements.hasTrailingComma) {
         text = `${name},`;
-      } else {
+      } else if (typeProperty.initializer.elements.length) {
         text = `, ${name}`;
+      } else {
+        text = name;
       }
       const newContents = applyChangesToString(contents, [
         {
@@ -156,7 +131,13 @@ export function insertNgModuleImport(
 }
 
 function findImport(sourceFile: SourceFile, importPath: string) {
-  const importStatements = sourceFile.statements.filter(isImportDeclaration);
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
+  const importStatements = sourceFile.statements.filter(
+    tsModule.isImportDeclaration
+  );
 
   return importStatements.find(
     (statement) =>
@@ -168,7 +149,11 @@ function findImport(sourceFile: SourceFile, importPath: string) {
 }
 
 function getNamedImport(coreImport: ImportDeclaration, importName: string) {
-  if (!isNamedImports(coreImport.importClause.namedBindings)) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
+  if (!tsModule.isNamedImports(coreImport.importClause.namedBindings)) {
     throw new Error(
       `The import from ${coreImport.moduleSpecifier} does not have named imports.`
     );
@@ -176,9 +161,9 @@ function getNamedImport(coreImport: ImportDeclaration, importName: string) {
 
   return coreImport.importClause.namedBindings.elements.find((namedImport) =>
     namedImport.propertyName
-      ? isIdentifier(namedImport.propertyName) &&
+      ? tsModule.isIdentifier(namedImport.propertyName) &&
         namedImport.propertyName.escapedText === importName
-      : isIdentifier(namedImport.name) &&
+      : tsModule.isIdentifier(namedImport.name) &&
         namedImport.name.escapedText === importName
   );
 }
@@ -187,14 +172,22 @@ function findDecoratedClass(
   sourceFile: SourceFile,
   ngModuleName: __String
 ): ClassDeclaration | undefined {
-  const classDeclarations = sourceFile.statements.filter(isClassDeclaration);
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
+  const classDeclarations = sourceFile.statements.filter(
+    tsModule.isClassDeclaration
+  );
+  const { getDecorators } = getTsEsLintTypeUtils();
+
   return classDeclarations.find((declaration) => {
     const decorators = getDecorators(declaration);
     if (decorators) {
       return decorators.some(
         (decorator) =>
-          isCallExpression(decorator.expression) &&
-          isIdentifier(decorator.expression.expression) &&
+          tsModule.isCallExpression(decorator.expression) &&
+          tsModule.isIdentifier(decorator.expression.expression) &&
           decorator.expression.expression.escapedText === ngModuleName
       );
     }
@@ -202,31 +195,23 @@ function findDecoratedClass(
   });
 }
 
-function findDecoratedClassLegacy(
-  sourceFile: SourceFile,
-  ngModuleName: __String
-) {
-  const classDeclarations = sourceFile.statements.filter(isClassDeclaration);
-  return classDeclarations.find(
-    (declaration) =>
-      declaration.decorators &&
-      (declaration.decorators as any[]).some(
-        (decorator) =>
-          isCallExpression(decorator.expression) &&
-          isIdentifier(decorator.expression.expression) &&
-          decorator.expression.expression.escapedText === ngModuleName
-      )
-  );
-}
-
 function findPropertyAssignment(
   ngModuleOptions: ObjectLiteralExpression,
   propertyName: ngModuleDecoratorProperty
 ) {
+  if (!tsModule) {
+    tsModule = ensureTypescript();
+  }
+
   return ngModuleOptions.properties.find(
     (property) =>
-      isPropertyAssignment(property) &&
-      isIdentifier(property.name) &&
+      tsModule.isPropertyAssignment(property) &&
+      tsModule.isIdentifier(property.name) &&
       property.name.escapedText === propertyName
   ) as PropertyAssignment;
+}
+
+let tsUtils;
+function getTsEsLintTypeUtils() {
+  return tsUtils ?? require('@typescript-eslint/type-utils');
 }

@@ -1,6 +1,6 @@
 {
   "name": "host",
-  "factory": "./src/generators/host/host#hostGenerator",
+  "factory": "./src/generators/host/host#hostGeneratorInternal",
   "schema": {
     "$schema": "http://json-schema.org/schema",
     "$id": "GeneratorReactHost",
@@ -14,7 +14,7 @@
         "description": "The name of the host application to generate the Module Federation configuration",
         "$default": { "$source": "argv", "index": 0 },
         "x-prompt": "What name would you like to use as the host application?",
-        "pattern": "^[a-zA-Z].*$",
+        "pattern": "^[a-zA-Z][^:]*$",
         "x-priority": "important"
       },
       "directory": {
@@ -22,6 +22,11 @@
         "type": "string",
         "alias": "dir",
         "x-priority": "important"
+      },
+      "projectNameAndRootFormat": {
+        "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
       },
       "style": {
         "description": "The file extension to be used for style files.",
@@ -36,10 +41,6 @@
             {
               "value": "scss",
               "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
-            },
-            {
-              "value": "styl",
-              "label": "Stylus(.styl)     [ http://stylus-lang.com                   ]"
             },
             {
               "value": "less",
@@ -67,13 +68,18 @@
         "enum": ["eslint"],
         "default": "eslint"
       },
+      "dynamic": {
+        "type": "boolean",
+        "description": "Should the host application use dynamic federation?",
+        "default": false
+      },
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
         "default": false,
         "x-priority": "internal"
       },
-      "skipWorkspaceJson": {
+      "skipNxJson": {
         "description": "Skip updating workspace.json with default options based on values provided to this app (e.g. babel, style).",
         "type": "boolean",
         "default": false,
@@ -87,7 +93,7 @@
       },
       "e2eTestRunner": {
         "type": "string",
-        "enum": ["cypress", "none"],
+        "enum": ["cypress", "playwright", "none"],
         "description": "Test runner to use for end to end (e2e) tests.",
         "default": "cypress"
       },
@@ -128,12 +134,6 @@
         "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
         "default": false
       },
-      "standaloneConfig": {
-        "description": "Split the project configuration into <projectRoot>/project.json rather than including it inside workspace.json",
-        "type": "boolean",
-        "default": true,
-        "x-deprecated": "Nx only supports standaloneConfig"
-      },
       "compiler": {
         "type": "string",
         "description": "The compiler to use",
@@ -161,6 +161,11 @@
         "description": "Generate a React app with a minimal setup. No nx starter template.",
         "type": "boolean",
         "default": false
+      },
+      "typescriptConfiguration": {
+        "type": "boolean",
+        "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+        "default": true
       }
     },
     "required": ["name"],
@@ -169,7 +174,7 @@
   },
   "x-type": "application",
   "description": "Generate a host react application",
-  "implementation": "/packages/react/src/generators/host/host#hostGenerator.ts",
+  "implementation": "/packages/react/src/generators/host/host#hostGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/react/src/generators/host/schema.json",

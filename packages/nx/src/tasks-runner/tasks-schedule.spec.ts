@@ -1,8 +1,9 @@
 import { TasksSchedule } from './tasks-schedule';
-import { Workspaces } from '../config/workspaces';
 import { removeTasksFromTaskGraph } from './utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { DependencyType, ProjectGraph } from '../config/project-graph';
+import * as nxJsonUtils from '../config/nx-json';
+import * as executorUtils from '../command-line/run/executor-utils';
 
 function createMockTask(id: string): Task {
   const [project, target] = id.split(':');
@@ -12,6 +13,7 @@ function createMockTask(id: string): Task {
       project,
       target,
     },
+    outputs: [],
     overrides: {},
   };
 }
@@ -42,21 +44,17 @@ describe('TasksSchedule', () => {
         },
         roots: ['lib1:build', 'app2:build'],
       };
-      const workspace: Partial<Workspaces> = {
-        readExecutor() {
-          return {
-            schema: {
-              version: 2,
-              properties: {},
-            },
-            implementationFactory: jest.fn(),
-            batchImplementationFactory: jest.fn(),
-          } as any;
+      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+        schema: {
+          version: 2,
+          properties: {},
         },
-        readNxJson() {
-          return {};
-        },
-      };
+        implementationFactory: jest.fn(),
+        batchImplementationFactory: jest.fn(),
+        isNgCompat: true,
+        isNxExecutor: true,
+      });
 
       const projectGraph: ProjectGraph = {
         nodes: {
@@ -113,30 +111,18 @@ describe('TasksSchedule', () => {
             },
           ],
         },
-        allWorkspaceFiles: [],
         externalNodes: {},
         version: '5',
       };
-
-      const hasher = {
-        hashTask: () => 'hash',
-      } as any;
 
       lifeCycle = {
         startTask: jest.fn(),
         endTask: jest.fn(),
         scheduleTask: jest.fn(),
       };
-      taskSchedule = new TasksSchedule(
-        hasher,
-        {},
-        projectGraph,
-        taskGraph,
-        workspace as Workspaces,
-        {
-          lifeCycle,
-        }
-      );
+      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
+        lifeCycle,
+      });
     });
 
     describe('Without Batch Mode', () => {
@@ -159,11 +145,6 @@ describe('TasksSchedule', () => {
         await taskSchedule.scheduleNextTasks();
         expect(taskSchedule.nextTask()).toEqual(lib1Build);
         expect(taskSchedule.nextTask()).toEqual(app2Build);
-      });
-
-      it('should invoke lifeCycle.scheduleTask', async () => {
-        await taskSchedule.scheduleNextTasks();
-        expect(lifeCycle.scheduleTask).toHaveBeenCalled();
       });
 
       it('should not schedule any tasks that still have uncompleted dependencies', async () => {
@@ -269,21 +250,17 @@ describe('TasksSchedule', () => {
         },
         roots: ['app1:test', 'app2:test', 'lib1:test'],
       };
-      const workspace: Partial<Workspaces> = {
-        readExecutor() {
-          return {
-            schema: {
-              version: 2,
-              properties: {},
-            },
-            implementationFactory: jest.fn(),
-            batchImplementationFactory: jest.fn(),
-          } as any;
+      jest.spyOn(nxJsonUtils, 'readNxJson').mockReturnValue({});
+      jest.spyOn(executorUtils, 'getExecutorInformation').mockReturnValue({
+        schema: {
+          version: 2,
+          properties: {},
         },
-        readNxJson() {
-          return {};
-        },
-      };
+        implementationFactory: jest.fn(),
+        batchImplementationFactory: jest.fn(),
+        isNgCompat: true,
+        isNxExecutor: true,
+      });
 
       const projectGraph: ProjectGraph = {
         nodes: {
@@ -340,30 +317,18 @@ describe('TasksSchedule', () => {
             },
           ],
         },
-        allWorkspaceFiles: [],
         externalNodes: {},
         version: '5',
       };
-
-      const hasher = {
-        hashTask: () => 'hash',
-      } as any;
 
       lifeCycle = {
         startTask: jest.fn(),
         endTask: jest.fn(),
         scheduleTask: jest.fn(),
       };
-      taskSchedule = new TasksSchedule(
-        hasher,
-        {},
-        projectGraph,
-        taskGraph,
-        workspace as Workspaces,
-        {
-          lifeCycle,
-        }
-      );
+      taskSchedule = new TasksSchedule(projectGraph, taskGraph, {
+        lifeCycle,
+      });
     });
 
     describe('Without Batch Mode', () => {
@@ -387,11 +352,6 @@ describe('TasksSchedule', () => {
         expect(taskSchedule.nextTask()).toEqual(lib1Test);
         expect(taskSchedule.nextTask()).toEqual(app1Test);
         expect(taskSchedule.nextTask()).toEqual(app2Test);
-      });
-
-      it('should invoke lifeCycle.scheduleTask', async () => {
-        await taskSchedule.scheduleNextTasks();
-        expect(lifeCycle.scheduleTask).toHaveBeenCalled();
       });
 
       it('should run out of tasks when they are all complete', async () => {

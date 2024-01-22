@@ -1,10 +1,15 @@
-import { addProjectConfiguration, Tree } from '@nrwl/devkit';
-import { libraryGenerator } from '@nrwl/workspace';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import {
+  addProjectConfiguration,
+  readProjectConfiguration,
+  Tree,
+  updateProjectConfiguration,
+} from '@nx/devkit';
+import { libraryGenerator } from '@nx/js';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateToCypress11 from './cypress-11';
 import { installedCypressVersion } from '../../utils/cypress-version';
 jest.mock('../../utils/cypress-version');
-import { cypressComponentProject } from '../../generators/cypress-component-project/cypress-component-project';
+import cypressComponentConfiguration from '../../generators/component-configuration/component-configuration';
 
 describe('Cypress 11 Migration', () => {
   let tree: Tree;
@@ -89,17 +94,18 @@ describe('Cypress 11 Migration', () => {
       },
     });
 
-    const content = `import {MountConfig} from 'cypress/angular';
-    import { MyComponent } from './my.component';
-     describe('MyComponent', () => {
-      const config:MountConfig = {
-      imports: [],
-      declarations: [],
-      providers: [{provide: 'foo', useValue: 'bar'}]
-      };
-      it('direct usage', () => {
-        cy.mount(MyComponent, config);
-      });
+    const content = `import { MountConfig } from 'cypress/angular';
+import { MyComponent } from './my.component';
+describe('MyComponent', () => {
+  const config: MountConfig = {
+    imports: [],
+    declarations: [],
+    providers: [{ provide: 'foo', useValue: 'bar' }],
+  };
+  it('direct usage', () => {
+    cy.mount(MyComponent, config);
+  });
+});
 `;
     tree.write('apps/my-e2e-app/src/somthing.component.cy.ts', content);
     await updateToCypress11(tree);
@@ -113,10 +119,13 @@ async function setup(tree: Tree) {
   await libraryGenerator(tree, {
     name: 'my-react-lib',
   });
-  await cypressComponentProject(tree, {
+  await cypressComponentConfiguration(tree, {
     project: 'my-react-lib',
     skipFormat: true,
   });
+  const projectConfig = readProjectConfiguration(tree, 'my-react-lib');
+  projectConfig.targets['component-test'].executor = '@nrwl/cypress:cypress';
+  updateProjectConfiguration(tree, 'my-react-lib', projectConfig);
   tree.write(
     'libs/my-react-lib/cypress/support/commands.ts',
     `/// <reference types="cypress" />
@@ -153,7 +162,7 @@ describe('again', () => {
   tree.write(
     'libs/my-react-lib/src/lib/with-import.component.cy.ts',
     `import { mountHook, unmount } from 'cypress/react'
-import { useCounter } from ‘./useCounter’
+import { useCounter } from './useCounter'
 
 it('increments the count', () => {
   mountHook(() => useCounter()).then((result) => {
@@ -203,8 +212,8 @@ describe('again', () => {
   );
   tree.write(
     'libs/my-react-lib/src/lib/with-import-18.component.cy.ts',
-    `import { mountHook, unmount } from 'cypress/react18'
-import { useCounter } from ‘./useCounter’
+    `import { mountHook, unmount } from 'cypress/react18';
+import { useCounter } from './useCounter';
 
 it('increments the count', () => {
   mountHook(() => useCounter()).then((result) => {
@@ -257,10 +266,13 @@ describe('again', () => {
     name: 'my-ng-lib',
   });
 
-  await cypressComponentProject(tree, {
+  await cypressComponentConfiguration(tree, {
     project: 'my-ng-lib',
     skipFormat: true,
   });
+  const projectConfig2 = readProjectConfiguration(tree, 'my-ng-lib');
+  projectConfig2.targets['component-test'].executor = '@nrwl/cypress:cypress';
+  updateProjectConfiguration(tree, 'my-ng-lib', projectConfig2);
   tree.write(
     'libs/my-ng-lib/cypress/support/commands.ts',
     `/// <reference types="cypress" />
@@ -299,6 +311,7 @@ Cypress.Commands.add('mount', mount)
       it('inlined usage', () => {
         cy.mount(MyComponent, {imports: [], declarations: [], providers: [{provide: 'foo', useValue: 'bar'}]});
       });
+      });
     `
   );
   tree.write(
@@ -319,6 +332,7 @@ Cypress.Commands.add('mount', mount)
       });
       it('inlined usage', () => {
         cy.mount(MyComponent, {imports: [], declarations: [], providers: [{provide: 'foo', useValue: 'bar'}]});
+      });
       });
    `
   );

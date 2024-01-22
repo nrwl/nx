@@ -2,7 +2,7 @@
 
 ## Why do users need access?
 
-While just adding an Nx Cloud access token to your monorepo gives you distributed caching and distributed tasks
+While just adding an Nx Cloud access token to your monorepo gives you remote caching and distributed tasks
 execution, the Nx Cloud web app gives you analytics about tasks running in your workspace, allows devs to easily inspect
 terminal output, and works seamlessly with our GitHub integration for your Pull Requests. Here is
 a [video walkthrough of this](https://youtu.be/GT7XIwG1i5A?t=409).
@@ -10,14 +10,14 @@ a [video walkthrough of this](https://youtu.be/GT7XIwG1i5A?t=409).
 By default, when you connect your token to a workspace on your Nx Cloud web app, all links and runs are private to only
 members of your organisation. This means that you'll either need to explicitly add members, or make your organisation
 public (which means anyone with access to your Nx Cloud instance will be able to see your runs)
-. [More details here.](/nx-cloud/account/users#managing-members)
+.
 
 ## Setting up a single admin user
 
 If you just want to try out running Nx Cloud on prem and set up full membership management later, then the simplest
 option is to
 just set up a single admin user. This option might also work for you if you are okay
-with [making your organisation public](/nx-cloud/account/users#public-organizations) to anyone that has access to your
+with making your organisation public to anyone that has access to your
 Nx Cloud installation.
 
 To do that provision the `ADMIN_PASSWORD` env variable for the `nx-cloud-aggregator` container (if you are running Nx
@@ -31,32 +31,27 @@ than 1 admin to your workspace, to reduce the chance of losing access to it.
 
 ## Setting up third-party auth providers
 
-For instructions on how to set up third-party auth providers please refer to these guides:
+For instructions on how to set up third-party auth providers, please refer to these guides:
 
-- [GitHub Auth](/nx-cloud/private-cloud/auth-github)
-- [GitLab Auth](/nx-cloud/private-cloud/auth-gitlab)
-- [BitBucket Auth](/nx-cloud/private-cloud/auth-bitbucket)
-- [SAML Auth](/nx-cloud/private-cloud/auth-saml)
+- [GitHub Auth](/ci/recipes/on-premise/auth-github)
+- [GitLab Auth](/ci/recipes/on-premise/auth-gitlab)
+- [BitBucket Auth](/ci/recipes/on-premise/auth-bitbucket)
+- [SAML Auth](/ci/recipes/on-premise/auth-saml)
 
 ## Inviting users
 
-Once that's done, you can either login with your admin user (see instructions below on how to log-in with admin), or
-directly via GitHub by hitting the "Log In" button:
+Once that's done, you can either sign in with your admin user by using the form, or
+directly via the configured third-party authentication providers by clicking the "_Sign In with configured third-party provider_" button:
 
-![Main user login](/nx-cloud/private/images/main_user_login.png)
+![Main user login](/nx-cloud/private/images/main-user-login.webp)
 
-You can then go to your organisation's members page and start inviting people based on their GitHub username:
-
-![Invite members](/nx-cloud/private/images/invite_members.png)
-
+You can then go to your organisation's settings and then to the members page and start inviting people based on their GitHub username.
 When you invite someone, Nx Cloud will generate a unique invite URL, which you can send to that person directly.
 
 ## Migrating from an admin-only set up to auth via a configured provider
 
-If you already have an admin user that manages an existing Nx Cloud workspace, you can still login, even after you set up
-GitHub auth. You'll find the admin log-in button here:
-
-![Admin hidden login](/nx-cloud/private/images/admin_hidden_login.png)
+If you already have an admin user that manages an existing Nx Cloud workspace, you can still login by using the login form, even after you set up
+GitHub auth.
 
 ## Finding usernames
 

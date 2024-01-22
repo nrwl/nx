@@ -3,40 +3,42 @@ import {
   getProjects,
   readJson,
   readProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import { Linter } from '@nrwl/linter';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Linter } from '@nx/eslint';
 import { reactNativeApplicationGenerator } from './application';
 
 describe('app', () => {
   let appTree: Tree;
 
   beforeEach(() => {
-    appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    appTree = createTreeWithEmptyWorkspace();
     appTree.write('.gitignore', '');
   });
 
   it('should update configuration', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'myApp',
+      name: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
+      projectNameAndRootFormat: 'as-provided',
     });
     const projects = getProjects(appTree);
 
-    expect(projects.get('my-app').root).toEqual('apps/my-app');
+    expect(projects.get('my-app').root).toEqual('my-app');
   });
 
   it('should update nx.json', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'myApp',
+      name: 'my-app',
       displayName: 'myApp',
       tags: 'one,two',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
+      projectNameAndRootFormat: 'as-provided',
     });
 
     const projectConfiguration = readProjectConfiguration(appTree, 'my-app');
@@ -47,56 +49,82 @@ describe('app', () => {
 
   it('should generate files', async () => {
     await reactNativeApplicationGenerator(appTree, {
-      name: 'myApp',
+      name: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
+      projectNameAndRootFormat: 'as-provided',
     });
-    expect(appTree.exists('apps/my-app/src/app/App.tsx')).toBeTruthy();
-    expect(appTree.exists('apps/my-app/src/main.tsx')).toBeTruthy();
+    expect(appTree.exists('my-app/src/app/App.tsx')).toBeTruthy();
+    expect(appTree.exists('my-app/src/main.tsx')).toBeTruthy();
 
-    const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');
-    expect(tsconfig.extends).toEqual('../../tsconfig.base.json');
+    const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
+    expect(tsconfig.extends).toEqual('../tsconfig.base.json');
 
-    expect(appTree.exists('apps/my-app/.eslintrc.json')).toBe(true);
+    expect(appTree.exists('my-app/.eslintrc.json')).toBe(true);
+    expect(appTree.read('my-app/jest.config.ts', 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "module.exports = {
+        displayName: 'my-app',
+        preset: 'react-native',
+        resolver: '@nx/jest/plugins/resolver',
+        moduleFileExtensions: ['ts', 'js', 'html', 'tsx', 'jsx'],
+        setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
+        moduleNameMapper: {
+          '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock',
+        },
+        coverageDirectory: '../coverage/my-app',
+      };
+      "
+    `);
+  });
+
+  it('should generate targets', async () => {
+    await reactNativeApplicationGenerator(appTree, {
+      name: 'my-app',
+      displayName: 'myApp',
+      linter: Linter.EsLint,
+      e2eTestRunner: 'none',
+      install: false,
+      projectNameAndRootFormat: 'as-provided',
+    });
+    const targets = readProjectConfiguration(appTree, 'my-app').targets;
+    expect(targets.test).toBeDefined();
   });
 
   it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
     appTree.rename('tsconfig.base.json', 'tsconfig.json');
 
     await reactNativeApplicationGenerator(appTree, {
-      name: 'myApp',
+      name: 'my-app',
       displayName: 'myApp',
       linter: Linter.EsLint,
       e2eTestRunner: 'none',
       install: false,
+      projectNameAndRootFormat: 'as-provided',
     });
 
-    const tsconfig = readJson(appTree, 'apps/my-app/tsconfig.json');
-    expect(tsconfig.extends).toEqual('../../tsconfig.json');
+    const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
+    expect(tsconfig.extends).toEqual('../tsconfig.json');
   });
 
   describe('detox', () => {
     it('should create e2e app with directory', async () => {
       await reactNativeApplicationGenerator(appTree, {
-        name: 'myApp',
-        directory: 'myDir',
+        name: 'my-app',
+        directory: 'my-dir',
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',
         install: false,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const projects = getProjects(appTree);
-      expect(projects.get('my-dir-my-app').root).toEqual('apps/my-dir/my-app');
+      expect(projects.get('my-app').root).toEqual('my-dir');
 
-      expect(
-        appTree.exists('apps/my-dir/my-app-e2e/.detoxrc.json')
-      ).toBeTruthy();
-      const detoxrc = appTree.read(
-        'apps/my-dir/my-app-e2e/.detoxrc.json',
-        'utf-8'
-      );
+      expect(appTree.exists('my-dir-e2e/.detoxrc.json')).toBeTruthy();
+      const detoxrc = appTree.read('my-dir-e2e/.detoxrc.json', 'utf-8');
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
         detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
@@ -104,30 +132,30 @@ describe('app', () => {
       expect(detoxrcJson.apps).toEqual({
         'android.debug': {
           binaryPath:
-            '../../../apps/my-dir/my-app/android/app/build/outputs/apk/debug/app-debug.apk',
+            '../my-dir/android/app/build/outputs/apk/debug/app-debug.apk',
           build:
-            'cd ../../../apps/my-dir/my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
+            'cd ../my-dir/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
           type: 'android.apk',
         },
         'android.release': {
           binaryPath:
-            '../../../apps/my-dir/my-app/android/app/build/outputs/apk/release/app-release.apk',
+            '../my-dir/android/app/build/outputs/apk/release/app-release.apk',
           build:
-            'cd ../../../apps/my-dir/my-app/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release',
+            'cd ../my-dir/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release',
           type: 'android.apk',
         },
         'ios.debug': {
           binaryPath:
-            '../../../apps/my-dir/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
+            '../my-dir/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../../../apps/my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
-            '../../../apps/my-dir/my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
+            '../my-dir/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../../../apps/my-dir/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-dir/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -135,16 +163,17 @@ describe('app', () => {
 
     it('should create e2e app without directory', async () => {
       await reactNativeApplicationGenerator(appTree, {
-        name: 'myApp',
+        name: 'my-app',
         linter: Linter.EsLint,
         e2eTestRunner: 'detox',
         install: false,
+        projectNameAndRootFormat: 'as-provided',
       });
 
       const projects = getProjects(appTree);
-      expect(projects.get('my-app').root).toEqual('apps/my-app');
+      expect(projects.get('my-app').root).toEqual('my-app');
 
-      const detoxrc = appTree.read('apps/my-app-e2e/.detoxrc.json', 'utf-8');
+      const detoxrc = appTree.read('my-app-e2e/.detoxrc.json', 'utf-8');
       // Strip trailing commas
       const detoxrcJson = JSON.parse(
         detoxrc.replace(/(?<=(true|false|null|["\d}\]])\s*),(?=\s*[}\]])/g, '')
@@ -152,30 +181,30 @@ describe('app', () => {
       expect(detoxrcJson.apps).toEqual({
         'android.debug': {
           binaryPath:
-            '../../apps/my-app/android/app/build/outputs/apk/debug/app-debug.apk',
+            '../my-app/android/app/build/outputs/apk/debug/app-debug.apk',
           build:
-            'cd ../../apps/my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
+            'cd ../my-app/android && ./gradlew assembleDebug assembleAndroidTest -DtestBuildType=debug',
           type: 'android.apk',
         },
         'android.release': {
           binaryPath:
-            '../../apps/my-app/android/app/build/outputs/apk/release/app-release.apk',
+            '../my-app/android/app/build/outputs/apk/release/app-release.apk',
           build:
-            'cd ../../apps/my-app/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release',
+            'cd ../my-app/android && ./gradlew assembleRelease assembleAndroidTest -DtestBuildType=release',
           type: 'android.apk',
         },
         'ios.debug': {
           binaryPath:
-            '../../apps/my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
+            '../my-app/ios/build/Build/Products/Debug-iphonesimulator/MyApp.app',
           build:
-            "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
         'ios.release': {
           binaryPath:
-            '../../apps/my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
+            '../my-app/ios/build/Build/Products/Release-iphonesimulator/MyApp.app',
           build:
-            "cd ../../apps/my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
+            "cd ../my-app/ios && xcodebuild -workspace MyApp.xcworkspace -scheme MyApp -configuration Release -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' -derivedDataPath ./build -quiet",
           type: 'ios.app',
         },
       });
@@ -184,18 +213,19 @@ describe('app', () => {
 
   describe('--skipPackageJson', () => {
     it('should not add or update dependencies when true', async () => {
-      const packageJsonBefore = appTree.read('package.json', 'utf-8');
+      const packageJsonBefore = readJson(appTree, 'package.json');
 
       await reactNativeApplicationGenerator(appTree, {
-        name: 'myApp',
+        name: 'my-app',
         displayName: 'myApp',
         linter: Linter.EsLint,
         e2eTestRunner: 'none',
         install: false,
         skipPackageJson: true,
+        projectNameAndRootFormat: 'as-provided',
       });
 
-      expect(appTree.read('package.json', 'utf-8')).toEqual(packageJsonBefore);
+      expect(readJson(appTree, 'package.json')).toEqual(packageJsonBefore);
     });
   });
 });

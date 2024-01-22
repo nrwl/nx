@@ -1,1 +1,1 @@
-export * from '@nrwl/webpack/src/utils/fs';
+export * from '@nx/webpack/src/utils/fs';

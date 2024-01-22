@@ -1,0 +1,12 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`init should install required dependencies 1`] = `
+{
+  "dependencies": {},
+  "devDependencies": {
+    "@nx/nuxt": "0.0.1",
+    "nuxi": "^3.8.1",
+  },
+  "name": "@proj/source",
+}
+`;

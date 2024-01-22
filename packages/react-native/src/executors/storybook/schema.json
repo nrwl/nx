@@ -17,17 +17,12 @@
     "outputFile": {
       "type": "string",
       "description": "The output file that will be written. It is relative to the project directory.",
-      "default": "./.storybook/story-loader.js"
+      "default": "./.storybook/story-loader.ts"
     },
     "pattern": {
       "type": "string",
       "description": "The pattern of files to look at. It can be a specific file, or any valid glob. Note: if using the CLI, globs with `**/*...` must be escaped with quotes",
       "default": "**/*.stories.@(js|jsx|ts|tsx|md)"
-    },
-    "silent": {
-      "type": "boolean",
-      "description": "Silences output.",
-      "default": false
     }
   },
   "required": ["searchDir", "outputFile", "pattern"]

@@ -1,15 +1,15 @@
 import type * as ts from 'typescript';
-import { findNodes } from 'nx/src/utils/typescript';
-import { getSourceNodes } from '@nrwl/workspace/src/utilities/typescript/get-source-nodes';
-import { dirname, join } from 'path';
-import { names, readProjectConfiguration, Tree } from '@nrwl/devkit';
 import {
+  findNodes,
   getImport,
+  getSourceNodes,
   insertChange,
   removeChange,
   replaceChange,
-} from '@nrwl/workspace/src/utilities/ast-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+} from '@nx/js';
+import { dirname, join } from 'path';
+import { names, readProjectConfiguration, Tree } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -70,6 +70,11 @@ function _angularImportsFromNode(
   }
 }
 
+/**
+ * Check if the Component, Directive or Pipe is standalone
+ * @param sourceFile TS Source File containing the token to check
+ * @param decoratorName The type of decorator to check (Component, Directive, Pipe)
+ */
 export function isStandalone(
   sourceFile: ts.SourceFile,
   decoratorName: DecoratorName
@@ -163,7 +168,7 @@ function _addSymbolToDecoratorMetadata(
   decoratorName: DecoratorName
 ): ts.SourceFile {
   const nodes = getDecoratorMetadata(source, decoratorName, '@angular/core');
-  let node: any = nodes[0]; // tslint:disable-line:no-any
+  let node: any = nodes[0];
 
   // Find the decorator declaration.
   if (!node) {
@@ -321,7 +326,7 @@ export function removeFromNgModule(
   property: string
 ): ts.SourceFile {
   const nodes = getDecoratorMetadata(source, 'NgModule', '@angular/core');
-  let node: any = nodes[0]; // tslint:disable-line:no-any
+  let node: any = nodes[0];
 
   // Find the decorator declaration.
   if (!node) {
@@ -346,6 +351,13 @@ export function removeFromNgModule(
   }
 }
 
+/**
+ * Add an import to a Standalone Component
+ * @param host Virtual Tree
+ * @param source TS Source File containing the Component
+ * @param componentPath The path to the Component
+ * @param symbolName The import to add to the Component
+ */
 export function addImportToComponent(
   host: Tree,
   source: ts.SourceFile,
@@ -362,6 +374,13 @@ export function addImportToComponent(
   );
 }
 
+/**
+ * Add an import to a Standalone Directive
+ * @param host Virtual Tree
+ * @param source TS Source File containing the Directive
+ * @param directivePath The path to the Directive
+ * @param symbolName The import to add to the Directive
+ */
 export function addImportToDirective(
   host: Tree,
   source: ts.SourceFile,
@@ -378,6 +397,13 @@ export function addImportToDirective(
   );
 }
 
+/**
+ * Add an import to a Standalone Pipe
+ * @param host Virtual Tree
+ * @param source TS Source File containing the Pipe
+ * @param pipePath The path to the Pipe
+ * @param symbolName The import to add to the Pipe
+ */
 export function addImportToPipe(
   host: Tree,
   source: ts.SourceFile,
@@ -394,6 +420,13 @@ export function addImportToPipe(
   );
 }
 
+/**
+ * Add an import to an NgModule
+ * @param host Virtual Tree
+ * @param source TS Source File containing the NgModule
+ * @param modulePath The path to the NgModule
+ * @param symbolName The import to add to the NgModule
+ */
 export function addImportToModule(
   host: Tree,
   source: ts.SourceFile,
@@ -565,7 +598,7 @@ function getMatchingProperty(
   module: string
 ): ts.ObjectLiteralElement {
   const nodes = getDecoratorMetadata(source, identifier, module);
-  let node: any = nodes[0]; // tslint:disable-line:no-any
+  let node: any = nodes[0];
 
   if (!node) return null;
 
@@ -643,6 +676,36 @@ function getListOfRoutes(
   return null;
 }
 
+export function isNgStandaloneApp(tree: Tree, projectName: string) {
+  const project = readProjectConfiguration(tree, projectName);
+  const mainFile =
+    project.targets?.build?.options?.main ??
+    project.targets?.build?.options?.browser;
+
+  if (project.projectType !== 'application' || !mainFile) {
+    return false;
+  }
+
+  ensureTypescript();
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+
+  const mainFileContents = tree.read(mainFile, 'utf-8');
+
+  const BOOTSTRAP_APPLICATION_SELECTOR =
+    'CallExpression:has(Identifier[name=bootstrapApplication])';
+  const ast = tsquery.ast(mainFileContents);
+  const nodes = tsquery(ast, BOOTSTRAP_APPLICATION_SELECTOR, {
+    visitAllChildren: true,
+  });
+  return nodes.length > 0;
+}
+
+/**
+ * Add a provider to bootstrapApplication call for Standalone Applications
+ * @param tree Virtual Tree
+ * @param filePath Path to the file containing the bootstrapApplication call
+ * @param providerToAdd Provider to add
+ */
 export function addProviderToBootstrapApplication(
   tree: Tree,
   filePath: string,
@@ -677,6 +740,54 @@ export function addProviderToBootstrapApplication(
   tree.write(filePath, newFileContents);
 }
 
+/**
+ * Add a provider to appConfig for Standalone Applications
+ * NOTE: The appConfig must be marked with type ApplicationConfig and the providers must be declared as an array in the config
+ * @param tree Virtual Tree
+ * @param filePath Path to the file containing the bootstrapApplication call
+ * @param providerToAdd Provider to add
+ */
+export function addProviderToAppConfig(
+  tree: Tree,
+  filePath: string,
+  providerToAdd: string
+) {
+  ensureTypescript();
+  const { tsquery } = require('@phenomnomnominal/tsquery');
+  const PROVIDERS_ARRAY_SELECTOR =
+    'VariableDeclaration:has(TypeReference > Identifier[name=ApplicationConfig]) > ObjectLiteralExpression  PropertyAssignment:has(Identifier[name=providers]) > ArrayLiteralExpression';
+
+  const fileContents = tree.read(filePath, 'utf-8');
+  const ast = tsquery.ast(fileContents);
+  const providersArrayNodes = tsquery(ast, PROVIDERS_ARRAY_SELECTOR, {
+    visitAllChildren: true,
+  });
+  if (providersArrayNodes.length === 0) {
+    throw new Error(
+      `'providers' does not exist in the application configuration at '${filePath}'.`
+    );
+  }
+
+  const arrayNode = providersArrayNodes[0];
+
+  const newFileContents = `${fileContents.slice(
+    0,
+    arrayNode.getStart() + 1
+  )}${providerToAdd},${fileContents.slice(
+    arrayNode.getStart() + 1,
+    fileContents.length
+  )}`;
+
+  tree.write(filePath, newFileContents);
+}
+
+/**
+ * Add a provider to an NgModule
+ * @param host Virtual Tree
+ * @param source TS Source File containing the NgModule
+ * @param modulePath Path to the NgModule
+ * @param symbolName The provider to add
+ */
 export function addProviderToModule(
   host: Tree,
   source: ts.SourceFile,
@@ -692,6 +803,13 @@ export function addProviderToModule(
   );
 }
 
+/**
+ * Add a provider to a Standalone Component
+ * @param host Virtual Tree
+ * @param source TS Source File containing the Component
+ * @param componentPath Path to the Component
+ * @param symbolName The provider to add
+ */
 export function addProviderToComponent(
   host: Tree,
   source: ts.SourceFile,
@@ -757,7 +875,8 @@ export function readBootstrapInfo(
 
   let mainPath;
   try {
-    mainPath = config.targets.build.options.main;
+    mainPath =
+      config.targets.build.options.main ?? config.targets.build.options.browser;
   } catch (e) {
     throw new Error('Main file cannot be located');
   }

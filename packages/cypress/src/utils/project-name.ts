@@ -1,4 +1,4 @@
-import { names } from '@nrwl/devkit';
+import { names } from '@nx/devkit';
 
 export function getUnscopedLibName(libRoot: string) {
   return libRoot.slice(libRoot.lastIndexOf('/') + 1);

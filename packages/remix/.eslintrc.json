@@ -1,0 +1,92 @@
+{
+  "extends": ["../../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off"
+      }
+    },
+    {
+      "files": ["*.ts", "*.tsx"],
+      "rules": {}
+    },
+    {
+      "files": ["*.js", "*.jsx"],
+      "rules": {}
+    },
+    {
+      "files": [
+        "./package.json",
+        "./generators.json",
+        "./executors.json",
+        "./migrations.json"
+      ],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/nx-plugin-checks": "error"
+      }
+    },
+    {
+      "files": ["./package.json"],
+      "parser": "jsonc-eslint-parser",
+      "rules": {
+        "@nx/dependency-checks": [
+          "error",
+          {
+            "buildTargets": ["build-base"],
+            "ignoredDependencies": [
+              "nx",
+              "eslint",
+              "prettier",
+              "typescript",
+              "react",
+              "@nx/workspace",
+              "fs-extra",
+              "@remix-run/dev",
+              "@nx/web",
+              "@nx/eslint",
+              // These are installed by ensurePackage so missing in package.json
+              "@nx/cypress",
+              "@nx/playwright",
+              "@nx/jest",
+              "@nx/rollup",
+              "@nx/storybook",
+              "@nx/vite",
+              "@nx/webpack",
+              // These are brought in by the webpack, rollup, or vite packages via init generators.
+              "@babel/preset-react",
+              "@phenomnomnominal/tsquery",
+              "@pmmmwh/react-refresh-webpack-plugin",
+              "@svgr/rollup",
+              "@rollup/plugin-url",
+              "@svgr/webpack",
+              "@swc/jest",
+              "babel-jest",
+              "babel-loader",
+              "babel-plugin-emotion",
+              "babel-plugin-styled-components",
+              "css-loader",
+              "file-loader",
+              "less-loader",
+              "react-refresh",
+              "rollup",
+              "sass",
+              "sass-loader",
+              "style-loader",
+              "stylus-loader",
+              "swc-loader",
+              "tsconfig-paths-webpack-plugin",
+              "url-loader",
+              "webpack",
+              "webpack-merge",
+              // used via the CT react plugin installed via vite plugin
+              "vite"
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

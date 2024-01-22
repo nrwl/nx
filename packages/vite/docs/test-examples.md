@@ -1,6 +1,6 @@
 ---
 title: Examples for the Vitest executor
-description: This page contains examples for the Vitest @nrwl/vite:test executor.
+description: This page contains examples for the Vitest @nx/vite:test executor.
 ---
 
 `project.json`:
@@ -11,7 +11,7 @@ description: This page contains examples for the Vitest @nrwl/vite:test executor
     "targets": {
         //...
         "test": {
-            "executor": "@nrwl/vite:test",
+            "executor": "@nx/vite:test",
             //...
             //...
             "options": {
@@ -39,7 +39,7 @@ To run testing in watch mode, you can create a new configuration within your tes
     "targets": {
         //...
         "test": {
-            "executor": "@nrwl/vite:test",
+            "executor": "@nx/vite:test",
             //...
             //...
             "options": {

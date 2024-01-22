@@ -1,11 +1,11 @@
-import type { ExecutorContext, ProjectGraph } from '@nrwl/devkit';
+import type { ExecutorContext, ProjectGraph } from '@nx/devkit';
 import {
   normalizePath,
   ProjectConfiguration,
   stripIndents,
   TargetConfiguration,
   workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { extname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 import {
@@ -13,7 +13,7 @@ import {
   findProjectForPath,
 } from 'nx/src/project-graph/utils/find-project-for-path';
 import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
-import { readNxJson } from 'nx/src/project-graph/file-utils';
+import { readNxJson } from 'nx/src/config/configuration';
 
 export const CY_FILE_MATCHER = new RegExp(/\.cy\.[tj]sx?$/);
 /**
@@ -39,14 +39,19 @@ export function getTempTailwindPath(context: ExecutorContext) {
 }
 
 /**
- * Checks if the childProjectName is a decendent of the parentProjectName
+ * Checks if the childProjectName is a descendent of the parentProjectName
  * in the project graph
  **/
 export function isCtProjectUsingBuildProject(
   graph: ProjectGraph,
   parentProjectName: string,
-  childProjectName: string
+  childProjectName: string,
+  seen = new Set<string>()
 ): boolean {
+  if (seen.has(parentProjectName)) {
+    return false;
+  }
+  seen.add(parentProjectName);
   const isProjectDirectDep = graph.dependencies[parentProjectName].some(
     (p) => p.target === childProjectName
   );
@@ -62,7 +67,8 @@ export function isCtProjectUsingBuildProject(
       isCtProjectUsingBuildProject(
         graph,
         maybeIntermediateProject.target,
-        childProjectName
+        childProjectName,
+        seen
       )
     ) {
       return true;
@@ -124,9 +130,5 @@ export function createExecutorContext(
     projectName,
     projectsConfigurations,
     nxJsonConfiguration,
-    workspace: {
-      ...nxJsonConfiguration,
-      ...projectsConfigurations,
-    },
   };
 }

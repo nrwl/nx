@@ -5,13 +5,13 @@ import {
   names,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   addRemoteDefinition,
   addRemoteRoute,
   addRemoteToConfig,
 } from '../../../module-federation/ast-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
@@ -25,10 +25,18 @@ export function updateHostWithRemote(
   }
 
   const hostConfig = readProjectConfiguration(host, hostName);
-  const moduleFederationConfigPath = joinPathFragments(
+  let moduleFederationConfigPath = joinPathFragments(
     hostConfig.root,
     'module-federation.config.js'
   );
+
+  if (!host.exists(moduleFederationConfigPath)) {
+    moduleFederationConfigPath = joinPathFragments(
+      hostConfig.root,
+      'module-federation.config.ts'
+    );
+  }
+
   const remoteDefsPath = joinPathFragments(
     hostConfig.sourceRoot,
     'remotes.d.ts'
@@ -52,7 +60,7 @@ export function updateHostWithRemote(
   } else {
     // TODO(jack): Point to the nx.dev guide when ready.
     logger.warn(
-      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nrwl/react:host"?`
+      `Could not find configuration at ${moduleFederationConfigPath}. Did you generate this project with "@nx/react:host"?`
     );
   }
 
@@ -70,7 +78,7 @@ export function updateHostWithRemote(
     );
   } else {
     logger.warn(
-      `Could not find remote definitions at ${remoteDefsPath}. Did you generate this project with "@nrwl/react:host"?`
+      `Could not find remote definitions at ${remoteDefsPath}. Did you generate this project with "@nx/react:host"?`
     );
   }
 
@@ -91,7 +99,7 @@ export function updateHostWithRemote(
     );
   } else {
     logger.warn(
-      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nrwl/react:host"?`
+      `Could not find app component at ${appComponentPath}. Did you generate this project with "@nx/react:host"?`
     );
   }
 }

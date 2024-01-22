@@ -1,6 +1,5 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments } from '@nrwl/devkit';
-import type { Ignore } from 'ignore';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import ignore from 'ignore';
 
 export function getAllFilesRecursivelyFromDir(
@@ -26,7 +25,7 @@ export function getAllFilesRecursivelyFromDir(
 }
 
 function isPathIgnored(tree: Tree, path: string): boolean {
-  let ig: Ignore;
+  let ig: ReturnType<typeof ignore>;
   if (tree.exists('.gitignore')) {
     ig = ignore();
     ig.add(tree.read('.gitignore', 'utf-8'));

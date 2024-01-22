@@ -1,5 +1,5 @@
-import { Tree } from '@nrwl/devkit/';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+import { Tree } from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { applicationGenerator } from '../application/application';
 import { e2eProjectGenerator } from './e2e-project';
 
@@ -14,6 +14,7 @@ describe('e2eProjectGenerator', () => {
       name: 'api',
       framework: 'express',
       e2eTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
@@ -29,6 +30,7 @@ describe('e2eProjectGenerator', () => {
       framework: 'express',
       e2eTestRunner: 'none',
       rootProject: true,
+      projectNameAndRootFormat: 'as-provided',
     });
     await e2eProjectGenerator(tree, {
       projectType: 'server',
@@ -44,6 +46,7 @@ describe('e2eProjectGenerator', () => {
       name: 'api',
       framework: 'none',
       e2eTestRunner: 'none',
+      projectNameAndRootFormat: 'as-provided',
     });
     await e2eProjectGenerator(tree, {
       projectType: 'cli',
@@ -56,14 +59,13 @@ describe('e2eProjectGenerator', () => {
 
       describe('CLI tests', () => {
         it('should print a message', () => {
-          const cliPath = join(process.cwd(), \\"dist/api\\");
+          const cliPath = join(process.cwd(), 'dist/api');
 
           const output = execSync(\`node \${cliPath}\`).toString();
 
           expect(output).toMatch(/Hello World/);
         });
       });
-
       "
     `);
   });

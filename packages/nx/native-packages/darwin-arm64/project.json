@@ -1,0 +1,4 @@
+{
+  "name": "darwin-arm64",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json"
+}

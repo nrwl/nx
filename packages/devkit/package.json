@@ -1,8 +1,8 @@
 {
-  "name": "@nrwl/devkit",
+  "name": "@nx/devkit",
   "version": "0.0.1",
   "private": false,
-  "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more.",
+  "description": "The Nx Devkit is used to customize Nx for different technologies and use cases. It contains many utility functions for reading and writing files, updating configuration, working with Abstract Syntax Trees(ASTs), and more. Learn more about [extending Nx by leveraging the Nx Devkit](https://nx.dev/extending-nx/intro/getting-started) on our docs.",
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -19,7 +19,7 @@
     "Cypress",
     "CLI"
   ],
-  "main": "./index.js",
+  "main": "./index",
   "typings": "./index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
@@ -29,19 +29,19 @@
   "homepage": "https://nx.dev",
   "dependencies": {
     "ejs": "^3.1.7",
+    "enquirer": "~2.3.6",
     "ignore": "^5.0.4",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
-    "@phenomnomnominal/tsquery": "4.1.1",
-    "semver": "7.3.4"
+    "semver": "7.5.3"
   },
   "peerDependencies": {
-    "nx": ">= 14.1 <= 16"
-  },
-  "nx-migrations": {
-    "migrations": "./migrations.json"
+    "nx": ">= 16 <= 18"
   },
   "publishConfig": {
     "access": "public"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
   }
 }

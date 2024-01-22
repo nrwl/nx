@@ -1,4 +1,3 @@
-import 'dotenv/config';
 import * as ts from 'typescript';
 import * as rollup from 'rollup';
 import * as peerDepsExternal from 'rollup-plugin-peer-deps-external';
@@ -6,15 +5,15 @@ import { getBabelInputPlugin } from '@rollup/plugin-babel';
 import { dirname, join, parse, resolve } from 'path';
 import { from, Observable, of } from 'rxjs';
 import { catchError, concatMap, last, scan, tap } from 'rxjs/operators';
-import { eachValueFrom } from '@nrwl/devkit/src/utils/rxjs-for-await';
+import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import * as autoprefixer from 'autoprefixer';
-import type { ExecutorContext } from '@nrwl/devkit';
-import { joinPathFragments, logger, names, readJsonFile } from '@nrwl/devkit';
+import type { ExecutorContext } from '@nx/devkit';
+import { joinPathFragments, logger, names, readJsonFile } from '@nx/devkit';
 import {
-  calculateProjectDependencies,
+  calculateProjectBuildableDependencies,
   computeCompilerOptionsPaths,
   DependentBuildableProjectNode,
-} from '@nrwl/workspace/src/utilities/buildable-libs-utils';
+} from '@nx/js/src/utils/buildable-libs-utils';
 import nodeResolve from '@rollup/plugin-node-resolve';
 
 import { AssetGlobPattern, RollupExecutorOptions } from './schema';
@@ -26,8 +25,8 @@ import {
 import { analyze } from './lib/analyze-plugin';
 import { deleteOutputDir } from '../../utils/fs';
 import { swc } from './lib/swc-plugin';
-import { validateTypes } from './lib/validate-types';
 import { updatePackageJson } from './lib/update-package-json';
+import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
 
 export type RollupExecutorEvent = {
   success: boolean;
@@ -52,7 +51,8 @@ export async function* rollupExecutor(
 
   const project = context.projectsConfigurations.projects[context.projectName];
   const sourceRoot = project.sourceRoot;
-  const { target, dependencies } = calculateProjectDependencies(
+  const { target, dependencies } = calculateProjectBuildableDependencies(
+    context.taskGraph,
     context.projectGraph,
     context.root,
     context.projectName,
@@ -63,7 +63,7 @@ export async function* rollupExecutor(
 
   const options = normalizeRollupExecutorOptions(
     rawOptions,
-    context.root,
+    context,
     sourceRoot
   );
 
@@ -84,18 +84,6 @@ export async function* rollupExecutor(
 
   const outfile = resolveOutfile(context, options);
 
-  if (options.compiler === 'swc') {
-    try {
-      await validateTypes({
-        workspaceRoot: context.root,
-        projectRoot: options.projectRoot,
-        tsconfig: options.tsConfig,
-      });
-    } catch {
-      return { success: false };
-    }
-  }
-
   if (options.watch) {
     const watcher = rollup.watch(rollupOptions);
     return yield* eachValueFrom(
@@ -104,13 +92,7 @@ export async function* rollupExecutor(
           if (data.code === 'START') {
             logger.info(`Bundling ${context.projectName}...`);
           } else if (data.code === 'END') {
-            updatePackageJson(
-              options,
-              context,
-              target,
-              dependencies,
-              packageJson
-            );
+            updatePackageJson(options, packageJson);
             logger.info('Bundle complete. Watching for file changes...');
             obs.next({ success: true, outfile });
           } else if (data.code === 'ERROR') {
@@ -142,7 +124,7 @@ export async function* rollupExecutor(
             })
           )
         ),
-        scan<RollupExecutorEvent>(
+        scan<RollupExecutorEvent, RollupExecutorEvent>(
           (acc, result) => {
             if (!acc.success) return acc;
             return result;
@@ -158,13 +140,7 @@ export async function* rollupExecutor(
                 2
               )}s`;
 
-              updatePackageJson(
-                options,
-                context,
-                target,
-                dependencies,
-                packageJson
-              );
+              updatePackageJson(options, packageJson);
               logger.info(`⚡ Done in ${duration}`);
             } else {
               logger.error(`Bundle failed: ${context.projectName}`);
@@ -203,6 +179,10 @@ export function createRollupOptions(
   }
 
   return options.format.map((format, idx) => {
+    // Either we're generating only one format, so we should bundle types
+    // OR we are generating dual formats, so only bundle types for CJS.
+    const shouldBundleTypes = options.format.length === 1 || format === 'cjs';
+
     const plugins = [
       copy({
         targets: convertCopyAssetsToRollupOptions(
@@ -212,9 +192,9 @@ export function createRollupOptions(
       }),
       image(),
       json(),
-      (useTsc || useBabel) &&
+      (useTsc || shouldBundleTypes) &&
         require('rollup-plugin-typescript2')({
-          check: true,
+          check: !options.skipTypeCheck,
           tsconfig: options.tsConfig,
           tsconfigOverride: {
             compilerOptions: createTsCompilerOptions(
@@ -223,6 +203,11 @@ export function createRollupOptions(
               options
             ),
           },
+        }),
+      shouldBundleTypes &&
+        typeDefinitions({
+          main: options.main,
+          projectRoot: options.projectRoot,
         }),
       peerDepsExternal({
         packageJsonPath: options.project,
@@ -245,7 +230,7 @@ export function createRollupOptions(
       useSwc && swc(),
       useBabel &&
         getBabelInputPlugin({
-          // Lets `@nrwl/js/babel` preset know that we are packaging.
+          // Lets `@nx/js/babel` preset know that we are packaging.
           caller: {
             // @ts-ignore
             // Ignoring type checks for caller since we have custom attributes
@@ -255,7 +240,7 @@ export function createRollupOptions(
             isModern: true,
           },
           cwd: join(context.root, sourceRoot),
-          rootMode: 'upward',
+          rootMode: options.babelUpwardRootMode ? 'upward' : undefined,
           babelrc: true,
           extensions: fileExtensions,
           babelHelpers: 'bundled',
@@ -271,28 +256,40 @@ export function createRollupOptions(
       analyze(),
     ];
 
-    const externalPackages = dependencies
-      .map((d) => d.name)
-      .concat(options.external || [])
-      .concat(Object.keys(packageJson.dependencies || {}));
+    let externalPackages = [
+      ...Object.keys(packageJson.dependencies || {}),
+      ...Object.keys(packageJson.peerDependencies || {}),
+    ]; // If external is set to none, include all dependencies and peerDependencies in externalPackages
+    if (options.external === 'all') {
+      externalPackages = externalPackages
+        .concat(dependencies.map((d) => d.name))
+        .concat(npmDeps);
+    } else if (Array.isArray(options.external) && options.external.length > 0) {
+      externalPackages = externalPackages.concat(options.external);
+    }
+    externalPackages = [...new Set(externalPackages)];
+
+    const mainEntryFileName = options.outputFileName || options.main;
+    const input: Record<string, string> = {};
+    input[parse(mainEntryFileName).name] = options.main;
+    options.additionalEntryPoints.forEach((entry) => {
+      input[parse(entry).name] = entry;
+    });
 
     const rollupConfig = {
-      input: options.outputFileName
-        ? {
-            [parse(options.outputFileName).name]: options.main,
-          }
-        : options.main,
+      input,
       output: {
         format,
         dir: `${options.outputPath}`,
         name: names(context.projectName).className,
-        entryFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
-        chunkFileNames: `[name].${format === 'esm' ? 'js' : 'cjs'}`,
+        entryFileNames: `[name].${format}.js`,
+        chunkFileNames: `[name].${format}.js`,
       },
-      external: (id) =>
-        externalPackages.some(
+      external: (id: string) => {
+        return externalPackages.some(
           (name) => id === name || id.startsWith(`${name}/`)
-        ) || npmDeps.some((name) => id === name || id.startsWith(`${name}/`)), // Could be a deep import
+        ); // Could be a deep import
+      },
       plugins,
     };
 
@@ -304,18 +301,21 @@ export function createRollupOptions(
 
 function createTsCompilerOptions(
   config: ts.ParsedCommandLine,
-  dependencies,
-  options
+  dependencies: DependentBuildableProjectNode[],
+  options: NormalizedRollupExecutorOptions
 ) {
   const compilerOptionPaths = computeCompilerOptionsPaths(config, dependencies);
   const compilerOptions = {
     rootDir: options.projectRoot,
-    allowJs: false,
+    allowJs: options.allowJs,
     declaration: true,
     paths: compilerOptionPaths,
   };
   if (config.options.module === ts.ModuleKind.CommonJS) {
     compilerOptions['module'] = 'ESNext';
+  }
+  if (options.compiler === 'swc') {
+    compilerOptions['emitDeclarationOnly'] = true;
   }
   return compilerOptions;
 }
@@ -337,7 +337,9 @@ function convertCopyAssetsToRollupOptions(
     : undefined;
 }
 
-function readCompatibleFormats(config: ts.ParsedCommandLine) {
+function readCompatibleFormats(
+  config: ts.ParsedCommandLine
+): ('cjs' | 'esm')[] {
   switch (config.options.module) {
     case ts.ModuleKind.CommonJS:
     case ts.ModuleKind.UMD:
@@ -354,7 +356,7 @@ function resolveOutfile(
 ) {
   if (!options.format?.includes('cjs')) return undefined;
   const { name } = parse(options.outputFileName ?? options.main);
-  return resolve(context.root, options.outputPath, `${name}.cjs`);
+  return resolve(context.root, options.outputPath, `${name}.cjs.js`);
 }
 
 export default rollupExecutor;

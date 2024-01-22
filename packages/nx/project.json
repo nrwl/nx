@@ -12,13 +12,22 @@
         "dist": "packages/nx/src/native",
         "jsFile": "packages/nx/src/native/index.js",
         "release": true
+      },
+      "configurations": {
+        "local": {
+          "release": false
+        }
       }
     },
+    "copy-native-package-directories": {
+      "command": "node scripts/copy.js build/packages/nx/native-packages/* build/packages"
+    },
     "artifacts": {
-      "command": "yarn napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages/nx/native-packages"
+      "dependsOn": ["copy-native-package-directories"],
+      "command": "pnpm napi artifacts -c build/packages/nx/package.json -d ./artifacts --dist build/packages"
     },
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "main": "packages/nx/bin/nx.ts",
         "assets": [
@@ -70,6 +79,14 @@
       "command": "echo hi"
     },
     "build": {
+      "dependsOn": ["^build-client", "build-base", "build-native"],
+      "inputs": [
+        "production",
+        "^production",
+        {
+          "dependentTasksOutputFiles": "**/*.node"
+        }
+      ],
       "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/nx"],
       "options": {
@@ -85,16 +102,13 @@
           },
           {
             "command": "node ./scripts/copy-readme.js nx"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/cli"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
           }
         ],
         "parallel": false
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js nx @nrwl/tao"
     },
     "lint": {},
     "test": {},

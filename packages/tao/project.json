@@ -6,7 +6,7 @@
   "targets": {
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "assets": [
           {

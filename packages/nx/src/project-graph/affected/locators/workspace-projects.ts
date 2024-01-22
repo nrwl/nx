@@ -1,4 +1,4 @@
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import {
@@ -26,15 +26,8 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
   projectGraphNodes,
   nxJson
 ): string[] => {
-  const implicits = { ...nxJson.implicitDependencies };
-  const globalFiles = [
-    ...extractGlobalFilesFromInputs(nxJson),
-    'nx.json',
-    'package-lock.json',
-    'yarn.lock',
-    'pnpm-lock.yaml',
-    'pnpm-lock.yml',
-  ];
+  const implicits = {};
+  const globalFiles = [...extractGlobalFilesFromInputs(nxJson), 'nx.json'];
   globalFiles.forEach((file) => {
     implicits[file] = '*' as any;
   });
@@ -56,7 +49,7 @@ export const getImplicitlyTouchedProjects: TouchedProjectLocator = (
 
   for (const [pattern, projects] of Object.entries(implicits)) {
     const implicitDependencyWasChanged = fileChanges.some((f) =>
-      minimatch(f.file, pattern)
+      minimatch(f.file, pattern, { dot: true })
     );
     if (!implicitDependencyWasChanged) {
       continue;

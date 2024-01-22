@@ -1,0 +1,36 @@
+{
+  "executors": {
+    "build": {
+      "implementation": "@nx/next/src/executors/build/build.impl",
+      "schema": "@nx/next/src/executors/build/schema.json",
+      "description": "Build a Next.js application."
+    },
+    "server": {
+      "implementation": "@nx/next/src/executors/server/server.impl",
+      "schema": "@nx/next/src/executors/server/schema.json",
+      "description": "Serve a Next.js application."
+    },
+    "export": {
+      "implementation": "@nx/next/src/executors/export/export.impl",
+      "schema": "@nx/next/src/executors/export/schema.json",
+      "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`."
+    }
+  },
+  "builders": {
+    "build": {
+      "implementation": "@nx/next/src/executors/build/compat",
+      "schema": "@nx/next/src/executors/build/schema.json",
+      "description": "Build a Next.js application."
+    },
+    "server": {
+      "implementation": "@nx/next/src/executors/server/compat",
+      "schema": "@nx/next/src/executors/server/schema.json",
+      "description": "Serve a Next.js application."
+    },
+    "export": {
+      "implementation": "@nx/next/src/executors/export/compat",
+      "schema": "@nx/next/src/executors/export/schema.json",
+      "description": "Export a Next.js application. The exported application is located at `dist/$outputPath/exported`."
+    }
+  }
+}

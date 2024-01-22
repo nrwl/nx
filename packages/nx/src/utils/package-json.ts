@@ -6,7 +6,6 @@ import {
 } from '../config/workspace-json-project-json';
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
-import { workspaceRoot } from './workspace-root';
 
 export type PackageJsonTargetConfiguration = Omit<
   TargetConfiguration,
@@ -39,6 +38,7 @@ export interface PackageJson {
   name: string;
   version: string;
   license?: string;
+  private?: boolean;
   scripts?: Record<string, string>;
   type?: 'module' | 'commonjs';
   main?: string;
@@ -57,7 +57,7 @@ export interface PackageJson {
   peerDependenciesMeta?: Record<string, { optional: boolean }>;
   resolutions?: Record<string, string>;
   overrides?: PackageOverride;
-  bin?: Record<string, string>;
+  bin?: Record<string, string> | string;
   workspaces?:
     | string[]
     | {
@@ -132,6 +132,26 @@ export function buildTargetFromScript(
       script,
     },
   };
+}
+
+export function readTargetsFromPackageJson({ scripts, nx }: PackageJson) {
+  const res: Record<string, TargetConfiguration> = {};
+  Object.keys(scripts || {}).forEach((script) => {
+    if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
+      res[script] = buildTargetFromScript(script, nx);
+    }
+  });
+
+  // Add implicit nx-release-publish target for all package.json files to allow for lightweight configuration for package based repos
+  if (!res['nx-release-publish']) {
+    res['nx-release-publish'] = {
+      dependsOn: ['^nx-release-publish'],
+      executor: '@nx/js:release-publish',
+      options: {},
+    };
+  }
+
+  return res;
 }
 
 /**

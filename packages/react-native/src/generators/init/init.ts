@@ -1,75 +1,37 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
-  detectPackageManager,
   formatFiles,
   GeneratorCallback,
+  readNxJson,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { Schema } from './schema';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { addBabelInputs } from '@nrwl/js/src/utils/add-babel-inputs';
-import { jestInitGenerator } from '@nrwl/jest';
-import { detoxInitGenerator } from '@nrwl/detox';
-import { babelPresetReactVersion } from '@nrwl/react/src/utils/versions';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
-
+  updateNxJson,
+} from '@nx/devkit';
+import { ReactNativePluginOptions } from '../../../plugins/plugin';
 import {
-  babelRuntimeVersion,
-  jestReactNativeVersion,
-  metroVersion,
   nxVersion,
   reactDomVersion,
-  reactNativeAsyncStorageAsyncStorageVersion,
   reactNativeCommunityCli,
   reactNativeCommunityCliAndroid,
   reactNativeCommunityCliIos,
-  reactNativeConfigVersion,
-  reactNativeSvgTransformerVersion,
-  reactNativeSvgVersion,
   reactNativeVersion,
-  reactTestRendererVersion,
   reactVersion,
-  testingLibraryJestNativeVersion,
-  testingLibraryReactNativeVersion,
-  typesNodeVersion,
-  typesReactNativeVersion,
-  typesReactVersion,
 } from '../../utils/versions';
-
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
+import { Schema } from './schema';
 
 export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
-  addBabelInputs(host);
+
+  if (process.env.NX_PCV3 === 'true') {
+    addPlugin(host);
+  }
+
   const tasks: GeneratorCallback[] = [];
-
-  tasks.push(
-    await jsInitGenerator(host, {
-      ...schema,
-      skipFormat: true,
-    })
-  );
-
   if (!schema.skipPackageJson) {
-    const installTask = updateDependencies(host);
-
     tasks.push(moveDependency(host));
-    tasks.push(installTask);
-  }
-
-  if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const jestTask = await jestInitGenerator(host, schema);
-    tasks.push(jestTask);
-  }
-
-  if (!schema.e2eTestRunner || schema.e2eTestRunner === 'detox') {
-    const detoxTask = await detoxInitGenerator(host, {
-      ...schema,
-      skipFormat: true,
-    });
-    tasks.push(detoxTask);
+    tasks.push(updateDependencies(host, schema));
   }
 
   if (!schema.skipFormat) {
@@ -79,8 +41,7 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree) {
-  const isPnpm = detectPackageManager(host.root) === 'pnpm';
+export function updateDependencies(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     host,
     {
@@ -89,44 +50,48 @@ export function updateDependencies(host: Tree) {
       'react-native': reactNativeVersion,
     },
     {
-      '@nrwl/react-native': nxVersion,
-      '@types/node': typesNodeVersion,
-      '@types/react': typesReactVersion,
-      '@types/react-native': typesReactNativeVersion,
+      '@nx/react-native': nxVersion,
       '@react-native-community/cli': reactNativeCommunityCli,
       '@react-native-community/cli-platform-android':
         reactNativeCommunityCliAndroid,
       '@react-native-community/cli-platform-ios': reactNativeCommunityCliIos,
-      '@testing-library/react-native': testingLibraryReactNativeVersion,
-      '@testing-library/jest-native': testingLibraryJestNativeVersion,
-      'jest-react-native': jestReactNativeVersion,
-      metro: metroVersion,
-      'metro-resolver': metroVersion,
-      'metro-babel-register': metroVersion,
-      'metro-react-native-babel-preset': metroVersion,
-      'metro-react-native-babel-transformer': metroVersion,
-      'react-test-renderer': reactTestRendererVersion,
-      'react-native-svg-transformer': reactNativeSvgTransformerVersion,
-      'react-native-svg': reactNativeSvgVersion,
-      'react-native-config': reactNativeConfigVersion,
-      '@react-native-async-storage/async-storage':
-        reactNativeAsyncStorageAsyncStorageVersion,
-      '@babel/preset-react': babelPresetReactVersion,
-      ...(isPnpm
-        ? {
-            'metro-config': metroVersion, // metro-config is used by metro.config.js
-            '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
-          }
-        : {}),
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 
 function moveDependency(host: Tree) {
-  return removeDependenciesFromPackageJson(host, ['@nrwl/react-native'], []);
+  return removeDependenciesFromPackageJson(host, ['@nx/react-native'], []);
+}
+
+function addPlugin(host: Tree) {
+  const nxJson = readNxJson(host);
+  nxJson.plugins ??= [];
+
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/react-native/plugin'
+        : plugin.plugin === '@nx/react-native/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/react-native/plugin',
+    options: {
+      startTargetName: 'start',
+      podInstallTargetName: 'pod-install',
+      bundleTargetName: 'bundle',
+      runIosTargetName: 'run-ios',
+      runAndroidTargetName: 'run-android',
+      buildIosTargetName: 'build-ios',
+      buildAndroidTargetName: 'build-android',
+    } as ReactNativePluginOptions,
+  });
+  updateNxJson(host, nxJson);
 }
 
 export default reactNativeInitGenerator;
-export const reactNativeInitSchematic = convertNxGenerator(
-  reactNativeInitGenerator
-);

@@ -1,65 +1,58 @@
-import type { Tree } from '@nrwl/devkit';
-import {
-  createProjectGraphAsync,
-  joinPathFragments,
-  readNxJson,
-  readProjectConfiguration,
-} from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import { names, readProjectConfiguration } from '@nx/devkit';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import type { AngularProjectConfiguration } from '../../../utils/types';
+import { buildSelector } from '../../utils/selector';
 import type { NormalizedSchema, Schema } from '../schema';
-import {
-  createProjectRootMappings,
-  findProjectForPath,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-
-async function findProjectFromOptions(options: Schema) {
-  const projectGraph = await createProjectGraphAsync();
-  const projectRootMappings = createProjectRootMappings(projectGraph.nodes);
-
-  // path can be undefined when running on the root of the workspace, we default to the root
-  // to handle standalone layouts
-  return findProjectForPath(options.path || '', projectRootMappings);
-}
 
 export async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
-  const project =
-    options.project ??
-    (await findProjectFromOptions(options)) ??
-    readNxJson(tree).defaultProject;
+  options.type ??= 'component';
+  const {
+    artifactName: name,
+    directory,
+    fileName,
+    filePath,
+    project: projectName,
+  } = await determineArtifactNameAndDirectoryOptions(tree, {
+    artifactType: 'component',
+    callingGenerator: '@nx/angular:component',
+    name: options.name,
+    directory: options.directory ?? options.path,
+    flat: options.flat,
+    nameAndDirectoryFormat: options.nameAndDirectoryFormat,
+    project: options.project,
+    suffix: options.type ?? 'component',
+  });
 
-  if (!project) {
-    // path is hidden, so if not provided we don't suggest setting it
-    if (!options.path) {
-      throw new Error(
-        'No "project" was specified and "defaultProject" is not set in the workspace configuration. Please provide the "project" option and try again.'
-      );
-    }
+  const { className } = names(name);
+  const { className: suffixClassName } = names(options.type);
+  const symbolName = `${className}${suffixClassName}`;
 
-    // path was provided, so it's wrong and we should mention it
-    throw new Error(
-      'The provided "path" is wrong and no "project" was specified and "defaultProject" is not set in the workspace configuration. ' +
-        'Please provide a correct "path" or provide the "project" option instead and try again.'
-    );
-  }
-
-  const { projectType, root, sourceRoot } = readProjectConfiguration(
+  const { prefix, root, sourceRoot } = readProjectConfiguration(
     tree,
-    project
-  );
-  const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
-  const path =
-    options.path ??
-    joinPathFragments(
-      projectSourceRoot,
-      projectType === 'application' ? 'app' : 'lib'
-    );
+    projectName
+  ) as AngularProjectConfiguration;
+
+  const selector =
+    options.selector ??
+    buildSelector(tree, name, options.prefix, prefix, 'fileName');
 
   return {
     ...options,
-    path,
-    project,
-    projectSourceRoot,
+    name,
+    projectName,
+    changeDetection: options.changeDetection ?? 'Default',
+    style: options.style ?? 'css',
+    standalone: options.standalone ?? true,
+    directory,
+    fileName,
+    filePath,
+    symbolName,
+    projectSourceRoot: sourceRoot,
+    projectRoot: root,
+    selector,
   };
 }

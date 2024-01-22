@@ -1,12 +1,5 @@
-import { joinPathFragments, workspaceRoot } from '@nrwl/devkit';
+import { joinPathFragments } from '@nx/devkit';
 import { basename, dirname, relative } from 'path';
-
-export function pathStartsWith(path1: string, path2: string): boolean {
-  const normalizedPath1 = joinPathFragments(workspaceRoot, path1);
-  const normalizedPath2 = joinPathFragments(workspaceRoot, path2);
-
-  return normalizedPath1.startsWith(normalizedPath2);
-}
 
 export function getRelativeImportToFile(
   sourceFilePath: string,

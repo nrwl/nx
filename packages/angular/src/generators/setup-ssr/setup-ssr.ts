@@ -1,40 +1,55 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
-  addDependenciesToPackageJson,
   formatFiles,
   installPackagesTask,
-} from '@nrwl/devkit';
-import { getPkgVersionsForAngularMajorVersion } from '../../utils/version-utils';
+  readProjectConfiguration,
+} from '@nx/devkit';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
+  addDependencies,
+  addHydration,
   generateSSRFiles,
+  generateTsConfigServerJsonForBrowserBuilder,
   normalizeOptions,
+  setRouterInitialNavigation,
+  setServerTsConfigOptionsForApplicationBuilder,
   updateAppModule,
-  updateProjectConfig,
+  updateProjectConfigForApplicationBuilder,
+  updateProjectConfigForBrowserBuilder,
+  validateOptions,
 } from './lib';
 import type { Schema } from './schema';
 
 export async function setupSsr(tree: Tree, schema: Schema) {
+  validateOptions(tree, schema);
   const options = normalizeOptions(tree, schema);
 
-  generateSSRFiles(tree, options);
-  updateAppModule(tree, options);
-  updateProjectConfig(tree, options);
+  const { targets } = readProjectConfiguration(tree, options.project);
+  const isUsingApplicationBuilder =
+    targets.build.executor === '@angular-devkit/build-angular:application';
 
-  const installedAngularVersion = getInstalledAngularVersionInfo(tree);
-  const { angularVersion: ngPlatformServerVersion, ngUniversalVersion } =
-    getPkgVersionsForAngularMajorVersion(installedAngularVersion.major);
+  addDependencies(tree);
+  generateSSRFiles(tree, options, isUsingApplicationBuilder);
 
-  addDependenciesToPackageJson(
-    tree,
-    {
-      '@nguniversal/express-engine': ngUniversalVersion,
-      '@angular/platform-server': ngPlatformServerVersion,
-    },
-    {
-      '@nguniversal/builders': ngUniversalVersion,
-    }
-  );
+  if (!options.standalone) {
+    updateAppModule(tree, options);
+  }
+  if (options.hydration) {
+    addHydration(tree, options);
+  }
+
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  if (angularMajorVersion < 17 || !options.hydration) {
+    setRouterInitialNavigation(tree, options);
+  }
+
+  if (isUsingApplicationBuilder) {
+    updateProjectConfigForApplicationBuilder(tree, options);
+    setServerTsConfigOptionsForApplicationBuilder(tree, options);
+  } else {
+    updateProjectConfigForBrowserBuilder(tree, options);
+    generateTsConfigServerJsonForBrowserBuilder(tree, options);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);

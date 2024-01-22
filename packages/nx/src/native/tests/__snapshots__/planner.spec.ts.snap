@@ -1,0 +1,141 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`task planner dependentTasksOutputFiles should depend on dependent tasks output files 1`] = `
+{
+  "parent:build": [
+    "**/*.d.ts:dist/libs/child",
+    "**/*.d.ts:dist/libs/grandchild",
+    "AllExternalDependencies",
+    "parent:!{projectRoot}/**/*.spec.ts",
+    "parent:ProjectConfiguration",
+    "parent:TsConfig",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/nx.json",
+  ],
+}
+`;
+
+exports[`task planner should be able to handle multiple filesets per project 1`] = `
+{
+  "parent:test": [
+    "AllExternalDependencies",
+    "child:!{projectRoot}/**/*.spec.ts",
+    "child:ProjectConfiguration",
+    "child:TsConfig",
+    "env:MY_TEST_HASH_ENV",
+    "parent:ProjectConfiguration",
+    "parent:TsConfig",
+    "parent:{projectRoot}/**/*",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/global1",
+    "{workspaceRoot}/global2",
+    "{workspaceRoot}/nx.json",
+  ],
+}
+`;
+
+exports[`task planner should build plans where the project graph has circular dependencies 1`] = `
+{
+  "child:build": [
+    "AllExternalDependencies",
+    "child:ProjectConfiguration",
+    "child:TsConfig",
+    "child:{projectRoot}/**/*",
+    "parent:ProjectConfiguration",
+    "parent:TsConfig",
+    "parent:{projectRoot}/**/*",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/nx.json",
+  ],
+  "parent:build": [
+    "AllExternalDependencies",
+    "child:ProjectConfiguration",
+    "child:TsConfig",
+    "child:{projectRoot}/**/*",
+    "parent:ProjectConfiguration",
+    "parent:TsConfig",
+    "parent:{projectRoot}/**/*",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/nx.json",
+  ],
+}
+`;
+
+exports[`task planner should include npm projects 1`] = `
+{
+  "app:build": [
+    "AllExternalDependencies",
+    "app:ProjectConfiguration",
+    "app:TsConfig",
+    "app:{projectRoot}/**/*",
+    "npm:react",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/nx.json",
+  ],
+}
+`;
+
+exports[`task planner should make a plan with multiple filesets of a project 1`] = `
+{
+  "parent:build": [
+    "AllExternalDependencies",
+    "parent:!{projectRoot}/**/*.spec.ts",
+    "parent:ProjectConfiguration",
+    "parent:TsConfig",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/nx.json",
+  ],
+  "parent:test": [
+    "AllExternalDependencies",
+    "parent:ProjectConfiguration",
+    "parent:TsConfig",
+    "parent:{projectRoot}/**/*",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/nx.json",
+  ],
+}
+`;
+
+exports[`task planner should plan non-default filesets 1`] = `
+{
+  "parent:build": [
+    "AllExternalDependencies",
+    "child:ProjectConfiguration",
+    "child:TsConfig",
+    "child:{projectRoot}/**/*",
+    "parent:!{projectRoot}/**/*.spec.ts",
+    "parent:ProjectConfiguration",
+    "parent:TsConfig",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/nx.json",
+  ],
+}
+`;
+
+exports[`task planner should plan the task where the project has dependencies 1`] = `
+{
+  "parent:build": [
+    "AllExternalDependencies",
+    "child:ProjectConfiguration",
+    "child:TsConfig",
+    "child:{projectRoot}/**/*",
+    "grandchild:ProjectConfiguration",
+    "grandchild:TsConfig",
+    "grandchild:{projectRoot}/**/*",
+    "parent:ProjectConfiguration",
+    "parent:TsConfig",
+    "parent:{projectRoot}/**/*",
+    "{workspaceRoot}/.gitignore",
+    "{workspaceRoot}/.nxignore",
+    "{workspaceRoot}/nx.json",
+  ],
+}
+`;

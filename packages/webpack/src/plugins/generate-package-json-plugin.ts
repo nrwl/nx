@@ -1,28 +1,31 @@
 import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
-import { createLockFile, createPackageJson } from '@nrwl/js';
 import {
-  ExecutorContext,
-  type ProjectGraph,
-  serializeJson,
-} from '@nrwl/devkit';
-import {
+  createLockFile,
+  createPackageJson,
   getHelperDependenciesFromProjectGraph,
+  getLockFileName,
   HelperDependency,
   readTsConfig,
-} from '@nrwl/js';
-import { getLockFileName } from 'nx/src/lock-file/lock-file';
+} from '@nx/js';
+import {
+  detectPackageManager,
+  type ProjectGraph,
+  serializeJson,
+} from '@nx/devkit';
 
 const pluginName = 'GeneratePackageJsonPlugin';
 
 export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
-  private readonly projectGraph: ProjectGraph;
-
   constructor(
-    private readonly options: { tsConfig: string; outputFileName: string },
-    private readonly context: ExecutorContext
-  ) {
-    this.projectGraph = context.projectGraph;
-  }
+    private readonly options: {
+      tsConfig: string;
+      outputFileName: string;
+      root: string;
+      projectName: string;
+      targetName: string;
+      projectGraph: ProjectGraph;
+    }
+  ) {}
 
   apply(compiler: Compiler): void {
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
@@ -33,9 +36,9 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
         },
         () => {
           const helperDependencies = getHelperDependenciesFromProjectGraph(
-            this.context.root,
-            this.context.projectName,
-            this.projectGraph
+            this.options.root,
+            this.options.projectName,
+            this.options.projectGraph
           );
 
           const importHelpers = !!readTsConfig(this.options.tsConfig).options
@@ -49,22 +52,20 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
           if (shouldAddHelperDependency) {
             helperDependencies.push({
               type: 'static',
-              source: this.context.projectName,
+              source: this.options.projectName,
               target: HelperDependency.tsc,
             });
           }
 
-          if (helperDependencies.length > 0) {
-            this.projectGraph.dependencies[this.context.projectName] =
-              this.projectGraph.dependencies[this.context.projectName].concat(
-                helperDependencies
-              );
-          }
-
           const packageJson = createPackageJson(
-            this.context.projectName,
-            this.projectGraph,
-            { root: this.context.root, isProduction: true }
+            this.options.projectName,
+            this.options.projectGraph,
+            {
+              target: this.options.targetName,
+              root: this.options.root,
+              isProduction: true,
+              helperDependencies: helperDependencies.map((dep) => dep.target),
+            }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
 
@@ -72,9 +73,16 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             'package.json',
             new sources.RawSource(serializeJson(packageJson))
           );
+          const packageManager = detectPackageManager(this.options.root);
           compilation.emitAsset(
-            getLockFileName(),
-            new sources.RawSource(createLockFile(packageJson))
+            getLockFileName(packageManager),
+            new sources.RawSource(
+              createLockFile(
+                packageJson,
+                this.options.projectGraph,
+                packageManager
+              )
+            )
           );
         }
       );

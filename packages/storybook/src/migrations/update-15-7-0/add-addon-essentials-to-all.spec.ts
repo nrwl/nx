@@ -2,8 +2,8 @@ import {
   addProjectConfiguration,
   ProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as variousProjects from './test-configs/various-configs.json';
 import addAddonEssentialsToAll from './add-addon-essentials-to-all';
 

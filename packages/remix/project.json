@@ -1,0 +1,53 @@
+{
+  "name": "remix",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/remix/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "command": "node ./scripts/copy-readme.js remix",
+      "outputs": ["{workspaceRoot}/build/packages/remix"]
+    },
+    "lint": {},
+    "test": {},
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "build/packages/remix",
+        "tsConfig": "packages/remix/tsconfig.lib.json",
+        "packageJson": "packages/remix/package.json",
+        "main": "packages/remix/index.ts",
+        "generateExportsField": true,
+        "additionalEntryPoints": [
+          "{projectRoot}/{executors,generators,migrations}.json",
+          "{projectRoot}/generators.ts"
+        ],
+        "assets": [
+          "packages/remix/*.md",
+          {
+            "input": "./packages/remix/src",
+            "glob": "**/!(*.ts)",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/remix/src",
+            "glob": "**/*.d.ts",
+            "output": "./src"
+          },
+          {
+            "input": "./packages/remix",
+            "glob": "**.json",
+            "output": ".",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"]
+          },
+          "LICENSE"
+        ]
+      }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js remix @nrwl/remix"
+    }
+  },
+  "tags": []
+}

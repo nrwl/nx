@@ -1,10 +1,19 @@
-import { Tree } from '@nrwl/devkit';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
+import { Tree } from '@nx/devkit';
+import { insertImport } from '@nx/js';
 import { addRouteToNgModule } from './ast-utils';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 
+/**
+ * Add a new route to a routes definition
+ * @param tree Virtual Tree
+ * @param routesFile File containing the routes definition
+ * @param route Route to add
+ * @param lazy If Route should be lazy-loaded
+ * @param routesConst Used when eager-loading a route: Class name of the Component
+ * @param importPath Used when eager-loading a route: The import path to the Component
+ */
 export function addRoute(
   tree: Tree,
   routesFile: string,
@@ -81,6 +90,13 @@ export function addRoute(
   tree.write(routesFile, newRoutesFileContents);
 }
 
+/**
+ * Add a provider to a standalone routes definition
+ * @param tree Virtual Tree
+ * @param routesFile The file containing the routes definition
+ * @param routeToAddProviderTo The route to add the provider to
+ * @param providerToAdd The provider to add to the route
+ */
 export function addProviderToRoute(
   tree: Tree,
   routesFile: string,

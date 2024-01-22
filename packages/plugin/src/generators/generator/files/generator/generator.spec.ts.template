@@ -1,0 +1,20 @@
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { Tree, readProjectConfiguration } from '@nx/devkit';
+
+import { <%= generatorFnName %> } from './generator';
+import { <%= schemaInterfaceName %> } from './schema';
+
+describe('<%= name %> generator', () => {
+  let tree: Tree;
+  const options: <%= schemaInterfaceName %> = { name: 'test' };
+
+  beforeEach(() => {
+    tree = createTreeWithEmptyWorkspace();
+  });
+
+  it('should run successfully', async () => {
+    await <%= generatorFnName %>(tree, options);
+    const config = readProjectConfiguration(tree, 'test');
+    expect(config).toBeDefined();
+  });
+});

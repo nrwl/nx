@@ -1,0 +1,16 @@
+{
+  "builders": {
+    "cypress": {
+      "implementation": "@nx/cypress/src/executors/cypress/compat",
+      "schema": "@nx/cypress/src/executors/cypress/schema.json",
+      "description": "Run Cypress E2E tests."
+    }
+  },
+  "executors": {
+    "cypress": {
+      "implementation": "@nx/cypress/src/executors/cypress/cypress.impl",
+      "schema": "@nx/cypress/src/executors/cypress/schema.json",
+      "description": "Run Cypress E2E tests."
+    }
+  }
+}

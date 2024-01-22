@@ -7,10 +7,12 @@
       "projectType": "application",
       "targets": {
         "build": {
-          "executor": "@nrwl/vite:build",
+          "executor": "@nx/vite:build",
           "outputs": ["{options.outputPath}"],
           "defaultConfiguration": "production",
-          "options": { "outputPath": "dist/web" },
+          "options": {
+            "outputPath": "dist/web"
+          },
           "configurations": {
             "development": {},
             "production": {
@@ -25,11 +27,15 @@
           }
         },
         "serve": {
-          "executor": "@nrwl/vite:dev-server",
+          "executor": "@nx/vite:dev-server",
           "defaultConfiguration": "development",
-          "options": { "buildTarget": "web:build" },
+          "options": {
+            "buildTarget": "web:build"
+          },
           "configurations": {
-            "development": { "buildTarget": "web:build:development" },
+            "development": {
+              "buildTarget": "web:build:development"
+            },
             "production": {
               "buildTarget": "web:build:production",
               "hmr": false
@@ -37,9 +43,11 @@
           }
         },
         "test": {
-          "executor": "@nrwl/vite:test",
+          "executor": "@nx/vite:test",
           "outputs": ["{projectRoot}/coverage"],
-          "options": { "passWithNoTests": true }
+          "options": {
+            "passWithNoTests": true
+          }
         },
         "storybook": {
           "executor": "@storybook/angular:start-storybook",
@@ -49,7 +57,11 @@
             "browserTarget": "web:build-storybook",
             "compodoc": false
           },
-          "configurations": { "ci": { "quiet": true } }
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
         },
         "build-storybook": {
           "executor": "@storybook/angular:build-storybook",
@@ -60,7 +72,11 @@
             "browserTarget": "web:build-storybook",
             "compodoc": false
           },
-          "configurations": { "ci": { "quiet": true } }
+          "configurations": {
+            "ci": {
+              "quiet": true
+            }
+          }
         }
       },
       "tags": [],
@@ -73,7 +89,7 @@
       "projectType": "application",
       "targets": {
         "build": {
-          "executor": "@nrwl/web:webpack",
+          "executor": "@nx/web:webpack",
           "outputs": ["{options.outputPath}"],
           "defaultConfiguration": "production",
           "options": {
@@ -87,7 +103,7 @@
             "assets": ["apps/reapp/src/favicon.ico", "apps/reapp/src/assets"],
             "styles": ["apps/reapp/src/styles.css"],
             "scripts": [],
-            "webpackConfig": "@nrwl/react/plugins/webpack"
+            "webpackConfig": "@nx/react/plugins/webpack"
           },
           "configurations": {
             "development": {
@@ -113,7 +129,7 @@
           }
         },
         "serve": {
-          "executor": "@nrwl/web:dev-server",
+          "executor": "@nx/web:dev-server",
           "defaultConfiguration": "development",
           "options": {
             "buildTarget": "reapp:build",
@@ -130,14 +146,14 @@
           }
         },
         "lint": {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["apps/reapp/**/*.{ts,tsx,js,jsx}"]
           }
         },
         "test": {
-          "executor": "@nrwl/jest:jest",
+          "executor": "@nx/jest:jest",
           "outputs": ["coverage/apps/reapp"],
           "options": {
             "jestConfig": "apps/reapp/jest.config.ts",
@@ -155,14 +171,14 @@
       "tags": [],
       "targets": {
         "lint": {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["libs/nxlib/**/*.{ts,tsx,js,jsx}"]
           }
         },
         "test": {
-          "executor": "@nrwl/jest:jest",
+          "executor": "@nx/jest:jest",
           "outputs": ["coverage/libs/nxlib"],
           "options": {
             "jestConfig": "libs/nxlib/jest.config.ts",
@@ -179,7 +195,7 @@
       "tags": [],
       "targets": {
         "build": {
-          "executor": "@nrwl/web:rollup",
+          "executor": "@nx/rollup:rollup",
           "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/nxlib-buildable",
@@ -187,7 +203,7 @@
             "project": "libs/nxlib-buildable/package.json",
             "entryFile": "libs/nxlib-buildable/src/index.ts",
             "external": ["react/jsx-runtime"],
-            "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+            "rollupConfig": "@nx/react/plugins/bundle-rollup",
             "compiler": "babel",
             "assets": [
               {
@@ -199,14 +215,14 @@
           }
         },
         "lint": {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["libs/nxlib-buildable/**/*.{ts,tsx,js,jsx}"]
           }
         },
         "test": {
-          "executor": "@nrwl/jest:jest",
+          "executor": "@nx/jest:jest",
           "outputs": ["coverage/libs/nxlib-buildable"],
           "options": {
             "jestConfig": "libs/nxlib-buildable/jest.config.ts",
@@ -223,7 +239,7 @@
       "tags": [],
       "targets": {
         "build": {
-          "executor": "@nrwl/web:rollup",
+          "executor": "@nx/rollup:rollup",
           "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/relib-buildable",
@@ -231,7 +247,7 @@
             "project": "libs/relib-buildable/package.json",
             "entryFile": "libs/relib-buildable/src/index.ts",
             "external": ["react/jsx-runtime"],
-            "rollupConfig": "@nrwl/react/plugins/bundle-rollup",
+            "rollupConfig": "@nx/react/plugins/bundle-rollup",
             "compiler": "babel",
             "assets": [
               {
@@ -243,14 +259,14 @@
           }
         },
         "lint": {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["libs/relib-buildable/**/*.{ts,tsx,js,jsx}"]
           }
         },
         "test": {
-          "executor": "@nrwl/jest:jest",
+          "executor": "@nx/jest:jest",
           "outputs": ["coverage/libs/relib-buildable"],
           "options": {
             "jestConfig": "libs/relib-buildable/jest.config.ts",
@@ -266,7 +282,7 @@
       "projectType": "application",
       "targets": {
         "build": {
-          "executor": "@nrwl/web:webpack",
+          "executor": "@nx/web:webpack",
           "outputs": ["{options.outputPath}"],
           "defaultConfiguration": "production",
           "options": {
@@ -283,7 +299,7 @@
             ],
             "styles": ["apps/reapp-swc/src/styles.css"],
             "scripts": [],
-            "webpackConfig": "@nrwl/react/plugins/webpack"
+            "webpackConfig": "@nx/react/plugins/webpack"
           },
           "configurations": {
             "development": {
@@ -309,7 +325,7 @@
           }
         },
         "serve": {
-          "executor": "@nrwl/web:dev-server",
+          "executor": "@nx/web:dev-server",
           "defaultConfiguration": "development",
           "options": {
             "buildTarget": "reapp-swc:build",
@@ -326,14 +342,14 @@
           }
         },
         "lint": {
-          "executor": "@nrwl/linter:eslint",
+          "executor": "@nx/eslint:lint",
           "outputs": ["{options.outputFile}"],
           "options": {
             "lintFilePatterns": ["apps/reapp-swc/**/*.{ts,tsx,js,jsx}"]
           }
         },
         "test": {
-          "executor": "@nrwl/jest:jest",
+          "executor": "@nx/jest:jest",
           "outputs": ["coverage/apps/reapp-swc"],
           "options": {
             "jestConfig": "apps/reapp-swc/jest.config.ts",

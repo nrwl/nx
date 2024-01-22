@@ -6,6 +6,8 @@ import {
 } from '../config/workspace-json-project-json';
 import { output } from './output';
 
+const LIST_CHOICE_DISPLAY_LIMIT = 10;
+
 type PropertyDescription = {
   type?: string | string[];
   required?: string[];
@@ -20,6 +22,7 @@ type PropertyDescription = {
   description?: string;
   format?: string;
   visible?: boolean;
+  hidden?: boolean;
   default?:
     | string
     | number
@@ -30,8 +33,10 @@ type PropertyDescription = {
   $default?:
     | { $source: 'argv'; index: number }
     | { $source: 'projectName' }
-    | { $source: 'unparsed' };
+    | { $source: 'unparsed' }
+    | { $source: 'workingDirectory' };
   additionalProperties?: boolean;
+  const?: any;
   'x-prompt'?:
     | string
     | { message: string; type: string; items?: any[]; multiselect?: boolean };
@@ -233,7 +238,7 @@ export function validateObject(
         errors.push(e);
       }
     }
-    if (errors.length > 0) {
+    if (errors.length === schema.anyOf.length) {
       throw new Error(
         `Options did not match schema. Please fix any of the following errors:\n${errors
           .map((e) => ' - ' + e.message)
@@ -338,7 +343,7 @@ function validateProperty(
 
   if (schema.allOf) {
     if (!Array.isArray(schema.allOf))
-      throw new Error(`Invalid schema file. anyOf must be an array.`);
+      throw new Error(`Invalid schema file. allOf must be an array.`);
 
     if (
       !schema.allOf.every((r) => {
@@ -358,6 +363,12 @@ function validateProperty(
 
   const isPrimitive = typeof value !== 'object';
   if (isPrimitive) {
+    if (schema.const !== undefined && value !== schema.const) {
+      throw new SchemaError(
+        `Property '${propName}' does not match the schema. '${value}' should be '${schema.const}'.`
+      );
+    }
+
     if (Array.isArray(schema.type)) {
       const passes = schema.type.some((t) => {
         try {
@@ -623,6 +634,8 @@ export async function combineOptionsForGenerator(
     schema,
     false
   );
+
+  warnDeprecations(combined, schema);
   convertSmartDefaultsIntoNamedParams(
     combined,
     schema,
@@ -634,9 +647,7 @@ export async function combineOptionsForGenerator(
     combined = await promptForValues(combined, schema, projectsConfigurations);
   }
 
-  warnDeprecations(combined, schema);
   setDefaults(combined, schema);
-
   validateOptsAgainstSchema(combined, schema);
   applyVerbosity(combined, schema, isVerbose);
   return combined;
@@ -688,6 +699,13 @@ export function convertSmartDefaultsIntoNamedParams(
       opts[k] === undefined &&
       v.format === 'path' &&
       v.visible === false &&
+      relativeCwd
+    ) {
+      opts[k] = relativeCwd.replace(/\\/g, '/');
+    } else if (
+      opts[k] === undefined &&
+      v.$default !== undefined &&
+      v.$default.$source === 'workingDirectory' &&
       relativeCwd
     ) {
       opts[k] = relativeCwd.replace(/\\/g, '/');
@@ -752,6 +770,7 @@ type Prompt = ConstructorParameters<typeof import('enquirer').Prompt>[0] & {
   type: 'input' | 'autocomplete' | 'multiselect' | 'confirm' | 'numeral';
   message: string;
   initial?: any;
+  limit?: number;
   choices?: (string | { name: string; message: string })[];
 };
 
@@ -774,10 +793,23 @@ export function getPromptsForSchema(
       // Normalize x-prompt
       if (typeof v['x-prompt'] === 'string') {
         const message = v['x-prompt'];
-        v['x-prompt'] = {
-          type: v.type === 'boolean' ? 'confirm' : 'input',
-          message,
-        };
+        if (v.type === 'boolean') {
+          v['x-prompt'] = {
+            type: 'confirm',
+            message,
+          };
+        } else if (v.type === 'array' && v.items?.enum) {
+          v['x-prompt'] = {
+            type: 'multiselect',
+            items: v.items.enum,
+            message,
+          };
+        } else {
+          v['x-prompt'] = {
+            type: 'input',
+            message,
+          };
+        }
       }
 
       question.message = v['x-prompt'].message;
@@ -793,6 +825,7 @@ export function getPromptsForSchema(
       if (v.type === 'string' && v.enum && Array.isArray(v.enum)) {
         question.type = 'autocomplete';
         question.choices = [...v.enum];
+        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
       } else if (
         v.type === 'string' &&
         (v.$default?.$source === 'projectName' ||
@@ -803,6 +836,7 @@ export function getPromptsForSchema(
       ) {
         question.type = 'autocomplete';
         question.choices = Object.keys(projectsConfigurations.projects);
+        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
       } else if (v.type === 'number' || v['x-prompt'].type == 'number') {
         question.type = 'numeral';
       } else if (
@@ -827,6 +861,7 @@ export function getPromptsForSchema(
               };
             }
           });
+        question.limit = LIST_CHOICE_DISPLAY_LIMIT;
       } else if (v.type === 'boolean') {
         question.type = 'confirm';
       } else {

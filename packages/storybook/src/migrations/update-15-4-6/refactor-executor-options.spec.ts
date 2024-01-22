@@ -3,8 +3,8 @@ import {
   getProjects,
   ProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import refactorExecutorOptions from './refactor-executor-options';
 import * as variousProjects from './test-configs/various-projects.json';
 

@@ -2,8 +2,9 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   Tree,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import removeShowCircularDependencies from './remove-show-circular-dependencies-option';
 
 describe('remove-show-circular-dependencies-option migration', () => {
@@ -11,6 +12,9 @@ describe('remove-show-circular-dependencies-option migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   it.each([

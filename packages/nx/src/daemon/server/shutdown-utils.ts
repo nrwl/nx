@@ -2,27 +2,25 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import type { Server, Socket } from 'net';
 import { serverLogger } from './logger';
 import { serializeResult } from '../socket-utils';
-import type { AsyncSubscription } from '@parcel/watcher';
+import { deleteDaemonJsonProcessCache } from '../cache';
+import type { Watcher } from '../../native';
 
 export const SERVER_INACTIVITY_TIMEOUT_MS = 10800000 as const; // 10800000 ms = 3 hours
 
-let sourceWatcherSubscription: AsyncSubscription | undefined;
-let outputsWatcherSubscription: AsyncSubscription | undefined;
-
-export function getSourceWatcherSubscription() {
-  return sourceWatcherSubscription;
+let watcherInstance: Watcher | undefined;
+export function storeWatcherInstance(instance: Watcher) {
+  watcherInstance = instance;
+}
+export function getWatcherInstance() {
+  return watcherInstance;
 }
 
-export function getOutputsWatcherSubscription() {
-  return outputsWatcherSubscription;
+let outputWatcherInstance: Watcher | undefined;
+export function storeOutputWatcherInstance(instance: Watcher) {
+  outputWatcherInstance = instance;
 }
-
-export function storeSourceWatcherSubscription(s: AsyncSubscription) {
-  sourceWatcherSubscription = s;
-}
-
-export function storeOutputsWatcherSubscription(s: AsyncSubscription) {
-  outputsWatcherSubscription = s;
+export function getOutputWatcherInstance() {
+  return outputWatcherInstance;
 }
 
 interface HandleServerProcessTerminationParams {
@@ -36,18 +34,22 @@ export async function handleServerProcessTermination({
 }: HandleServerProcessTerminationParams) {
   try {
     server.close();
-    if (sourceWatcherSubscription) {
-      await sourceWatcherSubscription.unsubscribe();
+    deleteDaemonJsonProcessCache();
+
+    if (watcherInstance) {
+      await watcherInstance.stop();
       serverLogger.watcherLog(
-        `Unsubscribed from changes within: ${workspaceRoot} (sources)`
+        `Stopping the watcher for ${workspaceRoot} (sources)`
       );
     }
-    if (outputsWatcherSubscription) {
-      await outputsWatcherSubscription.unsubscribe();
+
+    if (outputWatcherInstance) {
+      await outputWatcherInstance.stop();
       serverLogger.watcherLog(
-        `Unsubscribed from changes within: ${workspaceRoot} (outputs)`
+        `Stopping the watcher for ${workspaceRoot} (outputs)`
       );
     }
+
     serverLogger.log(`Server stopped because: "${reason}"`);
   } finally {
     process.exit(0);
@@ -97,6 +99,6 @@ export async function respondWithErrorAndExit(
 
   error.message = `${error.message}\n\nBecause of the error the Nx daemon process has exited. The next Nx command is going to restart the daemon process.\nIf the error persists, please run "nx reset".`;
 
-  await respondToClient(socket, serializeResult(error, null), null);
+  await respondToClient(socket, serializeResult(error, null, null), null);
   process.exit(1);
 }

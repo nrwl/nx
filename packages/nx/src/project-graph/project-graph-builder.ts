@@ -3,27 +3,69 @@
  */
 import {
   DependencyType,
+  FileData,
+  FileDataDependency,
+  fileDataDepTarget,
+  fileDataDepType,
+  FileMap,
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
+import { ProjectConfiguration } from '../config/workspace-json-project-json';
+import { CreateDependenciesContext } from '../utils/nx-plugin';
+import { getFileMap } from './build-project-graph';
 
+/**
+ * A class which builds up a project graph
+ * @deprecated The {@link ProjectGraphProcessor} has been deprecated. Use a {@link CreateNodes} and/or a {@link CreateDependencies} instead. This will be removed in Nx 18.
+ */
 export class ProjectGraphBuilder {
   // TODO(FrozenPandaz): make this private
   readonly graph: ProjectGraph;
+
+  private readonly projectFileMap: ProjectFileMap;
+  private readonly nonProjectFiles: FileData[];
+
   readonly removedEdges: { [source: string]: Set<string> } = {};
 
-  constructor(g?: ProjectGraph) {
-    if (g) {
-      this.graph = g;
+  constructor(
+    graph?: ProjectGraph,
+    projectFileMap?: ProjectFileMap,
+    nonProjectFiles?: FileMap['nonProjectFiles']
+  ) {
+    if (!projectFileMap || !nonProjectFiles) {
+      const fileMap = getFileMap().fileMap;
+      projectFileMap ??= fileMap.projectFileMap;
+      nonProjectFiles ??= fileMap.nonProjectFiles;
+    }
+    if (graph) {
+      this.graph = graph;
+      this.projectFileMap = projectFileMap;
+      this.nonProjectFiles = nonProjectFiles;
     } else {
       this.graph = {
         nodes: {},
         externalNodes: {},
         dependencies: {},
       };
+      this.projectFileMap = projectFileMap || {};
+      this.nonProjectFiles = nonProjectFiles || [];
     }
+  }
+
+  /**
+   * Merges the nodes and dependencies of p into the built project graph.
+   */
+  mergeProjectGraph(p: ProjectGraph) {
+    this.graph.nodes = { ...this.graph.nodes, ...p.nodes };
+    this.graph.externalNodes = {
+      ...this.graph.externalNodes,
+      ...p.externalNodes,
+    };
+    this.graph.dependencies = { ...this.graph.dependencies, ...p.dependencies };
   }
 
   /**
@@ -88,9 +130,6 @@ export class ProjectGraphBuilder {
     targetProjectName: string,
     sourceProjectFile?: string
   ): void {
-    if (this.graph.nodes[sourceProjectName] && !sourceProjectFile) {
-      throw new Error(`Source project file is required`);
-    }
     this.addDependency(
       sourceProjectName,
       targetProjectName,
@@ -107,12 +146,6 @@ export class ProjectGraphBuilder {
     targetProjectName: string,
     sourceProjectFile: string
   ): void {
-    if (this.graph.externalNodes[sourceProjectName]) {
-      throw new Error(`External projects can't have "dynamic" dependencies`);
-    }
-    if (!sourceProjectFile) {
-      throw new Error(`Source project file is required`);
-    }
     this.addDependency(
       sourceProjectName,
       targetProjectName,
@@ -128,9 +161,6 @@ export class ProjectGraphBuilder {
     sourceProjectName: string,
     targetProjectName: string
   ): void {
-    if (this.graph.externalNodes[sourceProjectName]) {
-      throw new Error(`External projects can't have "implicit" dependencies`);
-    }
     this.addDependency(
       sourceProjectName,
       targetProjectName,
@@ -172,41 +202,11 @@ export class ProjectGraphBuilder {
     sourceProjectFile: string,
     targetProjectName: string
   ): void {
-    if (sourceProjectName === targetProjectName) {
-      return;
-    }
-    const source = this.graph.nodes[sourceProjectName];
-    if (!source) {
-      throw new Error(`Source project does not exist: ${sourceProjectName}`);
-    }
-
-    if (
-      !this.graph.nodes[targetProjectName] &&
-      !this.graph.externalNodes[targetProjectName]
-    ) {
-      throw new Error(`Target project does not exist: ${targetProjectName}`);
-    }
-
-    const fileData = source.data.files.find(
-      (f) => f.file === sourceProjectFile
+    this.addStaticDependency(
+      sourceProjectName,
+      targetProjectName,
+      sourceProjectFile
     );
-    if (!fileData) {
-      throw new Error(
-        `Source project ${sourceProjectName} does not have a file: ${sourceProjectFile}`
-      );
-    }
-
-    if (!fileData.dependencies) {
-      fileData.dependencies = [];
-    }
-
-    if (!fileData.dependencies.find((t) => t.target === targetProjectName)) {
-      fileData.dependencies.push({
-        target: targetProjectName,
-        source: sourceProjectName,
-        type: DependencyType.static,
-      });
-    }
   }
 
   /**
@@ -226,6 +226,13 @@ export class ProjectGraphBuilder {
 
       const fileDeps = this.calculateTargetDepsFromFiles(sourceProject);
       for (const [targetProject, types] of fileDeps.entries()) {
+        // only add known nodes
+        if (
+          !this.graph.nodes[targetProject] &&
+          !this.graph.externalNodes[targetProject]
+        ) {
+          continue;
+        }
         for (const type of types.values()) {
           if (
             !alreadySetTargetProjects.has(targetProject) ||
@@ -245,79 +252,103 @@ export class ProjectGraphBuilder {
         }
       }
     }
+    for (const file of this.nonProjectFiles) {
+      if (file.deps) {
+        for (const dep of file.deps) {
+          if (!Array.isArray(dep)) {
+            throw new Error(
+              'Cached data on non project files should be a tuple'
+            );
+          }
+          const [source, target, type] = dep;
+          if (!source || !target || !type) {
+            throw new Error(
+              'Cached dependencies for non project files should be a tuple of length 3.'
+            );
+          }
+          this.graph.dependencies[source].push({
+            source,
+            target,
+            type,
+          });
+        }
+      }
+    }
     return this.graph;
   }
 
-  private addDependency(
-    sourceProjectName: string,
-    targetProjectName: string,
+  addDependency(
+    source: string,
+    target: string,
     type: DependencyType,
-    sourceProjectFile?: string
+    sourceFile?: string
   ): void {
-    if (sourceProjectName === targetProjectName) {
-      return;
-    }
-    if (
-      !this.graph.nodes[sourceProjectName] &&
-      !this.graph.externalNodes[sourceProjectName]
-    ) {
-      throw new Error(`Source project does not exist: ${sourceProjectName}`);
-    }
-    if (
-      !this.graph.nodes[targetProjectName] &&
-      !this.graph.externalNodes[targetProjectName]
-    ) {
-      throw new Error(`Target project does not exist: ${targetProjectName}`);
-    }
-    if (
-      this.graph.externalNodes[sourceProjectName] &&
-      this.graph.nodes[targetProjectName]
-    ) {
-      throw new Error(`External projects can't depend on internal projects`);
-    }
-    if (!this.graph.dependencies[sourceProjectName]) {
-      this.graph.dependencies[sourceProjectName] = [];
-    }
-    // do not add duplicate
-    if (
-      this.graph.dependencies[sourceProjectName].find(
-        (d) => d.target === targetProjectName && d.type === type
-      )
-    ) {
+    if (source === target) {
       return;
     }
 
-    const dependency = {
-      source: sourceProjectName,
-      target: targetProjectName,
-      type,
-    };
-
-    if (sourceProjectFile) {
-      const source = this.graph.nodes[sourceProjectName];
-      if (!source) {
-        throw new Error(
-          `Source project is not a project node: ${sourceProjectName}`
-        );
+    validateDependency(
+      {
+        source,
+        target,
+        type,
+        sourceFile,
+      },
+      {
+        externalNodes: this.graph.externalNodes,
+        fileMap: {
+          projectFileMap: this.projectFileMap,
+          nonProjectFiles: this.nonProjectFiles,
+        },
+        // the validators only really care about the keys on this.
+        projects: this.graph.nodes as any,
+        filesToProcess: null,
+        nxJsonConfiguration: null,
+        workspaceRoot: null,
       }
-      const fileData = source.data.files.find(
-        (f) => f.file === sourceProjectFile
+    );
+
+    if (!this.graph.dependencies[source]) {
+      this.graph.dependencies[source] = [];
+    }
+    const isDuplicate = !!this.graph.dependencies[source].find(
+      (d) => d.target === target && d.type === type
+    );
+
+    if (sourceFile) {
+      let fileData = getProjectFileData(
+        source,
+        sourceFile,
+        this.projectFileMap
       );
-      if (!fileData) {
-        throw new Error(
-          `Source project ${sourceProjectName} does not have a file: ${sourceProjectFile}`
-        );
+      const isProjectFileData = !!fileData;
+      fileData ??= getNonProjectFileData(sourceFile, this.nonProjectFiles);
+
+      if (!fileData.deps) {
+        fileData.deps = [];
       }
 
-      if (!fileData.dependencies) {
-        fileData.dependencies = [];
+      if (
+        !fileData.deps.find(
+          (t) => fileDataDepTarget(t) === target && fileDataDepType(t) === type
+        )
+      ) {
+        const dep: FileDataDependency = isProjectFileData
+          ? type === 'static'
+            ? target
+            : [target, type]
+          : [source, target, type];
+        fileData.deps.push(dep);
       }
-      if (!fileData.dependencies.find((t) => t.target === targetProjectName)) {
-        fileData.dependencies.push(dependency);
-      }
+    } else if (!isDuplicate) {
+      // only add to dependencies section if the source file is not specified
+      // and not already added
+      this.graph.dependencies[source].push({
+        source: source,
+        target: target,
+        type,
+      });
     }
-
-    this.graph.dependencies[sourceProjectName].push(dependency);
   }
 
   private removeDependenciesWithNode(name: string) {
@@ -345,17 +376,18 @@ export class ProjectGraphBuilder {
     sourceProject: string
   ): Map<string, Set<DependencyType | string>> {
     const fileDeps = new Map<string, Set<DependencyType | string>>();
-    const files = this.graph.nodes[sourceProject].data.files;
+    const files = this.projectFileMap[sourceProject] || [];
     if (!files) {
       return fileDeps;
     }
     for (let f of files) {
-      if (f.dependencies) {
-        for (let d of f.dependencies) {
-          if (!fileDeps.has(d.target)) {
-            fileDeps.set(d.target, new Set([d.type]));
+      if (f.deps) {
+        for (let d of f.deps) {
+          const target = fileDataDepTarget(d);
+          if (!fileDeps.has(target)) {
+            fileDeps.set(target, new Set([fileDataDepType(d)]));
           } else {
-            fileDeps.get(d.target).add(d.type);
+            fileDeps.get(target).add(fileDataDepType(d));
           }
         }
       }
@@ -373,7 +405,10 @@ export class ProjectGraphBuilder {
     if (this.graph.dependencies[sourceProject]) {
       const removed = this.removedEdges[sourceProject];
       for (const d of this.graph.dependencies[sourceProject]) {
-        if (!removed || !removed.has(d.target)) {
+        // static and dynamic dependencies of internal projects
+        // will be rebuilt based on the file dependencies
+        // we only need to keep the implicit dependencies
+        if (d.type === DependencyType.implicit && !removed?.has(d.target)) {
           if (!alreadySetTargetProjects.has(d.target)) {
             alreadySetTargetProjects.set(d.target, new Map([[d.type, d]]));
           } else {
@@ -384,4 +419,212 @@ export class ProjectGraphBuilder {
     }
     return alreadySetTargetProjects;
   }
+}
+
+/**
+ * A static {@link ProjectGraph} dependency between 2 projects
+ *
+ * This type of dependency indicates the source project ALWAYS load the target project.
+ *
+ * NOTE: {@link StaticDependency#sourceFile} MUST be present unless the source is the name of a {@link ProjectGraphExternalNode}
+ */
+export type StaticDependency = {
+  /**
+   * The name of a {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} depending on the target project
+   */
+  source: string;
+
+  /**
+   * The name of a {@link ProjectGraphProjectNode} or {@link ProjectGraphExternalNode} that the source project depends on
+   */
+  target: string;
+
+  /**
+   * The path of a file (relative from the workspace root) where the dependency is made
+   */
+  sourceFile?: string;
+
+  type: typeof DependencyType.static;
+};
+
+/**
+ * A dynamic {@link ProjectGraph} dependency between 2 projects
+ *
+ * This type of dependency indicates the source project MAY OR MAY NOT load the target project.
+ */
+export type DynamicDependency = {
+  /**
+   * The name of a {@link ProjectGraphProjectNode} depending on the target project
+   */
+  source: string;
+
+  /**
+   * The name of a {@link ProjectGraphProjectNode}  that the source project depends on
+   */
+  target: string;
+
+  /**
+   * The path of a file (relative from the workspace root) where the dependency is made
+   */
+  sourceFile: string;
+
+  type: typeof DependencyType.dynamic;
+};
+
+/**
+ * An implicit {@link ProjectGraph} dependency between 2 projects
+ *
+ * This type of dependency indicates a connection without an explicit reference in code
+ */
+export type ImplicitDependency = {
+  /**
+   * The name of a {@link ProjectGraphProjectNode} depending on the target project
+   */
+  source: string;
+  /**
+   * The name of a {@link ProjectGraphProjectNode} that the source project depends on
+   */
+  target: string;
+
+  type: typeof DependencyType.implicit;
+};
+
+/**
+ * A {@link ProjectGraph} dependency between 2 projects
+ *
+ * See {@link DynamicDependency}, {@link ImplicitDependency}, or {@link StaticDependency}
+ */
+export type RawProjectGraphDependency =
+  | ImplicitDependency
+  | StaticDependency
+  | DynamicDependency;
+
+/**
+ * A function to validate dependencies in a {@link CreateDependencies} function
+ * @throws If the dependency is invalid.
+ */
+export function validateDependency(
+  dependency: RawProjectGraphDependency,
+  ctx: CreateDependenciesContext
+): void {
+  if (dependency.type === DependencyType.implicit) {
+    validateImplicitDependency(dependency, ctx);
+  } else if (dependency.type === DependencyType.dynamic) {
+    validateDynamicDependency(dependency, ctx);
+  } else if (dependency.type === DependencyType.static) {
+    validateStaticDependency(dependency, ctx);
+  }
+
+  validateCommonDependencyRules(dependency, ctx);
+}
+
+function validateCommonDependencyRules(
+  d: RawProjectGraphDependency,
+  { externalNodes, projects, fileMap }: CreateDependenciesContext
+) {
+  if (!projects[d.source] && !externalNodes[d.source]) {
+    throw new Error(`Source project does not exist: ${d.source}`);
+  }
+  if (
+    !projects[d.target] &&
+    !externalNodes[d.target] &&
+    !('sourceFile' in d && d.sourceFile)
+  ) {
+    throw new Error(`Target project does not exist: ${d.target}`);
+  }
+  if (externalNodes[d.source] && projects[d.target]) {
+    throw new Error(`External projects can't depend on internal projects`);
+  }
+  if ('sourceFile' in d && d.sourceFile) {
+    if (projects[d.source]) {
+      // Throws if source file is not a valid file within the source project.
+      // We can pass empty array for all workspace files here, since its not checked by the impl.
+      // We need all workspace files in here for the TODO comment though, so lets figure that out.
+      getFileData(
+        d.source,
+        d.sourceFile,
+        projects,
+        externalNodes,
+        fileMap.projectFileMap,
+        fileMap.nonProjectFiles
+      );
+    }
+  }
+}
+
+function validateImplicitDependency(
+  d: ImplicitDependency,
+  { externalNodes }: CreateDependenciesContext
+) {
+  if (externalNodes[d.source]) {
+    throw new Error(`External projects can't have "implicit" dependencies`);
+  }
+}
+
+function validateDynamicDependency(
+  d: DynamicDependency,
+  { externalNodes }: CreateDependenciesContext
+) {
+  if (externalNodes[d.source]) {
+    throw new Error(`External projects can't have "dynamic" dependencies`);
+  }
+  // dynamic dependency is always bound to a file
+  if (!d.sourceFile) {
+    throw new Error(
+      `Source project file is required for "dynamic" dependencies`
+    );
+  }
+}
+
+function validateStaticDependency(
+  d: StaticDependency,
+  { projects }: CreateDependenciesContext
+) {
+  // internal nodes must provide sourceProjectFile when creating static dependency
+  // externalNodes do not have sourceProjectFile
+  if (projects[d.source] && !d.sourceFile) {
+    throw new Error(`Source project file is required`);
+  }
+}
+
+function getProjectFileData(
+  source: string,
+  sourceFile: string,
+  fileMap: ProjectFileMap
+) {
+  let fileData = (fileMap[source] || []).find((f) => f.file === sourceFile);
+  if (fileData) {
+    return fileData;
+  }
+}
+
+function getNonProjectFileData(sourceFile: string, files: FileData[]) {
+  const fileData = files.find((f) => f.file === sourceFile);
+  if (!fileData) {
+    throw new Error(
+      `Source file "${sourceFile}" does not exist in the workspace.`
+    );
+  }
+  return fileData;
+}
+
+function getFileData(
+  source: string,
+  sourceFile: string,
+  projects: Record<string, ProjectGraphProjectNode | ProjectConfiguration>,
+  externalNodes: Record<string, ProjectGraphExternalNode>,
+  fileMap: ProjectFileMap,
+  nonProjectFiles: FileData[]
+) {
+  const sourceProject = projects[source];
+  const matchingExternalNode = externalNodes[source];
+
+  if (!sourceProject && !matchingExternalNode) {
+    throw new Error(`Source project is not a project node: ${sourceProject}`);
+  }
+
+  return (
+    getProjectFileData(source, sourceFile, fileMap) ??
+    getNonProjectFileData(sourceFile, nonProjectFiles)
+  );
 }

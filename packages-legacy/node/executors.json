@@ -1,0 +1,26 @@
+{
+  "executors": {
+    "webpack": {
+      "implementation": "@nx/node/src/executors/webpack/webpack.impl",
+      "schema": "@nx/node/src/executors/webpack/schema.json",
+      "description": "Build a Node application using Webpack."
+    },
+    "node": {
+      "implementation": "@nx/node/src/executors/node/node.impl",
+      "schema": "@nx/node/src/executors/node/schema.json",
+      "description": "Execute a Node application."
+    }
+  },
+  "builders": {
+    "webpack": {
+      "implementation": "@nx/node/src/executors/webpack/compat",
+      "schema": "@nx/node/src/executors/webpack/schema.json",
+      "description": "Build a Node application using Webpack."
+    },
+    "node": {
+      "implementation": "@nx/node/src/executors/node/compat",
+      "schema": "@nx/node/src/executors/node/schema.json",
+      "description": "Execute a Node application."
+    }
+  }
+}

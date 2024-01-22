@@ -8,19 +8,13 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "strict": true,
-    "composite": true,
     "declaration": true
   },
-  "files": [
-    "../../node_modules/@nrwl/expo/typings/svg.d.ts"
-  ],
+  "files": [],
   "include": [],
   "references": [
     {
       "path": "./tsconfig.app.json"
     }
-  ],
-  "exclude": [
-    "node_modules"
   ]
 }

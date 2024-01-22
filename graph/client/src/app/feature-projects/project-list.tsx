@@ -4,8 +4,10 @@ import {
   FlagIcon,
   MapPinIcon,
 } from '@heroicons/react/24/outline';
+/* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
-import type { ProjectGraphNode } from '@nrwl/devkit';
+import type { ProjectGraphNode } from '@nx/devkit';
+/* eslint-enable @nx/enforce-module-boundaries */
 import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
 import {
   allProjectsSelector,
@@ -13,15 +15,12 @@ import {
   selectedProjectNamesSelector,
   workspaceLayoutSelector,
 } from './machines/selectors';
-import {
-  getProjectsByType,
-  parseParentDirectoriesFromFilePath,
-  useRouteConstructor,
-} from '../util';
+import { getProjectsByType, parseParentDirectoriesFromFilePath } from '../util';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
 import { Link, useNavigate } from 'react-router-dom';
+import { useRouteConstructor } from '@nx/graph/shared';
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphNode;

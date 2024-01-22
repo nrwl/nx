@@ -1,4 +1,4 @@
-import { Hash, Hasher } from '../hasher/hasher';
+import { Hash, TaskHasher } from '../hasher/task-hasher';
 import { ProjectGraph } from './project-graph';
 import { Task, TaskGraph } from './task-graph';
 import {
@@ -31,6 +31,8 @@ export interface GeneratorsJsonEntry {
   cli?: 'nx';
   'x-type'?: 'library' | 'application';
   'x-deprecated'?: string;
+  // @todo(v17) Remove this and make it default behavior.
+  'x-use-standalone-layout'?: boolean;
 }
 
 export type OutputCaptureMethod = 'direct-nodejs' | 'pipe';
@@ -73,7 +75,8 @@ export interface MigrationsJsonEntry {
 }
 
 export interface MigrationsJson {
-  version: string;
+  name?: string;
+  version?: string;
   collection?: string;
   generators?: { [name: string]: MigrationsJsonEntry };
   schematics?: { [name: string]: MigrationsJsonEntry };
@@ -115,7 +118,7 @@ export type Executor<T = any> = (
   | AsyncIterableIterator<{ success: boolean }>;
 
 export interface HasherContext {
-  hasher: Hasher;
+  hasher: TaskHasher;
   projectGraph: ProjectGraph;
   taskGraph: TaskGraph;
   projectsConfigurations: ProjectsConfigurations;
@@ -126,6 +129,18 @@ export type CustomHasher = (
   task: Task,
   context: HasherContext
 ) => Promise<Hash>;
+
+export type TaskResult = {
+  success: boolean;
+  terminalOutput: string;
+  startTime?: number;
+  endTime?: number;
+};
+export type BatchExecutorResult = Record<string, TaskResult>;
+export type BatchExecutorTaskResult = {
+  task: string;
+  result: TaskResult;
+};
 
 /**
  * Implementation of a target of a project that handles multiple projects to be batched
@@ -144,7 +159,9 @@ export type TaskGraphExecutor<T = any> = (
    */
   overrides: T,
   context: ExecutorContext
-) => Promise<Record<string, { success: boolean; terminalOutput: string }>>;
+) => Promise<
+  BatchExecutorResult | AsyncIterableIterator<BatchExecutorTaskResult>
+>;
 
 /**
  * Context that is passed into an executor
@@ -174,13 +191,6 @@ export interface ExecutorContext {
    * The configuration of the target being executed
    */
   target?: TargetConfiguration;
-
-  /**
-   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
-   * The full workspace configuration
-   * @todo(vsavkin): remove after v17
-   */
-  workspace?: ProjectsConfigurations & NxJsonConfiguration;
 
   /**
    * Projects config
@@ -213,4 +223,17 @@ export interface ExecutorContext {
    * @todo(vsavkin) mark this required for v17
    */
   projectGraph?: ProjectGraph;
+
+  /**
+   * A snapshot of the task graph as
+   * it existed when the Nx command was kicked off
+   */
+  taskGraph?: TaskGraph;
+
+  /**
+   * Deprecated. Use projectsConfigurations or nxJsonConfiguration
+   * The full workspace configuration
+   * @todo(vsavkin): remove after v17
+   */
+  workspace?: ProjectsConfigurations & NxJsonConfiguration;
 }

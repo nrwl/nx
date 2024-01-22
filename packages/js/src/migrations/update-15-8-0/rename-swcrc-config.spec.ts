@@ -2,8 +2,8 @@ import {
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { libraryGenerator } from '../../generators/library/library';
 import renameSwcrcConfig from './rename-swcrc-config';
 
@@ -60,11 +60,15 @@ describe('Rename swcrc file migration', () => {
 async function setup(tree: Tree) {
   await libraryGenerator(tree, {
     name: 'my-lib',
-    compiler: 'swc',
+    bundler: 'swc',
     unitTestRunner: 'jest',
-    buildable: true,
     config: 'project',
   });
+
+  const projectConfig = readProjectConfiguration(tree, 'my-lib');
+  projectConfig.targets.build.executor = '@nrwl/js:swc';
+  projectConfig.targets.test.executor = '@nrwl/jest:jest';
+  updateProjectConfiguration(tree, 'my-lib', projectConfig);
 
   tree.rename('libs/my-lib/.swcrc', 'libs/my-lib/.lib.swcrc');
   tree.write(

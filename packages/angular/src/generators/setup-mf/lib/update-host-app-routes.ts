@@ -1,7 +1,7 @@
 import { Tree } from 'nx/src/generators/tree';
 import { readProjectConfiguration } from 'nx/src/generators/utils/project-configuration';
-import { generateFiles, joinPathFragments, names } from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { generateFiles, joinPathFragments, names } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { addRoute } from '../../../utils/nx-devkit/route-utils';
 import { Schema } from '../schema';
 
@@ -28,19 +28,26 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
   tree.write(
     joinPathFragments(sourceRoot, 'app/app.component.html'),
     `<ul class="remote-menu">
-<li><a routerLink='/'>Home</a></li>
-${remoteRoutes}
+<li><a routerLink="/">Home</a></li>${remoteRoutes}
 </ul>
 <router-outlet></router-outlet>
 `
   );
 
-  const pathToHostRootRoutingFile = joinPathFragments(
+  let pathToHostRootRoutingFile = joinPathFragments(
     sourceRoot,
     'app/app.routes.ts'
   );
 
-  const hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+  let hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+
+  if (!hostRootRoutingFile) {
+    pathToHostRootRoutingFile = joinPathFragments(
+      sourceRoot,
+      'app/app-routing.module.ts'
+    );
+    hostRootRoutingFile = tree.read(pathToHostRootRoutingFile, 'utf-8');
+  }
 
   let sourceFile = tsModule.createSourceFile(
     pathToHostRootRoutingFile,
@@ -61,7 +68,7 @@ ${remoteRoutes}
   tree.write(
     pathToHostRootRoutingFile,
     `import { NxWelcomeComponent } from './nx-welcome.component';
-    ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
+${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
   );
 
   generateFiles(
@@ -70,6 +77,7 @@ ${remoteRoutes}
     joinPathFragments(sourceRoot, 'app'),
     {
       appName: options.appName,
+      standalone: options.standalone,
       tmpl: '',
     }
   );

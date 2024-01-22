@@ -4,7 +4,7 @@ import type { NxJsonConfiguration } from '../../config/nx-json';
 import type { Tree } from '../tree';
 
 import { readJson, updateJson } from './json';
-import { readNxJson as readNxJsonFromDisk } from '../../project-graph/file-utils';
+import { readNxJson as readNxJsonFromDisk } from '../../config/nx-json';
 
 /**
  * @deprecated You must pass a {@link Tree}

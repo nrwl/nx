@@ -1,35 +1,35 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  convertNxGenerator,
-  extractLayoutDirectory,
+  ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getWorkspaceLayout,
   joinPathFragments,
   logger,
   names,
   offsetFromRoot,
   ProjectConfiguration,
   readProjectConfiguration,
+  runTasksInSerial,
   TargetConfiguration,
   toJS,
   Tree,
   updateJson,
   updateProjectConfiguration,
   updateTsConfigsToJs,
-} from '@nrwl/devkit';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-import { jestProjectGenerator } from '@nrwl/jest';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
-import { tsConfigBaseOptions } from '@nrwl/js';
-import { join } from 'path';
-
-import { initGenerator } from '../init/init';
+} from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
+import { configurationGenerator } from '@nx/jest';
 import {
-  esbuildVersion,
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+  tsConfigBaseOptions,
+} from '@nx/js';
+import { esbuildVersion } from '@nx/js/src/utils/versions';
+import { Linter, lintProjectGenerator } from '@nx/eslint';
+import { join } from 'path';
+import {
   expressTypingsVersion,
   expressVersion,
   fastifyAutoloadVersion,
@@ -39,11 +39,15 @@ import {
   koaTypingsVersion,
   koaVersion,
   nxVersion,
+  tslibVersion,
+  typesNodeVersion,
 } from '../../utils/versions';
 import { e2eProjectGenerator } from '../e2e-project/e2e-project';
+import { initGenerator } from '../init/init';
 import { setupDockerGenerator } from '../setup-docker/setup-docker';
-
 import { Schema } from './schema';
+import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -55,8 +59,9 @@ function getWebpackBuildConfig(
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: `@nrwl/webpack:webpack`,
+    executor: `@nx/webpack:webpack`,
     outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
     options: {
       target: 'node',
       compiler: 'tsc',
@@ -70,18 +75,15 @@ function getWebpackBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
-      isolatedConfig: true,
       webpackConfig: joinPathFragments(
         options.appProjectRoot,
         'webpack.config.js'
       ),
     },
     configurations: {
+      development: {},
       production: {
         ...(options.docker && { generateLockfile: true }),
-        optimization: true,
-        extractLicenses: true,
-        inspect: false,
       },
     },
   };
@@ -92,8 +94,9 @@ function getEsBuildConfig(
   options: NormalizedSchema
 ): TargetConfiguration {
   return {
-    executor: '@nrwl/esbuild:esbuild',
+    executor: '@nx/esbuild:esbuild',
     outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
     options: {
       platform: 'node',
       outputPath: joinPathFragments(
@@ -109,6 +112,7 @@ function getEsBuildConfig(
       ),
       tsConfig: joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
       assets: [joinPathFragments(project.sourceRoot, 'assets')],
+      generatePackageJson: true,
       esbuildOptions: {
         sourcemap: true,
         // Generate CJS files as .js so imports can be './foo' rather than './foo.cjs'.
@@ -116,9 +120,14 @@ function getEsBuildConfig(
       },
     },
     configurations: {
+      development: {},
       production: {
         ...(options.docker && { generateLockfile: true }),
-        esbuildOptions: { sourcemap: false },
+        esbuildOptions: {
+          sourcemap: false,
+          // Generate CJS files as .js so imports can be './foo' rather than './foo.cjs'.
+          outExtension: { '.js': '.js' },
+        },
       },
     },
   };
@@ -126,11 +135,15 @@ function getEsBuildConfig(
 
 function getServeConfig(options: NormalizedSchema): TargetConfiguration {
   return {
-    executor: '@nrwl/js:node',
+    executor: '@nx/js:node',
+    defaultConfiguration: 'development',
     options: {
       buildTarget: `${options.name}:build`,
     },
     configurations: {
+      development: {
+        buildTarget: `${options.name}:build:development`,
+      },
       production: {
         buildTarget: `${options.name}:build:production`,
       },
@@ -147,10 +160,15 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     tags: options.parsedTags,
   };
 
-  project.targets.build =
-    options.bundler === 'esbuild'
-      ? getEsBuildConfig(project, options)
-      : getWebpackBuildConfig(project, options);
+  if (options.bundler === 'esbuild') {
+    addBuildTargetDefaults(tree, '@nx/esbuild:esbuild');
+    project.targets.build = getEsBuildConfig(project, options);
+  } else if (options.bundler === 'webpack') {
+    if (!hasWebpackPlugin(tree)) {
+      addBuildTargetDefaults(tree, `@nx/webpack:webpack`);
+      project.targets.build = getWebpackBuildConfig(project, options);
+    }
+  }
   project.targets.serve = getServeConfig(options);
 
   addProjectConfiguration(
@@ -162,6 +180,7 @@ function addProject(tree: Tree, options: NormalizedSchema) {
 }
 
 function addAppFiles(tree: Tree, options: NormalizedSchema) {
+  const sourceRoot = joinPathFragments(options.appProjectRoot, 'src');
   generateFiles(
     tree,
     join(__dirname, './files/common'),
@@ -176,6 +195,17 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
         tree,
         options.appProjectRoot
       ),
+      webpackPluginOptions: hasWebpackPlugin(tree)
+        ? {
+            outputPath: joinPathFragments(
+              'dist',
+              options.rootProject ? options.name : options.appProjectRoot
+            ),
+            main: './src/main' + (options.js ? '.js' : '.ts'),
+            tsConfig: './tsconfig.app.json',
+            assets: ['./assets'],
+          }
+        : null,
     }
   );
 
@@ -261,9 +291,6 @@ export async function addLintingToApplication(
     tsConfigPaths: [
       joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
     ],
-    eslintFilePatterns: [
-      `${options.appProjectRoot}/**/*.${options.js ? 'js' : 'ts'}`,
-    ],
     unitTestRunner: options.unitTestRunner,
     skipFormat: true,
     setParserOptionsProject: options.setParserOptionsProject,
@@ -279,10 +306,10 @@ function addProjectDependencies(
 ): GeneratorCallback {
   const bundlers = {
     webpack: {
-      '@nrwl/webpack': nxVersion,
+      '@nx/webpack': nxVersion,
     },
     esbuild: {
-      '@nrwl/esbuild': nxVersion,
+      '@nx/esbuild': nxVersion,
       esbuild: esbuildVersion,
     },
   };
@@ -290,11 +317,9 @@ function addProjectDependencies(
   const frameworkDependencies = {
     express: {
       express: expressVersion,
-      '@types/express': expressTypingsVersion,
     },
     koa: {
       koa: koaVersion,
-      '@types/koa': koaTypingsVersion,
     },
     fastify: {
       fastify: fastifyVersion,
@@ -316,10 +341,12 @@ function addProjectDependencies(
     tree,
     {
       ...frameworkDependencies[options.framework],
+      tslib: tslibVersion,
     },
     {
       ...frameworkDevDependencies[options.framework],
       ...bundlers[options.bundler],
+      '@types/node': typesNodeVersion,
     }
   );
 }
@@ -350,9 +377,27 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 }
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
-  const options = normalizeOptions(tree, schema);
+  return await applicationGeneratorInternal(tree, {
+    projectNameAndRootFormat: 'derived',
+    ...schema,
+  });
+}
+
+export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
+  const options = await normalizeOptions(tree, schema);
   const tasks: GeneratorCallback[] = [];
 
+  if (options.framework === 'nest') {
+    const { applicationGenerator } = ensurePackage('@nx/nest', nxVersion);
+    return await applicationGenerator(tree, { ...options, skipFormat: true });
+  }
+
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const initTask = await initGenerator(tree, {
     ...schema,
     skipFormat: true,
@@ -361,28 +406,43 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
   const installTask = addProjectDependencies(tree, options);
   tasks.push(installTask);
+
+  if (options.bundler === 'webpack') {
+    const { webpackInitGenerator } = ensurePackage<
+      typeof import('@nx/webpack')
+    >('@nx/webpack', nxVersion);
+    const webpackInitTask = await webpackInitGenerator(tree, {
+      skipPackageJson: options.skipPackageJson,
+      skipFormat: true,
+    });
+    tasks.push(webpackInitTask);
+    if (!options.skipPackageJson) {
+      const { ensureDependencies } = await import(
+        '@nx/webpack/src/utils/ensure-dependencies'
+      );
+      tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
+    }
+  }
+
   addAppFiles(tree, options);
   addProject(tree, options);
 
   updateTsConfigOptions(tree, options);
 
-  if (options.linter !== Linter.None) {
-    const lintTask = await addLintingToApplication(tree, {
-      ...options,
-      skipFormat: true,
-    });
+  if (options.linter === Linter.EsLint) {
+    const lintTask = await addLintingToApplication(tree, options);
     tasks.push(lintTask);
   }
 
   if (options.unitTestRunner === 'jest') {
-    const jestTask = await jestProjectGenerator(tree, {
+    const jestTask = await configurationGenerator(tree, {
       ...options,
       project: options.name,
       setupFile: 'none',
       skipSerializers: true,
       supportTsx: options.js,
       testEnvironment: 'node',
-      compiler: 'tsc',
+      compiler: options.swcJest ? 'swc' : 'tsc',
       skipFormat: true,
     });
     tasks.push(jestTask);
@@ -398,8 +458,12 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       ...options,
       projectType: options.framework === 'none' ? 'cli' : 'server',
       name: options.rootProject ? 'e2e' : `${options.name}-e2e`,
+      directory: options.rootProject ? 'e2e' : `${options.appProjectRoot}-e2e`,
+      projectNameAndRootFormat: 'as-provided',
       project: options.name,
       port: options.port,
+      isNest: options.isNest,
+      skipFormat: true,
     });
     tasks.push(e2eTask);
   }
@@ -416,6 +480,7 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
     const dockerTask = await setupDockerGenerator(tree, {
       ...options,
       project: options.name,
+      skipFormat: true,
     });
 
     tasks.push(dockerTask);
@@ -428,21 +493,24 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
-  const { layoutDirectory, projectDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const appsDir = layoutDirectory ?? getWorkspaceLayout(host).appsDir;
-
-  const appDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${names(options.name).fileName}`
-    : names(options.name).fileName;
-
-  const appProjectName = appDirectory.replace(new RegExp('/', 'g'), '-');
-
-  const appProjectRoot = options.rootProject
-    ? '.'
-    : joinPathFragments(appsDir, appDirectory);
+async function normalizeOptions(
+  host: Tree,
+  options: Schema
+): Promise<NormalizedSchema> {
+  const {
+    projectName: appProjectName,
+    projectRoot: appProjectRoot,
+    projectNameAndRootFormat,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'application',
+    directory: options.directory,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+    rootProject: options.rootProject,
+    callingGenerator: '@nx/node:application',
+  });
+  options.rootProject = appProjectRoot === '.';
+  options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   options.bundler = options.bundler ?? 'esbuild';
   options.e2eTestRunner = options.e2eTestRunner ?? 'jest';
@@ -453,7 +521,7 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 
   return {
     ...options,
-    name: names(appProjectName).fileName,
+    name: appProjectName,
     frontendProject: options.frontendProject
       ? names(options.frontendProject).fileName
       : undefined,
@@ -467,4 +535,3 @@ function normalizeOptions(host: Tree, options: Schema): NormalizedSchema {
 }
 
 export default applicationGenerator;
-export const applicationSchematic = convertNxGenerator(applicationGenerator);

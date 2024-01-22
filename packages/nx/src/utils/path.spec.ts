@@ -1,4 +1,4 @@
-import { normalizePath, joinPathFragments } from './path';
+import { joinPathFragments, normalizePath } from './path';
 
 describe('normalizePath', () => {
   it('should remove drive letters', () => {

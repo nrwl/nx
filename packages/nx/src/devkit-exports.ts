@@ -1,5 +1,5 @@
 /**
- * Note to developers: STOP! These exports end up as the public API of @nrwl/devkit.
+ * Note to developers: STOP! These exports end up as the public API of @nx/devkit.
  * Try hard to not add to this API to reduce the surface area we need to maintain.
  */
 
@@ -37,18 +37,26 @@ export type {
   HasherContext,
 } from './config/misc-interfaces';
 
+// TODO(v18): Remove this export
 /**
  * @category Workspace
  */
 export { Workspaces } from './config/workspaces';
 
-// TODO (v16): Change this to export from './config/configuration'
-export {
-  readAllWorkspaceConfiguration,
-  workspaceLayout,
-} from './project-graph/file-utils';
+export { workspaceLayout } from './config/configuration';
 
-export type { NxPlugin, ProjectTargetConfigurator } from './utils/nx-plugin';
+export type {
+  NxPlugin,
+  NxPluginV1,
+  NxPluginV2,
+  ProjectTargetConfigurator,
+  CreateNodes,
+  CreateNodesFunction,
+  CreateNodesResult,
+  CreateNodesContext,
+  CreateDependencies,
+  CreateDependenciesContext,
+} from './utils/nx-plugin';
 
 /**
  * @category Workspace
@@ -62,6 +70,8 @@ export type {
   ImplicitDependencyEntry,
   ImplicitJsonSubsetDependency,
   NxJsonConfiguration,
+  PluginConfiguration,
+  TargetDefaults,
   NxAffectedConfig,
 } from './config/nx-json';
 
@@ -92,11 +102,11 @@ export {
 /**
  * @category Commands
  */
-export type { Target } from './command-line/run';
+export type { Target } from './command-line/run/run';
 /**
  * @category Commands
  */
-export { runExecutor } from './command-line/run';
+export { runExecutor } from './command-line/run/run';
 
 /**
  * @category Generators
@@ -112,14 +122,11 @@ export {
 /**
  * @category Generators
  */
-export {
-  readWorkspaceConfiguration,
-  updateWorkspaceConfiguration,
-  isStandaloneProject,
-  WorkspaceConfiguration,
-  getWorkspacePath,
-} from './generators/utils/deprecated';
+export { glob } from './generators/utils/glob';
 
+/**
+ * @category Generators
+ */
 export {
   readNxJson,
   updateNxJson,
@@ -130,6 +137,7 @@ export {
  */
 export type {
   ProjectFileMap,
+  FileMap,
   FileData,
   ProjectGraph,
   ProjectGraphDependency,
@@ -147,10 +155,17 @@ export { DependencyType } from './config/project-graph';
 /**
  * @category Project Graph
  */
-export { ProjectGraphBuilder } from './project-graph/project-graph-builder';
+export {
+  ProjectGraphBuilder,
+  RawProjectGraphDependency,
+  DynamicDependency,
+  ImplicitDependency,
+  StaticDependency,
+  validateDependency,
+} from './project-graph/project-graph-builder';
 
 /**
- * @category Utils
+ * @category Generators
  */
 export { readJson, writeJson, updateJson } from './generators/utils/json';
 
@@ -177,12 +192,7 @@ export { stripIndents } from './utils/strip-indents';
 /**
  * @category Utils
  */
-export {
-  joinPathFragments,
-  normalizePath,
-  getImportPath,
-  detectWorkspaceScope,
-} from './utils/path';
+export { joinPathFragments, normalizePath } from './utils/path';
 
 // TODO(v16): Change this to export from './utils/workspace-root'
 /**
@@ -200,6 +210,7 @@ export { reverse } from './project-graph/operators';
 export {
   createProjectGraphAsync,
   readCachedProjectGraph,
+  readProjectsConfigurationFromProjectGraph,
 } from './project-graph/project-graph';
 
 /**
@@ -219,24 +230,15 @@ export {
 /**
  * @category Utils
  */
-export { Hash, Hasher } from './hasher/hasher';
+export { Hash, TaskHasher, Hasher } from './hasher/task-hasher';
+export { hashArray } from './hasher/file-hasher';
 
 /**
  * @category Utils
  */
 export { cacheDir } from './utils/cache-directory';
 
-import { createLockFile as _createLockFile } from './lock-file/lock-file';
-import { createPackageJson as _createPackageJson } from './utils/create-package-json';
-
 /**
- * @category Package Manager
+ * @category Utils
  */
-/**
- * @deprecated Import this from @nrwl/js instead
- */
-export const createLockFile = _createLockFile;
-/**
- * @deprecated Import this from @nrwl/js instead
- */
-export const createPackageJson = _createPackageJson;
+export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';

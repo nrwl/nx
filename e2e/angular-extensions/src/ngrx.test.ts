@@ -7,12 +7,12 @@ import {
   runCLI,
   runCLIAsync,
   uniq,
-} from '@nrwl/e2e/utils';
+} from '@nx/e2e/utils';
 
 describe('Angular Package', () => {
   describe('ngrx', () => {
     beforeAll(() => {
-      newProject();
+      newProject({ packages: ['@nx/angular'] });
     });
     afterAll(() => {
       cleanupProject();
@@ -20,11 +20,13 @@ describe('Angular Package', () => {
 
     it('should work', async () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --no-interactive`);
+      runCLI(
+        `generate @nx/angular:app ${myapp} --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      );
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nrwl/angular:ngrx users --parent=apps/${myapp}/src/app/app.module.ts --root --minimal=false`
+        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app.module.ts --root --minimal=false`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/store']).toBeDefined();
@@ -34,12 +36,14 @@ describe('Angular Package', () => {
 
       const mylib = uniq('mylib');
       // Generate feature library and ngrx state within that library
-      runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
       runCLI(
-        `generate @nrwl/angular:ngrx flights --parent=libs/${mylib}/src/lib/${mylib}.module.ts --facade`
+        `g @nx/angular:lib ${mylib} --prefix=fl --no-standalone --project-name-and-root-format=as-provided`
+      );
+      runCLI(
+        `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}.module.ts --facade`
       );
 
-      expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
+      expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       // TODO: remove this condition
       if (getSelectedPackageManager() !== 'pnpm') {
@@ -49,11 +53,13 @@ describe('Angular Package', () => {
 
     it('should work with creators', async () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --routing --no-interactive`);
+      runCLI(
+        `generate @nx/angular:app ${myapp} --routing --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      );
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nrwl/angular:ngrx users --parent=apps/${myapp}/src/app/app.module.ts --root`
+        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app.module.ts --root`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/entity']).toBeDefined();
@@ -65,14 +71,16 @@ describe('Angular Package', () => {
 
       const mylib = uniq('mylib');
       // Generate feature library and ngrx state within that library
-      runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
+      runCLI(
+        `g @nx/angular:lib ${mylib} --prefix=fl --no-standalone --project-name-and-root-format=as-provided`
+      );
 
       const flags = `--facade --barrels`;
       runCLI(
-        `generate @nrwl/angular:ngrx flights --parent=libs/${mylib}/src/lib/${mylib}.module.ts ${flags}`
+        `generate @nx/angular:ngrx flights --parent=${mylib}/src/lib/${mylib}.module.ts ${flags}`
       );
 
-      expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
+      expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       // TODO: remove this condition
       if (getSelectedPackageManager() !== 'pnpm') {
@@ -82,11 +90,13 @@ describe('Angular Package', () => {
 
     it('should work with creators using --module', async () => {
       const myapp = uniq('myapp');
-      runCLI(`generate @nrwl/angular:app ${myapp} --routing --no-interactive`);
+      runCLI(
+        `generate @nx/angular:app ${myapp} --routing --no-standalone --project-name-and-root-format=as-provided --no-interactive`
+      );
 
       // Generate root ngrx state management
       runCLI(
-        `generate @nrwl/angular:ngrx users --parent=apps/${myapp}/src/app/app.module.ts --root`
+        `generate @nx/angular:ngrx users --parent=${myapp}/src/app/app.module.ts --root`
       );
       const packageJson = readJson('package.json');
       expect(packageJson.dependencies['@ngrx/entity']).toBeDefined();
@@ -98,14 +108,16 @@ describe('Angular Package', () => {
 
       const mylib = uniq('mylib');
       // Generate feature library and ngrx state within that library
-      runCLI(`g @nrwl/angular:lib ${mylib} --prefix=fl`);
+      runCLI(
+        `g @nx/angular:lib ${mylib} --prefix=fl --no-standalone --project-name-and-root-format=as-provided`
+      );
 
       const flags = `--facade --barrels`;
       runCLI(
-        `generate @nrwl/angular:ngrx flights --module=libs/${mylib}/src/lib/${mylib}.module.ts ${flags}`
+        `generate @nx/angular:ngrx flights --module=${mylib}/src/lib/${mylib}.module.ts ${flags}`
       );
 
-      expect(runCLI(`build ${myapp}`)).toMatch(/main\.[a-z0-9]+\.js/);
+      expect(runCLI(`build ${myapp}`)).toMatch(/main-[a-zA-Z0-9]+\.js/);
       expectTestsPass(await runCLIAsync(`test ${myapp} --no-watch`));
       // TODO: remove this condition
       if (getSelectedPackageManager() !== 'pnpm') {

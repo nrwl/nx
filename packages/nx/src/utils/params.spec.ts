@@ -32,7 +32,7 @@ describe('params', () => {
     it('should use target options', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -58,7 +58,7 @@ describe('params', () => {
     it('should combine target, configuration', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -88,7 +88,7 @@ describe('params', () => {
         overriddenOpt: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -118,7 +118,7 @@ describe('params', () => {
         overriddenOpt: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOptAlias: 'target value',
         },
@@ -148,7 +148,7 @@ describe('params', () => {
         overriddenOptAlias: 'command value',
       };
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
         options: {
           overriddenOpt: 'target value',
         },
@@ -176,7 +176,7 @@ describe('params', () => {
     it('should handle targets without options', () => {
       const commandLineOpts = {};
       const target: TargetConfiguration = {
-        executor: '@nrwl/do:stuff',
+        executor: '@nx/do:stuff',
       };
 
       const options = combineOptionsForExecutor(
@@ -710,6 +710,28 @@ describe('params', () => {
       expect(params).toEqual({ a: './somepath' });
     });
 
+    it('should use relativeCwd to set workingDirectory', () => {
+      const params = {};
+      convertSmartDefaultsIntoNamedParams(
+        params,
+        {
+          properties: {
+            a: {
+              type: 'string',
+              $default: {
+                $source: 'workingDirectory',
+              },
+              visible: false,
+            },
+          },
+        },
+        null,
+        './somepath'
+      );
+
+      expect(params).toEqual({ a: './somepath' });
+    });
+
     it('should set unparsed overrides', () => {
       const params = { __overrides_unparsed__: ['one'] };
       convertSmartDefaultsIntoNamedParams(
@@ -877,6 +899,38 @@ describe('params', () => {
       `);
     });
 
+    it('should not throw if one of the anyOf conditions is met', () => {
+      expect(() =>
+        validateOptsAgainstSchema(
+          {
+            a: true,
+          },
+
+          {
+            properties: {
+              a: {
+                type: 'boolean',
+              },
+
+              b: {
+                type: 'boolean',
+              },
+            },
+
+            anyOf: [
+              {
+                required: ['a'],
+              },
+
+              {
+                required: ['b'],
+              },
+            ],
+          }
+        )
+      ).not.toThrow();
+    });
+
     it('should throw if found an unknown property', () => {
       expect(() =>
         validateOptsAgainstSchema(
@@ -948,6 +1002,27 @@ describe('params', () => {
             }
           )
         ).not.toThrow();
+      });
+
+      it('should handle const value', () => {
+        const schema = {
+          properties: {
+            a: {
+              const: 3,
+            },
+          },
+        };
+        expect(() => validateOptsAgainstSchema({ a: 3 }, schema)).not.toThrow();
+        expect(() =>
+          validateOptsAgainstSchema({ a: true }, schema)
+        ).toThrowErrorMatchingInlineSnapshot(
+          `"Property 'a' does not match the schema. 'true' should be '3'."`
+        );
+        expect(() =>
+          validateOptsAgainstSchema({ a: 123 }, schema)
+        ).toThrowErrorMatchingInlineSnapshot(
+          `"Property 'a' does not match the schema. '123' should be '3'."`
+        );
       });
 
       describe('array', () => {
@@ -1601,6 +1676,7 @@ describe('params', () => {
           name: 'pets',
           message: 'What kind of pets do you have?',
           choices: ['Cat', 'Dog', 'Fish'],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1641,6 +1717,7 @@ describe('params', () => {
             { message: 'Dog', name: 'dog' },
             { message: 'Fish', name: 'fish' },
           ],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1682,9 +1759,48 @@ describe('params', () => {
             { message: 'Dog', name: 'dog' },
             { message: 'Fish', name: 'fish' },
           ],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
+    });
+
+    it('should use a multiselect if type is array and x-prompt uses shorthand', () => {
+      const prompts = getPromptsForSchema(
+        {},
+        {
+          properties: {
+            pets: {
+              type: 'array',
+              'x-prompt': 'What kind of pets do you have?',
+              items: {
+                enum: ['cat', 'dog', 'fish'],
+              },
+            },
+          },
+        },
+        {
+          version: 2,
+          projects: {},
+        }
+      );
+
+      expect(prompts).toMatchInlineSnapshot(`
+        [
+          {
+            "choices": [
+              "cat",
+              "dog",
+              "fish",
+            ],
+            "limit": 10,
+            "message": "What kind of pets do you have?",
+            "name": "pets",
+            "type": "multiselect",
+            "validate": [Function],
+          },
+        ]
+      `);
     });
 
     describe('Project prompts', () => {
@@ -1714,6 +1830,7 @@ describe('params', () => {
             name: 'project',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1745,6 +1862,7 @@ describe('params', () => {
             name: 'projectName',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1777,6 +1895,7 @@ describe('params', () => {
             name: 'projectName',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1811,6 +1930,7 @@ describe('params', () => {
             name: 'yourProject',
             message: 'Which project?',
             choices: ['projA', 'projB'],
+            limit: expect.any(Number),
             validate: expect.any(Function),
           },
         ]);
@@ -1841,6 +1961,7 @@ describe('params', () => {
           name: 'name',
           message: 'What is your name?',
           choices: ['Bob', 'Joe', 'Jeff'],
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);
@@ -1872,6 +1993,7 @@ describe('params', () => {
           message: 'What is your name?',
           choices: ['Bob', 'Joe', 'Jeff'],
           initial: 'Joe',
+          limit: expect.any(Number),
           validate: expect.any(Function),
         },
       ]);

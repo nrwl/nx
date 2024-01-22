@@ -1,41 +1,39 @@
 import {
-  extractLayoutDirectory,
-  getImportPath,
   getProjects,
-  getWorkspaceLayout,
   joinPathFragments,
   logger,
-  names,
   normalizePath,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
+import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 
-export function normalizeOptions(
+export async function normalizeOptions(
   host: Tree,
   options: Schema
-): NormalizedSchema {
-  const name = names(options.name).fileName;
-  const { projectDirectory, layoutDirectory } = extractLayoutDirectory(
-    options.directory
-  );
-  const fullProjectDirectory = projectDirectory
-    ? `${names(projectDirectory).fileName}/${name}`
-    : name;
+): Promise<NormalizedSchema> {
+  const {
+    projectName,
+    names: projectNames,
+    projectRoot,
+    importPath,
+  } = await determineProjectNameAndRootOptions(host, {
+    name: options.name,
+    projectType: 'library',
+    directory: options.directory,
+    importPath: options.importPath,
+    projectNameAndRootFormat: options.projectNameAndRootFormat,
+    callingGenerator: '@nx/react:library',
+  });
 
-  const projectName = fullProjectDirectory.replace(new RegExp('/', 'g'), '-');
-  const fileName = projectName;
-  const { libsDir: defaultLibsDir, npmScope } = getWorkspaceLayout(host);
-  const libsDir = layoutDirectory ?? defaultLibsDir;
-  const projectRoot = joinPathFragments(libsDir, fullProjectDirectory);
+  const fileName = options.simpleName
+    ? projectNames.projectSimpleName
+    : projectNames.projectFileName;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
     : [];
-
-  const importPath =
-    options.importPath || getImportPath(npmScope, fullProjectDirectory);
 
   let bundler = options.bundler ?? 'none';
 
@@ -59,13 +57,11 @@ export function normalizeOptions(
     compiler: options.compiler ?? 'babel',
     bundler,
     fileName,
-    routePath: `/${name}`,
+    routePath: `/${projectNames.projectSimpleName}`,
     name: projectName,
     projectRoot,
-    projectDirectory: fullProjectDirectory,
     parsedTags,
     importPath,
-    libsDir,
   } as NormalizedSchema;
 
   // Libraries with a bundler or is publishable must also be buildable.
@@ -84,10 +80,13 @@ export function normalizeOptions(
       );
     }
 
-    try {
-      normalized.appMain = appProjectConfig.targets.build.options.main;
-      normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
-    } catch (e) {
+    normalized.appMain =
+      appProjectConfig.targets.build.options.main ??
+      findMainEntry(host, appProjectConfig.root);
+    normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
+
+    // TODO(jack): We should use appEntryFile instead of appProject so users can directly set it rather than us inferring it.
+    if (!normalized.appMain) {
       throw new Error(
         `Could not locate project main for ${options.appProject}`
       );
@@ -97,4 +96,31 @@ export function normalizeOptions(
   assertValidStyle(normalized.style);
 
   return normalized;
+}
+
+function findMainEntry(tree: Tree, projectRoot: string): string | undefined {
+  const mainFiles = [
+    // These are the main files we generate with.
+    'src/main.ts',
+    'src/main.tsx',
+    'src/main.js',
+    'src/main.jsx',
+    // Other options just in case
+    'src/index.ts',
+    'src/index.tsx',
+    'src/index.js',
+    'src/index.jsx',
+    'main.ts',
+    'main.tsx',
+    'main.js',
+    'main.jsx',
+    'index.ts',
+    'index.tsx',
+    'index.js',
+    'index.jsx',
+  ];
+  const mainEntry = mainFiles.find((file) =>
+    tree.exists(joinPathFragments(projectRoot, file))
+  );
+  return mainEntry ? joinPathFragments(projectRoot, mainEntry) : undefined;
 }

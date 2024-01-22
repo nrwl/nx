@@ -7,7 +7,7 @@
   "type": "object",
   "examples": [
     {
-      "command": "nx g @nrwl/angular:host appName --remotes=remote1",
+      "command": "nx g @nx/angular:host appName --remotes=remote1",
       "description": "Create an Angular application with configuration in place for Module Federation. If the `remotes` option is provided, attach the remote application to this application's configuration"
     }
   ],
@@ -18,7 +18,8 @@
       "$default": {
         "$source": "argv",
         "index": 0
-      }
+      },
+      "pattern": "^[a-zA-Z][^:]*$"
     },
     "remotes": {
       "type": "array",
@@ -33,6 +34,11 @@
     "directory": {
       "description": "The directory of the new application.",
       "type": "string"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -105,14 +111,15 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["karma", "jest", "none"],
+      "enum": ["jest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "jest"
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["protractor", "cypress", "none"],
+      "enum": ["cypress", "playwright", "none"],
       "description": "Test runner to use for end to end (E2E) tests.",
+      "x-prompt": "Which E2E test runner would you like to use?",
       "default": "cypress"
     },
     "tags": {
@@ -158,14 +165,19 @@
     },
     "standalone": {
       "type": "boolean",
-      "description": "Whether to generate a host application that uses standalone components. _Note: This is only supported in Angular versions >= 14.1.0_",
-      "default": false
+      "description": "Whether to generate a host application that uses standalone components.",
+      "default": true
     },
     "ssr": {
       "description": "Whether to configure SSR for the host application",
       "type": "boolean",
       "default": false,
       "x-priority": "important"
+    },
+    "typescriptConfiguration": {
+      "type": "boolean",
+      "description": "Whether the module federation configuration and webpack configuration files should use TS.",
+      "default": true
     }
   },
   "additionalProperties": false,

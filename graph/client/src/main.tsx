@@ -1,7 +1,13 @@
+/* eslint-disable import/first */
+// debug must be first import
+if (process.env.NODE_ENV === 'development') {
+  require('preact/debug');
+}
+
 import { StrictMode } from 'react';
 import { inspect } from '@xstate/inspect';
 import { App } from './app/app';
-import { ExternalApi } from './app/external-api';
+import { ExternalApiImpl } from './app/external-api-impl';
 import { render } from 'preact';
 
 if (window.useXstateInspect === true) {
@@ -11,7 +17,7 @@ if (window.useXstateInspect === true) {
   });
 }
 
-window.externalApi = new ExternalApi();
+window.externalApi = new ExternalApiImpl();
 const container = document.getElementById('app');
 
 if (!window.appConfig) {

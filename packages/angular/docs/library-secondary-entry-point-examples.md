@@ -6,7 +6,7 @@
 Create a secondary entrypoint named `button` in the `ui` library.
 
 ```bash
-nx g @nrwl/angular:library-secondary-entry-point --library=ui --name=button
+nx g @nx/angular:library-secondary-entry-point --library=ui --name=button
 ```
 
 {% /tab %}
@@ -15,7 +15,7 @@ nx g @nrwl/angular:library-secondary-entry-point --library=ui --name=button
 Create a secondary entrypoint named `button` in the `ui` library but skip creating an NgModule.
 
 ```bash
-nx g @nrwl/angular:library-secondary-entry-point --library=ui --name=button --skipModule
+nx g @nx/angular:library-secondary-entry-point --library=ui --name=button --skipModule
 ```
 
 {% /tab %}

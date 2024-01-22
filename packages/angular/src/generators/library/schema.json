@@ -4,7 +4,6 @@
   "title": "Create a library",
   "description": "Creates an Angular library.",
   "type": "object",
-
   "cli": "nx",
   "properties": {
     "name": {
@@ -15,12 +14,17 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the library?",
-      "pattern": "^[a-zA-Z].*$"
+      "pattern": "(?:^@[a-zA-Z0-9-*~][a-zA-Z0-9-*._~]*\\/[a-zA-Z0-9-~][a-zA-Z0-9-._~]*|^[a-zA-Z][^:]*)$"
     },
     "directory": {
       "type": "string",
       "description": "A directory where the library is placed.",
       "x-priority": "important"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "publishable": {
       "type": "boolean",
@@ -45,12 +49,6 @@
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
-    },
-    "simpleModuleName": {
-      "description": "Keep the module name simple (when using `--directory`).",
-      "type": "boolean",
-      "default": false,
-      "x-deprecated": "Use `simpleName` instead. It will be removed in v16."
     },
     "simpleName": {
       "description": "Don't include the directory in the name of the module or standalone component entry of the library.",
@@ -96,7 +94,7 @@
     },
     "unitTestRunner": {
       "type": "string",
-      "enum": ["karma", "jest", "none"],
+      "enum": ["jest", "none"],
       "description": "Test runner to use for unit tests.",
       "default": "jest"
     },
@@ -143,65 +141,65 @@
     },
     "standalone": {
       "type": "boolean",
-      "description": "Generate a library that uses a standalone component instead of a module as the entry point. _Note: This is only supported in Angular versions >= 14.1.0_",
-      "default": false
+      "description": "Generate a library that uses a standalone component instead of a module as the entry point.",
+      "default": true
     },
     "displayBlock": {
-      "description": "Specifies if the component generated style will contain `:host { display: block; }`. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+      "description": "Specifies if the component generated style will contain `:host { display: block; }`. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
       "type": "boolean",
       "default": false,
       "alias": "b"
     },
     "inlineStyle": {
-      "description": "Include styles inline in the component.ts file. Only CSS styles can be included inline. By default, an external styles file is created and referenced in the component.ts file. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+      "description": "Include styles inline in the component.ts file. Only CSS styles can be included inline. By default, an external styles file is created and referenced in the component.ts file. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
       "type": "boolean",
       "default": false,
       "alias": "s"
     },
     "inlineTemplate": {
-      "description": "Include template inline in the component.ts file. By default, an external template file is created and referenced in the component.ts file. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+      "description": "Include template inline in the component.ts file. By default, an external template file is created and referenced in the component.ts file. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
       "type": "boolean",
       "default": false,
       "alias": "t"
     },
     "viewEncapsulation": {
-      "description": "The view encapsulation strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+      "description": "The view encapsulation strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
       "enum": ["Emulated", "None", "ShadowDom"],
       "type": "string",
       "alias": "v"
     },
     "changeDetection": {
-      "description": "The change detection strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+      "description": "The change detection strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
       "enum": ["Default", "OnPush"],
       "type": "string",
       "default": "Default",
       "alias": "c"
     },
     "style": {
-      "description": "The file extension or preprocessor to use for style files, or `none` to skip generating the style file. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+      "description": "The file extension or preprocessor to use for style files, or `none` to skip generating the style file. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
       "type": "string",
       "default": "css",
       "enum": ["css", "scss", "sass", "less", "none"]
     },
     "skipTests": {
       "type": "boolean",
-      "description": "Do not create `spec.ts` test files for the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_",
+      "description": "Do not create `spec.ts` test files for the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
       "default": false
     },
     "selector": {
       "type": "string",
       "format": "html-selector",
-      "description": "The HTML selector to use for this component. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_"
+      "description": "The HTML selector to use for this component. Disclaimer: This option is only valid when `--standalone` is set to `true`."
     },
     "skipSelector": {
       "type": "boolean",
       "default": false,
-      "description": "Specifies if the component should have a selector or not. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_"
+      "description": "Specifies if the component should have a selector or not. Disclaimer: This option is only valid when `--standalone` is set to `true`."
     },
     "flat": {
       "type": "boolean",
       "default": false,
-      "description": "Ensure the generated standalone component is not placed in a subdirectory. Disclaimer: This option is only valid when `--standalone` is set to `true`. _Note: This is only supported in Angular versions >= 14.1.0_"
+      "description": "Ensure the generated standalone component is not placed in a subdirectory. Disclaimer: This option is only valid when `--standalone` is set to `true`."
     }
   },
   "additionalProperties": false,

@@ -1,0 +1,200 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`moveProjectConfiguration should rename the project 1`] = `
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [
+    "my-other-lib",
+  ],
+  "name": "subfolder-my-destination",
+  "projectType": "application",
+  "root": "apps/subfolder/my-destination",
+  "sourceRoot": "apps/subfolder/my-destination/src",
+  "tags": [
+    "type:ui",
+  ],
+  "targets": {
+    "build": {
+      "configurations": {
+        "production": {
+          "aot": true,
+          "budgets": [
+            {
+              "maximumError": "5mb",
+              "maximumWarning": "2mb",
+              "type": "initial",
+            },
+            {
+              "maximumError": "10kb",
+              "maximumWarning": "6kb",
+              "type": "anyComponentStyle",
+            },
+          ],
+          "buildOptimizer": true,
+          "extractCss": true,
+          "extractLicenses": true,
+          "fileReplacements": [
+            {
+              "replace": "apps/subfolder/my-destination/src/environments/environment.ts",
+              "with": "apps/subfolder/my-destination/src/environments/environment.prod.ts",
+            },
+          ],
+          "namedChunks": false,
+          "optimization": true,
+          "outputHashing": "all",
+          "sourceMap": false,
+          "vendorChunk": false,
+        },
+      },
+      "executor": "@angular-devkit/build-angular:browser",
+      "options": {
+        "aot": false,
+        "assets": [
+          "apps/subfolder/my-destination/src/favicon.ico",
+          "apps/subfolder/my-destination/src/assets",
+        ],
+        "index": "apps/subfolder/my-destination/src/index.html",
+        "main": "apps/subfolder/my-destination/src/main.ts",
+        "outputPath": "dist/apps/subfolder/my-destination",
+        "polyfills": "apps/subfolder/my-destination/src/polyfills.ts",
+        "scripts": [],
+        "styles": [
+          "apps/subfolder/my-destination/src/styles.scss",
+        ],
+        "tsConfig": "apps/subfolder/my-destination/tsconfig.app.json",
+      },
+    },
+    "extract-i18n": {
+      "executor": "@angular-devkit/build-angular:extract-i18n",
+      "options": {
+        "browserTarget": "my-source:build",
+      },
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+    },
+    "serve": {
+      "configurations": {
+        "production": {
+          "browserTarget": "my-source:build:production",
+        },
+      },
+      "executor": "@angular-devkit/build-angular:dev-server",
+      "options": {
+        "browserTarget": "my-source:build",
+      },
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "apps/subfolder/my-destination/jest.config.js",
+        "setupFile": "apps/subfolder/my-destination/src/test-setup.ts",
+        "tsConfig": "apps/subfolder/my-destination/tsconfig.spec.json",
+      },
+    },
+  },
+}
+`;
+
+exports[`moveProjectConfiguration should rename the project correctly except for build targets 1`] = `
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "implicitDependencies": [],
+  "name": "subfolder-my-destination",
+  "projectType": "application",
+  "root": "apps/subfolder/my-destination",
+  "sourceRoot": "apps/subfolder/my-destination/src",
+  "tags": [],
+  "targets": {
+    "build": {
+      "cache": true,
+      "configurations": {
+        "development": {
+          "mode": "development",
+        },
+        "production": {
+          "mode": "production",
+        },
+      },
+      "defaultConfiguration": "production",
+      "dependsOn": [
+        "^build",
+      ],
+      "executor": "@nx/vite:build",
+      "inputs": [
+        "production",
+        "^production",
+      ],
+      "options": {
+        "outputPath": "dist/apps/subfolder/my-destination",
+      },
+      "outputs": [
+        "{options.outputPath}",
+      ],
+    },
+    "lint": {
+      "cache": true,
+      "configurations": {},
+      "executor": "@nx/eslint:lint",
+      "inputs": [
+        "default",
+        "{workspaceRoot}/.eslintrc.json",
+        "{workspaceRoot}/.eslintignore",
+        "{workspaceRoot}/eslint.config.js",
+      ],
+      "options": {},
+      "outputs": [
+        "{options.outputFile}",
+      ],
+    },
+    "preview": {
+      "configurations": {
+        "development": {
+          "buildTarget": "my-flat-source:build:development",
+        },
+        "production": {
+          "buildTarget": "my-flat-source:build:production",
+        },
+      },
+      "defaultConfiguration": "development",
+      "executor": "@nx/vite:preview-server",
+      "options": {
+        "buildTarget": "my-flat-source:build",
+      },
+    },
+    "serve": {
+      "configurations": {
+        "development": {
+          "buildTarget": "my-flat-source:build:development",
+          "hmr": true,
+        },
+        "production": {
+          "buildTarget": "my-flat-source:build:production",
+          "hmr": false,
+        },
+      },
+      "defaultConfiguration": "development",
+      "executor": "@nx/vite:dev-server",
+      "options": {
+        "buildTarget": "my-flat-source:build:development",
+        "hmr": true,
+      },
+    },
+    "test": {
+      "cache": true,
+      "configurations": {},
+      "executor": "@nx/vite:test",
+      "inputs": [
+        "default",
+        "^production",
+      ],
+      "options": {
+        "reportsDirectory": "../coverage/apps/subfolder/my-destination",
+      },
+      "outputs": [
+        "{options.reportsDirectory}",
+      ],
+    },
+  },
+}
+`;

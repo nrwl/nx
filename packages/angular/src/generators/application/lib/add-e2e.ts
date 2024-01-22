@@ -1,50 +1,91 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments } from '@nrwl/devkit';
+import { configurationGenerator } from '@nx/cypress';
+import type { Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  addProjectConfiguration,
+  ensurePackage,
+  getPackageManagerCommand,
+  joinPathFragments,
+  readProjectConfiguration,
+  updateProjectConfiguration,
+} from '@nx/devkit';
+import { nxVersion } from '../../../utils/versions';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 
-import { cypressProjectGenerator } from '@nrwl/cypress';
-
-import { E2eTestRunner } from '../../../utils/test-runners';
-
-import { addProtractor } from './add-protractor';
-import { removeScaffoldedE2e } from './remove-scaffolded-e2e';
-import { updateE2eProject } from './update-e2e-project';
-import { Linter, lintProjectGenerator } from '@nrwl/linter';
-
 export async function addE2e(tree: Tree, options: NormalizedSchema) {
-  if (options.e2eTestRunner === E2eTestRunner.Protractor) {
-    await addProtractor(tree, options);
-  } else {
-    removeScaffoldedE2e(tree, options, options.ngCliSchematicE2ERoot);
-  }
-
   if (options.e2eTestRunner === 'cypress') {
-    await cypressProjectGenerator(tree, {
-      name: options.e2eProjectName,
-      directory: options.directory,
-      project: options.name,
+    // TODO: This can call `@nx/web:static-config` generator when ready
+    addFileServerTarget(tree, options, 'serve-static');
+    addProjectConfiguration(tree, options.e2eProjectName, {
+      projectType: 'application',
+      root: options.e2eProjectRoot,
+      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+      targets: {},
+      tags: [],
+      implicitDependencies: [options.name],
+    });
+    await configurationGenerator(tree, {
+      project: options.e2eProjectName,
+      directory: 'src',
       linter: options.linter,
-      skipFormat: options.skipFormat,
-      standaloneConfig: options.standaloneConfig,
       skipPackageJson: options.skipPackageJson,
+      skipFormat: true,
+      devServerTarget: `${options.name}:serve:development`,
+      baseUrl: 'http://localhost:4200',
+      rootProject: options.rootProject,
+    });
+  } else if (options.e2eTestRunner === 'playwright') {
+    const { configurationGenerator: playwrightConfigurationGenerator } =
+      ensurePackage<typeof import('@nx/playwright')>(
+        '@nx/playwright',
+        nxVersion
+      );
+    addProjectConfiguration(tree, options.e2eProjectName, {
+      projectType: 'application',
+      root: options.e2eProjectRoot,
+      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
+      targets: {},
+      implicitDependencies: [options.name],
+    });
+    await playwrightConfigurationGenerator(tree, {
+      project: options.e2eProjectName,
+      skipFormat: true,
+      skipPackageJson: options.skipPackageJson,
+      directory: 'src',
+      js: false,
+      linter: options.linter,
+      setParserOptionsProject: options.setParserOptionsProject,
+      webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
+        options.name
+      }`,
+      webServerAddress: `http://localhost:${options.port ?? 4200}`,
       rootProject: options.rootProject,
     });
   }
+}
 
-  if (options.e2eTestRunner === E2eTestRunner.Protractor) {
-    updateE2eProject(tree, options);
-    if (options.linter === Linter.EsLint) {
-      await lintProjectGenerator(tree, {
-        project: options.e2eProjectName,
-        linter: options.linter,
-        eslintFilePatterns: [
-          joinPathFragments(options.e2eProjectRoot, '**/*.ts'),
-        ],
-        unitTestRunner: options.unitTestRunner,
-        skipFormat: true,
-        setParserOptionsProject: options.setParserOptionsProject,
-        skipPackageJson: options.skipPackageJson,
-      });
-    }
-  }
+function addFileServerTarget(
+  tree: Tree,
+  options: NormalizedSchema,
+  targetName: string
+) {
+  addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion });
+
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  const isUsingApplicationBuilder =
+    angularMajorVersion >= 17 && options.bundler === 'esbuild';
+
+  const projectConfig = readProjectConfiguration(tree, options.name);
+  projectConfig.targets[targetName] = {
+    executor: '@nx/web:file-server',
+    options: {
+      buildTarget: `${options.name}:build`,
+      port: options.port,
+      staticFilePath: isUsingApplicationBuilder
+        ? joinPathFragments(options.outputPath, 'browser')
+        : undefined,
+    },
+  };
+  updateProjectConfiguration(tree, options.name, projectConfig);
 }

@@ -1,10 +1,14 @@
 import type { Observable } from 'rxjs';
 import type { Executor, ExecutorContext } from 'nx/src/config/misc-interfaces';
-import type { ProjectGraph } from 'nx/src/config/project-graph';
+import type { ProjectsConfigurations } from 'nx/src/devkit-exports';
+
 import { requireNx } from '../../nx';
 
-const { createProjectGraphAsync, readCachedProjectGraph, Workspaces } =
-  requireNx();
+const {
+  Workspaces,
+  readNxJsonFromDisk,
+  retrieveProjectConfigurationsWithAngularProjects,
+} = requireNx();
 
 /**
  * Convert an Nx Executor into an Angular Devkit Builder
@@ -15,18 +19,26 @@ const { createProjectGraphAsync, readCachedProjectGraph, Workspaces } =
 export function convertNxExecutor(executor: Executor) {
   const builderFunction = (options, builderContext) => {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
-    const nxJsonConfiguration = workspaces.readNxJson();
-    const projectsConfigurations = workspaces.readProjectsConfigurations({
-      _includeProjectsFromAngularJson: true,
-    });
+    const nxJsonConfiguration = readNxJsonFromDisk
+      ? readNxJsonFromDisk(builderContext.workspaceRoot)
+      : // TODO(v18): remove readNxJson. This is to be backwards compatible with Nx 16.5 and below.
+        (workspaces as any).readNxJson();
 
     const promise = async () => {
-      let projectGraph: ProjectGraph;
-      try {
-        projectGraph = readCachedProjectGraph();
-      } catch {
-        projectGraph = await createProjectGraphAsync();
-      }
+      const projectsConfigurations: ProjectsConfigurations =
+        retrieveProjectConfigurationsWithAngularProjects
+          ? {
+              version: 2,
+              projects: await retrieveProjectConfigurationsWithAngularProjects(
+                builderContext.workspaceRoot,
+                nxJsonConfiguration
+              ).then((p) => (p as any).projectNodes ?? p.projects),
+            }
+          : // TODO(v18): remove retrieveProjectConfigurations. This is to be backwards compatible with Nx 16.5 and below.
+            (workspaces as any).readProjectsConfigurations({
+              _includeProjectsFromAngularJson: true,
+            });
+
       const context: ExecutorContext = {
         root: builderContext.workspaceRoot,
         projectName: builderContext.target.project,
@@ -35,9 +47,9 @@ export function convertNxExecutor(executor: Executor) {
         configurationName: builderContext.target.configuration,
         projectsConfigurations,
         nxJsonConfiguration,
-        workspace: { ...projectsConfigurations, ...nxJsonConfiguration },
         cwd: process.cwd(),
-        projectGraph,
+        projectGraph: null,
+        taskGraph: null,
         isVerbose: false,
       };
       return executor(options, context);

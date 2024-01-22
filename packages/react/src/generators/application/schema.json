@@ -28,14 +28,18 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z].*$",
-      "x-priority": "important"
+      "pattern": "^[a-zA-Z][^:]*$"
     },
     "directory": {
       "description": "The directory of the new application.",
       "type": "string",
       "alias": "dir",
       "x-priority": "important"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -53,10 +57,6 @@
           {
             "value": "scss",
             "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
-          },
-          {
-            "value": "styl",
-            "label": "Stylus(.styl)     [ http://stylus-lang.com                   ]"
           },
           {
             "value": "less",
@@ -99,8 +99,8 @@
       "default": false,
       "x-priority": "internal"
     },
-    "skipWorkspaceJson": {
-      "description": "Skip updating `workspace.json` with default options based on values provided to this app (e.g. babel, style).",
+    "skipNxJson": {
+      "description": "Skip updating `nx.json` with default options based on values provided to this app.",
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
@@ -118,8 +118,9 @@
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["cypress", "none"],
+      "enum": ["cypress", "playwright", "none"],
       "description": "Test runner to use for end to end (E2E) tests.",
+      "x-prompt": "Which E2E test runner would you like to use?",
       "default": "cypress"
     },
     "tags": {
@@ -159,12 +160,6 @@
       "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
-    },
     "compiler": {
       "type": "string",
       "description": "The compiler to use.",
@@ -186,7 +181,7 @@
     "bundler": {
       "description": "The bundler to use.",
       "type": "string",
-      "enum": ["vite", "webpack"],
+      "enum": ["vite", "webpack", "rspack"],
       "x-prompt": "Which bundler do you want to use to build the application?",
       "default": "webpack",
       "x-priority": "important"
@@ -197,6 +192,6 @@
       "default": false
     }
   },
-  "required": [],
+  "required": ["name"],
   "examplesFile": "../../../docs/application-examples.md"
 }

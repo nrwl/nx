@@ -69,3 +69,11 @@ html {
 .hljs .hljs-strong {
   font-weight: 700;
 }
+
+.linenumber {
+  border-color: rgb(59 130 246);
+  background: #e5e7eb;
+}
+html.dark .linenumber {
+  background: #e5e7eb33;
+}

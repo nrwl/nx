@@ -1,26 +1,28 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import type { Schema } from '../schema';
 
 import {
   readProjectConfiguration,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 export function changeBuildTarget(host: Tree, options: Schema) {
   const appConfig = readProjectConfiguration(host, options.appName);
 
-  appConfig.targets.build.executor = '@nrwl/angular:webpack-browser';
+  const configExtName = options.typescriptConfiguration ? 'ts' : 'js';
+
+  appConfig.targets.build.executor = '@nx/angular:webpack-browser';
   appConfig.targets.build.options = {
     ...appConfig.targets.build.options,
     customWebpackConfig: {
-      path: `${appConfig.root}/webpack.config.js`,
+      path: `${appConfig.root}/webpack.config.${configExtName}`,
     },
   };
 
   appConfig.targets.build.configurations.production = {
     ...appConfig.targets.build.configurations.production,
     customWebpackConfig: {
-      path: `${appConfig.root}/webpack.prod.config.js`,
+      path: `${appConfig.root}/webpack.prod.config.${configExtName}`,
     },
   };
 

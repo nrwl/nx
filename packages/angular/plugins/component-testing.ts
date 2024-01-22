@@ -1,13 +1,13 @@
 import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
-} from '@nrwl/cypress/plugins/cypress-preset';
+} from '@nx/cypress/plugins/cypress-preset';
 import {
   createExecutorContext,
   getProjectConfigByPath,
   getTempTailwindPath,
   isCtProjectUsingBuildProject,
-} from '@nrwl/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/src/utils/ct-helpers';
 import {
   ExecutorContext,
   joinPathFragments,
@@ -19,11 +19,11 @@ import {
   readCachedProjectGraph,
   readTargetOptions,
   stripIndents,
-  workspaceRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { existsSync, lstatSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
-import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/webpack-browser.impl';
+import type { BrowserBuilderSchema } from '../src/builders/webpack-browser/schema';
+import { gte } from 'semver';
 
 /**
  * Angular nx preset for Cypress Component Testing
@@ -73,16 +73,19 @@ ${e.stack ? e.stack : e}`
   const buildTarget = getBuildableTarget(ctContext);
 
   if (!buildTarget.project && !graph.nodes?.[buildTarget.project]?.data) {
-    throw new Error(stripIndents`Unable to find project configuration for build target. 
+    throw new Error(stripIndents`Unable to find project configuration for build target.
     Project Name? ${buildTarget.project}
     Has project config? ${!!graph.nodes?.[buildTarget.project]?.data}`);
   }
 
-  const fromWorkspaceRoot = relative(workspaceRoot, pathToConfig);
+  const fromWorkspaceRoot = relative(ctContext.root, pathToConfig);
   const normalizedFromWorkspaceRootPath = lstatSync(pathToConfig).isFile()
     ? dirname(fromWorkspaceRoot)
     : fromWorkspaceRoot;
-  const offset = offsetFromRoot(normalizedFromWorkspaceRootPath);
+  const offset = isOffsetNeeded(ctContext, ctProjectConfig)
+    ? offsetFromRoot(normalizedFromWorkspaceRootPath)
+    : undefined;
+
   const buildContext = createExecutorContext(
     graph,
     graph.nodes[buildTarget.project]?.data.targets,
@@ -98,9 +101,20 @@ ${e.stack ? e.stack : e}`
   );
 
   return {
-    ...nxBaseCypressPreset(pathToConfig),
+    ...nxBaseCypressPreset(pathToConfig, { testingType: 'component' }),
     // NOTE: cannot use a glob pattern since it will break cypress generated tsconfig.
     specPattern: ['src/**/*.cy.ts', 'src/**/*.cy.js'],
+    // Cy v12.17.0+ does not work with aboslute paths for index file
+    // but does with relative pathing, since relative path is the default location, we can omit it
+    indexHtmlFile: requiresAbsolutePath()
+      ? joinPathFragments(
+          ctContext.root,
+          ctProjectConfig.root,
+          'cypress',
+          'support',
+          'component-index.html'
+        )
+      : undefined,
     devServer: {
       // cypress uses string union type,
       // need to use const to prevent typing to string
@@ -156,8 +170,12 @@ function getBuildableTarget(ctContext: ExecutorContext) {
 function normalizeBuildTargetOptions(
   buildContext: ExecutorContext,
   ctContext: ExecutorContext,
-  offset: string
-): { root: string; sourceRoot: string; buildOptions: BrowserBuilderSchema } {
+  offset?: string
+): {
+  root: string;
+  sourceRoot: string;
+  buildOptions: BrowserBuilderSchema & { workspaceRoot: string };
+} {
   const options = readTargetOptions<BrowserBuilderSchema>(
     {
       project: buildContext.projectName,
@@ -168,39 +186,45 @@ function normalizeBuildTargetOptions(
   );
   const buildOptions = withSchemaDefaults(options);
 
-  // polyfill entries might be local files or files that are resolved from node_modules
-  // like zone.js.
-  // prevents error from webpack saying can't find <offset>/zone.js.
-  const handlePolyfillPath = (polyfill: string) => {
-    const maybeFullPath = join(workspaceRoot, polyfill.split('/').join(sep));
-    if (existsSync(maybeFullPath)) {
-      return joinPathFragments(offset, polyfill);
-    }
-    return polyfill;
-  };
-  // paths need to be unix paths for angular devkit
-  buildOptions.polyfills =
-    Array.isArray(buildOptions.polyfills) && buildOptions.polyfills.length > 0
-      ? (buildOptions.polyfills as string[]).map((p) => handlePolyfillPath(p))
-      : handlePolyfillPath(buildOptions.polyfills as string);
-
-  buildOptions.main = joinPathFragments(offset, buildOptions.main);
-  buildOptions.index =
-    typeof buildOptions.index === 'string'
-      ? joinPathFragments(offset, buildOptions.index)
-      : {
-          ...buildOptions.index,
-          input: joinPathFragments(offset, buildOptions.index.input),
-        };
   // cypress creates a tsconfig if one isn't preset
   // that contains all the support required for angular and component tests
   delete buildOptions.tsConfig;
 
-  buildOptions.fileReplacements = buildOptions.fileReplacements.map((fr) => {
-    fr.replace = joinPathFragments(offset, fr.replace);
-    fr.with = joinPathFragments(offset, fr.with);
-    return fr;
-  });
+  if (offset) {
+    // polyfill entries might be local files or files that are resolved from node_modules
+    // like zone.js.
+    // prevents error from webpack saying can't find <offset>/zone.js.
+    const handlePolyfillPath = (polyfill: string) => {
+      const maybeFullPath = join(ctContext.root, polyfill.split('/').join(sep));
+      if (existsSync(maybeFullPath)) {
+        return joinPathFragments(offset, polyfill);
+      }
+      return polyfill;
+    };
+    // paths need to be unix paths for angular devkit
+    if (buildOptions.polyfills) {
+      buildOptions.polyfills =
+        Array.isArray(buildOptions.polyfills) &&
+        buildOptions.polyfills.length > 0
+          ? (buildOptions.polyfills as string[]).map((p) =>
+              handlePolyfillPath(p)
+            )
+          : handlePolyfillPath(buildOptions.polyfills as string);
+    }
+    buildOptions.main = joinPathFragments(offset, buildOptions.main);
+    buildOptions.index =
+      typeof buildOptions.index === 'string'
+        ? joinPathFragments(offset, buildOptions.index)
+        : {
+            ...buildOptions.index,
+            input: joinPathFragments(offset, buildOptions.index.input),
+          };
+    buildOptions.fileReplacements = buildOptions.fileReplacements.map((fr) => {
+      fr.replace = joinPathFragments(offset, fr.replace);
+      fr.with = joinPathFragments(offset, fr.with);
+      return fr;
+    });
+  }
 
   // if the ct project isn't being used in the build project
   // then we don't want to have the assets/scripts/styles be included to
@@ -213,29 +237,31 @@ function normalizeBuildTargetOptions(
       ctContext.projectName
     )
   ) {
-    buildOptions.assets = buildOptions.assets.map((asset) => {
-      return typeof asset === 'string'
-        ? joinPathFragments(offset, asset)
-        : { ...asset, input: joinPathFragments(offset, asset.input) };
-    });
-    buildOptions.styles = buildOptions.styles.map((style) => {
-      return typeof style === 'string'
-        ? joinPathFragments(offset, style)
-        : { ...style, input: joinPathFragments(offset, style.input) };
-    });
-    buildOptions.scripts = buildOptions.scripts.map((script) => {
-      return typeof script === 'string'
-        ? joinPathFragments(offset, script)
-        : { ...script, input: joinPathFragments(offset, script.input) };
-    });
-    if (buildOptions.stylePreprocessorOptions?.includePaths.length > 0) {
-      buildOptions.stylePreprocessorOptions = {
-        includePaths: buildOptions.stylePreprocessorOptions.includePaths.map(
-          (path) => {
-            return joinPathFragments(offset, path);
-          }
-        ),
-      };
+    if (offset) {
+      buildOptions.assets = buildOptions.assets.map((asset) => {
+        return typeof asset === 'string'
+          ? joinPathFragments(offset, asset)
+          : { ...asset, input: joinPathFragments(offset, asset.input) };
+      });
+      buildOptions.styles = buildOptions.styles.map((style) => {
+        return typeof style === 'string'
+          ? joinPathFragments(offset, style)
+          : { ...style, input: joinPathFragments(offset, style.input) };
+      });
+      buildOptions.scripts = buildOptions.scripts.map((script) => {
+        return typeof script === 'string'
+          ? joinPathFragments(offset, script)
+          : { ...script, input: joinPathFragments(offset, script.input) };
+      });
+      if (buildOptions.stylePreprocessorOptions?.includePaths.length > 0) {
+        buildOptions.stylePreprocessorOptions = {
+          includePaths: buildOptions.stylePreprocessorOptions.includePaths.map(
+            (path) => {
+              return joinPathFragments(offset, path);
+            }
+          ),
+        };
+      }
     }
   } else {
     const stylePath = getTempStylesForTailwind(ctContext);
@@ -256,15 +282,21 @@ Note: this may fail, setting the correct 'sourceRoot' for ${buildContext.project
   }
 
   return {
-    root: joinPathFragments(offset, config.root),
-    sourceRoot: joinPathFragments(offset, config.sourceRoot),
-    buildOptions,
+    root: offset ? joinPathFragments(offset, config.root) : config.root,
+    sourceRoot: offset
+      ? joinPathFragments(offset, config.sourceRoot)
+      : config.sourceRoot,
+    buildOptions: {
+      ...buildOptions,
+      // this property is only valid for cy v12.9.0+
+      workspaceRoot: offset ? undefined : ctContext.root,
+    },
   };
 }
 
 function withSchemaDefaults(options: any): BrowserBuilderSchema {
-  if (!options.main) {
-    throw new Error('Missing executor options "main"');
+  if (!options.main && !options.browser) {
+    throw new Error('Missing executor options "main" and "browser"');
   }
   if (!options.index) {
     throw new Error('Missing executor options "index"');
@@ -290,6 +322,7 @@ function withSchemaDefaults(options: any): BrowserBuilderSchema {
   options.outputHashing ??= 'none';
   options.progress ??= true;
   options.scripts ??= [];
+  options.main ??= options.browser;
 
   return options;
 }
@@ -309,13 +342,14 @@ function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
     ctProjectConfig.root,
     'tailwind.config'
   );
-  const isTailWindInCtProject =
-    existsSync(ctProjectTailwindConfig + '.js') ||
-    existsSync(ctProjectTailwindConfig + '.cjs');
+  const exts = ['js', 'cjs'];
+  const isTailWindInCtProject = exts.some((ext) =>
+    existsSync(`${ctProjectTailwindConfig}.${ext}`)
+  );
   const rootTailwindPath = join(ctExecutorContext.root, 'tailwind.config');
-  const isTailWindInRoot =
-    existsSync(rootTailwindPath + '.js') ||
-    existsSync(rootTailwindPath + '.cjs');
+  const isTailWindInRoot = exts.some((ext) =>
+    existsSync(`${rootTailwindPath}.${ext}`)
+  );
 
   if (isTailWindInRoot || isTailWindInCtProject) {
     const pathToStyle = getTempTailwindPath(ctExecutorContext);
@@ -338,4 +372,76 @@ function getTempStylesForTailwind(ctExecutorContext: ExecutorContext) {
       logger.error(makeTmpFileError);
     }
   }
+}
+
+function isOffsetNeeded(
+  ctExecutorContext: ExecutorContext,
+  ctProjectConfig: ProjectConfiguration
+) {
+  try {
+    const supportsWorkspaceRoot = isCyVersionGreaterThanOrEqual('12.9.0');
+
+    // if using cypress <v12.9.0 then we require the offset
+    if (!supportsWorkspaceRoot) {
+      return true;
+    }
+
+    if (
+      ctProjectConfig.projectType === 'library' &&
+      // angular will only see this config if the library root is the build project config root
+      // otherwise it will be set to the buildTarget root which is the app root where this config doesn't exist
+      // causing tailwind styles from the libs project root to not work
+      ['js', 'cjs'].some((ext) =>
+        existsSync(
+          join(
+            ctExecutorContext.root,
+            ctProjectConfig.root,
+            `tailwind.config.${ext}`
+          )
+        )
+      )
+    ) {
+      return true;
+    }
+
+    return false;
+  } catch (e) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      logger.error(e);
+    }
+    // unable to determine if we don't require an offset
+    // safest to assume we do
+    return true;
+  }
+}
+
+/**
+ * check if the cypress version is able to understand absolute paths to the indexHtmlFile option
+ * this is required for nx to work with cypress <v12.17.0 since the relative pathing is causes issues
+ * with invalid pathing.
+ * v12.17.0+ works with relative pathing
+ *
+ * if there is an error thrown then we assume it is an older version of cypress and use the absolute path
+ * as that was supported for longer.
+ *
+ * */
+function requiresAbsolutePath() {
+  try {
+    return !isCyVersionGreaterThanOrEqual('12.17.0');
+  } catch (e) {
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      logger.error(e);
+    }
+    return true;
+  }
+}
+
+/**
+ * Checks if the install cypress version is greater than or equal to the provided version.
+ * Does not catch errors as any custom logic for error handling is required on consumer side.
+ * */
+function isCyVersionGreaterThanOrEqual(version: string) {
+  const { version: cyVersion = null } = require('cypress/package.json');
+
+  return !!cyVersion && gte(cyVersion, version);
 }

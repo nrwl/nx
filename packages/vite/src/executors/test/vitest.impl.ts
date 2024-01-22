@@ -1,74 +1,44 @@
-import { ExecutorContext, workspaceRoot } from '@nrwl/devkit';
-import { CoverageOptions, File, Reporter } from 'vitest';
+import { ExecutorContext, workspaceRoot } from '@nx/devkit';
 import { VitestExecutorOptions } from './schema';
-import { relative } from 'path';
-
-class NxReporter implements Reporter {
-  deferred: {
-    promise: Promise<boolean>;
-    resolve: (val: boolean) => void;
-  };
-
-  constructor(private watch: boolean) {
-    this.setupDeferred();
-  }
-
-  async *[Symbol.asyncIterator]() {
-    do {
-      const hasErrors = await this.deferred.promise;
-      yield { hasErrors };
-      this.setupDeferred();
-    } while (this.watch);
-  }
-
-  private setupDeferred() {
-    let resolve: (val: boolean) => void;
-    this.deferred = {
-      promise: new Promise((res) => {
-        resolve = res;
-      }),
-      resolve,
-    };
-  }
-
-  onFinished(files: File[], errors?: unknown[]) {
-    const hasErrors =
-      files.some((f) => f.result?.state === 'fail') || errors?.length > 0;
-    this.deferred.resolve(hasErrors);
-  }
-}
+import { resolve } from 'path';
+import { registerTsConfigPaths } from '@nx/js/src/internal';
+import { NxReporter } from './lib/nx-reporter';
+import { getExtraArgs, getOptions } from './lib/utils';
 
 export async function* vitestExecutor(
   options: VitestExecutorOptions,
   context: ExecutorContext
 ) {
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
+
+  registerTsConfigPaths(resolve(workspaceRoot, projectRoot, 'tsconfig.json'));
+
+  process.env.VITE_CJS_IGNORE_WARNING = 'true';
+  // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { startVitest } = await (Function(
     'return import("vitest/node")'
   )() as Promise<typeof import('vitest/node')>);
 
-  const projectRoot = context.projectGraph.nodes[context.projectName].data.root;
-  const offset = relative(workspaceRoot, context.cwd);
+  const extraArgs = await getExtraArgs(options);
+  const resolvedOptions =
+    (await getOptions(options, context, projectRoot, extraArgs)) ?? {};
 
-  const nxReporter = new NxReporter(options.watch);
-  // if reportsDirectory is not provides vitest will remove all files in the project root
-  // when coverage is enabled in the vite.config.ts
-  const coverage: CoverageOptions = options.reportsDirectory
-    ? {
-        enabled: options.coverage,
-        reportsDirectory: options.reportsDirectory,
-      }
-    : {};
-  const settings = {
-    ...options,
-    // when running nx from the project root, the root will get appended to the cwd.
-    // creating an invalid path and no tests will be found.
-    // instead if we are not at the root, let the cwd be root.
-    root: offset === '' ? projectRoot : '',
-    reporters: [...(options.reporters ?? []), 'default', nxReporter],
-    coverage,
-  };
+  const nxReporter = new NxReporter(resolvedOptions['watch']);
+  if (resolvedOptions['reporters'] === undefined) {
+    resolvedOptions['reporters'] = [];
+  } else if (typeof resolvedOptions['reporters'] === 'string') {
+    resolvedOptions['reporters'] = [resolvedOptions['reporters']];
+  }
+  resolvedOptions['reporters'].push(nxReporter);
 
-  const ctx = await startVitest(options.mode, [], settings);
+  const cliFilters = options.testFiles ?? [];
+
+  const ctx = await startVitest(
+    resolvedOptions['mode'] ?? 'test',
+    cliFilters,
+    resolvedOptions
+  );
 
   let hasErrors = false;
 
@@ -81,7 +51,7 @@ export async function* vitestExecutor(
     }
   };
 
-  if (options.watch) {
+  if (resolvedOptions['watch'] === true) {
     process.on('SIGINT', processExit);
     process.on('SIGTERM', processExit);
     process.on('exit', processExit);

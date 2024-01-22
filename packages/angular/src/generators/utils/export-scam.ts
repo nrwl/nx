@@ -1,34 +1,31 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   logger,
   names,
   readProjectConfiguration,
   stripIndents,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { locateLibraryEntryPointFromDirectory } from './entry-point';
-import type { FileInfo } from './file-info';
 import { getRelativeImportToFile } from './path';
 
 export type GenerationOptions = {
+  directory: string;
+  filePath: string;
   name: string;
-  project: string;
+  projectName: string;
   export?: boolean;
   inlineScam?: boolean;
 };
 
-export function exportScam(
-  tree: Tree,
-  fileInfo: FileInfo,
-  options: GenerationOptions
-): void {
+export function exportScam(tree: Tree, options: GenerationOptions): void {
   if (!options.export) {
     return;
   }
 
   const { projectType, root, sourceRoot } = readProjectConfiguration(
     tree,
-    options.project
+    options.projectName
   );
   const projectSourceRoot = sourceRoot ?? joinPathFragments(root, 'src');
 
@@ -42,7 +39,7 @@ export function exportScam(
 
   const entryPointPath = locateLibraryEntryPointFromDirectory(
     tree,
-    fileInfo.directory,
+    options.directory,
     root,
     projectSourceRoot
   );
@@ -59,15 +56,15 @@ export function exportScam(
 
   const relativePathFromEntryPoint = getRelativeImportToFile(
     entryPointPath,
-    fileInfo.filePath
+    options.filePath
   );
   const entryPointContent = tree.read(entryPointPath, 'utf-8');
   let updatedEntryPointContent = stripIndents`${entryPointContent}
-    export * from "${relativePathFromEntryPoint}";`;
+    export * from '${relativePathFromEntryPoint}';`;
 
   if (!options.inlineScam) {
     const moduleFilePath = joinPathFragments(
-      fileInfo.directory,
+      options.directory,
       `${names(options.name).fileName}.module.ts`
     );
     const relativePathFromModule = getRelativeImportToFile(
@@ -75,7 +72,7 @@ export function exportScam(
       moduleFilePath
     );
     updatedEntryPointContent = stripIndents`${updatedEntryPointContent}
-        export * from "${relativePathFromModule}";`;
+        export * from '${relativePathFromModule}';`;
   }
 
   tree.write(entryPointPath, updatedEntryPointContent);

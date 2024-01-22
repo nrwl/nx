@@ -1,6 +1,6 @@
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { Configuration } from 'webpack';
-import { getCSSModuleLocalIdent } from '@nrwl/webpack';
+import { getCSSModuleLocalIdent } from '@nx/webpack';
 
 export function buildBaseWebpackConfig({
   tsConfigPath = 'tsconfig.cy.json',
@@ -71,7 +71,7 @@ export function buildBaseWebpackConfig({
       test: /\.(js|jsx|mjs|ts|tsx)$/,
       loader: require.resolve('babel-loader'),
       options: {
-        presets: [`@nrwl/react/babel`],
+        presets: [`@nx/react/babel`],
         rootMode: 'upward',
         babelrc: true,
       },
@@ -99,7 +99,7 @@ const commonLoaders = [
 ];
 
 const CSS_MODULES_LOADER = {
-  test: /\.css$|\.scss$|\.sass$|\.less$|\.styl$/,
+  test: /\.css$|\.scss$|\.sass$|\.less$/,
   oneOf: [
     {
       test: /\.module\.css$/,
@@ -127,15 +127,6 @@ const CSS_MODULES_LOADER = {
         ...commonLoaders,
         {
           loader: require.resolve('less-loader'),
-        },
-      ],
-    },
-    {
-      test: /\.module\.styl$/,
-      use: [
-        ...commonLoaders,
-        {
-          loader: require.resolve('stylus-loader'),
         },
       ],
     },

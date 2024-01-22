@@ -1,0 +1,4 @@
+{
+  "name": "win32-arm64-msvc",
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json"
+}

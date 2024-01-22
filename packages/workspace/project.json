@@ -6,7 +6,7 @@
   "targets": {
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "assets": [
           {
@@ -75,25 +75,15 @@
       }
     },
     "build": {
-      "executor": "nx:run-commands",
       "outputs": ["{workspaceRoot}/build/packages/workspace"],
+      "command": "node ./scripts/copy-readme.js workspace"
+    },
+    "add-extra-dependencies": {
+      "executor": "nx:run-commands",
       "options": {
         "commands": [
-          {
-            "command": "node ./scripts/copy-graph-client.js"
-          },
-          {
-            "command": "node ./scripts/copy-readme.js workspace"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js workspace nx"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/devkit"
-          },
-          {
-            "command": "node ./scripts/add-dependency-to-build.js workspace @nrwl/linter"
-          }
+          "node ./scripts/add-dependency-to-build.js workspace nx",
+          "node ./scripts/add-dependency-to-build.js workspace @nrwl/workspace"
         ],
         "parallel": false
       }

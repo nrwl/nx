@@ -1,0 +1,53 @@
+name: Generate embeddings
+
+on:
+  schedule:
+    - cron: "0 5 * * 0,4" # sunday, thursday 5AM
+  workflow_dispatch:
+jobs:
+  cache-and-install:
+    if: github.repository == 'nrwl/nx'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18]
+        
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        id: pnpm-install
+        with:
+          version: 7
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run embeddings script
+        run: pnpm exec nx run tools-documentation-create-embeddings:run-node 
+        env:
+            NX_NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NX_NEXT_PUBLIC_SUPABASE_URL }}
+            NX_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.NX_SUPABASE_SERVICE_ROLE_KEY }}
+            NX_OPENAI_KEY: ${{ secrets.NX_OPENAI_KEY }}

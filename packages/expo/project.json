@@ -7,7 +7,7 @@
     "lint": {},
     "test": {},
     "build-base": {
-      "executor": "@nrwl/js:tsc",
+      "executor": "@nx/js:tsc",
       "options": {
         "assets": [
           "packages/expo/*.md",
@@ -52,6 +52,9 @@
       "options": {
         "command": "node ./scripts/copy-readme.js expo"
       }
+    },
+    "add-extra-dependencies": {
+      "command": "node ./scripts/add-dependency-to-build.js expo @nrwl/expo"
     }
   },
   "tags": []

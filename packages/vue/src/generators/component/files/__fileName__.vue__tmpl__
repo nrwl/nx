@@ -1,0 +1,10 @@
+<script setup lang="ts">
+// defineProps<{}>()
+</script>
+
+<template>
+  <p>Welcome to <%= className %>!</p>
+</template>
+
+<style scoped>
+</style>

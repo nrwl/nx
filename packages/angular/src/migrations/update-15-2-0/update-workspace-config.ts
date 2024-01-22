@@ -1,9 +1,9 @@
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   formatFiles,
   getProjects,
   updateProjectConfiguration,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { Builders } from '@schematics/angular/utility/workspace-models';
 
 export default async function updateWorkspaceConfigurations(tree: Tree) {

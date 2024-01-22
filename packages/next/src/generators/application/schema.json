@@ -14,14 +14,19 @@
         "index": 0
       },
       "x-prompt": "What name would you like to use for the application?",
-      "pattern": "^[a-zA-Z].*$",
+      "pattern": "^[a-zA-Z][^:]*$",
       "x-priority": "important"
     },
     "directory": {
       "description": "The directory of the new application.",
       "type": "string",
-      "alias": "d",
+      "alias": "dir",
       "x-priority": "important"
+    },
+    "projectNameAndRootFormat": {
+      "description": "Whether to generate the project name and root directory as provided (`as-provided`) or generate them composing their values and taking the configured layout into account (`derived`).",
+      "type": "string",
+      "enum": ["as-provided", "derived"]
     },
     "style": {
       "description": "The file extension to be used for style files.",
@@ -38,10 +43,6 @@
             "label": "SASS(.scss)       [ http://sass-lang.com          ]"
           },
           {
-            "value": "styl",
-            "label": "Stylus(.styl)     [ http://stylus-lang.com        ]"
-          },
-          {
             "value": "less",
             "label": "LESS              [ http://lesscss.org            ]"
           },
@@ -56,13 +57,13 @@
           {
             "value": "styled-jsx",
             "label": "styled-jsx        [ https://www.npmjs.com/package/styled-jsx ]"
+          },
+          {
+            "value": "none",
+            "label": "None"
           }
         ]
       }
-    },
-    "server": {
-      "description": "The server script path to be used with next.",
-      "type": "string"
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -84,8 +85,9 @@
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["cypress", "none"],
+      "enum": ["cypress", "playwright", "none"],
       "description": "Test runner to use for end to end (E2E) tests.",
+      "x-prompt": "Which E2E test runner would you like to use?",
       "default": "cypress"
     },
     "tags": {
@@ -103,12 +105,6 @@
       "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
-    "standaloneConfig": {
-      "description": "Split the project configuration into `<projectRoot>/project.json` rather than including it inside `workspace.json`",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
-    },
     "swc": {
       "description": "Enable the Rust-based compiler SWC to compile JS/TS files.",
       "type": "boolean",
@@ -123,6 +119,25 @@
       "type": "boolean",
       "default": false,
       "description": "Do not add dependencies to `package.json`.",
+      "x-priority": "internal"
+    },
+    "appDir": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable the App Router for this project.",
+      "x-prompt": "Would you like to use the App Router (recommended)?"
+    },
+    "src": {
+      "type": "boolean",
+      "default": true,
+      "description": "Generate a `src` directory for the project.",
+      "x-prompt": "Would you like to use `src/` directory?"
+    },
+    "rootProject": {
+      "description": "Create an application at the root of the workspace.",
+      "type": "boolean",
+      "default": false,
+      "hidden": true,
       "x-priority": "internal"
     }
   },

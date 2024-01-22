@@ -1,68 +1,20 @@
 import {
-  addDependenciesToPackageJson,
-  convertNxGenerator,
-  readJson,
+  formatFiles,
+  GeneratorCallback,
   readNxJson,
+  runTasksInSerial,
   Tree,
-  updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
-import {
-  jsdomVersion,
-  nxVersion,
-  vitePluginDtsVersion,
-  vitePluginEslintVersion,
-  vitePluginReactVersion,
-  vitestUiVersion,
-  vitestVersion,
-  viteTsConfigPathsVersion,
-  viteVersion,
-} from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
+import {
+  addPlugin,
+  checkDependenciesInstalled,
+  moveToDevDependencies,
+} from './lib/utils';
 
-function checkDependenciesInstalled(host: Tree, schema: InitGeneratorSchema) {
-  const packageJson = readJson(host, 'package.json');
-  const devDependencies = {};
-  const dependencies = {};
-  packageJson.dependencies = packageJson.dependencies || {};
-  packageJson.devDependencies = packageJson.devDependencies || {};
-
-  // base deps
-  devDependencies['@nrwl/vite'] = nxVersion;
-  devDependencies['vite'] = viteVersion;
-  devDependencies['vite-plugin-eslint'] = vitePluginEslintVersion;
-  devDependencies['vite-tsconfig-paths'] = viteTsConfigPathsVersion;
-  devDependencies['vitest'] = vitestVersion;
-  devDependencies['@vitest/ui'] = vitestUiVersion;
-  devDependencies['jsdom'] = jsdomVersion;
-
-  if (schema.uiFramework === 'react') {
-    devDependencies['@vitejs/plugin-react'] = vitePluginReactVersion;
-  }
-
-  if (schema.includeLib) {
-    devDependencies['vite-plugin-dts'] = vitePluginDtsVersion;
-  }
-
-  return addDependenciesToPackageJson(host, dependencies, devDependencies);
-}
-
-function moveToDevDependencies(tree: Tree) {
-  updateJson(tree, 'package.json', (packageJson) => {
-    packageJson.dependencies = packageJson.dependencies || {};
-    packageJson.devDependencies = packageJson.devDependencies || {};
-
-    if (packageJson.dependencies['@nrwl/vite']) {
-      packageJson.devDependencies['@nrwl/vite'] =
-        packageJson.dependencies['@nrwl/vite'];
-      delete packageJson.dependencies['@nrwl/vite'];
-    }
-    return packageJson;
-  });
-}
-
-export function createVitestConfig(tree: Tree) {
+export function updateNxJsonSettings(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   const productionFileSet = nxJson.namedInputs?.production;
@@ -75,22 +27,43 @@ export function createVitestConfig(tree: Tree) {
     nxJson.namedInputs.production = Array.from(new Set(productionFileSet));
   }
 
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults.test ??= {};
-  nxJson.targetDefaults.test.inputs ??= [
-    'default',
-    productionFileSet ? '^production' : '^default',
-  ];
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/vite/plugin'
+      : p.plugin === '@nx/vite/plugin'
+  );
+
+  if (!hasPlugin) {
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults['@nx/vite:test'] ??= {};
+    nxJson.targetDefaults['@nx/vite:test'].cache ??= true;
+    nxJson.targetDefaults['@nx/vite:test'].inputs ??= [
+      'default',
+      productionFileSet ? '^production' : '^default',
+    ];
+  }
 
   updateNxJson(tree, nxJson);
 }
 
-export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
-  moveToDevDependencies(tree);
-  createVitestConfig(tree);
-  const installTask = checkDependenciesInstalled(tree, schema);
-  return installTask;
+export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
+  if (process.env.NX_PCV3 === 'true') {
+    addPlugin(tree);
+  }
+
+  updateNxJsonSettings(tree);
+
+  const tasks: GeneratorCallback[] = [];
+  if (!schema.skipPackageJson) {
+    tasks.push(moveToDevDependencies(tree));
+    tasks.push(checkDependenciesInstalled(tree, schema));
+  }
+
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
+
+  return runTasksInSerial(...tasks);
 }
 
 export default initGenerator;
-export const initSchematic = convertNxGenerator(initGenerator);

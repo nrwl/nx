@@ -7,8 +7,16 @@
   "cli": "nx",
   "presets": [
     {
-      "name": "Run tests",
-      "keys": ["detoxConfiguration", "loglevel", "reuse"]
+      "name": "Test a Detox Configuration",
+      "keys": ["detoxConfiguration"]
+    },
+    {
+      "name": "Reuse Existing Installed App",
+      "keys": ["reuse"]
+    },
+    {
+      "name": "Set Log Level",
+      "keys": ["loglevel"]
     }
   ],
   "properties": {
@@ -35,21 +43,25 @@
       "x-completion-glob": ".detoxrc?(.js)",
       "x-priority": "important"
     },
-    "runnerConfig": {
-      "type": "string",
-      "description": "Test runner config file, defaults to `e2e/mocha.opts` for mocha and `e2e/config.json` for Jest.",
-      "alias": "o"
-    },
-    "deviceName": {
-      "type": "string",
-      "description": "Override the device name specified in a configuration. Useful for running a single build configuration on multiple devices.",
-      "alias": "n"
-    },
     "loglevel": {
       "type": "string",
       "enum": ["fatal", "error", "warn", "info", "verbose", "trace"],
       "description": "Log level: `fatal`, `error`, `warn`, `info`, `verbose`, `trace`.",
       "alias": "l"
+    },
+    "retries": {
+      "type": "number",
+      "description": "[Jest Circus Only] Re-spawn the test runner for individual failing suite files until they pass, or `<N>` times at least."
+    },
+    "reuse": {
+      "type": "boolean",
+      "description": "Reuse existing installed app (do not delete + reinstall) for a faster run.",
+      "default": false
+    },
+    "cleanup": {
+      "type": "boolean",
+      "description": "Shutdown simulator when test is over, useful for CI scripts, to make sure detox exists cleanly with no residue",
+      "alias": "u"
     },
     "debugSynchronization": {
       "type": "boolean",
@@ -81,32 +93,10 @@
       "enum": ["all", "none"],
       "description": "[iOS Only] Save Detox Instruments performance recordings of each test to artifacts directory."
     },
-    "recordTimeline": {
-      "type": "string",
-      "enum": ["all", "none"],
-      "description": "[Jest Only] Record tests and events timeline, for visual display on the `chrome://tracing` tool."
-    },
     "captureViewHierarchy": {
       "type": "string",
       "enum": ["enabled", "disabled"],
       "description": "[iOS Only] Capture `*.uihierarchy` snapshots on view action errors and `device.captureViewHierarchy()` calls."
-    },
-    "retries": {
-      "type": "number",
-      "description": "[Jest Circus Only] Re-spawn the test runner for individual failing suite files until they pass, or `<N>` times at least."
-    },
-    "reuse": {
-      "type": "boolean",
-      "description": "Reuse existing installed app (do not delete + reinstall) for a faster run.",
-      "default": true
-    },
-    "cleanup": {
-      "type": "boolean",
-      "description": "Shutdown simulator when test is over, useful for CI scripts, to make sure detox exists cleanly with no residue"
-    },
-    "workers": {
-      "type": "number",
-      "description": "Specifies number of workers the test runner should spawn, requires a test runner with parallel execution support (Detox CLI currently supports Jest)."
     },
     "jestReportSpecs": {
       "type": "boolean",
@@ -120,17 +110,22 @@
       "type": "boolean",
       "description": "[Android Only] Launch Emulator with the specific `-gpu [gpu mode]` parameter."
     },
-    "deviceLaunchArgs": {
+    "keepLockFile": {
+      "type": "boolean",
+      "description": "Keep the device lock file when running Detox tests."
+    },
+    "deviceName": {
       "type": "string",
-      "description": "A list of passthrough-arguments to use when (if) devices (Android emulator / iOS simulator) are launched by Detox."
+      "description": "Override the device name specified in a configuration. Useful for running a single build configuration on multiple devices.",
+      "alias": "n"
+    },
+    "deviceBootArgs": {
+      "type": "string",
+      "description": "Custom arguments to pass (through) onto the device (emulator/simulator) binary when booted."
     },
     "appLaunchArgs": {
       "type": "number",
       "description": "Custom arguments to pass (through) onto the app every time it is launched."
-    },
-    "noColor": {
-      "type": "boolean",
-      "description": "Disable colors in log output"
     },
     "useCustomLogger": {
       "type": "boolean",
@@ -143,6 +138,32 @@
     "inspectBrk": {
       "type": "boolean",
       "description": "Uses node's `--inspect-brk` flag to let users debug the jest/mocha test runner"
+    },
+    "color": {
+      "type": "boolean",
+      "description": "Colors in log output"
+    },
+    "runnerConfig": {
+      "type": "string",
+      "description": "Test runner config file, defaults to `e2e/mocha.opts` for mocha and `e2e/config.json` for Jest.",
+      "alias": "o",
+      "x-deprecated": "Deprecated in Detox 20. It is default to jest.config.json. It could be specified in .detoxrc.json"
+    },
+    "recordTimeline": {
+      "type": "string",
+      "enum": ["all", "none"],
+      "description": "[Jest Only] Record tests and events timeline, for visual display on the `chrome://tracing` tool.",
+      "x-deprecated": "Deprecated in Detox 20."
+    },
+    "workers": {
+      "type": "number",
+      "description": "Specifies number of workers the test runner should spawn, requires a test runner with parallel execution support (Detox CLI currently supports Jest).",
+      "x-deprecated": "Deprecated in Detox 20."
+    },
+    "deviceLaunchArgs": {
+      "type": "string",
+      "description": "A list of passthrough-arguments to use when (if) devices (Android emulator / iOS simulator) are launched by Detox.",
+      "x-deprecated": "Deprecated in Detox 20. Use `deviceBootArgs` instead."
     }
   },
   "required": ["detoxConfiguration"]

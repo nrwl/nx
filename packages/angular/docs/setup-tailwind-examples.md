@@ -9,7 +9,7 @@ The `setup-tailwind` generator can be used to add [Tailwind](https://tailwindcss
 To generate a standard Tailwind setup, just run the following command.
 
 ```bash
-nx g @nrwl/angular:setup-tailwind myapp
+nx g @nx/angular:setup-tailwind myapp
 ```
 
 {% /tab %}
@@ -19,7 +19,7 @@ nx g @nrwl/angular:setup-tailwind myapp
 To specify the styles file that should be used as the entrypoint for Tailwind, simply pass the `--stylesEntryPoint` flag, relative to workspace root.
 
 ```bash
-nx g @nrwl/angular:setup-tailwind myapp --stylesEntryPoint=apps/myapp/src/styles.css
+nx g @nx/angular:setup-tailwind myapp --stylesEntryPoint=apps/myapp/src/styles.css
 ```
 
 {% /tab %}

@@ -3,16 +3,16 @@
   "lib": {
     "entryFile": "index.ts"
   },
+  "dest": "../../build/packages/angular",
+  "deleteDestPath": false,
   "allowedNonPeerDependencies": [
-    "@nrwl/",
+    "@nx/",
     "@angular-devkit",
     "@angular-eslint/",
-    "@nguniversal/builders",
     "@schematics",
     "@phenomnomnominal/tsquery",
     "@typescript-eslint/",
     "chalk",
-    "chokidar",
     "ignore",
     "minimatch",
     "rxjs-for-await",
@@ -23,7 +23,8 @@
     "webpack",
     "http-server",
     "magic-string",
-    "enquirer"
+    "enquirer",
+    "find-cache-dir"
   ],
   "keepLifecycleScripts": true
 }

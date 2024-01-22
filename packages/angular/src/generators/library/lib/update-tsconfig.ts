@@ -1,6 +1,6 @@
-import type { Tree } from '@nrwl/devkit';
-import { updateJson } from '@nrwl/devkit';
-import { getRelativePathToRootTsConfig } from '@nrwl/js';
+import type { Tree } from '@nx/devkit';
+import { updateJson } from '@nx/devkit';
+import { getRelativePathToRootTsConfig } from '@nx/js';
 import { NormalizedSchema } from './normalized-schema';
 import {
   createTsConfig,

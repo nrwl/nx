@@ -1,17 +1,23 @@
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
-import type { Tree } from '@nrwl/devkit';
+import type { Tree } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import { generateTestApplication } from '../../generators/utils/testing';
 import removeBrowserlistConfig, {
   DEFAULT_BROWSERS,
 } from './remove-browserlist-config';
-import applicationGenerator from '../../generators/application/application';
 
 describe('Migration to delete Browserslist configurations', () => {
   let tree: Tree;
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await applicationGenerator(tree, {
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
+    await generateTestApplication(tree, {
       name: 'test',
+      projectNameAndRootFormat: 'derived',
+      skipFormat: true,
     });
   });
 

@@ -29,10 +29,18 @@ If you ever need to manually shut down the Nx Daemon, you can run `nx reset` wit
 
 ## Turning it Off
 
-As of v13.6.0, the Nx Daemon is enabled by default when running on your local machine. If you want to turn it off, simply set `useDaemonProcess: false` in the runners options in nx.json. You can also set the `NX_DAEMON` env variable to `false`.
+As of v13.6.0, the Nx Daemon is enabled by default when running on your local machine. If you want to turn it off
+
+- simply set `useDaemonProcess: false` in the runners options in `nx.json` or
+- set the `NX_DAEMON` env variable to `false`.
 
 When using Nx in a CI environment, the Nx Daemon is disabled by default. Whether the process runs is determined by the following function: [https://github.com/nrwl/nx/blob/master/packages/nx/src/utils/is-ci.ts](https://github.com/nrwl/nx/blob/master/packages/nx/src/utils/is-ci.ts)
 
 ## Logs
 
 To see information about the running Nx Daemon (such as its background process ID and log output file), run `nx daemon`. Once you have the path to that log file, you could either open it in your IDE or stream updates in a separate terminal window by running `tail -f {REPLACE_WITH_LOG_PATH}`, for example.
+
+## Customizing the socket location
+
+The Nx Daemon uses a unix socket to communicate between the daemon and the Nx processes. By default this socket gets placed in a temp directory. If you are using Nx in a docker-compose environment, however, you may want to run the daemon manually
+and control its location to enable sharing the daemon among your docker containers. To do so, simply set the NX_DAEMON_SOCKET_DIR environment variable to a shared directory.

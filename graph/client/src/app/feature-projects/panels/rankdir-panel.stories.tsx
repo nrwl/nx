@@ -1,12 +1,14 @@
-import { ComponentMeta, ComponentStory } from '@storybook/react';
-import RankDirPanel from './rankdir-panel';
+import type { Meta, StoryObj } from '@storybook/react';
+import { RankdirPanel } from './rankdir-panel';
 
-export default {
-  component: RankDirPanel,
-  title: 'Project Graph/RankDirPanel',
-} as ComponentMeta<typeof RankDirPanel>;
+const meta: Meta<typeof RankdirPanel> = {
+  component: RankdirPanel,
+  title: 'Project Graph/RankdirPanel',
+};
 
-const Template: ComponentStory<typeof RankDirPanel> = () => <RankDirPanel />;
+export default meta;
+type Story = StoryObj<typeof RankdirPanel>;
 
-export const Primary = Template.bind({});
-Primary.args = {};
+export const Primary: Story = {
+  args: {},
+};

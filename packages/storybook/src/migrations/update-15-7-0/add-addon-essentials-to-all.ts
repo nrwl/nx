@@ -4,11 +4,11 @@ import {
   formatFiles,
   logger,
   Tree,
-} from '@nrwl/devkit';
-import { forEachExecutorOptions } from '@nrwl/workspace/src/utilities/executor-options-utils';
+} from '@nx/devkit';
+import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { tsquery } from '@phenomnomnominal/tsquery';
-import ts = require('typescript');
 import { removeRootConfig } from './remove-root-config';
+import ts = require('typescript');
 
 /**
  * The purpose of this migrator is to help users move away

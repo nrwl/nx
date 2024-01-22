@@ -1,65 +1,41 @@
 import {
   addDependenciesToPackageJson,
-  convertNxGenerator,
   formatFiles,
   GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
-} from '@nrwl/devkit';
-import { jestInitGenerator } from '@nrwl/jest';
-import { runTasksInSerial } from '@nrwl/workspace/src/utilities/run-tasks-in-serial';
-import { initGenerator as jsInitGenerator } from '@nrwl/js';
-import {
-  nxVersion,
-  tslibVersion,
-  typesNodeVersion,
-} from '../../utils/versions';
+} from '@nx/devkit';
+import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
-function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nrwl/node'], []);
-
-  return addDependenciesToPackageJson(
-    tree,
-    {
-      tslib: tslibVersion,
-    },
-    { '@nrwl/node': nxVersion, '@types/node': typesNodeVersion }
-  );
-}
-
-function normalizeOptions(schema: Schema) {
-  return {
-    ...schema,
-    unitTestRunner: schema.unitTestRunner ?? 'jest',
-  };
-}
-
-export async function initGenerator(tree: Tree, schema: Schema) {
-  const options = normalizeOptions(schema);
-
+function updateDependencies(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
+  tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/node'], []));
   tasks.push(
-    await jsInitGenerator(tree, {
-      ...schema,
-      tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-      skipFormat: true,
-    })
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@nx/node': nxVersion },
+      undefined,
+      options.keepExistingVersions
+    )
   );
-  if (options.unitTestRunner === 'jest') {
-    tasks.push(
-      await jestInitGenerator(tree, { ...schema, testEnvironment: 'node' })
-    );
-  }
 
-  tasks.push(updateDependencies(tree));
+  return runTasksInSerial(...tasks);
+}
+
+export async function initGenerator(tree: Tree, options: Schema) {
+  let installTask: GeneratorCallback = () => {};
+  if (!options.skipPackageJson) {
+    installTask = updateDependencies(tree, options);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(...tasks);
+  return installTask;
 }
 
 export default initGenerator;
-export const initSchematic = convertNxGenerator(initGenerator);

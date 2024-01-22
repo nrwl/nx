@@ -3,12 +3,12 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "@react-native/metro-config": "*",
     "@testing-library/jest-native": "*",
     "@testing-library/react-native": "*",
     "react": "*",
     "react-native": "*",
-    "react-native-config": "*",
     "react-native-svg": "*",
-    "@react-native-async-storage/async-storage": "*"
+    "metro-config": "*"
   }
 }

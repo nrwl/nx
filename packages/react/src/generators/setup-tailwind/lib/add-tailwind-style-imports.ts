@@ -4,7 +4,7 @@ import {
   ProjectConfiguration,
   stripIndents,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import * as chalk from 'chalk';
 
 import { SetupTailwindOptions } from '../schema';
@@ -13,14 +13,16 @@ const knownLocations = [
   // Plain React
   'src/styles.css',
   'src/styles.scss',
-  'src/styles.styl',
   'src/styles.less',
 
   // Next.js
   'pages/styles.css',
   'pages/styles.scss',
-  'pages/styles.styl',
   'pages/styles.less',
+
+  'app/global.css',
+  'app/global.scss',
+  'app/global.less',
 ];
 
 export function addTailwindStyleImports(

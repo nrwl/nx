@@ -2,13 +2,13 @@ import type {
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import {
   joinPathFragments,
   readNxJson,
   updateJson,
   updateNxJson,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 import { basename } from 'path';
 import type { Logger } from '../utilities/logger';
 import type {
@@ -97,15 +97,11 @@ export abstract class Migrator {
 
     const nxJson = readNxJson(this.tree);
 
-    Object.keys(nxJson.tasksRunnerOptions ?? {}).forEach((taskRunnerName) => {
-      const taskRunner = nxJson.tasksRunnerOptions[taskRunnerName];
-      taskRunner.options.cacheableOperations = Array.from(
-        new Set([
-          ...(taskRunner.options.cacheableOperations ?? []),
-          ...targetNames,
-        ])
-      );
-    });
+    nxJson.targetDefaults ??= {};
+    for (const target of targetNames) {
+      nxJson.targetDefaults[target] ??= {};
+      nxJson.targetDefaults[target].cache ??= true;
+    }
 
     updateNxJson(this.tree, nxJson);
   }

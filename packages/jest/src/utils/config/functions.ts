@@ -1,9 +1,9 @@
 import type * as ts from 'typescript';
-import { applyChangesToString, ChangeType, Tree } from '@nrwl/devkit';
+import { applyChangesToString, ChangeType, Tree } from '@nx/devkit';
 import { Config } from '@jest/types';
 import { createContext, runInContext } from 'vm';
 import { dirname, join } from 'path';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 
 let tsModule: typeof import('typescript');
 

@@ -1,6 +1,6 @@
-import { AssetGlob } from '@nrwl/workspace/src/utilities/assets';
+import { AssetGlob } from './assets';
 import { CopyAssetsHandler, FileEvent } from './copy-assets-handler';
-import { ExecutorContext } from '@nrwl/devkit';
+import { ExecutorContext } from '@nx/devkit';
 
 export interface CopyAssetsOptions {
   outputPath: string;

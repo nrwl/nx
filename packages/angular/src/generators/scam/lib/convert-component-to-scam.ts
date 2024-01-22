@@ -1,38 +1,26 @@
-import type { Tree } from '@nrwl/devkit';
-import { joinPathFragments, names } from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
-import { insertImport } from '@nrwl/workspace/src/utilities/ast-utils';
-import type { FileInfo } from '../../utils/file-info';
+import type { Tree } from '@nx/devkit';
+import { joinPathFragments, names } from '@nx/devkit';
+import { insertImport } from '@nx/js';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import type { NormalizedSchema } from '../schema';
 
 let tsModule: typeof import('typescript');
 
-export function convertComponentToScam(
-  tree: Tree,
-  componentFileInfo: FileInfo,
-  options: NormalizedSchema
-) {
-  if (!tree.exists(componentFileInfo.filePath)) {
+export function convertComponentToScam(tree: Tree, options: NormalizedSchema) {
+  if (!tree.exists(options.filePath)) {
     throw new Error(
-      `Couldn't find component at path ${componentFileInfo.filePath} to add SCAM setup.`
+      `Couldn't find component at path ${options.filePath} to add SCAM setup.`
     );
   }
-
-  const componentNames = names(options.name);
-  const typeNames = names(options.type ?? 'component');
-  const componentClassName = `${componentNames.className}${typeNames.className}`;
 
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
 
   if (options.inlineScam) {
-    const currentComponentContents = tree.read(
-      componentFileInfo.filePath,
-      'utf-8'
-    );
+    const currentComponentContents = tree.read(options.filePath, 'utf-8');
     let source = tsModule.createSourceFile(
-      componentFileInfo.filePath,
+      options.filePath,
       currentComponentContents,
       tsModule.ScriptTarget.Latest,
       true
@@ -41,35 +29,35 @@ export function convertComponentToScam(
     source = insertImport(
       tree,
       source,
-      componentFileInfo.filePath,
+      options.filePath,
       'NgModule',
       '@angular/core'
     );
     source = insertImport(
       tree,
       source,
-      componentFileInfo.filePath,
+      options.filePath,
       'CommonModule',
       '@angular/common'
     );
 
     let updatedComponentSource = source.getText();
     updatedComponentSource = `${updatedComponentSource}${getNgModuleDeclaration(
-      componentClassName
+      options.symbolName
     )}`;
 
-    tree.write(componentFileInfo.filePath, updatedComponentSource);
+    tree.write(options.filePath, updatedComponentSource);
     return;
   }
 
   const moduleFilePath = joinPathFragments(
-    componentFileInfo.directory,
-    `${componentNames.fileName}.module.ts`
+    options.directory,
+    `${options.name}.module.ts`
   );
 
   tree.write(
     moduleFilePath,
-    getModuleFileContent(componentClassName, componentFileInfo.fileName)
+    getModuleFileContent(options.symbolName, options.fileName)
   );
 }
 
@@ -90,5 +78,6 @@ function getNgModuleDeclaration(componentClassName: string): string {
   declarations: [${componentClassName}],
   exports: [${componentClassName}],
 })
-export class ${componentClassName}Module {}`;
+export class ${componentClassName}Module {}
+`;
 }

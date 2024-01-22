@@ -1,0 +1,29 @@
+{
+  "extends": "<%= rootTsConfigPath %>",
+  "compilerOptions": {
+    "jsx": "preserve",
+    <% if (style === '@emotion/styled') { %>"jsxImportSource": "@emotion/react",<% } %>
+    "allowJs": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "incremental": true,
+    "plugins": [{ "name": "next" }]
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.js",
+    "**/*.jsx",
+    <% if (appDir) { %>
+      "<%= layoutTypeSrcPath %>",
+      "<%= layoutTypeDistPath %>",
+    <% } %>
+    "next-env.d.ts"
+  ],
+  "exclude": ["node_modules", "jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}

@@ -54,6 +54,26 @@ describe('Run Commands', () => {
     expect(readFile(f)).toEqual('123');
   });
 
+  it.each([
+    [`--key=123`, `args.key`, `123`],
+    [`--key="123.10"`, `args.key`, `123.10`],
+    [`--nested.key="123.10"`, `args.nested.key`, `123.10`],
+  ])(
+    'should interpolate %s into %s as %s',
+    async (cmdLineArg, argKey, expected) => {
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          command: `echo {${argKey}} >> ${f}`,
+          __unparsed__: [cmdLineArg],
+        },
+        context
+      );
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual(expected);
+    }
+  );
+
   it('should run commands serially', async () => {
     const f = fileSync().name;
     const result = await runCommands(
@@ -158,6 +178,57 @@ describe('Run Commands', () => {
           true
         )
       ).toEqual('echo one -a=b');
+    });
+
+    it('should add all args when forwardAllArgs is true', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { args: '--additional-arg', __unparsed__: [] } as any,
+          true
+        )
+      ).toEqual('echo --additional-arg');
+    });
+
+    it('should add all args and unparsed args when forwardAllArgs is true', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            args: '--additional-arg',
+            __unparsed__: ['--additional-unparsed-arg'],
+          } as any,
+          true
+        )
+      ).toEqual('echo --additional-arg --additional-unparsed-arg');
+    });
+
+    it("shouldn't add literal `undefined` if arg is not provided", () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo {args.someValue}',
+          {
+            parsedArgs: {},
+            __unparsed__: [],
+          },
+          false
+        )
+      ).not.toContain('undefined');
+    });
+
+    it('should interpolate provided values', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo {args.someValue}',
+          {
+            parsedArgs: {
+              someValue: '"hello world"',
+            },
+            __unparsed__: [],
+          },
+          false
+        )
+      ).toEqual('echo "hello world"');
     });
   });
 
@@ -282,6 +353,27 @@ describe('Run Commands', () => {
       expect(normalize(readFile(f))).toBe(childFolder);
     });
 
+    it('should terminate properly with an error if the cwd is not valid', async () => {
+      const root = dirSync().name;
+      const cwd = 'bla';
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "command does not run"`,
+            },
+          ],
+          cwd,
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: false }));
+    }, 1000);
+
     it('should run the task in the specified absolute cwd', async () => {
       const root = dirSync().name;
       const childFolder = dirSync({ dir: root }).name;
@@ -303,6 +395,85 @@ describe('Run Commands', () => {
 
       expect(result).toEqual(expect.objectContaining({ success: true }));
       expect(normalize(readFile(f))).toBe(childFolder);
+    });
+
+    it('should add node_modules/.bins to the env for the cwd', async () => {
+      const root = dirSync().name;
+      const childFolder = dirSync({ dir: root }).name;
+      const f = fileSync().name;
+
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo $PATH >> ${f}`,
+            },
+          ],
+          cwd: childFolder,
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(normalize(readFile(f))).toContain(
+        `${childFolder}/node_modules/.bin`
+      );
+      expect(normalize(readFile(f))).toContain(`${root}/node_modules/.bin`);
+    });
+  });
+
+  describe('env', () => {
+    afterAll(() => {
+      delete process.env.MY_ENV_VAR;
+      unlinkSync('.env');
+    });
+
+    it('should add the env to the command', async () => {
+      const root = dirSync().name;
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "$MY_ENV_VAR" >> ${f}`,
+            },
+          ],
+          env: {
+            MY_ENV_VAR: 'my-value',
+          },
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('my-value');
+    });
+    it('should prioritize env setting over local dotenv files', async () => {
+      writeFileSync('.env', 'MY_ENV_VAR=from-dotenv');
+      const root = dirSync().name;
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "$MY_ENV_VAR" >> ${f}`,
+            },
+          ],
+          env: {
+            MY_ENV_VAR: 'from-options',
+          },
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('from-options');
     });
   });
 

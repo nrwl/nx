@@ -18,7 +18,7 @@ Then move `cow.txt` out of the `cli` project to:
 
 `packages/ascii/assets/cow.txt`:
 
-```shell
+```plaintext
  _____
 < moo >
  -----

@@ -2,8 +2,9 @@
  * Adapted from the original ng-packagr source.
  *
  * Changes made:
- * - Made sure ngccProcessor is optional.
+ * - Remove ngccProcessor (Angular < 16)
  * - Use custom cacheCompilerHost instead of the one provided by ng-packagr.
+ * - Support Angular Compiler `incrementalDriver` for Angular < 16.
  */
 
 import type {
@@ -13,16 +14,17 @@ import type {
 import { BuildGraph } from 'ng-packagr/lib/graph/build-graph';
 import {
   EntryPointNode,
+  PackageNode,
   isEntryPointInProgress,
   isPackage,
-  PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
-import { NgccProcessor } from 'ng-packagr/lib/ngc/ngcc-processor';
 import { augmentProgramWithVersioning } from 'ng-packagr/lib/ts/cache-compiler-host';
-import { ngccTransformCompilerHost } from 'ng-packagr/lib/ts/ngcc-transform-compiler-host';
 import * as log from 'ng-packagr/lib/utils/log';
-import { ngCompilerCli } from 'ng-packagr/lib/utils/ng-compiler-cli';
+import { join } from 'node:path';
 import * as ts from 'typescript';
+import { getInstalledAngularVersionInfo } from '../../../utilities/angular-version-utils';
+import { ngCompilerCli } from '../../../utilities/ng-compiler-cli';
+import { NgPackagrOptions } from '../ng-package/options.di';
 import { StylesheetProcessor } from '../styles/stylesheet-processor';
 import { cacheCompilerHost } from '../ts/cache-compiler-host';
 
@@ -30,13 +32,12 @@ export async function compileSourceFiles(
   graph: BuildGraph,
   tsConfig: ParsedConfiguration,
   moduleResolutionCache: ts.ModuleResolutionCache,
+  options: NgPackagrOptions,
   extraOptions?: Partial<CompilerOptions>,
-  stylesheetProcessor?: StylesheetProcessor,
-  ngccProcessor?: NgccProcessor,
-  watch?: boolean
+  stylesheetProcessor?: StylesheetProcessor
 ) {
   const { NgtscProgram, formatDiagnostics } = await ngCompilerCli();
-
+  const { cacheDirectory, watch, cacheEnabled } = options;
   const tsConfigOptions: CompilerOptions = {
     ...tsConfig.options,
     ...extraOptions,
@@ -45,7 +46,16 @@ export async function compileSourceFiles(
   const ngPackageNode: PackageNode = graph.find(isPackage);
   const inlineStyleLanguage = ngPackageNode.data.inlineStyleLanguage;
 
-  let tsCompilerHost = cacheCompilerHost(
+  const cacheDir = cacheEnabled && cacheDirectory;
+  if (cacheDir) {
+    tsConfigOptions.incremental ??= true;
+    tsConfigOptions.tsBuildInfoFile ??= join(
+      cacheDir,
+      `tsbuildinfo/${entryPoint.data.entryPoint.flatModuleFile}.tsbuildinfo`
+    );
+  }
+
+  const tsCompilerHost = cacheCompilerHost(
     graph,
     entryPoint,
     tsConfigOptions,
@@ -54,17 +64,15 @@ export async function compileSourceFiles(
     inlineStyleLanguage
   );
 
-  if (ngccProcessor) {
-    tsCompilerHost = ngccTransformCompilerHost(
-      tsCompilerHost,
-      tsConfigOptions,
-      ngccProcessor,
-      moduleResolutionCache
-    );
-  }
-
   const cache = entryPoint.cache;
   const sourceFileCache = cache.sourcesFileCache;
+  let usingBuildInfo = false;
+
+  let oldBuilder = cache.oldBuilder;
+  if (!oldBuilder && cacheDir) {
+    oldBuilder = ts.readBuilderProgram(tsConfigOptions, tsCompilerHost);
+    usingBuildInfo = true;
+  }
 
   // Create the Angular specific program that contains the Angular compiler
   const angularProgram = new NgtscProgram(
@@ -83,18 +91,19 @@ export async function compileSourceFiles(
   augmentProgramWithVersioning(typeScriptProgram);
 
   let builder: ts.BuilderProgram | ts.EmitAndSemanticDiagnosticsBuilderProgram;
-  if (watch) {
+  if (watch || cacheDir) {
     builder = cache.oldBuilder =
       ts.createEmitAndSemanticDiagnosticsBuilderProgram(
         typeScriptProgram,
         tsCompilerHost,
-        cache.oldBuilder
+        oldBuilder
       );
     cache.oldNgtscProgram = angularProgram;
   } else {
-    // When not in watch mode, the startup cost of the incremental analysis can be avoided by
-    // using an abstract builder that only wraps a TypeScript program.
-    builder = ts.createAbstractBuilder(typeScriptProgram, tsCompilerHost);
+    builder = ts.createEmitAndSemanticDiagnosticsBuilderProgram(
+      typeScriptProgram,
+      tsCompilerHost
+    );
   }
 
   // Update semantic diagnostics cache
@@ -137,6 +146,27 @@ export async function compileSourceFiles(
 
       affectedFiles.add(result.affected as ts.SourceFile);
     }
+
+    // Add all files with associated template type checking files.
+    // Stored TS build info does not have knowledge of the AOT compiler or the typechecking state of the templates.
+    // To ensure that errors are reported correctly, all AOT component diagnostics need to be analyzed even if build
+    // info is present.
+    if (usingBuildInfo) {
+      for (const sourceFile of builder.getSourceFiles()) {
+        if (
+          ignoreForDiagnostics.has(sourceFile) &&
+          sourceFile.fileName.endsWith('.ngtypecheck.ts')
+        ) {
+          // This file name conversion relies on internal compiler logic and should be converted
+          // to an official method when available. 15 is length of `.ngtypecheck.ts`
+          const originalFilename = sourceFile.fileName.slice(0, -15) + '.ts';
+          const originalSourceFile = builder.getSourceFile(originalFilename);
+          if (originalSourceFile) {
+            affectedFiles.add(originalSourceFile);
+          }
+        }
+      }
+    }
   }
 
   // Collect program level diagnostics
@@ -152,50 +182,34 @@ export async function compileSourceFiles(
 
   // Collect source file specific diagnostics
   for (const sourceFile of builder.getSourceFiles()) {
-    if (!ignoreForDiagnostics.has(sourceFile)) {
-      allDiagnostics.push(
-        ...builder.getDeclarationDiagnostics(sourceFile),
-        ...builder.getSyntacticDiagnostics(sourceFile),
-        ...builder.getSemanticDiagnostics(sourceFile)
-      );
+    if (ignoreForDiagnostics.has(sourceFile)) {
+      continue;
     }
 
+    allDiagnostics.push(
+      ...builder.getDeclarationDiagnostics(sourceFile),
+      ...builder.getSyntacticDiagnostics(sourceFile),
+      ...builder.getSemanticDiagnostics(sourceFile)
+    );
+
+    // Declaration files cannot have template diagnostics
     if (sourceFile.isDeclarationFile) {
       continue;
     }
 
-    // Collect sources that are required to be emitted
-    if (
-      !ignoreForEmit.has(sourceFile) &&
-      !angularCompiler.incrementalDriver.safeToSkipEmit(sourceFile)
-    ) {
-      // If required to emit, diagnostics may have also changed
-      if (!ignoreForDiagnostics.has(sourceFile)) {
-        affectedFiles.add(sourceFile);
-      }
-    } else if (
-      sourceFileCache &&
-      !affectedFiles.has(sourceFile) &&
-      !ignoreForDiagnostics.has(sourceFile)
-    ) {
-      // Use cached Angular diagnostics for unchanged and unaffected files
-      const angularDiagnostics =
-        sourceFileCache.getAngularDiagnostics(sourceFile);
-      if (angularDiagnostics?.length) {
-        allDiagnostics.push(...angularDiagnostics);
-      }
+    // Only request Angular template diagnostics for affected files to avoid
+    // overhead of template diagnostics for unchanged files.
+    if (affectedFiles.has(sourceFile)) {
+      const angularDiagnostics = angularCompiler.getDiagnosticsForFile(
+        sourceFile,
+        affectedFiles.size === 1
+          ? /** OptimizeFor.SingleFile **/ 0
+          : /** OptimizeFor.WholeProgram */ 1
+      );
+
+      allDiagnostics.push(...angularDiagnostics);
+      sourceFileCache.updateAngularDiagnostics(sourceFile, angularDiagnostics);
     }
-  }
-
-  // Collect new Angular diagnostics for files affected by changes
-  for (const affectedFile of affectedFiles) {
-    const angularDiagnostics = angularCompiler.getDiagnosticsForFile(
-      affectedFile,
-      /** OptimizeFor.WholeProgram */ 1
-    );
-
-    allDiagnostics.push(...angularDiagnostics);
-    sourceFileCache.updateAngularDiagnostics(affectedFile, angularDiagnostics);
   }
 
   const otherDiagnostics = [];
@@ -217,9 +231,43 @@ export async function compileSourceFiles(
   }
 
   const transformers = angularCompiler.prepareEmit().transformers;
-  for (const sourceFile of builder.getSourceFiles()) {
-    if (!ignoreForEmit.has(sourceFile)) {
-      builder.emit(sourceFile, undefined, undefined, undefined, transformers);
+
+  if ('getSemanticDiagnosticsOfNextAffectedFile' in builder) {
+    while (
+      builder.emitNextAffectedFile(
+        (fileName, data, writeByteOrderMark, onError, sourceFiles) => {
+          if (fileName.endsWith('.tsbuildinfo')) {
+            tsCompilerHost.writeFile(
+              fileName,
+              data,
+              writeByteOrderMark,
+              onError,
+              sourceFiles
+            );
+          }
+        }
+      )
+    ) {
+      // empty
     }
+  }
+
+  const angularVersion = getInstalledAngularVersionInfo();
+  const incrementalCompilation: typeof angularCompiler.incrementalCompilation =
+    angularVersion.major < 16
+      ? (angularCompiler as any).incrementalDriver
+      : angularCompiler.incrementalCompilation;
+
+  for (const sourceFile of builder.getSourceFiles()) {
+    if (ignoreForEmit.has(sourceFile)) {
+      continue;
+    }
+
+    if (incrementalCompilation.safeToSkipEmit(sourceFile)) {
+      continue;
+    }
+
+    builder.emit(sourceFile, undefined, undefined, undefined, transformers);
+    incrementalCompilation.recordSuccessfulEmit(sourceFile);
   }
 }

@@ -1,0 +1,65 @@
+{
+  "name": "tools-documentation-create-embeddings",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "tools/documentation/create-embeddings/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "platform": "node",
+        "outputPath": "dist/tools/documentation/create-embeddings",
+        "format": ["esm"],
+        "bundle": false,
+        "main": "tools/documentation/create-embeddings/src/main.mts",
+        "tsConfig": "tools/documentation/create-embeddings/tsconfig.app.json",
+        "assets": ["tools/documentation/create-embeddings/src/assets"],
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "sourcemap": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      },
+      "configurations": {
+        "development": {},
+        "production": {
+          "esbuildOptions": {
+            "sourcemap": false,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
+        }
+      }
+    },
+    "run-node": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "tools-documentation-create-embeddings:build",
+        "watch": false
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "tools-documentation-create-embeddings:build:development"
+        },
+        "production": {
+          "buildTarget": "tools-documentation-create-embeddings:build:production"
+        }
+      }
+    },
+    "lint": {},
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "tools/documentation/create-embeddings/jest.config.ts"
+      }
+    }
+  },
+  "tags": []
+}

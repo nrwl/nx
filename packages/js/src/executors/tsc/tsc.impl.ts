@@ -1,16 +1,6 @@
-import { ExecutorContext } from '@nrwl/devkit';
-import {
-  assetGlobsToFiles,
-  FileInputOutput,
-} from '@nrwl/workspace/src/utilities/assets';
-import type { TypeScriptCompilationOptions } from '@nrwl/workspace/src/utilities/typescript/compilation';
-import { join, resolve } from 'path';
-import {
-  CustomTransformers,
-  Program,
-  SourceFile,
-  TransformerFactory,
-} from 'typescript';
+import * as ts from 'typescript';
+import { ExecutorContext } from '@nx/devkit';
+import type { TypeScriptCompilationOptions } from '@nx/workspace/src/utilities/typescript/compilation';
 import { CopyAssetsHandler } from '../../utils/assets/copy-assets-handler';
 import { checkDependencies } from '../../utils/check-dependencies';
 import {
@@ -25,79 +15,31 @@ import {
 import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import { ExecutorOptions, NormalizedExecutorOptions } from '../../utils/schema';
 import { compileTypeScriptFiles } from '../../utils/typescript/compile-typescript-files';
-import { loadTsTransformers } from '../../utils/typescript/load-ts-transformers';
 import { watchForSingleFileChanges } from '../../utils/watch-for-single-file-changes';
+import { getCustomTrasformersFactory, normalizeOptions } from './lib';
+import { readTsConfig } from '../../utils/typescript/ts-config';
+import { createEntryPoints } from '../../utils/package-json/create-entry-points';
 
-export function normalizeOptions(
-  options: ExecutorOptions,
-  contextRoot: string,
-  sourceRoot: string,
-  projectRoot: string
-): NormalizedExecutorOptions {
-  const outputPath = join(contextRoot, options.outputPath);
-  const rootDir = options.rootDir
-    ? join(contextRoot, options.rootDir)
-    : projectRoot;
-
-  if (options.watch == null) {
-    options.watch = false;
+export function determineModuleFormatFromTsConfig(
+  absolutePathToTsConfig: string
+): 'cjs' | 'esm' {
+  const tsConfig = readTsConfig(absolutePathToTsConfig);
+  if (
+    tsConfig.options.module === ts.ModuleKind.ES2015 ||
+    tsConfig.options.module === ts.ModuleKind.ES2020 ||
+    tsConfig.options.module === ts.ModuleKind.ES2022 ||
+    tsConfig.options.module === ts.ModuleKind.ESNext
+  ) {
+    return 'esm';
+  } else {
+    return 'cjs';
   }
-
-  // TODO: put back when inlining story is more stable
-  // if (options.external == null) {
-  //   options.external = 'all';
-  // } else if (Array.isArray(options.external) && options.external.length === 0) {
-  //   options.external = 'none';
-  // }
-
-  if (Array.isArray(options.external) && options.external.length > 0) {
-    const firstItem = options.external[0];
-    if (firstItem === 'all' || firstItem === 'none') {
-      options.external = firstItem;
-    }
-  }
-
-  const files: FileInputOutput[] = assetGlobsToFiles(
-    options.assets,
-    contextRoot,
-    outputPath
-  );
-
-  return {
-    ...options,
-    root: contextRoot,
-    sourceRoot,
-    projectRoot,
-    files,
-    outputPath,
-    tsConfig: join(contextRoot, options.tsConfig),
-    rootDir,
-    mainOutputPath: resolve(
-      outputPath,
-      options.main.replace(`${projectRoot}/`, '').replace('.ts', '.js')
-    ),
-  };
 }
 
 export function createTypeScriptCompilationOptions(
   normalizedOptions: NormalizedExecutorOptions,
   context: ExecutorContext
 ): TypeScriptCompilationOptions {
-  const { compilerPluginHooks } = loadTsTransformers(
-    normalizedOptions.transformers
-  );
-  const getCustomTransformers = (program: Program): CustomTransformers => ({
-    before: compilerPluginHooks.beforeHooks.map(
-      (hook) => hook(program) as TransformerFactory<SourceFile>
-    ),
-    after: compilerPluginHooks.afterHooks.map(
-      (hook) => hook(program) as TransformerFactory<SourceFile>
-    ),
-    afterDeclarations: compilerPluginHooks.afterDeclarationsHooks.map(
-      (hook) => hook(program) as TransformerFactory<SourceFile>
-    ),
-  });
-
   return {
     outputPath: normalizedOptions.outputPath,
     projectName: context.projectName,
@@ -106,7 +48,9 @@ export function createTypeScriptCompilationOptions(
     tsConfig: normalizedOptions.tsConfig,
     watch: normalizedOptions.watch,
     deleteOutputPath: normalizedOptions.clean,
-    getCustomTransformers,
+    getCustomTransformers: getCustomTrasformersFactory(
+      normalizedOptions.transformers
+    ),
   };
 }
 
@@ -120,7 +64,7 @@ export async function* tscExecutor(
 
   const { projectRoot, tmpTsConfig, target, dependencies } = checkDependencies(
     context,
-    _options.tsConfig
+    options.tsConfig
   );
 
   if (tmpTsConfig) {
@@ -165,7 +109,22 @@ export async function* tscExecutor(
     tsCompilationOptions,
     async () => {
       await assetHandler.processAllAssetsOnce();
-      updatePackageJson(options, context, target, dependencies);
+      updatePackageJson(
+        {
+          ...options,
+          additionalEntryPoints: createEntryPoints(
+            options.additionalEntryPoints,
+            context.root
+          ),
+          format: [determineModuleFormatFromTsConfig(options.tsConfig)],
+          // As long as d.ts files match their .js counterparts, we don't need to emit them.
+          // TSC can match them correctly based on file names.
+          skipTypings: true,
+        },
+        context,
+        target,
+        dependencies
+      );
       postProcessInlinedDependencies(
         tsCompilationOptions.outputPath,
         tsCompilationOptions.projectRoot,
@@ -181,7 +140,23 @@ export async function* tscExecutor(
       context.projectName,
       options.projectRoot,
       'package.json',
-      () => updatePackageJson(options, context, target, dependencies)
+      () =>
+        updatePackageJson(
+          {
+            ...options,
+            additionalEntryPoints: createEntryPoints(
+              options.additionalEntryPoints,
+              context.root
+            ),
+            // As long as d.ts files match their .js counterparts, we don't need to emit them.
+            // TSC can match them correctly based on file names.
+            skipTypings: true,
+            format: [determineModuleFormatFromTsConfig(options.tsConfig)],
+          },
+          context,
+          target,
+          dependencies
+        )
     );
     const handleTermination = async (exitCode: number) => {
       await typescriptCompilation.close();

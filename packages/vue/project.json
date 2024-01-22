@@ -1,0 +1,68 @@
+{
+  "name": "vue",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/vue",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "@nx/jest:jest",
+      "options": {
+        "jestConfig": "packages/vue/jest.config.ts"
+      },
+      "outputs": ["{workspaceRoot}/coverage/packages/vue"]
+    },
+    "build-base": {
+      "executor": "@nx/js:tsc",
+      "options": {
+        "outputPath": "build/packages/vue",
+        "tsConfig": "packages/vue/tsconfig.lib.json",
+        "main": "packages/vue/index.ts",
+        "generateExportsField": true,
+        "additionalEntryPoints": [
+          "{projectRoot}/{executors,generators,migrations}.json",
+          "{projectRoot}/src/tailwind.ts"
+        ],
+        "assets": [
+          {
+            "input": "packages/vue",
+            "glob": "**/files/**",
+            "output": "/"
+          },
+          {
+            "input": "packages/vue",
+            "glob": "**/files/**/.gitkeep",
+            "output": "/"
+          },
+          {
+            "input": "packages/vue",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json", ".eslintrc.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages/vue",
+            "glob": "**/*.js",
+            "ignore": ["**/jest.config.js"],
+            "output": "/"
+          },
+          {
+            "input": "packages/vue",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          {
+            "input": "",
+            "glob": "LICENSE",
+            "output": "/"
+          }
+        ]
+      },
+      "outputs": ["{options.outputPath}"]
+    },
+    "build": {
+      "command": "node ./scripts/copy-readme.js vue",
+      "outputs": ["{workspaceRoot}/build/packages/vue"]
+    },
+    "lint": {}
+  }
+}

@@ -4,10 +4,10 @@ import {
   getProjects,
   updateProjectConfiguration,
   offsetFromRoot,
-} from '@nrwl/devkit';
+} from '@nx/devkit';
 
 /**
- * Add new @expi/cli targets:
+ * Add new @expo/cli targets:
  * - add target prebuild
  * - add target install
  * - add target update

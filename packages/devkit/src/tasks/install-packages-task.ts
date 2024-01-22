@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { type ExecSyncOptions, execSync } from 'child_process';
 import { join } from 'path';
 import { requireNx } from '../../nx';
 
@@ -38,9 +38,20 @@ export function installPackagesTask(
   if (storedPackageJsonValue != packageJsonValue || alwaysRun) {
     global['__packageJsonInstallCache__'] = packageJsonValue;
     const pmc = getPackageManagerCommand(packageManager);
-    execSync(pmc.install, {
+    const execSyncOptions: ExecSyncOptions = {
       cwd: join(tree.root, cwd),
-      stdio: [0, 1, 2],
-    });
+      stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
+    };
+    // ensure local registry from process is not interfering with the install
+    // when we start the process from temp folder the local registry would override the custom registry
+    if (
+      process.env.npm_config_registry &&
+      process.env.npm_config_registry.match(
+        /^https:\/\/registry\.(npmjs\.org|yarnpkg\.com)/
+      )
+    ) {
+      delete process.env.npm_config_registry;
+    }
+    execSync(pmc.install, execSyncOptions);
   }
 }

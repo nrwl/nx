@@ -6,9 +6,9 @@
   "cli": "nx",
   "type": "object",
   "properties": {
-    "name": {
+    "project": {
       "type": "string",
-      "aliases": ["project", "projectName"],
+      "aliases": ["name", "projectName"],
       "description": "Project for which to generate Storybook configuration.",
       "$default": {
         "$source": "argv",
@@ -18,12 +18,18 @@
       "x-dropdown": "projects",
       "x-priority": "important"
     },
+    "interactionTests": {
+      "type": "boolean",
+      "description": "Set up Storybook interaction tests.",
+      "x-prompt": "Do you want to set up Storybook interaction tests?",
+      "alias": ["configureTestRunner"],
+      "x-priority": "important",
+      "default": true
+    },
     "configureCypress": {
       "type": "boolean",
       "description": "Specifies whether to configure Cypress or not.",
-      "x-prompt": "Configure a Cypress e2e app to run against the storybook instance?",
-      "default": true,
-      "x-priority": "important"
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v18."
     },
     "generateStories": {
       "type": "boolean",
@@ -35,13 +41,19 @@
     "generateCypressSpecs": {
       "type": "boolean",
       "description": "Specifies whether to automatically generate test files in the generated Cypress e2e app.",
-      "x-prompt": "Automatically generate test files in the generated Cypress e2e app?",
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v18."
+    },
+    "configureStaticServe": {
+      "type": "boolean",
+      "description": "Specifies whether to configure a static file server target for serving storybook. Helpful for speeding up CI build/test times.",
+      "x-prompt": "Configure a static file server for the storybook instance?",
       "default": true,
       "x-priority": "important"
     },
     "cypressDirectory": {
       "type": "string",
-      "description": "A directory where the Cypress project will be placed. Placed at the root by default."
+      "description": "A directory where the Cypress project will be placed. Placed at the root by default.",
+      "x-deprecated": "Use interactionTests instead. This option will be removed in v18."
     },
     "linter": {
       "description": "The tool to use for running lint checks.",
@@ -52,7 +64,7 @@
     "tsConfiguration": {
       "type": "boolean",
       "description": "Configure your project with TypeScript. Generate main.ts and preview.ts files, instead of main.js and preview.js.",
-      "default": false,
+      "default": true,
       "x-priority": "important"
     },
     "skipFormat": {
@@ -68,6 +80,9 @@
         "type": "string",
         "description": "Path to ignore."
       },
+      "default": [
+        "*.stories.ts,*.stories.tsx,*.stories.js,*.stories.jsx,*.stories.mdx"
+      ],
       "examples": [
         "apps/my-app/src/not-stories/**",
         "**/**/src/**/not-stories/**",
@@ -75,19 +90,9 @@
         "**/**/src/**/*.other.*",
         "libs/my-lib/src/not-stories/**,**/**/src/**/*.other.*,apps/my-app/**/*.something.ts"
       ]
-    },
-    "configureTestRunner": {
-      "type": "boolean",
-      "description": "Add a Storybook Test-Runner target."
-    },
-    "storybook7betaConfiguration": {
-      "description": "Configure your workspace to use Storybook 7, even though Storybook v7 is still in beta.",
-      "type": "boolean",
-      "default": false,
-      "hidden": true
     }
   },
   "additionalProperties": false,
-  "required": ["name"],
+  "required": ["project"],
   "examplesFile": "../../../docs/storybook-configuration-examples.md"
 }

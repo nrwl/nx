@@ -10,9 +10,18 @@ import { installPackagesTask } from '../tasks/install-packages-task';
 import { requireNx } from '../../nx';
 import { dirSync } from 'tmp';
 import { join } from 'path';
+import type { PackageManager } from 'nx/src/utils/package-manager';
+import { writeFileSync } from 'fs';
 
-const { readJson, updateJson, getPackageManagerCommand, workspaceRoot } =
-  requireNx();
+const {
+  readJson,
+  updateJson,
+  getPackageManagerCommand,
+  workspaceRoot,
+  detectPackageManager,
+  createTempNpmDirectory,
+  getPackageManagerVersion,
+} = requireNx();
 
 const UNIDENTIFIED_VERSION = 'UNIDENTIFIED_VERSION';
 const NON_SEMVER_TAGS = {
@@ -123,13 +132,15 @@ function updateExistingDependenciesVersion(
  * @param dependencies Dependencies to be added to the dependencies section of package.json
  * @param devDependencies Dependencies to be added to the devDependencies section of package.json
  * @param packageJsonPath Path to package.json
+ * @param keepExistingVersions If true, prevents existing dependencies from being bumped to newer versions
  * @returns Callback to install dependencies only if necessary, no-op otherwise
  */
 export function addDependenciesToPackageJson(
   tree: Tree,
   dependencies: Record<string, string>,
   devDependencies: Record<string, string>,
-  packageJsonPath: string = 'package.json'
+  packageJsonPath: string = 'package.json',
+  keepExistingVersions?: boolean
 ): GeneratorCallback {
   const currentPackageJson = readJson(tree, packageJsonPath);
 
@@ -146,6 +157,7 @@ export function addDependenciesToPackageJson(
 
   // filtered dependencies should consist of:
   // - dependencies of the same type that are not present
+  // by default, filtered dependencies also include these (unless keepExistingVersions is true):
   // - dependencies of the same type that have greater version
   // - specified dependencies of the other type that have greater version and are already installed as current type
   filteredDependencies = {
@@ -169,14 +181,25 @@ export function addDependenciesToPackageJson(
     ),
   };
 
-  filteredDependencies = removeLowerVersions(
-    filteredDependencies,
-    currentPackageJson.dependencies
-  );
-  filteredDevDependencies = removeLowerVersions(
-    filteredDevDependencies,
-    currentPackageJson.devDependencies
-  );
+  if (keepExistingVersions) {
+    filteredDependencies = removeExistingDependencies(
+      filteredDependencies,
+      currentPackageJson.dependencies
+    );
+    filteredDevDependencies = removeExistingDependencies(
+      filteredDevDependencies,
+      currentPackageJson.devDependencies
+    );
+  } else {
+    filteredDependencies = removeLowerVersions(
+      filteredDependencies,
+      currentPackageJson.dependencies
+    );
+    filteredDevDependencies = removeLowerVersions(
+      filteredDevDependencies,
+      currentPackageJson.devDependencies
+    );
+  }
 
   if (
     requiresAddingOfPackages(
@@ -218,12 +241,24 @@ function removeLowerVersions(
 ) {
   return Object.keys(incomingDeps).reduce((acc, d) => {
     if (
-      existingDeps?.[d] &&
-      !isIncomingVersionGreater(incomingDeps[d], existingDeps[d])
+      !existingDeps?.[d] ||
+      isIncomingVersionGreater(incomingDeps[d], existingDeps[d])
     ) {
-      return acc;
+      acc[d] = incomingDeps[d];
     }
-    return { ...acc, [d]: incomingDeps[d] };
+    return acc;
+  }, {});
+}
+
+function removeExistingDependencies(
+  incomingDeps: Record<string, string>,
+  existingDeps: Record<string, string>
+): Record<string, string> {
+  return Object.keys(incomingDeps).reduce((acc, d) => {
+    if (!existingDeps?.[d]) {
+      acc[d] = incomingDeps[d];
+    }
+    return acc;
   }, {});
 }
 
@@ -379,13 +414,14 @@ const packageMapCache = new Map<string, any>();
  *
  * For example:
  * ```typescript
- * ensurePackage(tree, '@nrwl/jest', nxVersion)
+ * ensurePackage(tree, '@nx/jest', nxVersion)
  * ```
- * This install the @nrwl/jest@<nxVersion> and return the module
+ * This install the @nx/jest@<nxVersion> and return the module
  * When running with --dryRun, the function will throw when dependencies are missing.
+ * Returns null for ESM dependencies. Import them with a dynamic import instead.
  *
  * @param tree the file system tree
- * @param pkg the package to check (e.g. @nrwl/jest)
+ * @param pkg the package to check (e.g. @nx/jest)
  * @param requiredVersion the version or semver range to check (e.g. ~1.0.0, >=1.0.0 <2.0.0)
  * @param {EnsurePackageOptions} options?
  */
@@ -398,11 +434,13 @@ export function ensurePackage(
 
 /**
  * Ensure that dependencies and devDependencies from package.json are installed at the required versions.
+ * Returns null for ESM dependencies. Import them with a dynamic import instead.
  *
  * For example:
  * ```typescript
- * ensurePackage(tree, '@nrwl/jest', nxVersion)
+ * ensurePackage('@nx/jest', nxVersion)
  * ```
+ *
  * @param pkg the package to install and require
  * @param version the version to install if the package doesn't exist already
  */
@@ -434,7 +472,11 @@ export function ensurePackage<T extends any = any>(
   try {
     return require(pkg);
   } catch (e) {
-    if (e.code !== 'MODULE_NOT_FOUND') {
+    if (e.code === 'ERR_REQUIRE_ESM') {
+      // The package is installed, but is an ESM package.
+      // The consumer of this function can import it as needed.
+      return null;
+    } else if (e.code !== 'MODULE_NOT_FOUND') {
       throw e;
     }
   }
@@ -445,10 +487,30 @@ export function ensurePackage<T extends any = any>(
     );
   }
 
-  const tempDir = dirSync().name;
-  execSync(`${getPackageManagerCommand().addDev} ${pkg}@${requiredVersion}`, {
+  const { dir: tempDir } = createTempNpmDirectory?.() ?? {
+    dir: dirSync().name,
+  };
+
+  console.log(`Fetching ${pkg}...`);
+  const packageManager = detectPackageManager();
+  const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+  generatePackageManagerFiles(tempDir, packageManager);
+  const preInstallCommand = getPackageManagerCommand(packageManager).preInstall;
+  if (preInstallCommand) {
+    // ensure package.json and repo in tmp folder is set to a proper package manager state
+    execSync(preInstallCommand, {
+      cwd: tempDir,
+      stdio: isVerbose ? 'inherit' : 'ignore',
+    });
+  }
+  let addCommand = getPackageManagerCommand(packageManager).addDev;
+  if (packageManager === 'pnpm') {
+    addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
+  }
+
+  execSync(`${addCommand} ${pkg}@${requiredVersion}`, {
     cwd: tempDir,
-    stdio: [0, 1, 2],
+    stdio: isVerbose ? 'inherit' : 'ignore',
   });
 
   addToNodePath(join(workspaceRoot, 'node_modules'));
@@ -457,13 +519,44 @@ export function ensurePackage<T extends any = any>(
   // Re-initialize the added paths into require
   (Module as any)._initPaths();
 
-  const result = require(require.resolve(pkg, {
-    paths: [tempDir],
-  }));
+  try {
+    const result = require(require.resolve(pkg, {
+      paths: [tempDir],
+    }));
 
-  packageMapCache.set(pkg, result);
+    packageMapCache.set(pkg, result);
 
-  return result;
+    return result;
+  } catch (e) {
+    if (e.code === 'ERR_REQUIRE_ESM') {
+      // The package is installed, but is an ESM package.
+      // The consumer of this function can import it as needed.
+      packageMapCache.set(pkg, null);
+      return null;
+    }
+    throw e;
+  }
+}
+
+/**
+ * Generates necessary files needed for the package manager to work
+ * and for the node_modules to be accessible.
+ */
+function generatePackageManagerFiles(
+  root: string,
+  packageManager: PackageManager = detectPackageManager()
+) {
+  const [pmMajor] = getPackageManagerVersion(packageManager).split('.');
+  switch (packageManager) {
+    case 'yarn':
+      if (+pmMajor >= 2) {
+        writeFileSync(
+          join(root, '.yarnrc.yml'),
+          'nodeLinker: node-modules\nenableScripts: false'
+        );
+      }
+      break;
+  }
 }
 
 function addToNodePath(dir: string) {

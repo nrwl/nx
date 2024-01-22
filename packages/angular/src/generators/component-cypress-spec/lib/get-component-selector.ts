@@ -1,6 +1,6 @@
-import type { Tree } from '@nrwl/devkit';
-import { ensureTypescript } from '@nrwl/js/src/utils/typescript/ensure-typescript';
-import { findNodes } from 'nx/src/utils/typescript';
+import type { Tree } from '@nx/devkit';
+import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { findNodes } from '@nx/js';
 import type { PropertyAssignment } from 'typescript';
 
 import {

@@ -5,8 +5,8 @@ import {
   readProjectConfiguration,
   Tree,
   updateJson,
-} from '@nrwl/devkit';
-import { createTreeWithEmptyWorkspace } from '@nrwl/devkit/testing';
+} from '@nx/devkit';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { NormalizedSchema, Schema } from '../schema';
 import { normalizeSchema } from './normalize-schema';
 
@@ -31,32 +31,54 @@ describe('normalizeSchema', () => {
     projectConfiguration = readProjectConfiguration(tree, schema.projectName);
   });
 
-  it('should calculate importPath, projectName and relativeToRootDestination correctly', () => {
+  it('should calculate importPath, projectName and relativeToRootDestination correctly', async () => {
     const expected: NormalizedSchema = {
       destination: 'my/library',
       importPath: '@proj/my/library',
       newProjectName: 'my-library',
       projectName: 'my-library',
+      projectNameAndRootFormat: 'derived',
       relativeToRootDestination: 'libs/my/library',
       updateImportPath: true,
     };
 
-    const result = normalizeSchema(tree, schema, projectConfiguration);
+    const result = await normalizeSchema(tree, schema, projectConfiguration);
 
     expect(result).toEqual(expected);
   });
 
-  it('should use provided import path', () => {
+  it('should normalize destination and derive projectName correctly', async () => {
+    const expected: NormalizedSchema = {
+      destination: 'my/library',
+      importPath: '@proj/my/library',
+      newProjectName: 'my-library',
+      projectName: 'my-library',
+      projectNameAndRootFormat: 'derived',
+      relativeToRootDestination: 'libs/my/library',
+      updateImportPath: true,
+    };
+
+    const result = await normalizeSchema(
+      tree,
+      { ...schema, destination: './my/library' },
+      projectConfiguration
+    );
+
+    expect(result).toEqual(expected);
+  });
+
+  it('should use provided import path', async () => {
     const expected: NormalizedSchema = {
       destination: 'my/library',
       importPath: '@proj/my-awesome-library',
       newProjectName: 'my-library',
       projectName: 'my-library',
+      projectNameAndRootFormat: 'derived',
       relativeToRootDestination: 'libs/my/library',
       updateImportPath: true,
     };
 
-    const result = normalizeSchema(
+    const result = await normalizeSchema(
       tree,
       { ...schema, importPath: expected.importPath },
       projectConfiguration
@@ -71,7 +93,7 @@ describe('normalizeSchema', () => {
       return json;
     });
 
-    const result = normalizeSchema(tree, schema, projectConfiguration);
+    const result = await normalizeSchema(tree, schema, projectConfiguration);
 
     expect(result.relativeToRootDestination).toEqual('packages/my/library');
   });
