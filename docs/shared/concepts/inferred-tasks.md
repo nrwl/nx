@@ -1,75 +1,46 @@
 # Inferred Tasks
 
-In Nx version 17.3, many of the official Nx plugins gain the ability to automatically infer tasks for your projects based on the presence of tooling config files. For instance, the `@nx/eslint` plugin can infer a `lint` task in any project that contains an `.eslintrc.json` file.
+In Nx version 18, many Nx plugins will automatically infer tasks for your projects based on the configuration of different tools. Many tools have configuration files which determine what a tool does. Nx is able to cache the results of running the tool. Nx plugins use the same configuration files to infer how Nx should [run the task](/features/run-tasks). This includes [fine-tuned cache settings](/features/cache-task-results) and automatic [task dependencies](/concepts/task-pipeline-configuration).
 
-## What is an Inferred Task?
+For example, the `@nx/webpack` plugin infers tasks to run webpack through Nx based on your repository's webpack configuration. This configuration already defines the destination of your build files, so Nx reads that value and caches the correct output files.
 
-An inferred task is an executable task for a project - just like a `package.json` script or an explicitly defined `project.json` task - but these tasks are created on the fly based on the tooling config files that are present in your project. The tasks can be executed in the same way any task can (i.e. `nx test` or `nx build`).
-
-Let's take the `@nx/eslint` plugin for example. If you turn on task inference for the plugin in the `nx.json` file, the plugin will scan the projects in your repo for inferred tasks. If a project has an `.eslintrc.json` file, but no explicitly defined `lint` task in `package.json` or `project.json`, the `@nx/eslint` plugin will add a `lint` task for you.
-
-Inferred tasks are created with the following principles in mind:
-
-- As much as possible, tooling configuration stays in the tool configuration files.  
-  i.e. There should not be executor options that duplicate the tooling configuration.
-- Running an inferred task should be identical to launching that tool in the project directory.  
-  i.e. Running `nx lint my-project` should be the same as running `eslint .` from the `my-project` directory.
-- Inferred options (such as `inputs` and `outputs`) should be calculated from the tooling config.
-- Default set up should have very little nx-specific config
-- All default settings can be overwritten in the project configuration (`package.json` or `project.json`)
-
-## Setup Inferred Tasks
-
-To start using inferred tasks, you need to:
-
-1. Install the plugin
-
-   ```shell
-   npm i -D @nx/eslint
-   ```
-
-2. Enable inferred tasks in the `nx.json` file
-
-   ```json {% fileName="nx.json" %}
-   {
-     "plugins": [
-       {
-         "plugin": "@nx/eslint/plugin",
-         "options": {
-           "taskName": "lint"
-         }
-       }
-     ]
-   }
-   ```
-
-## How Exactly Does a Plugin Create an Inferred Task?
+## How Does a Plugin Infer Tasks?
 
 Every plugin has its own custom logic, but in order to infer tasks, they all go through the following steps.
 
-### 1. Detect Tooling Config in Projects
+### 1. Detect Tooling Configuration in Workspace
 
-The plugin will check each project in your repo for tooling configuration files. The `@nx/eslint` plugin checks for `.eslintrc.json` files at the root of the project. If the configuration files are found, tasks are inferred for that project.
+The plugin will search the workspace for configuration files of the tool. For each configuration file found, the plugin will infer tasks. i.e. The `@nx/webpack` plugin searches for `webpack.config.js` files to infer tasks that run webpack.
 
 ### 2. Create an Inferred Task
 
-The plugin will create a task for you that will use the tooling config that was detected. The name for the task (i.e. `lint`) is set in the `options` for the plugin in `nx.json`.
+The plugin then creates tasks with a name that you specified in the plugin's configuration in `nx.json`. The settings for the task are determined by the tool configuration.
 
-### 3. Set Inferred Task Options Based on Tooling Config
+The `@nx/webpack` plugin creates tasks named `build`, `serve` and `preview` by default and it automatically sets the task caching settings based on the values in the webpack configuration files.
 
-The plugin will automatically set options for the inferred tasks. This includes, at a minimum, `inputs` and `outputs`.
+### What Is Inferred
 
-## Configuration Precedence
+Nx plugins infer the following properties by analyzing the tool configuration.
 
-As much as possible, tooling configuration stays in the tooling configuration files themselves. For nx-specific task configuration, there are three possible sources:
+- Command - How is the tool invoked
+- [Cacheability](https://nx.dev/concepts/how-caching-works) - Whether the task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.
+- [Inputs](https://nx.dev/recipes/running-tasks/customizing-inputs) - Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.
+- [Outputs](https://nx.dev/reference/project-configuration#outputs) - Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.
+- [Task Dependencies](https://nx.dev/concepts/task-pipeline-configuration) - The list of other tasks which must be completed before running this task.
 
-- `taskDefaults` in the `nx.json` file
-- Inferred values from plugins
-- Project-specific configuration in `package.json` or `project.json`
+## Nx Use Plugins to Build the Graph
 
-The task configuration is calculated in that order. Project-specific configuration overwrites inferred values, which overwrite the `taskDefaults`.
+A typical workspace will have many plugins inferring tasks. Nx processes all the plugins registered in `nx.json` to create project configuration for individual projects and a project and task graph that shows the connections between them all.
 
-## Debug Inferred Tasks
+### Plugin Order Matters
+
+Plugins are processed in the order that they appear in the `plugins` array in `nx.json`. So, if multiple plugins create a task with the same name, the plugin listed last will win. If, for some reason, you have a project with both a `vite.config.js` file and a `webpack.config.js` file, both the `@nx/vite` plugin and the `@nx/webpack` plugin will try to create a `build` task. The `build` task that is executed will be the task that belongs to the plugin listed lower in the `plugins` array.
+
+### Sources of Project Configuration
+
+Inferred tasks can be overwritten in a couple ways. If you want to overwrite values for multiple projects in a single place, [use the `targetDefaults` object](/reference/nx-json#target-defaults) in the `nx.json` file. If you want to overwrite a value in a specific project, [update that project's configuration](/reference/project-configuration) in `package.json` or `project.json`. Inferred tasks will be overwritten by `targetDefaults` which will also be overwritten by individual project configuration files.
+
+## View Inferred Tasks
 
 To view the task settings that were inferred for a project, show the project details either from the command line or using Nx Console.
 
@@ -85,11 +56,3 @@ To modify a setting for an inferred task, set the specific property you want to 
 
 // TODO: Put picture here
 ![Inferred task configuration](/shared/concepts/inferred-task-config.png)
-
-## Why Use Inferred Tasks?
-
-The main value of inferred tasks differs based on the kind of repository you have.
-
-For a package-based repository, inferred tasks allow you to adopt an Nx plugin without any need to adjust your existing tooling configuration. Since the plugin is directly invoking the tool, if you're tooling configuration worked before, it will continue to work when run through Nx. In addition, the plugin will apply the correct `inputs` and `outputs` based on your configuration so that caching will work as expected. You'll also be able to automatically update tool versions and config files so that breaking changes from your tooling will no longer be a hassle.
-
-For an integrated repository, inferred tasks allow you to remove any tasks from your `project.json` files that are simply using the default settings. You'll only need to specify values that are unique to that project. You'll also be able to keep all configuration for a tool in the tool's configuration files - instead of having to check Nx config files to debug the tool. In addition, the plugin will apply the correct `inputs` and `outputs` based on your configuration so that caching will work as expected.
