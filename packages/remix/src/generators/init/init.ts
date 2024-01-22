@@ -8,7 +8,7 @@ import {
   runTasksInSerial,
 } from '@nx/devkit';
 import { type Schema } from './schema';
-import { remixVersion } from '../../utils/versions';
+import { nxVersion, remixVersion } from '../../utils/versions';
 
 function addPlugin(tree) {
   const nxJson = readNxJson(tree);
@@ -47,8 +47,11 @@ export async function remixInitGenerator(tree: Tree, options: Schema) {
         '@remix-run/serve': remixVersion,
       },
       {
+        '@nx/web': nxVersion,
         '@remix-run/dev': remixVersion,
-      }
+      },
+      undefined,
+      options.keepExistingVersions
     );
     tasks.push(installTask);
   }

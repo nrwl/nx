@@ -9,7 +9,6 @@ import { readJsonFile } from '../../utils/fileutils';
 import { nxVersion } from '../../utils/versions';
 import {
   addDepsToPackageJson,
-  askAboutNxCloud,
   createNxJsonFile,
   runInstall,
   updateGitIgnore,
@@ -18,6 +17,7 @@ import { prompt } from 'enquirer';
 import { execSync } from 'child_process';
 import { addNxToAngularCliRepo } from './implementation/angular';
 import { globWithWorkspaceContext } from '../../utils/workspace-context';
+import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
 
 export interface InitArgs {
   interactive: boolean;
@@ -68,11 +68,10 @@ export async function initHandler(options: InitArgs): Promise<void> {
 
   const detectPluginsResponse = await detectPlugins();
   const useNxCloud =
-    options.nxCloud ?? (options.interactive ? await askAboutNxCloud() : false);
+    options.nxCloud ??
+    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
-  if (detectPluginsResponse) {
-    addDepsToPackageJson(repoRoot, detectPluginsResponse.plugins);
-  }
+  addDepsToPackageJson(repoRoot, detectPluginsResponse?.plugins ?? []);
 
   output.log({ title: '📦 Installing Nx' });
 
@@ -82,7 +81,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     output.log({ title: '🔨 Configuring plugins' });
     for (const plugin of detectPluginsResponse.plugins) {
       execSync(
-        `${pmc.exec} nx g ${plugin}:init --skipPackageJson ${
+        `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
           detectPluginsResponse.updatePackageScripts
             ? '--updatePackageScripts'
             : ''
@@ -118,9 +117,14 @@ const npmPackageToPluginMap: Record<string, string> = {
   // Testing tools
   jest: '@nx/jest',
   cypress: '@nx/cypress',
-  playwright: '@nx/playwright',
+  '@playwright/test': '@nx/playwright',
+  // Frameworks
+  detox: '@nx/detox',
+  expo: '@nx/expo',
   next: '@nx/next',
   nuxt: '@nx/nuxt',
+  'react-native': '@nx/react-native',
+  '@remix-run/dev': '@nx/remix',
 };
 
 async function detectPlugins(): Promise<

@@ -49,6 +49,8 @@ export type {
   VersionData,
 } from './utils/shared';
 
+export const validReleaseVersionPrefixes = ['auto', '', '~', '^'];
+
 export interface ReleaseVersionGeneratorSchema {
   // The projects being versioned in the current execution
   projects: ProjectGraphProjectNode[];
@@ -60,6 +62,10 @@ export interface ReleaseVersionGeneratorSchema {
   packageRoot?: string;
   currentVersionResolver?: 'registry' | 'disk' | 'git-tag';
   currentVersionResolverMetadata?: Record<string, unknown>;
+  fallbackCurrentVersionResolver?: 'disk';
+  firstRelease?: boolean;
+  // auto means the existing prefix will be preserved, and is the default behavior
+  versionPrefix?: typeof validReleaseVersionPrefixes[number];
 }
 
 export interface NxReleaseVersionResult {
@@ -410,6 +416,7 @@ async function runVersionOnProjects(
     projects: projectNames.map((p) => projectGraph.nodes[p]),
     projectGraph,
     releaseGroup,
+    firstRelease: args.firstRelease ?? false,
   };
 
   // Apply generator defaults from schema.json file etc

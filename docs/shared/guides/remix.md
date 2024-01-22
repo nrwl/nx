@@ -7,7 +7,7 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 ```{% command="npx create-nx-workspace acme --preset=apps" path="~/" %}
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Enable remote caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 
  >  NX   Creating your v16.3.2 workspace.
 
@@ -31,9 +31,29 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 Make sure to install the `@nx/remix` version that is on the same minor version as the `nx` version in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install --save-dev @nx/remix
+npm add -D @nx/remix
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @nx/remix
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @nx/remix
+```
+
+{% /tab %}
+{% /tabs %}
 
 ## Generate a Remix Application
 

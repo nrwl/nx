@@ -1832,6 +1832,17 @@
         "path": "/nx-api/nx/documents/release",
         "tags": [],
         "originalFilePath": "generated/cli/release"
+      },
+      "/nx-api/nx/documents/add": {
+        "id": "add",
+        "name": "add",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/add",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/add",
+        "tags": [],
+        "originalFilePath": "generated/cli/add"
       }
     },
     "root": "/packages/nx",

@@ -1,8 +1,8 @@
-import type { Tree } from '@nx/devkit';
 import {
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
+  Tree,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -12,6 +12,7 @@ import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import { esbuildInitGenerator } from '../init/init';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
 import { EsBuildProjectSchema } from './schema';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -39,6 +40,7 @@ function checkForTargetConflicts(tree: Tree, options: EsBuildProjectSchema) {
 }
 
 function addBuildTarget(tree: Tree, options: EsBuildProjectSchema) {
+  addBuildTargetDefaults(tree, '@nx/esbuild:esbuild', options.buildTarget);
   const project = readProjectConfiguration(tree, options.project);
   const packageJsonPath = joinPathFragments(project.root, 'package.json');
 

@@ -7,9 +7,11 @@ import { Shell } from './shell';
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
 import { ProjectDetailsPage } from '@nx/graph/project-details';
-import { getEnvironmentConfig } from '@nx/graph/shared';
+import {
+  getEnvironmentConfig,
+  getProjectGraphDataService,
+} from '@nx/graph/shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
-import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -78,6 +80,7 @@ const projectDetailsLoader = async (
     (project) => project.name === projectName
   );
   return {
+    hash: workspaceData.hash,
     project,
     sourceMap: sourceMaps[project.data.root],
   };

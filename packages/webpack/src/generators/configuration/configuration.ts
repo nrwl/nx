@@ -1,8 +1,8 @@
-import type { Tree } from '@nx/devkit';
 import {
   formatFiles,
   joinPathFragments,
   readProjectConfiguration,
+  Tree,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -11,6 +11,7 @@ import { webpackInitGenerator } from '../init/init';
 import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { hasPlugin } from '../../utils/has-plugin';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -142,6 +143,8 @@ module.exports = composePlugins(withNx(), (config) => {
 }
 
 function addBuildTarget(tree: Tree, options: ConfigurationGeneratorSchema) {
+  addBuildTargetDefaults(tree, '@nx/webpack:webpack');
+
   const project = readProjectConfiguration(tree, options.project);
   const buildOptions: WebpackExecutorOptions = {
     target: options.target,

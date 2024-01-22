@@ -20,6 +20,7 @@ describe('Remix Init Generator', () => {
       `);
       expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
         {
+          "@nx/web": "0.0.1",
           "@remix-run/dev": "^2.3.0",
         }
       `);
@@ -43,6 +44,7 @@ describe('Remix Init Generator', () => {
       `);
       expect(pkgJson.devDependencies).toMatchInlineSnapshot(`
         {
+          "@nx/web": "0.0.1",
           "@remix-run/dev": "^2.3.0",
         }
       `);

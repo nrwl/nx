@@ -154,6 +154,7 @@ exports[`@nx/storybook:configuration for Storybook v7 dependencies should add an
     "@nx/jest": "0.0.1",
     "@nx/js": "0.0.1",
     "@nx/storybook": "0.0.1",
+    "@nx/web": "0.0.1",
     "@storybook/addon-essentials": "^7.5.3",
     "@storybook/addon-interactions": "^7.5.3",
     "@storybook/angular": "^7.5.3",
