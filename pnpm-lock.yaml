@@ -794,6 +794,9 @@ devDependencies:
   parse5:
     specifier: 4.0.0
     version: 4.0.0
+  piscina:
+    specifier: ^4.2.1
+    version: 4.2.1
   postcss:
     specifier: 8.4.19
     version: 8.4.19
@@ -22930,7 +22933,7 @@ packages:
       jsonc-parser: 3.2.0
       less: 4.2.0
       ora: 5.3.0
-      piscina: 4.1.0
+      piscina: 4.2.1
       postcss: 8.4.31
       postcss-url: 10.1.3(postcss@8.4.31)
       rollup: 4.3.0
@@ -24163,6 +24166,15 @@ packages:
     resolution: {integrity: sha512-sjbLMi3sokkie+qmtZpkfMCUJTpbxJm/wvaPzU28vmYSsTSW8xk9JcFUsbqGJdtPpIQ9tuj+iDcTtgZjwnOSig==}
     dependencies:
       eventemitter-asyncresource: 1.0.0
+      hdr-histogram-js: 2.0.3
+      hdr-histogram-percentiles-obj: 3.0.0
+    optionalDependencies:
+      nice-napi: 1.0.2
+    dev: true
+
+  /piscina@4.2.1:
+    resolution: {integrity: sha512-LShp0+lrO+WIzB9LXO+ZmO4zGHxtTJNZhEO56H9SSu+JPaUQb6oLcTCzWi5IL2DS8/vIkCE88ElahuSSw4TAkA==}
+    dependencies:
       hdr-histogram-js: 2.0.3
       hdr-histogram-percentiles-obj: 3.0.0
     optionalDependencies:
