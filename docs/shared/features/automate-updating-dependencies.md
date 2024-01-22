@@ -68,7 +68,7 @@ Note: You may want to keep the `migrations.json` until every branch that was cre
 
 ## Keep Nx Packages on the Same Version
 
-When you run `nx migrate`, the `nx` package and all the `@nx/` packages get updated to the same version. It is important to [keep these versions in sync](/recipes/tips-n-tricks/keep-nx-versions-in-sync), or you can encounter some difficult to debug errors. As long as you run `nx migrate` instead of manually changing the version numbers, you shouldn't have to worry about it.
+When you run `nx migrate`, the `nx` package and all the `@nx/` packages get updated to the same version. It is important to [keep these versions in sync](/recipes/tips-n-tricks/keep-nx-versions-in-sync), or you can encounter some difficult to debug errors. As long as you run `nx migrate` instead of manually changing the version numbers, you shouldn't have to worry about it. Also, when you add a new plugin, use `nx add <plugin>` to automatically install the version that matches your repository's version of Nx.
 
 {% callout type="note" title="Use the latest nx-cloud version" %}
 The `nx-cloud` package does not need to be in sync with the other Nx packages. For best results, stay on the latest version of `nx-cloud`. The latest `nx-cloud` version supports the most recent 2 major versions of `nx`, although earlier versions of `nx` may also be compatible.
