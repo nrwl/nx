@@ -115,6 +115,14 @@
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `browserTarget` options, or it will default to `true` if it's also not set in the `browserTarget` options.",
       "x-priority": "important"
+    },
+    "esbuildMiddleware": {
+      "description": "A list of HTTP request middleware functions. _Note: this is only supported in Angular versions >= 17.0.0_.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "The path to the middleware function. Relative to the workspace root."
+      }
     }
   },
   "additionalProperties": false,

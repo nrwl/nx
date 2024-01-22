@@ -381,6 +381,7 @@ async function determineStack(
       case Preset.NextJs:
       case Preset.NextJsStandalone:
         return 'react';
+      case Preset.Vue:
       case Preset.VueStandalone:
       case Preset.VueMonorepo:
       case Preset.Nuxt:
@@ -638,7 +639,7 @@ async function determineVueOptions(
   let appName: string;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
 
-  if (parsedArgs.preset) {
+  if (parsedArgs.preset && parsedArgs.preset !== Preset.Vue) {
     preset = parsedArgs.preset;
     if (preset === Preset.VueStandalone || preset === Preset.NuxtStandalone) {
       appName = parsedArgs.appName ?? parsedArgs.name;
@@ -646,13 +647,14 @@ async function determineVueOptions(
       appName = await determineAppName(parsedArgs);
     }
   } else {
+    const framework = await determineVueFramework(parsedArgs);
+
     const workspaceType = await determineStandaloneOrMonorepo();
     if (workspaceType === 'standalone') {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
       appName = await determineAppName(parsedArgs);
     }
-    const framework = await determineVueFramework(parsedArgs);
 
     if (framework === 'nuxt') {
       if (workspaceType === 'standalone') {

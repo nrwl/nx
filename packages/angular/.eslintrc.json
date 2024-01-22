@@ -45,6 +45,7 @@
             "ignoredDependencies": [
               "nx",
               "eslint",
+              "vite",
               "rxjs",
               "semver",
               // These are installed by ensurePackage so missing in package.json
