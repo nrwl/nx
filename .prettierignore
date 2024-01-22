@@ -16,7 +16,7 @@ packages/jest/src/schematics/**/files/**/*.json
 packages/nx/src/plugins/js/lock-file/__fixtures__/**/*.*
 packages/**/schematics/**/files/**/*.html
 packages/**/generators/**/files/**/*.html
-packages/nx/src/native/
+packages/nx/src/native/**/*.rs
 nx-dev/nx-dev/.next/
 nx-dev/nx-dev/public/documentation
 graph/client/src/assets/environment.js
