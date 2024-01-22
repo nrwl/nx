@@ -5,6 +5,8 @@ use std::{
 
 use anyhow::anyhow;
 use crossbeam_channel::{bounded, unbounded, Receiver};
+use crossterm::terminal::{self, disable_raw_mode, enable_raw_mode};
+use crossterm::tty::IsTty;
 use napi::threadsafe_function::ErrorStrategy::Fatal;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
@@ -126,10 +128,10 @@ pub fn run_command(
 
     let pty_system = NativePtySystem::default();
 
-    let (w, h) = term_size::dimensions().unwrap_or((80, 24));
+    let (w, h) = terminal::size().unwrap_or((80, 24));
     let pair = pty_system.openpty(PtySize {
-        rows: h as u16,
-        cols: w as u16,
+        rows: h,
+        cols: w,
         pixel_width: 0,
         pixel_height: 0,
     })?;
@@ -148,6 +150,8 @@ pub fn run_command(
 
     let reader = pair.master.try_clone_reader()?;
     let mut stdout = std::io::stdout();
+
+    // Output -> stdout handling
     std::thread::spawn(move || {
         let mut reader = BufReader::new(reader);
         let mut buffer = [0; 8 * 1024];
@@ -182,10 +186,25 @@ pub fn run_command(
 
     let process_killer = child.clone_killer();
     let (exit_tx, exit_rx) = bounded(1);
+
+    let mut writer = pair.master.take_writer()?;
+
+    // Stdin -> pty stdin
+    if std::io::stdout().is_tty() {
+        std::thread::spawn(move || {
+            enable_raw_mode().expect("Failed to enter raw terminal mode");
+            let mut stdin = std::io::stdin();
+            #[allow(clippy::redundant_pattern_matching)]
+            // ignore errors that come from copying the stream
+            if let Ok(_) = std::io::copy(&mut stdin, &mut writer) {}
+        });
+    }
+
     std::thread::spawn(move || {
         let exit = child.wait().unwrap();
         // make sure that master is only dropped after we wait on the child. Otherwise windows does not like it
         drop(pair.master);
+        disable_raw_mode().expect("Failed to restore non-raw terminal");
         exit_tx.send(exit.exit_code()).ok();
     });
 
