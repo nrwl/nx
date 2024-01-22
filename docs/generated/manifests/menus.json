@@ -8248,14 +8248,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "ai",
-                "path": "/nx-api/nx/documents/ai",
-                "id": "ai",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "init",
                 "path": "/nx-api/nx/documents/init",
                 "id": "init",

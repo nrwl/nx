@@ -1971,11 +1971,6 @@
               "file": "generated/cli/create-nx-workspace"
             },
             {
-              "name": "ai",
-              "id": "ai",
-              "file": "generated/cli/ai"
-            },
-            {
               "name": "init",
               "id": "init",
               "file": "generated/cli/init"

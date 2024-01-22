@@ -19,10 +19,11 @@ import {
 import { getLocalWorkspacePlugins } from '../../utils/plugins/local-plugins';
 import { printHelp } from '../../utils/print-help';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { NxJsonConfiguration } from '../../config/nx-json';
 import { calculateDefaultProjectName } from '../../config/calculate-default-project-name';
 import { findInstalledPlugins } from '../../utils/plugins/installed-plugins';
 import { getGeneratorInformation } from './generator-utils';
+import { sendPostRequest } from './get-response-from-ai';
+import { output } from '../../utils/output';
 
 export interface GenerateOptions {
   collectionName: string;
@@ -50,7 +51,8 @@ export function printChanges(fileChanges: FileChange[]) {
 async function promptForCollection(
   generatorName: string,
   interactive: boolean,
-  projectsConfiguration: ProjectsConfigurations
+  projectsConfiguration: ProjectsConfigurations,
+  generatorOptions: { [k: string]: any }
 ): Promise<string> {
   const localPlugins = await getLocalWorkspacePlugins(
     projectsConfiguration,
@@ -193,7 +195,7 @@ async function promptForCollection(
       ].join('\n')
     );
   } else {
-    throw new Error(`Could not find any generators named "${generatorName}"`);
+    await handleNoGeneratorFound(generatorOptions);
   }
 }
 
@@ -235,7 +237,8 @@ async function convertToGenerateOptions(
       const generatorString = await promptForCollection(
         generatorDescriptor,
         interactive,
-        projectsConfiguration
+        projectsConfiguration,
+        generatorOptions
       );
       const parsedGeneratorString = parseGeneratorString(generatorString);
       collectionName = parsedGeneratorString.collection;
@@ -422,4 +425,35 @@ export async function generate(cwd: string, args: { [k: string]: any }) {
       );
     }
   });
+}
+
+async function handleNoGeneratorFound(generatorOptions: { [k: string]: any }) {
+  try {
+    const query =
+      'generate ' +
+      generatorOptions.generator +
+      ' ' +
+      generatorOptions['_'].join(' ');
+    const response = await sendPostRequest({ query: query });
+    if (typeof response === 'string') {
+      output.note({
+        title: 'The command you need to run is:',
+        bodyLines: [response],
+      });
+    } else {
+      output.error({
+        title: 'Could not find a command to run.',
+        bodyLines: ['Please check out our docs: https://nx.dev/nx-api'],
+      });
+    }
+  } catch (error) {
+    output.error({
+      title: 'Could not find a command to run.',
+      bodyLines: [
+        'Error:',
+        error,
+        'Please check out our docs: https://nx.dev/nx-api',
+      ],
+    });
+  }
 }
