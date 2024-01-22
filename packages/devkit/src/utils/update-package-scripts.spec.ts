@@ -178,6 +178,63 @@ describe('updatePackageScripts', () => {
     );
   });
 
+  it('should support multiple occurrences of the same command within a script', async () => {
+    tree.write('app1/tsconfig.json', '');
+    writeJson(tree, 'app1/package.json', {
+      name: 'app1',
+      scripts: {
+        typecheck: 'tsc -p tsconfig.lib.json && tsc -p tsconfig.spec.json',
+      },
+    });
+
+    await updatePackageScripts(tree, [
+      '**/tsconfig.json',
+      () => ({
+        projects: {
+          app1: {
+            targets: {
+              build: { command: 'tsc' },
+            },
+          },
+        },
+      }),
+    ]);
+
+    const { scripts } = readJson<PackageJson>(tree, 'app1/package.json');
+    expect(scripts.typecheck).toBe(
+      'nx build -p tsconfig.lib.json && nx build -p tsconfig.spec.json'
+    );
+  });
+
+  it('should support multiple occurrences of the same command within a script with extra commands', async () => {
+    tree.write('app1/tsconfig.json', '');
+    writeJson(tree, 'app1/package.json', {
+      name: 'app1',
+      scripts: {
+        typecheck:
+          'echo "Typechecking..." && tsc -p tsconfig.lib.json && tsc -p tsconfig.spec.json && echo "Done"',
+      },
+    });
+
+    await updatePackageScripts(tree, [
+      '**/tsconfig.json',
+      () => ({
+        projects: {
+          app1: {
+            targets: {
+              build: { command: 'tsc' },
+            },
+          },
+        },
+      }),
+    ]);
+
+    const { scripts } = readJson<PackageJson>(tree, 'app1/package.json');
+    expect(scripts.typecheck).toBe(
+      'echo "Typechecking..." && nx build -p tsconfig.lib.json && nx build -p tsconfig.spec.json && echo "Done"'
+    );
+  });
+
   it('should exclude all package.json scripts when none are excluded', async () => {
     tree.write('next.config.js', '');
     writeJson(tree, 'package.json', {

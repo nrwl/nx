@@ -67,7 +67,8 @@ async function processProject(
   for (const targetCommand of targetCommands) {
     const { command, target, configuration } = targetCommand;
     const targetCommandRegex = new RegExp(
-      `(?<=^|&)((?: )*(?:[^&\\r\\n\\s]+ )*)(${command})((?: [^&\\r\\n\\s]+)*(?: )*)(?=$|&)`
+      `(?<=^|&)((?: )*(?:[^&\\r\\n\\s]+ )*)(${command})((?: [^&\\r\\n\\s]+)*(?: )*)(?=$|&)`,
+      'g'
     );
     for (const scriptName of Object.keys(packageJson.scripts)) {
       const script = packageJson.scripts[scriptName];
@@ -95,71 +96,84 @@ async function processProject(
         // this assumes there are no positional args in the command, everything is a command or subcommand
         const commandCommand = parsedCommand._.join(' ');
         const commandRegex = new RegExp(
-          `(?<=^|&)((?: )*(?:[^&\\r\\n\\s]+ )*)(${commandCommand})((?: [^&\\r\\n\\s]+)*( )*)(?=$|&)`
+          `(?<=^|&)((?: )*(?:[^&\\r\\n\\s]+ )*)(${commandCommand})((?: [^&\\r\\n\\s]+)*( )*)(?=$|&)`,
+          'g'
         );
-        const match = commandRegex.exec(script);
-        if (!match) {
+        const matches = script.match(commandRegex);
+        if (!matches) {
           // the command doesn't match the script, don't replace
           continue;
         }
 
-        // parse the matched command within the script
-        const parsedScript = yargs(match[0], {
-          configuration: { 'strip-dashed': true },
-        });
+        for (const match of matches) {
+          // parse the matched command within the script
+          const parsedScript = yargs(match, {
+            configuration: { 'strip-dashed': true },
+          });
 
-        let hasArgsWithDifferentValues = false;
-        let scriptHasExtraArgs = false;
-        let commandHasExtraArgs = false;
-        for (const [key, value] of Object.entries(parsedCommand)) {
-          if (key === '_') {
+          let hasArgsWithDifferentValues = false;
+          let scriptHasExtraArgs = false;
+          let commandHasExtraArgs = false;
+          for (const [key, value] of Object.entries(parsedCommand)) {
+            if (key === '_') {
+              continue;
+            }
+
+            if (parsedScript[key] === undefined) {
+              commandHasExtraArgs = true;
+              break;
+            }
+            if (parsedScript[key] !== value) {
+              hasArgsWithDifferentValues = true;
+            }
+          }
+
+          if (commandHasExtraArgs) {
+            // the command has extra args, don't replace
             continue;
           }
 
-          if (parsedScript[key] === undefined) {
-            commandHasExtraArgs = true;
-            break;
-          }
-          if (parsedScript[key] !== value) {
-            hasArgsWithDifferentValues = true;
-          }
-        }
+          for (const key of Object.keys(parsedScript)) {
+            if (key === '_') {
+              continue;
+            }
 
-        if (commandHasExtraArgs) {
-          // the command has extra args, don't replace
-          continue;
-        }
-
-        for (const key of Object.keys(parsedScript)) {
-          if (key === '_') {
-            continue;
+            if (!parsedCommand[key]) {
+              scriptHasExtraArgs = true;
+              break;
+            }
           }
 
-          if (!parsedCommand[key]) {
-            scriptHasExtraArgs = true;
-            break;
+          if (!hasArgsWithDifferentValues && !scriptHasExtraArgs) {
+            // they are the same, replace with the command removing the args
+            packageJson.scripts[scriptName] = packageJson.scripts[
+              scriptName
+            ].replace(
+              match,
+              match.replace(
+                commandRegex,
+                configuration
+                  ? `$1nx ${target} --configuration=${configuration}$4`
+                  : `$1nx ${target}$4`
+              )
+            );
+          } else {
+            // there are different args or the script has extra args, replace with the command leaving the args
+            packageJson.scripts[scriptName] = packageJson.scripts[
+              scriptName
+            ].replace(
+              match,
+              match.replace(
+                commandRegex,
+                configuration
+                  ? `$1nx ${target} --configuration=${configuration}$3`
+                  : `$1nx ${target}$3`
+              )
+            );
           }
-        }
 
-        if (!hasArgsWithDifferentValues && !scriptHasExtraArgs) {
-          // they are the same, replace with the command removing the args
-          packageJson.scripts[scriptName] = script.replace(
-            commandRegex,
-            configuration
-              ? `$1nx ${target} --configuration=${configuration}$4`
-              : `$1nx ${target}$4`
-          );
-        } else {
-          // there are different args or the script has extra args, replace with the command leaving the args
-          packageJson.scripts[scriptName] = script.replace(
-            commandRegex,
-            configuration
-              ? `$1nx ${target} --configuration=${configuration}$3`
-              : `$1nx ${target}$3`
-          );
+          excludeScriptFromPackageJson(packageJson, scriptName);
         }
-
-        excludeScriptFromPackageJson(packageJson, scriptName);
       }
     }
   }
