@@ -845,6 +845,63 @@ To fix this you will either need to add a package.json file at that location, or
       `);
     });
 
+    it('should use the behavior of "auto" by default', async () => {
+      expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+        '0.0.1'
+      );
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: '9.9.9',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+        versionPrefix: undefined,
+      });
+      expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "my-lib",
+          "version": "9.9.9",
+        }
+      `);
+
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "~9.9.9",
+          },
+          "name": "project-with-dependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "^9.9.9",
+          },
+          "name": "project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(
+          tree,
+          'libs/another-project-with-devDependency-on-my-pkg/package.json'
+        )
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "9.9.9",
+          },
+          "name": "another-project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+    });
+
     it(`should exit with code one and print guidance for invalid prefix values`, async () => {
       stubProcessExit = true;
 
