@@ -73,7 +73,7 @@ export function getPackageManagerCommand(
           ? 'yarn install --immutable'
           : 'yarn install --frozen-lockfile',
         updateLockFile: useBerry
-          ? 'yarn install --mode update-lockfile --skip-immutable-lockfile'
+          ? 'yarn install --mode update-lockfile'
           : 'yarn install',
         add: useBerry ? 'yarn add' : 'yarn add -W',
         addDev: useBerry ? 'yarn add -D' : 'yarn add -D -W',
