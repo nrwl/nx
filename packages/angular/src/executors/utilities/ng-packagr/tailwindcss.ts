@@ -57,7 +57,7 @@ export function getTailwindSetup(
   return { tailwindConfigPath, tailwindPackagePath };
 }
 
-function getTailwindConfigPath(
+export function getTailwindConfigPath(
   projectRoot: string,
   workspaceRoot: string
 ): string | undefined {

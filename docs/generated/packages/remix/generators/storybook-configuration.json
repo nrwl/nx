@@ -82,7 +82,7 @@
         "description": "Add a Storybook Test-Runner target."
       }
     },
-    "required": ["name"],
+    "required": ["project"],
     "presets": []
   },
   "description": "Generates a Storybook configuration for a Remix application",

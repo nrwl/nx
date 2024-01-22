@@ -118,8 +118,13 @@ const npmPackageToPluginMap: Record<string, string> = {
   jest: '@nx/jest',
   cypress: '@nx/cypress',
   '@playwright/test': '@nx/playwright',
+  // Frameworks
+  detox: '@nx/detox',
+  expo: '@nx/expo',
   next: '@nx/next',
   nuxt: '@nx/nuxt',
+  'react-native': '@nx/react-native',
+  '@remix-run/dev': '@nx/remix',
 };
 
 async function detectPlugins(): Promise<
