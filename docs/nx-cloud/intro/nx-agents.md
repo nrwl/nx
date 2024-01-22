@@ -31,7 +31,7 @@ Keep reading to learn what the configuration and setup looks like.
 
 ## Managed Agents, Seamless Configuration
 
-Enabling task distribution with Nx Agents can be done in a single line. Simply add the `--distributes-on` property to the `start-ci-run` line in your CI pipeline configuration:
+Enabling task distribution with Nx Agents can be done in a single line. Simply add the `--distribute-on` property to the `start-ci-run` line in your CI pipeline configuration:
 
 ```yaml
 - name: Start CI run
