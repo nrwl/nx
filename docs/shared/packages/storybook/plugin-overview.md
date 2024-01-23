@@ -9,43 +9,41 @@ This guide will briefly walk you through using Storybook within an Nx workspace.
 
 ## Setting Up Storybook
 
-### Add the Storybook plugin
+### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
 Make sure to install the `@nx/storybook` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
+In any Nx workspace, you can install `@nx/storybook` by running the following command:
+
 {% tabs %}
-{% tab label="npm" %}
+{% tab label="Nx 18+" %}
 
 ```shell
-npm add -D @nx/storybook
+nx add @nx/storybook
 ```
 
-{% /tab %}
-{% tab label="yarn" %}
+This will install the correct version of `@nx/storybook`.
 
-```shell
-yarn add -D @nx/storybook
-```
+### How @nx/storybook Infers Tasks
 
-{% /tab %}
-{% tab label="pnpm" %}
+The `@nx/storybook` plugin will create a task for any project that has a Storybook configuration file present. Any of the following files will be recognized as a Storybook configuration file:
 
-```shell
-pnpm add -D @nx/storybook
-```
+- `.storybook/main.js`
+- `.storybook/main.ts`
+- `.storybook/main.cjs`
+- `.storybook/main.cts`
+- `.storybook/main.mjs`
+- `.storybook/main.mts`
 
-{% /tab %}
-{% /tabs %}
+### View Inferred Tasks
 
-### Enable Inferred Tasks
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
 
-{% callout type="note" title="Inferred Tasks" %}
-In Nx version 17.3, the `@nx/storybook` plugin can create [inferred tasks](/concepts/inferred-tasks) for projects that have a Storybook configuration file present. This means you can run `nx storybook my-project`, `nx build-storybook my-project`, `nx test-storybook my-project` and `nx static-storybook my-project` for that project, even if there is no `storybook`, `build-storybook`, `test-storybook` or `static-storybook` targets defined in `package.json` or `project.json`.
-{% /callout %}
+### @nx/storybook Configuration
 
-To enable inferred targets, add `@nx/storybook/plugin` to the `plugins` array in `nx.json`.
+The `@nx/storybook/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
@@ -63,26 +61,20 @@ To enable inferred targets, add `@nx/storybook/plugin` to the `plugins` array in
 }
 ```
 
-### Task Inference Process
+- The `builtStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTargetName` and `staticStorybookTargetName` options control the names of the inferred Storybook tasks. The default names are `build-storybook`, `storybook`, `test-storybook` and `static-storybook`.
 
-#### Identify Valid Projects
+{% /tab %}
+{% tab label="Nx < 18" %}
 
-The `@nx/storybook/plugin` plugin will create a target for any project that has a Storybook configuration file present. Any of the following files will be recognized as a Storybook configuration file:
+Install the `@nx/storybook` package with your package manager and then run the `init` generator.
 
-- `.storybook/main.js`
-- `.storybook/main.ts`
-- `.storybook/main.cjs`
-- `.storybook/main.cts`
-- `.storybook/main.mjs`
-- `.storybook/main.mts`
+```shell
+npm add -D @nx/storybook
+nx g @nx/storybook:init
+```
 
-#### Name the Inferred Task
-
-Once a Storybook configuration file has been identified, the targets are created with the name you specify under `buildStorybookTargetName`, `serveStorybookTargetName`, `testStorybookTargetName` or `staticStorybookTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `storybook`, `build-storybook`, `test-storybook` and `static-storybook`.
-
-#### View and Edit Inferred Tasks
-
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line. Nx Console also provides a quick way to override the settings of an inferred task.
+{% /tab %}
+{% /tabs %}
 
 ## Using Storybook
 

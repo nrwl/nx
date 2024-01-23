@@ -16,7 +16,7 @@ Why should you use this plugin?
 
 Read more about Vite and Vitest in the [Vite documentation](https://vitejs.dev/).
 
-## Setting up a new Nx workspace with Vite
+## Setting up a new Nx workspace with @nx/vite
 
 Here's an example on how to create a new React app with Vite
 
@@ -24,9 +24,81 @@ Here's an example on how to create a new React app with Vite
 npx create-nx-workspace@latest --preset=react-standalone --bundler=vite
 ```
 
-## Add Vite to an existing workspace
+### Installation
 
-There are a number of ways to use Vite in your existing workspace.
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/vite` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
+In any Nx workspace, you can install `@nx/vite` by running the following command:
+
+{% tabs %}
+{% tab label="Nx 18+" %}
+
+```shell
+nx add @nx/vite
+```
+
+This will install the correct version of `@nx/vite`.
+
+### How @nx/vite Infers Tasks
+
+The `@nx/vite` plugin will create a task for any project that has a Vite configuration file present. Any of the following files will be recognized as a Vite configuration file:
+
+- `vite.config.js`
+- `vite.config.ts`
+- `vite.config.mjs`
+- `vite.config.mts`
+- `vite.config.cjs`
+- `vite.config.cts`
+- `vitest.config.js`
+- `vitest.config.ts`
+- `vitest.config.mjs`
+- `vitest.config.mts`
+- `vitest.config.cjs`
+- `vitest.config.cts`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/vite Configuration
+
+The `@nx/vite/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "previewTargetName": "preview",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "serveStaticTargetName": "serve-static"
+      }
+    }
+  ]
+}
+```
+
+- The `buildTargetName`, `previewTargetName`, `testTargetName`, `serveTargetName` and `serveStaticTargetName` options control the names of the inferred Vite tasks. The default names are `build`, `preview`, `test`, `serve` and `serve-static`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/vite` package with your package manager and then run the `init` generator.
+
+```shell
+npm add -D @nx/vite
+nx g @nx/vite:init
+```
+
+{% /tab %}
+{% /tabs %}
+
+## Using @nx/vite
 
 ### Generate a new project using Vite
 
@@ -55,101 +127,3 @@ nx g @nx/web:app my-app --bundler=vite
 You can use the `@nx/vite:configuration` generator to change your React or Web project to use Vite.js. This generator will modify your project's configuration to use Vite.js, and it will also install all the necessary dependencies, including the `@nx/vite` plugin..
 
 You can read more about this generator on the [`@nx/vite:configuration`](/nx-api/vite/generators/configuration) generator page.
-
-### Initialize Vite
-
-If you do not want to create any new projects or convert any existing projects yet, you can still use Nx to install all the necessary dependencies for Vite.js. This, for example, could be useful if you want to set up Vite.js manually for a project.
-
-#### Install the `@nx/vite` plugin
-
-{% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/vite` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
-{% /callout %}
-
-{% tabs %}
-{% tab label="npm" %}
-
-```shell
-npm add -D @nx/vite
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/vite
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/vite
-```
-
-{% /tab %}
-{% /tabs %}
-
-#### Enable Inferred Tasks
-
-{% callout type="note" title="Inferred Tasks" %}
-In Nx version 17.3, the `@nx/vite` plugin can create [inferred tasks](/concepts/inferred-tasks) for projects that have a Vite configuration file present. This means you can run `nx build my-project`, `nx serve my-project`, `nx preview my-project`, `nx serve-static my-project` and `nx test my-project` for that project, even if there is no `build`, `serve`, `preview`, `serve-static` or `test` targets defined in `package.json` or `project.json`.
-{% /callout %}
-
-To enable inferred tasks, add `@nx/vite/plugin` to the `plugins` array in `nx.json`.
-
-```json {% fileName="nx.json" %}
-{
-  "plugins": [
-    {
-      "plugin": "@nx/vite/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "previewTargetName": "preview",
-        "testTargetName": "test",
-        "serveTargetName": "serve",
-        "serveStaticTargetName": "serve-static"
-      }
-    }
-  ]
-}
-```
-
-#### Task Inference Process
-
-##### Identify Valid Projects
-
-The `@nx/vite/plugin` plugin will create a target for any project that has a Vite configuration file present. Any of the following files will be recognized as a Vite configuration file:
-
-- `vite.config.js`
-- `vite.config.ts`
-- `vite.config.mjs`
-- `vite.config.mts`
-- `vite.config.cjs`
-- `vite.config.cts`
-- `vitest.config.js`
-- `vitest.config.ts`
-- `vitest.config.mjs`
-- `vitest.config.mts`
-- `vitest.config.cjs`
-- `vitest.config.cts`
-
-##### Name the Inferred Task
-
-Once a Vite configuration file has been identified, the targets are created with the name you specify under `buildTargetName`, `serveTargetName`, `previewTargetName`, `serveStaticTargetName` or `testTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `build`, `serve`, `preview`, `serve-static` and `test`.
-
-##### View and Edit Inferred Tasks
-
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line. Nx Console also provides a quick way to override the settings of an inferred task.
-
-#### Ask Nx to install the necessary dependencies
-
-After you install the plugin, you can automatically initialize the project with Vite using an Nx generator:
-
-```bash
-nx g @nx/vite:init
-```
-
-{% callout type="note" title="Choosing a framework" %}
-You will notice that the generator will ask you of the framework you are planning to use. This is just to make sure that the right dependencies are installed. You can always install manually any other dependencies you need.
-{% /callout %}
