@@ -2,6 +2,7 @@ import { joinPathFragments } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
+  getSelectedPackageManager,
   newProject,
   readFile,
   runCLI,
@@ -34,6 +35,7 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
         // Normalize the version title date
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
+        .replaceAll(getSelectedPackageManager(), '{package-manager}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
@@ -127,7 +129,7 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
-        >  NX   Updating npm lock file
+        >  NX   Updating {package-manager} lock file
 
 
         >  NX   Staging changed files with git
@@ -162,7 +164,7 @@ describe('nx release - independent projects', () => {
         +
 
 
-        >  NX   Updating npm lock file
+        >  NX   Updating {package-manager} lock file
 
 
         >  NX   Staging changed files with git
@@ -204,7 +206,7 @@ describe('nx release - independent projects', () => {
         }
 
 
-        >  NX   Updating npm lock file
+        >  NX   Updating {package-manager} lock file
 
 
         >  NX   Staging changed files with git
@@ -246,7 +248,7 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
-        >  NX   Updating npm lock file
+        >  NX   Updating {package-manager} lock file
 
         Updating package-lock.json with the following command:
         npm install --package-lock-only
@@ -354,12 +356,12 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
-        >  NX   Updating npm lock file
+        >  NX   Updating {package-manager} lock file
 
         Updating package-lock.json with the following command:
         npm install --package-lock-only
 
-        >  NX   Updating npm lock file
+        >  NX   Updating {package-manager} lock file
 
         Updating package-lock.json with the following command:
         npm install --package-lock-only
