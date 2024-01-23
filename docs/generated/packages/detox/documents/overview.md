@@ -79,37 +79,11 @@ Once a Detox configuration file has been identified, the targets are created wit
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/detox` package with your package manager and then run the `init` generator.
-
-{% tabs %}
-{% tab label="npm" %}
+Install the `@nx/detox` package with your package manager.
 
 ```shell
 npm add -D @nx/detox
-nx g @nx/detox:init
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/detox
-nx g @nx/detox:init
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/detox
-nx g @nx/detox:init
-```
-
-{% /tab %}
-{% /tabs %}
-
-{% /tab %}
-{% /tabs %}
 
 ### Generating Applications
 

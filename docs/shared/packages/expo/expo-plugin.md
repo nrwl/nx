@@ -79,37 +79,11 @@ Once a Expo configuration file has been identified, the targets are created with
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/expo` package with your package manager and then run the `init` generator.
-
-{% tabs %}
-{% tab label="npm" %}
+Install the `@nx/expo` package with your package manager.
 
 ```shell
 npm add -D @nx/expo
-nx g @nx/expo:init
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/expo
-nx g @nx/expo:init
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/expo
-nx g @nx/expo:init
-```
-
-{% /tab %}
-{% /tabs %}
-
-{% /tab %}
-{% /tabs %}
 
 ### Creating Applications
 

@@ -65,11 +65,10 @@ The `@nx/jest/plugin` is configured in the `plugins` array in `nx.json`.
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/jest` package with your package manager and then run the `init` generator.
+Install the `@nx/jest` package with your package manager.
 
 ```shell
 npm add -D @nx/jest
-nx g @nx/jest:init
 ```
 
 {% /tab %}
