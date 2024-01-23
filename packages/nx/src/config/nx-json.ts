@@ -54,7 +54,7 @@ interface NxInstallationConfiguration {
 /**
  * **ALPHA**
  */
-interface NxReleaseVersionConfiguration {
+export interface NxReleaseVersionConfiguration {
   generator?: string;
   generatorOptions?: Record<string, unknown>;
   /**
