@@ -78,6 +78,10 @@ nx g @nx/playwright:init
 {% /tab %}
 {% /tabs %}
 
+### Splitting E2E tasks by file
+
+The `@nx/playwright/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/concepts/split-e2e-tasks).
+
 ## E2E Testing
 
 By default, when creating a new frontend application, Nx will prompt for which e2e test runner to use. Select `playwright` or pass in the arg `--e2eTestRunner=playwright`

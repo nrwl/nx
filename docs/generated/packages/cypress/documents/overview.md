@@ -84,6 +84,10 @@ nx g @nx/cypress:init
 {% /tab %}
 {% /tabs %}
 
+### Splitting E2E tasks by file
+
+The `@nx/cypress/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/concepts/split-e2e-tasks).
+
 ## E2E Testing
 
 By default, when creating a new frontend application, Nx will use Cypress to create the e2e tests project.
