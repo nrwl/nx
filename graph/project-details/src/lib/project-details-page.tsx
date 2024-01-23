@@ -4,12 +4,10 @@ import { ProjectGraphProjectNode } from '@nx/devkit';
 import {
   Link,
   ScrollRestoration,
-  useLocation,
-  useNavigate,
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
-import ProjectDetails from './project-details';
+import { ProjectDetailsWrapper } from './project-details-wrapper';
 import {
   fetchProjectGraph,
   getProjectGraphDataService,
@@ -85,10 +83,10 @@ export function ProjectDetailsPage() {
         </header>
       ) : null}
       <div className="flex-grow mx-auto w-full max-w-6xl px-8 mb-8">
-        <ProjectDetails
+        <ProjectDetailsWrapper
           project={project}
           sourceMap={sourceMap}
-        ></ProjectDetails>
+        ></ProjectDetailsWrapper>
       </div>
     </div>
   );
