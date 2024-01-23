@@ -88,33 +88,36 @@ describe('release-version', () => {
       })
     ).toMatchInlineSnapshot(`
       {
-        "my-lib": {
-          "currentVersion": "0.0.1",
-          "dependentProjects": [
-            {
-              "dependencyCollection": "dependencies",
-              "source": "project-with-dependency-on-my-pkg",
-              "target": "my-lib",
-              "type": "static",
-            },
-            {
-              "dependencyCollection": "devDependencies",
-              "source": "project-with-devDependency-on-my-pkg",
-              "target": "my-lib",
-              "type": "static",
-            },
-          ],
-          "newVersion": "1.0.0",
-        },
-        "project-with-dependency-on-my-pkg": {
-          "currentVersion": "0.0.1",
-          "dependentProjects": [],
-          "newVersion": "1.0.0",
-        },
-        "project-with-devDependency-on-my-pkg": {
-          "currentVersion": "0.0.1",
-          "dependentProjects": [],
-          "newVersion": "1.0.0",
+        "callback": [Function],
+        "data": {
+          "my-lib": {
+            "currentVersion": "0.0.1",
+            "dependentProjects": [
+              {
+                "dependencyCollection": "dependencies",
+                "source": "project-with-dependency-on-my-pkg",
+                "target": "my-lib",
+                "type": "static",
+              },
+              {
+                "dependencyCollection": "devDependencies",
+                "source": "project-with-devDependency-on-my-pkg",
+                "target": "my-lib",
+                "type": "static",
+              },
+            ],
+            "newVersion": "1.0.0",
+          },
+          "project-with-dependency-on-my-pkg": {
+            "currentVersion": "0.0.1",
+            "dependentProjects": [],
+            "newVersion": "1.0.0",
+          },
+          "project-with-devDependency-on-my-pkg": {
+            "currentVersion": "0.0.1",
+            "dependentProjects": [],
+            "newVersion": "1.0.0",
+          },
         },
       }
     `);

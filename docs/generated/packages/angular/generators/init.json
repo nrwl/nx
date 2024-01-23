@@ -34,7 +34,6 @@
         "default": false
       }
     },
-    "additionalProperties": false,
     "presets": []
   },
   "description": "Initializes the `@nrwl/angular` plugin.",
