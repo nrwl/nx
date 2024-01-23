@@ -80,37 +80,11 @@ Once a React Native configuration file has been identified, the targets are crea
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/react-native` package with your package manager and then run the `init` generator.
-
-{% tabs %}
-{% tab label="npm" %}
+Install the `@nx/react-native` package with your package manager.
 
 ```shell
 npm add -D @nx/react-native
-nx g @nx/react-native:init
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/react-native
-nx g @nx/react-native:init
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/react-native
-nx g @nx/react-native:init
-```
-
-{% /tab %}
-{% /tabs %}
-
-{% /tab %}
-{% /tabs %}
 
 ### Generating Applications
 

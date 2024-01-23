@@ -68,11 +68,10 @@ The `@nx/playwright/plugin` is configured in the `plugins` array in `nx.json`.
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/playwright` package with your package manager and then run the `init` generator.
+Install the `@nx/playwright` package with your package manager.
 
 ```shell
 npm add -D @nx/playwright
-nx g @nx/playwright:init
 ```
 
 {% /tab %}

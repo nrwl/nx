@@ -1,3 +1,8 @@
+---
+title: Overview of the Nx Angular Plugin
+description: The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries within an Nx workspace.
+---
+
 The Nx Plugin for Angular contains executors, generators, and utilities for managing Angular applications and libraries
 within an Nx workspace. It provides:
 
@@ -15,35 +20,32 @@ You can easily and mostly **automatically migrate from an Angular CLI** project 
 more [here](/recipes/angular/migration/angular).
 {% /callout %}
 
-## Setting up the Angular plugin
+## Setting Up @nx/angular
+
+### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/angular` version that matches the version of `nx` in your repository. If the version
-numbers get out of sync, you can encounter some difficult to debug errors. You
-can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/angular` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-Adding the Angular plugin to an existing Nx workspace can be done with the following:
+In any Nx workspace, you can install `@nx/angular` by running the following command:
 
 {% tabs %}
-{% tab label="npm" %}
+{% tab label="Nx 18+" %}
+
+```shell
+nx add @nx/angular
+```
+
+This will install the correct version of `@nx/angular`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/angular` package with your package manager.
 
 ```shell
 npm add -D @nx/angular
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/angular
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/angular
 ```
 
 {% /tab %}
