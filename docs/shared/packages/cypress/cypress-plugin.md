@@ -1,3 +1,8 @@
+---
+title: Overview of the Nx Cypress Plugin
+description: The Nx Plugin for Cypress contains executors and generators that support e2e testing with Cypress. This page also explains how to configure Cypress on your Nx workspace.
+---
+
 Cypress is a test runner built for the modern web. It has a lot of great features:
 
 - Time travel
@@ -7,33 +12,73 @@ Cypress is a test runner built for the modern web. It has a lot of great feature
 - Network traffic control
 - Screenshots and videos
 
-## Setting Up Cypress
+## Setting Up @nx/cypress
 
 > Info about [Cypress Component Testing can be found here](/recipes/cypress/cypress-component-testing)
 >
 > Info about [using Cypress and Storybook can be found here](/recipes/storybook/overview-react#cypress-tests-for-storiesbook)
 
-If the `@nx/cypress` package is not installed, install the version that matches your `nx` package version.
+### Installation
+
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/cypress` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
+In any Nx workspace, you can install `@nx/cypress` by running the following command:
 
 {% tabs %}
-{% tab label="npm" %}
+{% tab label="Nx 18+" %}
+
+```shell
+nx add @nx/cypress
+```
+
+This will install the correct version of `@nx/cypress`.
+
+### How @nx/cypress Infers Tasks
+
+The `@nx/cypress` plugin will create a task for any project that has a Cypress configuration file present. Any of the following files will be recognized as a Cypress configuration file:
+
+- `cypress.config.js`
+- `cypress.config.ts`
+- `cypress.config.mjs`
+- `cypress.config.mts`
+- `cypress.config.cjs`
+- `cypress.config.cts`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/cypress Configuration
+
+The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/cypress/plugin",
+      "options": {
+        "ciTargetName": "e2e-ci",
+        "targetName": "e2e",
+        "componentTestingTargetName": "component-test"
+      }
+    }
+  ]
+}
+```
+
+- The `targetName`, `ciTargetName` and `componentTestingTargetName` options control the namea of the inferred Cypress tasks. The default names are `e2e`, `e2e-ci` and `component-test`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/cypress` package with your package manager and then run the `init` generator.
 
 ```shell
 npm add -D @nx/cypress
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/cypress
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/cypress
+nx g @nx/cypress:init
 ```
 
 {% /tab %}

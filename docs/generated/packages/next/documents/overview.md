@@ -1,3 +1,8 @@
+---
+title: Overview of the Nx Next.js Plugin
+description: The Nx Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. This page also explains how to configure Next.js on your Nx workspace.
+---
+
 When using Next.js in Nx, you get the out-of-the-box support for TypeScript, Cypress, and Jest. No need to configure anything: watch mode, source maps, and typings just work.
 
 The Next.js plugin contains executors and generators for managing Next.js applications and libraries within an Nx workspace. It provides:
@@ -6,35 +11,78 @@ The Next.js plugin contains executors and generators for managing Next.js applic
 - Integration with building, serving, and exporting a Next.js application.
 - Integration with React libraries within the workspace.
 
-## Setting up Next.js
+## Setting up @nx/next
 
-To create a new Nx workspace with Next.js, run `npx create-nx-workspace@latest --preset=next`.
+To create a new Nx workspace with Next.js, run:
 
-To add Next.js to an existing Nx workspace, install the `@nx/next` package. Make sure to install the version that matches your `nx` version.
+```shell
+npx create-nx-workspace@latest --preset=next
+```
+
+### Installation
+
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/next` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
+In any Nx workspace, you can install `@nx/next` by running the following command:
 
 {% tabs %}
-{% tab label="npm" %}
+{% tab label="Nx 18+" %}
+
+```shell
+nx add @nx/next
+```
+
+This will install the correct version of `@nx/next`.
+
+### How @nx/next Infers Tasks
+
+The `@nx/next` plugin will create a task for any project that has a Next.js configuration file present. Any of the following files will be recognized as a Next.js configuration file:
+
+- `next.config.js`
+- `next.config.mjs`
+- `next.config.cjs`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/next Configuration
+
+The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/next/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "startTargetName": "start"
+      }
+    }
+  ]
+}
+```
+
+- The `buildTargetName`, `devTargetName` and `startTargetName` options control the names of the inferred Next.js tasks. The default names are `build`, `dev` and `start`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/next` package with your package manager and then run the `init` generator.
 
 ```shell
 npm add -D @nx/next
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/next
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/next
+nx g @nx/next:init
 ```
 
 {% /tab %}
 {% /tabs %}
+
+## Using @nx/next
 
 ### Creating Applications
 
