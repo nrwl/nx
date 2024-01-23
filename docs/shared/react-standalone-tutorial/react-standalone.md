@@ -44,7 +44,7 @@ Create a new standalone React application with the following command:
 ✔ Which bundler would you like to use? · vite
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
-✔ Do you want Nx Cloud to make your CI fast? · Yes
+✔ Set up CI with caching, distribution and test deflaking · github
 ```
 
 You can choose any bundler you like. In this tutorial we're going to use Vite. The above command generates the following structure:
@@ -85,10 +85,10 @@ The setup includes..
 
 Let me explain a couple of things that might be new to you.
 
-| File           | Description                                                                                                                                                                                                                                           |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nx.json`      | This is where we fine-tune how Nx works. We define what [cacheable operations](/features/cache-task-results) there are, and configure our [task pipeline](/concepts/task-pipeline-configuration). More on that soon.                                  |
-| `project.json` | This file contains the targets that can be invoked for the `myreactapp` project. It is like a more evolved version of simple `package.json` scripts with more metadata attached. You can read more about it [here](/reference/project-configuration). |
+| File           | Description                                                                                                                                                                                                          |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nx.json`      | This is where we fine-tune how Nx works. We define what [cacheable operations](/features/cache-task-results) there are, and configure our [task pipeline](/concepts/task-pipeline-configuration). More on that soon. |
+| `project.json` | This file contains project configuration for the `myreactapp` project. You can read more about it [here](/reference/project-configuration).                                                                          |
 
 ## Serving the App
 
@@ -120,64 +120,46 @@ Nx uses the following syntax to run tasks:
 
 ![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
-All targets, such as `serve`, `build`, `test` or your custom ones, are defined in the `project.json` file.
+## Identify Tasks
+
+Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors) project detail view or run:
+
+```shell
+nx show project myreactapp --web
+```
+
+If you expand the `build` task, you can see that it was created by the `@nx/vite` plugin by analyzing your `vite.config.ts` file. Notice the outputs are defined as `{projectRoot}/dist/myreactapp`. This value is being read from the `build.outDir` defined in your `vite.config.ts` file. Let's change that value in your `vite.config.ts` file:
+
+```ts {% fileName="vite.config.ts" %}
+export default defineConfig({
+  // ...
+  build: {
+    outDir: './build/myreactapp',
+    // ...
+  },
+});
+```
+
+Now if you look at the project details view, the outputs for the build target will say `{projectRoot}/build/myreactapp`. This feature ensures that Nx will always be caching the correct files.
+
+## Overriding Inferred Tasks
+
+If you have some custom logic that Nx's plugins are not able to detect, you can always override the settings that the plugin infers. Let's say we want to cache both the `build/myreactapp` folder and the `build/assets` folder when the `build` task is run. We can set that value in the `project.json` file and Nx will merge the values from the inferred task with the value you define in the project configuration.
 
 ```json {% fileName="project.json"}
 {
   "name": "myreactapp",
   ...
   "targets": {
-    "serve": { ... },
-    "build": { ... },
-    "preview": { ... },
-    "test": { ... },
-    "lint": { ... },
-    "serve-static": { ... },
-  },
+    "build": {
+      "outputs": [
+        "{projectRoot}/build/myreactapp",
+        "{projectRoot}/build/assets"
+      ]
+    }
+  }
 }
 ```
-
-{% callout type="info" title="You can also use the package.json" %}
-
-Note that Nx can pick up tasks from both, the `package.json` as well as the `project.json`. [Read more](/features/run-tasks)
-
-{% /callout %}
-
-Each target contains a configuration object that tells Nx how to run that target.
-
-```json {% fileName="project.json"}
-{
-  "name": "myreactapp",
-  ...
-  "targets": {
-    "serve": {
-      "executor": "@nx/vite:dev-server",
-      "defaultConfiguration": "development",
-      "options": {
-        "buildTarget": "reactutorial:build"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "reactutorial:build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "reactutorial:build:production",
-          "hmr": false
-        }
-      }
-     },
-     ...
-  },
-}
-```
-
-The most critical parts are:
-
-- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the React app using Vite.
-- `options` - these are additional properties and flags passed to the executor function to customize it
-
-Learn more about how to [run tasks with Nx](/features/run-tasks).
 
 ## Testing and Linting - Running Multiple Tasks
 
@@ -231,9 +213,9 @@ Not all tasks might be cacheable though. You can configure the `cache` propertie
 
 {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=598" /%}
 
-One thing you might be curious about is the project.json. You may wonder why we define tasks inside the `project.json` file instead of using the `package.json` file with scripts that directly launch Vite.
+One thing you might be curious about is the [inferred tasks](/concepts/inferred-tasks). You may wonder why we are detecting tasks from your tooling configuration instead of directly defining them in `package.json` scripts or in the `project.json` file.
 
-Nx understands and supports both approaches, allowing you to define targets either in your `package.json` or `project.json` files. While both serve a similar purpose, the `project.json` file can be seen as an advanced form of `package.json` scripts, providing additional metadata and capabilities. In this tutorial, we utilize the `project.json` approach primarily because we take advantage of Nx Plugins.
+Nx understands and supports both approaches, allowing you to define tasks in your `package.json` and `project.json` files or have Nx plugins automatically detect them. The inferred tasks give you the benefit of automatically setting the Nx cache settings for you based on your tooling configuration. In this tutorial, we take advantage of those inferred tasks to demonstrate the full value of Nx plugins.
 
 So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabilities of Nx, catering to various specific technologies. For instance, we have plugins tailored to React (e.g., `@nx/react`), Vite (`@nx/vite`), Cypress (`@nx/cypress`), and more. These plugins offer additional features, making your development experience more efficient and enjoyable when working with specific tech stacks.
 
