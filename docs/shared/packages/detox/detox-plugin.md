@@ -8,7 +8,9 @@ Detox is gray box end-to-end testing and automation library for mobile apps. It 
 
 ## Setting Up Detox
 
-### Install applesimutils (Mac only)
+### Setup Environment
+
+#### Install applesimutils (Mac only)
 
 [applesimutils](https://github.com/wix/AppleSimulatorUtils) is a collection of utils for Apple simulators.
 
@@ -17,31 +19,74 @@ brew tap wix/brew
 brew install applesimutils
 ```
 
-### Install Jest Globally
+#### Install Jest Globally
 
 ```sh
 npm install -g jest
 ```
 
-### Generating Applications
+### Installation
 
-By default, when creating a mobile application, Nx will use Detox to create the e2e tests project.
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/detox` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
+In any Nx workspace, you can install `@nx/detox` by running the following command:
+
+{% tabs %}
+{% tab label="Nx 18+" %}
 
 ```shell
-nx g @nx/react-native:app frontend
+nx add @nx/detox
 ```
 
-### Creating a Detox E2E project for an existing project
+This will install the correct version of `@nx/detox`.
 
-You can create a new Detox E2E project for an existing mobile project.
+### How @nx/detox Infers Tasks
 
-If the `@nx/detox` package is not installed, install the version that matches your `@nx/workspace` version.
+The `@nx/detox` plugin will create a task for any project that has an ESLint configuration file present. Any of the following files will be recognized as an ESLint configuration file:
+
+- `.detoxrc.js`
+- `.detoxrc.json`
+- `detox.config.js`
+- `detox.config.json`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/detox Configuration
+
+The `@nx/detox/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/detox/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "startTargetName": "start",
+        "testTargetName": "test"
+      }
+    }
+  ]
+}
+```
+
+Once a Detox configuration file has been identified, the targets are created with the name you specify under `buildTargetName`, `startTargetName` or `testTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `build` and `test`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/detox` package with your package manager and then run the `init` generator.
 
 {% tabs %}
 {% tab label="npm" %}
 
 ```shell
 npm add -D @nx/detox
+nx g @nx/detox:init
 ```
 
 {% /tab %}
@@ -49,6 +94,7 @@ npm add -D @nx/detox
 
 ```shell
 yarn add -D @nx/detox
+nx g @nx/detox:init
 ```
 
 {% /tab %}
@@ -56,20 +102,23 @@ yarn add -D @nx/detox
 
 ```shell
 pnpm add -D @nx/detox
+nx g @nx/detox:init
 ```
 
 {% /tab %}
 {% /tabs %}
 
-Next, generate an E2E project based on an existing project.
+{% /tab %}
+{% /tabs %}
 
-```sh
-nx g @nx/detox:app your-app-name-e2e --project=your-app-name
+### Generating Applications
+
+By default, when creating a mobile application, Nx will use Detox to create the e2e tests project.
+
+```shell
+nx g @nx/react-native:app frontend --e2eTestRunner=deotx
+nx g @nx/expo:app frontend --e2eTestRunner=detox
 ```
-
-Replace `your-app-name` with the app's name as defined in your `tsconfig.base.json` file or the `name` property of your `package.json`.
-
-In addition, you need to follow [instructions at Detox](https://github.com/wix/Detox/blob/master/docs/Introduction.Android.md) to do manual setup for Android files.
 
 ## Using Detox
 
