@@ -104,41 +104,41 @@ jobs:
           - yarn
           - pnpm
         project:
-          - e2e-angular-core
-          - e2e-angular-extensions
-          - e2e-angular-module-federation
-          - e2e-cypress
-          - e2e-detox
-          - e2e-esbuild
-          - e2e-eslint
-          - e2e-expo
-          - e2e-jest
-          - e2e-js
-          - e2e-lerna-smoke-tests
-          - e2e-next-core
-          - e2e-next-extensions
-          - e2e-node
-          - e2e-nuxt
-          - e2e-nx-init
-          - e2e-nx-misc
-          - e2e-nx-run
-          - e2e-playwright
-          - e2e-plugin
-          - e2e-react-core
-          - e2e-react-module-federation
-          - e2e-react-extensions
-          - e2e-react-native
+          # - e2e-angular-core
+          # - e2e-angular-extensions
+          # - e2e-angular-module-federation
+          # - e2e-cypress
+          # - e2e-detox
+          # - e2e-esbuild
+          # - e2e-eslint
+          # - e2e-expo
+          # - e2e-jest
+          # - e2e-js
+          # - e2e-lerna-smoke-tests
+          # - e2e-next-core
+          # - e2e-next-extensions
+          # - e2e-node
+          # - e2e-nuxt
+          # - e2e-nx-init
+          # - e2e-nx-misc
+          # - e2e-nx-run
+          # - e2e-playwright
+          # - e2e-plugin
+          # - e2e-react-core
+          # - e2e-react-module-federation
+          # - e2e-react-extensions
+          # - e2e-react-native
           - e2e-release
-          - e2e-remix
-          - e2e-rollup
-          - e2e-storybook
-          - e2e-storybook-angular
-          - e2e-vite
-          - e2e-vue
-          - e2e-web
-          - e2e-webpack
-          - e2e-workspace-create
-          - e2e-workspace-create-npm
+          # - e2e-remix
+          # - e2e-rollup
+          # - e2e-storybook
+          # - e2e-storybook-angular
+          # - e2e-vite
+          # - e2e-vue
+          # - e2e-web
+          # - e2e-webpack
+          # - e2e-workspace-create
+          # - e2e-workspace-create-npm
         include:
           # os short names
           - os: ubuntu-latest

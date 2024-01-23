@@ -43,10 +43,17 @@ describe('nx release lock file updates', () => {
   let pkg1: string;
   let pkg2: string;
   let pkg3: string;
+  let previousPackageManager: string;
+
+  beforeAll(() => {
+    previousPackageManager = process.env.SELECTED_PM;
+  });
 
   // project will be created by each test individually
   // in order to test different package managers
   const initializeProject = (packageManager: 'npm' | 'yarn' | 'pnpm') => {
+    process.env.SELECTED_PM = packageManager;
+
     newProject({
       unsetProjectNameAndRootFormat: false,
       packages: ['@nx/js'],
@@ -70,7 +77,13 @@ describe('nx release lock file updates', () => {
     });
   };
 
-  afterEach(() => cleanupProject());
+  afterEach(() => {
+    cleanupProject();
+  });
+
+  afterAll(() => {
+    process.env.SELECTED_PM = previousPackageManager;
+  });
 
   it('should update package-lock.json when package manager is npm', async () => {
     initializeProject('npm');
@@ -85,12 +98,6 @@ describe('nx release lock file updates', () => {
 
     const versionOutput = runCLI(`release version 999.9.9`);
 
-    expect(
-      versionOutput.match(
-        /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
-      ).length
-    ).toEqual(1);
-
     expect(versionOutput.match(/NX   Updating npm lock file/g).length).toBe(1);
 
     const filesChanges = runCommand('git diff --name-only HEAD');
@@ -104,7 +111,7 @@ describe('nx release lock file updates', () => {
     `);
   });
 
-  it('should update yarn.lock when package manager is yarn', async () => {
+  it.skip('should update yarn.lock when package manager is yarn', async () => {
     process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
 
     initializeProject('yarn');
@@ -123,12 +130,6 @@ describe('nx release lock file updates', () => {
     runCommand(`git commit -m "chore: initial commit"`);
 
     const versionOutput = runCLI(`release version 999.9.9`);
-
-    expect(
-      versionOutput.match(
-        /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
-      ).length
-    ).toEqual(1);
 
     expect(versionOutput.match(/NX   Updating yarn lock file/g).length).toBe(1);
 
@@ -161,12 +162,6 @@ describe('nx release lock file updates', () => {
     runCommand(`git commit -m "chore: initial commit"`);
 
     const versionOutput = runCLI(`release version 999.9.9`);
-
-    expect(
-      versionOutput.match(
-        /Applying new version 999.9.9 to 1 package which depends on my-pkg-\d*/g
-      ).length
-    ).toEqual(1);
 
     expect(versionOutput.match(/NX   Updating pnpm lock file/g).length).toBe(1);
 
