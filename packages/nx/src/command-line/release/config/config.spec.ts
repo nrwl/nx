@@ -910,14 +910,11 @@ describe('createNxReleaseConfig()', () => {
 
     it('should respect enabling git operations for the version command directly', async () => {
       const res = await createNxReleaseConfig(projectGraph, {
-        git: {
-          tag: false,
-        },
         version: {
           git: {
             commit: true,
             commitArgs: '--no-verify',
-            tag: true, // should take priority over top level
+            tag: true,
           },
         },
       });
@@ -932,7 +929,7 @@ describe('createNxReleaseConfig()', () => {
                 "commitArgs": "",
                 "commitMessage": "chore(release): publish {version}",
                 "stageChanges": false,
-                "tag": false,
+                "tag": true,
                 "tagArgs": "",
                 "tagMessage": "",
               },
@@ -2039,6 +2036,89 @@ describe('createNxReleaseConfig()', () => {
               ],
               "targetName": "nx-release-publish",
             },
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+    });
+  });
+
+  describe('user config -> mixed top level and granular git', () => {
+    it('should return an error with version config and top level config', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        git: {
+          commit: true,
+          tag: false,
+        },
+        version: {
+          git: {
+            commit: false,
+            tag: true,
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG",
+            "data": {},
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+    });
+
+    it('should return an error with changelog config and top level config', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        git: {
+          commit: true,
+          tag: false,
+        },
+        changelog: {
+          git: {
+            commit: false,
+            tag: true,
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG",
+            "data": {},
+          },
+          "nxReleaseConfig": null,
+        }
+      `);
+    });
+
+    it('should return an error with version and changelog config and top level config', async () => {
+      const res = await createNxReleaseConfig(projectGraph, {
+        git: {
+          commit: true,
+          tag: false,
+        },
+        version: {
+          git: {
+            commit: false,
+            tag: true,
+          },
+        },
+        changelog: {
+          git: {
+            commit: true,
+            tag: false,
+          },
+        },
+      });
+
+      expect(res).toMatchInlineSnapshot(`
+        {
+          "error": {
+            "code": "GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG",
+            "data": {},
           },
           "nxReleaseConfig": null,
         }
