@@ -304,8 +304,36 @@ export async function releaseChangelog(
         releaseGroup.projects;
     const projectNodes = projects.map((name) => projectGraph.nodes[name]);
 
+    // Determine any additional projects that we need to generate changelogs for, based on the dependent projects of the projects within the release group
+    const projectToDependencyProjectNames = new Map<
+      ProjectGraphProjectNode,
+      string[]
+    >();
+    for (const project of projects) {
+      const dependentProjects =
+        projectsVersionData[project]?.dependentProjects || [];
+      if (dependentProjects.length) {
+        for (const dependentProject of dependentProjects) {
+          const dependentProjectNode =
+            projectGraph.nodes[dependentProject.source];
+          if (!projectToDependencyProjectNames.has(dependentProjectNode)) {
+            projectToDependencyProjectNames.set(dependentProjectNode, [
+              project,
+            ]);
+            continue;
+          }
+          projectToDependencyProjectNames
+            .get(dependentProjectNode)
+            .push(project);
+        }
+      }
+    }
+
     if (releaseGroup.projectsRelationship === 'independent') {
-      for (const project of projectNodes) {
+      for (const project of Array.from(
+        // The full list is based on the projectNodes within the releaseGroup, plus any additional dependents
+        new Set([...projectNodes, ...projectToDependencyProjectNames.keys()])
+      )) {
         let fromRef =
           args.from ||
           (
@@ -358,7 +386,8 @@ export async function releaseChangelog(
           projectsVersionData,
           releaseGroup,
           [project],
-          nxReleaseConfig
+          nxReleaseConfig,
+          projectToDependencyProjectNames
         );
 
         let hasPushed = false;
@@ -425,7 +454,8 @@ export async function releaseChangelog(
         projectsVersionData,
         releaseGroup,
         projectNodes,
-        nxReleaseConfig
+        nxReleaseConfig,
+        projectToDependencyProjectNames
       );
 
       let hasPushed = false;
@@ -822,7 +852,8 @@ async function generateChangelogForProjects(
   projectsVersionData: VersionData,
   releaseGroup: ReleaseGroupWithName,
   projects: ProjectGraphProjectNode[],
-  nxReleaseConfig: NxReleaseConfig
+  nxReleaseConfig: NxReleaseConfig,
+  projectToDependencyProjectNames: Map<ProjectGraphProjectNode, string[]>
 ): Promise<NxReleaseChangelogResult['projectChangelogs']> {
   const config = releaseGroup.changelog;
   // The entire feature is disabled at the release group level, exit early
@@ -839,8 +870,37 @@ async function generateChangelogForProjects(
   const changelogRenderer = resolveChangelogRenderer(config.renderer);
 
   const projectChangelogs: NxReleaseChangelogResult['projectChangelogs'] = {};
+  const projectToAdditionalDependencyProjectNames = new Map<
+    ProjectGraphProjectNode,
+    string[]
+  >();
 
   for (const project of projects) {
+    const additionalDependentProjects =
+      projectsVersionData[project.name]?.dependentProjects || [];
+    if (additionalDependentProjects.length) {
+      for (const dependentProject of additionalDependentProjects) {
+        const dependentProjectNode =
+          projectGraph.nodes[dependentProject.source];
+        if (
+          !projectToAdditionalDependencyProjectNames.has(dependentProjectNode)
+        ) {
+          projectToAdditionalDependencyProjectNames.set(dependentProjectNode, [
+            project.name,
+          ]);
+          continue;
+        }
+        projectToAdditionalDependencyProjectNames
+          .get(dependentProjectNode)
+          .push(project.name);
+      }
+    }
+  }
+
+  for (const project of [
+    ...projects,
+    ...projectToAdditionalDependencyProjectNames.keys(),
+  ]) {
     let interpolatedTreePath = config.file || '';
     if (interpolatedTreePath) {
       interpolatedTreePath = interpolate(interpolatedTreePath, {
@@ -878,6 +938,15 @@ async function generateChangelogForProjects(
         ? getGitHubRepoSlug(gitRemote)
         : undefined;
 
+    const dependencyBumps = projectToDependencyProjectNames.has(project)
+      ? projectToDependencyProjectNames.get(project).map((dep) => {
+          return {
+            dependencyName: dep,
+            newVersion: projectsVersionData[dep].newVersion,
+          };
+        })
+      : undefined;
+
     let contents = await changelogRenderer({
       projectGraph,
       commits,
@@ -894,6 +963,7 @@ async function generateChangelogForProjects(
           : false,
       changelogRenderOptions: config.renderOptions,
       conventionalCommitsConfig: nxReleaseConfig.conventionalCommits,
+      dependencyBumps,
     });
 
     /**

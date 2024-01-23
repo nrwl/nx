@@ -73,6 +73,12 @@ export interface ReleaseVersionGeneratorSchema {
   installArgs?: string;
   installIgnoreScripts?: boolean;
   conventionalCommitsConfig?: NxReleaseConfig['conventionalCommits'];
+  updateDependents?: {
+    // "auto" means "only when the dependents are already included in the current batch", and is the default
+    when?: 'auto' | 'always';
+    // in the case "when" is set to "always", what semver bump should be applied to the dependents which are not included in the current batch
+    bump?: 'patch' | 'minor' | 'major';
+  };
 }
 
 export interface NxReleaseVersionResult {
@@ -165,8 +171,13 @@ export async function releaseVersion(
   const versionData: VersionData = {};
   const commitMessage: string | undefined =
     args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
-  const additionalChangedFiles = new Set<string>();
   const generatorCallbacks: (() => Promise<void>)[] = [];
+
+  /**
+   * additionalChangedFiles are files which need to be updated as a side-effect of versioning (such as package manager lock files),
+   * and need to get staged and committed as part of the existing commit, if applicable.
+   */
+  const additionalChangedFiles = new Set<string>();
 
   if (args.projects?.length) {
     /**
@@ -453,7 +464,7 @@ function appendVersionData(
   for (const [key, value] of Object.entries(newVersionData)) {
     if (existingVersionData[key]) {
       throw new Error(
-        `Version data key "${key}" already exists in version data. This is likely a bug.`
+        `Version data key "${key}" already exists in version data. This is likely a bug, please report your use-case on https://github.com/nrwl/nx`
       );
     }
     existingVersionData[key] = value;

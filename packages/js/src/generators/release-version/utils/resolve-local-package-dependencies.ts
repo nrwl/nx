@@ -12,7 +12,7 @@ import { satisfies } from 'semver';
 import { Package } from './package';
 import { resolveVersionSpec } from './resolve-version-spec';
 
-interface LocalPackageDependency extends ProjectGraphDependency {
+export interface LocalPackageDependency extends ProjectGraphDependency {
   /**
    * The rawVersionSpec contains the value of the version spec as it was defined in the package.json
    * of the dependent project. This can be useful in cases where the version spec is a range, path or
