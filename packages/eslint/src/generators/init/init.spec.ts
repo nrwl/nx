@@ -16,40 +16,26 @@ describe('@nx/eslint:init', () => {
     process.env.NX_PCV3 = envV3;
   });
 
-  it('should generate the global eslint config', async () => {
-    await lintInitGenerator(tree, {
-      linter: Linter.EsLint,
-    });
-
-    expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('.eslintignore', 'utf-8')).toMatchInlineSnapshot(`
-          "node_modules
-          "
-        `);
-  });
-
   it('should add the root eslint config to the lint targetDefaults for lint', async () => {
-    await lintInitGenerator(tree, {
-      linter: Linter.EsLint,
-    });
+    await lintInitGenerator(tree, {});
 
-    expect(readJson(tree, 'nx.json').targetDefaults.lint).toEqual({
-      cache: true,
-      inputs: [
-        'default',
-        '{workspaceRoot}/.eslintrc.json',
-        '{workspaceRoot}/.eslintignore',
-        '{workspaceRoot}/eslint.config.js',
-      ],
-    });
+    expect(readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']).toEqual(
+      {
+        cache: true,
+        inputs: [
+          'default',
+          '{workspaceRoot}/.eslintrc.json',
+          '{workspaceRoot}/.eslintignore',
+          '{workspaceRoot}/eslint.config.js',
+        ],
+      }
+    );
   });
 
   it('should not generate the global eslint config if it already exist', async () => {
     tree.write('.eslintrc.js', '{}');
 
-    await lintInitGenerator(tree, {
-      linter: Linter.EsLint,
-    });
+    await lintInitGenerator(tree, {});
 
     expect(tree.exists('.eslintrc.json')).toBe(false);
   });
@@ -64,7 +50,9 @@ describe('@nx/eslint:init', () => {
     await lintInitGenerator(tree, {});
 
     expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.lint
+      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
+        '@nx/eslint:lint'
+      ]
     ).toEqual({
       cache: true,
       inputs: [
@@ -87,10 +75,10 @@ describe('@nx/eslint:init', () => {
     await lintInitGenerator(tree, {});
 
     expect(
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.lint
-    ).toEqual({
-      cache: true,
-    });
+      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
+        '@nx/eslint:lint'
+      ]
+    ).toBeUndefined();
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json').plugins)
       .toMatchInlineSnapshot(`
       [
@@ -117,7 +105,7 @@ describe('@nx/eslint:init', () => {
     ).not.toBeDefined();
 
     process.env.NX_PCV3 = 'true';
-    await lintInitGenerator(tree, {});
+    lintInitGenerator(tree, {});
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json').plugins)
       .toMatchInlineSnapshot(`
       [

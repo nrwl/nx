@@ -35,6 +35,12 @@
       "aliases": ["lib"],
       "x-type": "library"
     },
+    "init": {
+      "implementation": "./src/generators/init/init",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nx/remix` plugin.",
+      "hidden": true
+    },
     "route": {
       "implementation": "./src/generators/route/route.impl",
       "schema": "./src/generators/route/schema.json",

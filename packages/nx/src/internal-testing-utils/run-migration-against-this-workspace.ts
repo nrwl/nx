@@ -9,11 +9,7 @@ export function assertRunsAgainstNxRepo(
     let resultOrPromise: void | Promise<void> = migrateFn(tree);
 
     if (resultOrPromise && 'then' in resultOrPromise) {
-      try {
-        await resultOrPromise;
-      } catch (e) {
-        fail(e);
-      }
+      await resultOrPromise;
     }
   });
 }

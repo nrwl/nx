@@ -1,97 +1,59 @@
 import {
   addDependenciesToPackageJson,
-  ensurePackage,
-  GeneratorCallback,
-  readNxJson,
+  removeDependenciesFromPackageJson,
   runTasksInSerial,
-  Tree,
+  type GeneratorCallback,
+  type Tree,
 } from '@nx/devkit';
-
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
-import reactInitGenerator from '@nx/react/src/generators/init/init';
-import { initGenerator as jsInitGenerator } from '@nx/js';
-
-import {
-  eslintConfigNextVersion,
-  nextVersion,
-  nxVersion,
-  tsLibVersion,
-} from '../../utils/versions';
-import { InitSchema } from './schema';
+import { createNodes } from '../../plugins/plugin';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
+import { nextVersion, nxVersion } from '../../utils/versions';
 import { addPlugin } from './lib/add-plugin';
+import type { InitSchema } from './schema';
 
-function updateDependencies(host: Tree) {
-  return addDependenciesToPackageJson(
-    host,
-    {
-      next: nextVersion,
-      react: reactVersion,
-      'react-dom': reactDomVersion,
-      tslib: tsLibVersion,
-    },
-    {
-      '@nx/next': nxVersion,
-      'eslint-config-next': eslintConfigNextVersion,
-    }
+function updateDependencies(host: Tree, schema: InitSchema) {
+  const tasks: GeneratorCallback[] = [];
+
+  tasks.push(removeDependenciesFromPackageJson(host, ['@nx/next'], []));
+
+  tasks.push(
+    addDependenciesToPackageJson(
+      host,
+      {
+        next: nextVersion,
+        react: reactVersion,
+        'react-dom': reactDomVersion,
+      },
+      {
+        '@nx/next': nxVersion,
+      },
+      undefined,
+      schema.keepExistingVersions
+    )
   );
+
+  return runTasksInSerial(...tasks);
 }
 
 export async function nextInitGenerator(host: Tree, schema: InitSchema) {
-  const tasks: GeneratorCallback[] = [];
-
-  tasks.push(
-    await jsInitGenerator(host, {
-      ...schema,
-      skipFormat: true,
-    })
-  );
-
-  if (!schema.unitTestRunner || schema.unitTestRunner === 'jest') {
-    const { jestInitGenerator } = ensurePackage<typeof import('@nx/jest')>(
-      '@nx/jest',
-      nxVersion
-    );
-    const jestTask = await jestInitGenerator(host, schema);
-    tasks.push(jestTask);
-  }
-  if (schema.e2eTestRunner === 'cypress') {
-    const { cypressInitGenerator } = ensurePackage<
-      typeof import('@nx/cypress')
-    >('@nx/cypress', nxVersion);
-    const cypressTask = await cypressInitGenerator(host, {});
-    tasks.push(cypressTask);
-  } else if (schema.e2eTestRunner === 'playwright') {
-    const { initGenerator } = ensurePackage<typeof import('@nx/playwright')>(
-      '@nx/playwright',
-      nxVersion
-    );
-    const playwrightTask = await initGenerator(host, {
-      skipFormat: true,
-      skipPackageJson: schema.skipPackageJson,
-    });
-    tasks.push(playwrightTask);
-  }
-
-  // @ts-ignore
-  // TODO(jack): remove once the React Playwright PR lands first
-  const reactTask = await reactInitGenerator(host, {
-    ...schema,
-    skipFormat: true,
-  });
-  tasks.push(reactTask);
-
-  if (!schema.skipPackageJson) {
-    const installTask = updateDependencies(host);
-    tasks.push(installTask);
-  }
-
-  addGitIgnoreEntry(host);
   if (process.env.NX_PCV3 === 'true') {
     addPlugin(host);
   }
 
-  return runTasksInSerial(...tasks);
+  addGitIgnoreEntry(host);
+
+  let installTask: GeneratorCallback = () => {};
+  if (!schema.skipPackageJson) {
+    installTask = updateDependencies(host, schema);
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(host, createNodes);
+  }
+
+  return installTask;
 }
 
 export default nextInitGenerator;

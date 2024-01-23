@@ -16,7 +16,6 @@ import { existsSync, readdirSync } from 'fs';
 import { loadNuxtKitDynamicImport } from '../utils/executor-utils';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getLockFileName } from '@nx/js';
-import { loadConfigFromFile, UserConfig } from 'vite';
 
 const cachePath = join(projectGraphCacheDirectory, 'nuxt.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
@@ -47,11 +46,10 @@ export const createDependencies: CreateDependencies = () => {
 export interface NuxtPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
-  testTargetName?: string;
 }
 
 export const createNodes: CreateNodes<NuxtPluginOptions> = [
-  '**/nuxt.config.{js,ts}',
+  '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
     // Do not create a project if package.json and project.json isn't there.
@@ -91,34 +89,13 @@ async function buildNuxtTargets(
   options: NuxtPluginOptions,
   context: CreateNodesContext
 ) {
-  let viteConfig:
-    | {
-        path: string;
-        config: UserConfig;
-        dependencies: string[];
-      }
-    | undefined;
-  if (
-    existsSync(
-      joinPathFragments(context.workspaceRoot, projectRoot, 'vitest.config.ts')
-    )
-  ) {
-    viteConfig = await loadConfigFromFile(
-      {
-        command: 'build',
-        mode: 'production',
-      },
-      joinPathFragments(context.workspaceRoot, projectRoot, 'vitest.config.ts')
-    );
-  }
-
   const nuxtConfig: {
     buildDir: string;
   } = await getInfoFromNuxtConfig(configFilePath, context, projectRoot);
 
-  const { buildOutputs, testOutputs } = getOutputs(
+  const { buildOutputs } = getOutputs(
     nuxtConfig,
-    viteConfig?.config,
+
     projectRoot
   );
 
@@ -134,12 +111,6 @@ async function buildNuxtTargets(
   );
 
   targets[options.serveTargetName] = serveTarget(projectRoot);
-
-  targets[options.testTargetName] = testTarget(
-    namedInputs,
-    testOutputs,
-    projectRoot
-  );
 
   return targets;
 }
@@ -181,30 +152,6 @@ function serveTarget(projectRoot: string) {
   return targetConfig;
 }
 
-function testTarget(
-  namedInputs: {
-    [inputName: string]: any[];
-  },
-  outputs: string[],
-  projectRoot: string
-) {
-  return {
-    command: `vitest run`,
-    options: { cwd: projectRoot },
-    cache: true,
-    inputs: [
-      ...('production' in namedInputs
-        ? ['default', '^production']
-        : ['default', '^default']),
-
-      {
-        externalDependencies: ['vitest'],
-      },
-    ],
-    outputs,
-  };
-}
-
 async function getInfoFromNuxtConfig(
   configFilePath: string,
   context: CreateNodesContext,
@@ -226,18 +173,10 @@ async function getInfoFromNuxtConfig(
 
 function getOutputs(
   nuxtConfig: { buildDir: string },
-  viteConfig: UserConfig,
   projectRoot: string
 ): {
   buildOutputs: string[];
-  testOutputs: string[];
 } {
-  const reportsDirectory = normalizeOutputPath(
-    viteConfig?.['test']?.coverage?.reportsDirectory,
-    projectRoot,
-    'coverage'
-  );
-
   let nuxtBuildDir = nuxtConfig?.buildDir;
   if (nuxtConfig?.buildDir && basename(nuxtConfig?.buildDir) === '.nuxt') {
     // buildDir will most probably be `../dist/my-app/.nuxt`
@@ -248,25 +187,23 @@ function getOutputs(
     );
   }
   const buildOutputPath =
-    normalizeOutputPath(nuxtBuildDir, projectRoot, 'dist') ??
+    normalizeOutputPath(nuxtBuildDir, projectRoot) ??
     '{workspaceRoot}/dist/{projectRoot}';
 
   return {
     buildOutputs: [buildOutputPath],
-    testOutputs: [reportsDirectory],
   };
 }
 
 function normalizeOutputPath(
   outputPath: string | undefined,
-  projectRoot: string,
-  path: 'coverage' | 'dist'
+  projectRoot: string
 ): string | undefined {
   if (!outputPath) {
     if (projectRoot === '.') {
-      return `{projectRoot}/${path}`;
+      return `{projectRoot}/dist`;
     } else {
-      return `{workspaceRoot}/${path}/{projectRoot}`;
+      return `{workspaceRoot}/dist/{projectRoot}`;
     }
   } else {
     if (isAbsolute(outputPath)) {
@@ -285,6 +222,5 @@ function normalizeOptions(options: NuxtPluginOptions): NuxtPluginOptions {
   options ??= {};
   options.buildTargetName ??= 'build';
   options.serveTargetName ??= 'serve';
-  options.testTargetName ??= 'test';
   return options;
 }

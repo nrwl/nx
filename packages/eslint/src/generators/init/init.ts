@@ -3,28 +3,19 @@ import {
   addDependenciesToPackageJson,
   readNxJson,
   removeDependenciesFromPackageJson,
-  updateJson,
+  runTasksInSerial,
   updateNxJson,
-  writeJson,
 } from '@nx/devkit';
-import {
-  eslintConfigPrettierVersion,
-  eslintVersion,
-  nxVersion,
-  typescriptESLintVersion,
-} from '../../utils/versions';
-
-import { Linter } from '../utils/linter';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { eslintVersion, nxVersion } from '../../utils/versions';
 import { findEslintFile } from '../utils/eslint-file';
-import { getGlobalEsLintConfiguration } from './global-eslint-config';
-import { EslintPluginOptions } from '../../plugins/plugin';
+import { EslintPluginOptions, createNodes } from '../../plugins/plugin';
 import { hasEslintPlugin } from '../utils/plugin';
 
 export interface LinterInitOptions {
-  linter?: Linter;
-  unitTestRunner?: string;
   skipPackageJson?: boolean;
-  rootProject?: boolean;
+  keepExistingVersions?: boolean;
+  updatePackageScripts?: boolean;
 }
 
 function updateProductionFileset(tree: Tree) {
@@ -44,9 +35,9 @@ function addTargetDefaults(tree: Tree) {
   const nxJson = readNxJson(tree);
 
   nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults.lint ??= {};
-  nxJson.targetDefaults.lint.cache ??= true;
-  nxJson.targetDefaults.lint.inputs ??= [
+  nxJson.targetDefaults['@nx/eslint:lint'] ??= {};
+  nxJson.targetDefaults['@nx/eslint:lint'].cache ??= true;
+  nxJson.targetDefaults['@nx/eslint:lint'].inputs ??= [
     'default',
     `{workspaceRoot}/.eslintrc.json`,
     `{workspaceRoot}/.eslintignore`,
@@ -78,46 +69,27 @@ function addPlugin(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function updateVSCodeExtensions(tree: Tree) {
-  if (tree.exists('.vscode/extensions.json')) {
-    updateJson(tree, '.vscode/extensions.json', (json) => {
-      json.recommendations ||= [];
-      const extension = 'dbaeumer.vscode-eslint';
-      if (!json.recommendations.includes(extension)) {
-        json.recommendations.push(extension);
-      }
-      return json;
-    });
-  }
-}
-
-/**
- * Initializes ESLint configuration in a workspace and adds necessary dependencies.
- */
-function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
+async function initEsLint(
+  tree: Tree,
+  options: LinterInitOptions
+): Promise<GeneratorCallback> {
   const addPlugins = process.env.NX_PCV3 === 'true';
   const hasPlugin = hasEslintPlugin(tree);
   const rootEslintFile = findEslintFile(tree);
 
   if (rootEslintFile && addPlugins && !hasPlugin) {
     addPlugin(tree);
+
+    if (options.updatePackageScripts) {
+      await updatePackageScripts(tree, createNodes);
+    }
+
     return () => {};
   }
 
   if (rootEslintFile) {
     return () => {};
   }
-
-  if (!options.skipPackageJson) {
-    removeDependenciesFromPackageJson(tree, ['@nx/eslint'], []);
-  }
-
-  writeJson(
-    tree,
-    '.eslintrc.json',
-    getGlobalEsLintConfiguration(options.unitTestRunner, options.rootProject)
-  );
-  tree.write('.eslintignore', 'node_modules\n');
 
   updateProductionFileset(tree);
 
@@ -127,24 +99,33 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
     addTargetDefaults(tree);
   }
 
-  updateVSCodeExtensions(tree);
-
-  return !options.skipPackageJson
-    ? addDependenciesToPackageJson(
+  const tasks: GeneratorCallback[] = [];
+  if (!options.skipPackageJson) {
+    tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/eslint'], []));
+    tasks.push(
+      addDependenciesToPackageJson(
         tree,
         {},
         {
           '@nx/eslint': nxVersion,
-          '@nx/eslint-plugin': nxVersion,
-          '@typescript-eslint/parser': typescriptESLintVersion,
-          '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
           eslint: eslintVersion,
-          'eslint-config-prettier': eslintConfigPrettierVersion,
-        }
+        },
+        undefined,
+        options.keepExistingVersions
       )
-    : () => {};
+    );
+  }
+
+  if (options.updatePackageScripts) {
+    updatePackageScripts(tree, createNodes);
+  }
+
+  return runTasksInSerial(...tasks);
 }
 
-export function lintInitGenerator(tree: Tree, options: LinterInitOptions) {
-  return initEsLint(tree, options);
+export async function lintInitGenerator(
+  tree: Tree,
+  options: LinterInitOptions
+) {
+  return await initEsLint(tree, options);
 }

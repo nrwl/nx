@@ -28,21 +28,21 @@ Install the `qwik-nx` plugin:
 {%tab label="npm"%}
 
 ```shell
-npm i --save-dev qwik-nx
+npm add -D qwik-nx
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev qwik-nx
+yarn add -D qwik-nx
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-pnpm i --dev qwik-nx
+pnpm add -D qwik-nx
 ```
 
 {% /tab %}

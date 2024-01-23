@@ -1,6 +1,6 @@
 // This file should be committed to your repository! It wraps Nx and ensures
 // that your local installation matches nx.json.
-// See: https://nx.dev/more-concepts/nx-and-the-wrapper for more info.
+// See: https://nx.dev/recipes/installation/install-non-javascript for more info.
 //
 //# The contents of this file are executed before packages are installed.
 //# As such, we should not import anything from nx, other @nrwl packages,
@@ -17,10 +17,17 @@ import type { PackageJson } from '../../../../utils/package-json';
 const installationPath = path.join(__dirname, 'installation', 'package.json');
 
 function matchesCurrentNxInstall(
+  currentInstallation: PackageJson,
   nxJsonInstallation: NxJsonConfiguration['installation']
 ) {
+  if (
+    !currentInstallation.devDependencies ||
+    !Object.keys(currentInstallation.devDependencies).length
+  ) {
+    return false;
+  }
+
   try {
-    const currentInstallation: PackageJson = require(installationPath);
     if (
       currentInstallation.devDependencies['nx'] !==
         nxJsonInstallation.version ||
@@ -52,37 +59,70 @@ function ensureDir(p: string) {
   }
 }
 
+function getCurrentInstallation(): PackageJson {
+  try {
+    return require(installationPath);
+  } catch {
+    return {
+      name: 'nx-installation',
+      version: '0.0.0',
+      devDependencies: {},
+    };
+  }
+}
+
+function performInstallation(
+  currentInstallation: PackageJson,
+  nxJson: NxJsonConfiguration
+) {
+  fs.writeFileSync(
+    installationPath,
+    JSON.stringify({
+      name: 'nx-installation',
+      devDependencies: {
+        nx: nxJson.installation.version,
+        ...nxJson.installation.plugins,
+      },
+    })
+  );
+
+  try {
+    cp.execSync('npm i', {
+      cwd: path.dirname(installationPath),
+      stdio: 'inherit',
+    });
+  } catch (e) {
+    // revert possible changes to the current installation
+    fs.writeFileSync(installationPath, JSON.stringify(currentInstallation));
+    // rethrow
+    throw e;
+  }
+}
+
 function ensureUpToDateInstallation() {
   const nxJsonPath = path.join(__dirname, '..', 'nx.json');
-
   let nxJson: NxJsonConfiguration;
 
   try {
     nxJson = require(nxJsonPath);
+    if (!nxJson.installation) {
+      console.error(
+        '[NX]: The "installation" entry in the "nx.json" file is required when running the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript'
+      );
+      process.exit(1);
+    }
   } catch {
     console.error(
-      '[NX]: nx.json is required when running the nx wrapper. See https://nx.dev/more-concepts/nx-and-the-wrapper'
+      '[NX]: The "nx.json" file is required when running the nx wrapper. See https://nx.dev/recipes/installation/install-non-javascript'
     );
     process.exit(1);
   }
 
   try {
     ensureDir(path.join(__dirname, 'installation'));
-    if (!matchesCurrentNxInstall(nxJson.installation)) {
-      fs.writeFileSync(
-        installationPath,
-        JSON.stringify({
-          name: 'nx-installation',
-          devDependencies: {
-            nx: nxJson.installation.version,
-            ...nxJson.installation.plugins,
-          },
-        })
-      );
-      cp.execSync('npm i', {
-        cwd: path.dirname(installationPath),
-        stdio: 'inherit',
-      });
+    const currentInstallation = getCurrentInstallation();
+    if (!matchesCurrentNxInstall(currentInstallation, nxJson.installation)) {
+      performInstallation(currentInstallation, nxJson);
     }
   } catch (e: unknown) {
     const messageLines = [

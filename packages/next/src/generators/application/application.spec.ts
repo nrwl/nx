@@ -82,12 +82,12 @@ describe('app', () => {
         `../dist/${name}/.next/types/**/*.ts`,
         'next-env.d.ts',
       ]);
-      expect(tree.exists(`${name}/pages/styles.css`)).toBeFalsy();
-      expect(tree.exists(`${name}/app/global.css`)).toBeTruthy();
-      expect(tree.exists(`${name}/app/page.tsx`)).toBeTruthy();
-      expect(tree.exists(`${name}/app/layout.tsx`)).toBeTruthy();
-      expect(tree.exists(`${name}/app/api/hello/route.ts`)).toBeTruthy();
-      expect(tree.exists(`${name}/app/page.module.css`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/pages/styles.css`)).toBeFalsy();
+      expect(tree.exists(`${name}/src/app/global.css`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/page.tsx`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/layout.tsx`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/api/hello/route.ts`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/page.module.css`)).toBeTruthy();
       expect(tree.exists(`${name}/public/favicon.ico`)).toBeTruthy();
     });
 
@@ -123,7 +123,7 @@ describe('app', () => {
         projectNameAndRootFormat: 'as-provided',
       });
 
-      const content = tree.read('app/page.tsx').toString();
+      const content = tree.read('src/app/page.tsx').toString();
 
       expect(content).not.toContain('import styles from');
       expect(content).not.toContain('const StyledPage');
@@ -138,6 +138,7 @@ describe('app', () => {
         name,
         style: 'css',
         appDir: false,
+        src: false,
         projectNameAndRootFormat: 'as-provided',
       });
       expect(tree.exists(`${name}/tsconfig.json`)).toBeTruthy();
@@ -166,6 +167,7 @@ describe('app', () => {
         name,
         style: 'none',
         appDir: false,
+        src: false,
         projectNameAndRootFormat: 'as-provided',
       });
 
@@ -186,12 +188,12 @@ describe('app', () => {
         projectNameAndRootFormat: 'as-provided',
       });
 
-      expect(tree.exists(`${name}/app/page.module.scss`)).toBeTruthy();
-      expect(tree.exists(`${name}/app/global.css`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/page.module.scss`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/global.css`)).toBeTruthy();
 
-      const indexContent = tree.read(`${name}/app/page.tsx`, 'utf-8');
+      const indexContent = tree.read(`${name}/src/app/page.tsx`, 'utf-8');
       expect(indexContent).toContain(`import styles from './page.module.scss'`);
-      expect(tree.read(`${name}/app/layout.tsx`, 'utf-8'))
+      expect(tree.read(`${name}/src/app/layout.tsx`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "import './global.css';
 
@@ -225,12 +227,12 @@ describe('app', () => {
         projectNameAndRootFormat: 'as-provided',
       });
 
-      expect(tree.exists(`${name}/app/page.module.less`)).toBeTruthy();
-      expect(tree.exists(`${name}/app/global.less`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/page.module.less`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/global.less`)).toBeTruthy();
 
-      const indexContent = tree.read(`${name}/app/page.tsx`, 'utf-8');
+      const indexContent = tree.read(`${name}/src/app/page.tsx`, 'utf-8');
       expect(indexContent).toContain(`import styles from './page.module.less'`);
-      expect(tree.read(`${name}/app/layout.tsx`, 'utf-8'))
+      expect(tree.read(`${name}/src/app/layout.tsx`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "import './global.less';
 
@@ -265,14 +267,14 @@ describe('app', () => {
       });
 
       expect(
-        tree.exists(`${name}/app/page.module.styled-components`)
+        tree.exists(`${name}/src/app/page.module.styled-components`)
       ).toBeFalsy();
-      expect(tree.exists(`${name}/app/global.css`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/global.css`)).toBeTruthy();
 
-      const indexContent = tree.read(`${name}/app/page.tsx`, 'utf-8');
+      const indexContent = tree.read(`${name}/src/app/page.tsx`, 'utf-8');
       expect(indexContent).not.toContain(`import styles from './page.module`);
       expect(indexContent).toContain(`import styled from 'styled-components'`);
-      expect(tree.read(`${name}/app/layout.tsx`, 'utf-8'))
+      expect(tree.read(`${name}/src/app/layout.tsx`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "import './global.css';
         import { StyledComponentsRegistry } from './registry';
@@ -297,7 +299,7 @@ describe('app', () => {
         }
         "
       `);
-      expect(tree.read(`${name}/app/registry.tsx`, 'utf-8'))
+      expect(tree.read(`${name}/src/app/registry.tsx`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "'use client';
 
@@ -348,14 +350,14 @@ describe('app', () => {
       });
 
       expect(
-        tree.exists(`${name}/app/page.module.styled-components`)
+        tree.exists(`${name}/src/app/page.module.styled-components`)
       ).toBeFalsy();
-      expect(tree.exists(`${name}/app/global.css`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/global.css`)).toBeTruthy();
 
-      const indexContent = tree.read(`${name}/app/page.tsx`, 'utf-8');
+      const indexContent = tree.read(`${name}/src/app/page.tsx`, 'utf-8');
       expect(indexContent).not.toContain(`import styles from './page.module`);
       expect(indexContent).toContain(`import styled from '@emotion/styled'`);
-      expect(tree.read(`${name}/app/layout.tsx`, 'utf-8'))
+      expect(tree.read(`${name}/src/app/layout.tsx`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "import './global.css';
 
@@ -406,17 +408,17 @@ describe('app', () => {
         projectNameAndRootFormat: 'as-provided',
       });
 
-      const indexContent = tree.read(`${name}/app/page.tsx`, 'utf-8');
+      const indexContent = tree.read(`${name}/src/app/page.tsx`, 'utf-8');
 
       expect(indexContent).toMatchSnapshot();
-      expect(tree.exists(`${name}/app/page.module.styled-jsx`)).toBeFalsy();
-      expect(tree.exists(`${name}/app/global.css`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/page.module.styled-jsx`)).toBeFalsy();
+      expect(tree.exists(`${name}/src/app/global.css`)).toBeTruthy();
 
       expect(indexContent).not.toContain(`import styles from './page.module`);
       expect(indexContent).not.toContain(
         `import styled from 'styled-components'`
       );
-      expect(tree.read(`${name}/app/layout.tsx`, 'utf-8'))
+      expect(tree.read(`${name}/src/app/layout.tsx`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "import './global.css';
         import { StyledJsxRegistry } from './registry';
@@ -436,7 +438,7 @@ describe('app', () => {
         }
         "
       `);
-      expect(tree.read(`${name}/app/registry.tsx`, 'utf-8'))
+      expect(tree.read(`${name}/src/app/registry.tsx`, 'utf-8'))
         .toMatchInlineSnapshot(`
         "'use client';
 
@@ -588,7 +590,7 @@ describe('app', () => {
       projectNameAndRootFormat: 'as-provided',
     });
 
-    const appContent = tree.read(`${name}/app/page.tsx`, 'utf-8');
+    const appContent = tree.read(`${name}/src/app/page.tsx`, 'utf-8');
 
     expect(appContent).not.toMatch(/extends Component/);
   });
@@ -709,7 +711,7 @@ describe('app', () => {
         js: true,
       });
 
-      expect(tree.exists(`${name}/app/page.js`)).toBeTruthy();
+      expect(tree.exists(`${name}/src/app/page.js`)).toBeTruthy();
       expect(tree.exists(`${name}/specs/index.spec.js`)).toBeTruthy();
       expect(tree.exists(`${name}/index.d.js`)).toBeFalsy();
       expect(tree.exists(`${name}/index.d.ts`)).toBeFalsy();

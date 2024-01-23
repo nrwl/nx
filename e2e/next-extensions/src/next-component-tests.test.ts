@@ -108,7 +108,9 @@ function addBabelSupport(path: string) {
 }
 
 function createAppWithCt(appName: string) {
-  runCLI(`generate @nx/next:app ${appName} --no-interactive --appDir=false`);
+  runCLI(
+    `generate @nx/next:app ${appName} --no-interactive --appDir=false --src=false`
+  );
   runCLI(
     `generate @nx/next:component button --project=${appName} --directory=components --flat --no-interactive`
   );

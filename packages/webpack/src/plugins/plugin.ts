@@ -107,11 +107,15 @@ async function createWebpackTargets(
   >
 > {
   const namedInputs = getNamedInputs(projectRoot, context);
+
+  global.NX_GRAPH_CREATION = true;
   const webpackConfig = resolveUserDefinedWebpackConfig(
     join(context.workspaceRoot, configFilePath),
     getRootTsConfigPath(),
     true
   );
+  delete global.NX_GRAPH_CREATION;
+
   const webpackOptions = await readWebpackOptions(webpackConfig);
 
   const outputPath =
@@ -123,7 +127,7 @@ async function createWebpackTargets(
   const configBasename = basename(configFilePath);
 
   targets[options.buildTargetName] = {
-    command: `webpack -c ${configBasename} --node-env=production`,
+    command: `webpack-cli -c ${configBasename} --node-env=production`,
     options: { cwd: projectRoot },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
@@ -147,14 +151,14 @@ async function createWebpackTargets(
   };
 
   targets[options.serveTargetName] = {
-    command: `webpack serve -c ${configBasename} --node-env=development`,
+    command: `webpack-cli serve -c ${configBasename} --node-env=development`,
     options: {
       cwd: projectRoot,
     },
   };
 
   targets[options.previewTargetName] = {
-    command: `webpack serve -c ${configBasename} --node-env=production`,
+    command: `webpack-cli serve -c ${configBasename} --node-env=production`,
     options: {
       cwd: projectRoot,
     },

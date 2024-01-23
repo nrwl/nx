@@ -27,7 +27,8 @@ import {
 export function migrateConfigToMonorepoStyle(
   projects: ProjectConfiguration[],
   tree: Tree,
-  unitTestRunner: string
+  unitTestRunner: string,
+  keepExistingVersions?: boolean
 ): void {
   const rootEslintConfig = findEslintFile(tree);
   let skipCleanup = false;
@@ -47,7 +48,9 @@ export function migrateConfigToMonorepoStyle(
         {},
         {
           '@eslint/js': eslintVersion,
-        }
+        },
+        undefined,
+        keepExistingVersions
       );
       tree.write(
         tree.exists('eslint.config.js')

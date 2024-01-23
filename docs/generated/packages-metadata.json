@@ -680,6 +680,15 @@
     ],
     "generators": [
       {
+        "description": "Set up the ESLint plugin.",
+        "file": "generated/packages/eslint/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/eslint/src/generators/init/schema.json",
+        "path": "eslint/generators/init",
+        "type": "generator"
+      },
+      {
         "description": "Create the Workspace Lint Rules Project.",
         "file": "generated/packages/eslint/generators/workspace-rules-project.json",
         "hidden": true,
@@ -1803,6 +1812,17 @@
         "path": "nx/documents/release",
         "tags": [],
         "originalFilePath": "generated/cli/release"
+      },
+      {
+        "id": "add",
+        "name": "add",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/add",
+        "itemList": [],
+        "isExternal": false,
+        "path": "nx/documents/add",
+        "tags": [],
+        "originalFilePath": "generated/cli/add"
       }
     ],
     "executors": [
@@ -2471,6 +2491,15 @@
         "name": "library",
         "originalFilePath": "/packages/remix/src/generators/library/schema.json",
         "path": "remix/generators/library",
+        "type": "generator"
+      },
+      {
+        "description": "Initialize the `@nx/remix` plugin.",
+        "file": "generated/packages/remix/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/remix/src/generators/init/schema.json",
+        "path": "remix/generators/init",
         "type": "generator"
       },
       {

@@ -37,5 +37,9 @@
   "peerDependencies": {},
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./plugin": "./plugin.js"
   }
 }

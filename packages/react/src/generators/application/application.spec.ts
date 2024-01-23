@@ -471,7 +471,6 @@ describe('app', () => {
     const projectsConfigurations = getProjects(appTree);
     expect(projectsConfigurations.get('my-app').targets.lint).toEqual({
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
     });
   });
 
@@ -492,9 +491,6 @@ describe('app', () => {
         .toMatchInlineSnapshot(`
         {
           "executor": "@nx/eslint:lint",
-          "outputs": [
-            "{options.outputFile}",
-          ],
         }
       `);
     });

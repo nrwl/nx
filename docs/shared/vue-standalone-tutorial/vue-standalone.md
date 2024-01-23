@@ -30,7 +30,7 @@ Create a new Vue application with the following command:
 
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 
  >  NX   Creating your v17.0.0 workspace.
 

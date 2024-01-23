@@ -4263,25 +4263,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Nuxt Project",
-                "path": "/showcase/example-repos/add-nuxt",
-                "id": "add-nuxt",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Add an Astro Project",
                 "path": "/showcase/example-repos/add-astro",
                 "id": "add-astro",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Add a Vue Project",
-                "path": "/showcase/example-repos/add-vue",
-                "id": "add-vue",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -4452,25 +4436,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Nuxt Project",
-            "path": "/showcase/example-repos/add-nuxt",
-            "id": "add-nuxt",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Add an Astro Project",
             "path": "/showcase/example-repos/add-astro",
             "id": "add-astro",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Add a Vue Project",
-            "path": "/showcase/example-repos/add-vue",
-            "id": "add-vue",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4599,25 +4567,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Nuxt Project",
-        "path": "/showcase/example-repos/add-nuxt",
-        "id": "add-nuxt",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Add an Astro Project",
         "path": "/showcase/example-repos/add-astro",
         "id": "add-astro",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add a Vue Project",
-        "path": "/showcase/example-repos/add-vue",
-        "id": "add-vue",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -7262,6 +7214,14 @@
             "name": "generators",
             "children": [
               {
+                "id": "init",
+                "path": "/nx-api/eslint/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "workspace-rules-project",
                 "path": "/nx-api/eslint/generators/workspace-rules-project",
                 "name": "workspace-rules-project",
@@ -8372,6 +8332,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "add",
+                "path": "/nx-api/nx/documents/add",
+                "id": "add",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -9087,6 +9055,14 @@
                 "id": "library",
                 "path": "/nx-api/remix/generators/library",
                 "name": "library",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "init",
+                "path": "/nx-api/remix/generators/init",
+                "name": "init",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

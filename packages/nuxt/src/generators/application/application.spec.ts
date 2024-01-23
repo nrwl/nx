@@ -124,8 +124,7 @@ describe('app', () => {
         const projectConfi = readProjectConfiguration(tree, name);
         expect(projectConfi.targets.build).toBeUndefined();
         expect(projectConfi.targets.serve).toBeUndefined();
-        // TODO(katerina): Enable once `@nx/vite/plugin` is released
-        // expect(projectConfi.targets.test).toBeUndefined();
+        expect(projectConfi.targets.test).toBeUndefined();
       });
     });
   });

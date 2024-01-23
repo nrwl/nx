@@ -161,7 +161,7 @@ export function Hero(): JSX.Element {
             >
               <button
                 title="Create an Nx workspace"
-                className="group relative flex w-full items-center rounded-lg border border-slate-200 bg-white py-3 px-2 sm:px-6 text-sm sm:text-lg font-semibold leading-6 transition hover:bg-slate-100 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 sm:w-auto"
+                className="group relative flex w-full items-center rounded-lg border border-slate-200 bg-white py-2 px-2 sm:px-6 text-sm sm:text-lg font-semibold leading-6 transition hover:bg-slate-100 focus:ring-2 focus:ring-offset-2 focus:ring-offset-white dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 sm:w-auto"
               >
                 <span className="absolute top-1 right-1 flex opacity-0 transition-opacity group-hover:opacity-100">
                   {copied ? (

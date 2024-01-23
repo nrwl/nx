@@ -9,6 +9,7 @@ export interface ConfigurationGeneratorSchema {
   js: boolean; // default is false
   skipFormat: boolean;
   skipPackageJson: boolean;
+  skipInstall?: boolean;
   linter: Linter;
   setParserOptionsProject: boolean; // default is false
   /**

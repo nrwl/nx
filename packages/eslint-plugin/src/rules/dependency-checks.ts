@@ -2,7 +2,7 @@ import { join } from 'path';
 import { satisfies } from 'semver';
 import { AST } from 'jsonc-eslint-parser';
 import { type JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
-import { normalizePath, workspaceRoot } from '@nx/devkit';
+import { normalizePath, workspaceRoot, NX_VERSION } from '@nx/devkit';
 import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
@@ -33,7 +33,10 @@ export type MessageIds =
 
 export const RULE_NAME = 'dependency-checks';
 
-export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
+export default ESLintUtils.RuleCreator(
+  () =>
+    `https://github.com/nrwl/nx/blob/${NX_VERSION}/docs/generated/packages/eslint-plugin/documents/dependency-checks.md`
+)<Options, MessageIds>({
   name: RULE_NAME,
   meta: {
     type: 'suggestion',

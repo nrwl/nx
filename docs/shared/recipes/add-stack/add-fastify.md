@@ -39,14 +39,21 @@ If you are adding Fastify to an existing repo, continue to the next section.
 {%tab label="npm"%}
 
 ```shell
-npm i --save-dev @nx/node
+npm add -D @nx/node
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nx/node
+yarn add -D @nx/node
+```
+
+{% /tab %}
+{%tab label="pnpm"%}
+
+```shell
+pnpm add -D @nx/node
 ```
 
 {% /tab %}

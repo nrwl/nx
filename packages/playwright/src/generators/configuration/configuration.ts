@@ -1,24 +1,32 @@
 import {
+  addDependenciesToPackageJson,
   ensurePackage,
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getPackageManagerCommand,
   joinPathFragments,
   offsetFromRoot,
+  output,
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
   Tree,
+  updateJson,
   updateNxJson,
   updateProjectConfiguration,
+  workspaceRoot,
+  writeJson,
 } from '@nx/devkit';
-import * as path from 'path';
-import { ConfigurationGeneratorSchema } from './schema';
-import initGenerator from '../init/init';
-import { addLinterToPlaywrightProject } from '../../utils/add-linter';
-import { typescriptVersion } from '@nx/js/src/utils/versions';
 import { getRelativePathToRootTsConfig } from '@nx/js';
+import { typescriptVersion } from '@nx/js/src/utils/versions';
+import { execSync } from 'child_process';
+import * as path from 'path';
+import { addLinterToPlaywrightProject } from '../../utils/add-linter';
+import { nxVersion } from '../../utils/versions';
+import { initGenerator } from '../init/init';
+import { ConfigurationGeneratorSchema } from './schema';
 
 export async function configurationGenerator(
   tree: Tree,
@@ -52,20 +60,20 @@ export async function configurationGenerator(
       `${projectConfig.root}/tsconfig.json`,
       JSON.stringify(
         {
-          extends: '${getRelativePathToRootTsConfig(tree, projectConfig.root)}',
+          extends: getRelativePathToRootTsConfig(tree, projectConfig.root),
           compilerOptions: {
             allowJs: true,
-            outDir: '${offsetFromProjectRoot}dist/out-tsc',
+            outDir: `${offsetFromProjectRoot}dist/out-tsc`,
             module: 'commonjs',
             sourceMap: false,
           },
           include: [
             '**/*.ts',
             '**/*.js',
-            '${offsetFromProjectRoot}playwright.config.ts',
-            '${offsetFromProjectRoot}**/*.spec.ts',
-            '${offsetFromProjectRoot}**/*.spec.js',
-            '${offsetFromProjectRoot}**/*.d.ts',
+            `${offsetFromProjectRoot}playwright.config.ts`,
+            `${offsetFromProjectRoot}**/*.spec.ts`,
+            `${offsetFromProjectRoot}**/*.spec.js`,
+            `${offsetFromProjectRoot}**/*.d.ts`,
           ],
         },
         null,
@@ -104,11 +112,60 @@ export async function configurationGenerator(
     ) as typeof import('typescript');
     toJS(tree, { extension: '.cjs', module: ModuleKind.CommonJS });
   }
+
+  recommendVsCodeExtensions(tree);
+
+  if (!options.skipPackageJson) {
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          // required since used in playwright config
+          '@nx/devkit': nxVersion,
+        }
+      )
+    );
+  }
+
+  if (!options.skipInstall) {
+    tasks.push(getBrowsersInstallTask());
+  }
+
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function getBrowsersInstallTask() {
+  return () => {
+    output.log({
+      title: 'Ensuring Playwright is installed.',
+      bodyLines: ['use --skipInstall to skip installation.'],
+    });
+    const pmc = getPackageManagerCommand();
+    execSync(`${pmc.exec} playwright install`, { cwd: workspaceRoot });
+  };
+}
+
+function recommendVsCodeExtensions(tree: Tree): void {
+  if (tree.exists('.vscode/extensions.json')) {
+    updateJson(tree, '.vscode/extensions.json', (json) => {
+      json.recommendations ??= [];
+
+      const recs = new Set(json.recommendations);
+      recs.add('ms-playwright.playwright');
+
+      json.recommendations = Array.from(recs);
+      return json;
+    });
+  } else {
+    writeJson(tree, '.vscode/extensions.json', {
+      recommendations: ['ms-playwright.playwright'],
+    });
+  }
 }
 
 function setupE2ETargetDefaults(tree: Tree) {

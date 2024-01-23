@@ -1225,22 +1225,10 @@
                   "file": "shared/recipes/add-stack/add-dotnet"
                 },
                 {
-                  "name": "Add a Nuxt Project",
-                  "id": "add-nuxt",
-                  "description": "Add a nuxt project to your repo",
-                  "file": "shared/recipes/add-stack/add-nuxt"
-                },
-                {
                   "name": "Add an Astro Project",
                   "id": "add-astro",
                   "description": "Add Nx to an Astro project",
                   "file": "shared/recipes/add-stack/add-astro"
-                },
-                {
-                  "name": "Add a Vue Project",
-                  "id": "add-vue",
-                  "description": "Add a Vue project to your repo",
-                  "file": "shared/recipes/add-stack/add-vue"
                 },
                 {
                   "name": "Add a Svelte Project",
@@ -2077,6 +2065,11 @@
               "name": "release",
               "id": "release",
               "file": "generated/cli/release"
+            },
+            {
+              "name": "add",
+              "id": "add",
+              "file": "generated/cli/add"
             }
           ]
         },

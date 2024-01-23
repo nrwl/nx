@@ -100,7 +100,7 @@ export async function showProjectHandler(
       {
         view: 'project-details',
         focus: node.name,
-        watch: false,
+        watch: true,
         open: true,
       },
       []

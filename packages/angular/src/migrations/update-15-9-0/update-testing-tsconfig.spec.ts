@@ -26,6 +26,11 @@ describe('Jest+Ng - 15.9.0 - tsconfig updates', () => {
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     tree.write('.gitignore', '');
+
+    projectGraph = {
+      dependencies: {},
+      nodes: {},
+    };
   });
 
   it('should update tsconfig.spec.json with target es2016', async () => {

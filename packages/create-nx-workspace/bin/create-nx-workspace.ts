@@ -12,14 +12,12 @@ import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-
 import { yargsDecorator } from './decorator';
 import { getThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
 import {
-  determineCI,
   determineDefaultBase,
   determineNxCloud,
   determinePackageManager,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
-  withCI,
   withGitOptions,
   withNxCloud,
   withOptions,
@@ -49,6 +47,7 @@ interface ReactArguments extends BaseArguments {
   style: string;
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
+  nextSrcDir: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
@@ -164,6 +163,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Enable the App Router for Next.js`,
             type: 'boolean',
           })
+          .option('nextSrcDir', {
+            describe: chalk.dim`Generate a 'src/' directory for Next.js`,
+            type: 'boolean',
+          })
           .option('e2eTestRunner', {
             describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
             choices: ['cypress', 'playwright', 'none'],
@@ -174,7 +177,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'boolean',
           }),
         withNxCloud,
-        withCI,
         withAllPrompts,
         withPackageManager,
         withGitOptions
@@ -225,8 +227,11 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   await recordStat({
     nxVersion,
     command: 'create-nx-workspace',
-    useCloud: parsedArgs.nxCloud,
-    meta: messages.codeOfSelectedPromptMessage('nxCloudCreation'),
+    useCloud: parsedArgs.nxCloud !== 'skip',
+    meta: [
+      messages.codeOfSelectedPromptMessage('setupCI'),
+      messages.codeOfSelectedPromptMessage('setupNxCloud'),
+    ],
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
@@ -310,13 +315,11 @@ async function normalizeArgsMiddleware(
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
-    const ci = await determineCI(argv, nxCloud);
 
     Object.assign(argv, {
       nxCloud,
       packageManager,
       defaultBase,
-      ci,
     });
   } catch (e) {
     console.error(e);
@@ -378,6 +381,7 @@ async function determineStack(
       case Preset.NextJs:
       case Preset.NextJsStandalone:
         return 'react';
+      case Preset.Vue:
       case Preset.VueStandalone:
       case Preset.VueMonorepo:
       case Preset.Nuxt:
@@ -512,6 +516,7 @@ async function determineReactOptions(
   let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let nextAppDir = false;
+  let nextSrcDir = false;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
     preset = parsedArgs.preset;
@@ -563,6 +568,7 @@ async function determineReactOptions(
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
     nextAppDir = await determineNextAppDir(parsedArgs);
+    nextSrcDir = await determineNextSrcDir(parsedArgs);
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
 
@@ -614,7 +620,15 @@ async function determineReactOptions(
     style = reply.style;
   }
 
-  return { preset, style, appName, bundler, nextAppDir, e2eTestRunner };
+  return {
+    preset,
+    style,
+    appName,
+    bundler,
+    nextAppDir,
+    nextSrcDir,
+    e2eTestRunner,
+  };
 }
 
 async function determineVueOptions(
@@ -625,7 +639,7 @@ async function determineVueOptions(
   let appName: string;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
 
-  if (parsedArgs.preset) {
+  if (parsedArgs.preset && parsedArgs.preset !== Preset.Vue) {
     preset = parsedArgs.preset;
     if (preset === Preset.VueStandalone || preset === Preset.NuxtStandalone) {
       appName = parsedArgs.appName ?? parsedArgs.name;
@@ -633,13 +647,14 @@ async function determineVueOptions(
       appName = await determineAppName(parsedArgs);
     }
   } else {
+    const framework = await determineVueFramework(parsedArgs);
+
     const workspaceType = await determineStandaloneOrMonorepo();
     if (workspaceType === 'standalone') {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
       appName = await determineAppName(parsedArgs);
     }
-    const framework = await determineVueFramework(parsedArgs);
 
     if (framework === 'nuxt') {
       if (workspaceType === 'standalone') {
@@ -1064,6 +1079,29 @@ async function determineNextAppDir(
     },
   ]);
   return reply.nextAppDir === 'Yes';
+}
+
+async function determineNextSrcDir(
+  parsedArgs: yargs.Arguments<ReactArguments>
+): Promise<boolean> {
+  if (parsedArgs.nextSrcDir !== undefined) return parsedArgs.nextSrcDir;
+  const reply = await enquirer.prompt<{ nextSrcDir: 'Yes' | 'No' }>([
+    {
+      name: 'nextSrcDir',
+      message: 'Would you like to use the src/ directory?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 'Yes' as any,
+    },
+  ]);
+  return reply.nextSrcDir === 'Yes';
 }
 
 async function determineVueFramework(

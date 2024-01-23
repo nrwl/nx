@@ -15,6 +15,7 @@ import { VitePreviewServerExecutorOptions } from '../executors/preview-server/sc
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -200,6 +201,7 @@ export function addOrChangeBuildTarget(
   options: ViteConfigurationGeneratorSchema,
   target: string
 ) {
+  addBuildTargetDefaults(tree, '@nx/vite:build');
   const project = readProjectConfiguration(tree, options.project);
 
   const buildOptions: ViteBuildExecutorOptions = {
@@ -212,9 +214,6 @@ export function addOrChangeBuildTarget(
   project.targets ??= {};
 
   if (project.targets[target]) {
-    buildOptions.fileReplacements =
-      project.targets[target].options?.fileReplacements;
-
     if (project.targets[target].executor === '@nxext/vite:build') {
       buildOptions['base'] = project.targets[target].options?.baseHref;
       buildOptions['sourcemap'] = project.targets[target].options?.sourcemaps;
