@@ -345,7 +345,16 @@
       "requires": {
         "@angular/core": ">=17.1.0"
       },
-      "description": "Add 'browser-sync' as dev dependency when '@angular-devkit/build-angular:ssr-dev-server' is used, as it is no longer a direct dependency of '@angular-devkit/build-angular'.",
+      "description": "Add 'browser-sync' as dev dependency when '@angular-devkit/build-angular:ssr-dev-server' or '@nx/angular:module-federation-dev-ssr' is used.",
+      "factory": "./src/migrations/update-17-3-0/add-browser-sync-dependency"
+    },
+    "add-autoprefixer-dependency": {
+      "cli": "nx",
+      "version": "17.3.0-beta.8",
+      "requires": {
+        "@angular/core": ">=17.1.0"
+      },
+      "description": "Add 'autoprefixer' as dev dependency when '@nx/angular:ng-packagr-lite' or '@nx/angular:package` is used.",
       "factory": "./src/migrations/update-17-3-0/add-browser-sync-dependency"
     }
   },

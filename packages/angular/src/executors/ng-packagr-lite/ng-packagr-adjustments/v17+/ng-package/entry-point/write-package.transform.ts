@@ -3,7 +3,6 @@
  *
  * Changes made:
  * - Change the package.json metadata to only use the ESM2022 output.
- * - Change the package.json metadata to only use the ESM2020 output (Angular < 16).
  */
 
 import { logger } from '@nx/devkit';
@@ -33,10 +32,6 @@ import { globFiles } from 'ng-packagr/lib/utils/glob';
 import { ensureUnixPath } from 'ng-packagr/lib/utils/path';
 import { AssetPattern } from 'ng-packagr/ng-package.schema';
 import * as path from 'path';
-import {
-  getInstalledAngularVersionInfo,
-  VersionInfo,
-} from '../../../../utilities/angular-version-utils';
 
 export const nxWritePackageTransform = (options: NgPackagrOptions) =>
   transformFromPromise(async (graph) => {
@@ -46,13 +41,11 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
     const ngPackage = ngPackageNode.data;
     const { destinationFiles } = entryPoint.data;
 
-    const angularVersion = getInstalledAngularVersionInfo();
-
     if (!ngEntryPoint.isSecondaryEntryPoint) {
       logger.log('Copying assets');
 
       try {
-        await copyAssets(graph, entryPoint, ngPackageNode, angularVersion);
+        await copyAssets(graph, entryPoint, ngPackageNode);
       } catch (error) {
         throw error;
       }
@@ -77,28 +70,9 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
           ngEntryPoint,
           ngPackage,
           {
-            // backward compat for Angular < 16
-            ...(angularVersion.major < 16
-              ? {
-                  module: relativeUnixFromDestPath(
-                    (destinationFiles as any).esm2020
-                  ),
-                  es2020: relativeUnixFromDestPath(
-                    (destinationFiles as any).esm2020
-                  ),
-                  esm2020: relativeUnixFromDestPath(
-                    (destinationFiles as any).esm2020
-                  ),
-                }
-              : {
-                  module: relativeUnixFromDestPath(destinationFiles.esm2022),
-                }),
+            module: relativeUnixFromDestPath(destinationFiles.esm2022),
             typings: relativeUnixFromDestPath(destinationFiles.declarations),
-            exports: generatePackageExports(
-              ngEntryPoint,
-              graph,
-              angularVersion
-            ),
+            exports: generatePackageExports(ngEntryPoint, graph),
             // webpack v4+ specific flag to enable advanced optimizations and code splitting
             sideEffects: ngEntryPoint.packageJson.sideEffects ?? false,
           },
@@ -135,13 +109,7 @@ export const nxWritePackageTransform = (options: NgPackagrOptions) =>
       await writeFile(
         path.join(ngEntryPoint.destinationPath, 'package.json'),
         JSON.stringify(
-          {
-            module: relativeUnixFromDestPath(
-              angularVersion.major < 16
-                ? (destinationFiles as any).esm2020
-                : destinationFiles.esm2022
-            ),
-          },
+          { module: relativeUnixFromDestPath(destinationFiles.esm2022) },
           undefined,
           2
         )
@@ -158,8 +126,7 @@ type AssetEntry = Exclude<AssetPattern, string>;
 async function copyAssets(
   graph: BuildGraph,
   entryPointNode: EntryPointNode,
-  ngPackageNode: PackageNode,
-  angularVersion: VersionInfo
+  ngPackageNode: PackageNode
 ): Promise<void> {
   const ngPackage = ngPackageNode.data;
 
@@ -214,24 +181,13 @@ async function copyAssets(
   }
 
   for (const asset of assets) {
-    const globOptions: Parameters<typeof globFiles>[1] = {
+    const filePaths = await globFiles(asset.glob, {
       cwd: asset.input,
       ignore: [...(asset.ignore ?? []), ...globsForceIgnored],
       dot: true,
-    };
-
-    if (angularVersion.major < 16) {
-      // versions lower than v16 support these properties
-      (globOptions as any).cache = (ngPackageNode.cache as any).globCache;
-      (globOptions as any).nodir = true;
-      (globOptions as any).follow = asset.followSymlinks;
-    } else {
-      // starting in v16 these properties are supported
-      globOptions.onlyFiles = true;
-      globOptions.followSymbolicLinks = asset.followSymlinks;
-    }
-
-    const filePaths = await globFiles(asset.glob, globOptions);
+      onlyFiles: true,
+      followSymbolicLinks: asset.followSymlinks,
+    });
     for (const filePath of filePaths) {
       const fileSrcFullPath = path.join(asset.input, filePath);
       const fileDestFullPath = path.join(asset.output, filePath);
@@ -412,8 +368,7 @@ type ConditionalExport = {
  */
 function generatePackageExports(
   { destinationPath, packageJson }: NgEntryPoint,
-  graph: BuildGraph,
-  angularVersion: VersionInfo
+  graph: BuildGraph
 ): PackageExports {
   const exports: PackageExports = packageJson.exports
     ? JSON.parse(JSON.stringify(packageJson.exports))
@@ -456,26 +411,12 @@ function generatePackageExports(
       ? `./${destinationFiles.directory}`
       : '.';
 
-    // backward compat for Angular < 16
-    const mapping =
-      angularVersion.major < 16
-        ? {
-            types: relativeUnixFromDestPath(destinationFiles.declarations),
-            es2020: relativeUnixFromDestPath((destinationFiles as any).esm2020),
-            esm2020: relativeUnixFromDestPath(
-              (destinationFiles as any).esm2020
-            ),
-            default: relativeUnixFromDestPath(
-              (destinationFiles as any).esm2020
-            ),
-          }
-        : {
-            esm2022: relativeUnixFromDestPath(destinationFiles.esm2022),
-            esm: relativeUnixFromDestPath(destinationFiles.esm2022),
-            default: relativeUnixFromDestPath(destinationFiles.esm2022),
-          };
-
-    insertMappingOrError(subpath, mapping);
+    insertMappingOrError(subpath, {
+      types: relativeUnixFromDestPath(destinationFiles.declarations),
+      esm2022: relativeUnixFromDestPath(destinationFiles.esm2022),
+      esm: relativeUnixFromDestPath(destinationFiles.esm2022),
+      default: relativeUnixFromDestPath(destinationFiles.esm2022),
+    });
   }
 
   return exports;
