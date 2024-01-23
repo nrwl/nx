@@ -50,6 +50,7 @@ import {
 import { launchEditor } from './utils/launch-editor';
 import { parseChangelogMarkdown } from './utils/markdown';
 import { printAndFlushChanges, printDiff } from './utils/print-changes';
+import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
   ReleaseVersion,
   VersionData,
@@ -86,6 +87,27 @@ export async function releaseChangelog(
   );
   if (configError) {
     return await handleNxReleaseConfigError(configError);
+  }
+
+  // The nx release top level command will always override these three git args. This is how we can tell
+  // if the top level release command was used or if the user is using the changelog subcommand.
+  // If the user explicitly overrides these args, then it doesn't matter if the top level config is set,
+  // as all of the git options would be overridden anyway.
+  if (
+    (args.gitCommit === undefined ||
+      args.gitTag === undefined ||
+      args.stageChanges === undefined) &&
+    nxJson.release?.git
+  ) {
+    const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+      'release',
+      'git',
+    ]);
+    output.error({
+      title: `The 'release.git' property in nx.json may not be used with the 'nx release changelog' subcommand or programmatic API. Instead, configure git options for subcommands directly with 'release.version.git' and 'release.changelog.git'.`,
+      bodyLines: [nxJsonMessage],
+    });
+    process.exit(1);
   }
 
   const {
@@ -233,7 +255,7 @@ export async function releaseChangelog(
 
         let commits: GitCommit[] | null = null;
 
-        if (useAutomaticFromRef) {
+        if (!fromRef && useAutomaticFromRef) {
           const firstCommit = await getFirstGitCommit();
           const allCommits = await getCommits(firstCommit, toSHA);
           const commitsForProject = allCommits.filter((c) =>
