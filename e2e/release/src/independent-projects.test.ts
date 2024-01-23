@@ -35,16 +35,16 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
         // Normalize the version title date
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
-        .replaceAll(getSelectedPackageManager(), '{package-manager}')
         .replaceAll('package-lock.json', '{lock-file}')
         .replaceAll('yarn.lock', '{lock-file}')
         .replaceAll('pnpm-lock.yaml', '{lock-file}')
-        .replaceAll('{lock-file-command}', '{lock-file-command}')
+        .replaceAll('npm install --package-lock-only', '{lock-file-command}')
         .replaceAll(
           'yarn install --mode update-lockfile',
           '{lock-file-command}'
         )
         .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
+        .replaceAll(getSelectedPackageManager(), '{package-manager}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
