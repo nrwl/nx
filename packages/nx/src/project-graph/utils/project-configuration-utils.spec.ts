@@ -303,6 +303,106 @@ describe('project-configuration-utils', () => {
         ).toEqual(projectDefaultConfiguration);
       });
     });
+
+    describe('run-commands', () => {
+      it('should merge two run-commands targets appropriately', () => {
+        const merged = mergeTargetConfigurations(
+          {
+            outputs: ['{projectRoot}/outputfile.json'],
+            options: {
+              command: 'eslint . -o outputfile.json',
+            },
+          },
+          {
+            cache: true,
+            inputs: [
+              'default',
+              '{workspaceRoot}/.eslintrc.json',
+              '{workspaceRoot}/apps/third-app/.eslintrc.json',
+              '{workspaceRoot}/tools/eslint-rules/**/*',
+              { externalDependencies: ['eslint'] },
+            ],
+            options: { cwd: 'apps/third-app', command: 'eslint .' },
+            executor: 'nx:run-commands',
+            configurations: {},
+          }
+        );
+        expect(merged).toMatchInlineSnapshot(`
+          {
+            "cache": true,
+            "configurations": {},
+            "executor": "nx:run-commands",
+            "inputs": [
+              "default",
+              "{workspaceRoot}/.eslintrc.json",
+              "{workspaceRoot}/apps/third-app/.eslintrc.json",
+              "{workspaceRoot}/tools/eslint-rules/**/*",
+              {
+                "externalDependencies": [
+                  "eslint",
+                ],
+              },
+            ],
+            "options": {
+              "command": "eslint . -o outputfile.json",
+              "cwd": "apps/third-app",
+            },
+            "outputs": [
+              "{projectRoot}/outputfile.json",
+            ],
+          }
+        `);
+      });
+
+      it('should merge targets when the base uses command syntactic sugar', () => {
+        const merged = mergeTargetConfigurations(
+          {
+            outputs: ['{projectRoot}/outputfile.json'],
+            options: {
+              command: 'eslint . -o outputfile.json',
+            },
+          },
+          {
+            cache: true,
+            inputs: [
+              'default',
+              '{workspaceRoot}/.eslintrc.json',
+              '{workspaceRoot}/apps/third-app/.eslintrc.json',
+              '{workspaceRoot}/tools/eslint-rules/**/*',
+              { externalDependencies: ['eslint'] },
+            ],
+            options: { cwd: 'apps/third-app' },
+            configurations: {},
+            command: 'eslint .',
+          }
+        );
+        expect(merged).toMatchInlineSnapshot(`
+          {
+            "cache": true,
+            "command": "eslint .",
+            "configurations": {},
+            "inputs": [
+              "default",
+              "{workspaceRoot}/.eslintrc.json",
+              "{workspaceRoot}/apps/third-app/.eslintrc.json",
+              "{workspaceRoot}/tools/eslint-rules/**/*",
+              {
+                "externalDependencies": [
+                  "eslint",
+                ],
+              },
+            ],
+            "options": {
+              "command": "eslint . -o outputfile.json",
+              "cwd": "apps/third-app",
+            },
+            "outputs": [
+              "{projectRoot}/outputfile.json",
+            ],
+          }
+        `);
+      });
+    });
   });
 
   describe('mergeProjectConfigurationIntoRootMap', () => {
@@ -1081,18 +1181,10 @@ describe('project-configuration-utils', () => {
       expect(
         isCompatibleTarget(
           {
-            command: 'echo',
-          },
-          {
-            command: 'echo',
-          }
-        )
-      ).toBe(true);
-
-      expect(
-        isCompatibleTarget(
-          {
-            command: 'echo',
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo',
+            },
           },
           {
             executor: 'nx:run-commands',
@@ -1108,37 +1200,16 @@ describe('project-configuration-utils', () => {
       expect(
         isCompatibleTarget(
           {
-            command: 'echo',
-          },
-          {
-            command: 'echo2',
-          }
-        )
-      ).toBe(false);
-
-      expect(
-        isCompatibleTarget(
-          {
-            command: 'echo',
+            executor: 'nx:run-commands',
+            options: {
+              command: 'echo',
+            },
           },
           {
             executor: 'nx:run-commands',
             options: {
               command: 'echo2',
             },
-          }
-        )
-      ).toBe(false);
-    });
-
-    it('should return false if one target specifies an executor and the other a command', () => {
-      expect(
-        isCompatibleTarget(
-          {
-            executor: 'nx:noop',
-          },
-          {
-            command: 'echo',
           }
         )
       ).toBe(false);
