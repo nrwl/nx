@@ -26,7 +26,7 @@ npx create-nx-workspace@latest --preset=react-standalone --bundler=vite
 
 ## Add Vite to an existing workspace
 
-There is a number of ways to use Vite in your existing workspace.
+There are a number of ways to use Vite in your existing workspace.
 
 ### Generate a new project using Vite
 
@@ -89,6 +89,58 @@ pnpm add -D @nx/vite
 
 {% /tab %}
 {% /tabs %}
+
+#### Enable Inferred Tasks
+
+{% callout type="note" title="Inferred Tasks" %}
+In Nx version 17.3, the `@nx/vite` plugin can create [inferred tasks](/concepts/inferred-tasks) for projects that have a Vite configuration file present. This means you can run `nx build my-project`, `nx serve my-project`, `nx preview my-project`, `nx serve-static my-project` and `nx test my-project` for that project, even if there is no `build`, `serve`, `preview`, `serve-static` or `test` targets defined in `package.json` or `project.json`.
+{% /callout %}
+
+To enable inferred tasks, add `@nx/vite/plugin` to the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/vite/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "previewTargetName": "preview",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "serveStaticTargetName": "serve-static"
+      }
+    }
+  ]
+}
+```
+
+#### Task Inference Process
+
+##### Identify Valid Projects
+
+The `@nx/vite/plugin` plugin will create a target for any project that has a Vite configuration file present. Any of the following files will be recognized as a Vite configuration file:
+
+- `vite.config.js`
+- `vite.config.ts`
+- `vite.config.mjs`
+- `vite.config.mts`
+- `vite.config.cjs`
+- `vite.config.cts`
+- `vitest.config.js`
+- `vitest.config.ts`
+- `vitest.config.mjs`
+- `vitest.config.mts`
+- `vitest.config.cjs`
+- `vitest.config.cts`
+
+##### Name the Inferred Task
+
+Once a Vite configuration file has been identified, the targets are created with the name you specify under `buildTargetName`, `serveTargetName`, `previewTargetName`, `serveStaticTargetName` or `testTargetName` in the `nx.json` `plugins` array. The default names for the inferred targets are `build`, `serve`, `preview`, `serve-static` and `test`.
+
+##### View and Edit Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line. Nx Console also provides a quick way to override the settings of an inferred task.
 
 #### Ask Nx to install the necessary dependencies
 
