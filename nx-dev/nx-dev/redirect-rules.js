@@ -952,8 +952,7 @@ const latestRecipesRefactoring = {
 
 const coreFeatureAndConceptsRefactoring = {
   '/features/share-your-cache': '/features/remote-cache',
-  '/concepts/more-concepts/customizing-inputs':
-    '/recipes/running-tasks/customizing-inputs',
+  '/concepts/more-concepts/customizing-inputs': '/concepts/task-inputs',
   '/recipes/tips-n-tricks/root-level-scripts':
     '/recipes/running-tasks/root-level-scripts',
   '/recipes/tips-n-tricks/run-commands-executor':
@@ -966,6 +965,7 @@ const coreFeatureAndConceptsRefactoring = {
     '/getting-started/installation#installing-nx-globally',
   '/concepts/more-concepts/nx-and-the-wrapper':
     '/getting-started/installation#selfmanaged-nx-installation',
+  '/recipes/running-tasks/customizing-inputs': '/concepts/task-inputs',
 };
 
 /*

@@ -9,6 +9,20 @@
     },
     {
       "description": "",
+      "file": "shared/concepts/inputs",
+      "id": "task-inputs",
+      "name": "Fine-tuning Caching with Inputs",
+      "path": "/concepts/task-inputs"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/outputs",
+      "id": "task-outputs",
+      "name": "Cache Results with Outputs",
+      "path": "/concepts/task-outputs"
+    },
+    {
+      "description": "",
       "file": "shared/concepts/task-pipeline-configuration",
       "id": "task-pipeline-configuration",
       "name": "What is a Task Pipeline",
@@ -20,13 +34,6 @@
       "id": "executors-and-configurations",
       "name": "Executors and Configurations",
       "path": "/concepts/executors-and-configurations"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/running-tasks/customizing-inputs",
-      "id": "customizing-inputs",
-      "name": "Fine-tuning Caching with Inputs",
-      "path": "/recipes/running-tasks/customizing-inputs"
     },
     {
       "description": "",
@@ -116,10 +123,17 @@
     },
     {
       "description": "",
-      "file": "shared/recipes/running-tasks/customizing-inputs",
-      "id": "customizing-inputs",
+      "file": "shared/concepts/inputs",
+      "id": "task-inputs",
       "name": "Fine-tuning Caching with Inputs",
-      "path": "/recipes/running-tasks/customizing-inputs"
+      "path": "/concepts/task-inputs"
+    },
+    {
+      "description": "",
+      "file": "shared/concepts/outputs",
+      "id": "task-outputs",
+      "name": "Cache Results with Outputs",
+      "path": "/concepts/task-outputs"
     },
     {
       "description": "",
@@ -180,10 +194,10 @@
   ],
   "explore-graph": [
     {
-      "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
+      "description": "",
       "file": "shared/features/explore-graph",
       "id": "explore-graph",
-      "name": "Explore the Graph",
+      "name": "Explore your Workspace",
       "path": "/features/explore-graph"
     },
     {
