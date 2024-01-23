@@ -74,8 +74,11 @@ async function createNxCloudWorkspace(
 
 function printSuccessMessage(url: string) {
   let host = 'nx.app';
+  let origin = 'https://nx.app';
   try {
-    host = new URL(url).host;
+    const { host: h, origin: o } = new URL(url);
+    host = h;
+    origin = o;
   } catch (e) {}
 
   output.note({
@@ -85,9 +88,11 @@ function printSuccessMessage(url: string) {
       `UI for viewing complex runs and GitHub integration. Learn more at https://nx.app`,
       ``,
       `Your workspace is currently unclaimed. Run details from unclaimed workspaces can be viewed on ${host} by anyone`,
-      `with the link. Claim your workspace at the following link to restrict access.`,
+      `with the link. Claiming your workspace restricts the access.`,
       ``,
-      `${url}`,
+      `Next steps:`,
+      `- Push your changes to the  main branch`,
+      `- Login/register to ${origin} to claim your workspace`,
     ],
   });
 }
