@@ -5,7 +5,7 @@ description: The Nx Plugin for Nuxt contains generators for managing Nuxt applic
 
 The Nx plugin for [Nuxt](https://nuxt.com/).
 
-## Setting up a new Nx workspace with Nuxt
+## Setting up a new Nx workspace with @nx/nuxt
 
 You can create a new workspace that uses Nuxt with one of the following commands:
 
@@ -15,43 +15,38 @@ You can create a new workspace that uses Nuxt with one of the following commands
 npx create-nx-workspace@latest --preset=nuxt
 ```
 
-## Add Nuxt to an existing workspace
+### Installation
 
-There are a number of ways to use Nuxt in your existing workspace.
-
-### Install the `@nx/nuxt` plugin
-
-{% tabs %}
-{% tab label="npm" %}
-
-```shell
-npm add -D @nx/nuxt
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/nuxt
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/nuxt
-```
-
-{% /tab %}
-{% /tabs %}
-
-### Enable Inferred Tasks
-
-{% callout type="note" title="Inferred Tasks" %}
-In Nx version 17.3, the `@nx/nuxt` plugin can create [inferred tasks](/concepts/inferred-tasks) for projects that have a Nuxt configuration file present. This means you can run `nx build my-project`, `nx serve my-project` and `nx test my-project` for that project, even if there is no `build`, `serve` or `test` targets defined in `package.json` or `project.json`.
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/nuxt` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-To enable inferred targets, add `@nx/nuxt/plugin` to the `plugins` array in `nx.json`.
+In any Nx workspace, you can install `@nx/nuxt` by running the following command:
+
+```shell
+nx add @nx/nuxt
+```
+
+This will install the correct version of `@nx/nuxt`.
+
+### How @nx/nuxt Infers Tasks
+
+The `@nx/nuxt` plugin will create a task for any project that has an Nuxt configuration file present. Any of the following files will be recognized as an Nuxt configuration file:
+
+- `nuxt.config.js`
+- `nuxt.config.ts`
+- `nuxt.config.mjs`
+- `nuxt.config.mts`
+- `nuxt.config.cjs`
+- `nuxt.config.cts`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/nuxt Configuration
+
+The `@nx/nuxt/plugin` is configured in the `plugins` array in `nx.json`.
 
 ```json {% fileName="nx.json" %}
 {
@@ -68,26 +63,9 @@ To enable inferred targets, add `@nx/nuxt/plugin` to the `plugins` array in `nx.
 }
 ```
 
-### Task Inference Process
+- The `buildTargetName`, `testTargetName` and `serveTargetName` options control the names of the inferred Vite tasks. The default names are `build`, `test` and `serve`.
 
-#### Identify Valid Projects
-
-The `@nx/nuxt/plugin` plugin will create a target for any project that has a Nuxt configuration file present. Any of the following files will be recognized as a Nuxt configuration file:
-
-- `nuxt.config.js`
-- `nuxt.config.ts`
-- `nuxt.config.mjs`
-- `nuxt.config.mts`
-- `nuxt.config.cjs`
-- `nuxt.config.cts`
-
-#### Name the Inferred Task
-
-Once a Nuxt configuration file has been identified, the tasks are created with the name you specify under `buildTargetName`, `serveTargetName` or `testTargetName` in the `nx.json` `plugins` array. The default names for the inferred tasks are `build`, `serve` and `test`.
-
-#### View and Edit Inferred Tasks
-
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line. Nx Console also provides a quick way to override the settings of an inferred task.
+## Using Nuxt
 
 ### Generate a new Nuxt app
 
