@@ -30,11 +30,10 @@ This will install the correct version of `@nx/web`.
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/web` package with your package manager and then run the `init` generator.
+Install the `@nx/web` package with your package manager.
 
 ```shell
 npm add -D @nx/web
-nx g @nx/web:init
 ```
 
 {% /tab %}

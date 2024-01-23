@@ -36,11 +36,10 @@ This will install the correct version of `@nx/react`.
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/react` package with your package manager and then run the `init` generator.
+Install the `@nx/react` package with your package manager.
 
 ```shell
 npm add -D @nx/react
-nx g @nx/react:init
 ```
 
 {% /tab %}

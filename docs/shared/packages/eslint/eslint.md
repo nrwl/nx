@@ -59,11 +59,10 @@ The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/eslint` package with your package manager and then run the `init` generator.
+Install the `@nx/eslint` package with your package manager.
 
 ```shell
 npm add -D @nx/eslint
-nx g @nx/eslint:init
 ```
 
 {% /tab %}

@@ -31,11 +31,10 @@ This will install the correct version of `@nx/express`.
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/express` package with your package manager and then run the `init` generator.
+Install the `@nx/express` package with your package manager.
 
 ```shell
 npm add -D @nx/express
-nx g @nx/express:init
 ```
 
 {% /tab %}

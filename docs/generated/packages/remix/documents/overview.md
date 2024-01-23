@@ -71,11 +71,10 @@ The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/remix` package with your package manager and then run the `init` generator.
+Install the `@nx/remix` package with your package manager.
 
 ```shell
 npm add -D @nx/remix
-nx g @nx/remix:init
 ```
 
 {% /tab %}

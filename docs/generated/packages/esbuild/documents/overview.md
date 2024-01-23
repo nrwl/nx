@@ -34,11 +34,10 @@ This will install the correct version of `@nx/esbuild`.
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/esbuild` package with your package manager and then run the `init` generator.
+Install the `@nx/esbuild` package with your package manager.
 
 ```shell
 npm add -D @nx/esbuild
-nx g @nx/esbuild:init
 ```
 
 {% /tab %}

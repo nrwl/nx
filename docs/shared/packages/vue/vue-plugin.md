@@ -35,11 +35,10 @@ This will install the correct version of `@nx/vue`.
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-Install the `@nx/vue` package with your package manager and then run the `init` generator.
+Install the `@nx/vue` package with your package manager.
 
 ```shell
 npm add -D @nx/vue
-nx g @nx/vue:init
 ```
 
 {% /tab %}
