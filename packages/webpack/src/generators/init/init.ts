@@ -6,7 +6,8 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { WebpackPluginOptions } from '../../plugins/plugin';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes, WebpackPluginOptions } from '../../plugins/plugin';
 import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -34,6 +35,10 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
       undefined,
       schema.keepExistingVersions
     );
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!schema.skipFormat) {

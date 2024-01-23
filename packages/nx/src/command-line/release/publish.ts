@@ -69,6 +69,13 @@ export async function releasePublish(args: PublishOptions): Promise<void> {
     process.exit(1);
   }
 
+  /**
+   * If the user is filtering to a subset of projects or groups, we should not run the publish task
+   * for dependencies, because that could cause projects outset of the filtered set to be published.
+   */
+  const shouldExcludeTaskDependencies =
+    _args.projects?.length > 0 || _args.groups?.length > 0;
+
   if (args.projects?.length) {
     /**
      * Run publishing for all remaining release groups and filtered projects within them
@@ -78,7 +85,8 @@ export async function releasePublish(args: PublishOptions): Promise<void> {
         _args,
         projectGraph,
         nxJson,
-        Array.from(releaseGroupToFilteredProjects.get(releaseGroup))
+        Array.from(releaseGroupToFilteredProjects.get(releaseGroup)),
+        shouldExcludeTaskDependencies
       );
     }
 
@@ -93,7 +101,8 @@ export async function releasePublish(args: PublishOptions): Promise<void> {
       _args,
       projectGraph,
       nxJson,
-      releaseGroup.projects
+      releaseGroup.projects,
+      shouldExcludeTaskDependencies
     );
   }
 
@@ -110,7 +119,8 @@ async function runPublishOnProjects(
   args: PublishOptions & { __overrides_unparsed__: string[] },
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
-  projectNames: string[]
+  projectNames: string[],
+  shouldExcludeTaskDependencies: boolean
 ) {
   const projectsToRun: ProjectGraphProjectNode[] = projectNames.map(
     (projectName) => projectGraph.nodes[projectName]
@@ -173,12 +183,13 @@ async function runPublishOnProjects(
       overrides,
       null,
       {},
-      { excludeTaskDependencies: false, loadDotEnvFiles: true }
+      {
+        excludeTaskDependencies: shouldExcludeTaskDependencies,
+        loadDotEnvFiles: true,
+      }
     );
 
     if (status !== 0) {
-      // fix for https://github.com/nrwl/nx/issues/1666
-      if (process.stdin['unref']) (process.stdin as any).unref();
       process.exit(status);
     }
   }
