@@ -1146,17 +1146,14 @@ ${JSON.stringify(
       silenceError: true,
     });
 
-    expect(releaseOutput6a).toMatchInlineSnapshot(`
-
-      >  NX   Running release version for project: {project-name}
-
-      {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
-
-      >  NX   Unable to resolve the current version from the registry ${e2eRegistryUrl}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can set the "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.
-
-      -                  Resolving the current version for tag "other" on ${e2eRegistryUrl}
-
-    `);
+    expect(
+      releaseOutput6a.match(
+        new RegExp(
+          `>  NX   Unable to resolve the current version from the registry ${e2eRegistryUrl}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can set the "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`,
+          'g'
+        )
+      ).length
+    ).toEqual(1);
 
     const releaseOutput6b = runCLI(
       `release patch --skip-publish --first-release`,

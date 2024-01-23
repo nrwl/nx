@@ -2,6 +2,7 @@ import { joinPathFragments } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
+  getSelectedPackageManager,
   newProject,
   readFile,
   runCLI,
@@ -34,6 +35,16 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
         // Normalize the version title date
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
+        .replaceAll('package-lock.json', '{lock-file}')
+        .replaceAll('yarn.lock', '{lock-file}')
+        .replaceAll('pnpm-lock.yaml', '{lock-file}')
+        .replaceAll('npm install --package-lock-only', '{lock-file-command}')
+        .replaceAll(
+          'yarn install --mode update-lockfile',
+          '{lock-file-command}'
+        )
+        .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
+        .replaceAll(getSelectedPackageManager(), '{package-manager}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
@@ -127,6 +138,9 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
+        >  NX   Updating {package-manager} lock file
+
+
         >  NX   Staging changed files with git
 
 
@@ -157,6 +171,9 @@ describe('nx release - independent projects', () => {
 
         }
         +
+
+
+        >  NX   Updating {package-manager} lock file
 
 
         >  NX   Staging changed files with git
@@ -198,6 +215,9 @@ describe('nx release - independent projects', () => {
         }
 
 
+        >  NX   Updating {package-manager} lock file
+
+
         >  NX   Staging changed files with git
 
 
@@ -237,10 +257,15 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
+        >  NX   Updating {package-manager} lock file
+
+        Updating {lock-file} with the following command:
+        {lock-file-command}
+
         >  NX   Committing changes with git
 
         Staging files in git with the following command:
-        git add {project-name}/package.json
+        git add {project-name}/package.json {lock-file}
 
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.2
@@ -340,10 +365,20 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
+        >  NX   Updating {package-manager} lock file
+
+        Updating {lock-file} with the following command:
+        {lock-file-command}
+
+        >  NX   Updating {package-manager} lock file
+
+        Updating {lock-file} with the following command:
+        {lock-file-command}
+
         >  NX   Committing changes with git
 
         Staging files in git with the following command:
-        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json {lock-file}
 
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - release-group: fixed 999.9.9-version-git-operations-test.3

@@ -19,21 +19,24 @@ import {
 } from 'nx/src/command-line/release/utils/resolve-semver-specifier';
 import { isValidSemverSpecifier } from 'nx/src/command-line/release/utils/semver';
 import {
+  ReleaseVersionGeneratorResult,
   VersionData,
   deriveNewSemverVersion,
   validReleaseVersionPrefixes,
 } from 'nx/src/command-line/release/version';
+import { daemonClient } from 'nx/src/daemon/client/client';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { relative } from 'path';
 import { prerelease } from 'semver';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
+import { updateLockFile } from './utils/update-lock-file';
 
 export async function releaseVersionGenerator(
   tree: Tree,
   options: ReleaseVersionGeneratorSchema
-) {
+): Promise<ReleaseVersionGeneratorResult> {
   try {
     const versionData: VersionData = {};
 
@@ -473,7 +476,36 @@ To fix this you will either need to add a package.json file at that location, or
     await formatFiles(tree);
 
     // Return the version data so that it can be leveraged by the overall version command
-    return versionData;
+    return {
+      data: versionData,
+      callback: async (tree, opts) => {
+        const cwd = tree.root;
+
+        const isDaemonEnabled = daemonClient.enabled();
+        if (isDaemonEnabled) {
+          // temporarily stop the daemon, as it will error if the lock file is updated
+          await daemonClient.stop();
+        }
+
+        const updatedFiles = updateLockFile(cwd, opts);
+
+        if (isDaemonEnabled) {
+          try {
+            await daemonClient.startInBackground();
+          } catch (e) {
+            // If the daemon fails to start, we don't want to prevent the user from continuing, so we just log the error and move on
+            if (opts.verbose) {
+              output.warn({
+                title:
+                  'Unable to restart the Nx Daemon. It will be disabled until you run "nx reset"',
+                bodyLines: [e.message],
+              });
+            }
+          }
+        }
+        return updatedFiles;
+      },
+    };
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       output.error({
