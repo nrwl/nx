@@ -988,7 +988,9 @@ ${JSON.stringify(
     await runCommandAsync(`git commit -m "feat(${pkg3}): new feat 3"`);
 
     // set 1300.1.0 as the latest version for group2
-    const releaseOutput2 = runCLI(`release version --group=group2`);
+    const releaseOutput2 = runCLI(
+      `release version --group=group2 --stage-changes --git-commit --git-tag`
+    );
     expect(
       releaseOutput2.match(
         new RegExp(

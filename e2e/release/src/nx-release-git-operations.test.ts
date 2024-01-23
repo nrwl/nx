@@ -104,7 +104,7 @@ describe('nx release git operations', () => {
     ).toEqual(1);
   });
 
-  it('should stage, commit, and tag if granular config options are true', async () => {
+  it('should error when granular config is set and top level command is run', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         projects: [pkg1, pkg2, pkg3],
@@ -124,90 +124,63 @@ describe('nx release git operations', () => {
       return nxJson;
     });
 
-    const releaseOutput1 = runCLI(`release patch --first-release -d`);
+    const releaseOutput1 = runCLI(`release patch --first-release -d`, {
+      silenceError: true,
+    });
 
     expect(
       releaseOutput1.match(
-        new RegExp('NX   Staging changed files with git', 'g')
+        new RegExp(
+          `The 'release' top level command cannot be used with granular git configuration. Instead, configure git options in the 'release.git' property in nx.json, or use the version, changelog, and publish subcommands or programmatic API directly.`,
+          'g'
+        )
       ).length
-    ).toEqual(2);
-    expect(
-      releaseOutput1.match(new RegExp('NX   Committing changes with git', 'g'))
-        .length
     ).toEqual(1);
-    expect(
-      releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g'))
-        .length
-    ).toEqual(1);
+  });
 
+  it('should error when top level git config is set and subcommands are run', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         projects: [pkg1, pkg2, pkg3],
-        version: {
-          git: {
-            commit: false,
-            tag: false,
-          },
-        },
-        changelog: {
-          git: {
-            commit: true,
-            tag: true,
-          },
+        git: {
+          commit: true,
+          tag: true,
+          stageChanges: false,
         },
       };
       return nxJson;
     });
 
-    const releaseOutput2 = runCLI(`release patch --first-release -d`);
+    const releaseVersionOutput = runCLI(
+      `release version patch --first-release -d`,
+      {
+        silenceError: true,
+      }
+    );
 
     expect(
-      releaseOutput2.match(
-        new RegExp('NX   Staging changed files with git', 'g')
+      releaseVersionOutput.match(
+        new RegExp(
+          `The 'release.git' property in nx.json may not be used with the 'nx release version' subcommand or programmatic API. Instead, configure git options for subcommands directly with 'release.version.git' and 'release.changelog.git'.`,
+          'g'
+        )
       ).length
-    ).toEqual(2);
-    expect(
-      releaseOutput2.match(new RegExp('NX   Committing changes with git', 'g'))
-        .length
-    ).toEqual(1);
-    expect(
-      releaseOutput2.match(new RegExp('NX   Tagging commit with git', 'g'))
-        .length
     ).toEqual(1);
 
-    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-      nxJson.release = {
-        projects: [pkg1, pkg2, pkg3],
-        version: {
-          git: {
-            commit: true,
-            tag: true,
-          },
-        },
-        changelog: {
-          git: {
-            commit: true,
-            tag: true,
-          },
-        },
-      };
-      return nxJson;
-    });
-
-    const releaseOutput3 = runCLI(`release patch --first-release -d`);
+    const releaseChangelogOutput = runCLI(
+      `release changelog 1.0.0 --first-release -d`,
+      {
+        silenceError: true,
+      }
+    );
 
     expect(
-      releaseOutput3.match(
-        new RegExp('NX   Staging changed files with git', 'g')
+      releaseChangelogOutput.match(
+        new RegExp(
+          `The 'release.git' property in nx.json may not be used with the 'nx release changelog' subcommand or programmatic API. Instead, configure git options for subcommands directly with 'release.version.git' and 'release.changelog.git'.`,
+          'g'
+        )
       ).length
-    ).toEqual(2);
-    expect(
-      releaseOutput3.match(new RegExp('NX   Committing changes with git', 'g'))
-        .length
-    ).toEqual(1);
-    expect(
-      releaseOutput3.match(new RegExp('NX   Tagging commit with git', 'g'))
-        .length
     ).toEqual(1);
   });
 
@@ -215,19 +188,10 @@ describe('nx release git operations', () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         projects: [pkg1, pkg2, pkg3],
-        version: {
-          git: {
-            commit: false,
-            tag: false,
-            stageChanges: true,
-          },
-        },
-        changelog: {
-          git: {
-            commit: false,
-            tag: false,
-            stageChanges: false,
-          },
+        git: {
+          commit: false,
+          tag: false,
+          stageChanges: true,
         },
       };
       return nxJson;
@@ -246,58 +210,15 @@ describe('nx release git operations', () => {
     expect(
       releaseOutput1.match(new RegExp('NX   Tagging commit with git', 'g'))
     ).toBeNull();
-
-    updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
-      nxJson.release = {
-        projects: [pkg1, pkg2, pkg3],
-        version: {
-          git: {
-            commit: false,
-            tag: false,
-            stageChanges: false,
-          },
-        },
-        changelog: {
-          git: {
-            commit: false,
-            tag: false,
-            stageChanges: true,
-          },
-        },
-      };
-      return nxJson;
-    });
-
-    const releaseOutput2 = runCLI(`release patch --first-release -d`);
-
-    expect(
-      releaseOutput2.match(
-        new RegExp('NX   Staging changed files with git', 'g')
-      ).length
-    ).toEqual(2);
-    expect(
-      releaseOutput2.match(new RegExp('NX   Committing changes with git', 'g'))
-    ).toBeNull();
-    expect(
-      releaseOutput2.match(new RegExp('NX   Tagging commit with git', 'g'))
-    ).toBeNull();
   });
 
-  it.skip('should not stage, commit, or tag if commit and tag are false and stageChanges is unspecified', async () => {
+  it('should not stage, commit, or tag if commit and tag are false and stageChanges is unspecified', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
         projects: [pkg1, pkg2, pkg3],
-        version: {
-          git: {
-            commit: false,
-            tag: false,
-          },
-        },
-        changelog: {
-          git: {
-            commit: false,
-            tag: false,
-          },
+        git: {
+          commit: false,
+          tag: false,
         },
       };
       return nxJson;
@@ -308,8 +229,8 @@ describe('nx release git operations', () => {
     expect(
       releaseOutput1.match(
         new RegExp('NX   Staging changed files with git', 'g')
-      ).length
-    ).toEqual(2);
+      )
+    ).toBeNull();
     expect(
       releaseOutput1.match(new RegExp('NX   Committing changes with git', 'g'))
     ).toBeNull();
