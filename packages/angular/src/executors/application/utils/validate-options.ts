@@ -50,4 +50,10 @@ export function validateOptions(options: ApplicationExecutorOptions): void {
       delete options.optimization.styles.removeSpecialComments;
     }
   }
+
+  if (typeof options.outputPath === 'object' && lt(angularVersion, '17.1.0')) {
+    throw new Error(
+      `The "outputPath" option as an object requires Angular version 17.1.0 or greater. You are currently using version ${angularVersion}.`
+    );
+  }
 }

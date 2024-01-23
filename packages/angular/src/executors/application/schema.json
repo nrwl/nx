@@ -222,8 +222,41 @@
       "default": []
     },
     "outputPath": {
-      "type": "string",
-      "description": "The full path for the new output directory, relative to the current workspace."
+      "description": "Specify the output path relative to workspace root. _Note: the object notation is only supported in Angular versions >= 17.1.0_.",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "base": {
+              "type": "string",
+              "description": "Specify the output path relative to workspace root."
+            },
+            "browser": {
+              "type": "string",
+              "pattern": "^[-\\w\\.]*$",
+              "default": "browser",
+              "description": "The output directory name of your browser build within the output path base. Defaults to 'browser'."
+            },
+            "server": {
+              "type": "string",
+              "pattern": "^[-\\w\\.]*$",
+              "default": "server",
+              "description": "The output directory name of your server build within the output path base. Defaults to 'server'."
+            },
+            "media": {
+              "type": "string",
+              "pattern": "^[-\\w\\.]+$",
+              "default": "media",
+              "description": "The output directory name of your media files within the output browser directory. Defaults to 'media'."
+            }
+          },
+          "required": ["base"],
+          "additionalProperties": false
+        },
+        {
+          "type": "string"
+        }
+      ]
     },
     "aot": {
       "type": "boolean",
