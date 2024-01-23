@@ -661,4 +661,80 @@ describe('defaultChangelogRenderer()', () => {
       `);
     });
   });
+
+  describe('dependency bumps', () => {
+    it('should render the dependency bumps in addition to the commits', async () => {
+      expect(
+        await defaultChangelogRenderer({
+          projectGraph,
+          commits,
+          releaseVersion: 'v1.1.0',
+          entryWhenNoChanges: false as const,
+          changelogRenderOptions: {
+            authors: true,
+          },
+          project: 'pkg-a',
+          dependencyBumps: [
+            {
+              dependencyName: 'pkg-b',
+              newVersion: '2.0.0',
+            },
+          ],
+        })
+      ).toMatchInlineSnapshot(`
+        "## v1.1.0
+
+
+        ### 🚀 Features
+
+        - **pkg-a:** new hotness
+
+
+        ### 🩹 Fixes
+
+        - all packages fixed
+
+        - **pkg-a:** squashing bugs
+
+
+        ### 🧱 Updated Dependencies
+
+        - Updated pkg-b to 2.0.0
+
+
+        ### ❤️  Thank You
+
+        - James Henry"
+      `);
+    });
+
+    it('should render the dependency bumps and release version title even when there are no commits', async () => {
+      expect(
+        await defaultChangelogRenderer({
+          projectGraph,
+          commits: [],
+          releaseVersion: 'v3.1.0',
+          entryWhenNoChanges:
+            'should not be printed because we have dependency bumps',
+          changelogRenderOptions: {
+            authors: true,
+          },
+          project: 'pkg-a',
+          dependencyBumps: [
+            {
+              dependencyName: 'pkg-b',
+              newVersion: '4.0.0',
+            },
+          ],
+        })
+      ).toMatchInlineSnapshot(`
+        "## v3.1.0
+
+
+        ### 🧱 Updated Dependencies
+
+        - Updated pkg-b to 4.0.0"
+      `);
+    });
+  });
 });

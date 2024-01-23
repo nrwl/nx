@@ -51,7 +51,7 @@ export type {
   VersionData,
 } from './utils/shared';
 
-export const validReleaseVersionPrefixes = ['auto', '', '~', '^'];
+export const validReleaseVersionPrefixes = ['auto', '', '~', '^', '='];
 
 export interface ReleaseVersionGeneratorSchema {
   // The projects being versioned in the current execution
@@ -68,6 +68,12 @@ export interface ReleaseVersionGeneratorSchema {
   firstRelease?: boolean;
   // auto means the existing prefix will be preserved, and is the default behavior
   versionPrefix?: typeof validReleaseVersionPrefixes[number];
+  updateDependents?: {
+    // "auto" means "only when the dependents are already included in the current batch", and is the default
+    when?: 'auto' | 'always';
+    // in the case "when" is set to "always", what semver bump should be applied to the dependents which are not included in the current batch
+    bump?: 'patch' | 'minor' | 'major';
+  };
 }
 
 export interface NxReleaseVersionResult {
@@ -155,8 +161,13 @@ export async function releaseVersion(
   const versionData: VersionData = {};
   const commitMessage: string | undefined =
     args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
-  const additionalChangedFiles = new Set<string>();
   const generatorCallbacks: (() => Promise<void>)[] = [];
+
+  /**
+   * additionalChangedFiles are files which need to be updated as a side-effect of versioning (such as package manager lock files),
+   * and need to get staged and committed as part of the existing commit, if applicable.
+   */
+  const additionalChangedFiles = new Set<string>();
 
   if (args.projects?.length) {
     /**

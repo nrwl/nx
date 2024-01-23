@@ -367,7 +367,7 @@ function resolveChangelogVersions(
           versionData[projectName] = {
             newVersion: args.version,
             currentVersion: '', // not relevant within changelog/commit generation
-            dependentProjects: [], // not relevant within changelog/commit generation
+            additionalDependentProjects: [], // not relevant within changelog/commit generation
           };
           continue;
         }
@@ -785,7 +785,37 @@ async function generateChangelogForProjects(
 
   const changelogRenderer = resolveChangelogRenderer(config.renderer);
 
+  const projectToAdditionalDependencyProjectNames = new Map<
+    ProjectGraphProjectNode,
+    string[]
+  >();
+
   for (const project of projects) {
+    const additionalDependentProjects =
+      projectsVersionData[project.name]?.additionalDependentProjects || [];
+    if (additionalDependentProjects.length) {
+      for (const dependentProject of additionalDependentProjects) {
+        const dependentProjectNode =
+          projectGraph.nodes[dependentProject.source];
+        if (
+          !projectToAdditionalDependencyProjectNames.has(dependentProjectNode)
+        ) {
+          projectToAdditionalDependencyProjectNames.set(dependentProjectNode, [
+            project.name,
+          ]);
+          continue;
+        }
+        projectToAdditionalDependencyProjectNames
+          .get(dependentProjectNode)
+          .push(project.name);
+      }
+    }
+  }
+
+  for (const project of [
+    ...projects,
+    ...projectToAdditionalDependencyProjectNames.keys(),
+  ]) {
     let interpolatedTreePath = config.file || '';
     if (interpolatedTreePath) {
       interpolatedTreePath = interpolate(interpolatedTreePath, {
@@ -835,21 +865,35 @@ async function generateChangelogForProjects(
         ? getGitHubRepoSlug(gitRemote)
         : undefined;
 
+    const dependencyBumps = projectToAdditionalDependencyProjectNames.has(
+      project
+    )
+      ? projectToAdditionalDependencyProjectNames.get(project).map((dep) => {
+          return {
+            dependencyName: dep,
+            newVersion: projectsVersionData[dep].newVersion,
+          };
+        })
+      : undefined;
+
     let contents = await changelogRenderer({
       projectGraph,
       commits,
       releaseVersion: releaseVersion.rawVersion,
       project: project.name,
       repoSlug: githubRepoSlug,
-      entryWhenNoChanges:
-        typeof config.entryWhenNoChanges === 'string'
-          ? interpolate(config.entryWhenNoChanges, {
-              projectName: project.name,
-              projectRoot: project.data.root,
-              workspaceRoot: '', // within the tree, workspaceRoot is the root
-            })
-          : false,
+      // If we have dependency bumps to print, the entryWhenNoChanges config is not appropriate
+      entryWhenNoChanges: dependencyBumps
+        ? false
+        : typeof config.entryWhenNoChanges === 'string'
+        ? interpolate(config.entryWhenNoChanges, {
+            projectName: project.name,
+            projectRoot: project.data.root,
+            workspaceRoot: '', // within the tree, workspaceRoot is the root
+          })
+        : false,
       changelogRenderOptions: config.renderOptions,
+      dependencyBumps,
     });
 
     /**

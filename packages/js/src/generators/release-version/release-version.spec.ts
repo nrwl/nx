@@ -91,31 +91,18 @@ describe('release-version', () => {
         "callback": [Function],
         "data": {
           "my-lib": {
+            "additionalDependentProjects": [],
             "currentVersion": "0.0.1",
-            "dependentProjects": [
-              {
-                "dependencyCollection": "dependencies",
-                "source": "project-with-dependency-on-my-pkg",
-                "target": "my-lib",
-                "type": "static",
-              },
-              {
-                "dependencyCollection": "devDependencies",
-                "source": "project-with-devDependency-on-my-pkg",
-                "target": "my-lib",
-                "type": "static",
-              },
-            ],
             "newVersion": "1.0.0",
           },
           "project-with-dependency-on-my-pkg": {
+            "additionalDependentProjects": [],
             "currentVersion": "0.0.1",
-            "dependentProjects": [],
             "newVersion": "1.0.0",
           },
           "project-with-devDependency-on-my-pkg": {
+            "additionalDependentProjects": [],
             "currentVersion": "0.0.1",
-            "dependentProjects": [],
             "newVersion": "1.0.0",
           },
         },
@@ -442,78 +429,252 @@ To fix this you will either need to add a package.json file at that location, or
         `);
       });
 
-      it(`should update dependents even when filtering to a subset of projects which do not include those dependents`, async () => {
-        expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
-          '0.0.1'
-        );
-        expect(
-          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
-        ).toMatchInlineSnapshot(`
-          {
-            "dependencies": {
-              "my-lib": "0.0.1",
-            },
-            "name": "project-with-dependency-on-my-pkg",
-            "version": "0.0.1",
-          }
-        `);
-        expect(
-          readJson(
-            tree,
-            'libs/project-with-devDependency-on-my-pkg/package.json'
-          )
-        ).toMatchInlineSnapshot(`
-          {
-            "devDependencies": {
-              "my-lib": "0.0.1",
-            },
-            "name": "project-with-devDependency-on-my-pkg",
-            "version": "0.0.1",
-          }
-        `);
+      describe('updateDependentsOptions', () => {
+        it(`should not update dependents when filtering to a subset of projects by default`, async () => {
+          expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+            '0.0.1'
+          );
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.1",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.1",
+            }
+          `);
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.1",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.1",
+            }
+          `);
 
-        await releaseVersionGenerator(tree, {
-          projects: [projectGraph.nodes['my-lib']], // version only my-lib
-          projectGraph,
-          specifier: '9.9.9', // user CLI specifier override set, no prompting should occur
-          currentVersionResolver: 'disk',
-          specifierSource: 'prompt',
-          releaseGroup: createReleaseGroup('independent'),
+          await releaseVersionGenerator(tree, {
+            projects: [projectGraph.nodes['my-lib']], // version only my-lib
+            projectGraph,
+            specifier: '9.9.9', // user CLI specifier override set, no prompting should occur
+            currentVersionResolver: 'disk',
+            specifierSource: 'prompt',
+            releaseGroup: createReleaseGroup('independent'),
+          });
+
+          expect(readJson(tree, 'libs/my-lib/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "name": "my-lib",
+              "version": "9.9.9",
+            }
+          `);
+
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.1",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.1",
+            }
+          `);
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.1",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.1",
+            }
+          `);
         });
 
-        expect(readJson(tree, 'libs/my-lib/package.json'))
-          .toMatchInlineSnapshot(`
-          {
-            "name": "my-lib",
-            "version": "9.9.9",
-          }
-        `);
+        it(`should not update dependents when filtering to a subset of projects by default, if "when" is set to "auto"`, async () => {
+          expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+            '0.0.1'
+          );
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.1",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.1",
+            }
+          `);
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.1",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.1",
+            }
+          `);
 
-        expect(
-          readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
-        ).toMatchInlineSnapshot(`
-          {
-            "dependencies": {
-              "my-lib": "9.9.9",
+          await releaseVersionGenerator(tree, {
+            projects: [projectGraph.nodes['my-lib']], // version only my-lib
+            projectGraph,
+            specifier: '9.9.9', // user CLI specifier override set, no prompting should occur
+            currentVersionResolver: 'disk',
+            specifierSource: 'prompt',
+            releaseGroup: createReleaseGroup('independent'),
+            updateDependents: {
+              when: 'auto',
             },
-            "name": "project-with-dependency-on-my-pkg",
-            "version": "0.0.1",
-          }
-        `);
-        expect(
-          readJson(
-            tree,
-            'libs/project-with-devDependency-on-my-pkg/package.json'
-          )
-        ).toMatchInlineSnapshot(`
-          {
-            "devDependencies": {
-              "my-lib": "9.9.9",
+          });
+
+          expect(readJson(tree, 'libs/my-lib/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "name": "my-lib",
+              "version": "9.9.9",
+            }
+          `);
+
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.1",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.1",
+            }
+          `);
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.1",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.1",
+            }
+          `);
+        });
+
+        it(`should update dependents even when filtering to a subset of projects which do not include those dependents, if "when" is "always"`, async () => {
+          expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+            '0.0.1'
+          );
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "0.0.1",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.1",
+            }
+          `);
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "0.0.1",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.1",
+            }
+          `);
+
+          await releaseVersionGenerator(tree, {
+            projects: [projectGraph.nodes['my-lib']], // version only my-lib
+            projectGraph,
+            specifier: '9.9.9', // user CLI specifier override set, no prompting should occur
+            currentVersionResolver: 'disk',
+            specifierSource: 'prompt',
+            releaseGroup: createReleaseGroup('independent'),
+            updateDependents: {
+              when: 'always',
             },
-            "name": "project-with-devDependency-on-my-pkg",
-            "version": "0.0.1",
-          }
-        `);
+          });
+
+          expect(readJson(tree, 'libs/my-lib/package.json'))
+            .toMatchInlineSnapshot(`
+            {
+              "name": "my-lib",
+              "version": "9.9.9",
+            }
+          `);
+
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-dependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "dependencies": {
+                "my-lib": "9.9.9",
+              },
+              "name": "project-with-dependency-on-my-pkg",
+              "version": "0.0.2",
+            }
+          `);
+          expect(
+            readJson(
+              tree,
+              'libs/project-with-devDependency-on-my-pkg/package.json'
+            )
+          ).toMatchInlineSnapshot(`
+            {
+              "devDependencies": {
+                "my-lib": "9.9.9",
+              },
+              "name": "project-with-devDependency-on-my-pkg",
+              "version": "0.0.2",
+            }
+          `);
+        });
       });
     });
   });

@@ -12,7 +12,7 @@ import { satisfies } from 'semver';
 import { Package } from './package';
 import { resolveVersionSpec } from './resolve-version-spec';
 
-interface LocalPackageDependency extends ProjectGraphDependency {
+export interface LocalPackageDependency extends ProjectGraphDependency {
   dependencyCollection:
     | 'dependencies'
     | 'devDependencies'
