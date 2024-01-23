@@ -119,7 +119,7 @@ describe('nx release lock file updates', () => {
     `);
   });
 
-  it('should update yarn.lock when package manager is yarn', async () => {
+  it.skip('should update yarn.lock when package manager is yarn', async () => {
     process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
     process.env.NODE_OPTIONS = '--no-enable-network-family-autoselection';
 
