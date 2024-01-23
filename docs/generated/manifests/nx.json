@@ -2494,17 +2494,6 @@
             "isExternal": false,
             "path": "/recipes/storybook/angular-configuring-styles",
             "tags": ["storybook"]
-          },
-          {
-            "id": "storybook-inferred-tasks",
-            "name": "Storybook Inferred Tasks",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/storybook/storybook-inferred-tasks",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/storybook/storybook-inferred-tasks",
-            "tags": ["inferred-tasks"]
           }
         ],
         "isExternal": false,
@@ -2630,17 +2619,6 @@
             "isExternal": false,
             "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
             "tags": []
-          },
-          {
-            "id": "nuxt-inferred-tasks",
-            "name": "Nuxt Inferred Tasks",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/nuxt/nuxt-inferred-tasks",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/nuxt/nuxt-inferred-tasks",
-            "tags": ["inferred-tasks"]
           }
         ],
         "isExternal": false,
@@ -2664,17 +2642,6 @@
             "isExternal": false,
             "path": "/recipes/vite/configure-vite",
             "tags": []
-          },
-          {
-            "id": "vite-inferred-tasks",
-            "name": "Vite Inferred Tasks",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/vite/vite-inferred-tasks",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/vite/vite-inferred-tasks",
-            "tags": ["inferred-tasks"]
           }
         ],
         "isExternal": false,
@@ -4369,17 +4336,6 @@
         "isExternal": false,
         "path": "/recipes/storybook/angular-configuring-styles",
         "tags": ["storybook"]
-      },
-      {
-        "id": "storybook-inferred-tasks",
-        "name": "Storybook Inferred Tasks",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/storybook/storybook-inferred-tasks",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/storybook/storybook-inferred-tasks",
-        "tags": ["inferred-tasks"]
       }
     ],
     "isExternal": false,
@@ -4517,17 +4473,6 @@
     "isExternal": false,
     "path": "/recipes/storybook/angular-configuring-styles",
     "tags": ["storybook"]
-  },
-  "/recipes/storybook/storybook-inferred-tasks": {
-    "id": "storybook-inferred-tasks",
-    "name": "Storybook Inferred Tasks",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/storybook/storybook-inferred-tasks",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/storybook/storybook-inferred-tasks",
-    "tags": ["inferred-tasks"]
   },
   "/recipes/cypress": {
     "id": "cypress",
@@ -4714,17 +4659,6 @@
         "isExternal": false,
         "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
         "tags": []
-      },
-      {
-        "id": "nuxt-inferred-tasks",
-        "name": "Nuxt Inferred Tasks",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/nuxt/nuxt-inferred-tasks",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/nuxt/nuxt-inferred-tasks",
-        "tags": ["inferred-tasks"]
       }
     ],
     "isExternal": false,
@@ -4741,17 +4675,6 @@
     "isExternal": false,
     "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
     "tags": []
-  },
-  "/recipes/nuxt/nuxt-inferred-tasks": {
-    "id": "nuxt-inferred-tasks",
-    "name": "Nuxt Inferred Tasks",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/nuxt/nuxt-inferred-tasks",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/nuxt/nuxt-inferred-tasks",
-    "tags": ["inferred-tasks"]
   },
   "/recipes/vite": {
     "id": "vite",
@@ -4770,17 +4693,6 @@
         "isExternal": false,
         "path": "/recipes/vite/configure-vite",
         "tags": []
-      },
-      {
-        "id": "vite-inferred-tasks",
-        "name": "Vite Inferred Tasks",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/vite/vite-inferred-tasks",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/vite/vite-inferred-tasks",
-        "tags": ["inferred-tasks"]
       }
     ],
     "isExternal": false,
@@ -4797,17 +4709,6 @@
     "isExternal": false,
     "path": "/recipes/vite/configure-vite",
     "tags": []
-  },
-  "/recipes/vite/vite-inferred-tasks": {
-    "id": "vite-inferred-tasks",
-    "name": "Vite Inferred Tasks",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/vite/vite-inferred-tasks",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/vite/vite-inferred-tasks",
-    "tags": ["inferred-tasks"]
   },
   "/recipes/webpack": {
     "id": "webpack",
