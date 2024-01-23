@@ -30,6 +30,9 @@
     "stylus-loader": "^7.1.0",
     "@nx/eslint": "^17.0.1"
   },
+  "peerDependencies": {
+    "@rspack/core": ">= 0.4.0"
+  },
   "nx-migrations": {
     "migrations": "./migrations.json"
   }
