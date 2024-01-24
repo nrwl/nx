@@ -24,7 +24,7 @@ export function SourcemapInfoToolTip({
 
   return (
     <div className="text-sm text-slate-700 dark:text-slate-400 max-w-md sm:max-w-full">
-      <div className="flex flex-col font-mono border-b py-2">
+      <div className="flex flex-col font-mono border-b border-slate-200 dark:border-slate-700/60 py-2">
         <p className="flex grow items-center gap-2">
           <span className="font-bold">{isTarget ? 'Created' : 'Set'} by:</span>
           <span className="inline-flex grow justify-between items-center">
