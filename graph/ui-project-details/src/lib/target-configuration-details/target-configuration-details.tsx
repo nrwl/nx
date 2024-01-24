@@ -177,8 +177,10 @@ export const TargetConfigurationDetails = forwardRef(
             </div>
             <div className="flex items-center gap-2">
               {onViewInTaskGraph && (
-                <span
-                  data-tooltip="View in Task Graph"
+                <button
+                  className="text-slate-600 dark:text-slate-300 text-sm ring-2 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-200 dark:hover:bg-slate-700/60 p-1 bg-inherit rounded-md"
+                  // TODO: fix tooltip overflow in collapsed state
+                  data-tooltip={collapsed ? false : 'View in Task Graph'}
                   data-tooltip-align-right
                 >
                   <EyeIcon
@@ -188,11 +190,16 @@ export const TargetConfigurationDetails = forwardRef(
                       onViewInTaskGraph({ projectName, targetName });
                     }}
                   />
-                </span>
+                </button>
               )}
 
               {onRunTarget && (
-                <span data-tooltip="Run Target" data-tooltip-align-right>
+                <span
+                  className="text-slate-600 dark:text-slate-300 text-sm ring-2 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-200 dark:hover:bg-slate-700/60 p-1 bg-inherit rounded-md"
+                  // TODO: fix tooltip overflow in collapsed state
+                  data-tooltip={collapsed ? false : 'Run Target'}
+                  data-tooltip-align-right
+                >
                   <PlayIcon
                     className="h-5 w-5 !cursor-pointer"
                     onClick={(e) => {
@@ -258,7 +265,7 @@ export const TargetConfigurationDetails = forwardRef(
               </h4>
               <p className="pl-5">
                 {executorLink ? (
-                  <span data-tooltip="View Documentation">
+                  <span>
                     <ExternalLink
                       href={executorLink ?? 'https://nx.dev/nx-api'}
                       text={
@@ -480,7 +487,7 @@ export const TargetConfigurationDetails = forwardRef(
                     </span>
                   </Tooltip>{' '}
                   {targetConfiguration.defaultConfiguration && (
-                    <span className="ml-3">
+                    <span className="ml-3 cursor-help">
                       <Pill
                         tooltip="Default Configuration"
                         text={targetConfiguration.defaultConfiguration}

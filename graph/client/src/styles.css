@@ -17,7 +17,6 @@
  * Tooltips
  */
 [data-tooltip] {
-  cursor: help;
   position: relative;
 }
 

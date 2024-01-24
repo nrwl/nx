@@ -13,7 +13,7 @@ export function Pill({
     <span
       data-tooltip={tooltip}
       className={twMerge(
-        'inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ',
+        'inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset',
         color === 'grey' &&
           'bg-slate-400/10 text-slate-600 ring-slate-400/40 dark:text-slate-400 dark:ring-slate-400/30',
         color === 'green' &&

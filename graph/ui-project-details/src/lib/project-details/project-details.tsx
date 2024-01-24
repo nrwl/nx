@@ -91,17 +91,22 @@ export const ProjectDetails = forwardRef(
         >
           <h1
             className={twMerge(
-              `flex items-center dark:text-slate-100`,
+              `flex items-center justify-between dark:text-slate-100`,
               isCompact ? `text-2xl gap-1` : `text-4xl mb-4 gap-2`
             )}
           >
-            {name}{' '}
-            {onViewInProjectGraph ? (
-              <EyeIcon
-                className="h-5 w-5 cursor-pointer"
-                onClick={() => onViewInProjectGraph({ projectName: name })}
-              ></EyeIcon>
-            ) : null}{' '}
+            <span>{name}</span>
+            <span>
+              {onViewInProjectGraph ? (
+                <button
+                  className="text-base cursor-pointer items-center inline-flex gap-2 text-slate-600 dark:text-slate-300 ring-2 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-md py-1 px-2"
+                  onClick={() => onViewInProjectGraph({ projectName: name })}
+                >
+                  <EyeIcon className="h-5 w-5 "></EyeIcon>
+                  <span>View In Graph</span>
+                </button>
+              ) : null}{' '}
+            </span>
           </h1>
           <div className="py-2 ">
             {projectData.tags && projectData.tags.length ? (
