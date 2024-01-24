@@ -88,7 +88,7 @@ Let me explain a couple of things that might be new to you.
 | File           | Description                                                                                                                                                                                                          |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `nx.json`      | This is where we fine-tune how Nx works. We define what [cacheable operations](/features/cache-task-results) there are, and configure our [task pipeline](/concepts/task-pipeline-configuration). More on that soon. |
-| `project.json` | This file contains project configuration for the `myreactapp` project. You can read more about it [here](/reference/project-configuration).                                                                          |
+| `project.json` | This file is where you can modify the inferred tasks for the `myreactapp` project. More about this later.                                                                          |
 
 ## Serving the App
 
@@ -120,7 +120,7 @@ Nx uses the following syntax to run tasks:
 
 ![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
-## Identify Tasks
+### Inferred Tasks
 
 Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors) project detail view or run:
 
@@ -142,7 +142,7 @@ export default defineConfig({
 
 Now if you look at the project details view, the outputs for the build target will say `{projectRoot}/build/myreactapp`. This feature ensures that Nx will always be caching the correct files.
 
-## Overriding Inferred Tasks
+### Overriding Inferred Tasks
 
 If you have some custom logic that Nx's plugins are not able to detect, you can always override the settings that the plugin infers. Let's say we want to cache both the `build/myreactapp` folder and the `build/assets` folder when the `build` task is run. We can set that value in the `project.json` file and Nx will merge the values from the inferred task with the value you define in the project configuration.
 
