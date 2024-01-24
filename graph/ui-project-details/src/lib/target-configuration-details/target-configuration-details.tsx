@@ -151,29 +151,18 @@ export const TargetConfigurationDetails = forwardRef(
           )}
           onClick={handleCollapseToggle}
         >
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <h3 className="font-bold mr-2">{targetName}</h3>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              {collapsed ? (
+                <ChevronDownIcon className="h-3 w-3" />
+              ) : (
+                <ChevronUpIcon className="h-3 w-3" />
+              )}
+              <h3 className="font-bold">{targetName}</h3>
               {collapsed && (
-                <p className="text-slate-600 mr-2">
+                <p className="text-slate-600">
                   {singleCommand ? singleCommand : targetConfiguration.executor}
                 </p>
-              )}
-            </div>
-            <div className="flex items-center">
-              {onViewInTaskGraph && (
-                <EyeIcon
-                  className={`h-4 w-4 mr-2 ${
-                    collapsed
-                      ? 'hidden group-hover:inline-block'
-                      : 'inline-block'
-                  }`}
-                  title="View in Task Graph"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onViewInTaskGraph({ projectName, targetName });
-                  }}
-                />
               )}
               {targetConfiguration.cache && (
                 <Tooltip
@@ -181,24 +170,32 @@ export const TargetConfigurationDetails = forwardRef(
                   strategy="fixed"
                   content={(<PropertyInfoTooltip type="cacheable" />) as any}
                 >
-                  <span className="rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 text-slate-50 mr-2">
+                  <span className="rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 text-slate-50">
                     Cacheable
                   </span>
                 </Tooltip>
               )}
+            </div>
+            <div className="flex items-center gap-2">
+              {onViewInTaskGraph && (
+                <EyeIcon
+                  className={`h-5 w-5`}
+                  title="View in Task Graph"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onViewInTaskGraph({ projectName, targetName });
+                  }}
+                />
+              )}
+
               {onRunTarget && (
                 <PlayIcon
-                  className="h-5 w-5 mr-2"
+                  className="h-4 w-4"
                   onClick={(e) => {
                     e.stopPropagation();
                     onRunTarget({ projectName, targetName });
                   }}
                 />
-              )}
-              {collapsed ? (
-                <ChevronDownIcon className="h-3 w-3" />
-              ) : (
-                <ChevronUpIcon className="h-3 w-3" />
               )}
             </div>
           </div>
