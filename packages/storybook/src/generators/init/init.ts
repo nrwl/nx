@@ -19,6 +19,7 @@ import {
 } from '../../utils/utilities';
 import { nxVersion, storybookVersion } from '../../utils/versions';
 import { Schema } from './schema';
+import { updateGitignore } from './lib/update-gitignore';
 
 function checkDependenciesInstalled(
   host: Tree,
@@ -92,6 +93,7 @@ function moveToDevDependencies(tree: Tree): GeneratorCallback {
 export async function initGenerator(tree: Tree, schema: Schema) {
   if (process.env.NX_PCV3 === 'true') {
     addPlugin(tree);
+    updateGitignore(tree);
   } else {
     addCacheableOperation(tree);
   }
