@@ -45,13 +45,11 @@ describe('nx release lock file updates', () => {
   let pkg3: string;
   let previousPackageManager: string;
   let previousYarnEnableImmutableInstalls: string;
-  let previousNodeOptions: string;
 
   beforeAll(() => {
     previousPackageManager = process.env.SELECTED_PM;
     previousYarnEnableImmutableInstalls =
       process.env.YARN_ENABLE_IMMUTABLE_INSTALLS;
-    previousNodeOptions = process.env.NODE_OPTIONS;
   });
 
   // project will be created by each test individually
@@ -90,7 +88,6 @@ describe('nx release lock file updates', () => {
     process.env.SELECTED_PM = previousPackageManager;
     process.env.YARN_ENABLE_IMMUTABLE_INSTALLS =
       previousYarnEnableImmutableInstalls;
-    process.env.NODE_OPTIONS = previousNodeOptions;
   });
 
   it('should update package-lock.json when package manager is npm', async () => {
@@ -119,9 +116,8 @@ describe('nx release lock file updates', () => {
     `);
   });
 
-  it.skip('should update yarn.lock when package manager is yarn', async () => {
+  it('should update yarn.lock when package manager is yarn', async () => {
     process.env.YARN_ENABLE_IMMUTABLE_INSTALLS = 'false';
-    process.env.NODE_OPTIONS = '--no-enable-network-family-autoselection';
 
     initializeProject('yarn');
 
@@ -130,6 +126,8 @@ describe('nx release lock file updates', () => {
       return json;
     });
 
+    runCommand(`corepack prepare yarn@4.0.2 --activate`);
+    runCommand(`yarn set version 4.0.2`);
     runCommand(`yarn install`);
 
     // workaround for NXC-143
