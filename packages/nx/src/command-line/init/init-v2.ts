@@ -97,7 +97,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     execSync(
-      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init-pcv3 --quiet --no-interactive`,
+      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init-pcv3 --quiet --hideFormatLogs --no-interactive`,
       {
         stdio: [0, 1, 2],
         cwd: repoRoot,

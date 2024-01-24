@@ -95,6 +95,7 @@ function printSuccessMessage(url: string) {
 interface ConnectToNxCloudOptions {
   analytics: boolean;
   installationSource: string;
+  hideFormatLogs?: boolean;
 }
 
 function addNxCloudOptionsToNxJson(
@@ -135,7 +136,9 @@ export async function connectToNxCloud(
 
     addNxCloudOptionsToNxJson(tree, nxJson, r.token);
 
-    await formatChangedFilesWithPrettierIfAvailable(tree);
+    await formatChangedFilesWithPrettierIfAvailable(tree, {
+      silent: schema.hideFormatLogs,
+    });
 
     return () => printSuccessMessage(r.url);
   }
