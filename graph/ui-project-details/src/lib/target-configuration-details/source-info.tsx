@@ -28,7 +28,7 @@ export function SourceInfo(props: {
         {/*<span className="italic text-gray-500">*/}
         {/*  <InformationCircleIcon className="w-3 h-3" />*/}
         {/*</span>*/}
-        <span className="italic text-gray-500">
+        <span className="italic text-gray-500 text-sm">
           {isTarget ? 'Created' : 'Set'} by {props.data?.[1]} from{' '}
           {props.data?.[0]}
         </span>

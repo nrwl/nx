@@ -158,9 +158,9 @@ export const TargetConfigurationDetails = forwardRef(
               ) : (
                 <ChevronUpIcon className="h-3 w-3" />
               )}
-              <h3 className="font-bold">{targetName}</h3>
+              <h3 className="font-medium">{targetName}</h3>
               {collapsed && (
-                <p className="text-slate-600">
+                <p className="text-slate-600 text-sm">
                   {singleCommand ? singleCommand : targetConfiguration.executor}
                 </p>
               )}
@@ -234,7 +234,7 @@ export const TargetConfigurationDetails = forwardRef(
             <div className="mb-4 group">
               <h4 className="mb-4">
                 {singleCommand ? (
-                  <span className="font-bold">
+                  <span className="font-medium">
                     Command
                     <span className="hidden group-hover:inline ml-2 mb-1">
                       <CopyToClipboard
@@ -249,7 +249,7 @@ export const TargetConfigurationDetails = forwardRef(
                     openAction="hover"
                     content={(<PropertyInfoTooltip type="executors" />) as any}
                   >
-                    <span className="font-bold">
+                    <span className="font-medium">
                       <TooltipTriggerText>Executor</TooltipTriggerText>
                     </span>
                   </Tooltip>
@@ -282,7 +282,7 @@ export const TargetConfigurationDetails = forwardRef(
                     openAction="hover"
                     content={(<PropertyInfoTooltip type="inputs" />) as any}
                   >
-                    <span className="font-bold">
+                    <span className="font-medium">
                       <TooltipTriggerText>Inputs</TooltipTriggerText>
                     </span>
                   </Tooltip>
@@ -332,7 +332,7 @@ export const TargetConfigurationDetails = forwardRef(
                     openAction="hover"
                     content={(<PropertyInfoTooltip type="outputs" />) as any}
                   >
-                    <span className="font-bold">
+                    <span className="font-medium">
                       <TooltipTriggerText>Outputs</TooltipTriggerText>
                     </span>
                   </Tooltip>
@@ -382,7 +382,7 @@ export const TargetConfigurationDetails = forwardRef(
                     openAction="hover"
                     content={(<PropertyInfoTooltip type="dependsOn" />) as any}
                   >
-                    <span className="font-bold">
+                    <span className="font-medium">
                       <TooltipTriggerText>Depends On</TooltipTriggerText>
                     </span>
                   </Tooltip>
@@ -434,7 +434,7 @@ export const TargetConfigurationDetails = forwardRef(
                     openAction="hover"
                     content={(<PropertyInfoTooltip type="options" />) as any}
                   >
-                    <span className="font-bold">
+                    <span className="font-medium">
                       <TooltipTriggerText>Options</TooltipTriggerText>
                     </span>
                   </Tooltip>
@@ -474,7 +474,7 @@ export const TargetConfigurationDetails = forwardRef(
                       (<PropertyInfoTooltip type="configurations" />) as any
                     }
                   >
-                    <span className="font-bold">
+                    <span className="font-medium">
                       <TooltipTriggerText>Configurations</TooltipTriggerText>
                     </span>
                   </Tooltip>{' '}
