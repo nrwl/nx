@@ -236,6 +236,7 @@ class CLIOutput {
     );
     this.writeToStdOut(commandOutputWithStatus);
     this.addNewline();
+    this.addNewline();
   }
 
   private normalizeMessage(message: string) {
