@@ -178,24 +178,30 @@ export const TargetConfigurationDetails = forwardRef(
             </div>
             <div className="flex items-center gap-2">
               {onViewInTaskGraph && (
-                <EyeIcon
-                  className={`h-5 w-5`}
-                  title="View in Task Graph"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onViewInTaskGraph({ projectName, targetName });
-                  }}
-                />
+                <span
+                  data-tooltip="View in Task Graph"
+                  data-tooltip-align-right
+                >
+                  <EyeIcon
+                    className={`h-5 w-5 !cursor-pointer`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onViewInTaskGraph({ projectName, targetName });
+                    }}
+                  />
+                </span>
               )}
 
               {onRunTarget && (
-                <PlayIcon
-                  className="h-4 w-4"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRunTarget({ projectName, targetName });
-                  }}
-                />
+                <span data-tooltip="Run Target" data-tooltip-align-right>
+                  <PlayIcon
+                    className="h-5 w-5 !cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRunTarget({ projectName, targetName });
+                    }}
+                  />
+                </span>
               )}
             </div>
           </div>
@@ -251,15 +257,16 @@ export const TargetConfigurationDetails = forwardRef(
               </h4>
               <p className="pl-5">
                 {executorLink ? (
-                  <ExternalLink
-                    href={executorLink ?? 'https://nx.dev/nx-api'}
-                    text={
-                      singleCommand
-                        ? singleCommand
-                        : targetConfiguration.executor
-                    }
-                    title="View Documentation"
-                  />
+                  <span data-tooltip="View Documentation">
+                    <ExternalLink
+                      href={executorLink ?? 'https://nx.dev/nx-api'}
+                      text={
+                        singleCommand
+                          ? singleCommand
+                          : targetConfiguration.executor
+                      }
+                    />
+                  </span>
                 ) : singleCommand ? (
                   singleCommand
                 ) : (
@@ -473,8 +480,8 @@ export const TargetConfigurationDetails = forwardRef(
                   </Tooltip>{' '}
                   {targetConfiguration.defaultConfiguration && (
                     <span
-                      className="ml-3 font-bold rounded-full inline-block text-xs bg-sky-500 px-2 text-slate-50  mr-6"
-                      title="Default Configuration"
+                      data-tooltip="Default Configuration"
+                      className="ml-3 rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 text-slate-50  mr-6"
                     >
                       {targetConfiguration.defaultConfiguration}
                     </span>

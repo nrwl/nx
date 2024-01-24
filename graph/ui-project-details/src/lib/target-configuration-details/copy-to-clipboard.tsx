@@ -16,16 +16,17 @@ export function CopyToClipboard(props: CopyToClipboardProps): JSX.Element {
     }
   });
   return (
-    <ClipboardIcon
-      title="Copy to clipboard"
-      className={`inline h-4 w-5 cursor-pointer ${
-        copied ? 'text-sky-500' : ''
-      }`}
-      onClick={(e) => {
-        e.stopPropagation();
-        setCopied(true);
-        props.onCopy();
-      }}
-    ></ClipboardIcon>
+    <span data-tooltip="Copy to clipboard" data-tooltip-align-right>
+      <ClipboardIcon
+        className={`inline h-4 w-5 !cursor-pointer ${
+          copied ? 'text-sky-500' : ''
+        }`}
+        onClick={(e) => {
+          e.stopPropagation();
+          setCopied(true);
+          props.onCopy();
+        }}
+      ></ClipboardIcon>
+    </span>
   );
 }
