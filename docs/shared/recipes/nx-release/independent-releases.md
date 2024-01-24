@@ -28,10 +28,12 @@ Since each project can have a different version, Nx Release will create a git ta
 
 This can still be changed with the `release.releaseTagPattern` property in `nx.json`, but be sure to include `{projectName}` in the pattern so that each generated tag is unique.
 
+For example, to generate the tags `release/pkg-1/1.1.0` and `release/pkg-2/1.2.1` for the `pkg-1` and `pkg-2` projects respectively, you would use the following configuration in nx.json:
+
 ```json nx.json
 {
   "release": {
-    "releaseTagPattern": "{projectName}@{version}"
+    "releaseTagPattern": "release/{projectName}/{version}"
   }
 }
 ```
@@ -68,10 +70,24 @@ Just like before, you can still preview changes to the changelog files by runnin
 
 ## Using the Projects Filter
 
-One of the key benefits of independent releases is the ability to release only a subset of projects. Nx Release supports this with the `--projects` option. This option accepts a comma separated list of project names. For example, to release only the `pkg-1` and `pkg-2` projects, you would run:
+One of the key benefits of independent releases is the ability to release only a subset of projects. Nx Release supports this with the `--projects` option. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s projects filtering, such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character. A few examples:
+
+Release only the `pkg-1` and `pkg-2` projects:
 
 ```shell
 nx release --projects=pkg-1,pkg-2
 ```
 
-All other projects in the workspace will be ignored and only `pkg-1` and `pkg-2` will be versioned, have their changelogs updated, and published.
+Release all projects in the `server` directory:
+
+```shell
+nx release --projects=server/*
+```
+
+Release all projects except those in the `ui` directory:
+
+```shell
+nx release --projects='!ui/*'
+```
+
+All other projects in the workspace will be ignored and only those that match the filter will be versioned, have their changelogs updated, and published.

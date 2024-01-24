@@ -52,7 +52,7 @@ nx release --first-release --dry-run
 
 ### Picking a New Version
 
-Nx Release will prompt you to pick a version bump for all the packages in the release. By default, all packages versions are kept in sync, so only one needs to be selected.
+Nx Release will prompt you to pick a version bump for all the packages in the release. By default, all package versions are kept in sync, so the prompt only needs to be answered one time.
 
 ```{% command="nx release --first-release --dry-run" %}
 
@@ -257,12 +257,12 @@ The commit message created by Nx Release defaults to 'chore(release): publish {v
 
 The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTagPattern` property in nx.json.
 
-An example nx.json file with these properties set:
+For this same example, if you want the commit message to be 'chore(release): 1.2.3' and the tag to be `release/1.2.3`, you would configure nx.json like this:
 
 ```json nx.json
 {
   "release": {
-    "releaseTagPattern": "v{version}",
+    "releaseTagPattern": "release/{version}",
     "git": {
       "commitMessage": "chore(release): {version}"
     }
