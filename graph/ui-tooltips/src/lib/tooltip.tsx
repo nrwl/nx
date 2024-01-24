@@ -98,6 +98,7 @@ export function Tooltip({
     outsidePressEvent: 'mousedown',
   });
   const hover = useHover(context, {
+    restMs: 300,
     enabled: openAction === 'hover',
     delay: { open: 0, close: 150 },
     handleClose: safePolygon({ buffer }),
