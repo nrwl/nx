@@ -1,8 +1,8 @@
-# Releasing Projects Independently
+# Release Projects Independently
 
 Nx Release supports releasing projects independently. This is useful when you have a monorepo with projects that are not released on the same schedule.
 
-## Configuring Independent Releases
+## Configure Independent Releases
 
 To configure independent releases, add the following property to your `nx.json` file:
 
@@ -66,11 +66,11 @@ Nx Release will no longer generate and update a workspace level `CHANGELOG.md` f
 }
 ```
 
-Just like before, you can still preview changes to the changelog files by running Nx Release with the `--dry-run` option.
+Just like with [fixed releases](/recipes/nx-release/get-started-with-nx-release), you can preview changes to the changelog files by running Nx Release with the `--dry-run` option.
 
-## Using the Projects Filter
+## Use the Projects Filter
 
-One of the key benefits of independent releases is the ability to release only a subset of projects. Nx Release supports this with the `--projects` option. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s projects filtering, such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character. A few examples:
+One of the key benefits of independent releases is the ability to release only a subset of projects. Nx Release supports this with the `--projects` option. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/nx-api/nx/documents/run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character. A few examples:
 
 Release only the `pkg-1` and `pkg-2` projects:
 

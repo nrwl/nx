@@ -1113,24 +1113,24 @@
   "nx-release": [
     {
       "description": "",
-      "file": "shared/recipes/nx-release/getting-started-with-nx-release",
-      "id": "getting-started-with-nx-release",
-      "name": "Getting Started with Nx Release",
-      "path": "/recipes/nx-release/getting-started-with-nx-release"
+      "file": "shared/recipes/nx-release/get-started-with-nx-release",
+      "id": "get-started-with-nx-release",
+      "name": "Get Started with Nx Release",
+      "path": "/recipes/nx-release/get-started-with-nx-release"
     },
     {
       "description": "",
-      "file": "shared/recipes/nx-release/independent-releases",
-      "id": "independent-releases",
-      "name": "Releasing Projects Independently",
-      "path": "/recipes/nx-release/independent-releases"
+      "file": "shared/recipes/nx-release/release-projects-independently",
+      "id": "release-projects-independently",
+      "name": "Release Projects Independently",
+      "path": "/recipes/nx-release/release-projects-independently"
     },
     {
       "description": "",
-      "file": "shared/recipes/nx-release/automatic-versioning-with-conventional-commits",
-      "id": "automatic-versioning-with-conventional-commits",
-      "name": "Automatic Versioning with Conventional Commits",
-      "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits"
+      "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+      "id": "automatically-version-with-conventional-commits",
+      "name": "Automatically Version with Conventional Commits",
+      "path": "/recipes/nx-release/automatically-version-with-conventional-commits"
     }
   ],
   "database": [

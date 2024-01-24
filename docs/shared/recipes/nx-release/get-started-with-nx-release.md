@@ -1,19 +1,19 @@
-# Getting Started with Nx Release
+# Get Started with Nx Release
 
 This recipe guides you through versioning packages, generating changelogs, and publishing packages in a JavaScript monorepo with Nx Release.
 
-## Getting set up
+## Initialize Nx Release in Your Workspace
 
-### Installing Nx
+### Install Nx
 
 Ensure that Nx is installed in your monorepo. Check out the [Installation docs](/getting-started/installation) for instructions on created a new Nx workspace or adding Nx to an existing project.
 
-### Adding the JavaScript Plugin
+### Add the JavaScript Plugin
 
-The @nx/js package is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
+The [`@nx/js` package](/nx-api/js) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
 
 ```shell
-npm install -D @nx/js
+nx add @nx/js
 ```
 
 ### Configure Projects to Release
@@ -24,7 +24,7 @@ If you want to release all of the projects in your workspace, such as when deali
 
 If you have a mixed workspace in which you also have some applications, e2e testing projects or other things you don't want to release, you can configure `nx release` to target only the projects you want to release.
 
-Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s projects filtering, such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character.
+Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s [projects filtering](/nx-api/nx/documents/run-many), such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character.
 
 For example, to release just the projects in the `packages` directory:
 
@@ -50,7 +50,7 @@ To preview your first release, run:
 nx release --first-release --dry-run
 ```
 
-### Picking a New Version
+### Pick a New Version
 
 Nx Release will prompt you to pick a version bump for all the packages in the release. By default, all package versions are kept in sync, so the prompt only needs to be answered one time.
 
@@ -71,7 +71,7 @@ pkg-1 📄 Resolved the current version as 0.0.1 from packages/pkg-1/package.jso
   Custom exact version
 ```
 
-### Previewing the Results
+### Preview the Results
 
 After this prompt, the command will finish, showing you the preview of changes that would have been made if the `--dry-run` option was not passed.
 
@@ -247,11 +247,11 @@ Published to https://registry.npmjs.org with tag "latest"
 
 ```
 
-## Managing Git Operations
+## Manage Git Operations
 
-By default, Nx Release will stage all changes it makes with git. This includes updating package.json files, creating changelog files, and updating the package-lock.json file. After staging the changes, Nx Release will commit the changes and create a git tag for the release.
+By default, Nx Release will stage all changes it makes with git. This includes updating `package.json` files, creating changelog files, and updating the `package-lock.json` file. After staging the changes, Nx Release will commit the changes and create a git tag for the release.
 
-### Customizing the Commit Message and Tag Pattern
+### Customize the Commit Message and Tag Pattern
 
 The commit message created by Nx Release defaults to 'chore(release): publish {version}', where `{version}` will be dynamically interpolated with the relevant value based on your actual release, but can be customized with the `release.git.commitMessage` property in nx.json.
 

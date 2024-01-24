@@ -1169,22 +1169,22 @@
               "description": "Recipes for releasing with Nx release.",
               "itemList": [
                 {
-                  "name": "Getting Started with Nx Release",
-                  "id": "getting-started-with-nx-release",
+                  "name": "Get Started with Nx Release",
+                  "id": "get-started-with-nx-release",
                   "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/getting-started-with-nx-release"
+                  "file": "shared/recipes/nx-release/get-started-with-nx-release"
                 },
                 {
-                  "name": "Releasing Projects Independently",
-                  "id": "independent-releases",
+                  "name": "Release Projects Independently",
+                  "id": "release-projects-independently",
                   "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/independent-releases"
+                  "file": "shared/recipes/nx-release/release-projects-independently"
                 },
                 {
-                  "name": "Automatic Versioning with Conventional Commits",
-                  "id": "automatic-versioning-with-conventional-commits",
+                  "name": "Automatically Version with Conventional Commits",
+                  "id": "automatically-version-with-conventional-commits",
                   "tags": ["nx-release"],
-                  "file": "shared/recipes/nx-release/automatic-versioning-with-conventional-commits"
+                  "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
                 }
               ]
             },

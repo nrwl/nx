@@ -1,8 +1,8 @@
-# Automatic Versioning with Conventional Commits
+# Automatically Version with Conventional Commits
 
 If you wish to bypass the versioning prompt, you can configure Nx Release to defer to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) standard to determine the version bump automatically. This is useful for automating the versioning process in a CI/CD pipeline.
 
-## Enabling Automatic Versioning
+## Enable Automatic Versioning
 
 To enable automatic versioning via conventional commits, set the `release.version.conventionalCommits` property to `true` in `nx.json`:
 
@@ -16,7 +16,7 @@ To enable automatic versioning via conventional commits, set the `release.versio
 }
 ```
 
-## Determining the Version Bump
+## Determine the Version Bump
 
 Nx Release will use the commit messages since the last release to determine the version bump. It will look at the type of each commit and determine the highest version bump from the following list:
 
@@ -32,15 +32,15 @@ For example, if the git history looks like this:
   - chore(release): 1.0.0
 ```
 
-then Nx Release will select the `minor` and elect to release version 1.1.0. This is because there is a `feat` commit since the last release of 1.0.0.
+then Nx Release will select the `minor` version bump and elect to release version 1.1.0. This is because there is a `feat` commit since the last release of 1.0.0.
 
 {% callout type="info" title="No changes detected" %}
-If Nx Release does not find any relevant commits since the last release, it will skip releasing a new version. This works with [independent releases](/recipes/nx-release/independent-releases) as well, allowing for only some projects to be released and some to be skipped.
+If Nx Release does not find any relevant commits since the last release, it will skip releasing a new version. This works with [independent releases](/recipes/nx-release/release-projects-independently) as well, allowing for only some projects to be released and some to be skipped.
 {% /callout %}
 
 ## Usage with Independent Releases
 
-If you are using [independent releases](/recipes/nx-release/independent-releases), Nx Release will determine the version bump for each project independently. For example, if the git history looks like this:
+If you are using [independent releases](/recipes/nx-release/release-projects-independently), Nx Release will determine the version bump for each project independently. For example, if the git history looks like this:
 
 ```
   - fix(pkg-1): fix something

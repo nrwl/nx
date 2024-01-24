@@ -3264,36 +3264,36 @@
         "file": "",
         "itemList": [
           {
-            "id": "getting-started-with-nx-release",
-            "name": "Getting Started with Nx Release",
+            "id": "get-started-with-nx-release",
+            "name": "Get Started with Nx Release",
             "description": "",
             "mediaImage": "",
-            "file": "shared/recipes/nx-release/getting-started-with-nx-release",
+            "file": "shared/recipes/nx-release/get-started-with-nx-release",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/nx-release/getting-started-with-nx-release",
+            "path": "/recipes/nx-release/get-started-with-nx-release",
             "tags": ["nx-release"]
           },
           {
-            "id": "independent-releases",
-            "name": "Releasing Projects Independently",
+            "id": "release-projects-independently",
+            "name": "Release Projects Independently",
             "description": "",
             "mediaImage": "",
-            "file": "shared/recipes/nx-release/independent-releases",
+            "file": "shared/recipes/nx-release/release-projects-independently",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/nx-release/independent-releases",
+            "path": "/recipes/nx-release/release-projects-independently",
             "tags": ["nx-release"]
           },
           {
-            "id": "automatic-versioning-with-conventional-commits",
-            "name": "Automatic Versioning with Conventional Commits",
+            "id": "automatically-version-with-conventional-commits",
+            "name": "Automatically Version with Conventional Commits",
             "description": "",
             "mediaImage": "",
-            "file": "shared/recipes/nx-release/automatic-versioning-with-conventional-commits",
+            "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
             "itemList": [],
             "isExternal": false,
-            "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits",
+            "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
             "tags": ["nx-release"]
           }
         ],
@@ -5777,36 +5777,36 @@
     "file": "",
     "itemList": [
       {
-        "id": "getting-started-with-nx-release",
-        "name": "Getting Started with Nx Release",
+        "id": "get-started-with-nx-release",
+        "name": "Get Started with Nx Release",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/nx-release/getting-started-with-nx-release",
+        "file": "shared/recipes/nx-release/get-started-with-nx-release",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-release/getting-started-with-nx-release",
+        "path": "/recipes/nx-release/get-started-with-nx-release",
         "tags": ["nx-release"]
       },
       {
-        "id": "independent-releases",
-        "name": "Releasing Projects Independently",
+        "id": "release-projects-independently",
+        "name": "Release Projects Independently",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/nx-release/independent-releases",
+        "file": "shared/recipes/nx-release/release-projects-independently",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-release/independent-releases",
+        "path": "/recipes/nx-release/release-projects-independently",
         "tags": ["nx-release"]
       },
       {
-        "id": "automatic-versioning-with-conventional-commits",
-        "name": "Automatic Versioning with Conventional Commits",
+        "id": "automatically-version-with-conventional-commits",
+        "name": "Automatically Version with Conventional Commits",
         "description": "",
         "mediaImage": "",
-        "file": "shared/recipes/nx-release/automatic-versioning-with-conventional-commits",
+        "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
         "itemList": [],
         "isExternal": false,
-        "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits",
+        "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
         "tags": ["nx-release"]
       }
     ],
@@ -5814,37 +5814,37 @@
     "path": "/recipes/nx-release",
     "tags": []
   },
-  "/recipes/nx-release/getting-started-with-nx-release": {
-    "id": "getting-started-with-nx-release",
-    "name": "Getting Started with Nx Release",
+  "/recipes/nx-release/get-started-with-nx-release": {
+    "id": "get-started-with-nx-release",
+    "name": "Get Started with Nx Release",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/nx-release/getting-started-with-nx-release",
+    "file": "shared/recipes/nx-release/get-started-with-nx-release",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-release/getting-started-with-nx-release",
+    "path": "/recipes/nx-release/get-started-with-nx-release",
     "tags": ["nx-release"]
   },
-  "/recipes/nx-release/independent-releases": {
-    "id": "independent-releases",
-    "name": "Releasing Projects Independently",
+  "/recipes/nx-release/release-projects-independently": {
+    "id": "release-projects-independently",
+    "name": "Release Projects Independently",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/nx-release/independent-releases",
+    "file": "shared/recipes/nx-release/release-projects-independently",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-release/independent-releases",
+    "path": "/recipes/nx-release/release-projects-independently",
     "tags": ["nx-release"]
   },
-  "/recipes/nx-release/automatic-versioning-with-conventional-commits": {
-    "id": "automatic-versioning-with-conventional-commits",
-    "name": "Automatic Versioning with Conventional Commits",
+  "/recipes/nx-release/automatically-version-with-conventional-commits": {
+    "id": "automatically-version-with-conventional-commits",
+    "name": "Automatically Version with Conventional Commits",
     "description": "",
     "mediaImage": "",
-    "file": "shared/recipes/nx-release/automatic-versioning-with-conventional-commits",
+    "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
     "itemList": [],
     "isExternal": false,
-    "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits",
+    "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
     "tags": ["nx-release"]
   },
   "/recipes/other": {
