@@ -106,7 +106,7 @@ export function sourcesRenderer(
         <span className="flex group/line" key={`code-group${idx}`}>
           <span>{element}</span>
           {sourceElement && (
-            <span className="hidden group-hover/line:inline pl-2">
+            <span className="opacity-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-2">
               {sourceElement}
             </span>
           )}

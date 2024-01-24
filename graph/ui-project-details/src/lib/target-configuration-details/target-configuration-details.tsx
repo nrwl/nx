@@ -311,7 +311,7 @@ export const TargetConfigurationDetails = forwardRef(
                       >
                         <TargetConfigurationProperty data={input}>
                           {sourceInfo && (
-                            <span className="hidden group-hover/line:inline pl-4">
+                            <span className="opacity-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
                               <SourceInfo
                                 data={sourceInfo}
                                 propertyKey={`targets.${targetName}.inputs`}
@@ -361,7 +361,7 @@ export const TargetConfigurationDetails = forwardRef(
                       >
                         <TargetConfigurationProperty data={output}>
                           {sourceInfo && (
-                            <span className="hidden group-hover/line:inline pl-4">
+                            <span className="opacity-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
                               <SourceInfo
                                 data={sourceInfo}
                                 propertyKey={`targets.${targetName}.outputs`}
@@ -386,7 +386,7 @@ export const TargetConfigurationDetails = forwardRef(
                       <TooltipTriggerText>Depends On</TooltipTriggerText>
                     </span>
                   </Tooltip>
-                  <span className="hidden group-hover:inline ml-2 mb-1">
+                  <span className="opacity-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
                     <CopyToClipboard
                       onCopy={() =>
                         handleCopyClick(
