@@ -3,6 +3,7 @@ import { JSX, useEffect, useState } from 'react';
 
 interface CopyToClipboardProps {
   onCopy: () => void;
+  tooltipAlignment?: 'left' | 'right';
 }
 
 export function CopyToClipboard(props: CopyToClipboardProps): JSX.Element {
@@ -16,7 +17,10 @@ export function CopyToClipboard(props: CopyToClipboardProps): JSX.Element {
     }
   });
   return (
-    <span data-tooltip="Copy to clipboard" data-tooltip-align-right>
+    <span
+      data-tooltip="Copy to clipboard"
+      data-tooltip-align-right={props.tooltipAlignment === 'right'}
+    >
       <ClipboardIcon
         className={`inline h-4 w-5 !cursor-pointer ${
           copied ? 'text-sky-500' : ''

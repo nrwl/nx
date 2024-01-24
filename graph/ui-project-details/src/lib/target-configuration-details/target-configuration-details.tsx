@@ -222,6 +222,7 @@ export const TargetConfigurationDetails = forwardRef(
                     onCopy={() =>
                       handleCopyClick(`nx run ${projectName}:${targetName}`)
                     }
+                    tooltipAlignment="right"
                   />
                 </span>
               </div>
