@@ -7,10 +7,9 @@ import {
   joinPathFragments,
   parseJson,
   readJsonFile,
-  workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, isAbsolute, join, relative } from 'path';
+import { dirname, join } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readFileSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
@@ -101,11 +100,6 @@ export const createNodes: CreateNodes<StorybookPluginOptions> = [
         },
       },
     };
-    // For root projects, the name is not inferred from root package.json, so we need to manually set it.
-    // TODO(katerina): Remove this workaround once Craigory's PR (https://github.com/nrwl/nx/pull/21125) is merged
-    if (projectRoot === '.') {
-      result.projects[projectRoot]['name'] = projectName;
-    }
 
     return result;
   },
@@ -125,6 +119,12 @@ function buildStorybookTargets(
   const storybookFramework = getStorybookConfig(configFilePath, context);
 
   const frameworkIsAngular = storybookFramework === "'@storybook/angular'";
+
+  if (frameworkIsAngular && !projectName) {
+    throw new Error(
+      `Could not find a name for the project at '${projectRoot}'. Please make sure that the project has a package.json or project.json file with name specified.`
+    );
+  }
 
   const targets: Record<string, TargetConfiguration> = {};
 
@@ -351,7 +351,10 @@ function normalizeOptions(
   return options;
 }
 
-function buildProjectName(projectRoot: string, workspaceRoot: string): string {
+function buildProjectName(
+  projectRoot: string,
+  workspaceRoot: string
+): string | undefined {
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   const projectJsonPath = join(workspaceRoot, projectRoot, 'project.json');
   let name: string;
@@ -362,5 +365,5 @@ function buildProjectName(projectRoot: string, workspaceRoot: string): string {
     const packageJson = parseJson(readFileSync(packageJsonPath, 'utf-8'));
     name = packageJson.name;
   }
-  return name ?? projectRoot;
+  return name;
 }

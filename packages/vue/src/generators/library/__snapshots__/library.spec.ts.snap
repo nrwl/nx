@@ -134,6 +134,37 @@ exports[`lib should add vue, vite and vitest to package.json 1`] = `
 }
 `;
 
+exports[`lib should add vue, vite and vitest to package.json 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "types": ["vite/client"]
+  },
+  "exclude": [
+    "src/**/__tests__/*",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.js",
+    "src/**/*.test.js",
+    "src/**/*.spec.jsx",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.vue",
+    "src/**/*.test.vue"
+  ],
+  "include": [
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue"
+  ]
+}
+"
+`;
+
 exports[`lib should generate files 1`] = `
 {
   "extends": [
@@ -174,5 +205,7 @@ exports[`lib should ignore test files in tsconfig.lib.json 1`] = `
   "src/**/*.test.js",
   "src/**/*.spec.jsx",
   "src/**/*.test.jsx",
+  "src/**/*.spec.vue",
+  "src/**/*.test.vue",
 ]
 `;
