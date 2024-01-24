@@ -207,16 +207,18 @@ export const TargetConfigurationDetails = forwardRef(
                   propertyKey={`targets.${targetName}`}
                 />
               </span>
-              <code className="ml-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono px-2 py-1 rounded">
-                nx run {projectName}:{targetName}
-              </code>
-              <span className="ml-2">
-                <CopyToClipboard
-                  onCopy={() =>
-                    handleCopyClick(`nx run ${projectName}:${targetName}`)
-                  }
-                />
-              </span>
+              <div className="flex items-center gap-2">
+                <code className="ml-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono px-2 py-1 rounded">
+                  nx run {projectName}:{targetName}
+                </code>
+                <span>
+                  <CopyToClipboard
+                    onCopy={() =>
+                      handleCopyClick(`nx run ${projectName}:${targetName}`)
+                    }
+                  />
+                </span>
+              </div>
             </div>
           )}
         </header>
