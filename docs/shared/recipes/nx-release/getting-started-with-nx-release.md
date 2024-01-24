@@ -18,9 +18,13 @@ npm install -D @nx/js
 
 ### Configure Projects to Release
 
-Nx Release uses Nx's powerful [Project Graph](/core-features/explore-graph) to understand your projects and their dependencies. However, not all projects in your repo need to be released, such as e2e testing projects and some applications.
+Nx Release uses Nx's powerful [Project Graph](/core-features/explore-graph) to understand your projects and their dependencies.
 
-Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of glob patterns that match the projects to release.
+If you want to release all of the projects in your workspace, such as when dealing with a series of npm library packages, no configuration is required.
+
+If you have a mixed workspace in which you also have some applications, e2e testing projects or other things you don't want to release, you can configure `nx release` to target only the projects you want to release.
+
+Configure which projects to release by adding the `release.projects` property to nx.json. The value is an array of strings, and you can use any of the same specifiers that are supported by `nx run-many`'s projects filtering, such as explicit project names, Nx tags, directories and glob patterns, including negation using the `!` character.
 
 For example, to release just the projects in the `packages` directory:
 
@@ -156,7 +160,7 @@ If the preview looks good, run the command again without the `--dry-run` option 
 nx release --first-release
 ```
 
-The command will proceed as before, prompting for a version bump and showing a preview of the changes. However, this time, it will prompt you to publish the packages to the remote registry. If you say no, the publishing step will be skipped If you say yes, the command will publish the packages to the npm registry.
+The command will proceed as before, prompting for a version bump and showing a preview of the changes. However, this time, it will prompt you to publish the packages to the remote registry. If you say no, the publishing step will be skipped. If you say yes, the command will publish the packages to the npm registry.
 
 ```{% command="nx release --first-release" %}
 ...
@@ -191,7 +195,7 @@ shasum:        {shasum}
 integrity:     {integrity}
 total files:   12
 
-Published to {registryUrl} with tag "latest"
+Published to https://registry.npmjs.org with tag "latest"
 
 > nx run pkg-2:nx-release-publish
 
@@ -213,7 +217,7 @@ shasum:        {shasum}
 integrity:     {integrity}
 total files:   12
 
-Published to {registryUrl} with tag "latest"
+Published to https://registry.npmjs.org with tag "latest"
 
 > nx run pkg-3:nx-release-publish
 
@@ -235,7 +239,7 @@ shasum:        {shasum}
 integrity:     {integrity}
 total files:   12
 
-Published to {registryUrl} with tag "latest"
+Published to https://registry.npmjs.org with tag "latest"
 
  —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -249,7 +253,7 @@ By default, Nx Release will stage all changes it makes with git. This includes u
 
 ### Customizing the Commit Message and Tag Pattern
 
-The commit message created by Nx Release defaults to 'chore(release): publish {version}', but can be customized with the `release.git.commitMessage` property in nx.json.
+The commit message created by Nx Release defaults to 'chore(release): publish {version}', where `{version}` will be dynamically interpolated with the relevant value based on your actual release, but can be customized with the `release.git.commitMessage` property in nx.json.
 
 The structure of the git tag defaults to `v{version}`. For example, if the version is `1.2.3`, the tag will be `v1.2.3`. This can be customized by setting the `release.releaseTagPattern` property in nx.json.
 
@@ -268,6 +272,6 @@ An example nx.json file with these properties set:
 
 ## Future Releases
 
-After the first release, the `--first-release` option will no longer be required. Nx Release will expect to find git tags and changelog files for each package. It will also use `npm view` to look up the current version of packages before publishing, ensuring that the package has not already been published.
+After the first release, the `--first-release` option will no longer be required. Nx Release will expect to find git tags and changelog files for each package. It will also use `npm view` to look up the current version of packages before publishing, ensuring that the package has not already been published and therefore avoid any conflict errors, meaning you can run the same publish action multiple times without any negative side-effects.
 
 Future releases will also generate entries in `CHANGELOG.md` based on the changes since the last release. Nx Release will parse the commits according to the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification and sort them into the appropriate sections of the changelog. An example of these changelogs can be seen on the [Nx releases page](https://github.com/nrwl/nx/releases).

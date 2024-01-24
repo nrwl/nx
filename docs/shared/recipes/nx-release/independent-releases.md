@@ -20,13 +20,13 @@ Nx release will behave differently when configured for independent releases.
 
 ### Prompt for Multiple Version Bumps
 
-When configured for independent releases, Nx Release will prompt for a version bump for each project that is being released. This allows the version of each package differ over time.
+When configured for independent releases, Nx Release will prompt for a version bump for each project that is being released. This allows the version of each package to differ over time.
 
 ### Create a Git Tag for Each Project
 
 Since each project can have a different version, Nx Release will create a git tag for each project that is being released. By default, the tag for each package will follow the pattern `{projectName}@{version}`. For example, if the `pkg-1` project is being released with version `1.1.0`, its git tag will be `pkg-1@1.1.0`.
 
-This can still be changed with the `release.releaseTagPattern` property in `nx.json`, but be sure to include `{projectName}` in the pattern.
+This can still be changed with the `release.releaseTagPattern` property in `nx.json`, but be sure to include `{projectName}` in the pattern so that each generated tag is unique.
 
 ```json nx.json
 {
@@ -58,7 +58,7 @@ Nx Release will no longer generate and update a workspace level `CHANGELOG.md` f
 {
   "release": {
     "changelog": {
-      "projectChangelogs": {}
+      "projectChangelogs": true
     }
   }
 }
