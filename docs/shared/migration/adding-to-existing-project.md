@@ -1,19 +1,14 @@
 # Adding Nx to your Existing Project
 
-{% youtube
-src="https://www.youtube.com/embed/VmGCZ77ao_I"
-title="Add Nx to any project"
-width="100%" /%}
-
 Nx can be added to any type of project, not just monorepos. The main benefit is to get caching abilities for the package scripts. Each project usually has a set of scripts in the `package.json`:
 
 ```json {% fileName="package.json" %}
 {
   ...
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "test": "jest",
-    "lint": "eslint . --ext .ts",
+    "build": "next build",
+    "lint": "eslint .",
+    "test": "node ./run-tests.js"
   }
 }
 ```
@@ -23,7 +18,7 @@ You can make these scripts faster by leveraging Nx's caching capabilities. For e
 - You change some spec files: in that case the `build` task can be cached and doesn't have to re-run.
 - You update your docs, changing a couple of markdown files: then there's no need to re-run builds, tests, linting on your CI. All you might want to do is trigger the Docusaurus build.
 
-## Installing Nx on a Non-Monorepo Project
+## Install Nx on a Non-Monorepo Project
 
 Run the following command:
 
@@ -33,110 +28,95 @@ npx nx@latest init
 
 This will
 
-- collect all the NPM scripts in the corresponding `package.json` files of your workspace packages
-- ask you which of those scripts are cacheable (e.g. build, test, lint)
-- ask you which of those scripts might need to be run in a certain order (e.g. if you run the `build` script you might want to first build all the dependent projects)
-- ask you for custom output folders that should be captured as part of the caching
+- detect the tools you are using and ask if you want to install plugins for them
+- ask you if you want Nx to be used in your package.json scripts
+- ask you if you want to enable remote caching
 
-This process adds `nx` to your `package.json` at the root of your workspace:
+This process generates an `nx.json` based on your answers during the setup process. The example below is using the `@nx/eslint` and `@nx/next` plugins to run ESLint and Next tasks with Nx:
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/next/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "startTargetName": "start"
+      }
+    }
+  ]
+}
+```
+
+When Nx updates your `package.json` scripts, it looks for scripts that can be non-intrusively replaced with an Nx command that has caching automatically enabled. The `package.json` defined above would be updated to look like this:
 
 ```json {% fileName="package.json" %}
 {
   "name": "my-workspace",
   ...
-  "devDependencies": {
-    ...
-    "nx": "17.2.0"
+  "scripts": {
+    "build": "nx build",
+    "lint": "nx lint",
+    "test": "node ./run-tests.js"
+  },
+  ...
+  "nx": {
+    "includedScripts": []
   }
 }
 ```
 
-In addition it generates a `nx.json` based on your answers during the setup process. This includes cacheable targets as well as some initial definition of the task pipeline. Here is an example:
+The `@nx/next` plugin can run `next build` for you and set up caching correctly, so it replaces `next build` with `nx build`. Similarly, `@nx/eslint` can set up caching for `eslint .`. When you run `npm run build` or `npm run lint` multiple times, you'll see that caching is enabled.
 
-{% tabs %}
-{% tab label="Nx >= 17" %}
+The `test` script was not recognized by any Nx plugin, so it was left as is.
 
-```json {% fileName="nx.json" %}
+## Inferred Tasks
+
+You may have noticed that `@nx/next` provides `dev` and `start` tasks in addition to the `build` task. Those tasks were created by `@nx/next` plugin from your existing Next configuration. To view all available tasks, open the Project Details view with Nx Console or run `nx show project my-workspace --web` to view the project details in a browser window.
+
+The project detail view lists all available tasks, the configuration values for those tasks and where those configuration values are being set.
+
+## Run More Tasks with Nx
+
+If you want to run one of your existing scripts with Nx, you need to tell Nx about it.
+
+1. Preface the script with `nx exec -- ` to invoke the command with Nx.
+2. Add the script name to `includedScripts`.
+3. Define caching settings.
+
+The `nx exec` command allows you to keep using `npm test` or `npm run test` (or other package manager's alternatives) as you're accustomed to. But still get the benefits of making those operations cacheable.  Configuring the `test` script from the example above to run with Nx would look something like this:
+
+```json {% fileName="package.json" %}
 {
-  "targetDefaults": {
-    "build": {
-      "cache": true
-    },
-    "lint": {
-      "cache": true
-    }
-  }
-}
-```
-
-{% /tab %}
-{% tab label="Nx < 17" %}
-
-```json {% fileName="nx.json" %}
-{
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "cacheableOperations": ["build", "lint"]
+  "name": "my-workspace",
+  ...
+  "scripts": {
+    "build": "nx build",
+    "lint": "nx lint",
+    "test": "nx exec -- node ./run-tests.js"
+  },
+  ...
+  "nx": {
+    "includedScripts": ["test"],
+    "targets": {
+      "test": {
+        "cache": "true",
+        "inputs": ["default", "^default"],
+        "outputs": []
       }
     }
   }
 }
 ```
 
-{% /tab %}
-{% /tabs %}
-
-## Wrapping Cacheable Scripts
-
-Nx also automatically wraps your cacheable scripts with the `nx exec` command. The main advantage here is that you can still keep using `npm start` or `npm run build` (or other package manager's alternatives) as you're accustomed to. But still get the benefits of making those operations cacheble.
-
-Here's an example of a `build` and `lint` script being wrapped by Nx:
-
-```json {% fileName="package.json" %}
-{
-  ...
-  "scripts": {
-    "build": "nx exec -- vite build",
-    "lint": "nx exec -- eslint \"src/**/*.ts*\"",
-    ...
-    "dev": "vite",
-    "start": "vite --open",
-  },
-  "devDependencies": {
-    ...
-    "nx": "17.2.0"
-  }
-}
-```
-
-{% callout type="note" title="Use Nx commands directly" %}
-
-Alternatively you could obviously also just switch to using `nx` for invoking the commands. Like `nx build` rather than `npm run build`.
-
-{% /callout %}
-
-## Fine-tuning caching with Nx Inputs
-
-To get the best caching results, you can customize which inputs should be accounted for when it comes to caching certain commands. This can be done in your `nx.json`.
-
-For example, excluding markdown files from the `lint` task cache:
-
-```json {% fileName="nx.json" %}
-{
-  ...
-  "targetDefaults": {
-    "lint": {
-      "inputs": ["{projectRoot}/**/*.ts","!**/*.md"]
-    }
-  }
-}
-```
-
-This includes all TypeScript files, but excludes markdown files. As a result, changing your README won't invalidate your "lint cache".
-
-Learn more about [Nx Inputs](/concepts/task-inputs).
+Now if you run `npm run test` or `nx test` twice, the results will be retrieved from the cache. The `inputs` used in this example are as cautious as possible, so you can significantly improve the value of the cache by [customizing Nx Inputs](/concepts/task-inputs) for each task.
 
 ## Learn More
 
