@@ -84,9 +84,9 @@ Instead of defining
 
 ```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
 distributes-on:
-  small-changeset: 1 linux-medium
-  medium-changeset: 6 linux-medium
-  large-changeset: 10 linux-medium
+  small-changeset: 1 linux-medium-js
+  medium-changeset: 6 linux-medium-js
+  large-changeset: 10 linux-medium-js
 ```
 
 {% callout type="note" title="How is the size of the PR determined?" %}
