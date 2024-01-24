@@ -17,7 +17,7 @@ export function JsonCodeBlockPreTag({
   return (
     <div
       className={twMerge(
-        'hljs not-prose w-full overflow-hidden',
+        'hljs not-prose w-full overflow-hidden rounded-md',
         'font-mono text-sm',
         'border border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/60'
       )}
