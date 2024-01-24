@@ -61,7 +61,6 @@ export class ForkedProcessTaskRunner {
             Object.values(batchTaskGraph.tasks)[0]
           );
           output.logCommand(args.join(' '));
-          output.addNewline();
         }
 
         const p = fork(workerPath, {
@@ -206,7 +205,6 @@ export class ForkedProcessTaskRunner {
     const args = getPrintableCommandArgsForTask(task);
     if (streamOutput) {
       output.logCommand(args.join(' '));
-      output.addNewline();
     }
 
     const childId = task.id;
@@ -287,7 +285,6 @@ export class ForkedProcessTaskRunner {
         const args = getPrintableCommandArgsForTask(task);
         if (streamOutput) {
           output.logCommand(args.join(' '));
-          output.addNewline();
         }
 
         const p = fork(this.cliPath, {
@@ -383,7 +380,6 @@ export class ForkedProcessTaskRunner {
         const args = getPrintableCommandArgsForTask(task);
         if (streamOutput) {
           output.logCommand(args.join(' '));
-          output.addNewline();
         }
         const p = fork(this.cliPath, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
