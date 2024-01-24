@@ -38,10 +38,11 @@ import { NxPluginV1 } from './nx-plugin.deprecated';
 import { RawProjectGraphDependency } from '../project-graph/project-graph-builder';
 import { combineGlobPatterns } from './globs';
 import { shouldMergeAngularProjects } from '../adapter/angular-json';
-import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
-import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
-import { CreatePackageJsonProjectsNextToProjectJson } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
+import { getNxPackageJsonWorkspacesPlugin } from '../plugins/package-json-workspaces';
+import { ProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
+import { PackageJsonProjectsNextToProjectJsonPlugin } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
 import { retrieveProjectConfigurationsWithoutPluginInference } from '../project-graph/utils/retrieve-workspace-files';
+import { TargetDefaultsPlugin } from '../plugins/target-defaults/target-defaults-plugin';
 
 /**
  * Context for {@link CreateNodesFunction}
@@ -251,7 +252,7 @@ export async function loadNxPlugins(
   projects?: Record<string, ProjectConfiguration>
 ): Promise<LoadedNxPlugin[]> {
   const result: LoadedNxPlugin[] = [
-    { plugin: CreatePackageJsonProjectsNextToProjectJson },
+    { plugin: PackageJsonProjectsNextToProjectJsonPlugin },
   ];
 
   plugins ??= [];
@@ -510,6 +511,7 @@ export async function getDefaultPlugins(
 ): Promise<LoadedNxPlugin[]> {
   const plugins: NxPluginV2[] = [
     await import('../plugins/js'),
+    TargetDefaultsPlugin,
     ...(shouldMergeAngularProjects(root, false)
       ? [
           await import('../adapter/angular-json').then(
@@ -518,7 +520,7 @@ export async function getDefaultPlugins(
         ]
       : []),
     getNxPackageJsonWorkspacesPlugin(root),
-    CreateProjectJsonProjectsPlugin,
+    ProjectJsonProjectsPlugin,
   ];
 
   return plugins.map((p) => ({

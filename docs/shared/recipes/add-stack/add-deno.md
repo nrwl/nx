@@ -26,14 +26,21 @@ Make sure you have Deno installed on your machine. Consult the [Deno docs for mo
 {%tab label="npm"%}
 
 ```shell
-npm i --save-dev @nx/deno
+npm add -D @nx/deno
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nx/deno
+yarn add -D @nx/deno
+```
+
+{% /tab %}
+{%tab label="pnpm"%}
+
+```shell
+pnpm add -D @nx/deno
 ```
 
 {% /tab %}

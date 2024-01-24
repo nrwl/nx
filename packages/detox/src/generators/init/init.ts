@@ -8,7 +8,8 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { DetoxPluginOptions } from '../../plugins/plugin';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes, DetoxPluginOptions } from '../../plugins/plugin';
 import { detoxVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
@@ -22,6 +23,10 @@ export async function detoxInitGenerator(host: Tree, schema: Schema) {
 
   if (process.env.NX_PCV3 === 'true') {
     addPlugin(host);
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(host, createNodes);
   }
 
   if (!schema.skipFormat) {
@@ -38,7 +43,9 @@ export function updateDependencies(host: Tree, schema: Schema) {
     {
       '@nx/detox': nxVersion,
       detox: detoxVersion,
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 
@@ -64,6 +71,7 @@ function addPlugin(host: Tree) {
     plugin: '@nx/detox/plugin',
     options: {
       buildTargetName: 'build',
+      startTargetName: 'start',
       testTargetName: 'test',
     } as DetoxPluginOptions,
   });

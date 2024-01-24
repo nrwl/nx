@@ -2,6 +2,7 @@ import { joinPathFragments } from '@nx/devkit';
 import {
   cleanupProject,
   exists,
+  getSelectedPackageManager,
   newProject,
   readFile,
   runCLI,
@@ -20,6 +21,7 @@ expect.addSnapshotSerializer({
         .replaceAll(tmpProjPath(), '')
         .replaceAll('/private/', '')
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
+        .replaceAll(' in /{project-name}', ' in {project-name}')
         .replaceAll(
           /integrity:\s*.*/g,
           'integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
@@ -28,10 +30,21 @@ expect.addSnapshotSerializer({
         .replaceAll(/\d*B  index\.js/g, 'XXB  index.js')
         .replaceAll(/\d*B  project\.json/g, 'XXB  project.json')
         .replaceAll(/\d*B package\.json/g, 'XXXB package.json')
+        .replaceAll(/\d*B CHANGELOG\.md/g, 'XXXB CHANGELOG.md')
         .replaceAll(/size:\s*\d*\s?B/g, 'size: XXXB')
         .replaceAll(/\d*\.\d*\s?kB/g, 'XXX.XXX kb')
         // Normalize the version title date
         .replaceAll(/\(\d{4}-\d{2}-\d{2}\)/g, '(YYYY-MM-DD)')
+        .replaceAll('package-lock.json', '{lock-file}')
+        .replaceAll('yarn.lock', '{lock-file}')
+        .replaceAll('pnpm-lock.yaml', '{lock-file}')
+        .replaceAll('npm install --package-lock-only', '{lock-file-command}')
+        .replaceAll(
+          'yarn install --mode update-lockfile',
+          '{lock-file-command}'
+        )
+        .replaceAll('pnpm install --lockfile-only', '{lock-file-command}')
+        .replaceAll(getSelectedPackageManager(), '{package-manager}')
         // We trim each line to reduce the chances of snapshot flakiness
         .split('\n')
         .map((r) => r.trim())
@@ -125,6 +138,9 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
+        >  NX   Updating {package-manager} lock file
+
+
         >  NX   Staging changed files with git
 
 
@@ -155,6 +171,9 @@ describe('nx release - independent projects', () => {
 
         }
         +
+
+
+        >  NX   Updating {package-manager} lock file
 
 
         >  NX   Staging changed files with git
@@ -196,6 +215,9 @@ describe('nx release - independent projects', () => {
         }
 
 
+        >  NX   Updating {package-manager} lock file
+
+
         >  NX   Staging changed files with git
 
 
@@ -235,10 +257,15 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
+        >  NX   Updating {package-manager} lock file
+
+        Updating {lock-file} with the following command:
+        {lock-file-command}
+
         >  NX   Committing changes with git
 
         Staging files in git with the following command:
-        git add {project-name}/package.json
+        git add {project-name}/package.json {lock-file}
 
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.2
@@ -338,10 +365,20 @@ describe('nx release - independent projects', () => {
         "scripts": {
 
 
+        >  NX   Updating {package-manager} lock file
+
+        Updating {lock-file} with the following command:
+        {lock-file-command}
+
+        >  NX   Updating {package-manager} lock file
+
+        Updating {lock-file} with the following command:
+        {lock-file-command}
+
         >  NX   Committing changes with git
 
         Staging files in git with the following command:
-        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json {lock-file}
 
         Committing files in git with the following command:
         git commit --message chore(release): publish --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - project: {project-name} 999.9.9-version-git-operations-test.3 --message - release-group: fixed 999.9.9-version-git-operations-test.3
@@ -581,6 +618,234 @@ describe('nx release - independent projects', () => {
 
       // Ensure no git operations were performed
       expect(runCommand(`git rev-parse HEAD`).trim()).toEqual(updatedHeadSHA);
+    });
+  });
+
+  describe('publish', () => {
+    beforeEach(() => {
+      updateJson('nx.json', () => {
+        return {
+          release: {
+            projectsRelationship: 'independent',
+            groups: {
+              group1: {
+                projects: [pkg1, pkg2],
+              },
+              group2: {
+                projects: [pkg3],
+              },
+            },
+          },
+        };
+      });
+    });
+
+    it('should only run the publish task for the filtered projects', async () => {
+      // Should only contain 1 project
+      expect(runCLI(`release publish -p ${pkg1} -d`)).toMatchInlineSnapshot(`
+
+        >  NX   Your filter "{project-name}" matched the following projects:
+
+        - {project-name} (release group "group1")
+
+
+        >  NX   Running target nx-release-publish for project {project-name}:
+
+        - {project-name}
+
+        With additional flags:
+        --dryRun=true
+
+
+
+        > nx run {project-name}:nx-release-publish
+
+
+        📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+        === Tarball Contents ===
+
+        XXXB CHANGELOG.md
+        XXB  index.js
+        XXXB package.json
+        XXB  project.json
+        === Tarball Details ===
+        name:          @proj/{project-name}
+        version:       999.9.9-version-git-operations-test.3
+        filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+        package size: XXXB
+        unpacked size: XXXB
+        shasum:        {SHASUM}
+        integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        total files:   4
+
+        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+
+
+
+        >  NX   Successfully ran target nx-release-publish for project {project-name}
+
+
+
+      `);
+
+      // Should only contain 2 projects
+      expect(runCLI(`release publish -p ${pkg1} -p ${pkg3} -d`))
+        .toMatchInlineSnapshot(`
+
+        >  NX   Your filter "{project-name},{project-name}" matched the following projects:
+
+        - {project-name} (release group "group1")
+        - {project-name} (release group "group2")
+
+
+        >  NX   Running target nx-release-publish for project {project-name}:
+
+        - {project-name}
+
+        With additional flags:
+        --dryRun=true
+
+
+
+        > nx run {project-name}:nx-release-publish
+
+
+        📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+        === Tarball Contents ===
+
+        XXXB CHANGELOG.md
+        XXB  index.js
+        XXXB package.json
+        XXB  project.json
+        === Tarball Details ===
+        name:          @proj/{project-name}
+        version:       999.9.9-version-git-operations-test.3
+        filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+        package size: XXXB
+        unpacked size: XXXB
+        shasum:        {SHASUM}
+        integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        total files:   4
+
+        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+
+
+
+        >  NX   Successfully ran target nx-release-publish for project {project-name}
+
+
+
+        >  NX   Running target nx-release-publish for project {project-name}:
+
+        - {project-name}
+
+        With additional flags:
+        --dryRun=true
+
+
+
+        > nx run {project-name}:nx-release-publish
+
+        Skipped package "@proj/{project-name}" from project "{project-name}", because it has \`"private": true\` in {project-name}/package.json
+
+
+
+        >  NX   Successfully ran target nx-release-publish for project {project-name}
+
+
+
+      `);
+    });
+
+    it('should only run the publish task for the filtered projects', async () => {
+      // Should only contain the 2 projects from group1
+      expect(runCLI(`release publish -g group1 -d`)).toMatchInlineSnapshot(`
+
+        >  NX   Running target nx-release-publish for 2 projects:
+
+        - {project-name}
+        - {project-name}
+
+        With additional flags:
+        --dryRun=true
+
+
+
+        > nx run {project-name}:nx-release-publish
+
+
+        📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+        === Tarball Contents ===
+
+        XXXB CHANGELOG.md
+        XXB  index.js
+        XXXB package.json
+        XXB  project.json
+        === Tarball Details ===
+        name:          @proj/{project-name}
+        version:       999.9.9-version-git-operations-test.3
+        filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+        package size: XXXB
+        unpacked size: XXXB
+        shasum:        {SHASUM}
+        integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        total files:   4
+
+        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+
+        > nx run {project-name}:nx-release-publish
+
+
+        📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+        === Tarball Contents ===
+
+        XXXB CHANGELOG.md
+        XXB  index.js
+        XXXB package.json
+        XXB  project.json
+        === Tarball Details ===
+        name:          @proj/{project-name}
+        version:       999.9.9-version-git-operations-test.3
+        filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+        package size: XXXB
+        unpacked size: XXXB
+        shasum:        {SHASUM}
+        integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        total files:   4
+
+        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+
+
+
+        >  NX   Successfully ran target nx-release-publish for 2 projects
+
+
+
+      `);
+
+      // Should only contain the 1 project from group2
+      expect(runCLI(`release publish -g group2 -d`)).toMatchInlineSnapshot(`
+
+          >  NX   Running target nx-release-publish for project {project-name}:
+
+          - {project-name}
+
+          With additional flags:
+          --dryRun=true
+
+
+
+          > nx run {project-name}:nx-release-publish
+
+          Skipped package "@proj/{project-name}" from project "{project-name}", because it has \`"private": true\` in {project-name}/package.json
+
+
+
+          >  NX   Successfully ran target nx-release-publish for project {project-name}
+
+
+
+      `);
     });
   });
 

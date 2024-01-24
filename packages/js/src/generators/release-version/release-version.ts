@@ -19,20 +19,24 @@ import {
 } from 'nx/src/command-line/release/utils/resolve-semver-specifier';
 import { isValidSemverSpecifier } from 'nx/src/command-line/release/utils/semver';
 import {
+  ReleaseVersionGeneratorResult,
   VersionData,
   deriveNewSemverVersion,
+  validReleaseVersionPrefixes,
 } from 'nx/src/command-line/release/version';
+import { daemonClient } from 'nx/src/daemon/client/client';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { relative } from 'path';
 import { prerelease } from 'semver';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
+import { updateLockFile } from './utils/update-lock-file';
 
 export async function releaseVersionGenerator(
   tree: Tree,
   options: ReleaseVersionGeneratorSchema
-) {
+): Promise<ReleaseVersionGeneratorResult> {
   try {
     const versionData: VersionData = {};
 
@@ -45,6 +49,26 @@ export async function releaseVersionGenerator(
       }
       // The node semver library classes a leading `v` as valid, but we want to ensure it is not present in the final version
       options.specifier = options.specifier.replace(/^v/, '');
+    }
+
+    if (
+      options.versionPrefix &&
+      validReleaseVersionPrefixes.indexOf(options.versionPrefix) === -1
+    ) {
+      throw new Error(
+        `Invalid value for version.generatorOptions.versionPrefix: "${
+          options.versionPrefix
+        }"
+
+Valid values are: ${validReleaseVersionPrefixes
+          .map((s) => `"${s}"`)
+          .join(', ')}`
+      );
+    }
+
+    if (options.firstRelease) {
+      // always use disk as a fallback for the first release
+      options.fallbackCurrentVersionResolver = 'disk';
     }
 
     const projects = options.projects;
@@ -75,6 +99,7 @@ export async function releaseVersionGenerator(
     }
 
     let currentVersion: string;
+    let currentVersionResolvedFromFallback: boolean = false;
 
     // only used for options.currentVersionResolver === 'git-tag', but
     // must be declared here in order to reuse it for additional projects
@@ -146,31 +171,53 @@ To fix this you will either need to add a package.json file at that location, or
               color.spinnerColor as typeof colors[number]['spinnerColor'];
             spinner.start();
 
-            // Must be non-blocking async to allow spinner to render
-            currentVersion = await new Promise<string>((resolve, reject) => {
-              exec(
-                `npm view ${packageName} version --registry=${registry} --tag=${tag}`,
-                (error, stdout, stderr) => {
-                  if (error) {
-                    return reject(error);
+            try {
+              // Must be non-blocking async to allow spinner to render
+              currentVersion = await new Promise<string>((resolve, reject) => {
+                exec(
+                  `npm view ${packageName} version --registry=${registry} --tag=${tag}`,
+                  (error, stdout, stderr) => {
+                    if (error) {
+                      return reject(error);
+                    }
+                    if (stderr) {
+                      return reject(stderr);
+                    }
+                    return resolve(stdout.trim());
                   }
-                  if (stderr) {
-                    return reject(stderr);
-                  }
-                  return resolve(stdout.trim());
-                }
+                );
+              });
+
+              spinner.stop();
+
+              log(
+                `📄 Resolved the current version as ${currentVersion} for tag "${tag}" from registry ${registry}`
               );
-            });
+            } catch (e) {
+              spinner.stop();
 
-            spinner.stop();
-
-            log(
-              `📄 Resolved the current version as ${currentVersion} for tag "${tag}" from registry ${registry}`
-            );
+              if (options.fallbackCurrentVersionResolver === 'disk') {
+                log(
+                  `📄 Unable to resolve the current version from the registry ${registry}. Falling back to the version on disk of ${currentVersionFromDisk}`
+                );
+                currentVersion = currentVersionFromDisk;
+                currentVersionResolvedFromFallback = true;
+              } else {
+                throw new Error(
+                  `Unable to resolve the current version from the registry ${registry}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can use the --first-release option or set "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`
+                );
+              }
+            }
           } else {
-            log(
-              `📄 Using the current version ${currentVersion} already resolved from the registry ${registry}`
-            );
+            if (currentVersionResolvedFromFallback) {
+              log(
+                `📄 Using the current version ${currentVersion} already resolved from disk fallback.`
+              );
+            } else {
+              log(
+                `📄 Using the current version ${currentVersion} already resolved from the registry ${registry}`
+              );
+            }
           }
           break;
         }
@@ -194,19 +241,33 @@ To fix this you will either need to add a package.json file at that location, or
               }
             );
             if (!latestMatchingGitTag) {
-              throw new Error(
-                `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version.`
+              if (options.fallbackCurrentVersionResolver === 'disk') {
+                log(
+                  `📄 Unable to resolve the current version from git tag using pattern "${releaseTagPattern}". Falling back to the version on disk of ${currentVersionFromDisk}`
+                );
+                currentVersion = currentVersionFromDisk;
+                currentVersionResolvedFromFallback = true;
+              } else {
+                throw new Error(
+                  `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`
+                );
+              }
+            } else {
+              currentVersion = latestMatchingGitTag.extractedVersion;
+              log(
+                `📄 Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}".`
               );
             }
-
-            currentVersion = latestMatchingGitTag.extractedVersion;
-            log(
-              `📄 Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}".`
-            );
           } else {
-            log(
-              `📄 Using the current version ${currentVersion} already resolved from git tag "${latestMatchingGitTag.tag}".`
-            );
+            if (currentVersionResolvedFromFallback) {
+              log(
+                `📄 Using the current version ${currentVersion} already resolved from disk fallback.`
+              );
+            } else {
+              log(
+                `📄 Using the current version ${currentVersion} already resolved from git tag "${latestMatchingGitTag.tag}".`
+              );
+            }
           }
           break;
         }
@@ -335,7 +396,7 @@ To fix this you will either need to add a package.json file at that location, or
       versionData[projectName] = {
         currentVersion,
         dependentProjects,
-        newVersion: null, // will stay as null in the final result the case that no changes are detected
+        newVersion: null, // will stay as null in the final result in the case that no changes are detected
       };
 
       if (!specifier) {
@@ -381,8 +442,27 @@ To fix this you will either need to add a package.json file at that location, or
             'package.json'
           ),
           (json) => {
-            json[dependentProject.dependencyCollection][packageName] =
-              newVersion;
+            // Auto (i.e.infer existing) by default
+            let versionPrefix = options.versionPrefix ?? 'auto';
+
+            // For auto, we infer the prefix based on the current version of the dependent
+            if (versionPrefix === 'auto') {
+              versionPrefix = ''; // we don't want to end up printing auto
+
+              const current =
+                json[dependentProject.dependencyCollection][packageName];
+              if (current) {
+                const prefixMatch = current.match(/^[~^]/);
+                if (prefixMatch) {
+                  versionPrefix = prefixMatch[0];
+                } else {
+                  versionPrefix = '';
+                }
+              }
+            }
+            json[dependentProject.dependencyCollection][
+              packageName
+            ] = `${versionPrefix}${newVersion}`;
             return json;
           }
         );
@@ -396,7 +476,36 @@ To fix this you will either need to add a package.json file at that location, or
     await formatFiles(tree);
 
     // Return the version data so that it can be leveraged by the overall version command
-    return versionData;
+    return {
+      data: versionData,
+      callback: async (tree, opts) => {
+        const cwd = tree.root;
+
+        const isDaemonEnabled = daemonClient.enabled();
+        if (isDaemonEnabled) {
+          // temporarily stop the daemon, as it will error if the lock file is updated
+          await daemonClient.stop();
+        }
+
+        const updatedFiles = updateLockFile(cwd, opts);
+
+        if (isDaemonEnabled) {
+          try {
+            await daemonClient.startInBackground();
+          } catch (e) {
+            // If the daemon fails to start, we don't want to prevent the user from continuing, so we just log the error and move on
+            if (opts.verbose) {
+              output.warn({
+                title:
+                  'Unable to restart the Nx Daemon. It will be disabled until you run "nx reset"',
+                bodyLines: [e.message],
+              });
+            }
+          }
+        }
+        return updatedFiles;
+      },
+    };
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       output.error({

@@ -30,12 +30,29 @@ These manual steps are not required if you use the generator from the previous s
 
 ### Step 1: Install Tailwind Dependencies
 
-```shell
-npm install -D tailwindcss@latest postcss@latest autoprefixer@latest
+{% tabs %}
+{% tab label="npm" %}
 
-# or with yarn
+```shell
+npm add -D tailwindcss@latest postcss@latest autoprefixer@latest
+```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
 yarn add -D tailwindcss@latest postcss@latest autoprefixer@latest
 ```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D tailwindcss@latest postcss@latest autoprefixer@latest
+```
+
+{% /tab %}
+{% /tabs %}
 
 This installs the requisite tailwind dependencies.
 

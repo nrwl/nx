@@ -24,16 +24,9 @@ import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
-import {
-  DaemonBasedTaskHasher,
-  InProcessTaskHasher,
-  TaskHasher,
-} from '../hasher/task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { getFileMap } from '../project-graph/build-project-graph';
-import { performance } from 'perf_hooks';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 
 async function getTerminalOutputLifeCycle(

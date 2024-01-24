@@ -6,13 +6,16 @@ import {
   runTasksInSerial,
   updateNxJson,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { eslintVersion, nxVersion } from '../../utils/versions';
 import { findEslintFile } from '../utils/eslint-file';
-import { EslintPluginOptions } from '../../plugins/plugin';
+import { EslintPluginOptions, createNodes } from '../../plugins/plugin';
 import { hasEslintPlugin } from '../utils/plugin';
 
 export interface LinterInitOptions {
   skipPackageJson?: boolean;
+  keepExistingVersions?: boolean;
+  updatePackageScripts?: boolean;
 }
 
 function updateProductionFileset(tree: Tree) {
@@ -66,13 +69,21 @@ function addPlugin(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
+async function initEsLint(
+  tree: Tree,
+  options: LinterInitOptions
+): Promise<GeneratorCallback> {
   const addPlugins = process.env.NX_PCV3 === 'true';
   const hasPlugin = hasEslintPlugin(tree);
   const rootEslintFile = findEslintFile(tree);
 
   if (rootEslintFile && addPlugins && !hasPlugin) {
     addPlugin(tree);
+
+    if (options.updatePackageScripts) {
+      await updatePackageScripts(tree, createNodes);
+    }
+
     return () => {};
   }
 
@@ -98,14 +109,23 @@ function initEsLint(tree: Tree, options: LinterInitOptions): GeneratorCallback {
         {
           '@nx/eslint': nxVersion,
           eslint: eslintVersion,
-        }
+        },
+        undefined,
+        options.keepExistingVersions
       )
     );
+  }
+
+  if (options.updatePackageScripts) {
+    updatePackageScripts(tree, createNodes);
   }
 
   return runTasksInSerial(...tasks);
 }
 
-export function lintInitGenerator(tree: Tree, options: LinterInitOptions) {
-  return initEsLint(tree, options);
+export async function lintInitGenerator(
+  tree: Tree,
+  options: LinterInitOptions
+) {
+  return await initEsLint(tree, options);
 }

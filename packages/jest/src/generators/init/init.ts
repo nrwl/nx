@@ -8,6 +8,8 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes } from '../../plugins/plugin';
 import { jestVersion, nxVersion } from '../../utils/versions';
 import type { JestInitSchema } from './schema';
 
@@ -86,14 +88,16 @@ function addJestTargetDefaults(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function updateDependencies(tree: Tree) {
+function updateDependencies(tree: Tree, options: JestInitSchema) {
   return addDependenciesToPackageJson(
     tree,
     {},
     {
       '@nx/jest': nxVersion,
       jest: jestVersion,
-    }
+    },
+    undefined,
+    options.keepExistingVersions
   );
 }
 
@@ -113,7 +117,11 @@ export async function jestInitGenerator(
   const tasks: GeneratorCallback[] = [];
   if (!options.skipPackageJson) {
     tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/jest'], []));
-    tasks.push(updateDependencies(tree));
+    tasks.push(updateDependencies(tree, options));
+  }
+
+  if (options.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!options.skipFormat) {

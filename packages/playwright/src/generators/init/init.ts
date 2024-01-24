@@ -7,6 +7,8 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes } from '../../plugins/plugin';
 import { nxVersion, playwrightVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
@@ -21,13 +23,19 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
         {
           '@nx/playwright': nxVersion,
           '@playwright/test': playwrightVersion,
-        }
+        },
+        undefined,
+        options.keepExistingVersions
       )
     );
   }
 
   if (process.env.NX_PCV3 === 'true') {
     addPlugin(tree);
+  }
+
+  if (options.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!options.skipFormat) {

@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
 import * as open from 'open';
 import {

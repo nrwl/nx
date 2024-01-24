@@ -10,7 +10,7 @@ import { DaemonClient } from '../daemon/client/client';
 import { hashArray } from './file-hasher';
 import { NodeTaskHasherImpl } from './node-task-hasher-impl';
 import { InputDefinition } from '../config/workspace-json-project-json';
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { NxWorkspaceFilesExternals } from '../native';

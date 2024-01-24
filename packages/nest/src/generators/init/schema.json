@@ -16,8 +16,13 @@
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
     }
   },
-  "additionalProperties": false,
   "required": []
 }

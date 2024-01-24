@@ -68,7 +68,7 @@ You can install Nx globally. Depending on your package manager, use one of the f
 {% tab label="npm" %}
 
 ```shell
-npm install --global nx@latest
+npm add --global nx@latest
 ```
 
 {% /tab %}
@@ -82,7 +82,7 @@ yarn global add nx@latest
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install --global nx@latest
+pnpm add --global nx@latest
 ```
 
 {% /tab %}

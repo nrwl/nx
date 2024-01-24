@@ -108,6 +108,7 @@ exports[`lib should add vue, vite and vitest to package.json 1`] = `
     "@nx/rollup": "0.0.1",
     "@nx/vite": "0.0.1",
     "@nx/vue": "0.0.1",
+    "@nx/web": "0.0.1",
     "@swc-node/register": "~1.6.7",
     "@swc/core": "~1.3.85",
     "@typescript-eslint/eslint-plugin": "^6.13.2",
@@ -131,6 +132,37 @@ exports[`lib should add vue, vite and vitest to package.json 1`] = `
   },
   "name": "@proj/source",
 }
+`;
+
+exports[`lib should add vue, vite and vitest to package.json 2`] = `
+"{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/out-tsc",
+    "types": ["vite/client"]
+  },
+  "exclude": [
+    "src/**/__tests__/*",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts",
+    "src/**/*.spec.tsx",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.js",
+    "src/**/*.test.js",
+    "src/**/*.spec.jsx",
+    "src/**/*.test.jsx",
+    "src/**/*.spec.vue",
+    "src/**/*.test.vue"
+  ],
+  "include": [
+    "src/**/*.js",
+    "src/**/*.jsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue"
+  ]
+}
+"
 `;
 
 exports[`lib should generate files 1`] = `
@@ -173,5 +205,7 @@ exports[`lib should ignore test files in tsconfig.lib.json 1`] = `
   "src/**/*.test.js",
   "src/**/*.spec.jsx",
   "src/**/*.test.jsx",
+  "src/**/*.spec.vue",
+  "src/**/*.test.vue",
 ]
 `;

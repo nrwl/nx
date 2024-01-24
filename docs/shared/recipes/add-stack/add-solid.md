@@ -28,8 +28,8 @@ updating any framework dependencies as needed.
 {% tab label="npm" %}
 
 ```shell
-npm i solid-js
-npm i --save-dev @nx/web solid-devtools vite-plugin-solid
+npm add solid-js
+npm add -D @nx/web solid-devtools vite-plugin-solid
 ```
 
 {% /tab %}
@@ -37,15 +37,15 @@ npm i --save-dev @nx/web solid-devtools vite-plugin-solid
 
 ```shell
 yarn add solid-js
-yarn add --dev @nx/web solid-devtools vite-plugin-solid
+yarn add -D @nx/web solid-devtools vite-plugin-solid
 ```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```shell
-pnpm i solid-js
-pnpm i --save-dev @nx/web solid-devtools vite-plugin-solid
+pnpm add solid-js
+pnpm add -D @nx/web solid-devtools vite-plugin-solid
 ```
 
 {% /tab %}

@@ -10,7 +10,7 @@ import { Task, TaskGraph } from '../config/task-graph';
 import { hashArray, hashObject } from './file-hasher';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import { workspaceRoot } from '../utils/workspace-root';
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import { join } from 'path';
 import { hashFile } from '../native';
 import { findAllProjectNodeDependencies } from '../utils/project-graph-utils';

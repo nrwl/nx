@@ -1,7 +1,7 @@
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
-import type { ChangelogRenderOptions } from '../../changelog-renderer';
+import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
 import { readJsonFile } from '../utils/fileutils';
 import { PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -54,9 +54,20 @@ interface NxInstallationConfiguration {
 /**
  * **ALPHA**
  */
-interface NxReleaseVersionConfiguration {
+export interface NxReleaseVersionConfiguration {
   generator?: string;
   generatorOptions?: Record<string, unknown>;
+  /**
+   * Enabling support for parsing semver bumps via conventional commits and reading the current version from
+   * git tags is so common that we have a first class shorthand for it, which is false by default.
+   *
+   * Setting this to true is the same as adding the following to version.generatorOptions:
+   * - currentVersionResolver: "git-tag"
+   * - specifierSource: "conventional-commits"
+   *
+   * If the user attempts to mix and match these options with the shorthand, we will provide a helpful error.
+   */
+  conventionalCommits?: boolean;
 }
 
 /**
@@ -98,7 +109,7 @@ export interface NxReleaseChangelogConfiguration {
    * A path to a valid changelog renderer function used to transform commit messages and other metadata into
    * the final changelog (usually in markdown format). Its output can be modified using the optional `renderOptions`.
    *
-   * By default, the renderer is set to "nx/changelog-renderer" which nx provides out of the box.
+   * By default, the renderer is set to "nx/release/changelog-renderer" which nx provides out of the box.
    */
   renderer?: string;
   renderOptions?: ChangelogRenderOptions;
@@ -120,6 +131,10 @@ export interface NxReleaseGitConfiguration {
    * Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes
    */
   commitArgs?: string;
+  /**
+   * Whether or not to stage the changes made by this command. Always treated as true if commit is true.
+   */
+  stageChanges?: boolean;
   /**
    * Whether or not to automatically tag the changes made by this command
    */
@@ -210,6 +225,12 @@ interface NxReleaseConfiguration {
      * - false = explicitly disable project level changelogs
      */
     projectChangelogs?: NxReleaseChangelogConfiguration | boolean;
+    /**
+     * Whether or not to automatically look up the first commit for the workspace (or package, if versioning independently)
+     * and use that as the starting point for changelog generation. If this is not enabled, changelog generation will fail
+     * if there is no previous matching git tag to use as a starting point.
+     */
+    automaticFromRef?: boolean;
   };
   /**
    * If no version config is provided, we will assume that @nx/js:release-version
@@ -219,12 +240,7 @@ interface NxReleaseConfiguration {
     /**
      * Enable or override configuration for git operations as part of the version subcommand
      */
-    git?: NxReleaseGitConfiguration & {
-      /**
-       * Whether or not to stage the changes made by this command. Useful when combining the version command with changelog generation.
-       */
-      stageChanges?: boolean;
-    };
+    git?: NxReleaseGitConfiguration;
   };
   /**
    * Optionally override the git/release tag pattern to use. This field is the source of truth

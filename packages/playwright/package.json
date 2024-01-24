@@ -36,7 +36,7 @@
     "@nx/eslint": "file:../eslint",
     "@nx/js": "file:../js",
     "tslib": "^2.3.0",
-    "minimatch": "3.0.5"
+    "minimatch": "9.0.3"
   },
   "peerDependencies": {
     "@playwright/test": "^1.36.0"

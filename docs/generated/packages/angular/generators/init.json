@@ -26,9 +26,14 @@
         "default": false,
         "description": "Do not add dependencies to `package.json`.",
         "x-priority": "internal"
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
       }
     },
-    "additionalProperties": false,
     "presets": []
   },
   "description": "Initializes the `@nrwl/angular` plugin.",

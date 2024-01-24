@@ -23,22 +23,11 @@ export class GraphTooltipService {
           this.hideAll();
           break;
         case 'ProjectNodeClick':
-          const openConfigCallback =
-            graph.renderMode === 'nx-console'
-              ? () =>
-                  this.externalApiService.postEvent({
-                    type: 'open-project-config',
-                    payload: {
-                      projectName: event.data.id,
-                    },
-                  })
-              : undefined;
           this.openProjectNodeToolTip(event.ref, {
             id: event.data.id,
             tags: event.data.tags,
             type: event.data.type,
             description: event.data.description,
-            openConfigCallback,
           });
           break;
         case 'TaskNodeClick':

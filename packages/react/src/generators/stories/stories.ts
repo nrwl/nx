@@ -18,7 +18,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { basename, join } from 'path';
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { nxVersion } from '../../utils/versions';
 

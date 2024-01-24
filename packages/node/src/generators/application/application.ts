@@ -47,6 +47,7 @@ import { initGenerator } from '../init/init';
 import { setupDockerGenerator } from '../setup-docker/setup-docker';
 import { Schema } from './schema';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -160,9 +161,11 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   };
 
   if (options.bundler === 'esbuild') {
+    addBuildTargetDefaults(tree, '@nx/esbuild:esbuild');
     project.targets.build = getEsBuildConfig(project, options);
   } else if (options.bundler === 'webpack') {
     if (!hasWebpackPlugin(tree)) {
+      addBuildTargetDefaults(tree, `@nx/webpack:webpack`);
       project.targets.build = getWebpackBuildConfig(project, options);
     }
   }

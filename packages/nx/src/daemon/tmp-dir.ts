@@ -21,7 +21,7 @@ export const DAEMON_OUTPUT_LOG_FILE = join(
   'daemon.log'
 );
 
-const socketDir = process.env.NX_DAEMON_SOCKET_DIR || createSocketDir();
+export const socketDir = process.env.NX_DAEMON_SOCKET_DIR || createSocketDir();
 
 export const DAEMON_SOCKET_PATH = join(
   socketDir,
@@ -71,6 +71,6 @@ function createSocketDir() {
 
 export function removeSocketDir() {
   try {
-    rmdirSync(socketDir);
+    rmdirSync(socketDir, { recursive: true });
   } catch (e) {}
 }

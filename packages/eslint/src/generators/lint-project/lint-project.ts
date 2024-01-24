@@ -49,6 +49,7 @@ interface LintProjectOptions {
   skipPackageJson?: boolean;
   unitTestRunner?: string;
   rootProject?: boolean;
+  keepExistingVersions?: boolean;
 }
 
 export async function lintProjectGenerator(
@@ -56,7 +57,7 @@ export async function lintProjectGenerator(
   options: LintProjectOptions
 ) {
   const tasks: GeneratorCallback[] = [];
-  const initTask = lintInitGenerator(tree, {
+  const initTask = await lintInitGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
   });
   tasks.push(initTask);
@@ -126,7 +127,8 @@ export async function lintProjectGenerator(
       migrateConfigToMonorepoStyle(
         filteredProjects,
         tree,
-        options.unitTestRunner
+        options.unitTestRunner,
+        options.keepExistingVersions
       );
     }
   }

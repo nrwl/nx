@@ -1,5 +1,10 @@
 # Enterprise Release Notes
 
+### 2312.11.7.patch1
+
+- re-enable path style access for s3 buckets
+- fix an aggregator migration issue with old CIPE data
+
 ### 2312.11.7
 
 ##### Helm package compatibility

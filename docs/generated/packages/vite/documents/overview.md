@@ -70,7 +70,7 @@ Make sure to install the `@nx/vite` version that matches the version of `nx` in 
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/vite
+npm add -D @nx/vite
 ```
 
 {% /tab %}
@@ -84,7 +84,7 @@ yarn add -D @nx/vite
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/vite
+pnpm add -D @nx/vite
 ```
 
 {% /tab %}
