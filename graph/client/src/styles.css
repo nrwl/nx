@@ -1,6 +1,12 @@
+/*! purgecss start ignore */
+@import './syntax-highlight.css';
+/*! purgecss end ignore */
+
 @tailwind components;
 @tailwind base;
 @tailwind utilities;
+
+
 
 /** Scrollbars **/
 .dark {
