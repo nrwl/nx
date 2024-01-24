@@ -140,13 +140,13 @@ export const TargetConfigurationDetails = forwardRef(
         : true);
 
     return (
-      <div className="rounded-md border border-slate-500 relative overflow-hidden">
+      <div className="rounded-md border border-slate-200 dark:border-slate-700/60 relative overflow-hidden">
         <header
           className={twMerge(
-            `group hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer`,
+            `group hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer`,
             isCompact ? 'px-2 py-1' : 'p-2',
             !collapsed
-              ? 'bg-slate-200 dark:bg-slate-800 border-b-2 border-slate-900/10 dark:border-slate-300/10 '
+              ? 'bg-slate-50 dark:bg-slate-800/60 border-b-2 dark:border-slate-700/60 dark:border-slate-300/10 '
               : ''
           )}
           onClick={handleCollapseToggle}
