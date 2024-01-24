@@ -11,6 +11,10 @@ import {
 } from '../sync-deps/sync-deps.impl';
 import { writeFileSync } from 'fs-extra';
 
+/**
+ * TODO (@xiongemi): remove this function in v19.
+ * @deprecated Going to use the default react storybook target
+ */
 export default async function* reactNativeStorybookExecutor(
   options: ReactNativeStorybookOptions,
   context: ExecutorContext

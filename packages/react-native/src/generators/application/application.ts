@@ -7,17 +7,17 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
-import { runSymlink } from '../../utils/symlink-task';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
 import { chmodAndroidGradlewFilesTask } from '../../utils/chmod-android-gradle-files';
 import { runPodInstall } from '../../utils/pod-install-task';
+import { webConfigurationGenerator } from '../web-configuration/web-configuration';
 
 import { normalizeOptions } from './lib/normalize-options';
 import initGenerator from '../init/init';
 import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
-import { addDetox } from './lib/add-detox';
+import { addE2e } from './lib/add-e2e';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 
@@ -71,10 +71,17 @@ export async function reactNativeApplicationGeneratorInternal(
     options.skipPackageJson
   );
   tasks.push(jestTask);
-  const detoxTask = await addDetox(host, options);
-  tasks.push(detoxTask);
-  const symlinkTask = runSymlink(host.root, options.appProjectRoot);
-  tasks.push(symlinkTask);
+
+  const webTask = await webConfigurationGenerator(host, {
+    ...options,
+    project: options.name,
+    skipFormat: true,
+  });
+  tasks.push(webTask);
+
+  const e2eTask = await addE2e(host, options);
+  tasks.push(e2eTask);
+
   const chmodTaskGradlewTask = chmodAndroidGradlewFilesTask(
     joinPathFragments(host.root, options.androidProjectRoot)
   );

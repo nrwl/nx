@@ -8,6 +8,8 @@ import {
   runCommandUntil,
   killProcessAndPorts,
   fileExists,
+  checkFilesExist,
+  runE2ETests,
 } from 'e2e/utils';
 
 describe('@nx/react-native/plugin', () => {
@@ -69,5 +71,53 @@ describe('@nx/react-native/plugin', () => {
     if (process && process.pid) {
       await killProcessAndPorts(process.pid, port);
     }
+  });
+
+  it('should serve', async () => {
+    let process: ChildProcess;
+    const port = 8081;
+
+    try {
+      process = await runCommandUntil(
+        `serve ${appName} --interactive=false --port=${port}`,
+        (output) => {
+          return output.includes(`http://localhost:${port}`);
+        }
+      );
+    } catch (err) {
+      console.error(err);
+    }
+
+    // port and process cleanup
+    try {
+      if (process && process.pid) {
+        await killProcessAndPorts(process.pid, port);
+      }
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  });
+
+  it('should run e2e for cypress', async () => {
+    if (runE2ETests()) {
+      let results = runCLI(`e2e ${appName}-e2e`);
+      expect(results).toContain('Successfully ran target e2e');
+
+      results = runCLI(`e2e ${appName}-e2e --configuration=ci`);
+      expect(results).toContain('Successfully ran target e2e');
+    }
+  });
+
+  it('should create storybook with application', async () => {
+    runCLI(
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
+    );
+    expect(() => {
+      checkFilesExist(
+        `${appName}/.storybook/main.ts`,
+        `${appName}/src/app/App.stories.tsx`
+      );
+      runCLI(`build-storybook ${appName}`);
+    }).not.toThrow();
   });
 });

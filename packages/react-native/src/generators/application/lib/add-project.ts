@@ -33,28 +33,21 @@ function getTargets(options: NormalizedSchema) {
 
   architect.start = {
     executor: '@nx/react-native:start',
-    dependsOn: ['ensure-symlink', 'sync-deps', 'pod-install'],
+    dependsOn: ['sync-deps'],
     options: {
       port: 8081,
     },
   };
 
-  architect.serve = {
-    executor: 'nx:run-commands',
-    options: {
-      command: `nx start ${options.projectName}`,
-    },
-  };
-
   architect['run-ios'] = {
     executor: '@nx/react-native:run-ios',
-    dependsOn: ['ensure-symlink', 'sync-deps', 'pod-install'],
+    dependsOn: ['sync-deps'],
     options: {},
   };
 
   architect['bundle-ios'] = {
     executor: '@nx/react-native:bundle',
-    dependsOn: ['ensure-symlink'],
+    dependsOn: ['sync-deps'],
     outputs: ['{options.bundleOutput}'],
     options: {
       entryFile: options.entryFile,
@@ -65,7 +58,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect['run-android'] = {
     executor: '@nx/react-native:run-android',
-    dependsOn: ['ensure-symlink', 'sync-deps'],
+    dependsOn: ['sync-deps'],
     options: {},
   };
 
@@ -75,25 +68,31 @@ function getTargets(options: NormalizedSchema) {
       `{projectRoot}/android/app/build/outputs/bundle`,
       `{projectRoot}/android/app/build/outputs/apk`,
     ],
-    dependsOn: ['ensure-symlink', 'sync-deps'],
+    dependsOn: ['sync-deps'],
     options: {},
   };
 
   architect['build-ios'] = {
     executor: '@nx/react-native:build-ios',
     outputs: ['{projectRoot}/ios/build/Build'],
-    dependsOn: ['ensure-symlink', 'sync-deps', 'pod-install'],
+    dependsOn: ['sync-deps'],
     options: {},
   };
 
   architect['pod-install'] = {
     executor: '@nx/react-native:pod-install',
+    outputs: ['{projectRoot}/ios/Pods', '{projectRoot}/ios/Podfile.lock'],
+    options: {},
+  };
+
+  architect.upgrade = {
+    executor: '@nx/react-native:upgrade',
     options: {},
   };
 
   architect['bundle-android'] = {
     executor: '@nx/react-native:bundle',
-    dependsOn: ['ensure-symlink'],
+    dependsOn: ['sync-deps'],
     outputs: ['{options.bundleOutput}'],
     options: {
       entryFile: options.entryFile,
@@ -104,11 +103,6 @@ function getTargets(options: NormalizedSchema) {
 
   architect['sync-deps'] = {
     executor: '@nx/react-native:sync-deps',
-    options: {},
-  };
-
-  architect['ensure-symlink'] = {
-    executor: '@nx/react-native:ensure-symlink',
     options: {},
   };
 

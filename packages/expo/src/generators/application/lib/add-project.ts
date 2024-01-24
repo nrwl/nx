@@ -40,22 +40,21 @@ function getTargets(options: NormalizedSchema) {
 
   architect.start = {
     executor: '@nx/expo:start',
-    dependsOn: ['ensure-symlink', 'sync-deps'],
-    options: {
-      port: 8081,
-    },
+    dependsOn: ['sync-deps'],
+    options: {},
   };
 
   architect.serve = {
-    executor: 'nx:run-commands',
+    executor: '@nx/expo:serve',
+    dependsOn: ['sync-deps'],
     options: {
-      command: `nx start ${options.projectName}`,
+      port: 4200,
     },
   };
 
   architect['run-ios'] = {
     executor: '@nx/expo:run',
-    dependsOn: ['ensure-symlink', 'sync-deps'],
+    dependsOn: ['sync-deps'],
     options: {
       platform: 'ios',
     },
@@ -63,7 +62,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect['run-android'] = {
     executor: '@nx/expo:run',
-    dependsOn: ['ensure-symlink', 'sync-deps'],
+    dependsOn: ['sync-deps'],
     options: {
       platform: 'android',
     },
@@ -71,6 +70,7 @@ function getTargets(options: NormalizedSchema) {
 
   architect['build'] = {
     executor: '@nx/expo:build',
+    dependsOn: ['sync-deps'],
     options: {},
   };
 
@@ -89,14 +89,9 @@ function getTargets(options: NormalizedSchema) {
     options: {},
   };
 
-  architect['ensure-symlink'] = {
-    executor: '@nx/expo:ensure-symlink',
-    options: {},
-  };
-
   architect['prebuild'] = {
     executor: '@nx/expo:prebuild',
-    dependsOn: ['ensure-symlink', 'sync-deps'],
+    dependsOn: ['sync-deps'],
     options: {},
   };
 
@@ -112,19 +107,11 @@ function getTargets(options: NormalizedSchema) {
 
   architect['export'] = {
     executor: '@nx/expo:export',
-    dependsOn: ['ensure-symlink', 'sync-deps'],
+    dependsOn: ['sync-deps'],
+    outputs: ['{options.outputDir}'],
     options: {
       platform: 'all',
-      outputDir: `${offsetFromRoot(options.appProjectRoot)}dist/${
-        options.appProjectRoot
-      }`,
-    },
-  };
-
-  architect['export-web'] = {
-    executor: '@nx/expo:export',
-    options: {
-      bundler: 'metro',
+      outputDir: `dist/${options.appProjectRoot}`,
     },
   };
 

@@ -1,4 +1,4 @@
-// options form https://github.com/react-native-community/cli/blob/main/docs/commands.md#bundle
+// options form https://github.com/facebook/react-native/tree/main/packages/community-cli-plugin#bundle
 export interface ReactNativeBundleOptions {
   entryFile: string;
   platform: string;

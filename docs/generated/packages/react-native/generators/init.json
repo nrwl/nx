@@ -37,7 +37,7 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nrwl/react-native` plugin.",
+  "description": "Initialize the `@nx/react-native` plugin.",
   "hidden": true,
   "implementation": "/packages/react-native/src/generators/init/init#reactNativeInitGenerator.ts",
   "aliases": [],

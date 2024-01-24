@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxReactNativeWebConfiguration",
+  "description": "Setup web configuration to React Native apps using react-native-web.",
+  "title": "Nx React Native Web configuration",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "aliases": ["name", "projectName"],
+      "description": "Project for which to generate web configuration.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-prompt": "For which project do you want to generate web configuration?",
+      "x-dropdown": "projects",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    },
+    "bundler": {
+      "description": "The bundler to use.",
+      "type": "string",
+      "enum": ["vite", "webpack"],
+      "x-prompt": "Which bundler do you want to use to build the application?",
+      "default": "webpack",
+      "x-priority": "important"
+    }
+  },
+  "required": ["project", "bundler"]
+}

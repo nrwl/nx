@@ -881,6 +881,15 @@
         "originalFilePath": "/packages/expo/src/executors/submit/schema.json",
         "path": "expo/executors/submit",
         "type": "executor"
+      },
+      {
+        "description": "Serve up the Expo web app locally",
+        "file": "generated/packages/expo/executors/serve.json",
+        "hidden": false,
+        "name": "serve",
+        "originalFilePath": "/packages/expo/src/executors/serve/schema.json",
+        "path": "expo/executors/serve",
+        "type": "executor"
       }
     ],
     "generators": [
@@ -2330,11 +2339,20 @@
         "originalFilePath": "/packages/react-native/src/executors/pod-install/schema.json",
         "path": "react-native/executors/pod-install",
         "type": "executor"
+      },
+      {
+        "description": "upgrade executor",
+        "file": "generated/packages/react-native/executors/upgrade.json",
+        "hidden": false,
+        "name": "upgrade",
+        "originalFilePath": "/packages/react-native/src/executors/upgrade/schema.json",
+        "path": "react-native/executors/upgrade",
+        "type": "executor"
       }
     ],
     "generators": [
       {
-        "description": "Initialize the `@nrwl/react-native` plugin.",
+        "description": "Initialize the `@nx/react-native` plugin.",
         "file": "generated/packages/react-native/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2370,7 +2388,7 @@
         "type": "generator"
       },
       {
-        "description": "Set up Storybook for a React-native application or library.",
+        "description": "Set up Storybook for a React Native application or library.",
         "file": "generated/packages/react-native/generators/storybook-configuration.json",
         "hidden": false,
         "name": "storybook-configuration",
@@ -2379,7 +2397,7 @@
         "type": "generator"
       },
       {
-        "description": "Generate Storybook story for a React-native component.",
+        "description": "Generate Storybook story for a React Native component.",
         "file": "generated/packages/react-native/generators/component-story.json",
         "hidden": false,
         "name": "component-story",
@@ -2388,7 +2406,7 @@
         "type": "generator"
       },
       {
-        "description": "Create stories/specs for all components declared in an application or library.",
+        "description": "Create stories for all components declared in an application or library.",
         "file": "generated/packages/react-native/generators/stories.json",
         "hidden": false,
         "name": "stories",
@@ -2403,6 +2421,15 @@
         "name": "upgrade-native",
         "originalFilePath": "/packages/react-native/src/generators/upgrade-native/schema.json",
         "path": "react-native/generators/upgrade-native",
+        "type": "generator"
+      },
+      {
+        "description": "Set up web configuration for a React Native app",
+        "file": "generated/packages/react-native/generators/web-configuration.json",
+        "hidden": false,
+        "name": "web-configuration",
+        "originalFilePath": "/packages/react-native/src/generators/web-configuration/schema.json",
+        "path": "react-native/generators/web-configuration",
         "type": "generator"
       }
     ],
