@@ -267,6 +267,12 @@ export class DaemonClient {
               `If you get this error again, check for any errors in the daemon process logs found in: ${DAEMON_OUTPUT_LOG_FILE}`,
             ],
           });
+          this._daemonStatus = DaemonStatus.DISCONNECTED;
+          this.currentReject?.(
+            daemonProcessException(
+              'Daemon process terminated and closed the connection'
+            )
+          );
           process.exit(1);
         }
       },
