@@ -52,8 +52,8 @@ export function ProjectDetailsPage() {
     <div className="flex flex-col justify-center w-full text-slate-700 dark:text-slate-400">
       <ScrollRestoration />
       {environment !== 'nx-console' ? (
-        <header className="flex w-full justify-center items-center px-8 py-2 border-b-2 border-slate-900/10 mb-8 dark:border-slate-300/10">
-          <div className="flex flex-grow items-center justify-between max-w-6xl">
+        <header className="flex w-full justify-center items-center py-2 mx-auto border-b-2 border-slate-900/10 mb-8 dark:border-slate-300/10">
+          <div className="flex flex-grow items-center justify-between max-w-6xl px-8 ">
             <svg
               className="h-10 w-auto text-slate-900 dark:text-white"
               viewBox="0 0 24 24"
