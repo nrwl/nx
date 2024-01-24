@@ -178,7 +178,7 @@ export const TargetConfigurationDetails = forwardRef(
             <div className="flex items-center gap-2">
               {onViewInTaskGraph && (
                 <button
-                  className="text-slate-600 dark:text-slate-300 text-sm ring-2 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-200 dark:hover:bg-slate-700/60 p-1 bg-inherit rounded-md"
+                  className="text-slate-600 dark:text-slate-300 text-sm ring-1 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-200 dark:hover:bg-slate-700/60 p-1 bg-inherit rounded-md"
                   // TODO: fix tooltip overflow in collapsed state
                   data-tooltip={collapsed ? false : 'View in Task Graph'}
                   data-tooltip-align-right
@@ -195,7 +195,7 @@ export const TargetConfigurationDetails = forwardRef(
 
               {onRunTarget && (
                 <span
-                  className="text-slate-600 dark:text-slate-300 text-sm ring-2 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-200 dark:hover:bg-slate-700/60 p-1 bg-inherit rounded-md"
+                  className="text-slate-600 dark:text-slate-300 text-sm ring-1 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-200 dark:hover:bg-slate-700/60 p-1 bg-inherit rounded-md"
                   // TODO: fix tooltip overflow in collapsed state
                   data-tooltip={collapsed ? false : 'Run Target'}
                   data-tooltip-align-right
