@@ -31,7 +31,7 @@ Keep reading to learn what the configuration and setup looks like.
 
 ## Managed Agents, Seamless Configuration
 
-Enabling task distribution with Nx Agents can be done in a single line. Simply add the `--distribute-on` property to the `start-ci-run` line in your CI pipeline configuration:
+Enabling task distribution with Nx Agents can be done in a single line. Simply add the `--distributes-on` property to the `start-ci-run` line in your CI pipeline configuration:
 
 ```yaml
 - name: Start CI run
@@ -84,9 +84,9 @@ Instead of defining
 
 ```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
 distributes-on:
-  small-changeset: 1 linux-medium
-  medium-changeset: 6 linux-medium
-  large-changeset: 10 linux-medium
+  small-changeset: 1 linux-medium-js
+  medium-changeset: 6 linux-medium-js
+  large-changeset: 10 linux-medium-js
 ```
 
 {% callout type="note" title="How is the size of the PR determined?" %}
