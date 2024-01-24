@@ -31,6 +31,7 @@ import {
 } from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from './tooltip-trigger-text';
 import { twMerge } from 'tailwind-merge';
+import { Pill } from '../pill';
 
 /* eslint-disable-next-line */
 export interface TargetProps {
@@ -158,9 +159,9 @@ export const TargetConfigurationDetails = forwardRef(
               ) : (
                 <ChevronUpIcon className="h-3 w-3" />
               )}
-              <h3 className="font-medium">{targetName}</h3>
+              <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
               {collapsed && (
-                <p className="text-slate-600 text-sm">
+                <p className="text-slate-400 text-sm">
                   {singleCommand ? singleCommand : targetConfiguration.executor}
                 </p>
               )}
@@ -170,9 +171,7 @@ export const TargetConfigurationDetails = forwardRef(
                   strategy="fixed"
                   content={(<PropertyInfoTooltip type="cacheable" />) as any}
                 >
-                  <span className="rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 py-1 text-slate-50">
-                    Cacheable
-                  </span>
+                  <Pill text="Cacheable" />
                 </Tooltip>
               )}
             </div>
@@ -211,6 +210,7 @@ export const TargetConfigurationDetails = forwardRef(
                 <SourceInfo
                   data={sourceMap[`targets.${targetName}`]}
                   propertyKey={`targets.${targetName}`}
+                  color="text-gray-500 dark:text-slate-400"
                 />
               </span>
               <div className="flex items-center gap-2">
@@ -480,11 +480,11 @@ export const TargetConfigurationDetails = forwardRef(
                     </span>
                   </Tooltip>{' '}
                   {targetConfiguration.defaultConfiguration && (
-                    <span
-                      data-tooltip="Default Configuration"
-                      className="ml-3 rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 py-1 text-slate-50  mr-6"
-                    >
-                      {targetConfiguration.defaultConfiguration}
+                    <span className="ml-3">
+                      <Pill
+                        tooltip="Default Configuration"
+                        text={targetConfiguration.defaultConfiguration}
+                      />
                     </span>
                   )}
                 </h4>

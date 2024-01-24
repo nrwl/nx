@@ -1,9 +1,11 @@
 import { SourcemapInfoToolTip, Tooltip } from '@nx/graph/ui-tooltips';
 import { InformationCircleIcon } from '@heroicons/react/24/outline';
+import { twMerge } from 'tailwind-merge';
 
 export function SourceInfo(props: {
   data: Array<string>;
   propertyKey: string;
+  color?: string;
 }) {
   // Target property key is in the form `target.${targetName}`
   // Every other property within in the target has the form `target.${targetName}.${propertyName}
@@ -28,7 +30,9 @@ export function SourceInfo(props: {
         {/*<span className="italic text-gray-500">*/}
         {/*  <InformationCircleIcon className="w-3 h-3" />*/}
         {/*</span>*/}
-        <span className="italic text-gray-500 text-sm">
+        <span
+          className={twMerge('italic text-sm', props.color ?? 'text-gray-500')}
+        >
           {isTarget ? 'Created' : 'Set'} by {props.data?.[1]} from{' '}
           {props.data?.[0]}
         </span>
