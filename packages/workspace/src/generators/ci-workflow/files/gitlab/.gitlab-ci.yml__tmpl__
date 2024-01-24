@@ -16,6 +16,6 @@ variables:
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
     # uncomment to enable task distribution
-    # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distributes-on="5 linux-medium"
+    # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
     - <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3

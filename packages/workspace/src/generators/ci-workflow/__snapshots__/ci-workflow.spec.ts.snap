@@ -26,7 +26,7 @@ jobs:
     steps:
       - script: npm ci
       # uncomment to enable task distribution
-      # - script: npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - script: npx nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build --parallel=3
 "
@@ -49,7 +49,7 @@ pipelines:
 
                 - npm ci
                 # uncomment to enable task distribution
-                # - npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
+                # - npx nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
                 - npx nx-cloud record -- nx format:check
                 - npx nx affected -t=lint,test,build --parallel=3
 "
@@ -71,7 +71,7 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
       # uncomment to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 
@@ -113,7 +113,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       # uncomment to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
 
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t=lint,test,build --parallel=3
@@ -149,7 +149,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       # uncomment to enable task distribution
-      # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - run: npx nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
 
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t=lint,test,build --parallel=3
@@ -172,7 +172,7 @@ CI:
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
     # uncomment to enable task distribution
-    # - npx nx-cloud start-ci-run --distributes-on="5 linux-medium"
+    # - npx nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
     - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 "
@@ -208,7 +208,7 @@ jobs:
         displayName: Install PNPM
       - script: pnpm install --frozen-lockfile
       # uncomment to enable task distribution
-      # - script: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - script: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
       - script: pnpm exec nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build --parallel=3
 "
@@ -233,7 +233,7 @@ pipelines:
 
                 - pnpm install --frozen-lockfile
                 # uncomment to enable task distribution
-                # - pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
+                # - pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
                 - pnpm exec nx-cloud record -- nx format:check
                 - pnpm exec nx affected -t=lint,test,build --parallel=3
 "
@@ -259,7 +259,7 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
       # uncomment to enable task distribution
-      # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
       - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 
@@ -305,7 +305,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       # uncomment to enable task distribution
-      # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
 
       - run: pnpm exec nx-cloud record -- nx format:check
       - run: pnpm exec nx affected -t=lint,test,build --parallel=3
@@ -345,7 +345,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       # uncomment to enable task distribution
-      # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - run: pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
 
       - run: pnpm exec nx-cloud record -- nx format:check
       - run: pnpm exec nx affected -t=lint,test,build --parallel=3
@@ -370,7 +370,7 @@ CI:
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
     # uncomment to enable task distribution
-    # - pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium"
+    # - pnpm exec nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
     - pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 "
@@ -404,7 +404,7 @@ jobs:
     steps:
       - script: yarn install --frozen-lockfile
       # uncomment to enable task distribution
-      # - script: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - script: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
       - script: yarn nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build --parallel=3
 "
@@ -427,7 +427,7 @@ pipelines:
 
                 - yarn install --frozen-lockfile
                 # uncomment to enable task distribution
-                # - yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
+                # - yarn nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
                 - yarn nx-cloud record -- nx format:check
                 - yarn nx affected -t=lint,test,build --parallel=3
 "
@@ -449,7 +449,7 @@ jobs:
       - nx/set-shas:
           main-branch-name: 'main'
       # uncomment to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
       - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 
@@ -491,7 +491,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       # uncomment to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
 
       - run: yarn nx-cloud record -- nx format:check
       - run: yarn nx affected -t=lint,test,build --parallel=3
@@ -527,7 +527,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       # uncomment to enable task distribution
-      # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # - run: yarn nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
 
       - run: yarn nx-cloud record -- nx format:check
       - run: yarn nx affected -t=lint,test,build --parallel=3
@@ -550,7 +550,7 @@ CI:
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
     # uncomment to enable task distribution
-    # - yarn nx-cloud start-ci-run --distributes-on="5 linux-medium"
+    # - yarn nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
     - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build --parallel=3
 "
