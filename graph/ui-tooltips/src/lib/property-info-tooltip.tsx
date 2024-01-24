@@ -8,7 +8,8 @@ type PropertyInfoTooltipType =
   | 'outputs'
   | 'dependsOn'
   | 'options'
-  | 'configurations';
+  | 'configurations'
+  | 'release';
 
 type PropertyInfoTooltipTypeOptions = {
   docsUrl: string;
@@ -72,6 +73,12 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
     heading: 'Configurations',
     description:
       'Configurations are sets of Options to allow a Target to be used in different scenarios.',
+  },
+  release: {
+    heading: 'nx release',
+    description:
+      "The nx-release-publish target is used to publish your project with nxrelease. Don't invoke this directly - use nx release publish instead.",
+    docsUrl: 'https://nx.dev/nx-api/nx/documents/release',
   },
 };
 

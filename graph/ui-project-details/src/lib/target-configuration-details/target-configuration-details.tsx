@@ -4,7 +4,9 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   EyeIcon,
+  InformationCircleIcon,
   PlayIcon,
+  QuestionMarkCircleIcon,
 } from '@heroicons/react/24/outline';
 
 // nx-ignore-next-line
@@ -160,10 +162,24 @@ export const TargetConfigurationDetails = forwardRef(
                 <ChevronUpIcon className="h-3 w-3" />
               )}
               <h3 className="font-medium dark:text-slate-300">{targetName}</h3>
-              {collapsed && (
-                <p className="text-slate-400 text-sm">
-                  {singleCommand ? singleCommand : targetConfiguration.executor}
-                </p>
+              {collapsed &&
+                targetConfiguration?.executor !== '@nx/js:release-publish' && (
+                  <p className="text-slate-400 text-sm">
+                    {singleCommand
+                      ? singleCommand
+                      : targetConfiguration.executor}
+                  </p>
+                )}
+              {targetName === 'nx-release-publish' && (
+                <Tooltip
+                  openAction="hover"
+                  strategy="fixed"
+                  content={(<PropertyInfoTooltip type="release" />) as any}
+                >
+                  <span className="inline-flex">
+                    <Pill text="nx release" color="grey" />
+                  </span>
+                </Tooltip>
               )}
               {targetConfiguration.cache && (
                 <Tooltip
@@ -171,7 +187,9 @@ export const TargetConfigurationDetails = forwardRef(
                   strategy="fixed"
                   content={(<PropertyInfoTooltip type="cacheable" />) as any}
                 >
-                  <Pill text="Cacheable" color="green" />
+                  <span className="inline-flex">
+                    <Pill text="Cacheable" color="green" />
+                  </span>
                 </Tooltip>
               )}
             </div>
@@ -220,19 +238,21 @@ export const TargetConfigurationDetails = forwardRef(
                   color="text-gray-500 dark:text-slate-400"
                 />
               </span>
-              <div className="flex items-center gap-2">
-                <code className="ml-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono px-2 py-1 rounded">
-                  nx run {projectName}:{targetName}
-                </code>
-                <span>
-                  <CopyToClipboard
-                    onCopy={() =>
-                      handleCopyClick(`nx run ${projectName}:${targetName}`)
-                    }
-                    tooltipAlignment="right"
-                  />
-                </span>
-              </div>
+              {targetName !== 'nx-release-publish' && (
+                <div className="flex items-center gap-2">
+                  <code className="ml-4 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 font-mono px-2 py-1 rounded">
+                    nx run {projectName}:{targetName}
+                  </code>
+                  <span>
+                    <CopyToClipboard
+                      onCopy={() =>
+                        handleCopyClick(`nx run ${projectName}:${targetName}`)
+                      }
+                      tooltipAlignment="right"
+                    />
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </header>

@@ -143,7 +143,7 @@ export const ProjectDetails = forwardRef(
             </Tooltip>
           </h2>
           <ul>
-            {projectTargets.map((targetName) => {
+            {projectTargets.sort(sortNxReleasePublishLast).map((targetName) => {
               const target = projectData.targets?.[targetName];
               return target && targetRefs.current[targetName] ? (
                 <li className="mb-4 last:mb-0" key={`target-${targetName}`}>
@@ -168,5 +168,11 @@ export const ProjectDetails = forwardRef(
     );
   }
 );
+
+function sortNxReleasePublishLast(a: string, b: string) {
+  if (a === 'nx-release-publish') return 1;
+  if (b === 'nx-release-publish') return -1;
+  return 0;
+}
 
 export default ProjectDetails;
