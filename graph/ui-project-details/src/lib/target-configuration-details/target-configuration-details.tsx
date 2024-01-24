@@ -170,7 +170,7 @@ export const TargetConfigurationDetails = forwardRef(
                   strategy="fixed"
                   content={(<PropertyInfoTooltip type="cacheable" />) as any}
                 >
-                  <span className="rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 text-slate-50">
+                  <span className="rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 py-1 text-slate-50">
                     Cacheable
                   </span>
                 </Tooltip>
@@ -481,7 +481,7 @@ export const TargetConfigurationDetails = forwardRef(
                   {targetConfiguration.defaultConfiguration && (
                     <span
                       data-tooltip="Default Configuration"
-                      className="ml-3 rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 text-slate-50  mr-6"
+                      className="ml-3 rounded-full inline-block text-xs bg-sky-500 dark:bg-sky-800 px-2 py-1 text-slate-50  mr-6"
                     >
                       {targetConfiguration.defaultConfiguration}
                     </span>
