@@ -153,11 +153,9 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
       {...props}
       onTargetCollapse={handleTargetCollapse}
       onTargetExpand={handleTargetExpand}
-      onViewInProjectGraph={
-        environment === 'nx-console' ? handleViewInProjectGraph : undefined
-      }
+      onViewInProjectGraph={handleViewInProjectGraph}
       onViewInTaskGraph={handleViewInTaskGraph}
-      onRunTarget={handleRunTarget}
+      onRunTarget={environment === 'nx-console' ? handleRunTarget : undefined}
     />
   );
 }

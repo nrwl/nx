@@ -30,6 +30,7 @@ import {
   Tooltip,
 } from '@nx/graph/ui-tooltips';
 import { TooltipTriggerText } from './tooltip-trigger-text';
+import { twMerge } from 'tailwind-merge';
 
 /* eslint-disable-next-line */
 export interface TargetProps {
@@ -37,6 +38,7 @@ export interface TargetProps {
   targetName: string;
   targetConfiguration: TargetConfiguration;
   sourceMap: Record<string, string[]>;
+  variant?: 'default' | 'compact';
   onCollapse?: (targetName: string) => void;
   onExpand?: (targetName: string) => void;
   onRunTarget?: (data: { projectName: string; targetName: string }) => void;
@@ -54,6 +56,7 @@ export interface TargetConfigurationDetailsHandle {
 export const TargetConfigurationDetails = forwardRef(
   (
     {
+      variant,
       projectName,
       targetName,
       targetConfiguration,
@@ -65,6 +68,7 @@ export const TargetConfigurationDetails = forwardRef(
     }: TargetProps,
     ref: ForwardedRef<TargetConfigurationDetailsHandle>
   ) => {
+    const isCompact = variant === 'compact';
     const [collapsed, setCollapsed] = useState(true);
 
     const handleCopyClick = async (copyText: string) => {
@@ -138,11 +142,13 @@ export const TargetConfigurationDetails = forwardRef(
     return (
       <div className="rounded-md border border-slate-500 relative overflow-hidden">
         <header
-          className={`group hover:bg-slate-200 dark:hover:bg-slate-800 p-2 cursor-pointer ${
+          className={twMerge(
+            `group hover:bg-slate-200 dark:hover:bg-slate-800 cursor-pointer`,
+            isCompact ? 'px-2 py-1' : 'p-2',
             !collapsed
               ? 'bg-slate-200 dark:bg-slate-800 border-b-2 border-slate-900/10 dark:border-slate-300/10 '
               : ''
-          }`}
+          )}
           onClick={handleCollapseToggle}
         >
           <div className="flex justify-between items-center">

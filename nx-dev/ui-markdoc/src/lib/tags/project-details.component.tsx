@@ -71,7 +71,7 @@ export function ProjectDetails({
   }
 
   return (
-    <div className="my-6 w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
+    <div className="w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
       {title && (
         <div className="relative flex justify-center p-2 border-b border-slate-200 bg-slate-100/50 dark:border-slate-700 dark:bg-slate-700/50 font-bold">
           {title}
@@ -79,12 +79,13 @@ export function ProjectDetails({
       )}
       <div
         className={`not-prose ${
-          height ? `p-6 h-[${height}] overflow-y-auto` : 'p-6'
+          height ? `p-4 h-[${height}] overflow-y-auto` : 'p-4'
         }`}
       >
         <ProjectDetailsUi
           project={parsedProps.project}
           sourceMap={parsedProps.sourceMap}
+          variant="compact"
         />
       </div>
     </div>

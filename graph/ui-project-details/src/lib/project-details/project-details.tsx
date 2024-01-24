@@ -19,10 +19,12 @@ import {
   useImperativeHandle,
   useRef,
 } from 'react';
+import { twMerge } from 'tailwind-merge';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
   sourceMap: Record<string, string[]>;
+  variant?: 'default' | 'compact';
   onTargetCollapse?: (targetName: string) => void;
   onTargetExpand?: (targetName: string) => void;
   onViewInProjectGraph?: (data: { projectName: string }) => void;
@@ -45,13 +47,17 @@ export const ProjectDetails = forwardRef(
         name,
         data: { root, ...projectData },
       },
+      sourceMap,
+      variant,
       onTargetCollapse,
       onTargetExpand,
-      sourceMap,
       onViewInProjectGraph,
+      onViewInTaskGraph,
+      onRunTarget,
     }: ProjectDetailsProps,
     ref: ForwardedRef<ProjectDetailsImperativeHandle>
   ) => {
+    const isCompact = variant === 'compact';
     const projectTargets = Object.keys(projectData.targets ?? {});
     const targetRefs = useRef(
       projectTargets.reduce((acc, targetName) => {
@@ -76,17 +82,27 @@ export const ProjectDetails = forwardRef(
 
     return (
       <>
-        <header className="border-b border-slate-900/10 mb-4 dark:border-slate-300/10">
-          <h1 className="text-4xl flex items-center mb-4 gap-2">
+        <header
+          className={twMerge(
+            `border-b border-slate-900/10 dark:border-slate-300/10`,
+            isCompact ? 'mb-2' : 'mb-4'
+          )}
+        >
+          <h1
+            className={twMerge(
+              `flex items-center`,
+              isCompact ? `text-2xl gap-1` : `text-4xl mb-4 gap-2`
+            )}
+          >
             {name}{' '}
             {onViewInProjectGraph ? (
               <EyeIcon
-                className="h-5 w-5"
+                className="h-5 w-5 cursor-pointer"
                 onClick={() => onViewInProjectGraph({ projectName: name })}
               ></EyeIcon>
             ) : null}{' '}
           </h1>
-          <div className="p-4">
+          <div className={isCompact ? `px-4 py-2` : `p-4`}>
             {projectData.tags ? (
               <p>
                 {projectData.tags?.map((tag) => (
@@ -107,7 +123,7 @@ export const ProjectDetails = forwardRef(
           </div>
         </header>
         <div>
-          <h2 className="text-2xl mb-4">
+          <h2 className={isCompact ? `text-lg mb-3` : `text-xl mb-4`}>
             <Tooltip
               openAction="hover"
               content={(<PropertyInfoTooltip type="targets" />) as any}
@@ -121,13 +137,16 @@ export const ProjectDetails = forwardRef(
             {projectTargets.map((targetName) => {
               const target = projectData.targets?.[targetName];
               return target && targetRefs.current[targetName] ? (
-                <li className="mb-4" key={`target-${targetName}`}>
+                <li className="mb-4 last:mb-0" key={`target-${targetName}`}>
                   <TargetConfigurationDetails
                     ref={targetRefs.current[targetName]}
+                    variant={variant}
                     projectName={name}
                     targetName={targetName}
                     targetConfiguration={target}
                     sourceMap={sourceMap}
+                    onRunTarget={onRunTarget}
+                    onViewInTaskGraph={onViewInTaskGraph}
                     onCollapse={onTargetCollapse}
                     onExpand={onTargetExpand}
                   />
