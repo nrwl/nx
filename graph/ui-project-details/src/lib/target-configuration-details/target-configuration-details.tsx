@@ -47,8 +47,8 @@ export interface TargetProps {
 }
 
 export interface TargetConfigurationDetailsHandle {
-  collapseTarget: (targetName: string) => void;
-  expandTarget: (targetName: string) => void;
+  collapse: () => void;
+  expand: () => void;
 }
 
 export const TargetConfigurationDetails = forwardRef(
@@ -85,10 +85,10 @@ export const TargetConfigurationDetails = forwardRef(
     }, [collapsed, onCollapse, onExpand, projectName, targetName]);
 
     useImperativeHandle(ref, () => ({
-      collapseTarget: (targetName: string) => {
+      collapse: () => {
         !collapsed && setCollapsed(true);
       },
-      expandTarget: (targetName: string) => {
+      expand: () => {
         collapsed && setCollapsed(false);
       },
     }));

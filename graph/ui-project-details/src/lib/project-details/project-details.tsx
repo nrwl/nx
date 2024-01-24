@@ -67,17 +67,17 @@ export const ProjectDetails = forwardRef(
 
     useImperativeHandle(ref, () => ({
       collapseTarget: (targetName: string) => {
-        targetRefs.current[targetName]?.current?.collapseTarget(targetName);
+        targetRefs.current[targetName]?.current?.collapse();
       },
       expandTarget: (targetName: string) => {
-        targetRefs.current[targetName]?.current?.expandTarget(targetName);
+        targetRefs.current[targetName]?.current?.expand();
       },
     }));
 
     return (
       <>
         <header className="border-b border-slate-900/10 mb-4 dark:border-slate-300/10">
-          <h1 className="text-6xl flex items-center mb-4 gap-2">
+          <h1 className="text-4xl flex items-center mb-4 gap-2">
             {name}{' '}
             {onViewInProjectGraph ? (
               <EyeIcon
@@ -107,7 +107,7 @@ export const ProjectDetails = forwardRef(
           </div>
         </header>
         <div>
-          <h2 className="text-3xl mb-4">
+          <h2 className="text-2xl mb-4">
             <Tooltip
               openAction="hover"
               content={(<PropertyInfoTooltip type="targets" />) as any}

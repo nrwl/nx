@@ -14,7 +14,7 @@ import {
   ProjectDetails,
   ProjectDetailsImperativeHandle,
 } from '@nx/graph/ui-project-details';
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { useCallback, useLayoutEffect, useRef } from 'react';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
@@ -95,30 +95,39 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
 
   const handleTargetCollapse = useCallback(
     (targetName: string) => {
-      setSearchParams((currentSearchParams) => {
-        const expandedSections =
-          currentSearchParams.get('expanded')?.split(',') || [];
-        const newExpandedSections = expandedSections.filter(
-          (section) => section !== targetName
-        );
-        updateSearchParams(currentSearchParams, newExpandedSections);
-        return currentSearchParams;
-      });
+      setSearchParams(
+        (currentSearchParams) => {
+          const expandedSections =
+            currentSearchParams.get('expanded')?.split(',') || [];
+          const newExpandedSections = expandedSections.filter(
+            (section) => section !== targetName
+          );
+          updateSearchParams(currentSearchParams, newExpandedSections);
+          return currentSearchParams;
+        },
+        {
+          replace: true,
+          preventScrollReset: true,
+        }
+      );
     },
     [setSearchParams]
   );
 
   const handleTargetExpand = useCallback(
     (targetName: string) => {
-      setSearchParams((currentSearchParams) => {
-        const expandedSections =
-          currentSearchParams.get('expanded')?.split(',') || [];
-        if (!expandedSections.includes(targetName)) {
-          expandedSections.push(targetName);
-          updateSearchParams(currentSearchParams, expandedSections);
-        }
-        return currentSearchParams;
-      });
+      setSearchParams(
+        (currentSearchParams) => {
+          const expandedSections =
+            currentSearchParams.get('expanded')?.split(',') || [];
+          if (!expandedSections.includes(targetName)) {
+            expandedSections.push(targetName);
+            updateSearchParams(currentSearchParams, expandedSections);
+          }
+          return currentSearchParams;
+        },
+        { replace: true, preventScrollReset: true }
+      );
     },
     [setSearchParams]
   );
@@ -134,8 +143,6 @@ export function ProjectDetailsWrapper(props: ProjectDetailsProps) {
     for (const targetName of Object.keys(props.project.data.targets)) {
       if (expandedSections.includes(targetName)) {
         projectDetailsRef.current?.expandTarget(targetName);
-      } else {
-        projectDetailsRef.current?.collapseTarget(targetName);
       }
     }
   }, [searchParams, props.project.data.targets, projectDetailsRef]);
