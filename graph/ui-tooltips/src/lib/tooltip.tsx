@@ -26,6 +26,7 @@ import {
   useHover,
   useRole,
   safePolygon,
+  useTransitionStyles,
 } from '@floating-ui/react';
 
 export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
@@ -76,6 +77,13 @@ export function Tooltip({
     ],
   });
 
+  const { isMounted, styles: animationStyles } = useTransitionStyles(context, {
+    duration: 200,
+    initial: {
+      opacity: openAction === 'hover' ? 0 : 1,
+    },
+  });
+
   const staticSide: string =
     {
       top: 'bottom',
@@ -122,7 +130,7 @@ export function Tooltip({
       {!externalReference && !!children
         ? cloneElement(children, cloneProps)
         : children}
-      {isOpen ? (
+      {isOpen && isMounted ? (
         <div
           ref={refs.setFloating}
           style={{
@@ -130,6 +138,7 @@ export function Tooltip({
             top: showTooltipArrow ? y : y + 8 ?? 0,
             left: x ?? 0,
             width: 'max-content',
+            ...animationStyles,
           }}
           className="z-10 min-w-[250px] rounded-md border border-slate-500"
           {...getFloatingProps()}
