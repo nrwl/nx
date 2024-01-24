@@ -1,6 +1,6 @@
 import { useTheme } from '@nx/nx-dev/ui-theme';
-import dynamic from 'next/dynamic';
-import { ReactElement, useEffect, useState } from 'react';
+import { JSX, ReactElement, useEffect, useState } from 'react';
+import { ProjectDetails as ProjectDetailsUi } from '@nx/graph/ui-project-details';
 
 export function Loading() {
   return (
@@ -15,35 +15,14 @@ export function Loading() {
   );
 }
 
-/**
- * dynamic() can't be used inside of React rendering as it needs to be marked
- * in the top level of the module for preloading to work, similar to React.lazy.
- */
-const NxProjectGraphViz = dynamic(
-  () => import('@nx/graph/ui-graph').then((module) => module.NxProjectGraphViz),
-  {
-    ssr: false,
-    loading: () => <Loading />,
-  }
-);
-const NxTaskGraphViz = dynamic(
-  () => import('@nx/graph/ui-graph').then((module) => module.NxTaskGraphViz),
-  {
-    ssr: false,
-    loading: () => <Loading />,
-  }
-);
-
-export function Graph({
+export function ProjectDetails({
   height,
   title,
-  type,
   jsonFile,
   children,
 }: {
   height: string;
   title: string;
-  type: 'project' | 'task';
   jsonFile?: string;
   children: ReactElement;
 }): JSX.Element {
@@ -63,6 +42,7 @@ export function Graph({
       getData(jsonFile);
     }
   }, [jsonFile, setParsedProps]);
+
   if (!jsonFile && !parsedProps) {
     if (!children || !children.hasOwnProperty('props')) {
       return (
@@ -91,31 +71,23 @@ export function Graph({
   }
 
   return (
-    <div className="my-6 w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
-      <div className="relative flex justify-center p-2 border-b border-slate-200 bg-slate-100/50 dark:border-slate-700 dark:bg-slate-700/50 font-bold">
-        {title}
-      </div>
-      {type === 'project' ? (
-        <NxProjectGraphViz
-          height={height}
-          groupByFolder={false}
-          theme={theme}
-          projects={parsedProps.projects}
-          workspaceLayout={parsedProps.workspaceLayout}
-          dependencies={parsedProps.dependencies}
-          affectedProjectIds={parsedProps.affectedProjectIds}
-          enableTooltips={parsedProps.enableTooltips}
-        />
-      ) : (
-        <NxTaskGraphViz
-          height={height}
-          theme={theme}
-          projects={parsedProps.projects}
-          taskGraphs={parsedProps.taskGraphs}
-          taskId={parsedProps.taskId}
-          enableTooltips={parsedProps.enableTooltips}
-        />
+    <div className="w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
+      {title && (
+        <div className="relative flex justify-center p-2 border-b border-slate-200 bg-slate-100/50 dark:border-slate-700 dark:bg-slate-700/50 font-bold">
+          {title}
+        </div>
       )}
+      <div
+        className={`not-prose ${
+          height ? `p-4 h-[${height}] overflow-y-auto` : 'p-4'
+        }`}
+      >
+        <ProjectDetailsUi
+          project={parsedProps.project}
+          sourceMap={parsedProps.sourceMap}
+          variant="compact"
+        />
+      </div>
     </div>
   );
 }
