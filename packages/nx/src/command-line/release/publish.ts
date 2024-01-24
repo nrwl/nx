@@ -150,6 +150,10 @@ async function runPublishOnProjects(
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
 
+  if (args.firstRelease) {
+    overrides.firstRelease = args.firstRelease;
+  }
+
   const targets = ['nx-release-publish'];
 
   if (args.graph) {

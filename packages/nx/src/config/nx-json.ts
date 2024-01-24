@@ -132,6 +132,10 @@ export interface NxReleaseGitConfiguration {
    */
   commitArgs?: string;
   /**
+   * Whether or not to stage the changes made by this command. Always treated as true if commit is true.
+   */
+  stageChanges?: boolean;
+  /**
    * Whether or not to automatically tag the changes made by this command
    */
   tag?: boolean;
@@ -221,6 +225,12 @@ interface NxReleaseConfiguration {
      * - false = explicitly disable project level changelogs
      */
     projectChangelogs?: NxReleaseChangelogConfiguration | boolean;
+    /**
+     * Whether or not to automatically look up the first commit for the workspace (or package, if versioning independently)
+     * and use that as the starting point for changelog generation. If this is not enabled, changelog generation will fail
+     * if there is no previous matching git tag to use as a starting point.
+     */
+    automaticFromRef?: boolean;
   };
   /**
    * If no version config is provided, we will assume that @nx/js:release-version
@@ -230,12 +240,7 @@ interface NxReleaseConfiguration {
     /**
      * Enable or override configuration for git operations as part of the version subcommand
      */
-    git?: NxReleaseGitConfiguration & {
-      /**
-       * Whether or not to stage the changes made by this command. Useful when combining the version command with changelog generation.
-       */
-      stageChanges?: boolean;
-    };
+    git?: NxReleaseGitConfiguration;
   };
   /**
    * Optionally override the git/release tag pattern to use. This field is the source of truth
