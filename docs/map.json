@@ -1173,6 +1173,12 @@
                   "id": "getting-started-with-nx-release",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/release/getting-started-with-nx-release"
+                },
+                {
+                  "name": "Releasing Projects Independently",
+                  "id": "independent-releases",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/release/independent-releases"
                 }
               ]
             },

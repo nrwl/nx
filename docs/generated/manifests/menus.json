@@ -2390,6 +2390,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Releasing Projects Independently",
+                "path": "/recipes/nx-release/independent-releases",
+                "id": "independent-releases",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -4207,6 +4215,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Releasing Projects Independently",
+            "path": "/recipes/nx-release/independent-releases",
+            "id": "independent-releases",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4215,6 +4231,14 @@
         "name": "Getting Started with Nx Release",
         "path": "/recipes/nx-release/getting-started-with-nx-release",
         "id": "getting-started-with-nx-release",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Releasing Projects Independently",
+        "path": "/recipes/nx-release/independent-releases",
+        "id": "independent-releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

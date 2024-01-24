@@ -1117,6 +1117,13 @@
       "id": "getting-started-with-nx-release",
       "name": "Getting Started with Nx Release",
       "path": "/recipes/nx-release/getting-started-with-nx-release"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/release/independent-releases",
+      "id": "independent-releases",
+      "name": "Releasing Projects Independently",
+      "path": "/recipes/nx-release/independent-releases"
     }
   ],
   "database": [
