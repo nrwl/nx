@@ -42,6 +42,7 @@ export const allowedProjectExtensions = [
   'root',
   'sourceRoot',
   'projectType',
+  'release',
 ] as const;
 
 // If we pass props on the workspace that angular doesn't know about,
@@ -132,7 +133,7 @@ function mockReadJsonWorkspace(
         ...options,
         allowedProjectExtensions: allowedProjectExtensions as CheckHasKeys<
           typeof allowedProjectExtensions,
-          keyof Omit<ProjectConfiguration, 'targets' | 'generators' | 'release'>
+          keyof Omit<ProjectConfiguration, 'targets' | 'generators'>
         >,
         allowedWorkspaceExtensions: allowedWorkspaceExtensions as CheckHasKeys<
           typeof allowedWorkspaceExtensions,
