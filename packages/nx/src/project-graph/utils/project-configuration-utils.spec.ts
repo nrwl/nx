@@ -433,7 +433,10 @@ describe('project-configuration-utils', () => {
           "root": "libs/lib-a",
           "targets": {
             "build": {
-              "command": "tsc",
+              "executor": "nx:run-commands",
+              "options": {
+                "command": "tsc",
+              },
             },
             "echo": {
               "command": "echo lib-a",

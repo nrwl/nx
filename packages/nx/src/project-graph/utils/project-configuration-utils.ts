@@ -28,7 +28,10 @@ export function mergeProjectConfigurationIntoRootMap(
     >;
   },
   configurationSourceMaps?: ConfigurationSourceMaps,
-  sourceInformation?: SourceInformation
+  sourceInformation?: SourceInformation,
+  // This function is used when reading project configuration
+  // in generators, where we don't want to do this.
+  skipCommandNormalization?: boolean
 ): void {
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
     configurationSourceMaps[project.root] = {};
@@ -158,11 +161,13 @@ export function mergeProjectConfigurationIntoRootMap(
 
       updatedProjectConfiguration.targets[targetName] =
         mergeTargetConfigurations(
-          resolveCommandSyntacticSugar(target, project.root),
+          skipCommandNormalization
+            ? target
+            : resolveCommandSyntacticSugar(target, project.root),
           matchingProject.targets?.[targetName],
           sourceMap,
           sourceInformation,
-          `targets.${target}`
+          `targets.${targetName}`
         );
     }
   }
