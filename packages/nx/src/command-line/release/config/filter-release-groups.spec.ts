@@ -18,9 +18,11 @@ describe('filterReleaseGroups()', () => {
           tag: true,
           tagMessage: '',
           tagArgs: '',
+          stageChanges: false,
         },
         workspaceChangelog: false,
         projectChangelogs: false,
+        automaticFromRef: false,
       },
       version: {
         conventionalCommits: false,
@@ -44,6 +46,7 @@ describe('filterReleaseGroups()', () => {
         tag: false,
         tagMessage: '',
         tagArgs: '',
+        stageChanges: false,
       },
     };
     projectGraph = {

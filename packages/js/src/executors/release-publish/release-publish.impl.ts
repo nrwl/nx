@@ -91,7 +91,7 @@ export default async function runExecutor(
    * Therefore, so as to not produce misleading output in dry around dist-tags being altered, we do not
    * perform the npm view step, and just show npm publish's dry-run output.
    */
-  if (!isDryRun) {
+  if (!isDryRun && !options.firstRelease) {
     const currentVersion = projectPackageJson.version;
     try {
       const result = execSync(npmViewCommandSegments.join(' '), {
@@ -199,6 +199,10 @@ export default async function runExecutor(
         };
       }
     }
+  }
+
+  if (options.firstRelease && context.isVerbose) {
+    console.log('Skipped npm view because --first-release was set');
   }
 
   try {

@@ -15,9 +15,11 @@ export interface NxReleaseArgs {
   projects?: string[];
   dryRun?: boolean;
   verbose?: boolean;
+  firstRelease?: boolean;
 }
 
 interface GitCommitAndTagOptions {
+  stageChanges?: boolean;
   gitCommit?: boolean;
   gitCommitMessage?: string;
   gitCommitArgs?: string;
@@ -31,7 +33,6 @@ export type VersionOptions = NxReleaseArgs &
     specifier?: string;
     preid?: string;
     stageChanges?: boolean;
-    firstRelease?: boolean;
   };
 
 export type ChangelogOptions = NxReleaseArgs &
@@ -56,7 +57,6 @@ export type PublishOptions = NxReleaseArgs &
 export type ReleaseOptions = NxReleaseArgs & {
   yes?: boolean;
   skipPublish?: boolean;
-  firstRelease?: boolean;
 };
 
 export const yargsReleaseCommand: CommandModule<
@@ -100,6 +100,11 @@ export const yargsReleaseCommand: CommandModule<
         type: 'boolean',
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
+      })
+      .option('first-release', {
+        type: 'boolean',
+        description:
+          'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.',
       })
       .check((argv) => {
         if (argv.groups && argv.projects) {
@@ -147,11 +152,6 @@ const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
         description:
           'Skip publishing by automatically answering no to the confirmation prompt for publishing',
       })
-      .option('first-release', {
-        type: 'boolean',
-        description:
-          'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.',
-      })
       .check((argv) => {
         if (argv.yes !== undefined && argv.skipPublish !== undefined) {
           throw new Error(
@@ -194,11 +194,6 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
           type: 'boolean',
           describe:
             'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
-        })
-        .option('first-release', {
-          type: 'boolean',
-          description:
-            'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release.',
         })
     ),
   handler: (args) =>
@@ -349,5 +344,10 @@ function withGitCommitAndGitTagOptions<T>(
       describe:
         'Additional arguments to pass to the `git tag` command invoked behind the scenes',
       type: 'string',
+    })
+    .option('stage-changes', {
+      describe:
+        'Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.',
+      type: 'boolean',
     });
 }

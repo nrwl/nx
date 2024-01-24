@@ -74,7 +74,8 @@ export interface CreateNxReleaseConfigError {
     | 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE'
     | 'PROJECT_MATCHES_MULTIPLE_GROUPS'
     | 'PROJECTS_MISSING_TARGET'
-    | 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS';
+    | 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_GENERATOR_OPTIONS'
+    | 'GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG';
   data: Record<string, string | string[]>;
 }
 
@@ -98,6 +99,16 @@ export async function createNxReleaseConfig(
     };
   }
 
+  if (hasInvalidGitConfig(userConfig)) {
+    return {
+      error: {
+        code: 'GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG',
+        data: {},
+      },
+      nxReleaseConfig: null,
+    };
+  }
+
   if (hasInvalidConventionalCommitsConfig(userConfig)) {
     return {
       error: {
@@ -115,8 +126,9 @@ export async function createNxReleaseConfig(
     tag: false,
     tagMessage: '',
     tagArgs: '',
+    stageChanges: false,
   };
-  const versionGitDefaults: NxReleaseConfig['version']['git'] = {
+  const versionGitDefaults = {
     ...gitDefaults,
     stageChanges: true,
   };
@@ -178,6 +190,7 @@ export async function createNxReleaseConfig(
             },
           }
         : false,
+      automaticFromRef: false,
     },
     releaseTagPattern:
       userConfig.releaseTagPattern ||
@@ -228,7 +241,10 @@ export async function createNxReleaseConfig(
     [
       WORKSPACE_DEFAULTS.version,
       // Merge in the git defaults from the top level
-      { git: rootGitConfig } as NxReleaseConfig['version'],
+      { git: versionGitDefaults } as NxReleaseConfig['version'],
+      {
+        git: userConfig.git as Partial<NxReleaseConfig['git']>,
+      } as NxReleaseConfig['version'],
     ],
     userConfig.version as Partial<NxReleaseConfig['version']>
   );
@@ -543,6 +559,18 @@ export async function handleNxReleaseConfigError(
         });
       }
       break;
+    case 'GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG':
+      {
+        const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+          'release',
+          'git',
+        ]);
+        output.error({
+          title: `You have duplicate conflicting git configurations. If you are using the top level 'nx release' command, then remove the 'release.version.git' and 'release.changelog.git' properties in favor of 'release.git'. If you are using the subcommands or the programmatic API, then remove the 'release.git' property in favor of 'release.version.git' and 'release.changelog.git':`,
+          bodyLines: [nxJsonMessage],
+        });
+      }
+      break;
     default:
       throw new Error(`Unhandled error code: ${error.code}`);
   }
@@ -691,4 +719,17 @@ function hasInvalidConventionalCommitsConfig(
     }
   }
   return false;
+}
+
+/**
+ * We want to prevent users from setting both the global and granular git configurations. Users should prefer the
+ * global configuration if using the top level nx release command and the granular configuration if using
+ * the subcommands or the programmatic API.
+ */
+function hasInvalidGitConfig(
+  userConfig: NxJsonConfiguration['release']
+): boolean {
+  return (
+    !!userConfig.git && !!(userConfig.version?.git || userConfig.changelog?.git)
+  );
 }
