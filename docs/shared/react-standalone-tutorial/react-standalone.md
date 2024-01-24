@@ -98,7 +98,7 @@ The most common tasks are already mapped in the `package.json` file:
 
 ```json {% fileName="package.json" %}
 {
-  "name": "reactutorial",
+  "name": "myreactapp",
   "scripts": {
     "start": "nx serve",
     "build": "nx build",
@@ -128,6 +128,66 @@ Nx identifies available tasks for your project from [tooling configuration files
 nx show project myreactapp --web
 ```
 
+{% project-details title="Project Details View (Simplified)" height="100px" %}
+
+```json
+{
+  "project": {
+    "name": "myreactapp",
+    "data": {
+      "root": ".",
+      "includedScripts": [],
+      "name": "myreactapp",
+      "targets": {
+        "build": {
+          "options": {
+            "cwd": ".",
+            "command": "vite build"
+          },
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": ["vite"]
+            }
+          ],
+          "outputs": ["{projectRoot}/build/myreactapp"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        }
+      },
+      "sourceRoot": "./src",
+      "projectType": "application",
+      "$schema": "node_modules/nx/schemas/project-schema.json",
+      "tags": [],
+      "implicitDependencies": []
+    }
+  },
+  "sourceMap": {
+    "root": ["project.json", "nx/core/project-json"],
+    "includedScripts": ["package.json", "nx/core/package-json-workspaces"],
+    "name": ["project.json", "nx/core/project-json"],
+    "targets": ["project.json", "nx/core/project-json"],
+    "targets.build": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.command": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.options": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.cache": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.dependsOn": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.inputs": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.outputs": ["vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.options.cwd": ["vite.config.ts", "@nx/vite/plugin"],
+    "sourceRoot": ["project.json", "nx/core/project-json"],
+    "projectType": ["project.json", "nx/core/project-json"],
+    "$schema": ["project.json", "nx/core/project-json"],
+    "tags": ["project.json", "nx/core/project-json"]
+  }
+}
+```
+
+{% /project-details %}
+
 If you expand the `build` task, you can see that it was created by the `@nx/vite` plugin by analyzing your `vite.config.ts` file. Notice the outputs are defined as `{projectRoot}/dist/myreactapp`. This value is being read from the `build.outDir` defined in your `vite.config.ts` file. Let's change that value in your `vite.config.ts` file:
 
 ```ts {% fileName="vite.config.ts" %}
@@ -140,7 +200,7 @@ export default defineConfig({
 });
 ```
 
-Now if you look at the project details view, the outputs for the build target will say `{projectRoot}/build/myreactapp`. This feature ensures that Nx will always be caching the correct files.
+Now if you look at the project details view, the outputs for the build target will say `{projectRoot}/build/myreactapp`. This feature ensures that Nx will always cache the correct files.
 
 You can also override the settings for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
 
