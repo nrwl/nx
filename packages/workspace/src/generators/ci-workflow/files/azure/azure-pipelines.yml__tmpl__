@@ -26,6 +26,6 @@ jobs:
         displayName: Install PNPM
       <% } %>- script: <%= packageManagerInstall %>
       # uncomment to enable task distribution
-      # - script: <%= packageManagerPrefix %> nx-cloud start-ci-run --distributes-on="5 linux-medium-js"
+      # - script: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js"
       - script: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build --parallel=3

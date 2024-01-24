@@ -31,11 +31,11 @@ Keep reading to learn what the configuration and setup looks like.
 
 ## Managed Agents, Seamless Configuration
 
-Enabling task distribution with Nx Agents can be done in a single line. Simply add the `--distributes-on` property to the `start-ci-run` line in your CI pipeline configuration:
+Enabling task distribution with Nx Agents can be done in a single line. Simply add the `--distribute-on` property to the `start-ci-run` line in your CI pipeline configuration:
 
 ```yaml
 - name: Start CI run
-  run: 'npx nx-cloud start-ci-run --distributes-on="8 linux-medium-js"'
+  run: 'npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"'
   ...
 ```
 
@@ -77,13 +77,13 @@ Here are the [available resource classes](https://nx.app/pricing#resource-classe
 Instead of defining
 
 ```
---distributes-on="8 linux-medium-js"
+--distribute-on="8 linux-medium-js"
 ```
 
 ...which always runs tasks on the same amount of machines, you can also have Nx Cloud scale the number of agents based on the size of your PR.
 
 ```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
-distributes-on:
+distribute-on:
   small-changeset: 1 linux-medium-js
   medium-changeset: 6 linux-medium-js
   large-changeset: 10 linux-medium-js
@@ -103,7 +103,7 @@ jobs:
     ...
     steps:
       - checkout
-      - run: npx nx-cloud start-ci-run --distributes-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e-wrapper"
+      - run: npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e-wrapper"
       - ...
 ```
 
