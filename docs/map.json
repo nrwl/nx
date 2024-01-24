@@ -1099,6 +1099,31 @@
               ]
             },
             {
+              "name": "Nx Release",
+              "id": "nx-release",
+              "description": "Recipes for releasing with Nx release.",
+              "itemList": [
+                {
+                  "name": "Get Started with Nx Release",
+                  "id": "get-started-with-nx-release",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/get-started-with-nx-release"
+                },
+                {
+                  "name": "Release Projects Independently",
+                  "id": "release-projects-independently",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/release-projects-independently"
+                },
+                {
+                  "name": "Automatically Version with Conventional Commits",
+                  "id": "automatically-version-with-conventional-commits",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
+                }
+              ]
+            },
+            {
               "name": "Other",
               "id": "other",
               "description": "Other recipes you will find useful.",

@@ -2223,6 +2223,39 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Release",
+            "path": "/recipes/nx-release",
+            "id": "nx-release",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Get Started with Nx Release",
+                "path": "/recipes/nx-release/get-started-with-nx-release",
+                "id": "get-started-with-nx-release",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Release Projects Independently",
+                "path": "/recipes/nx-release/release-projects-independently",
+                "id": "release-projects-independently",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Automatically Version with Conventional Commits",
+                "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+                "id": "automatically-version-with-conventional-commits",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Other",
             "path": "/recipes/other",
             "id": "other",
@@ -4002,6 +4035,63 @@
         "name": "Troubleshooting",
         "path": "/recipes/nx-console/console-troubleshooting",
         "id": "console-troubleshooting",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Release",
+        "path": "/recipes/nx-release",
+        "id": "nx-release",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Get Started with Nx Release",
+            "path": "/recipes/nx-release/get-started-with-nx-release",
+            "id": "get-started-with-nx-release",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Release Projects Independently",
+            "path": "/recipes/nx-release/release-projects-independently",
+            "id": "release-projects-independently",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Automatically Version with Conventional Commits",
+            "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+            "id": "automatically-version-with-conventional-commits",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Get Started with Nx Release",
+        "path": "/recipes/nx-release/get-started-with-nx-release",
+        "id": "get-started-with-nx-release",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Release Projects Independently",
+        "path": "/recipes/nx-release/release-projects-independently",
+        "id": "release-projects-independently",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automatically Version with Conventional Commits",
+        "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+        "id": "automatically-version-with-conventional-commits",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
