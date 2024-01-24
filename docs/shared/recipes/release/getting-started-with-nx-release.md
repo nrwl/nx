@@ -71,7 +71,7 @@ pkg-1 📄 Resolved the current version as 0.0.1 from packages/pkg-1/package.jso
 
 After this prompt, the command will finish, showing you the preview of changes that would have been made if the `--dry-run` option was not passed.
 
-```{% command="nx release --first-release --dry-run" }
+```{% command="nx release --first-release --dry-run" %}
 
  >  NX   Running release version for project: pkg-1
 

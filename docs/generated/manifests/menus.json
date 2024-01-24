@@ -2398,6 +2398,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Automatic Versioning with Conventional Commits",
+                "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits",
+                "id": "automatic-versioning-with-conventional-commits",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -4223,6 +4231,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Automatic Versioning with Conventional Commits",
+            "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits",
+            "id": "automatic-versioning-with-conventional-commits",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4239,6 +4255,14 @@
         "name": "Releasing Projects Independently",
         "path": "/recipes/nx-release/independent-releases",
         "id": "independent-releases",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automatic Versioning with Conventional Commits",
+        "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits",
+        "id": "automatic-versioning-with-conventional-commits",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

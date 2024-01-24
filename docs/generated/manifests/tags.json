@@ -1124,6 +1124,13 @@
       "id": "independent-releases",
       "name": "Releasing Projects Independently",
       "path": "/recipes/nx-release/independent-releases"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/release/automatic-versioning-with-conventional-commits",
+      "id": "automatic-versioning-with-conventional-commits",
+      "name": "Automatic Versioning with Conventional Commits",
+      "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits"
     }
   ],
   "database": [

@@ -1179,6 +1179,12 @@
                   "id": "independent-releases",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/release/independent-releases"
+                },
+                {
+                  "name": "Automatic Versioning with Conventional Commits",
+                  "id": "automatic-versioning-with-conventional-commits",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/release/automatic-versioning-with-conventional-commits"
                 }
               ]
             },

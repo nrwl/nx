@@ -3284,6 +3284,17 @@
             "isExternal": false,
             "path": "/recipes/nx-release/independent-releases",
             "tags": ["nx-release"]
+          },
+          {
+            "id": "automatic-versioning-with-conventional-commits",
+            "name": "Automatic Versioning with Conventional Commits",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/release/automatic-versioning-with-conventional-commits",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits",
+            "tags": ["nx-release"]
           }
         ],
         "isExternal": false,
@@ -5786,6 +5797,17 @@
         "isExternal": false,
         "path": "/recipes/nx-release/independent-releases",
         "tags": ["nx-release"]
+      },
+      {
+        "id": "automatic-versioning-with-conventional-commits",
+        "name": "Automatic Versioning with Conventional Commits",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/release/automatic-versioning-with-conventional-commits",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits",
+        "tags": ["nx-release"]
       }
     ],
     "isExternal": false,
@@ -5812,6 +5834,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-release/independent-releases",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/automatic-versioning-with-conventional-commits": {
+    "id": "automatic-versioning-with-conventional-commits",
+    "name": "Automatic Versioning with Conventional Commits",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/release/automatic-versioning-with-conventional-commits",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/automatic-versioning-with-conventional-commits",
     "tags": ["nx-release"]
   },
   "/recipes/other": {

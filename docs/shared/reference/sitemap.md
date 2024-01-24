@@ -194,6 +194,7 @@
     - [Nx Release](/recipes/nx-release)
       - [Getting Started with Nx Release](/recipes/nx-release/getting-started-with-nx-release)
       - [Releasing Projects Independently](/recipes/nx-release/independent-releases)
+      - [Automatic Versioning with Conventional Commits](/recipes/nx-release/automatic-versioning-with-conventional-commits)
     - [Other](/recipes/other)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
   - [Showcase](/showcase)
