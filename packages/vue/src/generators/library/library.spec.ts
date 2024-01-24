@@ -78,6 +78,7 @@ describe('lib', () => {
   it('should add vue, vite and vitest to package.json', async () => {
     await libraryGenerator(tree, defaultSchema);
     expect(readJson(tree, '/package.json')).toMatchSnapshot();
+    expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
   });
 
   it('should update root tsconfig.base.json', async () => {
