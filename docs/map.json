@@ -1164,6 +1164,19 @@
               ]
             },
             {
+              "name": "Nx Release",
+              "id": "nx-release",
+              "description": "Recipes for releasing with Nx release.",
+              "itemList": [
+                {
+                  "name": "Getting Started with Nx Release",
+                  "id": "getting-started-with-nx-release",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/release/getting-started-with-nx-release"
+                }
+              ]
+            },
+            {
               "name": "Other",
               "id": "other",
               "description": "Other recipes you will find useful.",

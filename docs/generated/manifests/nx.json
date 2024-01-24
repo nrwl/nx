@@ -3257,6 +3257,29 @@
         "tags": []
       },
       {
+        "id": "nx-release",
+        "name": "Nx Release",
+        "description": "Recipes for releasing with Nx release.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "getting-started-with-nx-release",
+            "name": "Getting Started with Nx Release",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/release/getting-started-with-nx-release",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/getting-started-with-nx-release",
+            "tags": ["nx-release"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/nx-release",
+        "tags": []
+      },
+      {
         "id": "other",
         "name": "Other",
         "description": "Other recipes you will find useful.",
@@ -5723,6 +5746,40 @@
     "isExternal": false,
     "path": "/recipes/nx-console/console-troubleshooting",
     "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-release": {
+    "id": "nx-release",
+    "name": "Nx Release",
+    "description": "Recipes for releasing with Nx release.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "getting-started-with-nx-release",
+        "name": "Getting Started with Nx Release",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/release/getting-started-with-nx-release",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/getting-started-with-nx-release",
+        "tags": ["nx-release"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/nx-release",
+    "tags": []
+  },
+  "/recipes/nx-release/getting-started-with-nx-release": {
+    "id": "getting-started-with-nx-release",
+    "name": "Getting Started with Nx Release",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/release/getting-started-with-nx-release",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/getting-started-with-nx-release",
+    "tags": ["nx-release"]
   },
   "/recipes/other": {
     "id": "other",

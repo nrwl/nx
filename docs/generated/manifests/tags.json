@@ -1110,6 +1110,15 @@
       "path": "/recipes/tips-n-tricks/flat-config"
     }
   ],
+  "nx-release": [
+    {
+      "description": "",
+      "file": "shared/recipes/release/getting-started-with-nx-release",
+      "id": "getting-started-with-nx-release",
+      "name": "Getting Started with Nx Release",
+      "path": "/recipes/nx-release/getting-started-with-nx-release"
+    }
+  ],
   "database": [
     {
       "description": "",

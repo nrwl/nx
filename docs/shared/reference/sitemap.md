@@ -191,6 +191,8 @@
       - [Project Pane](/recipes/nx-console/console-project-pane)
       - [Keyboard Shortcuts](/recipes/nx-console/console-shortcuts)
       - [Troubleshooting](/recipes/nx-console/console-troubleshooting)
+    - [Nx Release](/recipes/nx-release)
+      - [Getting Started with Nx Release](/recipes/nx-release/getting-started-with-nx-release)
     - [Other](/recipes/other)
       - [Rescope Packages from @nrwl to @nx](/recipes/other/rescope)
   - [Showcase](/showcase)

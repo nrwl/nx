@@ -2378,6 +2378,23 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nx Release",
+            "path": "/recipes/nx-release",
+            "id": "nx-release",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Getting Started with Nx Release",
+                "path": "/recipes/nx-release/getting-started-with-nx-release",
+                "id": "getting-started-with-nx-release",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Other",
             "path": "/recipes/other",
             "id": "other",
@@ -4173,6 +4190,31 @@
         "name": "Troubleshooting",
         "path": "/recipes/nx-console/console-troubleshooting",
         "id": "console-troubleshooting",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Nx Release",
+        "path": "/recipes/nx-release",
+        "id": "nx-release",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Getting Started with Nx Release",
+            "path": "/recipes/nx-release/getting-started-with-nx-release",
+            "id": "getting-started-with-nx-release",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Getting Started with Nx Release",
+        "path": "/recipes/nx-release/getting-started-with-nx-release",
+        "id": "getting-started-with-nx-release",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
