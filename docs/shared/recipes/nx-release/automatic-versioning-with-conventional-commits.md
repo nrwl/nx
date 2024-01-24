@@ -35,12 +35,12 @@ For example, if the git history looks like this:
 then Nx Release will select the `minor` and elect to release version 1.1.0. This is because there is a `feat` commit since the last release of 1.0.0.
 
 {% callout type="info" title="No changes detected" %}
-If Nx Release does not find any relevant commits since the last release, it will skip releasing a new version. This works with [independent releases](/recipes/release/independent-releases) as well, allowing for only some projects to be released and some to be skipped.
+If Nx Release does not find any relevant commits since the last release, it will skip releasing a new version. This works with [independent releases](/recipes/nx-release/independent-releases) as well, allowing for only some projects to be released and some to be skipped.
 {% /callout %}
 
 ## Usage with Independent Releases
 
-If you are using [independent releases](/recipes/release/independent-releases), Nx Release will determine the version bump for each project independently. For example, if the git history looks like this:
+If you are using [independent releases](/recipes/nx-release/independent-releases), Nx Release will determine the version bump for each project independently. For example, if the git history looks like this:
 
 ```
   - fix(pkg-1): fix something
