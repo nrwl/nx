@@ -103,23 +103,25 @@ export const ProjectDetails = forwardRef(
               ></EyeIcon>
             ) : null}{' '}
           </h1>
-          <div className="py-2">
-            {projectData.tags ? (
+          <div className="py-2 ">
+            {projectData.tags && projectData.tags.length ? (
               <p>
-                <span className="font-medium">Tags:</span>
+                <span className="font-medium inline-block w-10">Tags:</span>
                 {projectData.tags?.map((tag) => (
-                  <span className="ml-2">
+                  <span className="ml-2 font-mono">
                     <Pill text={tag} />
                   </span>
                 ))}
               </p>
             ) : null}
             <p>
-              <span className="font-medium">Root:</span> {root}
+              <span className="font-medium inline-block w-10">Root:</span>
+              <span className="font-mono"> {root}</span>
             </p>
             {displayType ? (
               <p>
-                <span className="font-medium">Type:</span> {displayType}
+                <span className="font-medium inline-block w-10">Type:</span>
+                <span className="font-mono"> {displayType}</span>
               </p>
             ) : null}
           </div>

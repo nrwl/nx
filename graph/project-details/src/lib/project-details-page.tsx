@@ -81,7 +81,9 @@ export function ProjectDetailsPage() {
             </ul>
           </div>
         </header>
-      ) : null}
+      ) : (
+        <div className="py-2"></div>
+      )}
       <div className="flex-grow mx-auto w-full max-w-6xl px-8 mb-8">
         <ProjectDetailsWrapper
           project={project}
