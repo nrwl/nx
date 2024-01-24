@@ -205,8 +205,8 @@ export const TargetConfigurationDetails = forwardRef(
             </div>
           </div>
           {!collapsed && (
-            <div className="flex items-center text-sm mt-2">
-              <span className="flex-1 flex items-center">
+            <div className="flex items-center text-sm mt-2 ml-5">
+              <span className="flex-1 flex min-w-0 items-center">
                 <SourceInfo
                   data={sourceMap[`targets.${targetName}`]}
                   propertyKey={`targets.${targetName}`}
@@ -312,7 +312,7 @@ export const TargetConfigurationDetails = forwardRef(
                       >
                         <TargetConfigurationProperty data={input}>
                           {sourceInfo && (
-                            <span className="opacity-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
+                            <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
                               <SourceInfo
                                 data={sourceInfo}
                                 propertyKey={`targets.${targetName}.inputs`}
@@ -362,7 +362,7 @@ export const TargetConfigurationDetails = forwardRef(
                       >
                         <TargetConfigurationProperty data={output}>
                           {sourceInfo && (
-                            <span className="opacity-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
+                            <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
                               <SourceInfo
                                 data={sourceInfo}
                                 propertyKey={`targets.${targetName}.outputs`}
@@ -412,7 +412,7 @@ export const TargetConfigurationDetails = forwardRef(
                         key={`dependsOn-${idx}`}
                       >
                         <TargetConfigurationProperty data={dep}>
-                          <span className="hidden group-hover/line:inline pl-4 h-6">
+                          <span className="opacity-0 flex shrink-1 min-w-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-4">
                             {sourceInfo && (
                               <SourceInfo
                                 data={sourceInfo}
