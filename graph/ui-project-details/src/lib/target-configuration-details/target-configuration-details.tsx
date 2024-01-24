@@ -171,7 +171,7 @@ export const TargetConfigurationDetails = forwardRef(
                   strategy="fixed"
                   content={(<PropertyInfoTooltip type="cacheable" />) as any}
                 >
-                  <Pill text="Cacheable" />
+                  <Pill text="Cacheable" color="green" />
                 </Tooltip>
               )}
             </div>
@@ -484,6 +484,7 @@ export const TargetConfigurationDetails = forwardRef(
                       <Pill
                         tooltip="Default Configuration"
                         text={targetConfiguration.defaultConfiguration}
+                        color="yellow"
                       />
                     </span>
                   )}
