@@ -450,7 +450,7 @@ export const TargetConfigurationDetails = forwardRef(
                           `targets.${targetName}.options.${propertyName}`
                         );
                         return sourceInfo ? (
-                          <span className="pl-4">
+                          <span className="pl-4 flex shrink-1 min-w-0">
                             <SourceInfo
                               data={sourceInfo}
                               propertyKey={`targets.${targetName}.options.${propertyName}`}
@@ -497,7 +497,7 @@ export const TargetConfigurationDetails = forwardRef(
                         `targets.${targetName}.configurations.${propertyName}`
                       );
                       return sourceInfo ? (
-                        <span className="pl-4">
+                        <span className="pl-4 flex shrink-1 min-w-0">
                           <SourceInfo
                             data={sourceInfo}
                             propertyKey={`targets.${targetName}.configurations.${propertyName}`}

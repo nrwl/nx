@@ -103,10 +103,13 @@ export function sourcesRenderer(
         }
       }
       return (
-        <span className="flex group/line" key={`code-group${idx}`}>
+        <span
+          className="flex group/line min-w-0 flex shrink-1"
+          key={`code-group${idx}`}
+        >
           <span>{element}</span>
           {sourceElement && (
-            <span className="opacity-0 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-2">
+            <span className="opacity-0 min-w-0 flex shrink-1 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-2">
               {sourceElement}
             </span>
           )}
