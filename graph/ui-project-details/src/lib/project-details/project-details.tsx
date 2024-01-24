@@ -172,7 +172,7 @@ export const ProjectDetails = forwardRef(
 function sortNxReleasePublishLast(a: string, b: string) {
   if (a === 'nx-release-publish') return 1;
   if (b === 'nx-release-publish') return -1;
-  return 0;
+  return 1;
 }
 
 export default ProjectDetails;
