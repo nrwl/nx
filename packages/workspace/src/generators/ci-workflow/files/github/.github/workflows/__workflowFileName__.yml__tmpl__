@@ -29,8 +29,8 @@ jobs:
       - run: <%= packageManagerInstall %>
       - uses: nrwl/nx-set-shas@v4
 
-      # uncomment to enable task distribution
-      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distributes-on="5 linux-medium"
+      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check
-      - run: <%= packageManagerPrefix %> nx affected -t=lint,test,build --parallel=3
+      - run: <%= packageManagerPrefix %> nx affected -t=lint,test,build
