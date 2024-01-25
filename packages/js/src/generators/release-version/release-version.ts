@@ -12,7 +12,10 @@ import {
 import * as chalk from 'chalk';
 import { exec } from 'child_process';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
-import { getLatestGitTagForPattern } from 'nx/src/command-line/release/utils/git';
+import {
+  getFirstGitCommit,
+  getLatestGitTagForPattern,
+} from 'nx/src/command-line/release/utils/git';
 import {
   resolveSemverSpecifierFromConventionalCommits,
   resolveSemverSpecifierFromPrompt,
@@ -310,8 +313,15 @@ To fix this you will either need to add a package.json file at that location, or
                 ? [projectName]
                 : projects.map((p) => p.name);
 
+            let previousVersionRef = latestMatchingGitTag?.tag;
+            // latestMatchingGitTag will only be undefined if we fell back to the version on disk,
+            // so we need to assume this is the first release for the project(s) being versioned
+            if (!previousVersionRef && currentVersionResolvedFromFallback) {
+              previousVersionRef = await getFirstGitCommit();
+            }
+
             specifier = await resolveSemverSpecifierFromConventionalCommits(
-              latestMatchingGitTag.tag,
+              previousVersionRef,
               options.projectGraph,
               affectedProjects
             );
