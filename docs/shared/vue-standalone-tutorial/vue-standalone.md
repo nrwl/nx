@@ -135,29 +135,6 @@ nx show project myvueapp --web
       "includedScripts": [],
       "name": "myvueapp",
       "targets": {
-        "nx-release-publish": {
-          "dependsOn": ["^nx-release-publish"],
-          "executor": "@nx/js:release-publish",
-          "options": {},
-          "configurations": {}
-        },
-        "lint": {
-          "cache": true,
-          "inputs": [
-            "default",
-            "{workspaceRoot}/.eslintrc.json",
-            "{workspaceRoot}/tools/eslint-rules/**/*",
-            {
-              "externalDependencies": ["eslint"]
-            }
-          ],
-          "options": {
-            "cwd": ".",
-            "command": "eslint ./src"
-          },
-          "executor": "nx:run-commands",
-          "configurations": {}
-        },
         "build": {
           "options": {
             "cwd": ".",
