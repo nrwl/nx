@@ -32,7 +32,9 @@ export function TooltipDisplay() {
             navigate(
               routeConstructor(
                 {
-                  pathname: `/project-details/${currentTooltip.props.id}`,
+                  pathname: `/project-details/${encodeURIComponent(
+                    currentTooltip.props.id
+                  )}`,
                 },
                 false
               )
@@ -68,7 +70,9 @@ export function TooltipDisplay() {
             navigate(
               routeConstructor(
                 {
-                  pathname: `/project-details/${projectName}`,
+                  pathname: `/project-details/${encodeURIComponent(
+                    projectName
+                  )}`,
                   search: `expanded=${targetName}`,
                 },
                 false
