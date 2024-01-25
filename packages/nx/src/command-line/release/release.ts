@@ -54,8 +54,7 @@ export async function release(
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
-    nxJson.release,
-    'nx-release-publish'
+    nxJson.release
   );
   if (configError) {
     return await handleNxReleaseConfigError(configError);

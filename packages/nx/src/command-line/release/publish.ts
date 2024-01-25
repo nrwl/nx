@@ -11,6 +11,7 @@ import {
   readGraphFileFromGraphArg,
 } from '../../utils/command-line-utils';
 import { logger } from '../../utils/logger';
+import { projectHasTarget } from '../../utils/project-graph-utils';
 import { generateGraph } from '../graph/graph';
 import { PublishOptions } from './command-object';
 import {
@@ -47,8 +48,7 @@ export async function releasePublish(args: PublishOptions): Promise<void> {
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
-    nxJson.release,
-    'nx-release-publish'
+    nxJson.release
   );
   if (configError) {
     return await handleNxReleaseConfigError(configError);
@@ -172,6 +172,7 @@ async function runPublishOnProjects(
       projectNames
     );
   } else {
+    ensureAllProjectsHaveTarget(projectsToRun);
     /**
      * Run the relevant nx-release-publish executor on each of the selected projects.
      */
@@ -197,4 +198,23 @@ async function runPublishOnProjects(
       process.exit(status);
     }
   }
+}
+
+function ensureAllProjectsHaveTarget(projectsToRun: ProjectGraphProjectNode[]) {
+  const requiredTargetName = 'nx-release-publish';
+  const projectsMissingTarget = projectsToRun.filter(
+    (project) => !projectHasTarget(project, requiredTargetName)
+  );
+  if (projectsMissingTarget.length === 0) {
+    return;
+  }
+  output.error({
+    title: `Based on your config, the following projects were matched for publishing but do not have the "${requiredTargetName}" target specified:`,
+    bodyLines: [
+      ...projectsMissingTarget.map((p) => `- ${p.name}`),
+      '',
+      'There are a few possible reasons for this: (1) The projects may be private (2) You may not have an appropriate plugin (such as `@nx/js`) installed which adds the target automatically to public projects (3) You intended to configure the target manually, or exclude those projects via config in nx.json',
+    ],
+  });
+  process.exit(1);
 }
