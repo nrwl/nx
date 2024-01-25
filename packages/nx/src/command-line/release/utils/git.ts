@@ -187,7 +187,7 @@ export async function gitCommit({
   let hasStagedFiles = false;
   try {
     // This command will error if there are staged changes
-    await execCommand('git', ['diff-index', '--quiet', 'HEAD']);
+    await execCommand('git', ['diff-index', '--quiet', 'HEAD', '--cached']);
   } catch {
     hasStagedFiles = true;
   }

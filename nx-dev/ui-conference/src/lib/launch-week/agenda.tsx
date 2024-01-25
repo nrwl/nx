@@ -111,7 +111,8 @@ export function LaunchWeekAgenda(): JSX.Element {
               Thursday, February 8th
             </span>
             <p className="mt-4">
-              Note: all time indications are in New York timezone (UTC-04:00).
+              Note: all time indications are in the Eastern Standard timezone
+              (UTC-05:00).
             </p>
           </div>
         </div>

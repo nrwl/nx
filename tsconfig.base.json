@@ -40,6 +40,7 @@
       "@nx/graph/ui-code-block": ["graph/ui-code-block/src/index.ts"],
       "@nx/graph/ui-components": ["graph/ui-components/src/index.ts"],
       "@nx/graph/ui-graph": ["graph/ui-graph/src/index.ts"],
+      "@nx/graph/ui-project-details": ["graph/ui-project-details/src/index.ts"],
       "@nx/graph/ui-theme": ["graph/ui-theme/src/index.ts"],
       "@nx/graph/ui-tooltips": ["graph/ui-tooltips/src/index.ts"],
       "@nx/jest": ["packages/jest"],

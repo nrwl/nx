@@ -77,7 +77,6 @@ export class InvokeRunnerTerminalOutputLifeCycle implements LifeCycle {
   ) {
     const args = getPrintableCommandArgsForTask(task);
     output.logCommand(args.join(' '), cacheStatus);
-    output.addNewline();
     process.stdout.write(terminalOutput);
   }
 }

@@ -4,12 +4,10 @@ import { ProjectGraphProjectNode } from '@nx/devkit';
 import {
   Link,
   ScrollRestoration,
-  useLocation,
-  useNavigate,
   useParams,
   useRouteLoaderData,
 } from 'react-router-dom';
-import ProjectDetails from './project-details';
+import { ProjectDetailsWrapper } from './project-details-wrapper';
 import {
   fetchProjectGraph,
   getProjectGraphDataService,
@@ -54,7 +52,7 @@ export function ProjectDetailsPage() {
     <div className="flex flex-col justify-center w-full text-slate-700 dark:text-slate-400">
       <ScrollRestoration />
       {environment !== 'nx-console' ? (
-        <header className="flex w-full justify-center items-center px-4 py-2 border-b-2 border-slate-900/10 mb-16 dark:border-slate-300/10">
+        <header className="flex w-full justify-center items-center px-4 py-2 border-b-2 border-slate-900/10 mb-8 dark:border-slate-300/10">
           <div className="flex flex-grow items-center justify-between max-w-6xl">
             <svg
               className="h-10 w-auto text-slate-900 dark:text-white"
@@ -85,10 +83,10 @@ export function ProjectDetailsPage() {
         </header>
       ) : null}
       <div className="flex-grow mx-auto w-full max-w-6xl px-8 mb-8">
-        <ProjectDetails
+        <ProjectDetailsWrapper
           project={project}
           sourceMap={sourceMap}
-        ></ProjectDetails>
+        ></ProjectDetailsWrapper>
       </div>
     </div>
   );

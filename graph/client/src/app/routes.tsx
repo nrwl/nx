@@ -5,13 +5,12 @@ import { Shell } from './shell';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
-/* eslint-enable @nx/enforce-module-boundaries */
-import { ProjectDetailsPage } from '@nx/graph/project-details';
 import {
   getEnvironmentConfig,
   getProjectGraphDataService,
 } from '@nx/graph/shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
+import { ProjectDetailsPage } from '@nx/graph/project-details';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();

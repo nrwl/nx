@@ -71,6 +71,6 @@ function createSocketDir() {
 
 export function removeSocketDir() {
   try {
-    rmdirSync(socketDir);
+    rmdirSync(socketDir, { recursive: true });
   } catch (e) {}
 }
