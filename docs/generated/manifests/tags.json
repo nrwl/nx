@@ -1131,6 +1131,13 @@
       "id": "automatically-version-with-conventional-commits",
       "name": "Automatically Version with Conventional Commits",
       "path": "/recipes/nx-release/automatically-version-with-conventional-commits"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/publish-in-ci-cd",
+      "id": "publish-in-ci-cd",
+      "name": "Publish in CI/CD",
+      "path": "/recipes/nx-release/publish-in-ci-cd"
     }
   ],
   "database": [
