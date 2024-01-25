@@ -60,10 +60,6 @@ async function processProject(
     return;
   }
 
-  // exclude package.json scripts from nx
-  packageJson.nx ??= {};
-  packageJson.nx.includedScripts ??= [];
-
   for (const targetCommand of targetCommands) {
     const { command, target, configuration } = targetCommand;
     const targetCommandRegex = new RegExp(
@@ -232,6 +228,11 @@ function excludeScriptFromPackageJson(
   packageJson: PackageJson,
   scriptName: string
 ) {
+  if (!packageJson.nx?.includedScripts) {
+    packageJson.nx ??= {};
+    packageJson.nx.includedScripts ??= Object.keys(packageJson.scripts);
+  }
+
   packageJson.nx.includedScripts = packageJson.nx.includedScripts.filter(
     (s) => s !== scriptName
   );

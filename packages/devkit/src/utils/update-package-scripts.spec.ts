@@ -235,12 +235,12 @@ describe('updatePackageScripts', () => {
     );
   });
 
-  it('should exclude all package.json scripts when none are excluded', async () => {
+  it('should not add "nx.includedScripts" entry to "package.json" when no script is replaced', async () => {
     tree.write('next.config.js', '');
     writeJson(tree, 'package.json', {
       name: 'app1',
       scripts: {
-        build: 'next build',
+        echo: 'echo "foo"',
       },
     });
 
@@ -257,20 +257,17 @@ describe('updatePackageScripts', () => {
       }),
     ]);
 
-    const { nx } = readJson<PackageJson>(tree, 'package.json');
-    expect(nx).toStrictEqual({ includedScripts: [] });
+    const packageJson = readJson<PackageJson>(tree, 'package.json');
+    expect(packageJson.nx).toBeUndefined();
   });
 
-  it('should exclude replaced package.json scripts from nx if they are initially included', async () => {
+  it('should exclude replaced "package.json" scripts while keeping the non-replaced ones', async () => {
     tree.write('next.config.js', '');
     writeJson(tree, 'package.json', {
       name: 'app1',
       scripts: {
         build: 'next build',
         foo: 'echo "foo"',
-      },
-      nx: {
-        includedScripts: ['build', 'foo'],
       },
     });
 
@@ -289,5 +286,36 @@ describe('updatePackageScripts', () => {
 
     const { nx } = readJson<PackageJson>(tree, 'package.json');
     expect(nx).toStrictEqual({ includedScripts: ['foo'] });
+  });
+
+  it('should respect existing "nx.includedScripts" entry and exclude replaced "package.json" scripts while keeping the non-replaced ones present in the list', async () => {
+    tree.write('next.config.js', '');
+    writeJson(tree, 'package.json', {
+      name: 'app1',
+      scripts: {
+        build: 'next build',
+        foo: 'echo "foo"',
+        bar: 'echo "bar"',
+      },
+      nx: {
+        includedScripts: ['build', 'bar'],
+      },
+    });
+
+    await updatePackageScripts(tree, [
+      '**/next.config.{js,cjs,mjs}',
+      () => ({
+        projects: {
+          app1: {
+            targets: {
+              build: { command: 'next build' },
+            },
+          },
+        },
+      }),
+    ]);
+
+    const { nx } = readJson<PackageJson>(tree, 'package.json');
+    expect(nx).toStrictEqual({ includedScripts: ['bar'] });
   });
 });
