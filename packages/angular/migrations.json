@@ -332,7 +332,7 @@
     },
     "update-angular-cli-version-17-1-0": {
       "cli": "nx",
-      "version": "17.3.0-beta.9",
+      "version": "17.3.0-beta.10",
       "requires": {
         "@angular/core": ">=17.1.0"
       },
@@ -341,7 +341,7 @@
     },
     "add-browser-sync-dependency": {
       "cli": "nx",
-      "version": "17.3.0-beta.9",
+      "version": "17.3.0-beta.10",
       "requires": {
         "@angular/core": ">=17.1.0"
       },
@@ -350,7 +350,7 @@
     },
     "add-autoprefixer-dependency": {
       "cli": "nx",
-      "version": "17.3.0-beta.9",
+      "version": "17.3.0-beta.10",
       "requires": {
         "@angular/core": ">=17.1.0"
       },
@@ -1565,7 +1565,7 @@
       }
     },
     "17.3.0": {
-      "version": "17.3.0-beta.9",
+      "version": "17.3.0-beta.10",
       "x-prompt": "Do you want to update the Angular version to v17.1?",
       "requires": {
         "@angular/core": ">=17.0.0 <17.1.0"
