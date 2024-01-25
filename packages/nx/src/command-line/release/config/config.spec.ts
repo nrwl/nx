@@ -1990,8 +1990,7 @@ describe('createNxReleaseConfig()', () => {
               projects: '*', // using string form to ensure that is supported in addition to array form
             },
           },
-        },
-        'nx-release-publish'
+        }
       );
       expect(res).toMatchInlineSnapshot(`
         {
@@ -2023,8 +2022,7 @@ describe('createNxReleaseConfig()', () => {
             },
           },
         },
-        {},
-        'nx-release-publish'
+        {}
       );
       expect(res2).toMatchInlineSnapshot(`
         {
@@ -2194,8 +2192,7 @@ describe('createNxReleaseConfig()', () => {
               projects: '*', // using string form to ensure that is supported in addition to array form
             },
           },
-        },
-        'nx-release-publish'
+        }
       );
       expect(res).toMatchInlineSnapshot(`
         {
@@ -2227,8 +2224,7 @@ describe('createNxReleaseConfig()', () => {
             },
           },
         },
-        {},
-        'nx-release-publish'
+        {}
       );
       expect(res2).toMatchInlineSnapshot(`
         {
