@@ -265,7 +265,7 @@ So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabi
 
 <!-- {% video-link link="https://youtu.be/ZAO0yXupIIE?t=500" /%} -->
 
-You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/features/generate-code). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/vue` plugin ships, run the following command and inspect the output:
+You can just create new Vue components as you normally would. However, Nx plugins usually also ship [generators](/features/generate-code). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/vue` plugin ships, run the following command and inspect the output:
 
 ```{% command="npx nx list @nx/vue" path="myvueapp" %}
 
