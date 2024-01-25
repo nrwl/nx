@@ -29,11 +29,6 @@ Here's the source code of the final result for this tutorial.
 
 <!-- {% stackblitz-button url="github.com/nrwl/nx-recipes/tree/main/react-standalone?file=README.md" /%} -->
 
-{% youtube
-src="https://www.youtube.com/embed/OQ-Zc5tcxJE"
-title="Tutorial: Standalone React Application"
-/%}
-
 ## Creating a new React App
 
 Create a new standalone React application with the following command:
@@ -202,7 +197,7 @@ You can also override the settings for inferred tasks by modifying the [`targetD
 
 ## Testing and Linting - Running Multiple Tasks
 
-Our current setup doesn't just come with targets for serving and building the React application, but also has targets for unit testing, e2e testing and linting. Again, these are defined in the `project.json` file. We can use the same syntax as before to run these tasks:
+Our current setup doesn't just come with targets for serving and building the React application, but also has targets for unit testing, e2e testing and linting. We can use the same syntax as before to run these tasks:
 
 ```bash
 nx test # runs tests using Vitest (or you can configure it to use Jest)
@@ -283,9 +278,9 @@ You can just create new React components as you normally would. However, Nx plug
    setup-tailwind : Set up Tailwind configuration for a project.
    setup-ssr : Set up SSR configuration for a project.
    federate-module : Federate a module.
-   
+
    EXECUTORS/BUILDERS
-   
+
    module-federation-dev-server : Serve a host or remote application.
    module-federation-ssr-dev-server : Serve a host application along with it's known remotes.
 ```

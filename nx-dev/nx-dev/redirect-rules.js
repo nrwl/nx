@@ -464,7 +464,7 @@ const tutorialBaseUrls = {
   '/(l|latest)/(a|angular)/tutorial/1-code-generation':
     '/angular-tutorial/1-code-generation',
   '/(l|latest)/(a|node)/tutorial/1-code-generation':
-    '/getting-started/tutorials/node-server-tutorial',
+    '/getting-started/tutorials',
   '/(l|latest)/(r|react)/tutorial/1-code-generation':
     '/react-tutorial/1-code-generation',
 };
@@ -500,17 +500,17 @@ const oldNodeTutorialPaths = [
 ];
 
 const extraNodeRedirects = {
-  '/getting-started/node-tutorial':
-    '/getting-started/tutorials/node-server-tutorial',
-  '/node-tutorial/1-code-generation': '/node-server-tutorial/1-code-generation',
-  '/node-tutorial/2-project-graph': '/node-server-tutorial/2-project-graph',
-  '/node-tutorial/3-task-running': '/node-server-tutorial/3-task-running',
-  '/node-tutorial/4-task-pipelines': '/node-server-tutorial/4-task-pipelines',
-  '/node-tutorial/5-docker-target': '/node-server-tutorial/5-docker-target',
-  '/node-tutorial/6-summary': '/node-server-tutorial/6-summary',
+  '/getting-started/node-tutorial': '/getting-started/tutorials',
+  '/node-tutorial/1-code-generation': '/getting-started/tutorials',
+  '/node-tutorial/2-project-graph': '/getting-started/tutorials',
+  '/node-tutorial/3-task-running': '/getting-started/tutorials',
+  '/node-tutorial/4-task-pipelines': '/getting-started/tutorials',
+  '/node-tutorial/5-docker-target': '/getting-started/tutorials',
+  '/node-tutorial/6-summary': '/getting-started/tutorials',
+  '/getting-started/tutorials/node-server-tutorial':
+    '/getting-started/tutorials',
 };
-const nodeRedirectDestination =
-  '/getting-started/tutorials/node-server-tutorial';
+const nodeRedirectDestination = '/getting-started/tutorials';
 const nodeTutorialRedirects = oldNodeTutorialPaths.reduce((acc, path) => {
   acc[path] = nodeRedirectDestination;
   return acc;
@@ -750,8 +750,7 @@ const nested5minuteTutorialUrls = {
     '/getting-started/tutorials/react-standalone-tutorial',
   '/tutorials/angular-standalone-tutorial':
     '/getting-started/tutorials/angular-standalone-tutorial',
-  '/tutorials/node-server-tutorial':
-    '/getting-started/tutorials/node-server-tutorial',
+  '/tutorials/node-server-tutorial': '/getting-started/tutorials',
   '/angular-tutorial': '/getting-started/tutorials/angular-monorepo-tutorial',
   '/angular-tutorial/1-code-generation':
     '/getting-started/tutorials/angular-monorepo-tutorial',
