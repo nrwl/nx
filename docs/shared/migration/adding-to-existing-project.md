@@ -26,13 +26,7 @@ Run the following command:
 npx nx@latest init
 ```
 
-This will
-
-- detect the tools you are using and ask if you want to install plugins for them
-- ask you if you want Nx to be used in your package.json scripts
-- ask you if you want to enable remote caching
-
-This process generates an `nx.json` based on your answers during the setup process. The example below is using the `@nx/eslint` and `@nx/next` plugins to run ESLint and Next tasks with Nx:
+This will set up Nx for you - updating the `package.json` file and creating a new `nx.json` file with Nx configuration based on your answers during the set up process. The set up process will suggest installing Nx plugins that might be useful based on your existing repository. The example below is using the `@nx/eslint` and `@nx/next` plugins to run ESLint and Next tasks with Nx:
 
 ```json {% fileName="nx.json" %}
 {
@@ -209,7 +203,7 @@ nx show project my-workspace --web
 
 The project detail view lists all available tasks, the configuration values for those tasks and where those configuration values are being set.
 
-## Run More Tasks with Nx
+## Configure an Existing Script to Run with Nx
 
 If you want to run one of your existing scripts with Nx, you need to tell Nx about it.
 
