@@ -484,7 +484,7 @@ export class ForkedProcessTaskRunner {
         }
       });
       // we exit here because we don't need to write anything to cache.
-      process.exit();
+      process.exit(this.signalToCode('SIGINT'));
     });
     process.on('SIGTERM', () => {
       this.processes.forEach((p) => {

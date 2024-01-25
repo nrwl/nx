@@ -57,7 +57,7 @@ export const createDependencies: CreateDependencies = () => {
 };
 
 export const createNodes: CreateNodes<CypressPluginOptions> = [
-  '**/cypress.config.{js,ts,mjs,mts,cjs,cts}',
+  '**/cypress.config.{js,ts,mjs,cjs}',
   (configFilePath, options, context) => {
     options = normalizeOptions(options);
     const projectRoot = dirname(configFilePath);
@@ -157,15 +157,13 @@ function buildCypressTargets(
   const webServerCommands: Record<string, string> =
     pluginPresetOptions?.webServerCommands;
 
-  const relativeConfigPath = relative(projectRoot, configFilePath);
-
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration> = {};
 
   if ('e2e' in cypressConfig) {
     targets[options.targetName] = {
-      command: `cypress run --config-file ${relativeConfigPath} --e2e`,
+      command: `cypress run`,
       options: { cwd: projectRoot },
       cache: true,
       inputs: getInputs(namedInputs),
@@ -182,7 +180,7 @@ function buildCypressTargets(
         webServerCommands ?? {}
       )) {
         targets[options.targetName].configurations[configuration] = {
-          command: `cypress run --config-file ${relativeConfigPath} --e2e --env webServerCommand="${webServerCommand}"`,
+          command: `cypress run --env webServerCommand="${webServerCommand}"`,
         };
       }
     }
@@ -215,7 +213,7 @@ function buildCypressTargets(
           outputs,
           inputs,
           cache: true,
-          command: `cypress run --config-file ${relativeConfigPath} --e2e --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath}`,
+          command: `cypress run --env webServerCommand="${ciWebServerCommand}" --spec ${relativeSpecFilePath}`,
           options: {
             cwd: projectRoot,
           },
@@ -241,7 +239,7 @@ function buildCypressTargets(
   if ('component' in cypressConfig) {
     // This will not override the e2e target if it is the same
     targets[options.componentTestingTargetName] ??= {
-      command: `cypress open --config-file ${relativeConfigPath} --component`,
+      command: `cypress open --component`,
       options: { cwd: projectRoot },
       cache: true,
       inputs: getInputs(namedInputs),
@@ -259,7 +257,7 @@ function getCypressConfig(
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
   let module: any;
-  if (['.ts', '.mts', '.cts'].includes(extname(configFilePath))) {
+  if (extname(configFilePath) === '.ts') {
     const tsConfigPath = getRootTsConfigPath();
 
     if (tsConfigPath) {

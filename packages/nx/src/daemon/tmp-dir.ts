@@ -4,7 +4,7 @@
  * and where we create the actual unix socket/named pipe for the daemon.
  */
 import { statSync, writeFileSync } from 'fs';
-import { ensureDirSync, rmdirSync } from 'fs-extra';
+import { ensureDirSync, rmSync } from 'fs-extra';
 import { join } from 'path';
 import { projectGraphCacheDirectory } from '../utils/cache-directory';
 import { createHash } from 'crypto';
@@ -71,6 +71,6 @@ function createSocketDir() {
 
 export function removeSocketDir() {
   try {
-    rmdirSync(socketDir, { recursive: true });
+    rmSync(socketDir, { recursive: true, force: true });
   } catch (e) {}
 }
