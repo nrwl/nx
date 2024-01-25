@@ -39,6 +39,11 @@
       "schema": "./src/generators/component-test/schema.json",
       "description": "Creates a cypress component test file for a component."
     },
+    "convert-to-application-executor": {
+      "factory": "./src/generators/convert-to-application-executor/convert-to-application-executor",
+      "schema": "./src/generators/convert-to-application-executor/schema.json",
+      "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder."
+    },
     "directive": {
       "factory": "./src/generators/directive/directive",
       "schema": "./src/generators/directive/schema.json",

@@ -6790,6 +6790,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "convert-to-application-executor",
+                "path": "/nx-api/angular/generators/convert-to-application-executor",
+                "name": "convert-to-application-executor",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "directive",
                 "path": "/nx-api/angular/generators/directive",
                 "name": "directive",
