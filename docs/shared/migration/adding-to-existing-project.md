@@ -26,7 +26,7 @@ Run the following command:
 npx nx@latest init
 ```
 
-This will set up Nx for you - updating the `package.json` file and creating a new `nx.json` file with Nx configuration based on your answers during the set up process. The set up process will suggest installing Nx plugins that might be useful based on your existing repository. The example below is using the `@nx/eslint` and `@nx/next` plugins to run ESLint and Next tasks with Nx:
+This will set up Nx for you - updating the `package.json` file and creating a new `nx.json` file with Nx configuration based on your answers during the set up process. The set up process will suggest installing Nx plugins that might be useful based on your existing repository. The example below is using the `@nx/eslint` and `@nx/next` plugins to run ESLint and Next.js tasks with Nx:
 
 ```json {% fileName="nx.json" %}
 {
@@ -49,7 +49,7 @@ This will set up Nx for you - updating the `package.json` file and creating a ne
 }
 ```
 
-When Nx updates your `package.json` scripts, it looks for scripts that can be non-intrusively replaced with an Nx command that has caching automatically enabled. The `package.json` defined above would be updated to look like this:
+When Nx updates your `package.json` scripts, it looks for scripts that can be replaced with an Nx command that has caching automatically enabled. The `package.json` defined above would be updated to look like this:
 
 ```json {% fileName="package.json" %}
 {
@@ -73,7 +73,7 @@ The `test` script was not recognized by any Nx plugin, so it was left as is.
 
 ## Inferred Tasks
 
-You may have noticed that `@nx/next` provides `dev` and `start` tasks in addition to the `build` task. Those tasks were created by the `@nx/next` plugin from your existing Next configuration. To view all available tasks, open the Project Details view with Nx Console or use the terminal to launch the project details in a browser window.
+You may have noticed that `@nx/next` provides `dev` and `start` tasks in addition to the `build` task. Those tasks were created by the `@nx/next` plugin from your existing Next.js configuration. To view all available tasks, open the Project Details view with Nx Console or use the terminal to launch the project details in a browser window.
 
 ```shell
 nx show project my-workspace --web
