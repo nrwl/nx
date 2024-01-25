@@ -56,13 +56,13 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
     output.log({
       title: '✅ This workspace is already connected to Nx Cloud.',
       bodyLines: [
-        'This means your workspace can use computation caching, distributed task execution, and show you run analytics.',
-        'Go to https://nx.app to learn more.',
+        `Your workspace can use free distributed execution for maximum speed,`,
+        `a dedicated run UI, and analytics. Learn more at https://nx.app`,
         ' ',
         'If you have not done so already, please claim this workspace:',
-        `${getNxCloudUrl(
+        `- Login or register at ${getNxCloudUrl(
           nxJson
-        )}/orgs/workspace-setup?accessToken=${getNxCloudToken(nxJson)}`,
+        )} to configure your workspace`,
       ],
     });
     return false;
