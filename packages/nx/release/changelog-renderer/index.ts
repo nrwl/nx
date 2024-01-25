@@ -125,7 +125,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
   if (project === null) {
     // No changes for the workspace
     if (commits.length === 0) {
-      if (dependencyBumps) {
+      if (dependencyBumps?.length) {
         applyAdditionalDependencyBumps({
           markdownLines,
           dependencyBumps,
@@ -205,7 +205,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
 
     // Generating for a named project, but that project has no relevant changes in the current set of commits, exit early
     if (relevantCommits.length === 0) {
-      if (dependencyBumps) {
+      if (dependencyBumps?.length) {
         applyAdditionalDependencyBumps({
           markdownLines,
           dependencyBumps,
@@ -268,7 +268,7 @@ const defaultChangelogRenderer: ChangelogRenderer = async ({
     markdownLines.push('', '#### ⚠️  Breaking Changes', '', ...breakingChanges);
   }
 
-  if (dependencyBumps) {
+  if (dependencyBumps?.length) {
     applyAdditionalDependencyBumps({
       markdownLines,
       dependencyBumps,

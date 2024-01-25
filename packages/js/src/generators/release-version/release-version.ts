@@ -1,4 +1,6 @@
 import {
+  ProjectGraph,
+  ProjectGraphDependency,
   ProjectGraphProjectNode,
   Tree,
   formatFiles,
@@ -74,7 +76,20 @@ Valid values are: ${validReleaseVersionPrefixes
       options.fallbackCurrentVersionResolver = 'disk';
     }
 
-    const projects = options.projects;
+    // Set defaults for updateDependentsOptions
+    const updateDependentsOptions = options.updateDependents ?? {};
+    // "auto" means "only when the dependents are already included in the current batch", and is the default
+    updateDependentsOptions.when = updateDependentsOptions.when || 'auto';
+    // in the case "when" is set to "always", what semver bump should be applied to the dependents which are not included in the current batch
+    updateDependentsOptions.bump = updateDependentsOptions.bump || 'patch';
+
+    // Sort the projects topologically because there are cases where we need to perform updates based on dependent relationships
+    // TODO: maybe move this sorting to the command level?
+    const projects = sortProjectsTopologically(
+      options.projectGraph,
+      options.projects
+    );
+    const projectToDependencyBumps = new Map<string, any>();
 
     const createResolvePackageRoot =
       (customPackageRoot?: string) =>
@@ -325,13 +340,21 @@ To fix this you will either need to add a package.json file at that location, or
             );
 
             if (!specifier) {
+              if (projectToDependencyBumps.has(projectName)) {
+                // No applicable changes to the project directly by the user, but we have updated or more dependencies from the current batch already, so it does need to be bumped
+                specifier = updateDependentsOptions.bump;
+                log(
+                  `📄 Resolved the specifier as "${specifier}" based on "release.version.generatorOptions.updateDependentsOptions.bump"`
+                );
+                break;
+              }
               log(
                 `🚫 No changes were detected using git history and the conventional commits standard.`
               );
               break;
             }
 
-            // TODO: reevaluate this logic/workflow for independent projects
+            // TODO: reevaluate this prerelease logic/workflow for independent projects
             //
             // Always assume that if the current version is a prerelease, then the next version should be a prerelease.
             // Users must manually graduate from a prerelease to a release by providing an explicit specifier.
@@ -395,12 +418,6 @@ To fix this you will either need to add a package.json file at that location, or
         options.releaseGroup.projectsRelationship === 'independent'
       );
 
-      const updateDependentsOptions = options.updateDependents ?? {};
-      // "auto" means "only when the dependents are already included in the current batch", and is the default
-      updateDependentsOptions.when = updateDependentsOptions.when || 'auto';
-      // in the case "when" is set to "always", what semver bump should be applied to the dependents which are not included in the current batch
-      updateDependentsOptions.bump = updateDependentsOptions.bump || 'patch';
-
       const allDependentProjects = Object.values(localPackageDependencies)
         .flat()
         .filter((localPackageDependency) => {
@@ -444,7 +461,7 @@ To fix this you will either need to add a package.json file at that location, or
       versionData[projectName] = {
         currentVersion,
         newVersion: null, // will stay as null in the final result in the case that no changes are detected
-        additionalDependentProjects: dependentProjectsOutsideCurrentBatch,
+        dependentProjects: allDependentProjects,
       };
 
       if (!specifier) {
@@ -488,10 +505,10 @@ To fix this you will either need to add a package.json file at that location, or
 
       const updateDependentProjectAndAddToVersionData = ({
         dependentProject,
-        versionBump,
+        forceVersionBump,
       }: {
         dependentProject: LocalPackageDependency;
-        versionBump: 'major' | 'minor' | 'patch' | false;
+        forceVersionBump: 'major' | 'minor' | 'patch' | false;
       }) => {
         const updatedFilePath = joinPathFragments(
           projectNameToPackageRootMap.get(dependentProject.source),
@@ -522,18 +539,18 @@ To fix this you will either need to add a package.json file at that location, or
             newDepVersion;
 
           // Bump the dependent's version if applicable and record it in the version data
-          if (versionBump) {
+          if (forceVersionBump) {
             const currentPackageVersion = json.version;
             const newPackageVersion = deriveNewSemverVersion(
               currentPackageVersion,
-              versionBump,
+              forceVersionBump,
               options.preid
             );
             json.version = newPackageVersion;
             versionData[dependentProject.source] = {
               currentVersion: currentPackageVersion,
               newVersion: newPackageVersion,
-              additionalDependentProjects: [],
+              dependentProjects: [], // TODO: missing recursion here?
             };
           }
 
@@ -542,9 +559,21 @@ To fix this you will either need to add a package.json file at that location, or
       };
 
       for (const dependentProject of dependentProjectsInCurrentBatch) {
+        if (projectToDependencyBumps.has(dependentProject.source)) {
+          const dependencyBumps = projectToDependencyBumps.get(
+            dependentProject.source
+          );
+          dependencyBumps.add(projectName);
+        } else {
+          projectToDependencyBumps.set(
+            dependentProject.source,
+            new Set([projectName])
+          );
+        }
         updateDependentProjectAndAddToVersionData({
           dependentProject,
-          versionBump: false,
+          // We don't force bump because we know they will come later in the topologically sorted projects loop and may have their own version update logic to take into account
+          forceVersionBump: false,
         });
       }
 
@@ -552,8 +581,8 @@ To fix this you will either need to add a package.json file at that location, or
         for (const dependentProject of dependentProjectsOutsideCurrentBatch) {
           updateDependentProjectAndAddToVersionData({
             dependentProject,
-            // For these additional dependents, we need to update their own package.json version as well with the appropriate bump
-            versionBump: updateDependentsOptions.bump,
+            // For these additional dependents, we need to update their package.json version as well because we know they will not come later in the topologically sorted projects loop
+            forceVersionBump: updateDependentsOptions.bump,
           });
         }
       }
@@ -650,4 +679,59 @@ async function getNpmRegistry() {
       return resolve(stdout.trim());
     });
   });
+}
+
+function sortProjectsTopologically(
+  projectGraph: ProjectGraph,
+  projectNodes: ProjectGraphProjectNode[]
+): ProjectGraphProjectNode[] {
+  const edges = new Map<ProjectGraphProjectNode, number>(
+    projectNodes.map((node) => [node, 0])
+  );
+
+  const filteredDependencies: ProjectGraphDependency[] = [];
+  for (const node of projectNodes) {
+    const deps = projectGraph.dependencies[node.name];
+    if (deps) {
+      filteredDependencies.push(
+        ...deps.filter((dep) => projectNodes.find((n) => n.name === dep.target))
+      );
+    }
+  }
+
+  filteredDependencies.forEach((dep) => {
+    const sourceNode = projectGraph.nodes[dep.source];
+    // dep.source depends on dep.target
+    edges.set(sourceNode, (edges.get(sourceNode) || 0) + 1);
+  });
+
+  // Initialize queue with projects that have no dependencies
+  const processQueue = [...edges]
+    .filter(([_, count]) => count === 0)
+    .map(([node]) => node);
+  const sortedProjects = [];
+
+  while (processQueue.length > 0) {
+    const node = processQueue.shift();
+    sortedProjects.push(node);
+
+    // Process each project that depends on the current node
+    filteredDependencies.forEach((dep) => {
+      const dependentNode = projectGraph.nodes[dep.source];
+      const count = edges.get(dependentNode) - 1;
+      edges.set(dependentNode, count);
+      if (count === 0) {
+        processQueue.push(dependentNode);
+      }
+    });
+  }
+
+  // TODO: should hopefully be impossible by this point?
+  if (sortedProjects.length !== projectNodes.length) {
+    throw new Error(
+      'Cycle detected or a disconnected node exists that was not included in the input set.'
+    );
+  }
+
+  return sortedProjects;
 }

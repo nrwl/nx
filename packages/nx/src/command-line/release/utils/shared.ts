@@ -25,10 +25,10 @@ export type VersionData = Record<
     newVersion: string;
     currentVersion: string;
     /**
-     * This list of projects which depend on this project, but are not part of the release.
+     * This list of projects which depend on this project.
      * TODO: investigate generic type for this once more ecosystems are explored
      */
-    additionalDependentProjects: any[];
+    dependentProjects: any[];
   }
 >;
 

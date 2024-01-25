@@ -243,8 +243,36 @@ export async function releaseChangelog(
         releaseGroup.projects;
     const projectNodes = projects.map((name) => projectGraph.nodes[name]);
 
+    // Determine any additional projects that we need to generate changelogs for, based on the dependent projects of the projects within the release group
+    const projectToDependencyProjectNames = new Map<
+      ProjectGraphProjectNode,
+      string[]
+    >();
+    for (const project of projects) {
+      const dependentProjects =
+        projectsVersionData[project]?.dependentProjects || [];
+      if (dependentProjects.length) {
+        for (const dependentProject of dependentProjects) {
+          const dependentProjectNode =
+            projectGraph.nodes[dependentProject.source];
+          if (!projectToDependencyProjectNames.has(dependentProjectNode)) {
+            projectToDependencyProjectNames.set(dependentProjectNode, [
+              project,
+            ]);
+            continue;
+          }
+          projectToDependencyProjectNames
+            .get(dependentProjectNode)
+            .push(project);
+        }
+      }
+    }
+
     if (releaseGroup.projectsRelationship === 'independent') {
-      for (const project of projectNodes) {
+      for (const project of Array.from(
+        // The full list is based on the projectNodes within the releaseGroup, plus any additional dependents
+        new Set([...projectNodes, ...projectToDependencyProjectNames.keys()])
+      )) {
         let fromRef =
           args.from ||
           (
@@ -289,7 +317,8 @@ export async function releaseChangelog(
           projectsVersionData,
           postGitTasks,
           releaseGroup,
-          [project]
+          [project],
+          projectToDependencyProjectNames
         );
       }
     } else {
@@ -315,7 +344,8 @@ export async function releaseChangelog(
         projectsVersionData,
         postGitTasks,
         releaseGroup,
-        projectNodes
+        projectNodes,
+        projectToDependencyProjectNames
       );
     }
   }
@@ -367,7 +397,7 @@ function resolveChangelogVersions(
           versionData[projectName] = {
             newVersion: args.version,
             currentVersion: '', // not relevant within changelog/commit generation
-            additionalDependentProjects: [], // not relevant within changelog/commit generation
+            dependentProjects: [], // not relevant within changelog/commit generation
           };
           continue;
         }
@@ -769,7 +799,8 @@ async function generateChangelogForProjects(
   projectsVersionData: VersionData,
   postGitTasks: PostGitTask[],
   releaseGroup: ReleaseGroupWithName,
-  projects: ProjectGraphProjectNode[]
+  projects: ProjectGraphProjectNode[],
+  projectToDependencyProjectNames: Map<ProjectGraphProjectNode, string[]>
 ) {
   const config = releaseGroup.changelog;
   // The entire feature is disabled at the release group level, exit early
@@ -785,37 +816,7 @@ async function generateChangelogForProjects(
 
   const changelogRenderer = resolveChangelogRenderer(config.renderer);
 
-  const projectToAdditionalDependencyProjectNames = new Map<
-    ProjectGraphProjectNode,
-    string[]
-  >();
-
   for (const project of projects) {
-    const additionalDependentProjects =
-      projectsVersionData[project.name]?.additionalDependentProjects || [];
-    if (additionalDependentProjects.length) {
-      for (const dependentProject of additionalDependentProjects) {
-        const dependentProjectNode =
-          projectGraph.nodes[dependentProject.source];
-        if (
-          !projectToAdditionalDependencyProjectNames.has(dependentProjectNode)
-        ) {
-          projectToAdditionalDependencyProjectNames.set(dependentProjectNode, [
-            project.name,
-          ]);
-          continue;
-        }
-        projectToAdditionalDependencyProjectNames
-          .get(dependentProjectNode)
-          .push(project.name);
-      }
-    }
-  }
-
-  for (const project of [
-    ...projects,
-    ...projectToAdditionalDependencyProjectNames.keys(),
-  ]) {
     let interpolatedTreePath = config.file || '';
     if (interpolatedTreePath) {
       interpolatedTreePath = interpolate(interpolatedTreePath, {
@@ -865,10 +866,8 @@ async function generateChangelogForProjects(
         ? getGitHubRepoSlug(gitRemote)
         : undefined;
 
-    const dependencyBumps = projectToAdditionalDependencyProjectNames.has(
-      project
-    )
-      ? projectToAdditionalDependencyProjectNames.get(project).map((dep) => {
+    const dependencyBumps = projectToDependencyProjectNames.has(project)
+      ? projectToDependencyProjectNames.get(project).map((dep) => {
           return {
             dependencyName: dep,
             newVersion: projectsVersionData[dep].newVersion,
@@ -882,16 +881,14 @@ async function generateChangelogForProjects(
       releaseVersion: releaseVersion.rawVersion,
       project: project.name,
       repoSlug: githubRepoSlug,
-      // If we have dependency bumps to print, the entryWhenNoChanges config is not appropriate
-      entryWhenNoChanges: dependencyBumps
-        ? false
-        : typeof config.entryWhenNoChanges === 'string'
-        ? interpolate(config.entryWhenNoChanges, {
-            projectName: project.name,
-            projectRoot: project.data.root,
-            workspaceRoot: '', // within the tree, workspaceRoot is the root
-          })
-        : false,
+      entryWhenNoChanges:
+        typeof config.entryWhenNoChanges === 'string'
+          ? interpolate(config.entryWhenNoChanges, {
+              projectName: project.name,
+              projectRoot: project.data.root,
+              workspaceRoot: '', // within the tree, workspaceRoot is the root
+            })
+          : false,
       changelogRenderOptions: config.renderOptions,
       dependencyBumps,
     });
