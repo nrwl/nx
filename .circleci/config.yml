@@ -87,7 +87,7 @@ jobs:
       NX_CI_EXECUTION_ENV: 'linux'
     steps:
       - checkout
-      - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
+      - run: NX_VERBOSE_LOGGING=true npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
       - run:
           command: |
             sudo apt-get update
