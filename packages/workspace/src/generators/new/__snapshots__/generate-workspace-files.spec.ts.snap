@@ -57,6 +57,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -122,6 +129,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -182,6 +196,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up remote caching](https://nx.dev/features/share-your-cache)
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
+
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
 
 ## Connect with us!
 
@@ -244,6 +265,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -305,6 +333,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -365,6 +400,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up remote caching](https://nx.dev/features/share-your-cache)
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
+
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
 
 ## Connect with us!
 
@@ -431,6 +473,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -491,6 +540,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up remote caching](https://nx.dev/features/share-your-cache)
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
+
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
 
 ## Connect with us!
 
@@ -557,6 +613,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -621,6 +684,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up remote caching](https://nx.dev/features/share-your-cache)
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
+
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
 
 ## Connect with us!
 
@@ -687,6 +757,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -747,6 +824,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up remote caching](https://nx.dev/features/share-your-cache)
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
+
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
 
 ## Connect with us!
 
@@ -813,6 +897,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -877,6 +968,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up remote caching](https://nx.dev/features/share-your-cache)
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
+
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
 
 ## Connect with us!
 
@@ -943,6 +1041,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -1008,6 +1113,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -1068,6 +1180,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up remote caching](https://nx.dev/features/share-your-cache)
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
+
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
 
 ## Connect with us!
 
@@ -1134,6 +1253,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -1195,6 +1321,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -1255,6 +1388,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up remote caching](https://nx.dev/features/share-your-cache)
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
+
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
 
 ## Connect with us!
 
@@ -1321,6 +1461,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -1385,6 +1532,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up remote caching](https://nx.dev/features/share-your-cache)
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
+
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
 
 ## Connect with us!
 
@@ -1451,6 +1605,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
 
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
+
 ## Connect with us!
 
 - [Join the community](https://nx.dev/community)
@@ -1511,6 +1672,13 @@ Nx comes with local caching already built-in (check your \`nx.json\`). On CI you
 - [Set up remote caching](https://nx.dev/features/share-your-cache)
 - [Set up task distribution across multiple machines](https://nx.dev/nx-cloud/features/distribute-task-execution)
 - [Learn more how to setup CI](https://nx.dev/recipes/ci)
+
+## Explore the Graph of Your Workspace
+
+Run \`nx graph\` to show the graph of the workspace.
+It will show tasks that you can run with Nx.
+
+- [Learn more about Exploring the Graph](https://nx.dev/core-features/explore-graph)
 
 ## Connect with us!
 
