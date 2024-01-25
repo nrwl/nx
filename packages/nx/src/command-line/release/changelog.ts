@@ -130,9 +130,9 @@ export async function releaseChangelog(
     Object.values(nxReleaseConfig.groups).some((g) => g.changelog);
   if (!changelogGenerationEnabled) {
     output.warn({
-      title: `Changelogs disabled. No changelog entries will be generated`,
+      title: `Changelogs are disabled. No changelog entries will be generated`,
       bodyLines: [
-        `The "changelog.workspaceChangelog" and "changelog.projectChangelogs" properties are both disabled in nx.json, so no changelog entries will be generated.`,
+        `To explicitly enable changelog generation, configure "changelog.workspaceChangelog" or "changelog.projectChangelogs" in nx.json.`,
       ],
     });
     return 0;
