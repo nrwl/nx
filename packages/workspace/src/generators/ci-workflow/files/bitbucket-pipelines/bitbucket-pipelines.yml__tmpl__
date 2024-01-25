@@ -15,7 +15,9 @@ pipelines:
                 - npm install --prefix=$HOME/.local -g pnpm@8
                 <% } %>
                 - <%= packageManagerInstall %>
-                # uncomment to enable task distribution
-                # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js"
+
+                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+                # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
                 - <%= packageManagerPrefix %> nx-cloud record -- nx format:check
-                - <%= packageManagerPrefix %> nx affected -t=lint,test,build --parallel=3
+                - <%= packageManagerPrefix %> nx affected -t=lint,test,build
