@@ -16,6 +16,6 @@ pipelines:
                 <% } %>
                 - <%= packageManagerInstall %>
                 # uncomment to enable task distribution
-                # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distributes-on="5 linux-medium"
+                # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js"
                 - <%= packageManagerPrefix %> nx-cloud record -- nx format:check
                 - <%= packageManagerPrefix %> nx affected -t=lint,test,build --parallel=3
