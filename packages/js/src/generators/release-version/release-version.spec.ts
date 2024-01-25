@@ -91,18 +91,31 @@ describe('release-version', () => {
         "callback": [Function],
         "data": {
           "my-lib": {
-            "additionalDependentProjects": [],
             "currentVersion": "0.0.1",
+            "dependentProjects": [
+              {
+                "dependencyCollection": "dependencies",
+                "source": "project-with-dependency-on-my-pkg",
+                "target": "my-lib",
+                "type": "static",
+              },
+              {
+                "dependencyCollection": "devDependencies",
+                "source": "project-with-devDependency-on-my-pkg",
+                "target": "my-lib",
+                "type": "static",
+              },
+            ],
             "newVersion": "1.0.0",
           },
           "project-with-dependency-on-my-pkg": {
-            "additionalDependentProjects": [],
             "currentVersion": "0.0.1",
+            "dependentProjects": [],
             "newVersion": "1.0.0",
           },
           "project-with-devDependency-on-my-pkg": {
-            "additionalDependentProjects": [],
             "currentVersion": "0.0.1",
+            "dependentProjects": [],
             "newVersion": "1.0.0",
           },
         },
@@ -1087,7 +1100,7 @@ To fix this you will either need to add a package.json file at that location, or
       expect(outputSpy).toHaveBeenCalledWith({
         title: `Invalid value for version.generatorOptions.versionPrefix: "$"
 
-Valid values are: "auto", "", "~", "^"`,
+Valid values are: "auto", "", "~", "^", "="`,
       });
 
       outputSpy.mockRestore();
