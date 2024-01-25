@@ -12,7 +12,10 @@ import {
 import * as chalk from 'chalk';
 import { exec } from 'child_process';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
-import { getLatestGitTagForPattern } from 'nx/src/command-line/release/utils/git';
+import {
+  getFirstGitCommit,
+  getLatestGitTagForPattern,
+} from 'nx/src/command-line/release/utils/git';
 import {
   resolveSemverSpecifierFromConventionalCommits,
   resolveSemverSpecifierFromPrompt,
@@ -310,8 +313,25 @@ To fix this you will either need to add a package.json file at that location, or
                 ? [projectName]
                 : projects.map((p) => p.name);
 
+            // latestMatchingGitTag will be undefined if the current version was resolved from the disk fallback.
+            // In this case, we want to use the first commit as the ref to be consistent with the changelog command.
+            const previousVersionRef = latestMatchingGitTag
+              ? latestMatchingGitTag.tag
+              : options.fallbackCurrentVersionResolver === 'disk'
+              ? await getFirstGitCommit()
+              : undefined;
+
+            if (!previousVersionRef) {
+              // This should never happen since the checks above should catch if the current version couldn't be resolved
+              throw new Error(
+                `Unable to determine previous version ref for the projects ${affectedProjects.join(
+                  ', '
+                )}. This is likely a bug in Nx.`
+              );
+            }
+
             specifier = await resolveSemverSpecifierFromConventionalCommits(
-              latestMatchingGitTag.tag,
+              previousVersionRef,
               options.projectGraph,
               affectedProjects
             );

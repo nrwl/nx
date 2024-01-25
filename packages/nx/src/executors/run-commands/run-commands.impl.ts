@@ -47,7 +47,7 @@ export interface RunCommandsOptions extends Json {
   readyWhen?: string;
   cwd?: string;
   env?: Record<string, string>;
-  args?: string;
+  args?: string | string[];
   envFile?: string;
   __unparsed__: string[];
 }
@@ -71,6 +71,7 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
   parsedArgs: {
     [k: string]: any;
   };
+  args?: string;
 }
 
 export default async function (
@@ -159,8 +160,6 @@ async function runInParallel(
 function normalizeOptions(
   options: RunCommandsOptions
 ): NormalizedRunCommandsOptions {
-  options.parsedArgs = parseArgs(options);
-
   if (options.command) {
     options.commands = [{ command: options.command }];
     options.parallel = !!options.readyWhen;
@@ -169,6 +168,12 @@ function normalizeOptions(
       typeof c === 'string' ? { command: c } : c
     );
   }
+
+  if (options.args && Array.isArray(options.args)) {
+    options.args = options.args.join(' ');
+  }
+  options.parsedArgs = parseArgs(options, options.args as string);
+
   (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
     c.command = interpolateArgsIntoCommand(
       c.command,
@@ -176,7 +181,7 @@ function normalizeOptions(
       c.forwardAllArgs ?? true
     );
   });
-  return options as any;
+  return options as NormalizedRunCommandsOptions;
 }
 
 async function runSerially(
@@ -363,8 +368,7 @@ export function interpolateArgsIntoCommand(
   }
 }
 
-function parseArgs(options: RunCommandsOptions) {
-  const args = options.args;
+function parseArgs(options: RunCommandsOptions, args?: string) {
   if (!args) {
     const unknownOptionsTreatedAsArgs = Object.keys(options)
       .filter((p) => propKeys.indexOf(p) === -1)

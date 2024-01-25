@@ -9,7 +9,7 @@ import {
   updateNxJson,
   writeJson,
 } from '@nx/devkit';
-import { Linter, lintInitGenerator } from '@nx/eslint';
+import { lintInitGenerator } from '@nx/eslint';
 import { setupRootEsLint } from '@nx/eslint/src/generators/lint-project/setup-root-eslint';
 import {
   getRootTsConfigPathInTree,
@@ -185,12 +185,12 @@ export function updatePackageJson(tree: Tree): void {
   });
 }
 
-export function updateRootEsLintConfig(
+export async function updateRootEsLintConfig(
   tree: Tree,
   existingEsLintConfig: any | undefined,
   unitTestRunner?: string
-): void {
-  lintInitGenerator(tree, {});
+): Promise<void> {
+  await lintInitGenerator(tree, {});
 
   if (!existingEsLintConfig) {
     // There was no eslint config in the root, so we set it up and use it as-is

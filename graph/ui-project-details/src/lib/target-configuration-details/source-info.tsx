@@ -19,8 +19,8 @@ export function SourceInfo(props: {
           (
             <SourcemapInfoToolTip
               propertyKey={props.propertyKey}
-              plugin={props.data[1]}
-              file={props.data[0]}
+              plugin={props.data?.[1]}
+              file={props.data?.[0]}
             />
           ) as any
         }
@@ -29,7 +29,8 @@ export function SourceInfo(props: {
         {/*  <InformationCircleIcon className="w-3 h-3" />*/}
         {/*</span>*/}
         <span className="italic text-gray-500">
-          {isTarget ? 'Created' : 'Set'} by {props.data[1]} from {props.data[0]}
+          {isTarget ? 'Created' : 'Set'} by {props.data?.[1]} from{' '}
+          {props.data?.[0]}
         </span>
       </Tooltip>
     </span>
