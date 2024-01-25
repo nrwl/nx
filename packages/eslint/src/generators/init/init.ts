@@ -117,7 +117,7 @@ async function initEsLint(
   }
 
   if (options.updatePackageScripts) {
-    updatePackageScripts(tree, createNodes);
+    await updatePackageScripts(tree, createNodes);
   }
 
   return runTasksInSerial(...tasks);
