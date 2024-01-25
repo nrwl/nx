@@ -25,8 +25,10 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - script: npm ci
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
 "
@@ -48,8 +50,10 @@ pipelines:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
 
                 - npm ci
-                # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
                 # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
                 - npx nx-cloud record -- nx format:check
                 - npx nx affected -t=lint,test,build
 "
@@ -70,8 +74,10 @@ jobs:
       - run: npm ci
       - nx/set-shas:
           main-branch-name: 'main'
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
 
@@ -112,7 +118,7 @@ jobs:
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: npx nx-cloud record -- nx format:check
@@ -148,7 +154,7 @@ jobs:
       - run: npm ci
       - uses: nrwl/nx-set-shas@v4
 
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: npx nx-cloud record -- nx format:check
@@ -171,8 +177,10 @@ CI:
     - npm ci
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
-    # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+    # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
     # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
     - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
 "
@@ -207,8 +215,10 @@ jobs:
       - script: npm install --prefix=$HOME/.local -g pnpm@8
         displayName: Install PNPM
       - script: pnpm install --frozen-lockfile
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - script: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       - script: pnpm exec nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
 "
@@ -232,8 +242,10 @@ pipelines:
                 - npm install --prefix=$HOME/.local -g pnpm@8
 
                 - pnpm install --frozen-lockfile
-                # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
                 # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
                 - pnpm exec nx-cloud record -- nx format:check
                 - pnpm exec nx affected -t=lint,test,build
 "
@@ -258,8 +270,10 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - nx/set-shas:
           main-branch-name: 'main'
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
 
@@ -304,7 +318,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm exec nx-cloud record -- nx format:check
@@ -344,7 +358,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm exec nx-cloud record -- nx format:check
@@ -369,8 +383,10 @@ CI:
     - pnpm install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
-    # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+    # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
     # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
     - pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
 "
@@ -403,8 +419,10 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       - script: yarn install --frozen-lockfile
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       - script: yarn nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
 "
@@ -426,8 +444,10 @@ pipelines:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
 
                 - yarn install --frozen-lockfile
-                # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
                 # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
                 - yarn nx-cloud record -- nx format:check
                 - yarn nx affected -t=lint,test,build
 "
@@ -448,8 +468,10 @@ jobs:
       - run: yarn install --frozen-lockfile
       - nx/set-shas:
           main-branch-name: 'main'
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
 
@@ -490,7 +512,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn nx-cloud record -- nx format:check
@@ -526,7 +548,7 @@ jobs:
       - run: yarn install --frozen-lockfile
       - uses: nrwl/nx-set-shas@v4
 
-      # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn nx-cloud record -- nx format:check
@@ -549,8 +571,10 @@ CI:
     - yarn install --frozen-lockfile
     - NX_HEAD=$CI_COMMIT_SHA
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
-    # uncomment to enable task distribution, agents can be terminated once the "build" targets have been requested
+
+    # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
     # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
     - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
 "
