@@ -313,11 +313,21 @@ To fix this you will either need to add a package.json file at that location, or
                 ? [projectName]
                 : projects.map((p) => p.name);
 
-            let previousVersionRef = latestMatchingGitTag?.tag;
-            // latestMatchingGitTag will only be undefined if we fell back to the version on disk,
-            // so we need to assume this is the first release for the project(s) being versioned
-            if (!previousVersionRef && currentVersionResolvedFromFallback) {
-              previousVersionRef = await getFirstGitCommit();
+            // latestMatchingGitTag will be undefined if the current version was resolved from the disk fallback.
+            // In this case, we want to use the first commit as the ref to be consistent with the changelog command.
+            const previousVersionRef = latestMatchingGitTag
+              ? latestMatchingGitTag.tag
+              : options.fallbackCurrentVersionResolver === 'disk'
+              ? await getFirstGitCommit()
+              : undefined;
+
+            if (!previousVersionRef) {
+              // This should never happen since the checks above should catch if the current version couldn't be resolved
+              throw new Error(
+                `Unable to determine previous version ref for the projects ${affectedProjects.join(
+                  ', '
+                )}. This is likely a bug in Nx.`
+              );
             }
 
             specifier = await resolveSemverSpecifierFromConventionalCommits(
