@@ -11,6 +11,7 @@ import {
   uniq,
   updateJson,
 } from '@nx/e2e/utils';
+import { execSync } from 'child_process';
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
@@ -60,6 +61,7 @@ describe('nx release - independent projects', () => {
   let pkg1: string;
   let pkg2: string;
   let pkg3: string;
+  let e2eRegistryUrl: string;
 
   beforeAll(() => {
     newProject({
@@ -96,6 +98,9 @@ describe('nx release - independent projects', () => {
     runCommand(`git tag ${pkg1}@0.0.0`);
     runCommand(`git tag ${pkg2}@0.0.0`);
     runCommand(`git tag ${pkg3}@0.0.0`);
+
+    // This is the verdaccio instance that the e2e tests themselves are working from
+    e2eRegistryUrl = execSync('npm config get registry').toString().trim();
   });
   afterAll(() => cleanupProject());
 
@@ -678,7 +683,7 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -727,7 +732,7 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 
@@ -791,7 +796,7 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
         > nx run {project-name}:nx-release-publish
 
@@ -813,7 +818,7 @@ describe('nx release - independent projects', () => {
         integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         total files:   4
 
-        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
+        Would publish to ${e2eRegistryUrl} with tag "latest", but [dry-run] was set
 
 
 

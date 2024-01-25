@@ -125,6 +125,19 @@ export async function releaseChangelog(
     process.exit(1);
   }
 
+  const changelogGenerationEnabled =
+    !!nxReleaseConfig.changelog.workspaceChangelog ||
+    Object.values(nxReleaseConfig.groups).some((g) => g.changelog);
+  if (!changelogGenerationEnabled) {
+    output.warn({
+      title: `Changelogs disabled. No changelog entries will be generated`,
+      bodyLines: [
+        `The "changelog.workspaceChangelog" and "changelog.projectChangelogs" properties are both disabled in nx.json, so no changelog entries will be generated.`,
+      ],
+    });
+    return 0;
+  }
+
   const useAutomaticFromRef =
     nxReleaseConfig.changelog?.automaticFromRef || args.firstRelease;
 
@@ -225,8 +238,7 @@ export async function releaseChangelog(
     nxReleaseConfig,
     workspaceChangelogVersion,
     workspaceChangelogCommits,
-    postGitTasks,
-    nxJson.release?.changelog?.workspaceChangelog
+    postGitTasks
   );
 
   for (const releaseGroup of releaseGroups) {
@@ -500,13 +512,11 @@ async function generateChangelogForWorkspace(
   nxReleaseConfig: NxReleaseConfig,
   workspaceChangelogVersion: (string | null) | undefined,
   commits: GitCommit[],
-  postGitTasks: PostGitTask[],
-  explicitWorkspaceChangelogConfig: unknown
+  postGitTasks: PostGitTask[]
 ) {
   const config = nxReleaseConfig.changelog.workspaceChangelog;
-  const isEnabled = args.workspaceChangelog ?? config;
   // The entire feature is disabled at the workspace level, exit early
-  if (isEnabled === false) {
+  if (config === false) {
     return;
   }
 
@@ -522,33 +532,20 @@ async function generateChangelogForWorkspace(
     );
   }
 
-  if (!workspaceChangelogVersion && args.workspaceChangelog) {
-    throw new Error(
-      `Workspace changelog is enabled but no overall version was provided. Please provide an explicit version using --version`
-    );
-  }
-
   if (
     Object.entries(nxReleaseConfig.groups).length > 1 ||
     Object.values(nxReleaseConfig.groups)[0].projectsRelationship ===
       'independent'
   ) {
-    if (
-      explicitWorkspaceChangelogConfig !== undefined &&
-      explicitWorkspaceChangelogConfig !== false
-    ) {
-      // only warn the user if they explicitly enabled workspace changelog
-      // if they didn't, then just disable it quietly, since it was enabled by default
-      output.warn({
-        title: `Workspace changelog is enabled, but you have multiple release groups configured or have configured an independent projects relationship. This is not supported, so workspace changelog will be disabled.`,
-        bodyLines: [
-          `A single workspace version cannot be determined when defining multiple release groups because versions differ between each group.`,
-          `Also, a single workspace version also cannot be determined when using independent projects because versions differ between each project.`,
-          `If you want to generate a workspace changelog, please use a single release group.`,
-          `Alternatively, project level changelogs can be enabled with the "projectChangelogs" property.`,
-        ],
-      });
-    }
+    output.warn({
+      title: `Workspace changelog is enabled, but you have multiple release groups configured or have configured an independent projects relationship. This is not supported, so workspace changelog will be disabled.`,
+      bodyLines: [
+        `A single workspace version cannot be determined when defining multiple release groups because versions differ between each group.`,
+        `Also, a single workspace version also cannot be determined when using independent projects because versions differ between each project.`,
+        `If you want to generate a workspace changelog, please use a single release group.`,
+        `Alternatively, project level changelogs can be enabled with the "projectChangelogs" property.`,
+      ],
+    });
     return;
   }
 

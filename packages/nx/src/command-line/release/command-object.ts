@@ -44,7 +44,6 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     gitRemote?: string;
-    workspaceChangelog?: boolean;
   };
 
 export type PublishOptions = NxReleaseArgs &
