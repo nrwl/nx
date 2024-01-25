@@ -36,8 +36,6 @@ title="Tutorial: Standalone React Application"
 
 ## Creating a new React App
 
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%}
-
 Create a new standalone React application with the following command:
 
 ```{% command="npx create-nx-workspace@latest myreactapp --preset=react-standalone" path="~" %}
@@ -91,8 +89,6 @@ Let me explain a couple of things that might be new to you.
 | `project.json` | This file is where you can modify the inferred tasks for the `myreactapp` project. More about this later.                                                                                                            |
 
 ## Serving the App
-
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=207" /%}
 
 The most common tasks are already mapped in the `package.json` file:
 
@@ -206,8 +202,6 @@ You can also override the settings for inferred tasks by modifying the [`targetD
 
 ## Testing and Linting - Running Multiple Tasks
 
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=410" /%}
-
 Our current setup doesn't just come with targets for serving and building the React application, but also has targets for unit testing, e2e testing and linting. Again, these are defined in the `project.json` file. We can use the same syntax as before to run these tasks:
 
 ```bash
@@ -254,8 +248,6 @@ Not all tasks might be cacheable though. You can configure the `cache` propertie
 
 ## Nx Plugins? Why?
 
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=598" /%}
-
 One thing you might be curious about is the [inferred tasks](/concepts/inferred-tasks). You may wonder why we are detecting tasks from your tooling configuration instead of directly defining them in `package.json` scripts or in the `project.json` file.
 
 Nx understands and supports both approaches, allowing you to define tasks in your `package.json` and `project.json` files or have Nx plugins automatically detect them. The inferred tasks give you the benefit of automatically setting the Nx cache settings for you based on your tooling configuration. In this tutorial, we take advantage of those inferred tasks to demonstrate the full value of Nx plugins.
@@ -265,8 +257,6 @@ So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabi
 [Visit our "Why Nx" page](/getting-started/why-nx) for more details.
 
 ## Creating New Components
-
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=706" /%}
 
 You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/features/generate-code). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin ships, run the following command and inspect the output:
 
@@ -292,9 +282,10 @@ You can just create new React components as you normally would. However, Nx plug
    component-test : Generate a Cypress component test for a React component
    setup-tailwind : Set up Tailwind configuration for a project.
    setup-ssr : Set up SSR configuration for a project.
-
+   federate-module : Federate a module.
+   
    EXECUTORS/BUILDERS
-
+   
    module-federation-dev-server : Serve a host or remote application.
    module-federation-ssr-dev-server : Serve a host application along with it's known remotes.
 ```
@@ -342,8 +333,6 @@ export default HelloWorld;
 
 ## Building the App for Deployment
 
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=856" /%}
-
 If you're ready and want to ship your application, you can build it using
 
 ```{% command="npx nx build" path="myreactapp" %}
@@ -363,8 +352,6 @@ All the required files will be placed in the `dist/myreactapp` folder and can be
 
 ## You're ready to go!
 
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=906" /%}
-
 In the previous sections you learned about the basics of using Nx, running tasks and navigating an Nx workspace. You're ready to ship features now!
 
 But there's more to learn. You have two possibilities here:
@@ -373,8 +360,6 @@ But there's more to learn. You have two possibilities here:
 - keep reading and learn some more about what makes Nx unique when working with React.
 
 ## Modularizing your React App with Local Libraries
-
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=986" /%}
 
 When you develop your React application, usually all your logic sits in the `app` folder. Ideally separated by various folder names which represent your "domains". As your app grows, this becomes more and more monolithic though.
 
@@ -404,8 +389,6 @@ Nx allows you to separate this logic into "local libraries". The main benefits i
 - better scalability in your teams by allowing different teams to work on separate libraries
 
 ### Creating Local Libraries
-
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1041" /%}
 
 Let's assume our domain areas include `products`, `orders` and some more generic design system components, called `ui`. We can generate a new library for each of these areas using the React library generator:
 
@@ -464,13 +447,12 @@ Running the above commands should lead to the following directory structure:
 
 Each of these libraries
 
-- has its own `project.json` file with corresponding targets you can run (e.g. running tests for just orders: `nx test orders`)
+- has a project details view where you can see the available tasks (e.g. running tests for just orders: `nx test orders`)
+- has its own `project.json` file where you can customize targets
 - has a dedicated `index.ts` file which is the "public API" of the library
 - is mapped in the `tsconfig.base.json` at the root of the workspace
 
 ### Importing Libraries into the React Application
-
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1245" /%}
 
 All libraries that we generate automatically have aliases created in the root-level `tsconfig.base.json`.
 
@@ -626,8 +608,6 @@ export default App;
 
 ## Visualizing your Project Structure
 
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1416" /%}
-
 Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
 
 Just run:
@@ -704,8 +684,6 @@ Notice how `ui` is not yet connected to anything because we didn't import it in 
 Exercise for you: change the codebase such that `ui` is used by `orders` and `products`. Note: you need to restart the `nx graph` command to update the graph visualization or run the CLI command with the `--watch` flag.
 
 ## Imposing Constraints with Module Boundary Rules
-
-{% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1456" /%}
 
 Once you modularize your codebase you want to make sure that the modules are not coupled to each other in an uncontrolled way. Here are some examples of how we might want to guard our small demo workspace:
 
