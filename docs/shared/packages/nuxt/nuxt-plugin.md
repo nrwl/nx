@@ -63,7 +63,7 @@ The `@nx/nuxt/plugin` is configured in the `plugins` array in `nx.json`.
 }
 ```
 
-- The `buildTargetName`, `testTargetName` and `serveTargetName` options control the names of the inferred Vite tasks. The default names are `build`, `test` and `serve`.
+- The `buildTargetName`, `testTargetName` and `serveTargetName` options control the names of the inferred Nuxt tasks. The default names are `build`, `test` and `serve`.
 
 ## Using Nuxt
 
