@@ -40,7 +40,14 @@ export async function setupNxCloud(
 export function printNxCloudSuccessMessage(nxCloudOut: string) {
   // remove leading Nx carret and any new lines
   const logContent = nxCloudOut.split('>  NX   ')[1];
-  const [title, ...bodyLines] = logContent.split('\n').map((r) => r.trim());
+  const indexOfTitleEnd = logContent.indexOf('\n');
+  const title = logContent.slice(0, logContent.indexOf('\n')).trim();
+  const bodyLines = logContent
+    .slice(indexOfTitleEnd)
+    .replace(/^\n*/, '') // remove leading new lines
+    .replace(/\n*$/, '') // remove trailing new lines
+    .split('\n')
+    .map((r) => r.trim());
   output.success({
     title,
     bodyLines,
