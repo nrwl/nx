@@ -498,7 +498,7 @@ async function determineNoneOptions(
             name: 'No',
           },
         ],
-        initial: 'Yes' as any,
+        initial: 0,
       },
     ]);
     js = reply.ts === 'No';
@@ -584,7 +584,7 @@ async function determineReactOptions(
       {
         name: 'style',
         message: `Default stylesheet format`,
-        initial: 'css' as any,
+        initial: 0,
         type: 'autocomplete',
         choices: [
           {
@@ -680,7 +680,7 @@ async function determineVueOptions(
       {
         name: 'style',
         message: `Default stylesheet format`,
-        initial: 'css' as any,
+        initial: 0,
         type: 'autocomplete',
         choices: [
           {
@@ -759,7 +759,7 @@ async function determineAngularOptions(
             message: 'Webpack [ https://webpack.js.org/ ]',
           },
         ],
-        initial: 'esbuild' as any,
+        initial: 0,
       },
     ]);
     bundler = reply.bundler;
@@ -772,7 +772,7 @@ async function determineAngularOptions(
       {
         name: 'style',
         message: `Default stylesheet format`,
-        initial: 'css' as any,
+        initial: 0,
         type: 'autocomplete',
         choices: [
           {
@@ -803,7 +803,7 @@ async function determineAngularOptions(
           'Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?',
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
-        initial: 'No' as any,
+        initial: 1,
       },
     ]);
     ssr = reply.ssr === 'Yes';
@@ -880,7 +880,7 @@ async function determineNodeOptions(
             name: 'No',
           },
         ],
-        initial: 'No' as any,
+        initial: 1,
       },
     ]);
     docker = reply.docker === 'Yes';
@@ -904,7 +904,7 @@ async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
       type: 'autocomplete',
       name: 'workspaceType',
       message: `Package-based monorepo, integrated monorepo, or standalone project?`,
-      initial: 'package-based' as any,
+      initial: 0,
       choices: [
         {
           name: 'package-based',
@@ -945,7 +945,7 @@ async function determineStandaloneOrMonorepo(): Promise<
       type: 'autocomplete',
       name: 'workspaceType',
       message: `Integrated monorepo, or standalone project?`,
-      initial: 'standalone' as any,
+      initial: 1,
       choices: [
         {
           name: 'integrated',
@@ -1022,7 +1022,7 @@ async function determineReactFramework(
           message: 'React Native  [ https://reactnative.dev/ ]',
         },
       ],
-      initial: 'none' as any,
+      initial: 0,
     },
   ]);
   return reply.framework;
@@ -1075,7 +1075,7 @@ async function determineNextAppDir(
           name: 'No',
         },
       ],
-      initial: 'Yes' as any,
+      initial: 0,
     },
   ]);
   return reply.nextAppDir === 'Yes';
@@ -1098,7 +1098,7 @@ async function determineNextSrcDir(
           name: 'No',
         },
       ],
-      initial: 'Yes' as any,
+      initial: 0,
     },
   ]);
   return reply.nextSrcDir === 'Yes';
@@ -1126,7 +1126,7 @@ async function determineVueFramework(
           message: 'Nuxt          [ https://nuxt.com/ ]',
         },
       ],
-      initial: 'none' as any,
+      initial: 0,
     },
   ]);
   return reply.framework;

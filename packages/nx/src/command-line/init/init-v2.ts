@@ -194,7 +194,7 @@ async function detectPlugins(): Promise<
           name: 'No',
         },
       ],
-      initial: 'Yes' as any,
+      initial: 0,
     },
   ]).then((r) => r.updatePackageScripts === 'Yes');
 
