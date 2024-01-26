@@ -18,29 +18,9 @@ This creates a single Deno application.
 
 You can also add a new Deno application to an existing Nx monorepo workspace. Make sure you have the `@nx/deno` package installed:
 
-{% tabs %}
-{% tab label="npm" %}
-
 ```shell
-npm add -D @nx/deno
+nx add @nx/deno
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/deno
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/deno
-```
-
-{% /tab %}
-{% /tabs %}
 
 {% callout type="note" title="Directory Flag Behavior Changes" %}
 The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.

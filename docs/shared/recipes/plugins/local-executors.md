@@ -9,8 +9,7 @@ This guide shows you how to create, run, and customize executors within your Nx 
 If you don't already have a local plugin, use Nx to generate one:
 
 ```shell
-# replace `latest` with the version that matches your Nx version
-npm install @nx/plugin@latest
+nx add @nx/plugin
 nx g @nx/plugin:plugin my-plugin
 ```
 

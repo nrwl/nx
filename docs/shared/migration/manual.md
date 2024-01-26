@@ -35,7 +35,7 @@ The `apps` directory is the place where your top-level applications will be stor
 {% tab label="Angular" %}
 
 ```shell
-npm add -D @nx/angular
+nx add @nx/angular
 # then
 nx generate @nx/angular:application my-application
 ```
@@ -44,7 +44,7 @@ nx generate @nx/angular:application my-application
 {% tab label="React" %}
 
 ```shell
-npm add -D @nx/react
+nx add @nx/react
 # then
 nx generate @nx/react:application my-application
 ```
