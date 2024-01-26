@@ -136,13 +136,13 @@ For example, excluding markdown files from the `lint` task cache:
 
 This includes all TypeScript files, but excludes markdown files. As a result, changing your README won't invalidate your "lint cache".
 
-Learn more about [Nx Inputs](/recipes/running-tasks/customizing-inputs).
+Learn more about [Nx Inputs](/concepts/task-inputs).
 
 ## Learn More
 
 {% cards %}
 
-{% card title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" type="documentation" url="/recipes/running-tasks/customizing-inputs" /%}
+{% card title="Customizing Inputs and Named Inputs" description="Learn more about how to fine-tune caching with custom inputs" type="documentation" url="/concepts/task-inputs" /%}
 
 {% card title="Cache Task Results" description="Learn more about how caching works" type="documentation" url="/features/cache-task-results" /%}
 

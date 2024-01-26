@@ -47,12 +47,12 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
       'This task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.',
   },
   inputs: {
-    docsUrl: 'https://nx.dev/recipes/running-tasks/customizing-inputs',
+    docsUrl: 'https://nx.dev/concepts/task-inputs',
     heading: 'Inputs',
     description: `Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.`,
   },
   outputs: {
-    docsUrl: 'https://nx.dev/reference/project-configuration#outputs',
+    docsUrl: 'https://nx.dev/concepts/task-outputs',
     heading: 'Outputs',
     description:
       'Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.',
