@@ -45,7 +45,7 @@ export async function release(
       jsonConfigErrorPath
     );
     output.error({
-      title: `The 'release' top level command cannot be used with granular git configuration. Instead, configure git options in the 'release.git' property in nx.json, or use the version, changelog, and publish subcommands or programmatic API directly.`,
+      title: `The "release" top level command cannot be used with granular git configuration. Instead, configure git options in the "release.git" property in nx.json, or use the version, changelog, and publish subcommands or programmatic API directly.`,
       bodyLines: [nxJsonMessage],
     });
     process.exit(1);

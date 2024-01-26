@@ -104,7 +104,7 @@ export async function releaseChangelog(
       'git',
     ]);
     output.error({
-      title: `The 'release.git' property in nx.json may not be used with the 'nx release changelog' subcommand or programmatic API. Instead, configure git options for subcommands directly with 'release.version.git' and 'release.changelog.git'.`,
+      title: `The "release.git" property in nx.json may not be used with the "nx release changelog" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
       bodyLines: [nxJsonMessage],
     });
     process.exit(1);
@@ -132,7 +132,7 @@ export async function releaseChangelog(
     output.warn({
       title: `Changelogs are disabled. No changelog entries will be generated`,
       bodyLines: [
-        `To explicitly enable changelog generation, configure "changelog.workspaceChangelog" or "changelog.projectChangelogs" in nx.json.`,
+        `To explicitly enable changelog generation, configure "release.changelog.workspaceChangelog" or "release.changelog.projectChangelogs" in nx.json.`,
       ],
     });
     return 0;
@@ -216,7 +216,7 @@ export async function releaseChangelog(
       }
     } else {
       throw new Error(
-        `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+        `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
       );
     }
   }
@@ -285,7 +285,7 @@ export async function releaseChangelog(
 
         if (!fromRef && !commits) {
           throw new Error(
-            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
           );
         }
 
