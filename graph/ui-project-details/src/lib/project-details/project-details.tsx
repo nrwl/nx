@@ -20,6 +20,7 @@ import {
   useRef,
 } from 'react';
 import { twMerge } from 'tailwind-merge';
+import { Pill } from '../pill';
 
 export interface ProjectDetailsProps {
   project: ProjectGraphProjectNode;
@@ -90,34 +91,42 @@ export const ProjectDetails = forwardRef(
         >
           <h1
             className={twMerge(
-              `flex items-center`,
+              `flex items-center justify-between dark:text-slate-100`,
               isCompact ? `text-2xl gap-1` : `text-4xl mb-4 gap-2`
             )}
           >
-            {name}{' '}
-            {onViewInProjectGraph ? (
-              <EyeIcon
-                className="h-5 w-5 cursor-pointer"
-                onClick={() => onViewInProjectGraph({ projectName: name })}
-              ></EyeIcon>
-            ) : null}{' '}
+            <span>{name}</span>
+            <span>
+              {onViewInProjectGraph ? (
+                <button
+                  className="text-base cursor-pointer items-center inline-flex gap-2 text-slate-600 dark:text-slate-300 ring-2 ring-inset ring-slate-400/40 dark:ring-slate-400/30 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-md py-1 px-2"
+                  onClick={() => onViewInProjectGraph({ projectName: name })}
+                >
+                  <EyeIcon className="h-5 w-5 "></EyeIcon>
+                  <span>View In Graph</span>
+                </button>
+              ) : null}{' '}
+            </span>
           </h1>
-          <div className={isCompact ? `px-4 py-2` : `p-4`}>
-            {projectData.tags ? (
+          <div className="py-2 ">
+            {projectData.tags && projectData.tags.length ? (
               <p>
+                <span className="font-medium inline-block w-10">Tags:</span>
                 {projectData.tags?.map((tag) => (
-                  <span className="bg-slate-300 rounded-md p-1 mr-2">
-                    {tag}
+                  <span className="ml-2 font-mono">
+                    <Pill text={tag} />
                   </span>
                 ))}
               </p>
             ) : null}
             <p>
-              <span className="font-bold">Root:</span> {root}
+              <span className="font-medium inline-block w-10">Root:</span>
+              <span className="font-mono"> {root}</span>
             </p>
             {displayType ? (
               <p>
-                <span className="font-bold">Type:</span> {displayType}
+                <span className="font-medium inline-block w-10">Type:</span>
+                <span className="font-mono"> {displayType}</span>
               </p>
             ) : null}
           </div>
@@ -128,13 +137,13 @@ export const ProjectDetails = forwardRef(
               openAction="hover"
               content={(<PropertyInfoTooltip type="targets" />) as any}
             >
-              <span>
+              <span className="text-slate-800 dark:text-slate-200">
                 <TooltipTriggerText>Targets</TooltipTriggerText>
               </span>
             </Tooltip>
           </h2>
           <ul>
-            {projectTargets.map((targetName) => {
+            {projectTargets.sort(sortNxReleasePublishLast).map((targetName) => {
               const target = projectData.targets?.[targetName];
               return target && targetRefs.current[targetName] ? (
                 <li className="mb-4 last:mb-0" key={`target-${targetName}`}>
@@ -159,5 +168,11 @@ export const ProjectDetails = forwardRef(
     );
   }
 );
+
+function sortNxReleasePublishLast(a: string, b: string) {
+  if (a === 'nx-release-publish') return 1;
+  if (b === 'nx-release-publish') return -1;
+  return 1;
+}
 
 export default ProjectDetails;

@@ -221,7 +221,7 @@ async function determineFormat(
         name: derivedSelectedValue,
       },
     ],
-    initial: 'as-provided' as any,
+    initial: 0,
   }).then(({ format }) =>
     format === asProvidedSelectedValue ? 'as-provided' : 'derived'
   );

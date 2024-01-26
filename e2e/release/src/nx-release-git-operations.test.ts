@@ -131,7 +131,7 @@ describe('nx release git operations', () => {
     expect(
       releaseOutput1.match(
         new RegExp(
-          `The 'release' top level command cannot be used with granular git configuration. Instead, configure git options in the 'release.git' property in nx.json, or use the version, changelog, and publish subcommands or programmatic API directly.`,
+          `The "release" top level command cannot be used with granular git configuration. Instead, configure git options in the "release.git" property in nx.json, or use the version, changelog, and publish subcommands or programmatic API directly.`,
           'g'
         )
       ).length
@@ -161,7 +161,7 @@ describe('nx release git operations', () => {
     expect(
       releaseVersionOutput.match(
         new RegExp(
-          `The 'release.git' property in nx.json may not be used with the 'nx release version' subcommand or programmatic API. Instead, configure git options for subcommands directly with 'release.version.git' and 'release.changelog.git'.`,
+          `The "release.git" property in nx.json may not be used with the "nx release version" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
           'g'
         )
       ).length
@@ -177,7 +177,7 @@ describe('nx release git operations', () => {
     expect(
       releaseChangelogOutput.match(
         new RegExp(
-          `The 'release.git' property in nx.json may not be used with the 'nx release changelog' subcommand or programmatic API. Instead, configure git options for subcommands directly with 'release.version.git' and 'release.changelog.git'.`,
+          `The "release.git" property in nx.json may not be used with the "nx release changelog" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
           'g'
         )
       ).length

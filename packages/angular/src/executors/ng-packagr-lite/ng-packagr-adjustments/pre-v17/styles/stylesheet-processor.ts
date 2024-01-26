@@ -2,10 +2,8 @@
  * Adapted from the original ng-packagr source.
  *
  * Changes made:
- * - Added the filePath parameter to the cache key.
  * - Refactored caching to take into account TailwindCSS processing.
- * - Added PostCSS plugins needed to support TailwindCSS.
- * - Added watch mode parameter.
+ * - Added PostCSS plugin needed to support TailwindCSS.
  */
 
 import * as browserslist from 'browserslist';
@@ -18,15 +16,14 @@ import {
 } from 'ng-packagr/lib/utils/cache';
 import * as log from 'ng-packagr/lib/utils/log';
 import { dirname, extname, join } from 'path';
-import * as postcssPresetEnv from 'postcss-preset-env';
+import * as autoprefixer from 'autoprefixer';
 import * as postcssUrl from 'postcss-url';
 import { pathToFileURL } from 'node:url';
 import {
-  getTailwindPostCssPlugins,
+  getTailwindPostCssPlugin,
   getTailwindSetup,
-  tailwindDirectives,
   TailwindSetup,
-} from '../../../utilities/ng-packagr/tailwindcss';
+} from '../../../../utilities/ng-packagr/tailwindcss';
 
 const postcss = require('postcss');
 
@@ -54,23 +51,21 @@ export class StylesheetProcessor {
   private postCssProcessor: ReturnType<typeof postcss>;
   private esbuild = new EsbuildExecutor();
   private styleIncludePaths: string[];
-  private tailwindSetup: TailwindSetup | undefined;
 
   constructor(
+    private readonly projectBasePath: string,
     private readonly basePath: string,
     private readonly cssUrl?: CssUrl,
     private readonly includePaths?: string[],
-    private readonly cacheDirectory?: string | false,
-    private readonly watch?: boolean,
+    private cacheDirectory?: string | false,
     private readonly tailwindConfig?: string
   ) {
     // By default, browserslist defaults are too inclusive
     // https://github.com/browserslist/browserslist/blob/83764ea81ffaa39111c204b02c371afa44a4ff07/index.js#L516-L522
-
     // We change the default query to browsers that Angular support.
     // https://angular.io/guide/browser-support
     (browserslist.defaults as string[]) = [
-      'last 2 Chrome version',
+      'last 2 Chrome versions',
       'last 1 Firefox version',
       'last 2 Edge major versions',
       'last 2 Safari major versions',
@@ -94,8 +89,14 @@ export class StylesheetProcessor {
 
     this.browserslistData = browserslist(undefined, { path: this.basePath });
     this.targets = transformSupportedBrowsersToTargets(this.browserslistData);
-    this.tailwindSetup = getTailwindSetup(this.basePath, this.tailwindConfig);
-    this.postCssProcessor = this.createPostCssPlugins();
+    const tailwindSetup = getTailwindSetup(
+      this.projectBasePath,
+      this.tailwindConfig
+    );
+    if (tailwindSetup) {
+      this.cacheDirectory = undefined;
+    }
+    this.postCssProcessor = this.createPostCssProcessor(tailwindSetup);
   }
 
   async process({
@@ -105,16 +106,20 @@ export class StylesheetProcessor {
     filePath: string;
     content: string;
   }): Promise<string> {
-    let key: string | undefined;
+    const CACHE_KEY_VALUES = [
+      ...this.browserslistData,
+      ...this.styleIncludePaths,
+      this.cssUrl,
+    ].join(':');
 
+    let key: string | undefined;
     if (
       this.cacheDirectory &&
       !content.includes('@import') &&
-      !content.includes('@use') &&
-      !this.containsTailwindDirectives(content)
+      !content.includes('@use')
     ) {
       // No transitive deps and no Tailwind directives, we can cache more aggressively.
-      key = await generateKey(content, ...this.browserslistData, filePath);
+      key = await generateKey(content, CACHE_KEY_VALUES);
       const result = await readCacheEntry(this.cacheDirectory, key);
       if (result) {
         result.warnings.forEach((msg) => log.warn(msg));
@@ -126,23 +131,18 @@ export class StylesheetProcessor {
     // Render pre-processor language (sass, styl, less)
     const renderedCss = await this.renderCss(filePath, content);
 
-    let containsTailwindDirectives = false;
-    if (this.cacheDirectory) {
-      containsTailwindDirectives = this.containsTailwindDirectives(renderedCss);
-      if (!containsTailwindDirectives) {
-        // No Tailwind directives to process by PostCSS, we can return cached results
-        if (!key) {
-          key = await generateKey(
-            renderedCss,
-            ...this.browserslistData,
-            filePath
-          );
-        }
+    // We cannot cache CSS re-rendering phase, because a transitive dependency via (@import) can case different CSS output.
+    // Example a change in a mixin or SCSS variable.
+    if (!key) {
+      key = await generateKey(renderedCss, CACHE_KEY_VALUES);
+    }
 
-        const cachedResult = await this.getCachedResult(key);
-        if (cachedResult) {
-          return cachedResult;
-        }
+    if (this.cacheDirectory) {
+      const cachedResult = await readCacheEntry(this.cacheDirectory, key);
+      if (cachedResult) {
+        cachedResult.warnings.forEach((msg) => log.warn(msg));
+
+        return cachedResult.css;
       }
     }
 
@@ -151,17 +151,6 @@ export class StylesheetProcessor {
       from: filePath,
       to: filePath.replace(extname(filePath), '.css'),
     });
-
-    if (this.cacheDirectory && containsTailwindDirectives) {
-      // We had Tailwind directives to process by PostCSS, only now
-      // is safe to return cached results
-      key = await generateKey(result.css, ...this.browserslistData, filePath);
-
-      const cachedResult = await this.getCachedResult(key);
-      if (cachedResult) {
-        return cachedResult;
-      }
-    }
 
     const warnings = result.warnings().map((w) => w.toString());
     const { code, warnings: esBuildWarnings } = await this.esbuild.transform(
@@ -197,47 +186,22 @@ export class StylesheetProcessor {
     return code;
   }
 
-  private async getCachedResult(key: string): Promise<string | undefined> {
-    const cachedResult = await readCacheEntry(
-      this.cacheDirectory as string,
-      key
-    );
-    if (cachedResult) {
-      cachedResult.warnings.forEach((msg) => log.warn(msg));
-
-      return cachedResult.css;
+  private createPostCssProcessor(
+    tailwindSetup: TailwindSetup
+  ): ReturnType<typeof postcss> {
+    const postCssPlugins = [];
+    if (tailwindSetup) {
+      postCssPlugins.push(getTailwindPostCssPlugin(tailwindSetup));
     }
 
-    return undefined;
-  }
-
-  private containsTailwindDirectives(content: string): boolean {
-    return (
-      this.tailwindSetup && tailwindDirectives.some((d) => content.includes(d))
-    );
-  }
-
-  private createPostCssPlugins(): ReturnType<typeof postcss> {
-    const postCssPlugins = [];
     if (this.cssUrl !== CssUrl.none) {
       postCssPlugins.push(postcssUrl({ url: this.cssUrl }));
     }
 
-    if (this.tailwindSetup) {
-      postCssPlugins.push(
-        ...getTailwindPostCssPlugins(
-          this.tailwindSetup,
-          this.styleIncludePaths,
-          this.watch
-        )
-      );
-    }
-
     postCssPlugins.push(
-      postcssPresetEnv({
-        browsers: this.browserslistData,
-        autoprefixer: true,
-        stage: 3,
+      autoprefixer({
+        ignoreUnknownVersions: true,
+        overrideBrowserslist: this.browserslistData,
       })
     );
 
@@ -250,13 +214,11 @@ export class StylesheetProcessor {
     switch (ext) {
       case '.sass':
       case '.scss': {
-        return (await import('sass'))
-          .compileString(css, {
-            url: pathToFileURL(filePath),
-            syntax: '.sass' === ext ? 'indented' : 'scss',
-            loadPaths: this.styleIncludePaths,
-          })
-          .css.toString();
+        return (await import('sass')).compileString(css, {
+          url: pathToFileURL(filePath),
+          syntax: '.sass' === ext ? 'indented' : 'scss',
+          loadPaths: this.styleIncludePaths,
+        }).css;
       }
       case '.less': {
         const { css: content } = await (
@@ -302,9 +264,7 @@ function transformSupportedBrowsersToTargets(
     // to perform minimum supported feature checks. esbuild also expects a single version.
     [version] = version.split('-');
 
-    if (browserName === 'ie') {
-      transformed.push('edge12');
-    } else if (esBuildSupportedBrowsers.has(browserName)) {
+    if (esBuildSupportedBrowsers.has(browserName)) {
       if (browserName === 'safari' && version === 'tp') {
         // esbuild only supports numeric versions so `TP` is converted to a high number (999) since
         // a Technology Preview (TP) of Safari is assumed to support all currently known features.

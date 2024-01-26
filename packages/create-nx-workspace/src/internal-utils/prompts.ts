@@ -104,7 +104,7 @@ export async function determinePackageManager(
         {
           name: 'packageManager',
           message: `Which package manager to use`,
-          initial: 'npm' as any,
+          initial: 0,
           type: 'autocomplete',
           choices: [
             { name: 'npm', message: 'NPM' },

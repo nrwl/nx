@@ -1,4 +1,5 @@
 import { ExternalLink } from './external-link';
+import { twMerge } from 'tailwind-merge';
 
 type PropertyInfoTooltipType =
   | 'targets'
@@ -8,10 +9,11 @@ type PropertyInfoTooltipType =
   | 'outputs'
   | 'dependsOn'
   | 'options'
-  | 'configurations';
+  | 'configurations'
+  | 'release';
 
 type PropertyInfoTooltipTypeOptions = {
-  docsUrl: string;
+  docsUrl?: string;
   docsLinkText?: string;
   heading: string;
   description: string;
@@ -63,15 +65,23 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
       'This is a list of other tasks which must be completed before running this task.',
   },
   options: {
-    docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
+    // TODO(v18): re-enable link once docs are published
+    // docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
     heading: 'Options',
     description: 'Options modify the behaviour of the task.',
   },
   configurations: {
-    docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
+    // TODO(v18): re-enable link once docs are published
+    // docsUrl: 'https://nx.dev/concepts/executors-and-configurations',
     heading: 'Configurations',
     description:
       'Configurations are sets of Options to allow a Target to be used in different scenarios.',
+  },
+  release: {
+    heading: 'nx release',
+    description:
+      "The nx-release-publish target is used to publish your project with nxrelease. Don't invoke this directly - use nx release publish instead.",
+    docsUrl: 'https://nx.dev/nx-api/nx/documents/release',
   },
 };
 
@@ -80,25 +90,34 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
 
   return (
     <div className="text-sm text-slate-700 dark:text-slate-400 max-w-lg">
-      <h4 className="flex justify-between items-center border-b text-base">
+      <h4 className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700/60 text-base">
         <span className="font-mono">{propertyInfo.heading}</span>
       </h4>
-      <div className="flex flex-col font-mono border-b py-2">
+      <div
+        className={twMerge(
+          `flex flex-col font-mono py-2`,
+          propertyInfo.docsUrl
+            ? 'border-b border-slate-200 dark:border-slate-700/60'
+            : ''
+        )}
+      >
         <p className="flex grow items-center gap-2 whitespace-pre-wrap">
           {propertyInfo.description}
         </p>
       </div>
-      <div className="flex py-2">
-        <p className="pr-4 flex items-center">
-          <ExternalLink
-            text={
-              propertyInfo.docsLinkText ??
-              `Learn more about ${propertyInfo.heading}`
-            }
-            href={propertyInfo.docsUrl}
-          />
-        </p>
-      </div>
+      {propertyInfo.docsUrl ? (
+        <div className="flex py-2">
+          <p className="pr-4 flex items-center">
+            <ExternalLink
+              text={
+                propertyInfo.docsLinkText ??
+                `Learn more about ${propertyInfo.heading}`
+              }
+              href={propertyInfo.docsUrl}
+            />
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }
