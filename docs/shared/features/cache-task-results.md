@@ -115,7 +115,7 @@ To achieve this, we can add an `inputs` and `outputs` definition globally for al
 
 Note, you only need to define output locations if they differ from the usual `dist` or `build` directory which Nx automatically recognizes.
 
-Learn more [about configuring inputs including `namedInputs`](/recipes/running-tasks/customizing-inputs).
+Learn more [about configuring inputs including `namedInputs`](/concepts/task-inputs).
 
 ## Where is the Cache Stored?
 

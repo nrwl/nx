@@ -203,9 +203,8 @@
               "file": "shared/features/cache-task-results"
             },
             {
-              "name": "Explore the Graph",
+              "name": "Explore your Workspace",
               "id": "explore-graph",
-              "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
               "tags": ["explore-graph"],
               "file": "shared/features/explore-graph"
             },
@@ -261,6 +260,18 @@
               "tags": ["cache-task-results"],
               "id": "how-caching-works",
               "file": "shared/concepts/how-caching-works"
+            },
+            {
+              "name": "Fine-tuning Caching with Inputs",
+              "id": "task-inputs",
+              "tags": ["run-tasks", "cache-task-results"],
+              "file": "shared/concepts/inputs"
+            },
+            {
+              "name": "Cache Results with Outputs",
+              "id": "task-outputs",
+              "tags": ["run-tasks", "cache-task-results"],
+              "file": "shared/concepts/outputs"
             },
             {
               "name": "Types of Configuration",
@@ -435,12 +446,6 @@
               "id": "running-tasks",
               "description": "A series of recipes that show how to run tasks efficiently with Nx",
               "itemList": [
-                {
-                  "name": "Fine-tuning Caching with Inputs",
-                  "id": "customizing-inputs",
-                  "tags": ["run-tasks", "cache-task-results"],
-                  "file": "shared/recipes/running-tasks/customizing-inputs"
-                },
                 {
                   "name": "Defining a Task Pipeline",
                   "id": "defining-task-pipeline",

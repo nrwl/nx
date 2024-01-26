@@ -14,7 +14,7 @@ The plugin will search the workspace for configuration files of the tool. For ea
 
 ### 2. Create an Inferred Task
 
-The plugin then creates tasks with a name that you specified in the plugin's configuration in `nx.json`. The settings for the task are determined by the tool configuration.
+The plugin then configures tasks with a name that you specified in the plugin's configuration in `nx.json`. The settings for the task are determined by the tool configuration.
 
 The `@nx/webpack` plugin creates tasks named `build`, `serve` and `preview` by default and it automatically sets the task caching settings based on the values in the webpack configuration files.
 
@@ -23,12 +23,12 @@ The `@nx/webpack` plugin creates tasks named `build`, `serve` and `preview` by d
 Nx plugins infer the following properties by analyzing the tool configuration.
 
 - Command - How is the tool invoked
-- [Cacheability](https://nx.dev/concepts/how-caching-works) - Whether the task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.
-- [Inputs](https://nx.dev/recipes/running-tasks/customizing-inputs) - Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.
-- [Outputs](https://nx.dev/reference/project-configuration#outputs) - Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.
-- [Task Dependencies](https://nx.dev/concepts/task-pipeline-configuration) - The list of other tasks which must be completed before running this task.
+- [Cacheability](/concepts/how-caching-works) - Whether the task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.
+- [Inputs](/concepts/task-inputs) - Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.
+- [Outputs](/concepts/task-outputs) - Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.
+- [Task Dependencies](/concepts/task-pipeline-configuration) - The list of other tasks which must be completed before running this task.
 
-## Nx Use Plugins to Build the Graph
+## Nx Uses Plugins to Build the Graph
 
 A typical workspace will have many plugins inferring tasks. Nx processes all the plugins registered in `nx.json` to create project configuration for individual projects and a project and task graph that shows the connections between them all.
 
@@ -36,23 +36,36 @@ A typical workspace will have many plugins inferring tasks. Nx processes all the
 
 Plugins are processed in the order that they appear in the `plugins` array in `nx.json`. So, if multiple plugins create a task with the same name, the plugin listed last will win. If, for some reason, you have a project with both a `vite.config.js` file and a `webpack.config.js` file, both the `@nx/vite` plugin and the `@nx/webpack` plugin will try to create a `build` task. The `build` task that is executed will be the task that belongs to the plugin listed lower in the `plugins` array.
 
-### Sources of Project Configuration
-
-Inferred tasks can be overwritten in a couple ways. If you want to overwrite values for multiple projects in a single place, [use the `targetDefaults` object](/reference/nx-json#target-defaults) in the `nx.json` file. If you want to overwrite a value in a specific project, [update that project's configuration](/reference/project-configuration) in `package.json` or `project.json`. Inferred tasks will be overwritten by `targetDefaults` which will also be overwritten by individual project configuration files.
-
 ## View Inferred Tasks
 
-To view the task settings that were inferred for a project, show the project details either from the command line or using Nx Console.
+To view the task settings for projects in your workspace, [show the project details](/features/explore-graph) either from the command line or using Nx Console.
+
+{% project-details  jsonFile="shared/concepts/myreactapp.json"%}
+{% /project-details %}
 
 ```shell
 nx show project my-project --web
 ```
 
-![Inferred task configuration](/shared/concepts/inferred-task-config.png)
-
-## Edit an Inferred Task
-
-To modify a setting for an inferred task, set the specific property you want to override in your project configuration (either `package.json` or `project.json`) and Nx will merge your settings on top of the inferred settings. The easiest way to do this is to use Nx Console's `Edit` button in the project detail view.
-
 // TODO: Put picture here
 ![Inferred task configuration](/shared/concepts/inferred-task-config.png)
+
+## Overriding Inferred Task Configuration
+
+The task configuration inferred by Nx Plugins is the base of the project configuration.
+You can override the task configuration inferred by plugins in several ways.
+If you want to overwrite the task configuration for multiple projects, [use the `targetDefaults` object](/reference/nx-json#target-defaults) in the `nx.json` file.
+If you only want to override the task configuration for a specific project, [update that project's configuration](/reference/project-configuration) in `package.json` or `project.json`.
+This configuration is more specific so it will override both the inferred configuration and the `targetDefaults`.
+
+The order of precedence for task configuration is:
+
+1. Inferred Task Configurations from plugins in `nx.json`.
+2. `targetDefaults` in `nx.json`.
+3. Project Configuration in `package.json` or `project.json`.
+
+More details about how to override task configuration is available in these recipes:
+
+- [Fine-tuning Caching with Inputs](/concepts/task-inputs)
+- [Cache Results with Outputs](/concepts/task-outputs)
+- [Defining a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)

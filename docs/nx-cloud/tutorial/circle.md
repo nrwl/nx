@@ -341,7 +341,7 @@ When Circle CI now processes our tasks they'll only take a fraction of the usual
 
 The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on security settings for your remote cache](/ci/concepts/cache-security).
 
-You might also want to learn more about [how to fine-tune caching](/recipes/running-tasks/customizing-inputs) to get even better results.
+You might also want to learn more about [how to fine-tune caching](/concepts/task-inputs) to get even better results.
 
 Merge your PR into the `main` branch when you're ready to move to the next section.
 

@@ -285,7 +285,7 @@ sources (non-test sources) of its dependencies. In other words, it treats test s
 
 {% cards %}
 {% card title="nx.json reference" type="documentation" description="inputs and namedInputs are also described in the nx.json reference" url="/reference/nx-json#inputs-&-namedinputs" /%}
-{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/recipes/running-tasks/customizing-inputs" /%}
+{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/concepts/task-inputs" /%}
 {% /cards %}
 
 ### Outputs
