@@ -62,7 +62,7 @@ When Nx updates your `package.json` scripts, it looks for scripts that can be re
   },
   ...
   "nx": {
-    "includedScripts": ["test"]
+    "includedScripts": []
   }
 }
 ```
@@ -71,7 +71,7 @@ The `@nx/next` plugin can run `next build` for you and set up caching correctly,
 
 The `test` script was not recognized by any Nx plugin, so it was left as is.
 
-The `includedScripts` array tells Nx to run the `test` script whenever you run `nx test`. This allows you to run all tasks with the same Nx syntax.
+The `includedScripts` array allows you to specify `package.json` scripts that can be run with the `nx build` syntax.
 
 ## Inferred Tasks
 
@@ -210,7 +210,7 @@ The project detail view lists all available tasks, the configuration values for 
 If you want to run one of your existing scripts with Nx, you need to tell Nx about it.
 
 1. Preface the script with `nx exec -- ` to have `npm run test` invoke the command with Nx.
-2. Make sure the script name is listed in `includedScripts`.
+2. Add the script to `includedScripts`.
 3. Define caching settings.
 
 The `nx exec` command allows you to keep using `npm test` or `npm run test` (or other package manager's alternatives) as you're accustomed to. But still get the benefits of making those operations cacheable.  Configuring the `test` script from the example above to run with Nx would look something like this:
