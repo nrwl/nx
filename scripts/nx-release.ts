@@ -7,6 +7,7 @@ import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
 import { ReleaseType, inc, major, parse } from 'semver';
 import * as yargs from 'yargs';
+import * as chalk from 'chalk';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -119,7 +120,7 @@ const LARGE_BUFFER = 1024 * 1000000;
     // If publishing locally, force all projects to not be private first
     if (options.local) {
       console.log(
-        '\nPublishing locally, so setting all resolved packages to not be private'
+        chalk.dim`\n  Publishing locally, so setting all resolved packages to not be private`
       );
       const projectGraph = await createProjectGraphAsync();
       for (const proj of Object.values(projectGraph.nodes)) {
@@ -159,6 +160,20 @@ const LARGE_BUFFER = 1024 * 1000000;
       maxBuffer: LARGE_BUFFER,
     });
   }
+
+  let version;
+  if (['minor', 'major', 'patch'].includes(options.version)) {
+    const currentLatestVersion = execSync('npm view nx@latest version')
+      .toString()
+      .trim();
+
+    version = inc(currentLatestVersion, options.version, undefined);
+  } else {
+    version = options.version;
+  }
+
+  console.log(chalk.green` > Published version: ` + version);
+  console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
 
   process.exit(0);
 })();
