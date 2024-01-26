@@ -29,8 +29,8 @@ jobs:
       - run: <%= packageManagerInstall %>
       - uses: nrwl/nx-set-shas@v4
 
-      # uncomment to enable task distribution
-      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js"
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check
-      - run: <%= packageManagerPrefix %> nx affected -t=lint,test,build --parallel=3
+      - run: <%= packageManagerPrefix %> nx affected -t=lint,test,build

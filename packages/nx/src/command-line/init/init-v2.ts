@@ -104,6 +104,14 @@ export async function initHandler(options: InitArgs): Promise<void> {
       }
     );
   }
+
+  output.log({
+    title: '👀 Explore the Graph of Your Workspace',
+    bodyLines: [
+      `Run "nx graph" to show the graph of the workspace. It will show tasks that you can run with Nx.`,
+      `Read this guide on exploring the graph: https://nx.dev/core-features/explore-graph`,
+    ],
+  });
 }
 
 const npmPackageToPluginMap: Record<string, string> = {
