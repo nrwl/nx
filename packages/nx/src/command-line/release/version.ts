@@ -107,8 +107,7 @@ export async function releaseVersion(
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
-    nxJson.release,
-    'nx-release-publish'
+    nxJson.release
   );
   if (configError) {
     return await handleNxReleaseConfigError(configError);
@@ -575,20 +574,48 @@ function resolveGeneratorData({
   configGeneratorOptions,
   projects,
 }): GeneratorData {
-  const { normalizedGeneratorName, schema, implementationFactory } =
-    getGeneratorInformation(
+  try {
+    const { normalizedGeneratorName, schema, implementationFactory } =
+      getGeneratorInformation(
+        collectionName,
+        generatorName,
+        workspaceRoot,
+        projects
+      );
+
+    return {
       collectionName,
       generatorName,
-      workspaceRoot,
-      projects
-    );
-
-  return {
-    collectionName,
-    generatorName,
-    configGeneratorOptions,
-    normalizedGeneratorName,
-    schema,
-    implementationFactory,
-  };
+      configGeneratorOptions,
+      normalizedGeneratorName,
+      schema,
+      implementationFactory,
+    };
+  } catch (err) {
+    if (err.message.startsWith('Unable to resolve')) {
+      // See if it is because the plugin is not installed
+      try {
+        require.resolve(collectionName);
+        // is installed
+        throw new Error(
+          `Unable to resolve the generator called "${generatorName}" within the "${collectionName}" package`
+        );
+      } catch {
+        /**
+         * Special messaging for the most common case (especially as the user is unlikely to explicitly have
+         * the @nx/js generator config in their nx.json so we need to be clear about what the problem is)
+         */
+        if (collectionName === '@nx/js') {
+          throw new Error(
+            'The @nx/js plugin is required in order to version your JavaScript packages. Please install it and try again.'
+          );
+        }
+        throw new Error(
+          `Unable to resolve the package ${collectionName} in order to load the generator called ${generatorName}. Is the package installed?`
+        );
+      }
+    }
+    // Unexpected error, rethrow
+    throw err;
+  }
 }
