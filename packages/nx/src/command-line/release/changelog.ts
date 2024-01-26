@@ -532,18 +532,26 @@ async function generateChangelogForWorkspace(
     );
   }
 
-  if (
-    Object.entries(nxReleaseConfig.groups).length > 1 ||
-    Object.values(nxReleaseConfig.groups)[0].projectsRelationship ===
-      'independent'
-  ) {
+  if (Object.entries(nxReleaseConfig.groups).length > 1) {
     output.warn({
-      title: `Workspace changelog is enabled, but you have multiple release groups configured or have configured an independent projects relationship. This is not supported, so workspace changelog will be disabled.`,
+      title: `Workspace changelog is enabled, but you have multiple release groups configured. This is not supported, so workspace changelog will be disabled.`,
       bodyLines: [
         `A single workspace version cannot be determined when defining multiple release groups because versions differ between each group.`,
-        `Also, a single workspace version also cannot be determined when using independent projects because versions differ between each project.`,
-        `If you want to generate a workspace changelog, please use a single release group.`,
-        `Alternatively, project level changelogs can be enabled with the "projectChangelogs" property.`,
+        `Project level changelogs can be enabled with the "release.changelog.projectChangelogs" property.`,
+      ],
+    });
+    return;
+  }
+
+  if (
+    Object.values(nxReleaseConfig.groups)[0].projectsRelationship ===
+    'independent'
+  ) {
+    output.warn({
+      title: `Workspace changelog is enabled, but you have configured an independent projects relationship. This is not supported, so workspace changelog will be disabled.`,
+      bodyLines: [
+        `A single workspace version cannot be determined when using independent projects because versions differ between each project.`,
+        `Project level changelogs can be enabled with the "release.changelog.projectChangelogs" property.`,
       ],
     });
     return;
