@@ -37,6 +37,7 @@ import { updateDependencies } from '../utils/update-dependencies';
 import initGenerator from '../init/init';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
   const options = await normalizeOptions(tree, _options);
@@ -266,6 +267,10 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.projectName);
+  });
 
   return runTasksInSerial(...tasks);
 }
