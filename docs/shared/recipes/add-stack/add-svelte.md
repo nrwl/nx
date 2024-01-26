@@ -183,45 +183,29 @@ Change your `tsconfig.lib.json` to `tsconfig.app.json`. It should look like this
 }
 ```
 
-Navigate to `project.json` and update it with the following content:
+Navigate to `nx.json` it should contain the following:
 
 ```json {% fileName="/project.json" %}
 {
-  "targets": {
-    "build": {
-      "executor": "@nx/vite:build",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
+  // ... other config
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
       "options": {
-        "outputPath": "dist/acme"
-      },
-      "configurations": {
-        "development": {
-          "mode": "development"
-        },
-        "production": {
-          "mode": "production"
-        }
+        "targetName": "lint"
       }
     },
-    "serve": {
-      "executor": "@nx/vite:dev-server",
-      "defaultConfiguration": "development",
+    {
+      "plugin": "@nx/vite/plugin",
       "options": {
-        "buildTarget": "acme:build"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "acme:build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "acme:build:production",
-          "hmr": false
-        }
+        "buildTargetName": "build",
+        "previewTargetName": "preview",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "serveStaticTargetName": "serve-static"
       }
     }
-  }
+  ]
 }
 ```
 
