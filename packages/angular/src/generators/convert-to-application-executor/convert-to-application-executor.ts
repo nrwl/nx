@@ -37,26 +37,15 @@ export async function convertToApplicationExecutor(
   tree: Tree,
   options: GeneratorOptions
 ) {
-  options.useNxExecutor ??= true;
-
   let didAnySucceed = false;
   if (options.project) {
     const project = validateProject(tree, options.project);
-    didAnySucceed = await convertProjectTargets(
-      tree,
-      project,
-      options.useNxExecutor,
-      true
-    );
+    didAnySucceed = await convertProjectTargets(tree, project, true);
   } else {
     const projects = getProjects(tree);
     for (const [, project] of projects) {
       logger.info(`Converting project "${project.name}"...`);
-      const success = await convertProjectTargets(
-        tree,
-        project,
-        options.useNxExecutor
-      );
+      const success = await convertProjectTargets(tree, project);
 
       if (success) {
         logger.info(`Project "${project.name}" converted successfully.`);
@@ -80,7 +69,6 @@ export async function convertToApplicationExecutor(
 async function convertProjectTargets(
   tree: Tree,
   project: ProjectConfiguration,
-  useNxExecutor: boolean,
   isProvidedProject = false
 ): Promise<boolean> {
   function warnIfProvided(message: string): void {
@@ -97,8 +85,7 @@ async function convertProjectTargets(
   }
 
   const { buildTargetName, serverTargetName } = getTargetsToConvert(
-    project.targets,
-    useNxExecutor
+    project.targets
   );
   if (!buildTargetName) {
     warnIfProvided(
@@ -109,6 +96,8 @@ async function convertProjectTargets(
     return false;
   }
 
+  const useNxExecutor =
+    project.targets[buildTargetName].executor.startsWith('@nx/angular:');
   const newExecutor = useNxExecutor
     ? '@nx/angular:application'
     : '@angular-devkit/build-angular:application';
@@ -169,9 +158,6 @@ async function convertProjectTargets(
     delete options['buildOptimizer'];
     delete options['main'];
     delete options['ngswConfigPath'];
-    if (!useNxExecutor) {
-      delete options['buildLibsFromSource'];
-    }
   }
 
   // Merge browser and server tsconfig
@@ -245,10 +231,7 @@ async function convertProjectTargets(
   return true;
 }
 
-function getTargetsToConvert(
-  targets: Record<string, TargetConfiguration>,
-  useNxExecutor: boolean
-): {
+function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
   buildTargetName?: string;
   serverTargetName?: string;
 } {
@@ -276,18 +259,7 @@ function getTargetsToConvert(
         }
         if (options.customWebpackConfig) {
           logger.warn(
-            `The project is using a custom webpack configuration which is not supported by the esbuild-based ${
-              useNxExecutor
-                ? '@nx/angular:application executor'
-                : '@angular-devkit/build-angular:application builder'
-            }. Skipping conversion.`
-          );
-          return {};
-        }
-        if (options.plugins && !useNxExecutor) {
-          logger.warn(
-            `The project is using custom esbuild plugins that could only be migrated when ` +
-              `converting to the "@nx/angular:application" executor. Skipping conversion.`
+            `The project is using a custom webpack configuration which is not supported by the esbuild-based application executor. Skipping conversion.`
           );
           return {};
         }
@@ -308,11 +280,7 @@ function getTargetsToConvert(
         for (const [, options] of allTargetOptions(targets[target])) {
           if (options.customWebpackConfig) {
             logger.warn(
-              `The project is using a custom webpack configuration which is not supported by the esbuild-based ${
-                useNxExecutor
-                  ? '@nx/angular:application executor'
-                  : '@angular-devkit/build-angular:application builder'
-              }. Skipping conversion.`
+              `The project is using a custom webpack configuration which is not supported by the esbuild-based application executor. Skipping conversion.`
             );
             return {};
           }
