@@ -170,12 +170,12 @@ Creating the equivalent configuration with Nx yields the following files:
 
 For each `turbo.json` configuration property, the equivalent Nx property is listed.
 
-| **Global Configuration:** |                                                                                                                                                          |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `globalDependencies`      | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/customizing-inputs)                                                                     |
-| `globalEnv`               | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/customizing-inputs) as an [`env` input](/reference/project-configuration#env-variables) |
-| `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                                           |
-| `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/recipes/running-tasks/customizing-inputs)                                                                     |
+| **Global Configuration:** |                                                                                                                                      |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `globalDependencies`      | add to the [`sharedGlobals` `namedInput`](/concepts/task-inputs)                                                                     |
+| `globalEnv`               | add to the [`sharedGlobals` `namedInput`](/concepts/task-inputs) as an [`env` input](/reference/project-configuration#env-variables) |
+| `globalPassThroughEnv`    | N/A. See [Defining Environment Variables](/recipes/tips-n-tricks/define-environment-variables)                                       |
+| `globalDotEnv`            | add to the [`sharedGlobals` `namedInput`](/concepts/task-inputs)                                                                     |
 
 | **Task Configuration:**         |                                                                                                   |
 | ------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -204,7 +204,7 @@ For each `turbo.json` configuration property, the equivalent Nx property is list
 | `--filter`                  | Use [`-p admin-*` or `-p tag:api-*`](/nx-api/nx/documents/run-many#projects). Also see [`nx affected`](/nx-api/nx/documents/affected).                                                |
 | `--graph`                   | [Same syntax](/nx-api/nx/documents/run-many#graph) or [`nx graph`](/nx-api/nx/documents/dep-graph) for the entire graph                                                               |
 | `--force`                   | [`nx reset`](/nx-api/nx/documents/reset) and then run the command again                                                                                                               |
-| `--global-deps`             | Use [`inputs` in the `nx.json`](/recipes/running-tasks/customizing-inputs) or project configuration                                                                                   |
+| `--global-deps`             | Use [`inputs` in the `nx.json`](/concepts/task-inputs) or project configuration                                                                                                       |
 | `--framework-inference`     | Nx knows if you're using a particular framework if you use an executor for that framework.                                                                                            |
 | `--ignore`                  | Use an [`.nxignore` file](/reference/nxignore) (or `.gitignore`)                                                                                                                      |
 | `--log-order`               | Use [`--output-style`](/nx-api/nx/documents/run-many#output-style)                                                                                                                    |
