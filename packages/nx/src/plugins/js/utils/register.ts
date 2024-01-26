@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import { dirname, join } from 'path';
 import type { CompilerOptions } from 'typescript';
 import { logger, NX_PREFIX, stripIndent } from '../../../utils/logger';
@@ -74,10 +75,37 @@ export function getTsNodeTranspiler(
 ): (...args: unknown[]) => unknown {
   const { register } = require('ts-node') as typeof import('ts-node');
   // ts-node doesn't provide a cleanup method
-  const service = register({
-    transpileOnly: true,
-    compilerOptions: getTsNodeCompilerOptions(compilerOptions),
-  });
+  let service: import('ts-node').Service;
+  try {
+    service = register({
+      transpileOnly: true,
+      compilerOptions: getTsNodeCompilerOptions(compilerOptions),
+    });
+  } catch (e) {
+    if (
+      /(?<=Cannot read file ').*\/\.nuxt\/tsconfig\.json(?=')/.test(
+        e.message
+      ) &&
+      packageIsInstalled('nuxi')
+    ) {
+      try {
+        // This is a workaround for Nuxt & TypeScript where Nuxt automatically
+        // generates a .nuxt/tsconfig.json when running nuxi commands. The file
+        // might not exist yet, so, we force the generation.
+        execSync('nuxi prepare');
+        // try again
+        service = register({
+          transpileOnly: true,
+          compilerOptions: getTsNodeCompilerOptions(compilerOptions),
+        });
+      } catch {
+        // ignore the fallback error and throw the original one
+        throw e;
+      }
+    } else {
+      throw e;
+    }
+  }
 
   const { transpiler, swc } = service.options;
 
