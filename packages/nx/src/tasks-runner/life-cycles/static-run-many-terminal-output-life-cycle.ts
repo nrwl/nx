@@ -149,7 +149,6 @@ export class StaticRunManyTerminalOutputLifeCycle implements LifeCycle {
     terminalOutput: string
   ) {
     const args = getPrintableCommandArgsForTask(task);
-    output.logCommand(args.join(' '), cacheStatus);
-    process.stdout.write(terminalOutput);
+    output.logCommandOutput(args.join(' '), cacheStatus, terminalOutput);
   }
 }
