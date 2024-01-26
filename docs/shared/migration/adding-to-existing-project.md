@@ -213,7 +213,7 @@ If you want to run one of your existing scripts with Nx, you need to tell Nx abo
 2. Add the script to `includedScripts`.
 3. Define caching settings.
 
-The `nx exec` command allows you to keep using `npm test` or `npm run test` (or other package manager's alternatives) as you're accustomed to. But still get the benefits of making those operations cacheable.  Configuring the `test` script from the example above to run with Nx would look something like this:
+The `nx exec` command allows you to keep using `npm test` or `npm run test` (or other package manager's alternatives) as you're accustomed to. But still get the benefits of making those operations cacheable. Configuring the `test` script from the example above to run with Nx would look something like this:
 
 ```json {% fileName="package.json" %}
 {
