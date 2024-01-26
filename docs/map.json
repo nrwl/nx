@@ -220,18 +220,6 @@
               "file": "shared/concepts/how-caching-works"
             },
             {
-              "name": "Fine-tuning Caching with Inputs",
-              "id": "task-inputs",
-              "tags": ["run-tasks", "cache-task-results"],
-              "file": "shared/concepts/inputs"
-            },
-            {
-              "name": "Cache Results with Outputs",
-              "id": "task-outputs",
-              "tags": ["run-tasks", "cache-task-results"],
-              "file": "shared/concepts/outputs"
-            },
-            {
               "name": "Types of Configuration",
               "tags": [],
               "id": "types-of-configuration",
@@ -405,7 +393,19 @@
               "description": "A series of recipes that show how to run tasks efficiently with Nx",
               "itemList": [
                 {
-                  "name": "Defining a Task Pipeline",
+                  "name": "Configure Inputs for Task Caching",
+                  "id": "configure-inputs",
+                  "tags": ["run-tasks", "cache-task-results"],
+                  "file": "shared/recipes/running-tasks/configure-inputs"
+                },
+                {
+                  "name": "Configure Outputs for Task Caching",
+                  "id": "configure-outputs",
+                  "tags": ["run-tasks", "cache-task-results"],
+                  "file": "shared/recipes/running-tasks/configure-outputs"
+                },
+                {
+                  "name": "Define a Task Pipeline",
                   "id": "defining-task-pipeline",
                   "tags": ["run-tasks"],
                   "file": "shared/recipes/running-tasks/defining-task-pipeline"
@@ -416,7 +416,7 @@
                   "file": "shared/recipes/running-tasks/change-cache-location"
                 },
                 {
-                  "name": "Running Custom Commands",
+                  "name": "Run Custom Commands",
                   "id": "run-commands-executor",
                   "tags": ["run-tasks"],
                   "file": "shared/recipes/running-tasks/running-custom-commands"
@@ -1298,6 +1298,12 @@
               "file": "shared/reference/project-configuration"
             },
             {
+              "name": "Inputs and Named Inputs",
+              "id": "inputs",
+              "tags": ["cache-task-results"],
+              "file": "shared/reference/inputs"
+            },
+            {
               "name": ".nxignore",
               "id": "nxignore",
               "tags": ["enforce-module-boundaries"],
@@ -1356,6 +1362,16 @@
               "name": "runtimeCacheInputs",
               "id": "runtime-cache-inputs",
               "file": "shared/deprecated/runtime-cache-inputs"
+            },
+            {
+              "name": "cacheableOperations",
+              "id": "cacheable-operations",
+              "file": "shared/deprecated/cacheable-operations"
+            },
+            {
+              "name": "npmScope",
+              "id": "npm-scope",
+              "file": "shared/deprecated/npm-scope"
             },
             {
               "name": "globalImplicitDependencies",
