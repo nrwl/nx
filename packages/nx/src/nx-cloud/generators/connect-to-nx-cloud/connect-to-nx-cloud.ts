@@ -79,14 +79,14 @@ function printSuccessMessage(url: string) {
   } catch (e) {}
 
   output.note({
-    title: `Remote caching via Nx Cloud has been enabled`,
+    title: `✔ This workspace has now Nx Cloud set up`,
     bodyLines: [
       `Enable config free distributed execution for maximum speed.`,
       `Run a task via Nx to view structured logs in the Run UI. Learn more at https://nx.app`,
       ``,
-      `Your workspace is unclaimed and public, claim it to manage settings and permissions:`,
+      `Your workspace is unclaimed and public. Connect your workspace to your Nx Cloud account:`,
       `- Push your changes to the main branch`,
-      `- Login or register at ${origin} to configure your workspace`,
+      `- Login at ${origin} to connect your repository`,
     ],
   });
 }
