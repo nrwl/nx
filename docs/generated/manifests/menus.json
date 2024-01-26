@@ -599,22 +599,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Fine-tuning Caching with Inputs",
-            "path": "/concepts/task-inputs",
-            "id": "task-inputs",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Cache Results with Outputs",
-            "path": "/concepts/task-outputs",
-            "id": "task-outputs",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Types of Configuration",
             "path": "/concepts/types-of-configuration",
             "id": "types-of-configuration",
@@ -855,22 +839,6 @@
         "name": "How Caching Works",
         "path": "/concepts/how-caching-works",
         "id": "how-caching-works",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Fine-tuning Caching with Inputs",
-        "path": "/concepts/task-inputs",
-        "id": "task-inputs",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Cache Results with Outputs",
-        "path": "/concepts/task-outputs",
-        "id": "task-outputs",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1282,7 +1250,23 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Defining a Task Pipeline",
+                "name": "Configure Inputs for Task Caching",
+                "path": "/recipes/running-tasks/configure-inputs",
+                "id": "configure-inputs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Configure Outputs for Task Caching",
+                "path": "/recipes/running-tasks/configure-outputs",
+                "id": "configure-outputs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Define a Task Pipeline",
                 "path": "/recipes/running-tasks/defining-task-pipeline",
                 "id": "defining-task-pipeline",
                 "isExternal": false,
@@ -1298,7 +1282,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Running Custom Commands",
+                "name": "Run Custom Commands",
                 "path": "/recipes/running-tasks/run-commands-executor",
                 "id": "run-commands-executor",
                 "isExternal": false,
@@ -2290,7 +2274,23 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Defining a Task Pipeline",
+            "name": "Configure Inputs for Task Caching",
+            "path": "/recipes/running-tasks/configure-inputs",
+            "id": "configure-inputs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Configure Outputs for Task Caching",
+            "path": "/recipes/running-tasks/configure-outputs",
+            "id": "configure-outputs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Define a Task Pipeline",
             "path": "/recipes/running-tasks/defining-task-pipeline",
             "id": "defining-task-pipeline",
             "isExternal": false,
@@ -2306,7 +2306,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Running Custom Commands",
+            "name": "Run Custom Commands",
             "path": "/recipes/running-tasks/run-commands-executor",
             "id": "run-commands-executor",
             "isExternal": false,
@@ -2349,7 +2349,23 @@
         "disableCollapsible": false
       },
       {
-        "name": "Defining a Task Pipeline",
+        "name": "Configure Inputs for Task Caching",
+        "path": "/recipes/running-tasks/configure-inputs",
+        "id": "configure-inputs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Configure Outputs for Task Caching",
+        "path": "/recipes/running-tasks/configure-outputs",
+        "id": "configure-outputs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Define a Task Pipeline",
         "path": "/recipes/running-tasks/defining-task-pipeline",
         "id": "defining-task-pipeline",
         "isExternal": false,
@@ -2365,7 +2381,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Running Custom Commands",
+        "name": "Run Custom Commands",
         "path": "/recipes/running-tasks/run-commands-executor",
         "id": "run-commands-executor",
         "isExternal": false,
@@ -4677,6 +4693,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Inputs and Named Inputs",
+            "path": "/reference/inputs",
+            "id": "inputs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": ".nxignore",
             "path": "/reference/nxignore",
             "id": "nxignore",
@@ -4723,6 +4747,14 @@
         "name": "Project Configuration",
         "path": "/reference/project-configuration",
         "id": "project-configuration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Inputs and Named Inputs",
+        "path": "/reference/inputs",
+        "id": "inputs",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4809,6 +4841,22 @@
             "name": "runtimeCacheInputs",
             "path": "/deprecated/runtime-cache-inputs",
             "id": "runtime-cache-inputs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "cacheableOperations",
+            "path": "/deprecated/cacheable-operations",
+            "id": "cacheable-operations",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "npmScope",
+            "path": "/deprecated/npm-scope",
+            "id": "npm-scope",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4949,6 +4997,22 @@
         "name": "runtimeCacheInputs",
         "path": "/deprecated/runtime-cache-inputs",
         "id": "runtime-cache-inputs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "cacheableOperations",
+        "path": "/deprecated/cacheable-operations",
+        "id": "cacheable-operations",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "npmScope",
+        "path": "/deprecated/npm-scope",
+        "id": "npm-scope",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
