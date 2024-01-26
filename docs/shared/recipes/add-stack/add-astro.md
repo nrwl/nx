@@ -82,29 +82,9 @@ Install `@nx/js` plugin.
 
 > Note: you should make sure any first party, `@nx/` scoped, plugins match the `nx` package version
 
-{% tabs %}
-{% tab label="npm" %}
-
 ```shell
-npm add -DE @nx/js@<nx-version>
+nx add @nx/js@<nx-version>
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -DE @nx/js@<nx-version>
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -DE @nx/js@<nx-version>
-```
-
-{% /tab %}
-{% /tabs %}
 
 Then generate a project
 
