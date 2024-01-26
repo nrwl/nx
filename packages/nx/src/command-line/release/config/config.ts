@@ -147,6 +147,13 @@ export async function createNxReleaseConfig(
       }
     : {};
 
+  const userGroups = Object.values(userConfig.groups ?? {});
+  const disableWorkspaceChangelog =
+    userGroups.length > 1 ||
+    (userGroups.length === 1 &&
+      userGroups[0].projectsRelationship === 'independent') ||
+    (userConfig.projectsRelationship === 'independent' &&
+      !userGroups.some((g) => g.projectsRelationship === 'fixed'));
   const WORKSPACE_DEFAULTS: Omit<NxReleaseConfig, 'groups'> = {
     // By default all projects in all groups are released together
     projectsRelationship: workspaceProjectsRelationship,
@@ -159,18 +166,20 @@ export async function createNxReleaseConfig(
     },
     changelog: {
       git: changelogGitDefaults,
-      workspaceChangelog: {
-        createRelease: false,
-        entryWhenNoChanges:
-          'This was a version bump only, there were no code changes.',
-        file: '{workspaceRoot}/CHANGELOG.md',
-        renderer: 'nx/release/changelog-renderer',
-        renderOptions: {
-          authors: true,
-          commitReferences: true,
-          versionTitleDate: true,
-        },
-      },
+      workspaceChangelog: disableWorkspaceChangelog
+        ? false
+        : {
+            createRelease: false,
+            entryWhenNoChanges:
+              'This was a version bump only, there were no code changes.',
+            file: '{workspaceRoot}/CHANGELOG.md',
+            renderer: 'nx/release/changelog-renderer',
+            renderOptions: {
+              authors: true,
+              commitReferences: true,
+              versionTitleDate: true,
+            },
+          },
       // For projectChangelogs if the user has set any changelog config at all, then use one set of defaults, otherwise default to false for the whole feature
       projectChangelogs: userConfig.changelog?.projectChangelogs
         ? {
