@@ -9,42 +9,40 @@ Nx understands your workspace as a collection of projects.
 Each project can be explored to view the different tasks which can be run.
 
 The projects in the workspace have dependencies between them and form a graph known as the **Project Graph**.
-Nx uses this project graph in many many ways to make informed decisions such which tasks to run, when the results of a task can be restored from cache, and much more.
+Nx uses this project graph in many ways to make informed decisions such as which tasks to run, when the results of a task can be restored from cache, and more.
 
 In addition to the project graph, Nx also runs your tasks as a **Task Graph**.
-This is a separate graph of tasks and their dependencies based on the project graph and determines the way in which the tasks are executed.
+This is a separate graph of tasks and their dependencies which is based on the project graph and determines the way in which the tasks are executed.
 
 Nx allows you to interactively explore your workspace through a UI which shows the information above.
 Using this tool is _vital_ to understanding both your workspace as well as how Nx behaves.
 
-This guide will teach you to use this tool to explore projects, the project graph, as well as task graphs for your workspace.
+This guide will teach you to use this tool to explore projects, the project graph, and the task graphs for your workspace.
 
 ## Explore Projects in your Workspace
 
 Projects in Nx are the different parts of the monorepo which can have tasks run for them.
 
-The best way to see what projects are in your workspace is to view the [Project Graph](#explore-the-project-graph) which will be covered in the next section.
-A simple way is to look at the **Projects** pane in Nx Console or run `nx show projects` to show show a list of projects in your terminal.
+The best way to see what projects are in your workspace is to view the [project graph](#explore-the-project-graph) which will be covered in the next section.
+Another way is to look at the **Projects** pane in [Nx Console](/features/integrate-with-ides) or run `nx show projects` to show a list of projects in your terminal.
 
-From the list, you can see more details about a specific project in Nx Console or by running `nx show project <project-name> --web` which will show something like the example below:
+You can see more details about a specific project in Nx Console or by running `nx show project <project-name> --web`. Both methods will show something like the example below:
 
 {% project-details  jsonFile="shared/concepts/myreactapp.json"%}
 {% /project-details %}
 
-The view will show a list of targets which can be [run by Nx](/features/run-tasks).
+The view shows a list of targets which can be [run by Nx](/features/run-tasks).
 Each target has different options which determine how Nx runs the task.
-
-From this view, you can view the project in the **Project Graph** as well as the tasks for the project in the **Task Graph**.
 
 ## Explore the Project Graph
 
 Nx understands the projects in your workspace as a graph and uses this understanding to behave intelligently.
-Exploring this graph visually is vital to understanding your code architecture as well as how Nx behaves.
+Exploring this graph visually is vital to understanding how your code is structured and how Nx behaves.
 It always stays up to date without having to actively maintain a document as it is [calculated by analyzing your source code](/concepts/more-concepts/how-project-graph-is-built#how-the-project-graph-is-built)
 
 ### Launching the Project Graph
 
-To launch the project graph visualization for your workspace, run:
+To launch the project graph visualization for your workspace, use [Nx Console](/features/integrate-with-ides) or run:
 
 ```shell
 npx nx graph
@@ -65,7 +63,7 @@ focus of the visualization down to the most useful part of the graph at the mome
 Once the graph is displayed, you can explore deeper by clicking on nodes and edges in the graph.
 Click on a node to show a tooltip which also has a link to view more details about the project.
 You can trace the dependency chain between two projects by choosing a **Start** and **End** point in the project tooltips.
-Click on any dependency to find which file(s) created the dependency.
+Click on any dependency line to find which file(s) created the dependency.
 
 Try playing around with a [fully interactive graph on a sample repo](https://nrwl-nx-examples-dep-graph.netlify.app/?focus=cart) or look at the more limited example below:
 
@@ -200,7 +198,7 @@ Some moments which you may want to share these images are:
 
 ## Explore the Task Graph
 
-Nx uses the Project Graph of your workspace to determine the order in which to [run tasks](/features/run-tasks). Pass the `--graph` flag to view the **Task Graph** which is executed by Nx when running a command.
+Nx uses the project graph of your workspace to determine the order in which to [run tasks](/features/run-tasks). Pass the `--graph` flag to view the **task graph** which is executed by Nx when running a command.
 
 ```shell
 nx build myreactapp --graph # View the graph for building myreactapp
@@ -214,12 +212,4 @@ Click on the nodes of this graph to see more information about the task such as:
 - Which [inputs](/recipes/running-tasks/configure-inputs) are used to calculate the computation hash.
 - A link to see more details about the project which the task belongs to
 
-Dependencies in this graph mean that Nx will need to wait for all tasks depended upon by a task to complete successfully before running the task.
-
-## Summary
-
-Nx allows you to both understand your own code as well as how Nx behaves in many different ways:
-
-- [Explore project details](#explore-projects-in-your-workspace) to see what tasks can be run
-- [Explore the Project Graph](#explore-the-project-graph) to see how projects relate to one another
-- [Explore the Task Graph](#explore-the-task-graph) to see the graph which Nx executes
+Dependencies in this graph mean that Nx will need to wait for all task dependencies to complete successfully before running the task.

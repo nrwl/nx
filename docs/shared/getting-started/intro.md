@@ -11,7 +11,7 @@ Nx is a powerful open-source build system that provides tools and techniques for
 
 <!-- - **Monorepo and Single Projects**: Nx supports both, monorepos as well as single-project (standalone) workspaces. -->
 
-Find out more about [why you should use Nx](/getting-started/why-nx) or browse our [core features](/features).
+Find out more about [why you should use Nx](/getting-started/why-nx) or browse our [features](/features).
 
 ## Try Nx Yourself!
 

@@ -69,9 +69,9 @@ Doing so will show a view such as the one below:
 {% project-details  jsonFile="shared/concepts/myreactapp.json"%}
 {% /project-details %}
 
-Nx Console has a button which will show a preview of this screen when a `project.json` or other configuration files are opened in the IDE.
+Nx Console has a button which will show a preview of this screen when a project level configuration file (`project.json` or `package.json`) is opened in the IDE.
 
-Another way of accessing this information is to run `nx show project myreactapp --web` and the view above will be opened directly.
+Another way of accessing this information is to run `nx show project myreactapp --web` and the view above will be opened in a browser.
 
 Use this tool to help understand what inputs are being used by Nx in your workspace.
 
