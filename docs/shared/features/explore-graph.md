@@ -211,7 +211,7 @@ nx affected --targets build --graph # View the graph for building the affected p
 Click on the nodes of this graph to see more information about the task such as:
 
 - Which executor was used to run the command
-- Which [inputs](/concepts/task-inputs) are used to calculate the computation hash.
+- Which [inputs](/recipes/running-tasks/configure-inputs) are used to calculate the computation hash.
 - A link to see more details about the project which the task belongs to
 
 Dependencies in this graph mean that Nx will need to wait for all tasks depended upon by a task to complete successfully before running the task.

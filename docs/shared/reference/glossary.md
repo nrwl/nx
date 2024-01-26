@@ -32,7 +32,7 @@ When the [cache inputs](#cache-inputs) for a [task](#task) match an existing ent
 
 Everything that might change the output of a [task](#task). This may include source code, task options, environment variables and other settings determined at run time. These values are combined as a hash to serve as a key for an entry in the [cache](#cache).
 
-> See: [Customizing Inputs and Named Inputs](/concepts/task-inputs)
+> See: [Customizing Inputs and Named Inputs](/recipes/running-tasks/configure-inputs)
 
 ### Cache Miss
 

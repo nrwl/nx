@@ -1,12 +1,12 @@
 ---
-title: Cache Results with Outputs
+title: Configure Outputs for Task Caching
 description: 'Learn how to optimize what Nx restores from the cache'
 ---
 
-# Cache Results with Outputs
+# Configure Outputs for Task Caching
 
-Whenever Nx runs a task which can be cached, it will store the results of that task in the cache.
-When Nx runs the task again, if nothing has changed, it will restore the results from the cache instead of spending the time to run the task again.
+Whenever Nx runs a cacheable task, it will store the results of that task in the cache.
+When Nx runs the task again, if the [inputs for that task](/recipes/running-tasks/configure-inputs) have not changed, it will restore the results from the cache instead of spending the time to run the task again.
 
 ## Types of Outputs
 
@@ -34,12 +34,12 @@ These outputs files can be specified in several ways:
 All outputs explicitly specifying paths must be prefixed with either `{projectRoot}` or `{workspaceRoot}` to distinguish where the path is resolved from. `{workspaceRoot}` should only appear in the beginning of an `output` but `{projectRoot}` and `{projectName}` can be specified later in the `output` to interpolate the root or name of the a project into the output location.
 
 Outputs can also be determined from the `options` of running a task via the `{options.[propertyName]}` syntax.
-This is useful when an option for the task determines the output location and could be written when the task is run.
+This is useful when an option for the task determines the output location and could be modified when the task is run.
 This path is resolved from the root of the workspace.
 
 If an output file or directory does not exist, it will be ignored.
 
-## Viewing Outputs of a Task
+## View Outputs of a Task
 
 The outputs of a task can be viewed by adding the `--graph` flag to the command:
 
@@ -51,7 +51,7 @@ This will open the task graph in the browser.
 Clicking on a task in the graph will open a tooltip with a link to see details about the project.
 View the project's configuration to see a list of the outputs which are defined for each target.
 
-## Configuring Outputs
+## Configure Outputs
 
 The tasks you run in your workspace will likely already have `outputs` defined.
 Be sure to [view the existing outputs](#viewing-outputs-of-a-task) and start from there.
@@ -72,7 +72,7 @@ To override the `outputs` of a task, start by copying over the entire array show
 
 As you configure `outputs`, keep the project details screen open and it will refresh as changes are made. Check to make sure that the intended configuration is shown.
 
-### Workspace
+### Workspace Level Outputs
 
 [Target Defaults](/reference/nx-json#target-defaults) defined in `nx.json` apply to a set of targets. Defining `outputs` here one time will apply to a set of similar targets.
 
@@ -95,7 +95,7 @@ This configuration may be overwritten by configuration in project-specific confi
 Specifying the same output location for multiple tasks often causes unintentional behavior. While sometimes this is intentional, try and ensure that a set of targets will yield unique output locations for the tasks belonging to different projects. Use the `{projectRoot}` and `{projectName}` notation to include unique characteristics of a project in the output.
 {% /callout %}
 
-### Project Level
+### Project Level Outputs
 
 Defining `outputs` of a target in `project.json` or `package.json` will apply only to tasks of the specific project.
 
@@ -127,7 +127,7 @@ The `package.json` file may include configuration for a specific Nx project. Def
   "nx": {
     "targets": {
       "build": {
-      "outputs": ["{projectRoot}/dist"]
+        "outputs": ["{projectRoot}/dist"]
       }
       ...
     }
