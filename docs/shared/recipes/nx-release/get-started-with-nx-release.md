@@ -18,7 +18,7 @@ nx add @nx/js
 
 ### Configure Projects to Release
 
-Nx Release uses Nx's powerful [Project Graph](/core-features/explore-graph) to understand your projects and their dependencies.
+Nx Release uses Nx's powerful [Project Graph](/features/explore-graph) to understand your projects and their dependencies.
 
 If you want to release all of the projects in your workspace, such as when dealing with a series of npm library packages, no configuration is required.
 
