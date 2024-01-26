@@ -10,13 +10,16 @@
 import type { Transform } from 'ng-packagr/lib/graph/transform';
 import { transformFromPromise } from 'ng-packagr/lib/graph/transform';
 import {
+  EntryPointNode,
   isEntryPoint,
   isEntryPointInProgress,
+  isPackage,
+  PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
 import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
 import * as path from 'path';
 import * as ts from 'typescript';
-import { getInstalledAngularVersionInfo } from '../../../../utilities/angular-version-utils';
+import { getInstalledAngularVersionInfo } from '../../../../../utilities/angular-version-utils';
 import { compileSourceFiles } from '../../ngc/compile-source-files';
 import { StylesheetProcessor as StylesheetProcessorClass } from '../../styles/stylesheet-processor';
 import { NgPackagrOptions } from '../options.di';
@@ -26,9 +29,12 @@ export const nxCompileNgcTransformFactory = (
   options: NgPackagrOptions
 ): Transform => {
   return transformFromPromise(async (graph) => {
+    const entryPoints: EntryPointNode[] = graph.filter(isEntryPoint);
+    const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
+    const ngPackageNode: PackageNode = graph.find(isPackage);
+    const projectBasePath = ngPackageNode.data.primary.basePath;
+
     try {
-      const entryPoint = graph.find(isEntryPointInProgress());
-      const entryPoints = graph.filter(isEntryPoint);
       // Add paths mappings for dependencies
       const tsConfig = setDependenciesTsConfigPaths(
         entryPoint.data.tsConfig,
@@ -48,11 +54,11 @@ export const nxCompileNgcTransformFactory = (
       const { moduleResolutionCache } = entryPoint.cache;
 
       entryPoint.cache.stylesheetProcessor ??= new StylesheetProcessor(
+        projectBasePath,
         basePath,
         cssUrl,
         styleIncludePaths,
         options.cacheEnabled && options.cacheDirectory,
-        options.watch,
         options.tailwindConfig
       ) as any;
 

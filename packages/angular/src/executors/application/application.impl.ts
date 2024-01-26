@@ -1,22 +1,21 @@
 import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
+import { gte } from 'semver';
 import { getInstalledAngularVersionInfo } from '../utilities/angular-version-utils';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import { loadPlugins } from '../utilities/esbuild-extensions';
+import {
+  loadIndexHtmlTransformer,
+  loadPlugins,
+} from '../utilities/esbuild-extensions';
 import type { ApplicationExecutorOptions } from './schema';
+import { validateOptions } from './utils/validate-options';
 
 export default async function* applicationExecutor(
   options: ApplicationExecutorOptions,
   context: ExecutorContext
 ) {
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo();
-  if (angularMajorVersion < 17) {
-    throw new Error(
-      `The "application" executor requires Angular version 17 or greater. You are currently using version ${angularVersion}.`
-    );
-  }
+  validateOptions(options);
 
   const {
     buildLibsFromSource = true,
@@ -37,6 +36,12 @@ export default async function* applicationExecutor(
   }
 
   const plugins = await loadPlugins(pluginPaths, options.tsConfig);
+  const indexHtmlTransformer = options.indexHtmlTransformer
+    ? await loadIndexHtmlTransformer(
+        options.indexHtmlTransformer,
+        options.tsConfig
+      )
+    : undefined;
 
   const { buildApplication } = await import('@angular-devkit/build-angular');
   const builderContext = await createBuilderContext(
@@ -47,6 +52,14 @@ export default async function* applicationExecutor(
     },
     context
   );
+
+  const { version: angularVersion } = getInstalledAngularVersionInfo();
+  if (gte(angularVersion, '17.1.0')) {
+    return yield* buildApplication(delegateExecutorOptions, builderContext, {
+      codePlugins: plugins,
+      indexHtmlTransformer,
+    });
+  }
 
   return yield* buildApplication(
     delegateExecutorOptions,
