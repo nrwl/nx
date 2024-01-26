@@ -27,7 +27,7 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
   PropertyInfoTooltipTypeOptions
 > = {
   targets: {
-    docsUrl: 'https://nx.dev/core-features/run-tasks#define-tasks',
+    docsUrl: 'https://nx.dev/features/run-tasks',
     docsLinkText: 'Learn more about running tasks',
     heading: 'Target',
     description:
@@ -52,7 +52,7 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
     description: `Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.`,
   },
   outputs: {
-    docsUrl: 'https://nx.dev/concepts/task-outputs',
+    docsUrl: 'https://nx.dev/recipes/running-tasks/configure-outputs',
     heading: 'Outputs',
     description:
       'Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.',
