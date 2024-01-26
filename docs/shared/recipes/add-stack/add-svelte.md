@@ -183,48 +183,6 @@ Change your `tsconfig.lib.json` to `tsconfig.app.json`. It should look like this
 }
 ```
 
-Navigate to `project.json` and update it with the following content:
-
-```json {% fileName="/project.json" %}
-{
-  "targets": {
-    "build": {
-      "executor": "@nx/vite:build",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
-      "options": {
-        "outputPath": "dist/acme"
-      },
-      "configurations": {
-        "development": {
-          "mode": "development"
-        },
-        "production": {
-          "mode": "production"
-        }
-      }
-    },
-    "serve": {
-      "executor": "@nx/vite:dev-server",
-      "defaultConfiguration": "development",
-      "options": {
-        "buildTarget": "acme:build"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "acme:build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "acme:build:production",
-          "hmr": false
-        }
-      }
-    }
-  }
-}
-```
-
 We also need to add a `svelte.config.js` file to the project root with the following content:
 
 ```js
