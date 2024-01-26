@@ -21,10 +21,13 @@ npx create-nx-workspace@latest --preset=next
 
 ### Installation
 
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/next` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
 In any workspace, you can install `@nx/next` by running the following command:
 
 {% tabs %}
-
 {% tab label="Nx 18+" %}
 
 ```shell
@@ -69,53 +72,6 @@ The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
 - The `startTargetName` option controls the name of Next.js' production serve task which starts the application in production mode. The default name is `start`.
 
 {% /tab %}
-
-{% tab label="Nx < 18" %}
-
-{% tabs %}
-
-{% tab label="npm" %}
-
-```shell
-nx add @nx/next
-```
-
-This will install the correct version of `@nx/next`.
-
-### How @nx/next Infers Tasks
-
-The `@nx/next` plugin will create a task for any project that has a Next.js configuration file present. Any of the following files will be recognized as a Next.js configuration file:
-
-- `next.config.js`
-- `next.config.mjs`
-- `next.config.cjs`
-
-### View Inferred Tasks
-
-To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
-
-### @nx/next Configuration
-
-The `@nx/next/plugin` is configured in the `plugins` array in `nx.json`.
-
-```json {% fileName="nx.json" %}
-{
-  "plugins": [
-    {
-      "plugin": "@nx/next/plugin",
-      "options": {
-        "buildTargetName": "build",
-        "devTargetName": "dev",
-        "startTargetName": "start"
-      }
-    }
-  ]
-}
-```
-
-- The `buildTargetName`, `devTargetName` and `startTargetName` options control the names of the inferred Next.js tasks. The default names are `build`, `dev` and `start`.
-
-{% /tab %}
 {% tab label="Nx < 18" %}
 
 Install the `@nx/next` package with your package manager.
@@ -124,8 +80,6 @@ Install the `@nx/next` package with your package manager.
 npm add -D @nx/next
 ```
 
-{% /tab %}
-{% /tabs %}
 {% /tab %}
 {% /tabs %}
 
@@ -181,26 +135,26 @@ Nx generates components with tests by default. For pages, you can pass the `--wi
 You can serve a Next.js application `my-new-app` for development:
 
 ```shell
-  nx dev my-new-app
+nx dev my-new-app
 ```
 
 To serve a Next.js application for production:
 
 ```shell
-  nx start my-new-app
+nx start my-new-app
 ```
 
-This will start the server at http://localhost:3000 by default.
+This will start the server at <http://localhost:3000> by default.
 
 {% /tab %}
 {% tab label="Nx < 18" %}
 
-You can run `nx serve my-new-app` to serve a Next.js application called `my-new-app` for development. This will start the dev server at http://localhost:4200.
+You can run `nx serve my-new-app` to serve a Next.js application called `my-new-app` for development. This will start the dev server at <http://localhost:4200>.
 
 To serve a Next.js application for production, add the `--prod` flag to the serve command:
 
 ```shell
-  nx serve my-new-app --prod
+nx serve my-new-app --prod
 ```
 
 {% /tab %}
