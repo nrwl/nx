@@ -21,29 +21,9 @@ Because we are using an Nx plugin for Deno, all the features of Nx are available
 Make sure you have Deno installed on your machine. Consult the [Deno docs for more details](https://deno.com/manual/getting_started/installation)
 {% /callout %}
 
-{% tabs %}
-{%tab label="npm"%}
-
 ```shell
-npm add -D @nx/deno
+nx add @nx/deno
 ```
-
-{% /tab %}
-{%tab label="yarn"%}
-
-```shell
-yarn add -D @nx/deno
-```
-
-{% /tab %}
-{%tab label="pnpm"%}
-
-```shell
-pnpm add -D @nx/deno
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Create an Application
 
