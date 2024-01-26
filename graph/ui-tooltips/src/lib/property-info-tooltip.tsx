@@ -8,7 +8,8 @@ type PropertyInfoTooltipType =
   | 'outputs'
   | 'dependsOn'
   | 'options'
-  | 'configurations';
+  | 'configurations'
+  | 'release';
 
 type PropertyInfoTooltipTypeOptions = {
   docsUrl: string;
@@ -73,6 +74,12 @@ const PROPERTY_INFO_TOOLTIP_TYPE_OPTIONS: Record<
     description:
       'Configurations are sets of Options to allow a Target to be used in different scenarios.',
   },
+  release: {
+    heading: 'nx release',
+    description:
+      "The nx-release-publish target is used to publish your project with nxrelease. Don't invoke this directly - use nx release publish instead.",
+    docsUrl: 'https://nx.dev/nx-api/nx/documents/release',
+  },
 };
 
 export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
@@ -80,10 +87,10 @@ export function PropertyInfoTooltip({ type }: PropertyInfoTooltipProps) {
 
   return (
     <div className="text-sm text-slate-700 dark:text-slate-400 max-w-lg">
-      <h4 className="flex justify-between items-center border-b text-base">
+      <h4 className="flex justify-between items-center border-b border-slate-200 dark:border-slate-700/60 text-base">
         <span className="font-mono">{propertyInfo.heading}</span>
       </h4>
-      <div className="flex flex-col font-mono border-b py-2">
+      <div className="flex flex-col font-mono border-b border-slate-200 dark:border-slate-700/60 py-2">
         <p className="flex grow items-center gap-2 whitespace-pre-wrap">
           {propertyInfo.description}
         </p>

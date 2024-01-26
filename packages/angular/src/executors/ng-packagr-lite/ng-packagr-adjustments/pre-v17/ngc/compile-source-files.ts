@@ -2,8 +2,7 @@
  * Adapted from the original ng-packagr source.
  *
  * Changes made:
- * - Remove ngccProcessor (Angular < 16)
- * - Use custom cacheCompilerHost instead of the one provided by ng-packagr.
+ * - Use custom StylesheetProcessor instead of the one provided by ng-packagr.
  * - Support Angular Compiler `incrementalDriver` for Angular < 16.
  */
 
@@ -18,15 +17,17 @@ import {
   isEntryPointInProgress,
   isPackage,
 } from 'ng-packagr/lib/ng-package/nodes';
-import { augmentProgramWithVersioning } from 'ng-packagr/lib/ts/cache-compiler-host';
+import {
+  augmentProgramWithVersioning,
+  cacheCompilerHost,
+} from 'ng-packagr/lib/ts/cache-compiler-host';
 import * as log from 'ng-packagr/lib/utils/log';
 import { join } from 'node:path';
 import * as ts from 'typescript';
-import { getInstalledAngularVersionInfo } from '../../../utilities/angular-version-utils';
-import { ngCompilerCli } from '../../../utilities/ng-compiler-cli';
+import { getInstalledAngularVersionInfo } from '../../../../utilities/angular-version-utils';
+import { ngCompilerCli } from '../../../../utilities/ng-compiler-cli';
 import { NgPackagrOptions } from '../ng-package/options.di';
 import { StylesheetProcessor } from '../styles/stylesheet-processor';
-import { cacheCompilerHost } from '../ts/cache-compiler-host';
 
 export async function compileSourceFiles(
   graph: BuildGraph,
@@ -60,7 +61,7 @@ export async function compileSourceFiles(
     entryPoint,
     tsConfigOptions,
     moduleResolutionCache,
-    stylesheetProcessor,
+    stylesheetProcessor as any,
     inlineStyleLanguage
   );
 
