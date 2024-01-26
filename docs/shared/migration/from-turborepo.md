@@ -12,34 +12,7 @@ To switch to Nx, run this command:
 npx nx@latest init
 ```
 
-The command will ask you three questions.
-
-1. Which scripts need to be run in order?
-
-   Any scripts you select in this step will be set up so project dependencies will be run first. i.e. `"dependsOn": "^build"`
-
-2. Which scripts are cacheable?
-
-   Any scripts you select in this step will be made cacheable, i.e. the `cache` property will be set to `true` (`false` by default) in the `targetDefaults` section.
-
-3. For each cacheable script, does it produce output in the file system?
-
-   Any folders identified will be added to the task's `outputs`. i.e. `"outputs": ["{projectRoot}/dist"]`
-
-This process adds `nx` to your `package.json` at the root of your workspace:
-
-```json {% fileName="package.json" %}
-{
-  "name": "my-workspace",
-  ...
-  "devDependencies": {
-    ...
-    "nx": "17.2.0"
-  }
-}
-```
-
-It also creates an `nx.json` based on the answers given during the setup process. This includes cacheable operations as well as some initial definition of the task pipeline.
+See the [Adding Nx to NPM/Yarn/PNPM Workspace](/recipes/adopting-nx/adding-to-monorepo) guide for details about everything the `nx init` command does.
 
 ## Convert turbo.json into Nx Configuration
 
@@ -80,9 +53,6 @@ Let's say you start with the following `turbo.json` file:
 
 Creating the equivalent configuration with Nx yields the following files:
 
-{% tabs %}
-{% tab label="Nx >= 17" %}
-
 ```json {% fileName="/nx.json" %}
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
@@ -111,46 +81,6 @@ Creating the equivalent configuration with Nx yields the following files:
   "nxCloudAccessToken": "..."
 }
 ```
-
-{% /tab %}
-{% tab label="Nx < 17" %}
-
-```json {% fileName="/nx.json" %}
-{
-  "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "namedInputs": {
-    "sharedGlobals": ["babel.config.json"],
-    "default": ["{projectRoot}/**/*", "sharedGlobals"]
-  },
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["default"],
-      "outputs": ["{projectRoot}/dist"]
-    },
-    "test": {
-      "dependsOn": ["build"],
-      "inputs": ["default"]
-    },
-    "e2e": {
-      "dependsOn": ["build"],
-      "inputs": ["default"]
-    }
-  },
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx-cloud",
-      "options": {
-        "cacheableOperations": ["build", "e2e", "test"],
-        "accessToken": "..."
-      }
-    }
-  }
-}
-```
-
-{% /tab %}
-{% /tabs %}
 
 ```jsonc {% fileName="/packages/docs/package.json" %}
 {
