@@ -79,7 +79,7 @@ function printSuccessMessage(url: string) {
   } catch (e) {}
 
   output.note({
-    title: `✔ This workspace has now Nx Cloud set up`,
+    title: `This workspace has now Nx Cloud set up`,
     bodyLines: [
       `Enable config free distributed execution for maximum speed.`,
       `Run a task via Nx to view structured logs in the Run UI. Learn more at https://nx.app`,

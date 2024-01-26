@@ -1,6 +1,7 @@
 import { execSync } from 'child_process';
 import { resolve } from 'path';
 import { output } from '../output';
+import { getPackageManagerCommand } from '../package-manager';
 
 export function showNxWarning(workspaceName: string) {
   try {
@@ -11,12 +12,13 @@ export function showNxWarning(workspaceName: string) {
     });
   } catch (e) {
     // no nx found
+    const { exec, globalAdd } = getPackageManagerCommand();
     output.addVerticalSeparator();
     output.note({
       title: `Nx CLI is not installed globally.`,
       bodyLines: [
-        `This means that you might have to use "yarn nx" or "npx nx" to execute commands in the workspace.`,
-        `Run "yarn global add nx" or "npm install -g nx" to be able to execute command directly.`,
+        `This means that you will have to use "${exec} nx" to execute commands in the workspace.`,
+        `Run "${globalAdd} nx" to be able to execute command directly.`,
       ],
     });
   }

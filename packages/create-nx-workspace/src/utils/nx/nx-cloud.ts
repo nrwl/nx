@@ -38,8 +38,10 @@ export async function setupNxCloud(
 }
 
 export function printNxCloudSuccessMessage(nxCloudOut: string) {
-  const [title, ...bodyLines] = nxCloudOut.split('\n').map((r) => r.trim());
-  output.note({
+  // remove leading Nx carret and any new lines
+  const logContent = nxCloudOut.split('>  NX   ')[1];
+  const [title, ...bodyLines] = logContent.split('\n').map((r) => r.trim());
+  output.success({
     title,
     bodyLines,
   });
