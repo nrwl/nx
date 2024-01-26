@@ -79,13 +79,10 @@ function printSuccessMessage(url: string) {
   } catch (e) {}
 
   output.note({
-    title: `This workspace has now Nx Cloud set up`,
+    title: `Your Nx Cloud workspace is public`,
     bodyLines: [
-      `Enable config free distributed execution for maximum speed.`,
-      `Run a task via Nx to view structured logs in the Run UI. Learn more at https://nx.app`,
-      ``,
-      `Your workspace is unclaimed and public. Connect your workspace to your Nx Cloud account:`,
-      `- Push your changes to the main branch`,
+      `To restrict access, connect it to your Nx Cloud account:`,
+      `- Push your changes`,
       `- Login at ${origin} to connect your repository`,
     ],
   });

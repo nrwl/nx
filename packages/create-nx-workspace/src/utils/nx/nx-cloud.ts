@@ -48,7 +48,7 @@ export function printNxCloudSuccessMessage(nxCloudOut: string) {
     .replace(/\n*$/, '') // remove trailing new lines
     .split('\n')
     .map((r) => r.trim());
-  output.success({
+  output.warn({
     title,
     bodyLines,
   });
