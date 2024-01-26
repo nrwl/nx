@@ -57,21 +57,24 @@ Make sure to install the `@nx/vite` and `@nx/js` versions that matches the versi
 {%tab label="npm"%}
 
 ```shell
-npm add -D @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+npm add -D vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+nx add @nx/vite @nx/js
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add -D @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+yarn add -D vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+nx add @nx/vite @nx/js
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-pnpm add -D @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+pnpm add -D vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+nx add @nx/vite @nx/js
 ```
 
 {% /tab %}

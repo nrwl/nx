@@ -14,32 +14,10 @@ caption="Demoes how to use Nx generators in a PNPM workspace to automate the cre
 
 If you don't already have a local plugin, use Nx to generate one:
 
-{% tabs %}
-{% tab label="npm" %}
-
 ```shell
-npm add @nx/plugin@latest
+nx add @nx/plugin
 nx g @nx/plugin:plugin my-plugin
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add @nx/plugin@latest
-nx g @nx/plugin:plugin my-plugin
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add @nx/plugin@latest
-nx g @nx/plugin:plugin my-plugin
-```
-
-{% /tab %}
-{% /tabs %}
 
 Note that `latest` should match the version of the `nx` plugins installed in your workspace.
 

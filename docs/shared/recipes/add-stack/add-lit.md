@@ -27,21 +27,24 @@ Install all the dependencies we need:
 {%tab label="npm"%}
 
 ```shell
-npm add -D @nx/node lit http-server
+nx add @nx/node
+npm add -D lit http-server
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add -D @nx/node lit http-server
+nx add @nx/node
+yarn add -D lit http-server
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-pnpm add -D @nx/node lit http-server
+nx add @nx/node
+pnpm add -D lit http-server
 ```
 
 {% /tab %}

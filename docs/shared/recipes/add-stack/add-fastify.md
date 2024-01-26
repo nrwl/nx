@@ -34,29 +34,9 @@ If you are adding Fastify to an existing repo, continue to the next section.
 
 ## Install the Node Plugin
 
-{% tabs %}
-{%tab label="npm"%}
-
 ```shell
-npm add -D @nx/node
+nx add @nx/node
 ```
-
-{% /tab %}
-{%tab label="yarn"%}
-
-```shell
-yarn add -D @nx/node
-```
-
-{% /tab %}
-{%tab label="pnpm"%}
-
-```shell
-pnpm add -D @nx/node
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Create an Application
 
