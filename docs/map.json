@@ -67,11 +67,6 @@
                   "name": "Vue Standalone",
                   "id": "vue-standalone-tutorial",
                   "file": "shared/vue-standalone-tutorial/vue-standalone"
-                },
-                {
-                  "name": "Node Standalone",
-                  "id": "node-server-tutorial",
-                  "file": "shared/node-server-tutorial/1-code-generation"
                 }
               ]
             }
@@ -143,43 +138,6 @@
               "name": "5 - Summary",
               "id": "5-summary",
               "file": "shared/angular-standalone-tutorial/5-summary"
-            }
-          ]
-        },
-        {
-          "name": "Node Server Tutorial",
-          "id": "node-server-tutorial",
-          "description": "Learn to use Nx with this Node Server Tutorial where you will learn about all its main feature with a real project.",
-          "itemList": [
-            {
-              "name": "1 - Code Generation",
-              "id": "1-code-generation",
-              "file": "shared/node-server-tutorial/1-code-generation"
-            },
-            {
-              "name": "2 - Project Graph",
-              "id": "2-project-graph",
-              "file": "shared/node-server-tutorial/2-project-graph"
-            },
-            {
-              "name": "3 - Task Running",
-              "id": "3-task-running",
-              "file": "shared/node-server-tutorial/3-task-running"
-            },
-            {
-              "name": "4 - Task Pipelines",
-              "id": "4-task-pipelines",
-              "file": "shared/node-server-tutorial/4-task-pipelines"
-            },
-            {
-              "name": "5 - Docker Target",
-              "id": "5-docker-target",
-              "file": "shared/node-server-tutorial/5-docker-target"
-            },
-            {
-              "name": "6 - Summary",
-              "id": "6-summary",
-              "file": "shared/node-server-tutorial/6-summary"
             }
           ]
         },

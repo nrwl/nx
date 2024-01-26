@@ -93,14 +93,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Node Standalone",
-                "path": "/getting-started/tutorials/node-server-tutorial",
-                "id": "node-server-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -193,14 +185,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Node Standalone",
-            "path": "/getting-started/tutorials/node-server-tutorial",
-            "id": "node-server-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -257,14 +241,6 @@
         "name": "Vue Standalone",
         "path": "/getting-started/tutorials/vue-standalone-tutorial",
         "id": "vue-standalone-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Node Standalone",
-        "path": "/getting-started/tutorials/node-server-tutorial",
-        "id": "node-server-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -459,111 +435,6 @@
         "name": "5 - Summary",
         "path": "/angular-standalone-tutorial/5-summary",
         "id": "5-summary",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Node Server Tutorial",
-        "path": "/node-server-tutorial",
-        "id": "node-server-tutorial",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "1 - Code Generation",
-            "path": "/node-server-tutorial/1-code-generation",
-            "id": "1-code-generation",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "2 - Project Graph",
-            "path": "/node-server-tutorial/2-project-graph",
-            "id": "2-project-graph",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "3 - Task Running",
-            "path": "/node-server-tutorial/3-task-running",
-            "id": "3-task-running",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "4 - Task Pipelines",
-            "path": "/node-server-tutorial/4-task-pipelines",
-            "id": "4-task-pipelines",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "5 - Docker Target",
-            "path": "/node-server-tutorial/5-docker-target",
-            "id": "5-docker-target",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "6 - Summary",
-            "path": "/node-server-tutorial/6-summary",
-            "id": "6-summary",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "1 - Code Generation",
-        "path": "/node-server-tutorial/1-code-generation",
-        "id": "1-code-generation",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "2 - Project Graph",
-        "path": "/node-server-tutorial/2-project-graph",
-        "id": "2-project-graph",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "3 - Task Running",
-        "path": "/node-server-tutorial/3-task-running",
-        "id": "3-task-running",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "4 - Task Pipelines",
-        "path": "/node-server-tutorial/4-task-pipelines",
-        "id": "4-task-pipelines",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "5 - Docker Target",
-        "path": "/node-server-tutorial/5-docker-target",
-        "id": "5-docker-target",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "6 - Summary",
-        "path": "/node-server-tutorial/6-summary",
-        "id": "6-summary",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
