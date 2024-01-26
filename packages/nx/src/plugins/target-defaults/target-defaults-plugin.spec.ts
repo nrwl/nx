@@ -8,7 +8,7 @@ const {
   createNodes: [, createNodesFn],
 } = TargetDefaultsPlugin;
 
-describe('nx project.json plugin', () => {
+describe('target-defaults plugin', () => {
   let context: CreateNodesContext;
   beforeEach(() => {
     context = {
@@ -21,6 +21,10 @@ describe('nx project.json plugin', () => {
       },
       workspaceRoot: '/root',
     };
+  });
+
+  afterEach(() => {
+    memfs.vol.reset();
   });
 
   it('should add target default info to project json projects', () => {
@@ -70,6 +74,158 @@ describe('nx project.json plugin', () => {
                 "dependsOn": [
                   "^build",
                 ],
+              },
+            },
+          },
+        },
+      }
+    `);
+  });
+
+  it('should add target if package.json has nx but no includedScripts', () => {
+    memfs.vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          scripts: {
+            test: 'nx affected:test',
+          },
+          nx: {},
+        }),
+      },
+      '/root'
+    );
+
+    expect(
+      createNodesFn('package.json', undefined, {
+        nxJsonConfiguration: {
+          targetDefaults: {
+            test: {
+              command: 'jest',
+            },
+          },
+        },
+        workspaceRoot: '/root',
+      })
+    ).toMatchInlineSnapshot(`
+      {
+        "projects": {
+          ".": {
+            "targets": {
+              "test": {
+                "command": "jest",
+              },
+            },
+          },
+        },
+      }
+    `);
+  });
+
+  it('should add target if package.json has nx and includes the script in includedScripts', () => {
+    memfs.vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          scripts: {
+            test: 'nx affected:test',
+          },
+          nx: {
+            includedScripts: ['test'],
+          },
+        }),
+      },
+      '/root'
+    );
+
+    expect(
+      createNodesFn('package.json', undefined, {
+        nxJsonConfiguration: {
+          targetDefaults: {
+            test: {
+              command: 'jest',
+            },
+          },
+        },
+        workspaceRoot: '/root',
+      })
+    ).toMatchInlineSnapshot(`
+      {
+        "projects": {
+          ".": {
+            "targets": {
+              "test": {
+                "command": "jest",
+              },
+            },
+          },
+        },
+      }
+    `);
+  });
+
+  it('should not add target if package.json does not have nx', () => {
+    memfs.vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          scripts: {
+            test: 'nx affected:test',
+          },
+        }),
+      },
+      '/root'
+    );
+
+    expect(
+      createNodesFn('package.json', undefined, {
+        nxJsonConfiguration: {
+          targetDefaults: {
+            test: {
+              command: 'jest',
+            },
+          },
+        },
+        workspaceRoot: '/root',
+      })
+    ).toMatchInlineSnapshot(`{}`);
+  });
+
+  it('should not add target if project does not define target', () => {
+    memfs.vol.fromJSON(
+      {
+        'package.json': JSON.stringify({
+          name: 'lib-a',
+          scripts: {
+            test: 'nx affected:test',
+          },
+          nx: {
+            includedScripts: [],
+          },
+        }),
+      },
+      '/root'
+    );
+
+    expect(
+      createNodesFn('package.json', undefined, {
+        nxJsonConfiguration: {
+          targetDefaults: {
+            test: {
+              command: 'jest',
+            },
+          },
+        },
+        workspaceRoot: '/root',
+      })
+    ).toMatchInlineSnapshot(`
+      {
+        "projects": {
+          ".": {
+            "targets": {
+              "test": {
+                "command": "jest",
+                Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
               },
             },
           },
