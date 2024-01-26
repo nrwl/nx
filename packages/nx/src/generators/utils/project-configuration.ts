@@ -59,7 +59,7 @@ export function addProjectConfiguration(
 
   if (tree.exists(projectConfigFile)) {
     throw new Error(
-      `Cannot create a new project ${projectName} at ${projectConfiguration.root}. It already exists.`
+      `Cannot create a new project ${projectName} at ${projectConfiguration.root}. A project already exists in this directory.`
     );
   }
 
