@@ -47,9 +47,7 @@ npx create-nx-workspace@latest
 
 <!-- {% link-card title="React Monorepo" type="tutorial" url="/getting-started/tutorials/react-standalone-tutorial" icon="reactMono" /%}
 
-{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angularMono" /%}
-
-{% link-card title="Node Monorepo" type="tutorial" url="/getting-started/tutorials/node-server-tutorial" icon="nodeMono" /%} -->
+{% link-card title="Angular Monorepo" type="tutorial" url="/getting-started/tutorials/angular-standalone-tutorial" icon="angularMono" /%}-->
 
 {% /cards %}
 
