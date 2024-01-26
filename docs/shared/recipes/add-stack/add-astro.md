@@ -37,7 +37,7 @@ We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#inst
 
 ✔ Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts. · build
 
-✔ Does the "build" script create any outputs? If not, leave blank, otherwise provide a path (e.g. dist, lib, build, coverage) · dist
+
 ✔ Would you like remote caching to make your build faster? · Yes
 
  >  NX   📦 Installing dependencies
@@ -92,18 +92,19 @@ Then generate a project
 The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
-```{% command="nx g @nx/js:lib ui --directory=libs/ui --simpleName --minimal"%}
+```{% command="nx g @nx/js:lib ui --directory=libs/ui --simpleName --minimal" path="~/astro-app"}
 >  NX  Generating @nx/js:library
 
 ✔ Which unit test runner would you like to use? · none
 ✔ Which bundler would you like to use to build the library? Choose 'none' to skip build setup. · none
 
-CREATE ui/tsconfig.json
-CREATE ui/src/index.ts
-CREATE ui/src/lib/ui.ts
-CREATE ui/tsconfig.lib.json
-CREATE ui/project.json
-CREATE ui/.eslintrc.json
+CREATE libs/ui/tsconfig.json
+CREATE libs/ui/README.md
+CREATE libs/ui/src/index.ts
+CREATE libs/ui/src/lib/ui.ts
+CREATE libs/ui/tsconfig.lib.json
+CREATE libs/ui/project.json
+CREATE libs/ui/.eslintrc.json
 UPDATE tsconfig.json
 ```
 
