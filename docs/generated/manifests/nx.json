@@ -806,8 +806,8 @@
       },
       {
         "id": "explore-graph",
-        "name": "Explore the Graph",
-        "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
+        "name": "Explore your Workspace",
+        "description": "",
         "mediaImage": "",
         "file": "shared/features/explore-graph",
         "itemList": [],
@@ -899,8 +899,8 @@
   },
   "/features/explore-graph": {
     "id": "explore-graph",
-    "name": "Explore the Graph",
-    "description": "Nx uses a graph behind the scenes to optimize your operations. You can also visualize and use the graph to better understand your workspace structure. Learn more in this guide.",
+    "name": "Explore your Workspace",
+    "description": "",
     "mediaImage": "",
     "file": "shared/features/explore-graph",
     "itemList": [],
@@ -991,6 +991,28 @@
         "isExternal": false,
         "path": "/concepts/how-caching-works",
         "tags": ["cache-task-results"]
+      },
+      {
+        "id": "task-inputs",
+        "name": "Fine-tuning Caching with Inputs",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/inputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/task-inputs",
+        "tags": ["run-tasks", "cache-task-results"]
+      },
+      {
+        "id": "task-outputs",
+        "name": "Cache Results with Outputs",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/outputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/task-outputs",
+        "tags": ["run-tasks", "cache-task-results"]
       },
       {
         "id": "types-of-configuration",
@@ -1328,6 +1350,28 @@
     "isExternal": false,
     "path": "/concepts/how-caching-works",
     "tags": ["cache-task-results"]
+  },
+  "/concepts/task-inputs": {
+    "id": "task-inputs",
+    "name": "Fine-tuning Caching with Inputs",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/inputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/task-inputs",
+    "tags": ["run-tasks", "cache-task-results"]
+  },
+  "/concepts/task-outputs": {
+    "id": "task-outputs",
+    "name": "Cache Results with Outputs",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/outputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/task-outputs",
+    "tags": ["run-tasks", "cache-task-results"]
   },
   "/concepts/types-of-configuration": {
     "id": "types-of-configuration",
@@ -1884,17 +1928,6 @@
         "mediaImage": "",
         "file": "",
         "itemList": [
-          {
-            "id": "customizing-inputs",
-            "name": "Fine-tuning Caching with Inputs",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/recipes/running-tasks/customizing-inputs",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/running-tasks/customizing-inputs",
-            "tags": ["run-tasks", "cache-task-results"]
-          },
           {
             "id": "defining-task-pipeline",
             "name": "Defining a Task Pipeline",
@@ -3264,17 +3297,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "customizing-inputs",
-        "name": "Fine-tuning Caching with Inputs",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/recipes/running-tasks/customizing-inputs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/running-tasks/customizing-inputs",
-        "tags": ["run-tasks", "cache-task-results"]
-      },
-      {
         "id": "defining-task-pipeline",
         "name": "Defining a Task Pipeline",
         "description": "",
@@ -3355,17 +3377,6 @@
     "isExternal": false,
     "path": "/recipes/running-tasks",
     "tags": []
-  },
-  "/recipes/running-tasks/customizing-inputs": {
-    "id": "customizing-inputs",
-    "name": "Fine-tuning Caching with Inputs",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/recipes/running-tasks/customizing-inputs",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/running-tasks/customizing-inputs",
-    "tags": ["run-tasks", "cache-task-results"]
   },
   "/recipes/running-tasks/defining-task-pipeline": {
     "id": "defining-task-pipeline",
