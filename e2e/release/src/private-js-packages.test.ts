@@ -204,6 +204,8 @@ describe('nx release - private JS packages', () => {
 
       There are a few possible reasons for this: (1) The projects may be private (2) You may not have an appropriate plugin (such as \`@nx/js\`) installed which adds the target automatically to public projects (3) You intended to configure the target manually, or exclude those projects via config in nx.json
 
+      Pass --verbose to see the stacktrace.
+
 
     `);
 
