@@ -40,19 +40,15 @@ Plugins are processed in the order that they appear in the `plugins` array in `n
 
 To view the task settings for projects in your workspace, [show the project details](/features/explore-graph) either from the command line or using Nx Console.
 
-{% project-details  jsonFile="shared/concepts/myreactapp.json"%}
-{% /project-details %}
-
 ```shell
 nx show project my-project --web
 ```
 
-// TODO: Put picture here
-![Inferred task configuration](/shared/concepts/inferred-task-config.png)
+{% project-details  jsonFile="shared/concepts/myreactapp.json"%}
+{% /project-details %}
 
 ## Overriding Inferred Task Configuration
 
-The task configuration inferred by Nx Plugins is the base of the project configuration.
 You can override the task configuration inferred by plugins in several ways.
 If you want to overwrite the task configuration for multiple projects, [use the `targetDefaults` object](/reference/nx-json#target-defaults) in the `nx.json` file.
 If you only want to override the task configuration for a specific project, [update that project's configuration](/reference/project-configuration) in `package.json` or `project.json`.
@@ -66,6 +62,6 @@ The order of precedence for task configuration is:
 
 More details about how to override task configuration is available in these recipes:
 
-- [Fine-tuning Caching with Inputs](/recipes/running-tasks/configure-inputs)
-- [Cache Results with Outputs](/recipes/running-tasks/configure-outputs)
+- [Configure Inputs for Task Caching](/recipes/running-tasks/configure-inputs)
+- [Configure Outputs for Task Caching](/recipes/running-tasks/configure-outputs)
 - [Defining a Task Pipeline](/recipes/running-tasks/defining-task-pipeline)
