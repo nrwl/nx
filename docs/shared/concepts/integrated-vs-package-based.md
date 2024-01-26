@@ -1,6 +1,6 @@
 # Integrated Repos vs. Package-Based Repos vs. Standalone Apps
 
-There are many different ways to structure a repository and Nx is designed to support them all. To better discuss how Nx can improves a repository, it is helpful to define terms for different types of repositories.
+There are many different ways to structure a repository and Nx is designed to support them all. To better discuss how Nx can improve a repository, it is helpful to define some terms.
 
 - Standalone Application - A repository with a single application
 - Package-Based Repository - A repository with multiple projects that depend on each other via `package.json` and often have nested `node_modules`
