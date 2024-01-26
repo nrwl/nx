@@ -816,28 +816,6 @@
         "tags": ["cache-task-results"]
       },
       {
-        "id": "task-inputs",
-        "name": "Fine-tuning Caching with Inputs",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/inputs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/task-inputs",
-        "tags": ["run-tasks", "cache-task-results"]
-      },
-      {
-        "id": "task-outputs",
-        "name": "Cache Results with Outputs",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/outputs",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/task-outputs",
-        "tags": ["run-tasks", "cache-task-results"]
-      },
-      {
         "id": "types-of-configuration",
         "name": "Types of Configuration",
         "description": "",
@@ -1173,28 +1151,6 @@
     "isExternal": false,
     "path": "/concepts/how-caching-works",
     "tags": ["cache-task-results"]
-  },
-  "/concepts/task-inputs": {
-    "id": "task-inputs",
-    "name": "Fine-tuning Caching with Inputs",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/inputs",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/task-inputs",
-    "tags": ["run-tasks", "cache-task-results"]
-  },
-  "/concepts/task-outputs": {
-    "id": "task-outputs",
-    "name": "Cache Results with Outputs",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/outputs",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/task-outputs",
-    "tags": ["run-tasks", "cache-task-results"]
   },
   "/concepts/types-of-configuration": {
     "id": "types-of-configuration",
@@ -1752,8 +1708,30 @@
         "file": "",
         "itemList": [
           {
+            "id": "configure-inputs",
+            "name": "Configure Inputs for Task Caching",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/configure-inputs",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/configure-inputs",
+            "tags": ["run-tasks", "cache-task-results"]
+          },
+          {
+            "id": "configure-outputs",
+            "name": "Configure Outputs for Task Caching",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/running-tasks/configure-outputs",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/running-tasks/configure-outputs",
+            "tags": ["run-tasks", "cache-task-results"]
+          },
+          {
             "id": "defining-task-pipeline",
-            "name": "Defining a Task Pipeline",
+            "name": "Define a Task Pipeline",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/running-tasks/defining-task-pipeline",
@@ -1775,7 +1753,7 @@
           },
           {
             "id": "run-commands-executor",
-            "name": "Running Custom Commands",
+            "name": "Run Custom Commands",
             "description": "",
             "mediaImage": "",
             "file": "shared/recipes/running-tasks/running-custom-commands",
@@ -3120,8 +3098,30 @@
     "file": "",
     "itemList": [
       {
+        "id": "configure-inputs",
+        "name": "Configure Inputs for Task Caching",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/configure-inputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/configure-inputs",
+        "tags": ["run-tasks", "cache-task-results"]
+      },
+      {
+        "id": "configure-outputs",
+        "name": "Configure Outputs for Task Caching",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/running-tasks/configure-outputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/running-tasks/configure-outputs",
+        "tags": ["run-tasks", "cache-task-results"]
+      },
+      {
         "id": "defining-task-pipeline",
-        "name": "Defining a Task Pipeline",
+        "name": "Define a Task Pipeline",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/running-tasks/defining-task-pipeline",
@@ -3143,7 +3143,7 @@
       },
       {
         "id": "run-commands-executor",
-        "name": "Running Custom Commands",
+        "name": "Run Custom Commands",
         "description": "",
         "mediaImage": "",
         "file": "shared/recipes/running-tasks/running-custom-commands",
@@ -3201,9 +3201,31 @@
     "path": "/recipes/running-tasks",
     "tags": []
   },
+  "/recipes/running-tasks/configure-inputs": {
+    "id": "configure-inputs",
+    "name": "Configure Inputs for Task Caching",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/configure-inputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/configure-inputs",
+    "tags": ["run-tasks", "cache-task-results"]
+  },
+  "/recipes/running-tasks/configure-outputs": {
+    "id": "configure-outputs",
+    "name": "Configure Outputs for Task Caching",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/running-tasks/configure-outputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/running-tasks/configure-outputs",
+    "tags": ["run-tasks", "cache-task-results"]
+  },
   "/recipes/running-tasks/defining-task-pipeline": {
     "id": "defining-task-pipeline",
-    "name": "Defining a Task Pipeline",
+    "name": "Define a Task Pipeline",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/running-tasks/defining-task-pipeline",
@@ -3225,7 +3247,7 @@
   },
   "/recipes/running-tasks/run-commands-executor": {
     "id": "run-commands-executor",
-    "name": "Running Custom Commands",
+    "name": "Run Custom Commands",
     "description": "",
     "mediaImage": "",
     "file": "shared/recipes/running-tasks/running-custom-commands",
@@ -6370,6 +6392,17 @@
         "tags": []
       },
       {
+        "id": "inputs",
+        "name": "Inputs and Named Inputs",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/reference/inputs",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/reference/inputs",
+        "tags": ["cache-task-results"]
+      },
+      {
         "id": "nxignore",
         "name": ".nxignore",
         "description": "",
@@ -6439,6 +6472,17 @@
     "isExternal": false,
     "path": "/reference/project-configuration",
     "tags": []
+  },
+  "/reference/inputs": {
+    "id": "inputs",
+    "name": "Inputs and Named Inputs",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/reference/inputs",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/reference/inputs",
+    "tags": ["cache-task-results"]
   },
   "/reference/nxignore": {
     "id": "nxignore",
@@ -6555,6 +6599,28 @@
         "itemList": [],
         "isExternal": false,
         "path": "/deprecated/runtime-cache-inputs",
+        "tags": []
+      },
+      {
+        "id": "cacheable-operations",
+        "name": "cacheableOperations",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/cacheable-operations",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/cacheable-operations",
+        "tags": []
+      },
+      {
+        "id": "npm-scope",
+        "name": "npmScope",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/deprecated/npm-scope",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/deprecated/npm-scope",
         "tags": []
       },
       {
@@ -6748,6 +6814,28 @@
     "itemList": [],
     "isExternal": false,
     "path": "/deprecated/runtime-cache-inputs",
+    "tags": []
+  },
+  "/deprecated/cacheable-operations": {
+    "id": "cacheable-operations",
+    "name": "cacheableOperations",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/cacheable-operations",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/cacheable-operations",
+    "tags": []
+  },
+  "/deprecated/npm-scope": {
+    "id": "npm-scope",
+    "name": "npmScope",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/deprecated/npm-scope",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/deprecated/npm-scope",
     "tags": []
   },
   "/deprecated/global-implicit-dependencies": {
