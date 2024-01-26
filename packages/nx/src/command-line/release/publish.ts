@@ -11,6 +11,7 @@ import {
   readGraphFileFromGraphArg,
 } from '../../utils/command-line-utils';
 import { logger } from '../../utils/logger';
+import { handleErrors } from '../../utils/params';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { generateGraph } from '../graph/graph';
 import { PublishOptions } from './command-object';
@@ -21,14 +22,17 @@ import {
 import { filterReleaseGroups } from './config/filter-release-groups';
 
 export const releasePublishCLIHandler = (args: PublishOptions) =>
-  releasePublish(args);
+  handleErrors(args.verbose, () => releasePublish(args, true));
 
 /**
  * NOTE: This function is also exported for programmatic usage and forms part of the public API
  * of Nx. We intentionally do not wrap the implementation with handleErrors because users need
  * to have control over their own error handling when using the API.
  */
-export async function releasePublish(args: PublishOptions): Promise<void> {
+export async function releasePublish(
+  args: PublishOptions,
+  isCLI = false
+): Promise<void> {
   /**
    * When used via the CLI, the args object will contain a __overrides_unparsed__ property that is
    * important for invoking the relevant executor behind the scenes.
@@ -86,7 +90,8 @@ export async function releasePublish(args: PublishOptions): Promise<void> {
         projectGraph,
         nxJson,
         Array.from(releaseGroupToFilteredProjects.get(releaseGroup)),
-        shouldExcludeTaskDependencies
+        shouldExcludeTaskDependencies,
+        isCLI
       );
     }
 
@@ -102,7 +107,8 @@ export async function releasePublish(args: PublishOptions): Promise<void> {
       projectGraph,
       nxJson,
       releaseGroup.projects,
-      shouldExcludeTaskDependencies
+      shouldExcludeTaskDependencies,
+      isCLI
     );
   }
 
@@ -120,7 +126,8 @@ async function runPublishOnProjects(
   projectGraph: ProjectGraph,
   nxJson: NxJsonConfiguration,
   projectNames: string[],
-  shouldExcludeTaskDependencies: boolean
+  shouldExcludeTaskDependencies: boolean,
+  isCLI: boolean
 ) {
   const projectsToRun: ProjectGraphProjectNode[] = projectNames.map(
     (projectName) => projectGraph.nodes[projectName]
@@ -171,32 +178,39 @@ async function runPublishOnProjects(
       },
       projectNames
     );
-  } else {
-    ensureAllProjectsHaveTarget(projectsToRun);
-    /**
-     * Run the relevant nx-release-publish executor on each of the selected projects.
-     */
-    const status = await runCommand(
-      projectsToRun,
-      projectGraph,
-      { nxJson },
-      {
-        targets,
-        outputStyle: 'static',
-        ...(args as any),
-      },
-      overrides,
-      null,
-      {},
-      {
-        excludeTaskDependencies: shouldExcludeTaskDependencies,
-        loadDotEnvFiles: true,
-      }
-    );
+  }
 
-    if (status !== 0) {
-      process.exit(status);
+  ensureAllProjectsHaveTarget(projectsToRun);
+  /**
+   * Run the relevant nx-release-publish executor on each of the selected projects.
+   */
+  const status = await runCommand(
+    projectsToRun,
+    projectGraph,
+    { nxJson },
+    {
+      targets,
+      outputStyle: 'static',
+      ...(args as any),
+    },
+    overrides,
+    null,
+    {},
+    {
+      excludeTaskDependencies: shouldExcludeTaskDependencies,
+      loadDotEnvFiles: true,
     }
+  );
+
+  if (status !== 0) {
+    // In order to not add noise to the overall CLI output, do not throw an additional error
+    if (isCLI) {
+      return status;
+    }
+    // Throw an additional error for programmatic API usage
+    throw new Error(
+      'One or more of the selected projects could not be published'
+    );
   }
 }
 
@@ -208,13 +222,11 @@ function ensureAllProjectsHaveTarget(projectsToRun: ProjectGraphProjectNode[]) {
   if (projectsMissingTarget.length === 0) {
     return;
   }
-  output.error({
-    title: `Based on your config, the following projects were matched for publishing but do not have the "${requiredTargetName}" target specified:`,
-    bodyLines: [
+  throw new Error(
+    `Based on your config, the following projects were matched for publishing but do not have the "${requiredTargetName}" target specified:\n${[
       ...projectsMissingTarget.map((p) => `- ${p.name}`),
       '',
       'There are a few possible reasons for this: (1) The projects may be private (2) You may not have an appropriate plugin (such as `@nx/js`) installed which adds the target automatically to public projects (3) You intended to configure the target manually, or exclude those projects via config in nx.json',
-    ],
-  });
-  process.exit(1);
+    ].join('\n')}\n`
+  );
 }

@@ -281,10 +281,12 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
         description:
           'A one-time password for publishing to a registry that requires 2FA',
       }),
-  handler: (args) =>
-    import('./publish').then((m) =>
-      m.releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)))
-    ),
+  handler: async (args) => {
+    const status = await (
+      await import('./publish')
+    ).releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)));
+    process.exit(status);
+  },
 };
 
 function coerceParallelOption(args: any) {
