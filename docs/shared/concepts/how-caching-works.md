@@ -44,13 +44,13 @@ work happens. The rest is either left as is or restored from the cache.
 
 Each cacheable task defines a set of inputs and outputs. Inputs are factors Nx considers when calculating the computation hash.
 Outputs are files that will be cached and restored when the computation hash matches.
-For more information on how to fine-tune caching, see the [Fine-tuning Caching with Inputs recipe](/concepts/task-inputs).
+For more information on how to fine-tune caching, see the [Fine-tuning Caching with Inputs recipe](/recipes/running-tasks/configure-inputs).
 
 ### Inputs
 
 Inputs are factors Nx considers when calculating the computation hash for a task.
 
-For more information on the different types of inputs and how to configure inputs for your tasks, read the [Fine-tuning Caching with Inputs recipe](/concepts/task-inputs)
+For more information on the different types of inputs and how to configure inputs for your tasks, read the [Fine-tuning Caching with Inputs recipe](/recipes/running-tasks/configure-inputs)
 
 ## What is Cached
 
@@ -174,7 +174,7 @@ Inputs may include
 - runtime inputs
 - command line arguments
 
-Learn more about fine tuning caching in the [Fine-tuning Caching with Inputs page](/concepts/task-inputs).
+Learn more about fine tuning caching in the [Fine-tuning Caching with Inputs page](/recipes/running-tasks/configure-inputs).
 
 ## Args Hash Inputs
 

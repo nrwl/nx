@@ -9,20 +9,6 @@
     },
     {
       "description": "",
-      "file": "shared/concepts/inputs",
-      "id": "task-inputs",
-      "name": "Fine-tuning Caching with Inputs",
-      "path": "/concepts/task-inputs"
-    },
-    {
-      "description": "",
-      "file": "shared/concepts/outputs",
-      "id": "task-outputs",
-      "name": "Cache Results with Outputs",
-      "path": "/concepts/task-outputs"
-    },
-    {
-      "description": "",
       "file": "shared/concepts/task-pipeline-configuration",
       "id": "task-pipeline-configuration",
       "name": "What is a Task Pipeline",
@@ -37,16 +23,30 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/running-tasks/configure-inputs",
+      "id": "configure-inputs",
+      "name": "Configure Inputs for Task Caching",
+      "path": "/recipes/running-tasks/configure-inputs"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/running-tasks/configure-outputs",
+      "id": "configure-outputs",
+      "name": "Configure Outputs for Task Caching",
+      "path": "/recipes/running-tasks/configure-outputs"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/running-tasks/defining-task-pipeline",
       "id": "defining-task-pipeline",
-      "name": "Defining a Task Pipeline",
+      "name": "Define a Task Pipeline",
       "path": "/recipes/running-tasks/defining-task-pipeline"
     },
     {
       "description": "",
       "file": "shared/recipes/running-tasks/running-custom-commands",
       "id": "run-commands-executor",
-      "name": "Running Custom Commands",
+      "name": "Run Custom Commands",
       "path": "/recipes/running-tasks/run-commands-executor"
     },
     {
@@ -123,17 +123,17 @@
     },
     {
       "description": "",
-      "file": "shared/concepts/inputs",
-      "id": "task-inputs",
-      "name": "Fine-tuning Caching with Inputs",
-      "path": "/concepts/task-inputs"
+      "file": "shared/recipes/running-tasks/configure-inputs",
+      "id": "configure-inputs",
+      "name": "Configure Inputs for Task Caching",
+      "path": "/recipes/running-tasks/configure-inputs"
     },
     {
       "description": "",
-      "file": "shared/concepts/outputs",
-      "id": "task-outputs",
-      "name": "Cache Results with Outputs",
-      "path": "/concepts/task-outputs"
+      "file": "shared/recipes/running-tasks/configure-outputs",
+      "id": "configure-outputs",
+      "name": "Configure Outputs for Task Caching",
+      "path": "/recipes/running-tasks/configure-outputs"
     },
     {
       "description": "",
@@ -141,6 +141,13 @@
       "id": "troubleshoot-cache-misses",
       "name": "Troubleshoot Cache Misses",
       "path": "/recipes/troubleshooting/troubleshoot-cache-misses"
+    },
+    {
+      "description": "",
+      "file": "shared/reference/inputs",
+      "id": "inputs",
+      "name": "Inputs and Named Inputs",
+      "path": "/reference/inputs"
     },
     {
       "description": "",
