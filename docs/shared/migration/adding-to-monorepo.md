@@ -239,7 +239,7 @@ The `nx exec` command allows you to keep using `npm test` or `npm run test` (or 
 }
 ```
 
-Now if you run `npm run test` or `nx test` twice, the results will be retrieved from the cache. The `inputs` used in this example are as cautious as possible, so you can significantly improve the value of the cache by [customizing Nx Inputs](/concepts/task-inputs) for each task.
+Now if you run `npm run test` or `nx test` twice, the results will be retrieved from the cache. The `inputs` used in this example are as cautious as possible, so you can significantly improve the value of the cache by [customizing Nx Inputs](/recipes/running-tasks/configure-inputs) for each task.
 
 ## Incrementally Adopting Nx
 
