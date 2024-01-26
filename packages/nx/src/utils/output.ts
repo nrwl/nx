@@ -106,13 +106,9 @@ class CLIOutput {
   applyNxPrefix(color = 'cyan', text: string): string {
     let nxPrefix = '';
     if (chalk[color]) {
-      nxPrefix = `${chalk[color]('>')} ${chalk.reset.inverse.bold[color](
-        ` ${this.cliName} `
-      )}`;
+      nxPrefix = chalk.reset.inverse.bold[color](` ${this.cliName} `);
     } else {
-      nxPrefix = `${chalk.keyword(color)(
-        '>'
-      )} ${chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `)}`;
+      nxPrefix = chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `);
     }
     return `${nxPrefix}  ${text}`;
   }

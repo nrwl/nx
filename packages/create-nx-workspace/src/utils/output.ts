@@ -100,13 +100,9 @@ class CLIOutput {
   applyCLIPrefix(color = 'cyan', text: string): string {
     let cliPrefix = '';
     if ((chalk as any)[color]) {
-      cliPrefix = `${(chalk as any)[color]('>')} ${(
-        chalk as any
-      ).reset.inverse.bold[color](` ${this.cliName} `)}`;
+      cliPrefix = (chalk as any).reset.inverse.bold[color](` ${this.cliName} `);
     } else {
-      cliPrefix = `${chalk.keyword(color)(
-        '>'
-      )} ${chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `)}`;
+      cliPrefix = chalk.reset.inverse.bold.keyword(color)(` ${this.cliName} `);
     }
     return `${cliPrefix}  ${text}`;
   }
