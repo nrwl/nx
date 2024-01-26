@@ -1,10 +1,6 @@
 import { output } from '../../utils/output';
 import { readNxJson } from '../../config/configuration';
-import {
-  getNxCloudToken,
-  getNxCloudUrl,
-  isNxCloudUsed,
-} from '../../utils/nx-cloud-utils';
+import { getNxCloudUrl, isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { runNxSync } from '../../utils/child-process';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { NxArgs } from '../../utils/command-line-utils';
@@ -56,8 +52,8 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
     output.log({
       title: '✅ This workspace is already connected to Nx Cloud.',
       bodyLines: [
-        `Your workspace can use free distributed execution for maximum speed,`,
-        `a dedicated run UI, and analytics. Learn more at https://nx.app`,
+        `Your workspace can use free distributed execution for maximum speed.`,
+        `Learn more at https://nx.app`,
         ' ',
         'If you have not done so already, please claim this workspace:',
         `- Login or register at ${getNxCloudUrl(

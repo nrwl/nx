@@ -81,8 +81,8 @@ function printSuccessMessage(url: string) {
   output.note({
     title: `Remote caching via Nx Cloud has been enabled`,
     bodyLines: [
-      `Enable config free distributed execution for maximum speed,`,
-      `a dedicated run UI, and analytics. Learn more at https://nx.app`,
+      `Enable config free distributed execution for maximum speed.`,
+      `Run a task via Nx to view structured logs in the Run UI. Learn more at https://nx.app`,
       ``,
       `Your workspace is unclaimed and public, claim it to manage settings and permissions:`,
       `- Push your changes to the main branch`,
