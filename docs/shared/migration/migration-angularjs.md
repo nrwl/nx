@@ -41,29 +41,9 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 
 Your new workspace won’t have much in it because of the `apps` preset. You’ll need to generate an application to have some structure created. Add the Angular plugin to your workspace:
 
-{% tabs %}
-{% tab label="npm" %}
-
 ```shell
-npm add -D @nx/angular
+nx add @nx/angular
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/angular
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/angular
-```
-
-{% /tab %}
-{% /tabs %}
 
 For this example, we will use Karma and Protractor, the most common unit test runner and e2e test runner for AngularJS.
 
@@ -389,21 +369,24 @@ But migrating AngularJS code means we need to switch some of our tools to a more
 {% tab label="npm" %}
 
 ```shell
-npm add -D @nx/web babel-plugin-angularjs-annotate
+npm add -D babel-plugin-angularjs-annotate
+nx add @nx/web
 ```
 
 {% /tab %}
 {% tab label="yarn" %}
 
 ```shell
-yarn add -D @nx/web babel-plugin-angularjs-annotate
+yarn add -D babel-plugin-angularjs-annotate
+nx add @nx/web
 ```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```shell
-pnpm add -D @nx/web babel-plugin-angularjs-annotate
+pnpm add -D babel-plugin-angularjs-annotate
+nx add @nx/web
 ```
 
 {% /tab %}
