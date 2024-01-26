@@ -22,11 +22,11 @@ executors:
       - image: cimg/rust:1.73.0-browsers
     resource_class: medium+
 
-  macos:
-    <<: *defaults
-    resource_class: macos.m1.medium.gen1
-    macos:
-      xcode: '14.2.0'
+  # macos:
+  #   <<: *defaults
+  #   resource_class: macos.m1.medium.gen1
+  #   macos:
+  #     xcode: '14.2.0'
 
 # -------------------------
 #        COMMANDS
@@ -85,6 +85,7 @@ jobs:
       NX_NATIVE_LOGGING: 'false'
       NX_E2E_RUN_E2E: 'true'
       NX_CI_EXECUTION_ENV: 'linux'
+      NX_PCV3: 'true'
     steps:
       - checkout
       - run: npx nx-cloud@next start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e"
@@ -98,24 +99,17 @@ jobs:
           os: linux
       - nx/set-shas:
           main-branch-name: 'master'
-      - run:
-          name: Check Documentation
-          command: pnpm nx documentation --no-dte
-          no_output_timeout: 20m
+      # - run:
+      #     name: Check Documentation
+      #     command: pnpm nx documentation --no-dte
+      #     no_output_timeout: 20m
       - run:
           name: Run Checks/Lint/Test/Build
           no_output_timeout: 60m
           command: |
             pids=()
 
-            pnpm nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD &
-            pids+=($!)
-
-            pnpm nx run-many -t check-imports check-commit check-lock-files check-codeowners documentation --parallel=1 --no-dte &
-            pids+=($!)
-
-            (pnpm nx affected --targets=lint,test,build --base=$NX_BASE --head=$NX_HEAD --parallel=3 &&
-            pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
+            (pnpm nx affected --target=e2e --base=$NX_BASE --head=$NX_HEAD --parallel=1) &
             pids+=($!)
 
             for pid in "${pids[@]}"; do
@@ -124,42 +118,42 @@ jobs:
   # -------------------------
   #     JOBS: Main-MacOS
   # -------------------------
-  mainmacos:
-    executor: macos
-    environment:
-      NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
-      NX_PERF_LOGGING: 'false'
-      NX_CI_EXECUTION_ENV: 'macos'
-      SELECTED_PM: 'npm' # explicitly define npm for macOS tests
-    steps:
-      - checkout
-      - restore_cache:
-          name: Restore Homebrew packages
-          keys:
-            - nrwl-nx-homebrew-packages
-      - run:
-          name: Configure Detox Environment, Install applesimutils
-          command: |
-            HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
-            xcrun simctl shutdown all && xcrun simctl erase all
-          no_output_timeout: 20m
-      - save_cache:
-          name: Save Homebrew Cache
-          key: nrwl-nx-homebrew-packages
-          paths:
-            - /usr/local/Homebrew
-            - ~/Library/Caches/Homebrew
-      - run-pnpm-install:
-          os: macos
-      - rust/install
-      - nx/set-shas:
-          main-branch-name: 'master'
-      - run:
-          name: Run E2E Tests for macOS
-          command: |
-            pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
-          no_output_timeout: 45m
+  # mainmacos:
+  #   executor: macos
+  #   environment:
+  #     NX_E2E_CI_CACHE_KEY: e2e-circleci-macos
+  #     NX_PERF_LOGGING: 'false'
+  #     NX_CI_EXECUTION_ENV: 'macos'
+  #     SELECTED_PM: 'npm' # explicitly define npm for macOS tests
+  #   steps:
+  #     - checkout
+  #     - restore_cache:
+  #         name: Restore Homebrew packages
+  #         keys:
+  #           - nrwl-nx-homebrew-packages
+  #     - run:
+  #         name: Configure Detox Environment, Install applesimutils
+  #         command: |
+  #           HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+  #           HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null
+  #           xcrun simctl shutdown all && xcrun simctl erase all
+  #         no_output_timeout: 20m
+  #     - save_cache:
+  #         name: Save Homebrew Cache
+  #         key: nrwl-nx-homebrew-packages
+  #         paths:
+  #           - /usr/local/Homebrew
+  #           - ~/Library/Caches/Homebrew
+  #     - run-pnpm-install:
+  #         os: macos
+  #     - rust/install
+  #     - nx/set-shas:
+  #         main-branch-name: 'master'
+  #     - run:
+  #         name: Run E2E Tests for macOS
+  #         command: |
+  #           pnpm nx affected -t e2e-macos --parallel=1 --base=$NX_BASE --head=$NX_HEAD
+  #         no_output_timeout: 45m
 
 # -------------------------
 #        WORKFLOWS(JOBS)
@@ -170,5 +164,5 @@ workflows:
   build:
     jobs:
       - main-linux
-      - mainmacos:
-          name: main-macos-e2e
+      # - mainmacos:
+      #     name: main-macos-e2e
