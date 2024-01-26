@@ -75,10 +75,6 @@ describe('nx release - independent projects', () => {
 
     pkg3 = uniq('my-pkg-3');
     runCLI(`generate @nx/workspace:npm-package ${pkg3}`);
-    updateJson(`${pkg3}/package.json`, (json) => {
-      json.private = true;
-      return json;
-    });
 
     /**
      * Update pkg2 to depend on pkg3.
@@ -204,9 +200,6 @@ describe('nx release - independent projects', () => {
         -   "version": "0.0.0",
         +   "version": "999.9.9-package.3",
         "scripts": {
-
-        }
-        +
 
 
         "dependencies": {
@@ -424,7 +417,7 @@ describe('nx release - independent projects', () => {
           release: {
             projectsRelationship: 'independent',
             changelog: {
-              projectChangelogs: {}, // enable project changelogs with default options
+              projectChangelogs: true, // enable project changelogs with default options
               workspaceChangelog: false, // disable workspace changelog
             },
           },
@@ -746,7 +739,25 @@ describe('nx release - independent projects', () => {
 
         > nx run {project-name}:nx-release-publish
 
-        Skipped package "@proj/{project-name}" from project "{project-name}", because it has \`"private": true\` in {project-name}/package.json
+
+        📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+        === Tarball Contents ===
+
+        XXXB CHANGELOG.md
+        XXB  index.js
+        XXXB package.json
+        XXB  project.json
+        === Tarball Details ===
+        name:          @proj/{project-name}
+        version:       999.9.9-version-git-operations-test.3
+        filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+        package size: XXXB
+        unpacked size: XXXB
+        shasum:        {SHASUM}
+        integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        total files:   4
+
+        Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
 
 
@@ -837,7 +848,25 @@ describe('nx release - independent projects', () => {
 
           > nx run {project-name}:nx-release-publish
 
-          Skipped package "@proj/{project-name}" from project "{project-name}", because it has \`"private": true\` in {project-name}/package.json
+
+          📦  @proj/{project-name}@999.9.9-version-git-operations-test.3
+          === Tarball Contents ===
+
+          XXXB CHANGELOG.md
+          XXB  index.js
+          XXXB package.json
+          XXB  project.json
+          === Tarball Details ===
+          name:          @proj/{project-name}
+          version:       999.9.9-version-git-operations-test.3
+          filename:      proj-{project-name}-999.9.9-version-git-operations-test.3.tgz
+          package size: XXXB
+          unpacked size: XXXB
+          shasum:        {SHASUM}
+          integrity: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          total files:   4
+
+          Would publish to http://localhost:4873 with tag "latest", but [dry-run] was set
 
 
 
@@ -862,7 +891,7 @@ describe('nx release - independent projects', () => {
               },
             },
             changelog: {
-              projectChangelogs: {},
+              projectChangelogs: true,
             },
           },
         };
@@ -920,7 +949,7 @@ describe('nx release - independent projects', () => {
               },
             },
             changelog: {
-              projectChangelogs: {},
+              projectChangelogs: true,
             },
           },
         };
