@@ -33,7 +33,9 @@ export function FadingCollapsible({ children }: { children: ReactNode }) {
     >
       <div
         className={`${
-          collapsed && isCollapsible ? 'hover:bg-slate-700' : ''
+          collapsed && isCollapsible
+            ? 'hover:bg-slate-200 dark:hover:bg-slate-700'
+            : ''
         } rounded-md`}
         style={fadeStyles}
       >
