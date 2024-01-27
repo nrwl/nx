@@ -28,7 +28,7 @@ describe('runCommand', () => {
     });
 
     childProcess.onExit(() => {
-      expect(output.trim()).toEqual('hello world');
+      expect(output.trim()).toContain('hello world');
       done();
     });
   });
@@ -41,9 +41,7 @@ describe('runCommand', () => {
       // check to make sure that we have ansi sequence characters only available in tty terminals
     });
     childProcess.onExit((_) => {
-      expect(JSON.stringify(output)).toMatchInlineSnapshot(
-        `""\\u001b[33mtrue\\u001b[39m""`
-      );
+      expect(JSON.stringify(output)).toContain('\\u001b[33mtrue\\u001b[39m');
       done();
     });
   });

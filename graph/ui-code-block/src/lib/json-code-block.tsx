@@ -17,7 +17,7 @@ export function JsonCodeBlockPreTag({
   return (
     <div
       className={twMerge(
-        'hljs not-prose w-full overflow-hidden',
+        'hljs not-prose w-full overflow-hidden rounded-md',
         'font-mono text-sm',
         'border border-slate-200 bg-slate-50/50 dark:border-slate-700 dark:bg-slate-800/60'
       )}
@@ -103,10 +103,13 @@ export function sourcesRenderer(
         }
       }
       return (
-        <span className="flex group/line" key={`code-group${idx}`}>
+        <span
+          className="flex group/line min-w-0 flex shrink-1"
+          key={`code-group${idx}`}
+        >
           <span>{element}</span>
           {sourceElement && (
-            <span className="hidden group-hover/line:inline pl-2">
+            <span className="opacity-0 min-w-0 flex shrink-1 group-hover/line:opacity-100 transition-opacity duration-150 ease-in-out inline pl-2">
               {sourceElement}
             </span>
           )}

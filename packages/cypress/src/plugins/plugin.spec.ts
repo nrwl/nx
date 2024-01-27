@@ -73,10 +73,10 @@ describe('@nx/cypress/plugin', () => {
             "targets": {
               "e2e": {
                 "cache": true,
-                "command": "cypress run --config-file cypress.config.js --e2e",
+                "command": "cypress run",
                 "configurations": {
                   "production": {
-                    "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="nx run my-app:serve:production"",
+                    "command": "cypress run --env webServerCommand="nx run my-app:serve:production"",
                   },
                 },
                 "inputs": [
@@ -132,7 +132,7 @@ describe('@nx/cypress/plugin', () => {
             "targets": {
               "component-test": {
                 "cache": true,
-                "command": "cypress open --config-file cypress.config.js --component",
+                "command": "cypress open --component",
                 "inputs": [
                   "default",
                   "^production",
@@ -190,10 +190,10 @@ describe('@nx/cypress/plugin', () => {
             "targets": {
               "e2e": {
                 "cache": true,
-                "command": "cypress run --config-file cypress.config.js --e2e",
+                "command": "cypress run",
                 "configurations": {
                   "production": {
-                    "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="my-app:serve:production"",
+                    "command": "cypress run --env webServerCommand="my-app:serve:production"",
                   },
                 },
                 "inputs": [
@@ -239,7 +239,7 @@ describe('@nx/cypress/plugin', () => {
               },
               "e2e-ci--src/test.cy.ts": {
                 "cache": true,
-                "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="my-app:serve-static" --spec src/test.cy.ts",
+                "command": "cypress run --env webServerCommand="my-app:serve-static" --spec src/test.cy.ts",
                 "inputs": [
                   "default",
                   "^production",

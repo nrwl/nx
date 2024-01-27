@@ -2,21 +2,11 @@ import { logger } from '@nx/devkit';
 import { workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
-import * as postcssImport from 'postcss-import';
 
 export interface TailwindSetup {
   tailwindConfigPath: string;
   tailwindPackagePath: string;
 }
-
-export const tailwindDirectives = [
-  '@tailwind',
-  '@apply',
-  '@layer',
-  '@variants',
-  '@responsive',
-  '@screen',
-];
 
 export function getTailwindSetup(
   basePath: string,
@@ -81,20 +71,9 @@ export function getTailwindConfigPath(
   return undefined;
 }
 
-export function getTailwindPostCssPlugins(
-  { tailwindConfigPath, tailwindPackagePath }: TailwindSetup,
-  includePaths?: string[],
-  watch?: boolean
-) {
-  if (process.env['TAILWIND_MODE'] === undefined) {
-    process.env['TAILWIND_MODE'] = watch ? 'watch' : 'build';
-  }
-
-  return [
-    postcssImport({
-      addModulesDirectories: includePaths ?? [],
-      resolve: (url: string) => (url.startsWith('~') ? url.substring(1) : url),
-    }),
-    require(tailwindPackagePath)({ config: tailwindConfigPath }),
-  ];
+export function getTailwindPostCssPlugin({
+  tailwindConfigPath,
+  tailwindPackagePath,
+}: TailwindSetup) {
+  return require(tailwindPackagePath)({ config: tailwindConfigPath });
 }
