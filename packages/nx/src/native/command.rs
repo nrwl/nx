@@ -39,14 +39,14 @@ pub enum ChildProcessMessage {
 pub struct ChildProcess {
     process_killer: Box<dyn ChildKiller + Sync + Send>,
     message_receiver: Receiver<String>,
-    wait_receiver: Receiver<u32>,
+    wait_receiver: Receiver<String>,
 }
 #[napi]
 impl ChildProcess {
     pub fn new(
         process_killer: Box<dyn ChildKiller + Sync + Send>,
         message_receiver: Receiver<String>,
-        exit_receiver: Receiver<u32>,
+        exit_receiver: Receiver<String>,
     ) -> Self {
         Self {
             process_killer,
@@ -57,17 +57,16 @@ impl ChildProcess {
 
     #[napi]
     pub fn kill(&mut self) -> anyhow::Result<()> {
-        self.process_killer.kill().map_err(anyhow::Error::from)?;
-        Ok(())
+        self.process_killer.kill().map_err(anyhow::Error::from)
     }
 
     #[napi]
     pub fn on_exit(
         &mut self,
-        #[napi(ts_arg_type = "(code: number) => void")] callback: JsFunction,
+        #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
     ) -> napi::Result<()> {
         let wait = self.wait_receiver.clone();
-        let callback_tsfn: ThreadsafeFunction<u32, Fatal> =
+        let callback_tsfn: ThreadsafeFunction<String, Fatal> =
             callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
 
         std::thread::spawn(move || {
@@ -205,7 +204,7 @@ pub fn run_command(
         // make sure that master is only dropped after we wait on the child. Otherwise windows does not like it
         drop(pair.master);
         disable_raw_mode().expect("Failed to restore non-raw terminal");
-        exit_tx.send(exit.exit_code()).ok();
+        exit_tx.send(exit.to_string()).ok();
     });
 
     Ok(ChildProcess::new(process_killer, message_rx, exit_rx))

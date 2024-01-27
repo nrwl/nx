@@ -5,6 +5,7 @@ import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import * as chalk from 'chalk';
 import { runCommand } from '../../native';
+import { PseudoTtyProcess } from '../../utils/child-process';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -230,7 +231,9 @@ async function createProcess(
     !commandConfig.prefix &&
     !isParallel
   ) {
-    const cp = runCommand(commandConfig.command, cwd, env);
+    const cp = new PseudoTtyProcess(
+      runCommand(commandConfig.command, cwd, env)
+    );
 
     return new Promise((res) => {
       cp.onOutput((output) => {
@@ -239,7 +242,15 @@ async function createProcess(
         }
       });
 
-      cp.onExit((code) => res(code === 0));
+      cp.onExit((code) => {
+        if (code === 0) {
+          res(true);
+        } else if (code >= 128) {
+          process.exit(code);
+        } else {
+          res(false);
+        }
+      });
     });
   }
 
