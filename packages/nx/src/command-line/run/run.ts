@@ -22,6 +22,7 @@ import {
   isAsyncIterator,
 } from '../../utils/async-iterator';
 import { getExecutorInformation } from './executor-utils';
+import { PseudoTtyProcess } from '../../utils/child-process';
 
 export interface Target {
   project: string;
@@ -127,7 +128,7 @@ async function printTargetRunHelpInternal(
   ) {
     const command = targetConfig.options.command.split(' ')[0];
     await new Promise(() => {
-      const cp = runCommand(`${command} --help`);
+      const cp = new PseudoTtyProcess(runCommand(`${command} --help`));
       cp.onExit((code) => {
         process.exit(code);
       });
