@@ -16,6 +16,7 @@ import {
 } from '../../project-graph/project-graph';
 import { ProjectGraph } from '../../config/project-graph';
 import { readNxJson } from '../../config/configuration';
+import { runCommand } from '../../native';
 import {
   getLastValueFromAsyncIterableIterator,
   isAsyncIterator,
@@ -80,10 +81,9 @@ async function iteratorToProcessStatusCode(
 }
 
 async function parseExecutorAndTarget(
-  { project, target, configuration }: Target,
+  { project, target }: Target,
   root: string,
-  projectsConfigurations: ProjectsConfigurations,
-  nxJsonConfiguration: NxJsonConfiguration
+  projectsConfigurations: ProjectsConfigurations
 ) {
   const proj = projectsConfigurations.projects[project];
   const targetConfig = proj.targets?.[target];
@@ -104,23 +104,37 @@ async function parseExecutorAndTarget(
 }
 
 async function printTargetRunHelpInternal(
-  { project, target, configuration }: Target,
+  { project, target }: Target,
   root: string,
-  projectsConfigurations: ProjectsConfigurations,
-  nxJsonConfiguration: NxJsonConfiguration
+  projectsConfigurations: ProjectsConfigurations
 ) {
-  const { executor, nodeModule, schema } = await parseExecutorAndTarget(
-    { project, target, configuration },
-    root,
-    projectsConfigurations,
-    nxJsonConfiguration
-  );
+  const { executor, nodeModule, schema, targetConfig } =
+    await parseExecutorAndTarget(
+      { project, target },
+      root,
+      projectsConfigurations
+    );
 
   printRunHelp({ project, target }, schema, {
     plugin: nodeModule,
     entity: executor,
   });
-  process.exit(0);
+
+  if (
+    nodeModule === 'nx' &&
+    executor === 'run-commands' &&
+    targetConfig.options.command
+  ) {
+    const command = targetConfig.options.command.split(' ')[0];
+    await new Promise(() => {
+      const cp = runCommand(`${command} --help`);
+      cp.onExit((code) => {
+        process.exit(code);
+      });
+    });
+  } else {
+    process.exit(0);
+  }
 }
 
 async function runExecutorInternal<T extends { success: boolean }>(
@@ -140,8 +154,7 @@ async function runExecutorInternal<T extends { success: boolean }>(
     await parseExecutorAndTarget(
       { project, target, configuration },
       root,
-      projectsConfigurations,
-      nxJsonConfiguration
+      projectsConfigurations
     );
   configuration ??= targetConfig.defaultConfiguration;
 
@@ -258,13 +271,11 @@ export function printTargetRunHelp(targetDescription: Target, root: string) {
   return handleErrors(false, async () => {
     const projectsConfigurations =
       readProjectsConfigurationFromProjectGraph(projectGraph);
-    const nxJsonConfiguration = readNxJson();
 
-    printTargetRunHelpInternal(
+    await printTargetRunHelpInternal(
       targetDescription,
       root,
-      projectsConfigurations,
-      nxJsonConfiguration
+      projectsConfigurations
     );
   });
 }
