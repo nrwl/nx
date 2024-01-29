@@ -1,3 +1,4 @@
+import type { IndexHtmlTransform } from '@angular-devkit/build-angular/src/utils/index-file/index-html-generator';
 import { registerTsProject } from '@nx/js/src/internal';
 import type { Plugin } from 'esbuild';
 import type { Connect } from 'vite';
@@ -52,6 +53,19 @@ export async function loadMiddleware(
 
   try {
     return await Promise.all(middlewareFns.map((fnPath) => loadModule(fnPath)));
+  } finally {
+    cleanupTranspiler();
+  }
+}
+
+export async function loadIndexHtmlTransformer(
+  indexHtmlTransformerPath: string,
+  tsConfig: string
+): Promise<IndexHtmlTransform> {
+  const cleanupTranspiler = registerTsProject(tsConfig);
+
+  try {
+    return await loadModule(indexHtmlTransformerPath);
   } finally {
     cleanupTranspiler();
   }

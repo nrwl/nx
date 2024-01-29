@@ -2,7 +2,7 @@ import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
 
 jest.mock('vite', () => ({
-  loadConfigFromFile: jest.fn().mockImplementation(() => {
+  resolveConfig: jest.fn().mockImplementation(() => {
     return Promise.resolve({
       path: 'vitest.config.ts',
       config: {},
@@ -13,7 +13,7 @@ jest.mock('vite', () => ({
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
-    loadConfigFromFile: jest.fn().mockResolvedValue({
+    resolveConfig: jest.fn().mockResolvedValue({
       path: 'vitest.config.ts',
       config: {},
       dependencies: [],

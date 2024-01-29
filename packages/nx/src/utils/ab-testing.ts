@@ -7,7 +7,7 @@ const messageOptions = {
     {
       code: 'enable-caching',
       message: `Would you like remote caching to make your build faster?`,
-      initial: 'yes',
+      initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },
@@ -21,7 +21,7 @@ const messageOptions = {
     {
       code: 'connect-to-view-logs',
       message: `To view the logs, Nx needs to connect your workspace to Nx Cloud and upload the most recent run details`,
-      initial: 'yes',
+      initial: 0,
       choices: [
         {
           value: 'yes',
