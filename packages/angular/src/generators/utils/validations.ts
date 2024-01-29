@@ -1,10 +1,7 @@
-import type { ProjectConfiguration, Tree } from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import { getProjects } from '@nx/devkit';
 
-export function validateProject(
-  tree: Tree,
-  projectName: string
-): ProjectConfiguration {
+export function validateProject(tree: Tree, projectName: string): void {
   const projects = getProjects(tree);
 
   if (!projects.has(projectName)) {
@@ -12,6 +9,4 @@ export function validateProject(
       `Project "${projectName}" does not exist! Please provide an existing project name.`
     );
   }
-
-  return projects.get(projectName)!;
 }

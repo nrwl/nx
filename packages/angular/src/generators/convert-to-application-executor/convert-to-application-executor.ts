@@ -4,10 +4,11 @@ import {
   installPackagesTask,
   logger,
   readJson,
+  readProjectConfiguration,
   updateProjectConfiguration,
-  type ProjectConfiguration,
   type TargetConfiguration,
   type Tree,
+  writeJson,
 } from '@nx/devkit';
 import { dirname, join } from 'node:path/posix';
 import { allTargetOptions } from '../../utils/targets';
@@ -39,19 +40,19 @@ export async function convertToApplicationExecutor(
 ) {
   let didAnySucceed = false;
   if (options.project) {
-    const project = validateProject(tree, options.project);
-    didAnySucceed = await convertProjectTargets(tree, project, true);
+    validateProject(tree, options.project);
+    didAnySucceed = await convertProjectTargets(tree, options.project, true);
   } else {
     const projects = getProjects(tree);
-    for (const [, project] of projects) {
-      logger.info(`Converting project "${project.name}"...`);
-      const success = await convertProjectTargets(tree, project);
+    for (const [projectName] of projects) {
+      logger.info(`Converting project "${projectName}"...`);
+      const success = await convertProjectTargets(tree, projectName);
 
       if (success) {
-        logger.info(`Project "${project.name}" converted successfully.`);
+        logger.info(`Project "${projectName}" converted successfully.`);
       } else {
         logger.info(
-          `Project "${project.name}" could not be converted. See above for more information.`
+          `Project "${projectName}" could not be converted. See above for more information.`
         );
       }
       logger.info('');
@@ -68,7 +69,7 @@ export async function convertToApplicationExecutor(
 
 async function convertProjectTargets(
   tree: Tree,
-  project: ProjectConfiguration,
+  projectName: string,
   isProvidedProject = false
 ): Promise<boolean> {
   function warnIfProvided(message: string): void {
@@ -77,9 +78,10 @@ async function convertProjectTargets(
     }
   }
 
+  let project = readProjectConfiguration(tree, projectName);
   if (project.projectType !== 'application') {
     warnIfProvided(
-      `The provided project "${project.name}" is not an application. Skipping conversion.`
+      `The provided project "${projectName}" is not an application. Skipping conversion.`
     );
     return false;
   }
@@ -89,7 +91,7 @@ async function convertProjectTargets(
   );
   if (!buildTargetName) {
     warnIfProvided(
-      `The provided project "${project.name}" does not have any targets using on of the ` +
+      `The provided project "${projectName}" does not have any targets using on of the ` +
         `'@angular-devkit/build-angular:browser', '@angular-devkit/build-angular:browser-esbuild', ` +
         `'@nx/angular:browser' and '@nx/angular:browser-esbuild' executors. Skipping conversion.`
     );
@@ -167,14 +169,14 @@ async function convertProjectTargets(
 
     if (typeof browserTsConfigPath !== 'string') {
       logger.warn(
-        `Cannot update project "${project.name}" to use the application executor ` +
+        `Cannot update project "${projectName}" to use the application executor ` +
           `as the browser tsconfig cannot be located.`
       );
     }
 
     if (typeof serverTsConfigPath !== 'string') {
       logger.warn(
-        `Cannot update project "${project.name}" to use the application executor ` +
+        `Cannot update project "${projectName}" to use the application executor ` +
           `as the server tsconfig cannot be located.`
       );
     }
@@ -211,13 +213,18 @@ async function convertProjectTargets(
     rootTsConfigJson.compilerOptions.esModuleInterop = true;
     rootTsConfigJson.compilerOptions.downlevelIteration = undefined;
     rootTsConfigJson.compilerOptions.allowSyntheticDefaultImports = undefined;
+    writeJson(tree, projectRootTsConfigPath, rootTsConfigJson);
   }
 
   // Update server file
   const ssrMainFile = project.targets['server']?.options?.['main'];
   if (typeof ssrMainFile === 'string') {
     tree.delete(ssrMainFile);
-    await setupSsr(tree, { project: project.name, skipFormat: true });
+    // apply changes so the setup-ssr generator can access the updated project
+    updateProjectConfiguration(tree, projectName, project);
+    await setupSsr(tree, { project: projectName, skipFormat: true });
+    // re-read project configuration as it might have changed
+    project = readProjectConfiguration(tree, projectName);
   }
 
   // Delete all redundant targets
@@ -227,7 +234,7 @@ async function convertProjectTargets(
     }
   }
 
-  updateProjectConfiguration(tree, project.name, project);
+  updateProjectConfiguration(tree, projectName, project);
   return true;
 }
 
