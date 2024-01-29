@@ -32,7 +32,7 @@ export const releasePublishCLIHandler = (args: PublishOptions) =>
 export async function releasePublish(
   args: PublishOptions,
   isCLI = false
-): Promise<void> {
+): Promise<number> {
   /**
    * When used via the CLI, the args object will contain a __overrides_unparsed__ property that is
    * important for invoking the relevant executor behind the scenes.
@@ -100,7 +100,7 @@ export async function releasePublish(
       }
     }
 
-    return process.exit(overallExitStatus);
+    return overallExitStatus;
   }
 
   /**
@@ -126,7 +126,7 @@ export async function releasePublish(
     );
   }
 
-  process.exit(overallExitStatus);
+  return overallExitStatus;
 }
 
 async function runPublishOnProjects(
