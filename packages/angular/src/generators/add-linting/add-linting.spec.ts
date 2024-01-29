@@ -1,4 +1,4 @@
-import type { ProjectConfiguration, Tree } from '@nx/devkit';
+import { ProjectConfiguration, readNxJson, Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   readJson,
@@ -65,7 +65,7 @@ describe('addLinting generator', () => {
     expect(eslintConfig).toMatchSnapshot();
   });
 
-  it('should update the project with the right lint target configuration', async () => {
+  it('should add @nx/eslint/plugin', async () => {
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
@@ -73,9 +73,15 @@ describe('addLinting generator', () => {
       skipFormat: true,
     });
 
-    const project = readProjectConfiguration(tree, appProjectName);
-    expect(project.targets.lint).toEqual({
-      executor: '@nx/eslint:lint',
-    });
+    const nxJson = readNxJson(tree);
+    expect(
+      nxJson.plugins.find((p) => {
+        if (typeof p === 'string') {
+          return p === '@nx/eslint/plugin';
+        } else {
+          return p.plugin === '@nx/eslint/plugin';
+        }
+      })
+    ).toBeTruthy();
   });
 });

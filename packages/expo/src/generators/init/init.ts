@@ -26,7 +26,7 @@ import { Schema } from './schema';
 export async function expoInitGenerator(host: Tree, schema: Schema) {
   addGitIgnoreEntry(host);
 
-  if (process.env.NX_PCV3 === 'true') {
+  if (process.env.NX_ADD_PLUGINS !== 'false') {
     addPlugin(host);
   }
 

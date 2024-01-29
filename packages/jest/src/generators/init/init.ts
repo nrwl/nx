@@ -107,7 +107,7 @@ export async function jestInitGenerator(
 ): Promise<GeneratorCallback> {
   if (!tree.exists('jest.preset.js')) {
     updateProductionFileSet(tree);
-    if (process.env.NX_PCV3 === 'true') {
+    if (process.env.NX_ADD_PLUGINS !== 'false') {
       addPlugin(tree);
     } else {
       addJestTargetDefaults(tree);

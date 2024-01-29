@@ -790,10 +790,10 @@ describe('Linter', () => {
       });
     });
 
-    it('should lint example app', () => {
+    it('should lint example app (legacy)', () => {
       runCLI(
         `generate @nx/react:app ${myapp}  --directory apps/${myapp} --unitTestRunner=none --bundler=vite --e2eTestRunner=cypress --style=css --no-interactive --projectNameAndRootFormat=as-provided`,
-        { env: { NX_PCV3: 'true' } }
+        { env: { NX_ADD_PLUGINS: 'false' } }
       );
 
       let lintResults = runCLI(`lint ${myapp}`);

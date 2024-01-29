@@ -1,11 +1,9 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
-  getProjects,
   NxJsonConfiguration,
   ProjectConfiguration,
   readJson,
-  readProjectConfiguration,
   Tree,
   updateJson,
   writeJson,
@@ -418,10 +416,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         standaloneConfig: false,
         uiFramework: '@storybook/angular',
       });
-      const project = readProjectConfiguration(tree, 'test-ui-lib');
-      expect(project).toMatchSnapshot();
 
-      expect(tree.read('.storybook/main.ts', 'utf-8')).toMatchSnapshot();
       expect(tree.exists('test-ui-lib/tsconfig.storybook.json')).toBeFalsy();
       expect(
         tree.read('test-ui-lib/.storybook/main.ts', 'utf-8')
@@ -569,15 +564,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
           '@storybook/addon-interactions'
         ]
       ).toBeTruthy();
-
-      const project = readProjectConfiguration(tree, 'test-ui-lib');
-      expect(project.targets['test-storybook']).toEqual({
-        executor: 'nx:run-commands',
-        options: {
-          command:
-            'test-storybook -c test-ui-lib/.storybook --url=http://localhost:4400',
-        },
-      });
     });
   });
 
@@ -756,11 +742,6 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         project: 'ww1',
         uiFramework: '@storybook/web-components-webpack5',
       });
-    });
-
-    it('should have updated all their target configurations correctly', async () => {
-      const projects = getProjects(tree);
-      expect(projects).toMatchSnapshot();
     });
 
     test.each(testCases)(

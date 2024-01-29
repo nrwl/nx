@@ -4,6 +4,18 @@ import libraryGenerator from '../library/library.impl';
 import cypressComponentConfigurationGenerator from './cypress-component-configuration.impl';
 
 describe('CypressComponentConfiguration', () => {
+  // TODO(@colum): Turn this back to adding the plugin
+  let originalEnv: string;
+
+  beforeEach(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterEach(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
+
   it('should create the cypress configuration correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();

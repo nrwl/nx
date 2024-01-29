@@ -22,11 +22,8 @@ describe('application generator', () => {
     await applicationGenerator(tree, { ...options, unitTestRunner: 'vitest' });
     expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/vite.config.ts', 'utf-8')).toMatchSnapshot();
-    expect(tree.read('test/project.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
-    expect(
-      tree.read('test/src/__tests__/App.spec.ts', 'utf-8')
-    ).toMatchSnapshot();
+    expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
     expect(listFiles(tree)).toMatchSnapshot();
   });
 

@@ -176,10 +176,6 @@ describe('app', () => {
       expect(
         appTree.exists('playwright-app-e2e/src/example.spec.ts')
       ).toBeTruthy();
-      expect(
-        readProjectConfiguration(appTree, 'playwright-app-e2e')?.targets?.e2e
-          ?.executor
-      ).toEqual('@nx/playwright:playwright');
     });
 
     it('should setup jest with serializers', async () => {
@@ -536,18 +532,12 @@ describe('app', () => {
     describe('eslint', () => {
       it('should add lint target', async () => {
         await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
-        expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
-          .toMatchInlineSnapshot(`
-          {
-            "executor": "@nx/eslint:lint",
-          }
-        `);
-        expect(readProjectConfiguration(appTree, 'my-app-e2e').targets.lint)
-          .toMatchInlineSnapshot(`
-          {
-            "executor": "@nx/eslint:lint",
-          }
-        `);
+        expect(
+          readProjectConfiguration(appTree, 'my-app').targets.lint
+        ).toMatchInlineSnapshot(`undefined`);
+        expect(
+          readProjectConfiguration(appTree, 'my-app-e2e').targets.lint
+        ).toMatchInlineSnapshot(`undefined`);
       });
 
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
@@ -882,9 +872,6 @@ describe('app', () => {
         e2eTestRunner: E2eTestRunner.Playwright,
         rootProject: true,
       });
-      expect(
-        readProjectConfiguration(appTree, 'e2e').targets.e2e.executor
-      ).toEqual('@nx/playwright:playwright');
       expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
     });

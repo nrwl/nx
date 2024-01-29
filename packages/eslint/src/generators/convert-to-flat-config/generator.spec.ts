@@ -18,6 +18,16 @@ describe('convert-to-flat-config generator', () => {
   let tree: Tree;
   const options: ConvertToFlatConfigGeneratorSchema = { skipFormat: false };
 
+  let originalEnv: string;
+  beforeEach(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterEach(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
+
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'test-lib', {

@@ -18,8 +18,8 @@ describe('@nx/vite/plugin', () => {
 
   describe('with react', () => {
     beforeAll(() => {
-      originalEnv = process.env.NX_PCV3;
-      process.env.NX_PCV3 = 'true';
+      originalEnv = process.env.NX_ADD_PLUGINS;
+      process.env.NX_ADD_PLUGINS = 'false';
       proj = newProject({
         packages: ['@nx/react', '@nx/vue'],
       });
@@ -83,8 +83,8 @@ describe('@nx/vite/plugin', () => {
     const reactVitest = uniq('reactVitest');
 
     beforeAll(() => {
-      originalEnv = process.env.NX_PCV3;
-      process.env.NX_PCV3 = 'true';
+      originalEnv = process.env.NX_ADD_PLUGINS;
+      process.env.NX_ADD_PLUGINS = 'false';
       proj = newProject({
         packages: ['@nx/vite', '@nx/react'],
       });

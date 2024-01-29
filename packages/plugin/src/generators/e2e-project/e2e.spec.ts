@@ -160,9 +160,8 @@ describe('NxPlugin e2e-project Generator', () => {
       npmPackageName: '@proj/my-plugin',
     });
 
-    const projectsConfigurations = getProjects(tree);
-    expect(projectsConfigurations.get('my-plugin-e2e').targets.lint).toEqual({
-      executor: '@nx/eslint:lint',
-    });
+    expect(
+      tree.read('apps/my-plugin-e2e/.eslintrc.json', 'utf-8')
+    ).toMatchSnapshot();
   });
 });

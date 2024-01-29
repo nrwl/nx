@@ -35,7 +35,6 @@ describe('Cypress e2e configuration', () => {
     });
 
     it('should add web server commands to the cypress config when the @nx/cypress/plugin is present', async () => {
-      process.env.NX_PCV3 = 'true';
       await cypressInitGenerator(tree, {});
 
       addProject(tree, { name: 'my-app', type: 'apps' });
@@ -99,7 +98,6 @@ describe('Cypress e2e configuration', () => {
         }
       `);
       assertCypressFiles(tree, 'apps/my-app/src');
-      delete process.env.NX_PCV3;
     });
 
     it('should add e2e target to existing app', async () => {

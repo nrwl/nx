@@ -81,7 +81,7 @@ export async function normalizeOptions(
     }
 
     normalized.appMain =
-      appProjectConfig.targets.build.options.main ??
+      appProjectConfig.targets.build?.options?.main ??
       findMainEntry(host, appProjectConfig.root);
     normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
 

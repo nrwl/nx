@@ -10,7 +10,7 @@ import {
   fileExists,
 } from 'e2e/utils';
 
-describe('@nx/react-native/plugin', () => {
+describe('@nx/react-native (legacy)', () => {
   let appName: string;
 
   beforeAll(() => {
@@ -18,22 +18,11 @@ describe('@nx/react-native/plugin', () => {
     appName = uniq('app');
     runCLI(
       `generate @nx/react-native:app ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`,
-      { env: { NX_PCV3: 'true' } }
+      { env: { NX_ADD_PLUGINS: 'false' } }
     );
   });
 
   afterAll(() => cleanupProject());
-
-  it('nx.json should contain plugin configuration', () => {
-    const nxJson = readJson('nx.json');
-    const reactNativePlugin = nxJson.plugins.find(
-      (plugin) => plugin.plugin === '@nx/react-native/plugin'
-    );
-    expect(reactNativePlugin).toBeDefined();
-    expect(reactNativePlugin.options).toBeDefined();
-    expect(reactNativePlugin.options.bundleTargetName).toEqual('bundle');
-    expect(reactNativePlugin.options.startTargetName).toEqual('start');
-  });
 
   it('should bundle the app', async () => {
     const result = runCLI(

@@ -68,7 +68,7 @@ function createNxJson(
       defaultBase,
     },
     targetDefaults:
-      process.env.NX_PCV3 !== 'true'
+      process.env.NX_ADD_PLUGINS === 'false'
         ? {
             build: {
               cache: true,
@@ -90,7 +90,7 @@ function createNxJson(
       production: ['default'],
       sharedGlobals: [],
     };
-    if (process.env.NX_PCV3 !== 'true') {
+    if (process.env.NX_ADD_PLUGINS === 'false') {
       nxJson.targetDefaults.build.inputs = ['production', '^production'];
     }
   }

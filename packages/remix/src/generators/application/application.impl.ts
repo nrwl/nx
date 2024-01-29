@@ -170,8 +170,10 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
         skipFormat: true,
       });
       const projectConfig = readProjectConfiguration(tree, options.projectName);
-      projectConfig.targets['test'].options.passWithNoTests = true;
-      updateProjectConfiguration(tree, options.projectName, projectConfig);
+      if (projectConfig.targets['test']?.options) {
+        projectConfig.targets['test'].options.passWithNoTests = true;
+        updateProjectConfiguration(tree, options.projectName, projectConfig);
+      }
 
       tasks.push(jestTask);
     }

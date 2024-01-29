@@ -73,7 +73,7 @@ async function initEsLint(
   tree: Tree,
   options: LinterInitOptions
 ): Promise<GeneratorCallback> {
-  const addPlugins = process.env.NX_PCV3 === 'true';
+  const addPlugins = process.env.NX_ADD_PLUGINS !== 'false';
   const hasPlugin = hasEslintPlugin(tree);
   const rootEslintFile = findEslintFile(tree);
 

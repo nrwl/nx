@@ -1172,19 +1172,6 @@ describe('lib', () => {
 
   describe('--linter', () => {
     describe('eslint', () => {
-      it('should add a lint target', async () => {
-        // ACT
-        await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
-
-        // ASSERT
-        expect(readProjectConfiguration(tree, 'my-lib').targets['lint'])
-          .toMatchInlineSnapshot(`
-          {
-            "executor": "@nx/eslint:lint",
-          }
-        `);
-      });
-
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
         // ACT
         await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });

@@ -29,47 +29,33 @@ describe('app', () => {
         projectNameAndRootFormat: 'as-provided',
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
-      expect(project.root).toEqual('my-node-app');
-      expect(project.targets).toEqual(
-        expect.objectContaining({
-          build: {
-            executor: '@nx/webpack:webpack',
-            outputs: ['{options.outputPath}'],
-            defaultConfiguration: 'production',
-            options: {
-              target: 'node',
-              compiler: 'tsc',
-              outputPath: 'dist/my-node-app',
-              main: 'my-node-app/src/main.ts',
-              tsConfig: 'my-node-app/tsconfig.app.json',
-              webpackConfig: 'my-node-app/webpack.config.js',
-              assets: ['my-node-app/src/assets'],
-            },
-            configurations: {
-              development: {},
-              production: {},
-            },
-          },
-          serve: {
-            executor: '@nx/js:node',
-            defaultConfiguration: 'development',
-            options: {
-              buildTarget: 'my-node-app:build',
-            },
-            configurations: {
-              development: {
-                buildTarget: 'my-node-app:build:development',
+      expect(project).toMatchInlineSnapshot(`
+        {
+          "$schema": "../node_modules/nx/schemas/project-schema.json",
+          "name": "my-node-app",
+          "projectType": "application",
+          "root": "my-node-app",
+          "sourceRoot": "my-node-app/src",
+          "tags": [],
+          "targets": {
+            "serve": {
+              "configurations": {
+                "development": {
+                  "buildTarget": "my-node-app:build:development",
+                },
+                "production": {
+                  "buildTarget": "my-node-app:build:production",
+                },
               },
-              production: {
-                buildTarget: 'my-node-app:build:production',
+              "defaultConfiguration": "development",
+              "executor": "@nx/js:node",
+              "options": {
+                "buildTarget": "my-node-app:build",
               },
             },
           },
-        })
-      );
-      expect(project.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-      });
+        }
+      `);
       expect(() =>
         readProjectConfiguration(tree, 'my-node-app-e2e')
       ).not.toThrow();
@@ -185,11 +171,71 @@ describe('app', () => {
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
 
-      expect(project.root).toEqual('my-dir/my-node-app');
-
-      expect(project.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-      });
+      expect(project).toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "name": "my-node-app",
+          "projectType": "application",
+          "root": "my-dir/my-node-app",
+          "sourceRoot": "my-dir/my-node-app/src",
+          "tags": [],
+          "targets": {
+            "build": {
+              "configurations": {
+                "development": {},
+                "production": {
+                  "esbuildOptions": {
+                    "outExtension": {
+                      ".js": ".js",
+                    },
+                    "sourcemap": false,
+                  },
+                },
+              },
+              "defaultConfiguration": "production",
+              "executor": "@nx/esbuild:esbuild",
+              "options": {
+                "assets": [
+                  "my-dir/my-node-app/src/assets",
+                ],
+                "bundle": false,
+                "esbuildOptions": {
+                  "outExtension": {
+                    ".js": ".js",
+                  },
+                  "sourcemap": true,
+                },
+                "format": [
+                  "cjs",
+                ],
+                "generatePackageJson": true,
+                "main": "my-dir/my-node-app/src/main.ts",
+                "outputPath": "dist/my-dir/my-node-app",
+                "platform": "node",
+                "tsConfig": "my-dir/my-node-app/tsconfig.app.json",
+              },
+              "outputs": [
+                "{options.outputPath}",
+              ],
+            },
+            "serve": {
+              "configurations": {
+                "development": {
+                  "buildTarget": "my-node-app:build:development",
+                },
+                "production": {
+                  "buildTarget": "my-node-app:build:production",
+                },
+              },
+              "defaultConfiguration": "development",
+              "executor": "@nx/js:node",
+              "options": {
+                "buildTarget": "my-node-app:build",
+              },
+            },
+          },
+        }
+      `);
 
       expect(() =>
         readProjectConfiguration(tree, 'my-node-app-e2e')
@@ -270,13 +316,6 @@ describe('app', () => {
       expect(tree.exists('my-node-app/src/test.ts')).toBeFalsy();
       expect(tree.exists('my-node-app/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('my-node-app/jest.config.ts')).toBeFalsy();
-      const project = readProjectConfiguration(tree, 'my-node-app');
-      expect(project.targets.test).toBeUndefined();
-      expect(project.targets.lint).toMatchInlineSnapshot(`
-        {
-          "executor": "@nx/eslint:lint",
-        }
-      `);
     });
   });
 
@@ -477,8 +516,7 @@ describe('app', () => {
         framework,
       });
 
-      const project = readProjectConfiguration(tree, 'api');
-      expect(project.targets.test).toBeDefined();
+      expect(tree.exists(`api/jest.config.ts`)).toBeTruthy();
 
       if (checkSpecFile) {
         expect(tree.exists(`api/src/app/app.spec.ts`)).toBeTruthy();

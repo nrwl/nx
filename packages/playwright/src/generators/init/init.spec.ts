@@ -11,18 +11,11 @@ describe('@nx/playwright:init', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should add the plugin if PCV3 is set', async () => {
-    await withEnvironmentVariables(
-      {
-        NX_PCV3: 'true',
-      },
-      async () => {
-        await initGenerator(tree, {
-          skipFormat: true,
-          skipPackageJson: false,
-        });
-      }
-    );
+  it('should add the plugin', async () => {
+    await initGenerator(tree, {
+      skipFormat: true,
+      skipPackageJson: false,
+    });
     const nxJson = readNxJson(tree);
     expect(nxJson.plugins).toMatchInlineSnapshot(`
       [
@@ -40,17 +33,10 @@ describe('@nx/playwright:init', () => {
     updateNxJson(tree, {
       plugins: ['foo'],
     });
-    await withEnvironmentVariables(
-      {
-        NX_PCV3: 'true',
-      },
-      async () => {
-        await initGenerator(tree, {
-          skipFormat: true,
-          skipPackageJson: false,
-        });
-      }
-    );
+    await initGenerator(tree, {
+      skipFormat: true,
+      skipPackageJson: false,
+    });
     const nxJson = readNxJson(tree);
     expect(nxJson.plugins).toMatchInlineSnapshot(`
       [
@@ -69,17 +55,10 @@ describe('@nx/playwright:init', () => {
     updateNxJson(tree, {
       plugins: ['@nx/playwright/plugin'],
     });
-    await withEnvironmentVariables(
-      {
-        NX_PCV3: 'true',
-      },
-      async () => {
-        await initGenerator(tree, {
-          skipFormat: true,
-          skipPackageJson: false,
-        });
-      }
-    );
+    await initGenerator(tree, {
+      skipFormat: true,
+      skipPackageJson: false,
+    });
     const nxJson = readNxJson(tree);
     expect(nxJson.plugins).toMatchInlineSnapshot(`
       [
@@ -88,10 +67,10 @@ describe('@nx/playwright:init', () => {
     `);
   });
 
-  it('should not add plugin if environment variable is not set', async () => {
+  it('should not add plugin if NX_ADD_PLUGINS variable is set', async () => {
     await withEnvironmentVariables(
       {
-        NX_PCV3: undefined,
+        NX_ADD_PLUGINS: 'false',
       },
       async () => {
         await initGenerator(tree, {

@@ -5,6 +5,15 @@ import { applicationGenerator } from '../application/application';
 describe('app', () => {
   let tree: Tree;
 
+  let originalEnv: string;
+  beforeAll(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+  afterAll(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
+
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
   });

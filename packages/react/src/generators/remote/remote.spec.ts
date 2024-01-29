@@ -5,6 +5,18 @@ import remote from './remote';
 import { getRootTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
 
 describe('remote generator', () => {
+  // TODO(@jaysoo): Turn this back to adding the plugin
+  let originalEnv: string;
+
+  beforeEach(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterEach(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
+
   it('should create the remote with the correct config files', async () => {
     const tree = createTreeWithEmptyWorkspace();
     await remote(tree, {

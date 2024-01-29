@@ -116,6 +116,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
 
   const jestTask = await configurationGenerator(host, {
     project: options.projectName,
+    targetName: 'e2e',
     setupFile: 'none',
     supportTsx: false,
     skipSerializers: true,
@@ -139,19 +140,16 @@ async function addJest(host: Tree, options: NormalizedSchema) {
   );
 
   const project = readProjectConfiguration(host, options.projectName);
-  const testTarget = project.targets.test;
+  const e2eTarget = project.targets.e2e;
 
   project.targets.e2e = {
-    ...testTarget,
+    ...e2eTarget,
     dependsOn: [`^build`],
     options: {
-      ...testTarget.options,
+      ...e2eTarget.options,
       runInBand: true,
     },
   };
-
-  // remove the jest build target
-  delete project.targets.test;
 
   updateProjectConfiguration(host, options.projectName, project);
 

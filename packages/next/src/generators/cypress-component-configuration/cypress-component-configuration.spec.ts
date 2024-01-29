@@ -8,6 +8,17 @@ import { Linter } from '@nx/eslint';
 
 describe('cypress-component-configuration generator', () => {
   let tree: Tree;
+  // TODO(@jaysoo): Turn this back to adding the plugin
+  let originalEnv: string;
+
+  beforeEach(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterEach(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -172,15 +183,5 @@ describe('cypress-component-configuration generator', () => {
       "
     `);
     expect(tree.exists('demo/pages/index.cy.ts')).toBeFalsy();
-    expect(
-      readProjectConfiguration(tree, 'demo').targets['component-test']
-    ).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        cypressConfig: 'demo/cypress.config.ts',
-        skipServe: true,
-        testingType: 'component',
-      },
-    });
   });
 });

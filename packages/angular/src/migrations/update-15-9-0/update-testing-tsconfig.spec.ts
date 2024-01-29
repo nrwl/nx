@@ -33,6 +33,16 @@ describe('Jest+Ng - 15.9.0 - tsconfig updates', () => {
     };
   });
 
+  let originalEnv: string;
+  beforeEach(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterEach(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
+
   it('should update tsconfig.spec.json with target es2016', async () => {
     await setup(tree, 'proj');
     await updateTestingTsconfigForJest(tree);

@@ -14,7 +14,7 @@ describe('jest', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should add target defaults for test', async () => {
+  it('should exclude jest files from production fileset', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default'];
@@ -33,19 +33,6 @@ describe('jest', () => {
     expect(productionFileSet).toContain('!{projectRoot}/tsconfig.spec.json');
     expect(productionFileSet).toContain('!{projectRoot}/jest.config.[jt]s');
     expect(productionFileSet).toContain('!{projectRoot}/src/test-setup.[jt]s');
-    expect(jestDefaults).toEqual({
-      cache: true,
-      inputs: ['default', '^production', '{workspaceRoot}/jest.preset.js'],
-      options: {
-        passWithNoTests: true,
-      },
-      configurations: {
-        ci: {
-          ci: true,
-          codeCoverage: true,
-        },
-      },
-    });
   });
 
   it('should not alter target defaults if jest.preset.js already exists', async () => {

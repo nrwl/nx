@@ -37,7 +37,7 @@ function updateDependencies(host: Tree, schema: InitSchema) {
 }
 
 export async function nextInitGenerator(host: Tree, schema: InitSchema) {
-  if (process.env.NX_PCV3 === 'true') {
+  if (process.env.NX_ADD_PLUGINS !== 'false') {
     addPlugin(host);
   }
 

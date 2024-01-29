@@ -36,11 +36,14 @@ export async function viteConfigurationGenerator(
 ) {
   const tasks: GeneratorCallback[] = [];
 
+  const projectConfig = readProjectConfiguration(tree, schema.project);
   const {
     targets,
-    projectType,
+
     root: projectRoot,
-  } = readProjectConfiguration(tree, schema.project);
+  } = projectConfig;
+
+  const projectType = projectConfig.projectType ?? 'library';
   let buildTargetName = 'build';
   let serveTargetName = 'serve';
   let testTargetName = 'test';

@@ -69,23 +69,23 @@ describe('Playwright E2E Test runner', () => {
   );
 });
 
-describe('Playwright E2E Test Runner - PCV3', () => {
+describe('Playwright E2E Test Runner - legacy', () => {
   let env: string | undefined;
 
   beforeAll(() => {
-    env = process.env.NX_PCV3;
+    env = process.env.NX_ADD_PLUGINS;
     newProject({
       name: uniq('playwright'),
       unsetProjectNameAndRootFormat: false,
     });
-    process.env.NX_PCV3 = 'true';
+    process.env.NX_ADD_PLUGINS = 'false';
   });
 
   afterAll(() => {
     if (env) {
-      process.env.NX_PCV3 = env;
+      process.env.NX_ADD_PLUGINS = env;
     } else {
-      delete process.env.NX_PCV3;
+      delete process.env.NX_ADD_PLUGINS;
     }
   });
 

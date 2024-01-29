@@ -12,7 +12,7 @@ import {
   createFile,
 } from 'e2e/utils';
 
-describe('@nx/next/plugin', () => {
+describe('@nx/next (legacy)', () => {
   let project: string;
   let appName: string;
 
@@ -23,7 +23,7 @@ describe('@nx/next/plugin', () => {
     appName = uniq('app');
     runCLI(
       `generate @nx/next:app ${appName} --project-name-and-root-format=as-provided --no-interactive`,
-      { env: { NX_PCV3: 'true' } }
+      { env: { NX_ADD_PLUGINS: 'false' } }
     );
 
     // update package.json to add next as a script
@@ -50,7 +50,7 @@ describe('@nx/next/plugin', () => {
 
   it('should build the app', async () => {
     const result = runCLI(`build ${appName}`);
-    // check build output for PCV3 artifacts (e.g. .next directory) are inside the project directory
+    // check build output for cached artifacts (e.g. .next directory) are inside the project directory
     directoryExists(`${appName}/.next`);
 
     expect(result).toContain(

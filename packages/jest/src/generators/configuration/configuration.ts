@@ -16,6 +16,7 @@ import {
   runTasksInSerial,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { JestPluginOptions } from '../../plugins/plugin';
 
 const schemaDefaults = {
   setupFile: 'none',
@@ -33,6 +34,8 @@ function normalizeOptions(
   if (!options.testEnvironment) {
     options.testEnvironment = 'jsdom';
   }
+
+  options.targetName ??= 'test';
 
   if (!options.hasOwnProperty('supportTsx')) {
     options.supportTsx = false;
@@ -82,11 +85,17 @@ export async function configurationGenerator(
   updateVsCodeRecommendedExtensions(tree);
 
   const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/jest/plugin'
-      : p.plugin === '@nx/jest/plugin'
-  );
+  const hasPlugin = nxJson.plugins?.some((p) => {
+    if (typeof p === 'string') {
+      return p === '@nx/jest/plugin' && options.targetName === 'test';
+    } else {
+      return (
+        p.plugin === '@nx/jest/plugin' &&
+        ((p.options as JestPluginOptions)?.targetName ?? 'test') ===
+          options.targetName
+      );
+    }
+  });
   if (!hasPlugin) {
     updateWorkspace(tree, options);
   }

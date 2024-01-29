@@ -111,8 +111,7 @@ describe('Cypress Project', () => {
         projectNameAndRootFormat: 'as-provided',
       });
 
-      const project = readProjectConfiguration(tree, 'my-app-e2e');
-      expect(project.targets.lint).toMatchSnapshot();
+      expect(tree.read('my-app-e2e/.eslintrc.json', 'utf-8')).toMatchSnapshot();
     });
 
     it('should not add lint target when "none" is passed', async () => {
@@ -457,6 +456,17 @@ describe('Cypress Project', () => {
   });
 
   describe('< v7', () => {
+    let originalEnv: string;
+
+    beforeEach(() => {
+      originalEnv = process.env.NX_ADD_PLUGINS;
+      process.env.NX_ADD_PLUGINS = 'false';
+    });
+
+    afterEach(() => {
+      process.env.NX_ADD_PLUGINS = originalEnv;
+    });
+
     beforeEach(() => {
       mockedInstalledCypressVersion.mockReturnValue(6);
     });

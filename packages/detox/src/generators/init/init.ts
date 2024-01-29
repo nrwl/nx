@@ -21,7 +21,7 @@ export async function detoxInitGenerator(host: Tree, schema: Schema) {
     tasks.push(updateDependencies(host, schema));
   }
 
-  if (process.env.NX_PCV3 === 'true') {
+  if (process.env.NX_ADD_PLUGINS !== 'false') {
     addPlugin(host);
   }
 

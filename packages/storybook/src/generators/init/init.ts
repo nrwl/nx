@@ -30,7 +30,7 @@ function checkDependenciesInstalled(
     '@nx/web': nxVersion,
   };
 
-  if (process.env.NX_PCV3 === 'true') {
+  if (process.env.NX_ADD_PLUGINS !== 'false') {
     let storybook7VersionToInstall = storybookVersion;
     if (
       storybookMajorVersion() >= 7 &&
@@ -91,7 +91,7 @@ function moveToDevDependencies(tree: Tree): GeneratorCallback {
 }
 
 export async function initGenerator(tree: Tree, schema: Schema) {
-  if (process.env.NX_PCV3 === 'true') {
+  if (process.env.NX_ADD_PLUGINS !== 'false') {
     addPlugin(tree);
     updateGitignore(tree);
   } else {

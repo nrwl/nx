@@ -10,7 +10,7 @@ describe('webpackInitGenerator', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  it('should install plugin', async () => {
+  it('should install plugin and webpack-cli', async () => {
     await webpackInitGenerator(tree, {});
 
     const packageJson = readJson(tree, 'package.json');
@@ -20,6 +20,7 @@ describe('webpackInitGenerator', () => {
       devDependencies: {
         '@nx/webpack': expect.any(String),
         '@nx/web': expect.any(String),
+        'webpack-cli': expect.any(String),
       },
     });
   });

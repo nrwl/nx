@@ -7,7 +7,7 @@ import {
   updateJson,
 } from 'e2e/utils';
 
-describe('@nx/detox/plugin', () => {
+describe('@nx/detox (legacy)', () => {
   let project: string;
   let appName: string;
 
@@ -16,7 +16,7 @@ describe('@nx/detox/plugin', () => {
     appName = uniq('app');
     runCLI(
       `generate @nx/react-native:app ${appName} --e2eTestRunner=detox --install=false --project-name-and-root-format=as-provided --interactive=false`,
-      { env: { NX_PCV3: 'true' } }
+      { env: { NX_ADD_PLUGINS: 'false' } }
     );
     updateJson(`${appName}-e2e/.detoxrc.json`, (json) => {
       json.apps['e2e.debug'] = {

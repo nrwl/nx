@@ -28,17 +28,6 @@ describe('lib', () => {
   });
 
   describe('not nested', () => {
-    it('should update project.json', async () => {
-      await libraryGenerator(appTree, { ...defaultSchema, tags: 'one,two' });
-      const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-      expect(projectConfiguration.root).toEqual('my-lib');
-      expect(projectConfiguration.targets.build).toBeUndefined();
-      expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-      });
-      expect(projectConfiguration.tags).toEqual(['one', 'two']);
-    });
-
     it('should update root tsconfig.base.json', async () => {
       await libraryGenerator(appTree, defaultSchema);
       const tsconfigJson = readJson(appTree, '/tsconfig.base.json');
@@ -145,19 +134,6 @@ describe('lib', () => {
       });
     });
 
-    it('should update project.json', async () => {
-      await libraryGenerator(appTree, {
-        ...defaultSchema,
-        directory: 'my-dir',
-      });
-      const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-
-      expect(projectConfiguration.root).toEqual('my-dir');
-      expect(projectConfiguration.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-      });
-    });
-
     it('should update root tsconfig.base.json', async () => {
       await libraryGenerator(appTree, {
         ...defaultSchema,
@@ -229,11 +205,6 @@ describe('lib', () => {
 
       expect(appTree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(appTree.exists('my-lib/jest.config.ts')).toBeFalsy();
-      const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-      expect(projectConfiguration.targets.test).toBeUndefined();
-      expect(projectConfiguration.targets.lint).toMatchObject({
-        executor: '@nx/eslint:lint',
-      });
     });
 
     it('should generate test configuration', async () => {
@@ -280,18 +251,6 @@ describe('lib', () => {
           coverageDirectory: '../coverage/my-lib',
         };
         "
-      `);
-      const projectConfiguration = readProjectConfiguration(appTree, 'my-lib');
-      expect(projectConfiguration.targets.test).toMatchInlineSnapshot(`
-        {
-          "executor": "@nx/jest:jest",
-          "options": {
-            "jestConfig": "my-lib/jest.config.ts",
-          },
-          "outputs": [
-            "{workspaceRoot}/coverage/{projectRoot}",
-          ],
-        }
       `);
     });
   });

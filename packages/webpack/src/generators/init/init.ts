@@ -12,7 +12,7 @@ import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
 export async function webpackInitGenerator(tree: Tree, schema: Schema) {
-  const shouldAddPlugin = process.env.NX_PCV3 === 'true';
+  const shouldAddPlugin = process.env.NX_ADD_PLUGINS !== 'false';
   if (shouldAddPlugin) {
     addPlugin(tree);
   }

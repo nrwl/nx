@@ -1,5 +1,6 @@
 export interface JestProjectSchema {
   project: string;
+  targetName?: string;
   supportTsx?: boolean;
   /**
    * @deprecated use setupFile instead

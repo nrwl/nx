@@ -89,8 +89,8 @@ describe('app', () => {
       install: false,
       projectNameAndRootFormat: 'as-provided',
     });
-    const targets = readProjectConfiguration(appTree, 'my-app').targets;
-    expect(targets.test).toBeDefined();
+
+    expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
   });
 
   it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {

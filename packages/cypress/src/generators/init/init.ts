@@ -99,7 +99,7 @@ function updateProductionFileset(tree: Tree) {
 export async function cypressInitGenerator(tree: Tree, options: Schema) {
   updateProductionFileset(tree);
 
-  if (process.env.NX_PCV3 === 'true') {
+  if (process.env.NX_ADD_PLUGINS !== 'false') {
     addPlugin(tree);
   } else {
     setupE2ETargetDefaults(tree);

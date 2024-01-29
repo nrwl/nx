@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   NxJsonConfiguration,
   readJson,
+  readNxJson,
   Tree,
   updateJson,
 } from '@nx/devkit';
@@ -43,22 +44,42 @@ describe('@nx/vite:init', () => {
 
       await initGenerator(tree, {});
 
-      const productionNamedInputs = readJson(tree, 'nx.json').namedInputs
-        .production;
-      const vitestDefaults = readJson(tree, 'nx.json').targetDefaults[
-        '@nx/vite:test'
-      ];
+      const nxJson = readNxJson(tree);
 
-      expect(productionNamedInputs).toContain(
-        '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
-      );
-      expect(productionNamedInputs).toContain(
-        '!{projectRoot}/tsconfig.spec.json'
-      );
-      expect(vitestDefaults).toEqual({
-        cache: true,
-        inputs: ['default', '^production'],
-      });
+      expect(nxJson).toMatchInlineSnapshot(`
+        {
+          "affected": {
+            "defaultBase": "main",
+          },
+          "namedInputs": {
+            "production": [
+              "default",
+              "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+              "!{projectRoot}/tsconfig.spec.json",
+            ],
+          },
+          "plugins": [
+            {
+              "options": {
+                "buildTargetName": "build",
+                "previewTargetName": "preview",
+                "serveStaticTargetName": "serve-static",
+                "serveTargetName": "serve",
+                "testTargetName": "test",
+              },
+              "plugin": "@nx/vite/plugin",
+            },
+          ],
+          "targetDefaults": {
+            "build": {
+              "cache": true,
+            },
+            "lint": {
+              "cache": true,
+            },
+          },
+        }
+      `);
     });
   });
 });

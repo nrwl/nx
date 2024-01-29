@@ -38,6 +38,8 @@ describe('init', () => {
       return json;
     });
 
+    process.env.NX_ADD_PLUGINS = 'false';
+
     await cypressInitGenerator(tree, {});
 
     expect(
@@ -46,10 +48,11 @@ describe('init', () => {
       cache: true,
       inputs: ['default', '^production'],
     });
+
+    delete process.env.NX_ADD_PLUGINS;
   });
 
   it('should setup @nx/cypress/plugin', async () => {
-    process.env.NX_PCV3 = 'true';
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default'];
@@ -91,7 +94,5 @@ describe('init', () => {
         },
       }
     `);
-
-    delete process.env.NX_PCV3;
   });
 });
