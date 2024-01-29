@@ -80,12 +80,14 @@ export async function releasePublish(
   const shouldExcludeTaskDependencies =
     _args.projects?.length > 0 || _args.groups?.length > 0;
 
+  let overallExitStatus = 0;
+
   if (args.projects?.length) {
     /**
      * Run publishing for all remaining release groups and filtered projects within them
      */
     for (const releaseGroup of releaseGroups) {
-      await runPublishOnProjects(
+      const status = await runPublishOnProjects(
         _args,
         projectGraph,
         nxJson,
@@ -93,16 +95,19 @@ export async function releasePublish(
         shouldExcludeTaskDependencies,
         isCLI
       );
+      if (status !== 0) {
+        overallExitStatus = status || 1;
+      }
     }
 
-    return process.exit(0);
+    return process.exit(overallExitStatus);
   }
 
   /**
    * Run publishing for all remaining release groups
    */
   for (const releaseGroup of releaseGroups) {
-    await runPublishOnProjects(
+    const status = await runPublishOnProjects(
       _args,
       projectGraph,
       nxJson,
@@ -110,6 +115,9 @@ export async function releasePublish(
       shouldExcludeTaskDependencies,
       isCLI
     );
+    if (status !== 0) {
+      overallExitStatus = status || 1;
+    }
   }
 
   if (_args.dryRun) {
@@ -118,7 +126,7 @@ export async function releasePublish(
     );
   }
 
-  process.exit(0);
+  process.exit(overallExitStatus);
 }
 
 async function runPublishOnProjects(
@@ -180,12 +188,26 @@ async function runPublishOnProjects(
     );
   }
 
-  ensureAllProjectsHaveTarget(projectsToRun);
+  const requiredTargetName = 'nx-release-publish';
+  const projectsWithTarget = projectsToRun.filter((project) =>
+    projectHasTarget(project, requiredTargetName)
+  );
+
+  if (projectsWithTarget.length === 0) {
+    throw new Error(
+      `Based on your config, the following projects were matched for publishing but do not have the "${requiredTargetName}" target specified:\n${[
+        ...projectsToRun.map((p) => `- ${p.name}`),
+        '',
+        `This is usually caused by not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "${requiredTargetName}" target for you automatically.`,
+      ].join('\n')}\n`
+    );
+  }
+
   /**
    * Run the relevant nx-release-publish executor on each of the selected projects.
    */
   const status = await runCommand(
-    projectsToRun,
+    projectsWithTarget,
     projectGraph,
     { nxJson },
     {
@@ -212,21 +234,4 @@ async function runPublishOnProjects(
       'One or more of the selected projects could not be published'
     );
   }
-}
-
-function ensureAllProjectsHaveTarget(projectsToRun: ProjectGraphProjectNode[]) {
-  const requiredTargetName = 'nx-release-publish';
-  const projectsMissingTarget = projectsToRun.filter(
-    (project) => !projectHasTarget(project, requiredTargetName)
-  );
-  if (projectsMissingTarget.length === 0) {
-    return;
-  }
-  throw new Error(
-    `Based on your config, the following projects were matched for publishing but do not have the "${requiredTargetName}" target specified:\n${[
-      ...projectsMissingTarget.map((p) => `- ${p.name}`),
-      '',
-      'There are a few possible reasons for this: (1) The projects may be private (2) You may not have an appropriate plugin (such as `@nx/js`) installed which adds the target automatically to public projects (3) You intended to configure the target manually, or exclude those projects via config in nx.json',
-    ].join('\n')}\n`
-  );
 }
