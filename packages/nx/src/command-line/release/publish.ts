@@ -136,7 +136,7 @@ async function runPublishOnProjects(
   projectNames: string[],
   shouldExcludeTaskDependencies: boolean,
   isCLI: boolean
-) {
+): Promise<number> {
   const projectsToRun: ProjectGraphProjectNode[] = projectNames.map(
     (projectName) => projectGraph.nodes[projectName]
   );
@@ -174,7 +174,7 @@ async function runPublishOnProjects(
   if (args.graph) {
     const file = readGraphFileFromGraphArg(args);
     const projectNames = projectsToRun.map((t) => t.name);
-    return await generateGraph(
+    await generateGraph(
       {
         watch: false,
         all: false,
@@ -186,6 +186,7 @@ async function runPublishOnProjects(
       },
       projectNames
     );
+    return 0;
   }
 
   const requiredTargetName = 'nx-release-publish';
@@ -234,4 +235,6 @@ async function runPublishOnProjects(
       'One or more of the selected projects could not be published'
     );
   }
+
+  return 0;
 }
