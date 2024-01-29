@@ -114,6 +114,8 @@ const LARGE_BUFFER = 1024 * 1000000;
     maxBuffer: LARGE_BUFFER,
   });
 
+  const distTag = determineDistTag(options.version);
+
   if (options.dryRun) {
     console.warn('Not Publishing because --dryRun was passed');
   } else {
@@ -147,8 +149,6 @@ const LARGE_BUFFER = 1024 * 1000000;
       }
     }
 
-    const distTag = determineDistTag(options.version);
-
     // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
     let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
     if (options.dryRun) {
@@ -163,11 +163,7 @@ const LARGE_BUFFER = 1024 * 1000000;
 
   let version;
   if (['minor', 'major', 'patch'].includes(options.version)) {
-    const currentLatestVersion = execSync('npm view nx@latest version')
-      .toString()
-      .trim();
-
-    version = inc(currentLatestVersion, options.version, undefined);
+    version = execSync(`npm view nx@${distTag} version`).toString().trim();
   } else {
     version = options.version;
   }
