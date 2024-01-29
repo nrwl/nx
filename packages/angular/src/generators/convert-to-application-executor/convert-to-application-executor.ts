@@ -187,7 +187,7 @@ async function convertProjectTargets(
       ...(serverTsConfigJson.files ?? []),
     ]);
 
-    // Server file will be added later by the means of the ssr schematic.
+    // Server file will be added later by the setup-ssr generator
     files.delete('server.ts');
 
     browserTsConfigJson.files = Array.from(files);
