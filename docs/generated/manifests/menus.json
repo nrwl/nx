@@ -2406,6 +2406,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Publish in CI/CD",
+                "path": "/recipes/nx-release/publish-in-ci-cd",
+                "id": "publish-in-ci-cd",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -4239,6 +4247,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Publish in CI/CD",
+            "path": "/recipes/nx-release/publish-in-ci-cd",
+            "id": "publish-in-ci-cd",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4263,6 +4279,14 @@
         "name": "Automatically Version with Conventional Commits",
         "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
         "id": "automatically-version-with-conventional-commits",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish in CI/CD",
+        "path": "/recipes/nx-release/publish-in-ci-cd",
+        "id": "publish-in-ci-cd",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
