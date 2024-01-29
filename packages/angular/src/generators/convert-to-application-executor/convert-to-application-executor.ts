@@ -299,3 +299,5 @@ function getTargetsToConvert(targets: Record<string, TargetConfiguration>): {
 
   return { buildTargetName, serverTargetName };
 }
+
+export default convertToApplicationExecutor;
