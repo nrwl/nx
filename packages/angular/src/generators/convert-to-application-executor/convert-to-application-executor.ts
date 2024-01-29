@@ -107,6 +107,12 @@ async function convertProjectTargets(
   const buildTarget = project.targets[buildTargetName];
   buildTarget.executor = newExecutor;
 
+  if (buildTarget.outputs) {
+    buildTarget.outputs = buildTarget.outputs.map((output) =>
+      output === '{options.outputPath}' ? '{options.outputPath.base}' : output
+    );
+  }
+
   for (const [, options] of allTargetOptions(buildTarget)) {
     if (options['index'] === '') {
       options['index'] = false;

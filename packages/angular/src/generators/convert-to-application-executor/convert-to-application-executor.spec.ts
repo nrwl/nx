@@ -127,6 +127,30 @@ describe('convert-to-application-executor generator', () => {
     expect(project.targets.build.options.polyfills).toStrictEqual(['zone.js']);
   });
 
+  it('should update "outputs"', async () => {
+    addProjectConfiguration(tree, 'app1', {
+      root: 'app1',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@angular-devkit/build-angular:browser',
+          outputs: ['{options.outputPath}'],
+          options: {
+            outputPath: 'dist/app1',
+            resourcesOutputPath: 'media',
+          },
+        },
+      },
+    });
+
+    await convertToApplicationExecutor(tree, {});
+
+    const project = readProjectConfiguration(tree, 'app1');
+    expect(project.targets.build.outputs).toStrictEqual([
+      '{options.outputPath.base}',
+    ]);
+  });
+
   it('should replace "outputPath" to string if "resourcesOutputPath" is set to "media"', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'app1',
