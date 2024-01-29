@@ -37,7 +37,7 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
 
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Where would you like to create your workspace? · products-api
 ✔ Which stack do you want to use? · node
@@ -62,7 +62,7 @@ To create the `auth` library, use the `@nx/node:lib` generator:
 ![Nx Generator Syntax](/shared/node-server-tutorial/generator-syntax.svg)
 
 ```{% command="npx nx g @nx/node:lib auth --buildable" path="~/products-api" %}
->  NX  Generating @nx/node:library
+ NX  Generating @nx/node:library
 
 CREATE auth/README.md
 CREATE auth/.babelrc

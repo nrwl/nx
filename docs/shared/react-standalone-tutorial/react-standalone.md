@@ -202,7 +202,7 @@ More conveniently, we can also run them in parallel using the following syntax:
 
  ——————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 2 projects (7s)
+  NX   Successfully ran targets test, lint, e2e for 2 projects (7s)
 ```
 
 ### Caching
@@ -220,7 +220,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 
  ——————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
+  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
 
    Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
@@ -247,7 +247,7 @@ You can just create new React components as you normally would. However, Nx plug
 
 ```{% command="npx nx list @nx/react" path="myreactapp" %}
 
- >  NX   Capabilities in @nx/react:
+  NX   Capabilities in @nx/react:
 
    GENERATORS
 
@@ -285,7 +285,7 @@ More info can be found in [the integrate with editors article](/core-features/in
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
 ```{% command="npx nx g @nx/react:component --directory=src/app/hello-world hello-world --dry-run" path="myreactapp" %}
->  NX  Generating @nx/react:component
+ NX  Generating @nx/react:component
 
 ✔ Should this component be exported in the project? (y/N) · false
 ✔ Where should the component be generated? · src/app/hello-world/hello-world.tsx
@@ -331,7 +331,7 @@ dist/myreactapp/assets/index-378e8124.js   165.64 kB │ gzip: 51.63 kB
 
  ——————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project reactutorial (1s)
+  NX   Successfully ran target build for project reactutorial (1s)
 ```
 
 All the required files will be placed in the `dist/myreactapp` folder and can be deployed to your favorite hosting provider.
@@ -826,7 +826,7 @@ If you lint your workspace you'll get an error now:
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Ran target lint for 5 projects (1s)
+  NX   Ran target lint for 5 projects (1s)
 
     ✔    4/5 succeeded [2 read from cache]
 

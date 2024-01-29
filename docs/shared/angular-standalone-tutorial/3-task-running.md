@@ -90,7 +90,7 @@ Ran all test suites.
 
  —————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target test for project shared-ui (3s)
+  NX   Successfully ran target test for project shared-ui (3s)
 ```
 
 Next, run a lint check on your `shared-ui` project:
@@ -107,7 +107,7 @@ All files pass linting.
 
 ———————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target lint for project shared-ui (2s)
+  NX   Successfully ran target lint for project shared-ui (2s)
 ```
 
 Also, by running the `serve` target for your `store` application, you can run local web server during development that

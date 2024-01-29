@@ -26,13 +26,13 @@ Here's the source code of the final result for this tutorial.
 Create a new Vue application with the following command:
 
 ```{% command="npx create-nx-workspace@latest myvueapp --preset=vue-standalone" path="~" %}
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
 ✔ Do you want Nx Cloud to make your CI fast? · Yes
 
- >  NX   Creating your v17.0.0 workspace.
+  NX   Creating your v17.0.0 workspace.
 
    To make sure the command works reliably in all environments, and that the preset is applied correctly,
    Nx will run "npm install" several times. Please wait.
@@ -192,7 +192,7 @@ More conveniently, we can also run them in parallel using the following syntax:
 
  ——————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 2 projects (8s)
+  NX   Successfully ran targets test, lint, e2e for 2 projects (8s)
 ```
 
 ### Caching
@@ -212,7 +212,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 
  ———————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 2 projects (143ms)
+  NX   Successfully ran targets test, lint, e2e for 2 projects (143ms)
 
    Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
 ```
@@ -239,7 +239,7 @@ You can just create new React components as you normally would. However, Nx plug
 
 ```{% command="npx nx list @nx/vue" path="myvueapp" %}
 
->  NX   Capabilities in @nx/vue:
+ NX   Capabilities in @nx/vue:
 
    GENERATORS
 
@@ -263,7 +263,7 @@ More info can be found in [the integrate with editors article](/core-features/in
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
 ```{% command="npx nx g @nx/vue:component hello-world --no-export --unit-test-runner=vitest --directory=src/components --dry-run" path="myvueapp" %}
->  NX  Generating @nx/vue:component
+ NX  Generating @nx/vue:component
 
 CREATE src/components/hello-world.spec.ts
 CREATE src/components/hello-world.vue
@@ -303,7 +303,7 @@ dist/myvueapp/assets/index-46a11b5f.js   62.39 kB │ gzip: 24.35 kB
 
  —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project myvueapp (957ms)
+  NX   Successfully ran target build for project myvueapp (957ms)
 ```
 
 All the required files will be placed in the `dist/myvueapp` folder and can be deployed to your favorite hosting provider.
@@ -790,7 +790,7 @@ import { Orders } from 'orders';
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
- >  NX   Running target lint for 5 projects
+ NX   Running target lint for 5 projects
     ✖  nx run products:lint
        Linting "products"...
 
@@ -812,7 +812,7 @@ If you lint your workspace you'll get an error now:
 
  ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Ran target lint for 5 projects (2s)
+  NX   Ran target lint for 5 projects (2s)
 
     ✔    4/5 succeeded [1 read from cache]
 

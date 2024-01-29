@@ -103,7 +103,7 @@ Done in 0.14s.
 
  ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target serve for project cow
+  NX   Successfully ran target serve for project cow
 
 
    See Nx Cloud run details at https://nx.app/runs/nZBYYBEuIfG

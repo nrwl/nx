@@ -208,7 +208,7 @@ More conveniently, we can also run them in parallel using the following syntax:
 
  ——————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 2 projects (8s)
+  NX   Successfully ran targets test, lint, e2e for 2 projects (8s)
 ```
 
 ### Caching
@@ -228,7 +228,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 
  ———————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 2 projects (143ms)
+  NX   Successfully ran targets test, lint, e2e for 2 projects (143ms)
 
    Nx read the output from the cache instead of running the command for 4 out of 4 tasks.
 ```
@@ -245,9 +245,9 @@ Generators allow you to easily scaffold code, configuration or entire projects. 
 
 ```{% command="npx nx list @nx/angular" path="myngapp" %}
 
- >  NX   Capabilities in @nx/angular:
+  NX   Capabilities in @nx/angular:
 
->  NX   Capabilities in @nx/angular:
+ NX   Capabilities in @nx/angular:
 
    GENERATORS
 
@@ -296,7 +296,7 @@ More info can be found in [the integrate with editors article](/core-features/in
 Run the following command to generate a new "hello-world" component. Note how we append `--dry-run` to first check the output.
 
 ```{% command="npx nx g @nx/angular:component hello-world --directory=src/app/hello-world --standalone --dry-run" path="myngapp" %}
->  NX  Generating @nx/angular:component
+ NX  Generating @nx/angular:component
 
 CREATE src/app/hello-world/hello-world.component.css
 CREATE src/app/hello-world/hello-world.component.html
@@ -347,7 +347,7 @@ Build at: 2023-05-23T14:00:31.981Z - Hash: 9086e92ce0bfefca - Time: 5228ms
 
  ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project myngapp (7s)
+  NX   Successfully ran target build for project myngapp (7s)
 ```
 
 All the required files will be placed in the `dist/myngapp` folder and can be deployed to your favorite hosting provider.
@@ -799,7 +799,7 @@ If you lint your workspace you'll get an error now:
 
  —————————————————————————————————————————————————————————————————————
 
- >  NX   Ran target lint for 5 projects (2s)
+  NX   Ran target lint for 5 projects (2s)
 
     ✔    4/5 succeeded [0 read from cache]
 

@@ -221,7 +221,7 @@ Clearly this is not a scalable solution as it requires us to manually add every 
 
  ————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for 6 projects (10s)
+  NX   Successfully ran target build for 6 projects (10s)
 ```
 
 This change makes our CI pipeline configuration more maintainable. For a small repository, this might be good enough, but after a little bit of growth this approach will cause your CI times to become unmanageable.
@@ -236,7 +236,7 @@ Nx comes with a dedicated ["affected" command](/ci/features/affected) to help wi
 
  ——————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project cart and 3 tasks it depends on (4s)
+  NX   Successfully ran target build for project cart and 3 tasks it depends on (4s)
 ```
 
 ### Configuring the Comparison Range for Affected Commands
@@ -315,7 +315,7 @@ Reducing the number of tasks to run via [affected commands](/ci/features/affecte
 ```{% command="pnpm nx connect" %}
 $ nx g nx:connect-to-nx-cloud --quiet --no-interactive
 
- >  NX   Remote caching via Nx Cloud has been enabled
+  NX   Remote caching via Nx Cloud has been enabled
 
    In addition to the caching, Nx Cloud provides config-free distributed execution,
    UI for viewing complex runs and GitHub integration. Learn more at https://nx.app

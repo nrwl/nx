@@ -105,7 +105,7 @@ Run the `@nx/angular:component` generator with the command:
 
 ```{% command="npx nx g @nx/angular:component banner --project=shared-ui --export" path="~/store" %}
 
->  NX  Generating @nx/angular:component
+ NX  Generating @nx/angular:component
 
 CREATE shared/ui/src/lib/banner/banner.component.css
 CREATE shared/ui/src/lib/banner/banner.component.html
@@ -141,7 +141,7 @@ Create a cart-route component:
 
 ```{% command="npx nx g @nx/angular:component cart-route --project=cart" path="~/store" %}
 
->  NX  Generating @nx/angular:component
+ NX  Generating @nx/angular:component
 
 CREATE cart/src/lib/cart-route/cart-route.component.css
 CREATE cart/src/lib/cart-route/cart-route.component.html

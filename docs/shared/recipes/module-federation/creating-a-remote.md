@@ -18,7 +18,7 @@ To generate a remote application in your workspace, run the following command:
 {% tab label="React" %}
 
 ```{% command="nx g @nx/react:remote myremote --directory=apps/react/myremote" %}
->  NX  Generating @nx/react:remote
+ NX  Generating @nx/react:remote
 
 CREATE apps/react/myremote/src/app/app.spec.tsx
 CREATE apps/react/myremote/src/assets/.gitkeep
@@ -126,7 +126,7 @@ The command would look like the following:
 {% tab label="React" %}
 
 ```{% command="nx g @nx/react:remote myremote --directory=apps/react/myremote --host=shell" %}
->  NX  Generating @nx/react:remote
+ NX  Generating @nx/react:remote
 
 CREATE apps/react/myremote/src/app/app.spec.tsx
 CREATE apps/react/myremote/src/assets/.gitkeep

@@ -163,12 +163,12 @@ It may take a few minutes.
 ✔ Do you want to update to TypeScript v5.0? (Y/n) · false
 ✔ Do you want to update the Angular version to v16? (Y/n) · false
 
- >  NX   The migrate command has run successfully.
+  NX   The migrate command has run successfully.
 
    - package.json has been updated.
    - migrations.json has been generated.
 
- >  NX   Next steps:
+  NX   Next steps:
 
    - Make sure package.json changes make sense and then run 'pnpm install --no-frozen-lockfile',
    - Run 'pnpm exec nx migrate --run-migrations'

@@ -24,7 +24,7 @@ To mitigate the impact of this change of direction, Nx will prompt you when runn
 ```{% command="nx g lib my-lib --directory=shared/my-lib" path="~/myorg" %}
 ✔ Which generator would you like to use? · @nx/node:library
 
->  NX  Generating @nx/node:library
+ NX  Generating @nx/node:library
 
 ? What should be the project name and where should it be generated? …
 ❯ As provided:

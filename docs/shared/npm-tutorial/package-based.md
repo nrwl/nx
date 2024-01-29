@@ -223,7 +223,7 @@ Run the command:
 
  ——————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project is-even (33ms)
+  NX   Successfully ran target build for project is-even (33ms)
 
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 
@@ -241,7 +241,7 @@ To run the `build` target for all the packages in the workspace, use:
 
  ————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for 2 projects (35ms)
+  NX   Successfully ran target build for 2 projects (35ms)
 
    Nx read the output from the cache instead of running the command for 2 out of 2 tasks.
 ```
@@ -254,7 +254,7 @@ Notice that both builds are replayed from cache. We can skip the cache by adding
 
  ———————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for 2 projects (2s)
+  NX   Successfully ran target build for 2 projects (2s)
 ```
 
 Notice that using this method, the `is-even` build ran before the `is-odd` build, and that the `is-even` build only happened once. This demonstrates how `run-many` is informed by the `targetDefaults` we set earlier.
@@ -263,7 +263,7 @@ You can also only run tasks on packages that got changed by using the command:
 
 ```{% command="npx nx affected -t build" %}
 
- >  NX   Affected criteria defaulted to --base=main --head=HEAD
+  NX   Affected criteria defaulted to --base=main --head=HEAD
 
 
     ✔  nx run is-even:build  [existing outputs match the cache, left as is]
@@ -271,7 +271,7 @@ You can also only run tasks on packages that got changed by using the command:
 
  ——————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for 2 projects (34ms)
+  NX   Successfully ran target build for 2 projects (34ms)
 
    Nx read the output from the cache instead of running the command for 2 out of 2 tasks.
 ```

@@ -137,7 +137,7 @@ Hello, World!
 
  —————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target serve for project cli (2s)
+  NX   Successfully ran target serve for project cli (2s)
 
    See Nx Cloud run details at https://nx.app/runs/THRW7SDRL9S
 

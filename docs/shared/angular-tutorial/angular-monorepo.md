@@ -52,7 +52,7 @@ title="Tutorial: Standalone Angular Application"
 Create a new Angular monorepo with the following command:
 
 ```{% command="npx create-nx-workspace@latest angular-monorepo --preset=angular-monorepo" path="~" %}
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · angular-store
 ✔ Which bundler would you like to use? · esbuild
@@ -186,7 +186,7 @@ Nx plugins usually provide [generators](/core-features/plugin-features/use-code-
 
 ```{% command="npx nx list @nx/angular" path="angular-monorepo" %}
 
- >  NX   Capabilities in @nx/angular:
+  NX   Capabilities in @nx/angular:
 
    GENERATORS
 
@@ -228,7 +228,7 @@ More info can be found in [the integrate with editors article](/core-features/in
 Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
 
 ```{% command="npx nx g @nx/angular:app inventory --directory=apps/inventory --dry-run" path="angular-monorepo" %}
->  NX  Generating @nx/angular:application
+ NX  Generating @nx/angular:application
 
 ✔ Would you like to configure routing for this application? (y/N) · false
 ✔ Would you like to use Standalone Components? (y/N) · true
@@ -637,7 +637,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 
  ——————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
+  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
 
    Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
@@ -773,7 +773,7 @@ nx graph --affected
 If you're ready and want to ship your applications, you can build them using
 
 ```{% command="npx nx run-many -t build" path="angular-monorepo" %}
->  NX  Generating @nx/angular:component
+ NX  Generating @nx/angular:component
 
 CREATE libs/orders/src/lib/order-list/order-list.component.css
 CREATE libs/orders/src/lib/order-list/order-list.component.html
@@ -787,7 +787,7 @@ UPDATE libs/orders/src/index.ts
 
  ———————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for 2 projects (7s)
+  NX   Successfully ran target build for 2 projects (7s)
 ```
 
 All the required files will be placed in `dist/apps/angular-store` and `dist/apps/inventory` and can be deployed to your favorite hosting provider.
@@ -941,7 +941,7 @@ export class ProductListComponent {}
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
- >  NX   Running target lint for 7 projects
+  NX   Running target lint for 7 projects
     ✖  nx run products:lint
        Linting "products"...
 
@@ -965,7 +965,7 @@ If you lint your workspace you'll get an error now:
 
  ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Ran target lint for 7 projects (3s)
+  NX   Ran target lint for 7 projects (3s)
 
     ✔    6/7 succeeded [0 read from cache]
 

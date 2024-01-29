@@ -193,7 +193,7 @@ Done compiling TypeScript files for project "is-even".
 
  —————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project is-even (713ms)
+  NX   Successfully ran target build for project is-even (713ms)
 ```
 
 ## Running Multiple Tasks
@@ -212,7 +212,7 @@ What you would get is the following:
 
  —————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for 2 projects (914ms)
+  NX   Successfully ran target build for 2 projects (914ms)
 
    Nx read the output from the cache instead of running the command for 1 out of 2 tasks.
 ```

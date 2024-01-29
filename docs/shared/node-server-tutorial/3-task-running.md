@@ -85,7 +85,7 @@ Done compiling TypeScript files for project "auth".
 
  ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project auth (1s)
+  NX   Successfully ran target build for project auth (1s)
 ```
 
 You can now find your built `auth` distributable in your `dist/auth/` directory, as specified in the `outputPath` property of the `build` target options in your `project.json` file.
@@ -104,7 +104,7 @@ All files pass linting.
 
  ———————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target lint for project products-api (777ms)
+  NX   Successfully ran target lint for project products-api (777ms)
 ```
 
 ## Run e2e Tests
@@ -146,7 +146,7 @@ Tearing down...
 
  ———————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target e2e for project e2e (2s)
+  NX   Successfully ran target e2e for project e2e (2s)
 ```
 
 ## What's Next

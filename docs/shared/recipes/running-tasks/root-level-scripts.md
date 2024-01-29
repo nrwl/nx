@@ -49,7 +49,7 @@ Documentation site generated in /docs
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target docs for project myorg (5s)
+  NX   Successfully ran target docs for project myorg (5s)
 ```
 
 ## Configuring a Root-Level Target
@@ -91,7 +91,7 @@ Documentation site generated in /docs
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target docs for project myorg (31ms)
+  NX   Successfully ran target docs for project myorg (31ms)
 
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```

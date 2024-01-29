@@ -30,7 +30,7 @@ This will guide you through the setup, asking whether you want a monorepo or a s
 
 ```{% command="npx create-nx-workspace" path="~" %}
 
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Where would you like to create your workspace? · myorg
 ? Which stack do you want to use? …

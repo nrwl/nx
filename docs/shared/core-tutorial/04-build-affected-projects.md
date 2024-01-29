@@ -71,7 +71,7 @@ Printing the affected projects can be handy, but usually you want to do somethin
 
  ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for 2 projects (2s)
+  NX   Successfully ran target build for 2 projects (2s)
 
    See Nx Cloud run details at https://nx.app/runs/XfhRFaOyGCE
 ```

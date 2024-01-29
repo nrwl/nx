@@ -20,7 +20,7 @@ To generate just a host application in your workspace, run the following command
 {% tab label="React" %}
 
 ```{% command="nx g @nx/react:host shell --directory=apps/react/shell" %}
->  NX  Generating @nx/react:host
+ NX  Generating @nx/react:host
 
 CREATE apps/react/shell/src/app/app.spec.tsx
 CREATE apps/react/shell/src/assets/.gitkeep
@@ -88,7 +88,7 @@ To scaffold a host application along with remote applications in your workspace,
 {% tab label="React" %}
 
 ```{% command="nx g @nx/react:host shell-with-remotes --directory=apps/react/with-remotes/shell --remotes=remote1,remote2" %}
->  NX  Generating @nx/react:host
+ NX  Generating @nx/react:host
 
 CREATE apps/react/with-remotes/shell/src/app/app.spec.tsx
 CREATE apps/react/with-remotes/shell/src/assets/.gitkeep

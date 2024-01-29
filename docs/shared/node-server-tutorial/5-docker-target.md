@@ -80,7 +80,7 @@ Use 'docker scan' to run Snyk tests against images to find vulnerabilities and l
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target docker-build for project products-api and 1 task it depends on (2s)
+  NX   Successfully ran target docker-build for project products-api and 1 task it depends on (2s)
 
    View logs and investigate cache misses at https://nx.app/runs/NrNdfzx12g
 ```
@@ -103,7 +103,7 @@ The `docker-build` command is defined as a target in the root `project.json` fil
 You can also add a `Dockerfile` to a new node app using the `--docker` flag. Here we're creating an `orders-api` application:
 
 ```{% command="npx nx g @nx/node:app orders-api --docker" path="~/products-api" %}
->  NX  Generating @nx/node:application
+ NX  Generating @nx/node:application
 
 ✔ Which framework do you want to use? · express
 CREATE orders-api/src/assets/.gitkeep

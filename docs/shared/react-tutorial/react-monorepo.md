@@ -55,7 +55,7 @@ title="Tutorial: Standalone React Application"
 Create a new React monorepo with the following command:
 
 ```{% command="npx create-nx-workspace@latest react-monorepo --preset=react-monorepo" path="~" %}
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Application name · react-store
 ✔ Which bundler would you like to use? · vite
@@ -184,7 +184,7 @@ Nx plugins usually provide [generators](/core-features/plugin-features/use-code-
 
 ```{% command="npx nx list @nx/react" path="react-monorepo" %}
 
- >  NX   Capabilities in @nx/react:
+  NX   Capabilities in @nx/react:
 
    GENERATORS
 
@@ -222,7 +222,7 @@ More info can be found in [the integrate with editors article](/core-features/in
 Run the following command to generate a new `inventory` application. Note how we append `--dry-run` to first check the output.
 
 ```{% command="npx nx g @nx/react:app inventory --directory=apps/inventory --dry-run" path="react-monorepo" %}
->  NX  Generating @nx/react:application
+ NX  Generating @nx/react:application
 
 ✔ Would you like to add React Router to this application? (y/N) · false
 ✔ Which E2E test runner would you like to use? · cypress
@@ -660,7 +660,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
 
  ——————————————————————————————————————————————————————
 
- >  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
+  NX   Successfully ran targets test, lint, e2e for 5 projects (54ms)
 
    Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
@@ -819,7 +819,7 @@ dist/react-store/assets/index-378e8124.js   165.64 kB │ gzip: 51.63 kB
 
  ——————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project reactutorial (1s)
+  NX   Successfully ran target build for project reactutorial (1s)
 ```
 
 All the required files will be placed in `dist/react-store` and `dist/inventory` and can be deployed to your favorite hosting provider.
@@ -977,7 +977,7 @@ export default ProductList;
 If you lint your workspace you'll get an error now:
 
 ```{% command="nx run-many -t lint" %}
->  NX   Running target lint for 7 projects
+ NX   Running target lint for 7 projects
     ✖  nx run products:lint
        Linting "products"...
 
@@ -1001,7 +1001,7 @@ If you lint your workspace you'll get an error now:
 
  ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Ran target lint for 7 projects (2s)
+  NX   Ran target lint for 7 projects (2s)
 
     ✔    6/7 succeeded [0 read from cache]
 

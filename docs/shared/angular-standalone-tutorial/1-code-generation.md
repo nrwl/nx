@@ -30,7 +30,7 @@ Run the command `npx create-nx-workspace@latest` and when prompted, provide the 
 
 ```{% command="npx create-nx-workspace@latest" path="~" %}
 
- >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
+  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
 ✔ Where would you like to create your workspace? · store
 ✔ Which stack do you want to use? · angular
@@ -71,7 +71,7 @@ As far as Nx is concerned, the root-level `store` app owns every file that doesn
 
 ```{% command="npx nx g @nx/angular:component shop --project=store" path="~/store" %}
 
->  NX  Generating @nx/angular:component
+ NX  Generating @nx/angular:component
 
 CREATE src/app/shop/shop.component.css
 CREATE src/app/shop/shop.component.html
@@ -88,7 +88,7 @@ To create the `cart` and `shared/ui` libraries, use the nx/angular:lib` generato
 
 ```{% command="npx nx g @nx/angular:library cart" path="~/store" %}
 
->  NX  Generating @nx/angular:library
+ NX  Generating @nx/angular:library
 
 CREATE cart/README.md
 CREATE cart/tsconfig.lib.json
@@ -105,7 +105,7 @@ CREATE cart/.eslintrc.json
 
 ```{% command="npx nx g @nx/angular:lib shared/ui --buildable" path="~/store" %}
 
->  NX  Generating @nx/angular:library
+ NX  Generating @nx/angular:library
 
 UPDATE jest.config.ts
 CREATE jest.config.app.ts

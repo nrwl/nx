@@ -357,7 +357,7 @@ If you inspect the terminal output, you'll see something like this, even if you 
 
  (snip)
 
- >  NX   Successfully ran target build for project about
+  NX   Successfully ran target build for project about
 
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 

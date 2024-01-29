@@ -29,20 +29,20 @@ created dist in 786ms
 
  —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project header (2s)
+  NX   Successfully ran target build for project header (2s)
 
    See logs and investigate cache misses at https://cloud.nx.app/runs/k0HDHACpL8
 
 
- >  NX   Resetting the Nx workspace cache and stopping the Nx Daemon.
+  NX   Resetting the Nx workspace cache and stopping the Nx Daemon.
 
    This might take a few minutes.
 
 
- >  NX   Daemon Server - Stopped
+  NX   Daemon Server - Stopped
 
 
- >  NX   Successfully reset the Nx workspace.
+  NX   Successfully reset the Nx workspace.
 
 
 > nx run header:build  [remote cache]
@@ -57,7 +57,7 @@ created dist in 786ms
 
  —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target build for project header (664ms)
+  NX   Successfully ran target build for project header (664ms)
 
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 
@@ -69,7 +69,7 @@ created dist in 786ms
 During the setup process you might have seen a link to claim your Nx Cloud connected workspace.
 
 ```plaintext
->  NX   NOTE  Nx Cloud has been enabled
+ NX   NOTE  Nx Cloud has been enabled
 
   Your workspace is currently public. Anybody with code access
   can view the workspace on nx.app.
