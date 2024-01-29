@@ -1185,6 +1185,12 @@
                   "id": "automatically-version-with-conventional-commits",
                   "tags": ["nx-release"],
                   "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
+                },
+                {
+                  "name": "Publish in CI/CD",
+                  "id": "publish-in-ci-cd",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-in-ci-cd"
                 }
               ]
             },

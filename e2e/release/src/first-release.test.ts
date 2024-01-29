@@ -76,7 +76,7 @@ describe('nx release first run', () => {
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
-  });
+  }, 60000);
   afterAll(() => cleanupProject());
 
   describe('without --first-release', () => {

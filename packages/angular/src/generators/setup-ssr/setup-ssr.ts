@@ -8,6 +8,7 @@ import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
   addDependencies,
   addHydration,
+  addServerFile,
   generateSSRFiles,
   generateTsConfigServerJsonForBrowserBuilder,
   normalizeOptions,
@@ -50,6 +51,8 @@ export async function setupSsr(tree: Tree, schema: Schema) {
     updateProjectConfigForBrowserBuilder(tree, options);
     generateTsConfigServerJsonForBrowserBuilder(tree, options);
   }
+
+  addServerFile(tree, options, isUsingApplicationBuilder);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

@@ -3,6 +3,7 @@ import {
   readJson,
   readProjectConfiguration,
   updateJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -140,6 +141,45 @@ describe('setupSSR', () => {
       `);
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.targetDefaults.server).toBeUndefined();
+    });
+
+    it('should support object output option using a custom "outputPath.browser" and "outputPath.server" values', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.outputPath = {
+        base: project.targets.build.options.outputPath,
+        browser: 'public',
+        server: 'node-server',
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1' });
+
+      const serverFileContent = tree.read('app1/server.ts', 'utf-8');
+      expect(serverFileContent).toContain(
+        `resolve(serverDistFolder, '../public')`
+      );
+    });
+
+    it('should remove "outputPath.browser" when it is an empty string', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.outputPath = {
+        base: project.targets.build.options.outputPath,
+        browser: '',
+        server: 'node-server',
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1' });
+
+      const updatedProject = readProjectConfiguration(tree, 'app1');
+      expect(updatedProject.targets.build.options.outputPath).toStrictEqual({
+        base: 'dist/app1',
+        server: 'node-server',
+      });
     });
   });
 

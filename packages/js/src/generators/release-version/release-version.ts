@@ -27,7 +27,7 @@ import {
   deriveNewSemverVersion,
   validReleaseVersionPrefixes,
 } from 'nx/src/command-line/release/version';
-import { daemonClient } from 'nx/src/daemon/client/client';
+
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { relative } from 'path';
@@ -500,29 +500,7 @@ To fix this you will either need to add a package.json file at that location, or
       data: versionData,
       callback: async (tree, opts) => {
         const cwd = tree.root;
-
-        const isDaemonEnabled = daemonClient.enabled();
-        if (isDaemonEnabled) {
-          // temporarily stop the daemon, as it will error if the lock file is updated
-          await daemonClient.stop();
-        }
-
-        const updatedFiles = updateLockFile(cwd, opts);
-
-        if (isDaemonEnabled) {
-          try {
-            await daemonClient.startInBackground();
-          } catch (e) {
-            // If the daemon fails to start, we don't want to prevent the user from continuing, so we just log the error and move on
-            if (opts.verbose) {
-              output.warn({
-                title:
-                  'Unable to restart the Nx Daemon. It will be disabled until you run "nx reset"',
-                bodyLines: [e.message],
-              });
-            }
-          }
-        }
+        const updatedFiles = await updateLockFile(cwd, opts);
         return updatedFiles;
       },
     };
