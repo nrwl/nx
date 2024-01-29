@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createProjectGraphAsync, workspaceRoot } from '@nx/devkit';
+import * as chalk from 'chalk';
 import { execSync } from 'node:child_process';
 import { rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -7,7 +8,6 @@ import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
 import { ReleaseType, inc, major, parse } from 'semver';
 import * as yargs from 'yargs';
-import * as chalk from 'chalk';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -58,6 +58,9 @@ const LARGE_BUFFER = 1024 * 1000000;
     if (options.dryRun) {
       versionCommand += ' --dry-run';
     }
+    if (isVerboseLogging) {
+      versionCommand += ' --verbose';
+    }
     console.log(`> ${versionCommand}`);
     execSync(versionCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
@@ -94,6 +97,9 @@ const LARGE_BUFFER = 1024 * 1000000;
     }
     if (options.dryRun) {
       changelogCommand += ' --dry-run';
+    }
+    if (isVerboseLogging) {
+      changelogCommand += ' --verbose';
     }
     console.log(`> ${changelogCommand}`);
     execSync(changelogCommand, {
