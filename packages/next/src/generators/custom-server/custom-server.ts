@@ -9,11 +9,12 @@ import {
 } from '@nx/devkit';
 import { CustomServerSchema } from './schema';
 import { join } from 'path';
+import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 
 export async function customServerGenerator(
   host: Tree,
   options: CustomServerSchema
-): Promise<void> {
+) {
   const project = readProjectConfiguration(host, options.project);
 
   if (
@@ -64,7 +65,7 @@ export async function customServerGenerator(
   project.targets.serve.configurations.production.customServerTarget = `${options.project}:serve-custom-server:production`;
 
   project.targets['build-custom-server'] = {
-    executor: '@nx/js:tsc',
+    executor: options.compiler === 'tsc' ? '@nx/js:tsc' : '@nx/js:swc',
     defaultConfiguration: 'production',
     options: {
       outputPath,
@@ -113,4 +114,8 @@ export async function customServerGenerator(
     json.targetDefaults['build-custom-server'].cache ??= true;
     return json;
   });
+
+  if (options.compiler === 'swc') {
+    return configureForSwc(host, project.root);
+  }
 }
