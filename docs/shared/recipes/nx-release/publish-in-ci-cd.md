@@ -121,11 +121,12 @@ jobs:
     name: Publish
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       id-token: write # needed for provenance data generation
     timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -192,6 +193,7 @@ jobs:
     name: Publish
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       id-token: write # needed for provenance data generation
 ```
 
