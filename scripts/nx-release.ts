@@ -117,6 +117,17 @@ const LARGE_BUFFER = 1024 * 1000000;
   if (options.dryRun) {
     console.warn('Not Publishing because --dryRun was passed');
   } else {
+    let version;
+    if (['minor', 'major', 'patch'].includes(options.version)) {
+      const currentLatestVersion = execSync('npm view nx@latest version')
+        .toString()
+        .trim();
+
+      version = inc(currentLatestVersion, options.version, undefined);
+    } else {
+      version = options.version;
+    }
+
     // If publishing locally, force all projects to not be private first
     if (options.local) {
       console.log(
@@ -159,21 +170,10 @@ const LARGE_BUFFER = 1024 * 1000000;
       stdio: [0, 1, 2],
       maxBuffer: LARGE_BUFFER,
     });
+
+    console.log(chalk.green` > Published version: ` + version);
+    console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
   }
-
-  let version;
-  if (['minor', 'major', 'patch'].includes(options.version)) {
-    const currentLatestVersion = execSync('npm view nx@latest version')
-      .toString()
-      .trim();
-
-    version = inc(currentLatestVersion, options.version, undefined);
-  } else {
-    version = options.version;
-  }
-
-  console.log(chalk.green` > Published version: ` + version);
-  console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
 
   process.exit(0);
 })();
