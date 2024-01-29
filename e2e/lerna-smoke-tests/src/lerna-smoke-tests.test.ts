@@ -75,7 +75,7 @@ describe('Lerna Smoke Tests', () => {
 
 
 
-         Lerna (powered by Nx)   Successfully ran target print-name for project package-1
+        Lerna (powered by Nx)   Successfully ran target print-name for project package-1
 
 
 

@@ -104,12 +104,12 @@ describe('nx release - private JS packages', () => {
     const publicPkg1PublishOutput = runCLI(`release publish -p ${publicPkg1}`);
     expect(publicPkg1PublishOutput).toMatchInlineSnapshot(`
 
-       NX   Your filter "{public-project-name}" matched the following projects:
+      NX   Your filter "{public-project-name}" matched the following projects:
 
       - {public-project-name}
 
 
-       NX   Running target nx-release-publish for project {public-project-name}:
+      NX   Running target nx-release-publish for project {public-project-name}:
 
       - {public-project-name}
 
@@ -138,7 +138,7 @@ describe('nx release - private JS packages', () => {
 
 
 
-       NX   Successfully ran target nx-release-publish for project {public-project-name}
+      NX   Successfully ran target nx-release-publish for project {public-project-name}
 
 
 
@@ -148,12 +148,12 @@ describe('nx release - private JS packages', () => {
     const publicPkg2PublishOutput = runCLI(`release publish -p ${publicPkg2}`);
     expect(publicPkg2PublishOutput).toMatchInlineSnapshot(`
 
-       NX   Your filter "{public-project-name}" matched the following projects:
+      NX   Your filter "{public-project-name}" matched the following projects:
 
       - {public-project-name}
 
 
-       NX   Running target nx-release-publish for project {public-project-name}:
+      NX   Running target nx-release-publish for project {public-project-name}:
 
       - {public-project-name}
 
@@ -182,7 +182,7 @@ describe('nx release - private JS packages', () => {
 
 
 
-       NX   Successfully ran target nx-release-publish for project {public-project-name}
+      NX   Successfully ran target nx-release-publish for project {public-project-name}
 
 
 
@@ -193,12 +193,12 @@ describe('nx release - private JS packages', () => {
     });
     expect(privatePkgPublishOutput).toMatchInlineSnapshot(`
 
-       NX   Your filter "{private-project-name}" matched the following projects:
+      NX   Your filter "{private-project-name}" matched the following projects:
 
       - {private-project-name}
 
 
-       NX   Based on your config, the following projects were matched for publishing but do not have the "nx-release-publish" target specified:
+      NX   Based on your config, the following projects were matched for publishing but do not have the "nx-release-publish" target specified:
 
       - {private-project-name}
 
