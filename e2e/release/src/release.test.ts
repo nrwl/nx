@@ -573,7 +573,7 @@ ${JSON.stringify(
 
 
 
-       NX   Successfully ran target nx-release-publish for 3 projects
+      NX   Successfully ran target nx-release-publish for 3 projects
 
 
 
@@ -1085,11 +1085,11 @@ ${JSON.stringify(
 
     expect(releaseOutput4a).toMatchInlineSnapshot(`
 
-       NX   Running release version for project: {project-name}
+      NX   Running release version for project: {project-name}
 
       {project-name} 🔍 Reading data for package "@proj/{project-name}" from {project-name}/package.json
 
-       NX   No git tags matching pattern ">{version}" for project "{project-name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.
+      NX   No git tags matching pattern ">{version}" for project "{project-name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.
 
 
     `);

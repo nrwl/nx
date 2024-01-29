@@ -42,7 +42,7 @@ describe('Lerna Smoke Tests', () => {
       result = result.replace(/.*\/node_modules\/.*\n/, ''); // yarn adds "$ /node_modules/.bin/lerna repair" to the output
       expect(result).toMatchInlineSnapshot(`
 
-         Lerna   No changes were necessary. This workspace is up to date!
+        Lerna   No changes were necessary. This workspace is up to date!
 
 
       `);

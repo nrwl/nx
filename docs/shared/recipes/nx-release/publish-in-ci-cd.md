@@ -100,7 +100,7 @@ Published to https://registry.npmjs.org with tag "latest"
 
  —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
- >  NX   Successfully ran target nx-release-publish for 3 projects
+ NX   Successfully ran target nx-release-publish for 3 projects
 ```
 
 ## Publish in Github Actions
