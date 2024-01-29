@@ -78,7 +78,7 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
         },
       },
       typecheck: {
-        command: `tsc`,
+        command: `tsc --project tsconfig.app.json`,
         options: {
           cwd: options.projectRoot,
         },
