@@ -32,6 +32,7 @@ describe('init', () => {
   });
 
   it('should setup e2e target defaults', async () => {
+    process.env.NX_PCV3 = 'false';
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default'];
@@ -46,10 +47,11 @@ describe('init', () => {
       cache: true,
       inputs: ['default', '^production'],
     });
+
+    delete process.env.NX_PCV3;
   });
 
   it('should setup @nx/cypress/plugin', async () => {
-    process.env.NX_PCV3 = 'true';
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
       json.namedInputs.production = ['default'];
@@ -91,7 +93,5 @@ describe('init', () => {
         },
       }
     `);
-
-    delete process.env.NX_PCV3;
   });
 });
