@@ -6,6 +6,7 @@ import {
   type NxJsonConfiguration,
   type Tree,
 } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './rename-webpack-dev-server';
 
@@ -14,6 +15,9 @@ describe('rename-webpack-dev-server migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   it('should replace @nx/angular:webpack-dev-server with @nx/angular:dev-server', async () => {

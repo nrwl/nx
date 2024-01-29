@@ -79,7 +79,7 @@ function printSuccessMessage(url: string) {
   } catch (e) {}
 
   output.note({
-    title: `Distributed caching via Nx Cloud has been enabled`,
+    title: `Remote caching via Nx Cloud has been enabled`,
     bodyLines: [
       `In addition to the caching, Nx Cloud provides config-free distributed execution,`,
       `UI for viewing complex runs and GitHub integration. Learn more at https://nx.app`,
@@ -95,6 +95,7 @@ function printSuccessMessage(url: string) {
 interface ConnectToNxCloudOptions {
   analytics: boolean;
   installationSource: string;
+  hideFormatLogs?: boolean;
 }
 
 function addNxCloudOptionsToNxJson(
@@ -102,6 +103,9 @@ function addNxCloudOptionsToNxJson(
   nxJson: NxJsonConfiguration,
   token: string
 ) {
+  nxJson ??= {
+    extends: 'nx/presets/npm.json',
+  };
   nxJson.nxCloudAccessToken = token;
   const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
   if (overrideUrl) {
@@ -114,9 +118,11 @@ export async function connectToNxCloud(
   tree: Tree,
   schema: ConnectToNxCloudOptions
 ) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) as
+    | null
+    | (NxJsonConfiguration & { neverConnectToCloud: boolean });
 
-  if ((nxJson as any).neverConnectToCloud) {
+  if (nxJson?.neverConnectToCloud) {
     return () => {
       printCloudConnectionDisabledMessage();
     };
@@ -130,7 +136,9 @@ export async function connectToNxCloud(
 
     addNxCloudOptionsToNxJson(tree, nxJson, r.token);
 
-    await formatChangedFilesWithPrettierIfAvailable(tree);
+    await formatChangedFilesWithPrettierIfAvailable(tree, {
+      silent: schema.hideFormatLogs,
+    });
 
     return () => printSuccessMessage(r.url);
   }

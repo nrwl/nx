@@ -42,6 +42,7 @@ export const allowedProjectExtensions = [
   'root',
   'sourceRoot',
   'projectType',
+  'release',
 ] as const;
 
 // If we pass props on the workspace that angular doesn't know about,

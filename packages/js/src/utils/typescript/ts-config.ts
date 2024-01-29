@@ -64,6 +64,7 @@ export function addTsConfigPath(
   lookupPaths: string[]
 ) {
   updateJson(tree, getRootTsConfigPathInTree(tree), (json) => {
+    json.compilerOptions ??= {};
     const c = json.compilerOptions;
     c.paths ??= {};
 

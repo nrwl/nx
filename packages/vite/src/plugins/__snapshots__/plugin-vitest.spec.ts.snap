@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/vite/plugin root project should create nodes 1`] = `
+{
+  "projects": {
+    ".": {
+      "root": ".",
+      "targets": {
+        "test": {
+          "cache": true,
+          "command": "vitest run",
+          "inputs": [
+            "default",
+            "^production",
+            {
+              "externalDependencies": [
+                "vitest",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "{projectRoot}/coverage",
+          ],
+        },
+      },
+    },
+  },
+}
+`;

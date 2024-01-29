@@ -1,0 +1,1328 @@
+{
+  "/ci/intro": {
+    "id": "intro",
+    "name": "Intro",
+    "description": "Learn about basic Nx Cloud knowledge.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ci-with-nx",
+        "name": "CI with Nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/intro/ci-with-nx",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/intro/ci-with-nx",
+        "tags": []
+      },
+      {
+        "id": "tutorials",
+        "name": "Tutorials",
+        "description": "Tutorials setting up CI with Nx",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "circle",
+            "name": "Circle CI with Nx",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/tutorial/circle",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/intro/tutorials/circle",
+            "tags": []
+          },
+          {
+            "id": "github-actions",
+            "name": "GitHub Actions with Nx",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/tutorial/github-actions",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/intro/tutorials/github-actions",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/intro/tutorials",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/intro",
+    "tags": []
+  },
+  "/ci/intro/ci-with-nx": {
+    "id": "ci-with-nx",
+    "name": "CI with Nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/intro/ci-with-nx",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/intro/ci-with-nx",
+    "tags": []
+  },
+  "/ci/intro/tutorials": {
+    "id": "tutorials",
+    "name": "Tutorials",
+    "description": "Tutorials setting up CI with Nx",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "circle",
+        "name": "Circle CI with Nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/tutorial/circle",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/intro/tutorials/circle",
+        "tags": []
+      },
+      {
+        "id": "github-actions",
+        "name": "GitHub Actions with Nx",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/tutorial/github-actions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/intro/tutorials/github-actions",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/intro/tutorials",
+    "tags": []
+  },
+  "/ci/intro/tutorials/circle": {
+    "id": "circle",
+    "name": "Circle CI with Nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/tutorial/circle",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/intro/tutorials/circle",
+    "tags": []
+  },
+  "/ci/intro/tutorials/github-actions": {
+    "id": "github-actions",
+    "name": "GitHub Actions with Nx",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/tutorial/github-actions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/intro/tutorials/github-actions",
+    "tags": []
+  },
+  "/ci/features": {
+    "id": "features",
+    "name": "Features",
+    "description": "Features of Nx and Nx Cloud that improve CI",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "remote-cache",
+        "name": "Use Remote Caching",
+        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+        "mediaImage": "",
+        "file": "shared/core-features/remote-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/remote-cache",
+        "tags": ["remote-cache"]
+      },
+      {
+        "id": "affected",
+        "name": "Run Only Tasks Affected by a PR",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/using-nx/affected",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/affected",
+        "tags": ["run-tasks"]
+      },
+      {
+        "id": "distribute-task-execution",
+        "name": "Distribute Task Execution",
+        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
+        "mediaImage": "",
+        "file": "shared/core-features/distribute-task-execution",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/distribute-task-execution",
+        "tags": ["distribute-task-execution"]
+      },
+      {
+        "id": "on-premise",
+        "name": "Set up Nx Cloud On-Premise",
+        "description": "Set up Nx Cloud on machines that you control",
+        "mediaImage": "",
+        "file": "nx-cloud/private/nx-enterprise-on-prem",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/on-premise",
+        "tags": ["on-premise"]
+      },
+      {
+        "id": "nx-agents",
+        "name": "Nx Agents",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/intro/nx-agents",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/nx-agents",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/features",
+    "tags": []
+  },
+  "/ci/features/remote-cache": {
+    "id": "remote-cache",
+    "name": "Use Remote Caching",
+    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+    "mediaImage": "",
+    "file": "shared/core-features/remote-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/remote-cache",
+    "tags": ["remote-cache"]
+  },
+  "/ci/features/affected": {
+    "id": "affected",
+    "name": "Run Only Tasks Affected by a PR",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/using-nx/affected",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/affected",
+    "tags": ["run-tasks"]
+  },
+  "/ci/features/distribute-task-execution": {
+    "id": "distribute-task-execution",
+    "name": "Distribute Task Execution",
+    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
+    "mediaImage": "",
+    "file": "shared/core-features/distribute-task-execution",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/distribute-task-execution",
+    "tags": ["distribute-task-execution"]
+  },
+  "/ci/features/on-premise": {
+    "id": "on-premise",
+    "name": "Set up Nx Cloud On-Premise",
+    "description": "Set up Nx Cloud on machines that you control",
+    "mediaImage": "",
+    "file": "nx-cloud/private/nx-enterprise-on-prem",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/on-premise",
+    "tags": ["on-premise"]
+  },
+  "/ci/features/nx-agents": {
+    "id": "nx-agents",
+    "name": "Nx Agents",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/intro/nx-agents",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/nx-agents",
+    "tags": []
+  },
+  "/ci/concepts": {
+    "id": "concepts",
+    "name": "Concepts",
+    "description": "Learn how to manage Nx Cloud subscriptions and other options.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "building-blocks-fast-ci",
+        "name": "The Building Blocks of Fast CI",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/concepts/building-blocks-fast-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/building-blocks-fast-ci",
+        "tags": []
+      },
+      {
+        "id": "reduce-waste",
+        "name": "Reduce Wasted Time in CI",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/concepts/reduce-waste",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/reduce-waste",
+        "tags": []
+      },
+      {
+        "id": "parallelization-distribution",
+        "name": "Parallelization and Distribution",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/concepts/parallelization-distribution",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/parallelization-distribution",
+        "tags": ["distribute-task-execution"]
+      },
+      {
+        "id": "cache-security",
+        "name": "Cache Security",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/concepts/cache-security",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/concepts/cache-security",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/concepts",
+    "tags": []
+  },
+  "/ci/concepts/building-blocks-fast-ci": {
+    "id": "building-blocks-fast-ci",
+    "name": "The Building Blocks of Fast CI",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/concepts/building-blocks-fast-ci",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/building-blocks-fast-ci",
+    "tags": []
+  },
+  "/ci/concepts/reduce-waste": {
+    "id": "reduce-waste",
+    "name": "Reduce Wasted Time in CI",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/concepts/reduce-waste",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/reduce-waste",
+    "tags": []
+  },
+  "/ci/concepts/parallelization-distribution": {
+    "id": "parallelization-distribution",
+    "name": "Parallelization and Distribution",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/concepts/parallelization-distribution",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/parallelization-distribution",
+    "tags": ["distribute-task-execution"]
+  },
+  "/ci/concepts/cache-security": {
+    "id": "cache-security",
+    "name": "Cache Security",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/concepts/cache-security",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/concepts/cache-security",
+    "tags": []
+  },
+  "/ci/recipes": {
+    "id": "recipes",
+    "name": "Recipes",
+    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "set-up",
+        "name": "Set Up CI",
+        "description": "Learn how to set up Nx Cloud for your workspace.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "monorepo-ci-azure",
+            "name": "Setting up Azure Pipelines",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/monorepo-ci-azure",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/set-up/monorepo-ci-azure",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-circle-ci",
+            "name": "Setting up CircleCI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/monorepo-ci-circle-ci",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/set-up/monorepo-ci-circle-ci",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-github-actions",
+            "name": "Setting up GitHub Actions",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/monorepo-ci-github-actions",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/set-up/monorepo-ci-github-actions",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-jenkins",
+            "name": "Setting up Jenkins",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/monorepo-ci-jenkins",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/set-up/monorepo-ci-jenkins",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-gitlab",
+            "name": "Setting up GitLab",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/monorepo-ci-gitlab",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/set-up/monorepo-ci-gitlab",
+            "tags": []
+          },
+          {
+            "id": "monorepo-ci-bitbucket-pipelines",
+            "name": "Setting up Bitbucket",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/monorepo-ci-bitbucket-pipelines",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/set-up",
+        "tags": ["distribute-task-execution"]
+      },
+      {
+        "id": "security",
+        "name": "Security",
+        "description": "Manage access to Nx Cloud",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "google-auth",
+            "name": "Authenticate with Google Identity",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/recipes/google-auth",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/security/google-auth",
+            "tags": []
+          },
+          {
+            "id": "access-tokens",
+            "name": "Access Tokens",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/recipes/access-tokens",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/security/access-tokens",
+            "tags": []
+          },
+          {
+            "id": "encryption",
+            "name": "Enable End to End Encryption",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/recipes/encryption",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/security/encryption",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/security",
+        "tags": []
+      },
+      {
+        "id": "source-control-integration",
+        "name": "Source Control Integration",
+        "description": "Show Nx Cloud results directly in your pull request",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "github",
+            "name": "Enable GitHub PR Integration",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/set-up/github",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/source-control-integration/github",
+            "tags": []
+          },
+          {
+            "id": "bitbucket-cloud",
+            "name": "Enable Bitbucket Cloud PR Integration",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/set-up/bitbucket-cloud",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
+            "tags": []
+          },
+          {
+            "id": "gitlab",
+            "name": "Enable GitLab MR Integration",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/set-up/gitlab",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/source-control-integration/gitlab",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/source-control-integration",
+        "tags": []
+      },
+      {
+        "id": "on-premise",
+        "name": "On-Premise",
+        "description": "Manage an on-premise installation of Nx Cloud",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "auth-single-admin",
+            "name": "Authenticate with a Single Admin",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/private/auth-single-admin",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/on-premise/auth-single-admin",
+            "tags": []
+          },
+          {
+            "id": "auth-github",
+            "name": "Authenticate with GitHub",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/private/auth-github",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/on-premise/auth-github",
+            "tags": []
+          },
+          {
+            "id": "ami-setup",
+            "name": "On-Prem VM Setup",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/private/ami-setup",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/on-premise/ami-setup",
+            "tags": []
+          },
+          {
+            "id": "auth-gitlab",
+            "name": "Authenticate with GitLab",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/private/auth-gitlab",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/on-premise/auth-gitlab",
+            "tags": []
+          },
+          {
+            "id": "auth-bitbucket",
+            "name": "Authenticate with BitBucket",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/private/auth-bitbucket",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/on-premise/auth-bitbucket",
+            "tags": []
+          },
+          {
+            "id": "auth-saml",
+            "name": "Authenticate via SAML",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/private/auth-saml",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/on-premise/auth-saml",
+            "tags": []
+          },
+          {
+            "id": "auth-saml-managed",
+            "name": "Authenticate via SAML on Managed Version",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/private/auth-saml-managed",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/on-premise/auth-saml-managed",
+            "tags": []
+          },
+          {
+            "id": "advanced-config",
+            "name": "Advanced Configuration",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/private/advanced-config",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/on-premise/advanced-config",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/on-premise",
+        "tags": []
+      },
+      {
+        "id": "other",
+        "name": "Other",
+        "description": "Learn how to set up Nx Cloud for your workspace.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "record-commands",
+            "name": "Record Non-Nx Commands",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/set-up/record-commands",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/other/record-commands",
+            "tags": []
+          },
+          {
+            "id": "ci-deployment",
+            "name": "Prepare applications for deployment via CI",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/ci-deployment",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/other/ci-deployment",
+            "tags": ["docker", "deploy"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/other",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes",
+    "tags": []
+  },
+  "/ci/recipes/set-up": {
+    "id": "set-up",
+    "name": "Set Up CI",
+    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "monorepo-ci-azure",
+        "name": "Setting up Azure Pipelines",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/monorepo-ci-azure",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/set-up/monorepo-ci-azure",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-circle-ci",
+        "name": "Setting up CircleCI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/monorepo-ci-circle-ci",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/set-up/monorepo-ci-circle-ci",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-github-actions",
+        "name": "Setting up GitHub Actions",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/monorepo-ci-github-actions",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/set-up/monorepo-ci-github-actions",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-jenkins",
+        "name": "Setting up Jenkins",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/monorepo-ci-jenkins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/set-up/monorepo-ci-jenkins",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-gitlab",
+        "name": "Setting up GitLab",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/monorepo-ci-gitlab",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/set-up/monorepo-ci-gitlab",
+        "tags": []
+      },
+      {
+        "id": "monorepo-ci-bitbucket-pipelines",
+        "name": "Setting up Bitbucket",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/monorepo-ci-bitbucket-pipelines",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/set-up",
+    "tags": ["distribute-task-execution"]
+  },
+  "/ci/recipes/set-up/monorepo-ci-azure": {
+    "id": "monorepo-ci-azure",
+    "name": "Setting up Azure Pipelines",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/monorepo-ci-azure",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/set-up/monorepo-ci-azure",
+    "tags": []
+  },
+  "/ci/recipes/set-up/monorepo-ci-circle-ci": {
+    "id": "monorepo-ci-circle-ci",
+    "name": "Setting up CircleCI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/monorepo-ci-circle-ci",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/set-up/monorepo-ci-circle-ci",
+    "tags": []
+  },
+  "/ci/recipes/set-up/monorepo-ci-github-actions": {
+    "id": "monorepo-ci-github-actions",
+    "name": "Setting up GitHub Actions",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/monorepo-ci-github-actions",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/set-up/monorepo-ci-github-actions",
+    "tags": []
+  },
+  "/ci/recipes/set-up/monorepo-ci-jenkins": {
+    "id": "monorepo-ci-jenkins",
+    "name": "Setting up Jenkins",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/monorepo-ci-jenkins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/set-up/monorepo-ci-jenkins",
+    "tags": []
+  },
+  "/ci/recipes/set-up/monorepo-ci-gitlab": {
+    "id": "monorepo-ci-gitlab",
+    "name": "Setting up GitLab",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/monorepo-ci-gitlab",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/set-up/monorepo-ci-gitlab",
+    "tags": []
+  },
+  "/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines": {
+    "id": "monorepo-ci-bitbucket-pipelines",
+    "name": "Setting up Bitbucket",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/monorepo-ci-bitbucket-pipelines",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines",
+    "tags": []
+  },
+  "/ci/recipes/security": {
+    "id": "security",
+    "name": "Security",
+    "description": "Manage access to Nx Cloud",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "google-auth",
+        "name": "Authenticate with Google Identity",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/recipes/google-auth",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/security/google-auth",
+        "tags": []
+      },
+      {
+        "id": "access-tokens",
+        "name": "Access Tokens",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/recipes/access-tokens",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/security/access-tokens",
+        "tags": []
+      },
+      {
+        "id": "encryption",
+        "name": "Enable End to End Encryption",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/recipes/encryption",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/security/encryption",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/security",
+    "tags": []
+  },
+  "/ci/recipes/security/google-auth": {
+    "id": "google-auth",
+    "name": "Authenticate with Google Identity",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/recipes/google-auth",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/security/google-auth",
+    "tags": []
+  },
+  "/ci/recipes/security/access-tokens": {
+    "id": "access-tokens",
+    "name": "Access Tokens",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/recipes/access-tokens",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/security/access-tokens",
+    "tags": []
+  },
+  "/ci/recipes/security/encryption": {
+    "id": "encryption",
+    "name": "Enable End to End Encryption",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/recipes/encryption",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/security/encryption",
+    "tags": []
+  },
+  "/ci/recipes/source-control-integration": {
+    "id": "source-control-integration",
+    "name": "Source Control Integration",
+    "description": "Show Nx Cloud results directly in your pull request",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "github",
+        "name": "Enable GitHub PR Integration",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/set-up/github",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/source-control-integration/github",
+        "tags": []
+      },
+      {
+        "id": "bitbucket-cloud",
+        "name": "Enable Bitbucket Cloud PR Integration",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/set-up/bitbucket-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
+        "tags": []
+      },
+      {
+        "id": "gitlab",
+        "name": "Enable GitLab MR Integration",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/set-up/gitlab",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/source-control-integration/gitlab",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/source-control-integration",
+    "tags": []
+  },
+  "/ci/recipes/source-control-integration/github": {
+    "id": "github",
+    "name": "Enable GitHub PR Integration",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/set-up/github",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/source-control-integration/github",
+    "tags": []
+  },
+  "/ci/recipes/source-control-integration/bitbucket-cloud": {
+    "id": "bitbucket-cloud",
+    "name": "Enable Bitbucket Cloud PR Integration",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/set-up/bitbucket-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
+    "tags": []
+  },
+  "/ci/recipes/source-control-integration/gitlab": {
+    "id": "gitlab",
+    "name": "Enable GitLab MR Integration",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/set-up/gitlab",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/source-control-integration/gitlab",
+    "tags": []
+  },
+  "/ci/recipes/on-premise": {
+    "id": "on-premise",
+    "name": "On-Premise",
+    "description": "Manage an on-premise installation of Nx Cloud",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "auth-single-admin",
+        "name": "Authenticate with a Single Admin",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/private/auth-single-admin",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/on-premise/auth-single-admin",
+        "tags": []
+      },
+      {
+        "id": "auth-github",
+        "name": "Authenticate with GitHub",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/private/auth-github",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/on-premise/auth-github",
+        "tags": []
+      },
+      {
+        "id": "ami-setup",
+        "name": "On-Prem VM Setup",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/private/ami-setup",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/on-premise/ami-setup",
+        "tags": []
+      },
+      {
+        "id": "auth-gitlab",
+        "name": "Authenticate with GitLab",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/private/auth-gitlab",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/on-premise/auth-gitlab",
+        "tags": []
+      },
+      {
+        "id": "auth-bitbucket",
+        "name": "Authenticate with BitBucket",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/private/auth-bitbucket",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/on-premise/auth-bitbucket",
+        "tags": []
+      },
+      {
+        "id": "auth-saml",
+        "name": "Authenticate via SAML",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/private/auth-saml",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/on-premise/auth-saml",
+        "tags": []
+      },
+      {
+        "id": "auth-saml-managed",
+        "name": "Authenticate via SAML on Managed Version",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/private/auth-saml-managed",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/on-premise/auth-saml-managed",
+        "tags": []
+      },
+      {
+        "id": "advanced-config",
+        "name": "Advanced Configuration",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/private/advanced-config",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/on-premise/advanced-config",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/on-premise",
+    "tags": []
+  },
+  "/ci/recipes/on-premise/auth-single-admin": {
+    "id": "auth-single-admin",
+    "name": "Authenticate with a Single Admin",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/private/auth-single-admin",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/on-premise/auth-single-admin",
+    "tags": []
+  },
+  "/ci/recipes/on-premise/auth-github": {
+    "id": "auth-github",
+    "name": "Authenticate with GitHub",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/private/auth-github",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/on-premise/auth-github",
+    "tags": []
+  },
+  "/ci/recipes/on-premise/ami-setup": {
+    "id": "ami-setup",
+    "name": "On-Prem VM Setup",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/private/ami-setup",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/on-premise/ami-setup",
+    "tags": []
+  },
+  "/ci/recipes/on-premise/auth-gitlab": {
+    "id": "auth-gitlab",
+    "name": "Authenticate with GitLab",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/private/auth-gitlab",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/on-premise/auth-gitlab",
+    "tags": []
+  },
+  "/ci/recipes/on-premise/auth-bitbucket": {
+    "id": "auth-bitbucket",
+    "name": "Authenticate with BitBucket",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/private/auth-bitbucket",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/on-premise/auth-bitbucket",
+    "tags": []
+  },
+  "/ci/recipes/on-premise/auth-saml": {
+    "id": "auth-saml",
+    "name": "Authenticate via SAML",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/private/auth-saml",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/on-premise/auth-saml",
+    "tags": []
+  },
+  "/ci/recipes/on-premise/auth-saml-managed": {
+    "id": "auth-saml-managed",
+    "name": "Authenticate via SAML on Managed Version",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/private/auth-saml-managed",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/on-premise/auth-saml-managed",
+    "tags": []
+  },
+  "/ci/recipes/on-premise/advanced-config": {
+    "id": "advanced-config",
+    "name": "Advanced Configuration",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/private/advanced-config",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/on-premise/advanced-config",
+    "tags": []
+  },
+  "/ci/recipes/other": {
+    "id": "other",
+    "name": "Other",
+    "description": "Learn how to set up Nx Cloud for your workspace.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "record-commands",
+        "name": "Record Non-Nx Commands",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/set-up/record-commands",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/other/record-commands",
+        "tags": []
+      },
+      {
+        "id": "ci-deployment",
+        "name": "Prepare applications for deployment via CI",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/ci-deployment",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/other/ci-deployment",
+        "tags": ["docker", "deploy"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/other",
+    "tags": []
+  },
+  "/ci/recipes/other/record-commands": {
+    "id": "record-commands",
+    "name": "Record Non-Nx Commands",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/set-up/record-commands",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/other/record-commands",
+    "tags": []
+  },
+  "/ci/recipes/other/ci-deployment": {
+    "id": "ci-deployment",
+    "name": "Prepare applications for deployment via CI",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/ci-deployment",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/other/ci-deployment",
+    "tags": ["docker", "deploy"]
+  },
+  "/ci/reference": {
+    "id": "reference",
+    "name": "Reference",
+    "description": "Understand how to use Nx Cloud, what arguments and options are available for each component.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "config",
+        "name": "Configuration Options",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/config",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/config",
+        "tags": []
+      },
+      {
+        "id": "nx-cloud-cli",
+        "name": "nx-cloud CLI",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/nx-cloud-cli",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/nx-cloud-cli",
+        "tags": []
+      },
+      {
+        "id": "env-vars",
+        "name": "Environment Variables",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/env-vars",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/env-vars",
+        "tags": []
+      },
+      {
+        "id": "server-api",
+        "name": "Server API Reference",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/server-api",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/server-api",
+        "tags": []
+      },
+      {
+        "id": "release-notes",
+        "name": "Release Notes",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/release-notes",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/release-notes",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/reference",
+    "tags": []
+  },
+  "/ci/reference/config": {
+    "id": "config",
+    "name": "Configuration Options",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/config",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/config",
+    "tags": []
+  },
+  "/ci/reference/nx-cloud-cli": {
+    "id": "nx-cloud-cli",
+    "name": "nx-cloud CLI",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/nx-cloud-cli",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/nx-cloud-cli",
+    "tags": []
+  },
+  "/ci/reference/env-vars": {
+    "id": "env-vars",
+    "name": "Environment Variables",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/env-vars",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/env-vars",
+    "tags": []
+  },
+  "/ci/reference/server-api": {
+    "id": "server-api",
+    "name": "Server API Reference",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/server-api",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/server-api",
+    "tags": []
+  },
+  "/ci/reference/release-notes": {
+    "id": "release-notes",
+    "name": "Release Notes",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/release-notes",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/release-notes",
+    "tags": []
+  }
+}

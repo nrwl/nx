@@ -18,5 +18,6 @@ export interface Schema {
   customServer?: boolean;
   skipPackageJson?: boolean;
   appDir?: boolean;
+  src?: boolean;
   rootProject?: boolean;
 }

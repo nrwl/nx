@@ -22,7 +22,7 @@ describe('Next.js Styles', () => {
     const lessApp = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${lessApp} --no-interactive --style=less --appDir=false`
+      `generate @nx/next:app ${lessApp} --no-interactive --style=less --appDir=false --src=false`
     );
 
     await checkApp(lessApp, {

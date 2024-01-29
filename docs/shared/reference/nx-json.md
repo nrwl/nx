@@ -31,7 +31,25 @@ The following is an expanded example showing all options. Your `nx.json` will li
     }
   },
   "parallel": 4,
-  "cacheDirectory": "tmp/my-nx-cache"
+  "cacheDirectory": "tmp/my-nx-cache",
+  "release": {
+    "version": {
+      "generatorOptions": {
+        "currentVersionResolver": "git-tag",
+        "specifierSource": "conventional-commits"
+      }
+    },
+    "changelog": {
+      "git": {
+        "commit": true,
+        "tag": true
+      },
+      "workspaceChangelog": {
+        "createRelease": "github"
+      },
+      "projectChangelogs": true
+    }
+  }
 }
 ```
 
@@ -259,3 +277,181 @@ As of Nx 17, if you only use one tasks runner, you can specify these properties 
 
 You can configure `parallel` in `nx.json`, but you can also pass them in the
 terminal `nx run-many -t test --parallel=5`.
+
+### Release
+
+The `release` property in `nx.json` configures the `nx release` command. It is an optional property, as `nx release` is capable of working with zero config, but when present it is used to configure the versioning, changelog, and publishing phases of the release process.
+
+For more information on how `nx release` works, see [manage releases](/core-features/manage-releases).
+
+The full list of configuration options available for `"release"` can be found here: [https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts](https://github.com/nrwl/nx/blob/master/packages/nx/src/config/nx-json.ts) under `NxReleaseConfiguration`.
+
+#### Projects
+
+If you want to limit the projects that `nx release` targets, you can use the `projects` property in `nx.json` to do so. This property is either a string, or an array of strings. The strings can be project names, glob patterns, directories, tag references or anything else that is supported by the `--projects` filter you may know from other commands such as `nx run`.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    // Here we are configuring nx release to target all projects
+    // except the one called "ignore-me"
+    "projects": ["*", "!ignore-me"]
+  }
+}
+```
+
+#### Projects Relationship
+
+The `projectsRelationship` property tells Nx whether to release projects independently or together. By default Nx will release all your projects together in lock step, which is an equivalent of `"projectRelationships": "fixed"`. If you want to release projects independently, you can set `"projectsRelationship": "independent"`.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    // Here we are configuring nx release to release projects
+    // independently, as opposed to the default of "fixed"
+    "projectsRelationship": "independent"
+  }
+}
+```
+
+#### Release Tag Pattern
+
+Optionally override the git/release tag pattern to use. This field is the source of truth for changelog generation and release tagging, as well as for conventional commits parsing.
+
+It supports interpolating the version as `{version}` and (if releasing independently or forcing project level version control system releases) the project name as `{projectName}` within the string.
+
+The default `"releaseTagPattern"` for fixed/unified releases is: `v{version}`
+
+The default `"releaseTagPattern"` for independent releases at the project level is: `{projectName}@{version}`
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    // Here we are configuring nx release to use a custom release
+    // tag pattern (we have dropped the v prefix from the default)
+    "releaseTagPattern": "{version}"
+  }
+}
+```
+
+#### Version
+
+The `version` property configures the versioning phase of the release process. It is used to determine the next version of your projects, and update any projects that depend on them to use the new version.
+
+Behind the scenes, the `version` logic is powered by an Nx generator. Out of the box Nx wires up the most widely applicable generator implementation for you, which is `@nx/js:release-version` provided by the `@nx/js` plugin.
+
+It is therefore a common requirement to be able to tweak the options given to that generator. This can be done by configuring the `release.version.generatorOptions` property in `nx.json`:
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "version": {
+      "generatorOptions": {
+        // Here we are configuring the generator to use git tags as the
+        // source of truth for a project's current version
+        "currentVersionResolver": "git-tag",
+        // Here we are configuring the generator to use conventional
+        // commits as the source of truth for how to determine the
+        // relevant version bump for the next version
+        "specifierSource": "conventional-commits"
+      }
+    }
+  }
+}
+```
+
+For a full reference of the available options for the `@nx/js:release-version` generator, see the [release version generator reference](/nx-api/js/generators/release-version).
+
+#### Changelog
+
+The `changelog` property configures the changelog phase of the release process. It is used to generate a changelog for your projects, and commit it to your repository.
+
+There are two types of possible changelog that can be generated:
+
+- **Workspace Changelog**: A changelog that contains all changes across all projects in your workspace. This is not applicable when releasing projects independently.
+
+- **Project Changelogs**: A changelog that contains all changes for a given project.
+
+The `changelog` property is used to configure both of these changelogs.
+
+##### Workspace Changelog
+
+The `changelog.workspaceChangelog` property configures the workspace changelog. It is used to determine if and how the workspace changelog is generated.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "changelog": {
+      // This disables the workspace changelog
+      "workspaceChangelog": false
+    }
+  }
+}
+```
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "changelog": {
+      "workspaceChangelog": {
+        // This will create a GitHub release containing the workspace
+        // changelog contents
+        "createRelease": "github",
+        // This will disable creating a workspace CHANGELOG.md file
+        "file": false
+      }
+    }
+  }
+}
+```
+
+##### Project Changelogs
+
+The `changelog.projectChangelogs` property configures the project changelogs. It is used to determine if and how the project changelogs are generated.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "changelog": {
+      // This enables project changelogs with the default options
+      "projectChangelogs": true
+    }
+  }
+}
+```
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "changelog": {
+      "projectChangelogs": {
+        // This will create one GitHub release per project containing
+        // the project changelog contents
+        "createRelease": "github",
+        // This will disable creating any project level CHANGELOG.md
+        // files
+        "file": false
+      }
+    }
+  }
+}
+```
+
+#### Git
+
+The `git` property configures the automated git operations that take place as part of the release process.
+
+```jsonc {% fileName="nx.json" %}
+{
+  "release": {
+    "git": {
+      // This will enable committing any changes (e.g. package.json
+      // updates, CHANGELOG.md files) to git
+      "commit": true,
+      // This will enable create a git for the overall release, or
+      // one tag per project for independent project releases
+      "tag": false
+    }
+  }
+}
+```

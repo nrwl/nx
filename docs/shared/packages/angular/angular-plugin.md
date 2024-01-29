@@ -25,13 +25,29 @@ can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-
 
 Adding the Angular plugin to an existing Nx workspace can be done with the following:
 
+{% tabs %}
+{% tab label="npm" %}
+
+```shell
+npm add -D @nx/angular
+```
+
+{% /tab %}
+{% tab label="yarn" %}
+
 ```shell
 yarn add -D @nx/angular
 ```
 
+{% /tab %}
+{% tab label="pnpm" %}
+
 ```shell
-npm install -D @nx/angular
+pnpm add -D @nx/angular
 ```
+
+{% /tab %}
+{% /tabs %}
 
 {% callout type="note" title="Angular Tutorials" %}
 For a full tutorial experience, follow the [Angular Standalone Tutorial](/getting-started/tutorials/angular-standalone-tutorial) or the [Angular Monorepo Tutorial](/getting-started/tutorials/angular-monorepo-tutorial)

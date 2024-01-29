@@ -8,7 +8,7 @@ export interface Schema {
   devServerPort?: number;
   directory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
-  e2eTestRunner: 'cypress' | 'none';
+  e2eTestRunner: 'cypress' | 'playwright' | 'none';
   globalCss?: boolean;
   js?: boolean;
   linter: Linter;

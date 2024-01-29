@@ -1,9 +1,9 @@
-import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
 import { shouldMergeAngularProjects } from '../adapter/angular-json';
 import { ProjectGraphProcessor } from '../config/project-graph';
 import { TargetConfiguration } from '../config/workspace-json-project-json';
-import { CreatePackageJsonProjectsNextToProjectJson } from '../plugins/project-json/build-nodes/package-json-next-to-project-json';
-import { CreateProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
+import { ProjectJsonProjectsPlugin } from '../plugins/project-json/build-nodes/project-json';
+import { TargetDefaultsPlugin } from '../plugins/target-defaults/target-defaults-plugin';
+import { getNxPackageJsonWorkspacesPlugin } from '../plugins/package-json-workspaces';
 import { LoadedNxPlugin, NxPluginV2 } from './nx-plugin';
 
 /**
@@ -45,8 +45,9 @@ export function getDefaultPluginsSync(root: string): LoadedNxPlugin[] {
     ...(shouldMergeAngularProjects(root, false)
       ? [require('../adapter/angular-json').NxAngularJsonPlugin]
       : []),
+    TargetDefaultsPlugin,
     getNxPackageJsonWorkspacesPlugin(root),
-    CreateProjectJsonProjectsPlugin,
+    ProjectJsonProjectsPlugin,
   ];
 
   return plugins.map((p) => ({

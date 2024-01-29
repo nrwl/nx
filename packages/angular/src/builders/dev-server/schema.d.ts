@@ -17,6 +17,7 @@ interface BaseSchema {
   watch?: boolean;
   poll?: number;
   buildLibsFromSource?: boolean;
+  esbuildMiddleware?: string[];
 }
 
 export type SchemaWithBrowserTarget = BaseSchema & {

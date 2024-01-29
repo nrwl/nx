@@ -27,7 +27,7 @@ You will need to install `@nx/netlify` if you haven't already.
 {% tab label="npm" %}
 
 ```shell
-npm i -D @nx/netlify
+npm add -D @nx/netlify
 ```
 
 {% /tab %}

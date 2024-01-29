@@ -343,7 +343,7 @@ describe('Linter Builder', () => {
       );
       expect(console.error).toHaveBeenCalledWith(
         `
-Error: You have attempted to use a lint rule which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config \`apps/proj/.eslintrc.json\`
+Error: You have attempted to use the lint rule @typescript-eslint/await-thenable which requires the full TypeScript type-checker to be available, but you do not have \`parserOptions.project\` configured to point at your project tsconfig.json files in the relevant TypeScript file "overrides" block of your project ESLint config \`apps/proj/.eslintrc.json\`
 
 Please see https://nx.dev/guides/eslint for full guidance on how to resolve this issue.
 `
@@ -683,10 +683,10 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     await lintExecutor(createValidRunBuilderOptions(), mockContext);
     expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
-      undefined,
+      '/root/apps/proj/eslint.config.js',
       {
         lintFilePatterns: [],
-        eslintConfig: null,
+        eslintConfig: 'apps/proj/eslint.config.js',
         fix: true,
         cache: true,
         cacheLocation: 'cacheLocation1/proj',

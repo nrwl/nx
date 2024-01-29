@@ -12,7 +12,7 @@ import {
 describe('Angular Package', () => {
   describe('ngrx', () => {
     beforeAll(() => {
-      newProject();
+      newProject({ packages: ['@nx/angular'] });
     });
     afterAll(() => {
       cleanupProject();

@@ -3,8 +3,9 @@
 exports[`writeNewWebpackConfig should convert config that is both remote and host correctly 1`] = `
 [
   "const { withModuleFederation } = require('@nx/angular/module-federation');
-  const config = require('./module-federation.config');
-  module.exports = withModuleFederation(config);",
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config);
+",
   "
     module.exports = {
       name: 'both1',
@@ -19,8 +20,9 @@ exports[`writeNewWebpackConfig should convert config that is both remote and hos
 exports[`writeNewWebpackConfig should convert config that is neither remote and host correctly 1`] = `
 [
   "const { withModuleFederation } = require('@nx/angular/module-federation');
-  const config = require('./module-federation.config');
-  module.exports = withModuleFederation(config);",
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config);
+",
   "
         module.exports = {
           name: 'neither',
@@ -31,8 +33,9 @@ exports[`writeNewWebpackConfig should convert config that is neither remote and 
 exports[`writeNewWebpackConfig should convert host config correctly 1`] = `
 [
   "const { withModuleFederation } = require('@nx/angular/module-federation');
-  const config = require('./module-federation.config');
-  module.exports = withModuleFederation(config);",
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config);
+",
   "
         module.exports = {
           name: 'host1',
@@ -44,8 +47,9 @@ exports[`writeNewWebpackConfig should convert host config correctly 1`] = `
 exports[`writeNewWebpackConfig should convert remote config correctly 1`] = `
 [
   "const { withModuleFederation } = require('@nx/angular/module-federation');
-  const config = require('./module-federation.config');
-  module.exports = withModuleFederation(config);",
+const config = require('./module-federation.config');
+module.exports = withModuleFederation(config);
+",
   "
         module.exports = {
           name: 'remote1',

@@ -3,6 +3,7 @@ import {
   ExecutorContext,
   parseTargetString,
   readTargetOptions,
+  targetToTargetString,
 } from '@nx/devkit';
 
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
@@ -38,6 +39,9 @@ export async function* devServerExecutor(
     sourceRoot
   );
 
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildOptions.buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = serveOptions.buildTarget;
+
   // TODO(jack): Figure out a way to port this into NxWebpackPlugin
   if (!buildOptions.buildLibsFromSource) {
     if (!buildOptions.tsConfig) {
@@ -59,6 +63,8 @@ export async function* devServerExecutor(
       target.data.root,
       dependencies
     );
+
+    process.env.NX_TSCONFIG_PATH = buildOptions.tsConfig;
   }
 
   let config;
@@ -81,7 +87,11 @@ export async function* devServerExecutor(
 
     // Only add the dev server option if user is composable plugin.
     // Otherwise, user should define `devServer` option directly in their webpack config.
-    if (isNxWebpackComposablePlugin(userDefinedWebpackConfig)) {
+    if (
+      typeof userDefinedWebpackConfig === 'function' &&
+      (isNxWebpackComposablePlugin(userDefinedWebpackConfig) ||
+        !buildOptions.standardWebpackConfigFunction)
+    ) {
       config = await userDefinedWebpackConfig(
         { devServer },
         {

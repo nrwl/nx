@@ -12,6 +12,7 @@ import {
   updateTsConfig,
 } from './lib';
 import type { LibraryGeneratorOptions } from './schema';
+import initGenerator from '../init/init';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -29,7 +30,7 @@ export async function libraryGeneratorInternal(
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, rawOptions);
   await jsLibraryGenerator(tree, toJsLibraryGeneratorOptions(options));
-  const installDepsTask = addDependencies(tree);
+  const initTask = initGenerator(tree, rawOptions);
   deleteFiles(tree, options);
   createFiles(tree, options);
   addExportsToBarrelFile(tree, options);
@@ -40,7 +41,7 @@ export async function libraryGeneratorInternal(
     await formatFiles(tree);
   }
 
-  return installDepsTask;
+  return initTask;
 }
 
 export default libraryGenerator;

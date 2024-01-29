@@ -1,6 +1,6 @@
 import { RelatedDocument } from './documents.models';
 
-interface RelatedDocumentsCategory {
+export interface RelatedDocumentsCategory {
   id: string;
   /**
    * Matcher that will be evaluated against a path.
@@ -48,20 +48,4 @@ export function categorizeRelatedDocuments(
   );
 
   return categories.filter((c) => !!c.relatedDocuments.length);
-}
-
-export function generateRelatedDocumentsTemplate(
-  relatedDocumentCategories: RelatedDocumentsCategory[]
-): string {
-  if (!relatedDocumentCategories.length) return '';
-
-  const template = relatedDocumentCategories.map((c) => {
-    const header = `### ${c.name}`;
-    const template = c.relatedDocuments
-      .map((d) => `- [${d.name}](${d.path})`)
-      .join('\n');
-    return [header, template].join('\n');
-  });
-
-  return ['\n## Related Documentation\n', ...template].join('\n');
 }

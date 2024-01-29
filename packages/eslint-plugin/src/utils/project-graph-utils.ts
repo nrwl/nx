@@ -4,7 +4,7 @@ import {
   readCachedProjectGraph,
 } from '@nx/devkit';
 import { isTerminalRun } from './runtime-lint-utils';
-import * as chalk from 'chalk';
+import chalk = require('chalk');
 import {
   createProjectRootMappings,
   ProjectRootMappings,

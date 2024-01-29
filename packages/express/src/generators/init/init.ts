@@ -1,48 +1,43 @@
 import {
   addDependenciesToPackageJson,
   formatFiles,
+  GeneratorCallback,
   removeDependenciesFromPackageJson,
+  runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { initGenerator as nodeInitGenerator } from '@nx/node';
-import { tslibVersion } from '@nx/node/src/utils/versions';
-import {
-  expressTypingsVersion,
-  expressVersion,
-  nxVersion,
-} from '../../utils/versions';
+import { expressVersion, nxVersion } from '../../utils/versions';
 import type { Schema } from './schema';
 
-function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nx/express'], []);
+function updateDependencies(tree: Tree, schema: Schema) {
+  const tasks: GeneratorCallback[] = [];
 
-  return addDependenciesToPackageJson(
-    tree,
-    {
-      express: expressVersion,
-      tslib: tslibVersion,
-    },
-    {
-      '@types/express': expressTypingsVersion,
-      '@nx/express': nxVersion,
-    }
+  tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/express'], []));
+
+  tasks.push(
+    addDependenciesToPackageJson(
+      tree,
+      { express: expressVersion },
+      { '@nx/express': nxVersion },
+      undefined,
+      schema.keepExistingVersions
+    )
   );
+
+  return runTasksInSerial(...tasks);
 }
 
 export async function initGenerator(tree: Tree, schema: Schema) {
-  const initTask = await nodeInitGenerator(tree, {
-    ...schema,
-    skipFormat: true,
-  });
-  const installTask = updateDependencies(tree);
+  let installTask: GeneratorCallback = () => {};
+  if (!schema.skipPackageJson) {
+    installTask = updateDependencies(tree, schema);
+  }
+
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
 
-  return async () => {
-    await initTask();
-    await installTask();
-  };
+  return installTask;
 }
 
 export default initGenerator;

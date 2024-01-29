@@ -4,7 +4,7 @@ There are two general approaches to setting up CI with Nx - using a single job o
 
 ## Process Only Affected Projects With One Job on Bitbucket Pipelines
 
-Below is an example of an Bitbucket Pipelines setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/nx-cloud/features/affected) to run the tasks only for the projects that were affected by that PR.
+Below is an example of an Bitbucket Pipelines setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/ci/features/affected) to run the tasks only for the projects that were affected by that PR.
 
 ```yaml {% fileName="bitbucket-pipelines.yml" %}
 image: node:20
@@ -17,7 +17,7 @@ pipelines:
             - node
           script:
             - npm ci
-            - npx nx format:check
+            - npx nx-cloud record -- nx format:check
             - npx nx affected -t lint,test,build --base=origin/master --head=HEAD --configuration=ci
 
   branches:
@@ -28,7 +28,7 @@ pipelines:
             - node
           script:
             - npm ci
-            - npx nx format:check
+            - npx nx-cloud record -- nx format:check
             - npx nx affected -t lint,test,build --base=HEAD~1 --configuration=ci
 ```
 
@@ -36,7 +36,7 @@ The `pull-requests` and `main` jobs implement the CI workflow.
 
 ## Distribute Tasks Across Agents on Bitbucket Pipelines
 
-To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can run this generator:
+To set up [Distributed Task Execution (DTE)](/ci/features/distribute-task-execution), you can run this generator:
 
 ```shell
 npx nx g ci-workflow --ci=bitbucket-pipelines
@@ -71,7 +71,7 @@ pipelines:
 
                 - npm ci
                 - npx nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
-                - npx nx-cloud record -- npx nx format:check
+                - npx nx-cloud record -- nx format:check
                 - npx nx affected --target=lint,test,build --parallel=2
           - step: *agent
           - step: *agent

@@ -4,7 +4,7 @@
  * and where we create the actual unix socket/named pipe for the daemon.
  */
 import { statSync, writeFileSync } from 'fs';
-import { ensureDirSync, rmdirSync } from 'fs-extra';
+import { ensureDirSync, rmSync } from 'fs-extra';
 import { join } from 'path';
 import { projectGraphCacheDirectory } from '../utils/cache-directory';
 import { createHash } from 'crypto';
@@ -21,7 +21,7 @@ export const DAEMON_OUTPUT_LOG_FILE = join(
   'daemon.log'
 );
 
-const socketDir = process.env.NX_DAEMON_SOCKET_DIR || createSocketDir();
+export const socketDir = process.env.NX_DAEMON_SOCKET_DIR || createSocketDir();
 
 export const DAEMON_SOCKET_PATH = join(
   socketDir,
@@ -71,6 +71,6 @@ function createSocketDir() {
 
 export function removeSocketDir() {
   try {
-    rmdirSync(socketDir);
+    rmSync(socketDir, { recursive: true, force: true });
   } catch (e) {}
 }

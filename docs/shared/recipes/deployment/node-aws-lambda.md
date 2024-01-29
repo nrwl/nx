@@ -25,7 +25,7 @@ First, make sure you have `@nx/aws-lambda` installed.
 {% tab label="npm" %}
 
 ```shell
-npm i -D @nx/aws-lambda
+npm add -D @nx/aws-lambda
 ```
 
 {% /tab %}

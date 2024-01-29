@@ -15,6 +15,8 @@ import {
   EntryPointNode,
   isEntryPoint,
   isEntryPointInProgress,
+  isPackage,
+  PackageNode,
 } from 'ng-packagr/lib/ng-package/nodes';
 import { setDependenciesTsConfigPaths } from 'ng-packagr/lib/ts/tsconfig';
 import * as ora from 'ora';
@@ -36,9 +38,12 @@ export const compileNgcTransformFactory = (
       discardStdin: false,
     });
 
+    const entryPoints: EntryPointNode[] = graph.filter(isEntryPoint);
+    const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
+    const ngPackageNode: PackageNode = graph.find(isPackage);
+    const projectBasePath = ngPackageNode.data.primary.basePath;
+
     try {
-      const entryPoint: EntryPointNode = graph.find(isEntryPointInProgress());
-      const entryPoints: EntryPointNode[] = graph.filter(isEntryPoint);
       // Add paths mappings for dependencies
       const tsConfig = setDependenciesTsConfigPaths(
         entryPoint.data.tsConfig,
@@ -79,11 +84,11 @@ export const compileNgcTransformFactory = (
       }
 
       entryPoint.cache.stylesheetProcessor ??= new StylesheetProcessor(
+        projectBasePath,
         basePath,
         cssUrl,
         styleIncludePaths,
         options.cacheEnabled && options.cacheDirectory,
-        options.watch,
         options.tailwindConfig
       ) as any;
 

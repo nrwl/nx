@@ -4,3 +4,6 @@ export * from './lib/conf-schedule-short';
 export * from './lib/conf-speakers';
 export * from './lib/conf-sponsors';
 export * from './lib/conf-workshop';
+export * from './lib/launch-week/agenda';
+export * from './lib/launch-week/speakers';
+export * from './lib/launch-week/announcements';

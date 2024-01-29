@@ -36,7 +36,7 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### constructor
 
-• **new ProjectGraphBuilder**(`graph?`, `projectFileMap?`, `nonProjectFiles?`)
+• **new ProjectGraphBuilder**(`graph?`, `projectFileMap?`, `nonProjectFiles?`): [`ProjectGraphBuilder`](../../devkit/documents/ProjectGraphBuilder)
 
 #### Parameters
 
@@ -45,6 +45,10 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 | `graph?`           | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
 | `projectFileMap?`  | [`ProjectFileMap`](../../devkit/documents/ProjectFileMap) |
 | `nonProjectFiles?` | [`FileData`](../../devkit/documents/FileData)[]           |
+
+#### Returns
+
+[`ProjectGraphBuilder`](../../devkit/documents/ProjectGraphBuilder)
 
 ## Properties
 
@@ -60,7 +64,7 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 #### Index signature
 
-▪ [source: `string`]: `Set`<`string`\>
+▪ [source: `string`]: `Set`\<`string`\>
 
 ## Methods
 

@@ -68,6 +68,10 @@ export default defineConfig({
 
   build: {
     outDir: '../dist/test',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
   },
 
   test: {
@@ -78,6 +82,7 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 
+    reporters: ['default'],
     coverage: {
       reportsDirectory: '../coverage/test',
       provider: 'v8',
@@ -95,8 +100,7 @@ exports[`application generator should set up project correctly with given option
   "sourceRoot": "test/src",
   "targets": {
     "lint": {
-      "executor": "@nx/eslint:lint",
-      "outputs": ["{options.outputFile}"]
+      "executor": "@nx/eslint:lint"
     },
     "build": {
       "executor": "@nx/vite:build",

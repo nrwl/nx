@@ -60,22 +60,4 @@ describe('@nx/storybook:cypress-project', () => {
       tree.exists('apps/one/two/test-ui-lib-e2e/cypress.config.ts')
     ).toBeTruthy();
   });
-
-  it('should make sure the cypress packages are installed', async () => {
-    expect(
-      readJson(tree, 'package.json').devDependencies['cypress']
-    ).toBeFalsy();
-    await cypressProjectGenerator(tree, {
-      name: 'test-ui-lib',
-      directory: 'one/two',
-      linter: Linter.EsLint,
-    });
-    expect(
-      readJson(tree, 'package.json').devDependencies['cypress']
-    ).toBeTruthy();
-
-    expect(
-      readJson(tree, 'package.json').devDependencies['@nx/cypress']
-    ).toBeTruthy();
-  });
 });

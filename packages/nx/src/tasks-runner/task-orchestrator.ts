@@ -66,6 +66,9 @@ export class TaskOrchestrator {
   ) {}
 
   async run() {
+    // Init the ForkedProcessTaskRunner
+    await this.forkedProcessTaskRunner.init();
+
     // initial scheduling
     await this.scheduleNextTasks();
 
@@ -88,6 +91,7 @@ export class TaskOrchestrator {
       'task-execution:start',
       'task-execution:end'
     );
+    this.forkedProcessTaskRunner.destroy();
     this.cache.removeOldCacheRecords();
 
     return this.completedTasks;
@@ -398,25 +402,22 @@ export class TaskOrchestrator {
   ) {
     try {
       // execution
-      const { code, terminalOutput } = pipeOutput
-        ? await this.forkedProcessTaskRunner.forkProcessPipeOutputCapture(
-            task,
-            {
+      const { code, terminalOutput } =
+        process.env.NX_NATIVE_COMMAND_RUNNER !== 'false'
+          ? await this.forkedProcessTaskRunner.forkProcess(task, {
               temporaryOutputPath,
               streamOutput,
+              pipeOutput,
               taskGraph: this.taskGraph,
               env,
-            }
-          )
-        : await this.forkedProcessTaskRunner.forkProcessDirectOutputCapture(
-            task,
-            {
+            })
+          : await this.forkedProcessTaskRunner.forkProcessLegacy(task, {
               temporaryOutputPath,
               streamOutput,
+              pipeOutput,
               taskGraph: this.taskGraph,
               env,
-            }
-          );
+            });
 
       return {
         code,
@@ -565,6 +566,10 @@ export class TaskOrchestrator {
 
   private async pipeOutputCapture(task: Task) {
     try {
+      if (process.env.NX_NATIVE_COMMAND_RUNNER !== 'false') {
+        return true;
+      }
+
       const { schema } = await getExecutorForTask(task, this.projectGraph);
 
       return (

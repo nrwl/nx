@@ -50,9 +50,13 @@ function getData(port, path = '/api'): Promise<any> {
 }
 
 describe('Node Applications', () => {
-  beforeEach(() => newProject());
+  beforeAll(() =>
+    newProject({
+      packages: ['@nx/node', '@nx/express', '@nx/nest'],
+    })
+  );
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should be able to generate an empty application', async () => {
     const nodeapp = uniq('nodeapp');
@@ -331,12 +335,16 @@ describe('Node Applications', () => {
 });
 
 describe('Build Node apps', () => {
-  beforeEach(() => newProject());
+  let scope: string;
+  beforeAll(() => {
+    scope = newProject({
+      packages: ['@nx/node', '@nx/express', '@nx/nest'],
+    });
+  });
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should generate a package.json with the `--generatePackageJson` flag', async () => {
-    const scope = newProject();
     const packageManager = detectPackageManager(tmpProjPath());
     const nestapp = uniq('nestapp');
     runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
@@ -523,7 +531,6 @@ ${jslib}();
 
   describe('NestJS', () => {
     it('should have plugin output if specified in `tsPlugins`', async () => {
-      newProject();
       const nestapp = uniq('nestapp');
       runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
       setMaxWorkers(join('apps', nestapp, 'project.json'));
@@ -576,99 +583,95 @@ ${jslib}();
       expect(mainJs).toContain('_OPENAPI_METADATA_FACTORY');
     }, 300000);
   });
-});
 
-describe('nest libraries', function () {
-  beforeEach(() => newProject());
+  describe('nest libraries', function () {
+    it('should be able to generate a nest library', async () => {
+      const nestlib = uniq('nestlib');
+      runCLI(`generate @nx/nest:lib ${nestlib}`);
 
-  it('should be able to generate a nest library', async () => {
-    const nestlib = uniq('nestlib');
-    runCLI(`generate @nx/nest:lib ${nestlib}`);
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
 
-    const lintResults = runCLI(`lint ${nestlib}`);
-    expect(lintResults).toContain('All files pass linting.');
+      const testResults = runCLI(`test ${nestlib}`);
+      expect(testResults).toContain(
+        `Successfully ran target test for project ${nestlib}`
+      );
+    }, 60000);
 
-    const testResults = runCLI(`test ${nestlib}`);
-    expect(testResults).toContain(
-      `Successfully ran target test for project ${nestlib}`
-    );
-  }, 60000);
+    it('should be able to generate a nest library w/ service', async () => {
+      const nestlib = uniq('nestlib');
 
-  it('should be able to generate a nest library w/ service', async () => {
-    const nestlib = uniq('nestlib');
+      runCLI(`generate @nx/nest:lib ${nestlib} --service`);
 
-    runCLI(`generate @nx/nest:lib ${nestlib} --service`);
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
 
-    const lintResults = runCLI(`lint ${nestlib}`);
-    expect(lintResults).toContain('All files pass linting.');
+      const jestResult = await runCLIAsync(`test ${nestlib}`);
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
+    }, 200000);
 
-    const jestResult = await runCLIAsync(`test ${nestlib}`);
-    expect(jestResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-  }, 200000);
+    it('should be able to generate a nest library w/ controller', async () => {
+      const nestlib = uniq('nestlib');
 
-  it('should be able to generate a nest library w/ controller', async () => {
-    const nestlib = uniq('nestlib');
+      runCLI(`generate @nx/nest:lib ${nestlib} --controller`);
 
-    runCLI(`generate @nx/nest:lib ${nestlib} --controller`);
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
 
-    const lintResults = runCLI(`lint ${nestlib}`);
-    expect(lintResults).toContain('All files pass linting.');
+      const jestResult = await runCLIAsync(`test ${nestlib}`);
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 1 passed, 1 total'
+      );
+    }, 200000);
 
-    const jestResult = await runCLIAsync(`test ${nestlib}`);
-    expect(jestResult.combinedOutput).toContain(
-      'Test Suites: 1 passed, 1 total'
-    );
-  }, 200000);
+    it('should be able to generate a nest library w/ controller and service', async () => {
+      const nestlib = uniq('nestlib');
 
-  it('should be able to generate a nest library w/ controller and service', async () => {
-    const nestlib = uniq('nestlib');
+      runCLI(`generate @nx/nest:lib ${nestlib} --controller --service`);
 
-    runCLI(`generate @nx/nest:lib ${nestlib} --controller --service`);
+      const lintResults = runCLI(`lint ${nestlib}`);
+      expect(lintResults).toContain('All files pass linting.');
 
-    const lintResults = runCLI(`lint ${nestlib}`);
-    expect(lintResults).toContain('All files pass linting.');
+      const jestResult = await runCLIAsync(`test ${nestlib}`);
+      expect(jestResult.combinedOutput).toContain(
+        'Test Suites: 2 passed, 2 total'
+      );
+    }, 200000);
 
-    const jestResult = await runCLIAsync(`test ${nestlib}`);
-    expect(jestResult.combinedOutput).toContain(
-      'Test Suites: 2 passed, 2 total'
-    );
-  }, 200000);
+    it('should have plugin output if specified in `transformers`', async () => {
+      const nestlib = uniq('nestlib');
+      runCLI(`generate @nx/nest:lib ${nestlib} --buildable`);
 
-  it('should have plugin output if specified in `transformers`', async () => {
-    newProject();
-    const nestlib = uniq('nestlib');
-    runCLI(`generate @nx/nest:lib ${nestlib} --buildable`);
+      packageInstall('@nestjs/swagger', undefined, '^7.0.0');
 
-    packageInstall('@nestjs/swagger', undefined, '^7.0.0');
-
-    updateJson(join('libs', nestlib, 'project.json'), (config) => {
-      config.targets.build.options.transformers = [
-        {
-          name: '@nestjs/swagger/plugin',
-          options: {
-            dtoFileNameSuffix: ['.model.ts'],
+      updateJson(join('libs', nestlib, 'project.json'), (config) => {
+        config.targets.build.options.transformers = [
+          {
+            name: '@nestjs/swagger/plugin',
+            options: {
+              dtoFileNameSuffix: ['.model.ts'],
+            },
           },
-        },
-      ];
-      return config;
-    });
+        ];
+        return config;
+      });
 
-    updateFile(
-      `libs/${nestlib}/src/lib/foo.model.ts`,
-      `
+      updateFile(
+        `libs/${nestlib}/src/lib/foo.model.ts`,
+        `
 export class FooModel {
   foo?: string;
   bar?: number;
 }`
-    );
+      );
 
-    await runCLIAsync(`build ${nestlib}`);
+      await runCLIAsync(`build ${nestlib}`);
 
-    const fooModelJs = readFile(`dist/libs/${nestlib}/src/lib/foo.model.js`);
-    expect(stripIndents`${fooModelJs}`).toContain(
-      stripIndents`
+      const fooModelJs = readFile(`dist/libs/${nestlib}/src/lib/foo.model.js`);
+      expect(stripIndents`${fooModelJs}`).toContain(
+        stripIndents`
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FooModel = void 0;
@@ -681,10 +684,11 @@ class FooModel {
 exports.FooModel = FooModel;
 //# sourceMappingURL=foo.model.js.map
         `
-    );
-  }, 300000);
+      );
+    }, 300000);
 
-  it('should run default jest tests', async () => {
-    await expectJestTestsToPass('@nx/node:lib');
-  }, 100000);
+    it('should run default jest tests', async () => {
+      await expectJestTestsToPass('@nx/node:lib');
+    }, 100000);
+  });
 });

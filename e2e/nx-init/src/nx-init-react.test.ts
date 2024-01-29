@@ -32,7 +32,7 @@ describe('nx init (for React)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --nxCloud=false --integrated --vite=false`
+      } nx@${getPublishedVersion()} init --nxCloud=skip --integrated --vite=false`
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -65,7 +65,7 @@ describe('nx init (for React)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --nxCloud=false --integrated`
+      } nx@${getPublishedVersion()} init --nxCloud=skip --integrated`
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -97,7 +97,7 @@ describe('nx init (for React)', () => {
     runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --nxCloud=false --force --integrated`
+      } nx@${getPublishedVersion()} init --nxCloud=skip --force --integrated`
     );
 
     const viteConfig = readFile(`apps/${appName}/vite.config.js`);
@@ -115,7 +115,7 @@ describe('nx init (for React)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --nxCloud=false --vite=false`
+      } nx@${getPublishedVersion()} init --nxCloud=skip --vite=false`
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');
@@ -137,7 +137,7 @@ describe('nx init (for React)', () => {
     const craToNxOutput = runCommand(
       `${
         pmc.runUninstalledPackage
-      } nx@${getPublishedVersion()} init --nxCloud=false --vite`
+      } nx@${getPublishedVersion()} init --nxCloud=skip --vite`
     );
 
     expect(craToNxOutput).toContain('🎉 Done!');

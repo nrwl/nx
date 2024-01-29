@@ -1,92 +1,38 @@
 import {
   addDependenciesToPackageJson,
-  ensurePackage,
-  GeneratorCallback,
-  readNxJson,
+  formatFiles,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
-  Tree,
-  updateNxJson,
+  type GeneratorCallback,
+  type Tree,
 } from '@nx/devkit';
-
-import { initGenerator as jsInitGenerator } from '@nx/js';
-import {
-  nxVersion,
-  reactDomVersion,
-  reactVersion,
-  testingLibraryReactVersion,
-  tsLibVersion,
-  typesNodeVersion,
-  typesReactDomVersion,
-  typesReactVersion,
-} from '../../utils/versions';
+import { nxVersion, reactDomVersion, reactVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
-
-function setDefault(host: Tree) {
-  const workspace = readNxJson(host);
-
-  workspace.generators = workspace.generators || {};
-  const reactGenerators = workspace.generators['@nx/react'] || {};
-  const generators = {
-    ...workspace.generators,
-    '@nx/react': {
-      ...reactGenerators,
-      application: {
-        ...reactGenerators.application,
-        babel: true,
-      },
-    },
-  };
-
-  updateNxJson(host, { ...workspace, generators });
-}
-
-function updateDependencies(host: Tree, schema: InitSchema) {
-  removeDependenciesFromPackageJson(host, ['@nx/react'], []);
-
-  const dependencies = {
-    react: reactVersion,
-    'react-dom': reactDomVersion,
-  };
-
-  if (!schema.skipHelperLibs) {
-    dependencies['tslib'] = tsLibVersion;
-  }
-
-  return addDependenciesToPackageJson(host, dependencies, {
-    '@nx/react': nxVersion,
-    '@types/node': typesNodeVersion,
-    '@types/react': typesReactVersion,
-    '@types/react-dom': typesReactDomVersion,
-    '@testing-library/react': testingLibraryReactVersion,
-  });
-}
 
 export async function reactInitGenerator(host: Tree, schema: InitSchema) {
   const tasks: GeneratorCallback[] = [];
 
-  const jsInitTask = await jsInitGenerator(host, {
-    ...schema,
-    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-    skipFormat: true,
-  });
+  if (!schema.skipPackageJson) {
+    tasks.push(removeDependenciesFromPackageJson(host, ['@nx/react'], []));
 
-  tasks.push(jsInitTask);
-
-  setDefault(host);
-
-  if (!schema.e2eTestRunner || schema.e2eTestRunner === 'cypress') {
-    ensurePackage('@nx/cypress', nxVersion);
-    const { cypressInitGenerator } = (await import(
-      '@nx/cypress/src/generators/init/init'
-    )) as typeof import('@nx/cypress/src/generators/init/init');
-    const cypressTask = await cypressInitGenerator(host, schema);
-    tasks.push(cypressTask);
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        {
+          react: reactVersion,
+          'react-dom': reactDomVersion,
+        },
+        {
+          '@nx/react': nxVersion,
+        },
+        undefined,
+        schema.keepExistingVersions
+      )
+    );
   }
 
-  if (!schema.skipPackageJson) {
-    const installTask = updateDependencies(host, schema);
-    tasks.push(installTask);
+  if (!schema.skipFormat) {
+    await formatFiles(host);
   }
 
   return runTasksInSerial(...tasks);

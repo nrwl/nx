@@ -43,8 +43,8 @@ Here's a quick side-by-side overview comparing the features between the Angular 
 | [Running Tasks in Parallel](/recipes/running-tasks/run-tasks-in-parallel)                                  | ❌              | ✅            |
 | Building, Testing [Only What is Affected](/core-features/run-tasks#run-tasks-on-projects-affected-by-a-pr) | ❌              | ✅            |
 | [Local Caching](/core-features/cache-task-results)                                                         | ❌\*\*          | ✅            |
-| [Distributed Caching](/nx-cloud/features/remote-cache)                                                     | ❌              | ✅            |
-| [Distributed Task Execution on CI](/nx-cloud/features/distribute-task-execution)                           | ❌              | ✅            |
+| [Remote Caching](/ci/features/remote-cache)                                                                | ❌              | ✅            |
+| [Distributed Task Execution on CI](/ci/features/distribute-task-execution)                                 | ❌              | ✅            |
 | Custom Hashers                                                                                             | ❌              | ✅            |
 | [Extensible Plugin System](/extending-nx/intro/getting-started)                                            | ❌              | ✅            |
 
@@ -209,11 +209,11 @@ Nx is designed to be fast. The Angular CLI leverages Webpack's caching, which Nx
 
 Features like
 
-- only running tasks on [affected projects](/nx-cloud/features/affected)
+- only running tasks on [affected projects](/ci/features/affected)
 - running [tasks in parallel](/core-features/run-tasks#run-tasks-for-multiple-projects)
 - applying [computation caching](/core-features/cache-task-results)
-- offering [remote caching abilities](/nx-cloud/features/remote-cache) on CI
-- offering [task distribution across machines (DTE)](/nx-cloud/features/distribute-task-execution)
+- offering [remote caching abilities](/ci/features/remote-cache) on CI
+- offering [task distribution across machines (DTE)](/ci/features/distribute-task-execution)
 
 And, Nx already uses fast, modern tooling like [ESBuild](/nx-api/esbuild), [Vite](/nx-api/vite), Vitest and [Rspack](/nx-api/rspack) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
 

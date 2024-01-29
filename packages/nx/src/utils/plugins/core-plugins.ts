@@ -69,6 +69,10 @@ export function fetchCorePlugins(): CorePlugin[] {
       capabilities: 'executors,generators',
     },
     {
+      name: '@nx/remix',
+      capabilities: 'executors,generators',
+    },
+    {
       name: '@nx/rollup',
       capabilities: 'executors,generators',
     },

@@ -14,7 +14,9 @@ exports[`ngrx-feature-store NgModule should generate into a subdirectory correct
 "import { createAction, props } from '@ngrx/store';
 import { UsersEntity } from './users.models';
 
-export const initUsers = createAction('[Users Page] Init');
+export const initUsers = createAction(
+  '[Users Page] Init'
+);
 
 export const loadUsersSuccess = createAction(
   '[Users/API] Load Users Success',
@@ -39,16 +41,15 @@ import * as UsersFeature from './users.reducer';
 export class UsersEffects {
   private actions$ = inject(Actions);
 
-  init$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(UsersActions.initUsers),
-      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
-      catchError((error) => {
+  init$ = createEffect(() => this.actions$.pipe(
+    ofType(UsersActions.initUsers),
+    switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+    catchError((error) => {
         console.error('Error', error);
         return of(UsersActions.loadUsersFailure({ error }));
-      })
+      }
     )
-  );
+  ));
 }
 "
 `;
@@ -103,25 +104,24 @@ export interface UsersPartialState {
   readonly [USERS_FEATURE_KEY]: UsersState;
 }
 
-export const usersAdapter: EntityAdapter<UsersEntity> =
-  createEntityAdapter<UsersEntity>();
+export const usersAdapter: EntityAdapter<UsersEntity> = createEntityAdapter<UsersEntity>();
 
 export const initialUsersState: UsersState = usersAdapter.getInitialState({
   // set initial required properties
-  loaded: false,
+  loaded: false
 });
 
 const reducer = createReducer(
   initialUsersState,
-  on(UsersActions.initUsers, (state) => ({
-    ...state,
-    loaded: false,
-    error: null,
-  })),
-  on(UsersActions.loadUsersSuccess, (state, { users }) =>
-    usersAdapter.setAll(users, { ...state, loaded: true })
+  on(UsersActions.initUsers,
+    state => ({ ...state, loaded: false, error: null })
   ),
-  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error }))
+  on(UsersActions.loadUsersSuccess,
+    (state, { users }) => usersAdapter.setAll(users, { ...state, loaded: true })
+  ),
+  on(UsersActions.loadUsersFailure,
+    (state, { error }) => ({ ...state, error })
+  ),
 );
 
 export function usersReducer(state: UsersState | undefined, action: Action) {
@@ -135,8 +135,7 @@ exports[`ngrx-feature-store NgModule should generate into a subdirectory correct
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
 // Lookup the 'Users' feature state managed by NgRx
-export const selectUsersState =
-  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+export const selectUsersState = createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
 
 const { selectAll, selectEntities } = usersAdapter.getSelectors();
 
@@ -183,11 +182,7 @@ import { UsersEffects } from './+state/users/users.effects';
 import { UsersFacade } from './+state/users/users.facade';
 
 @NgModule({
-  imports: [
-    CommonModule,
-    StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
-    EffectsModule.forFeature([UsersEffects]),
-  ],
+  imports: [CommonModule, StoreModule.forFeature(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), EffectsModule.forFeature([UsersEffects])],
   providers: [UsersFacade],
 })
 export class FeatureModuleModule {}
@@ -717,7 +712,7 @@ import {
   USERS_FEATURE_KEY,
   UsersState,
   initialUsersState,
-  usersReducer,
+  usersReducer
 } from './users.reducer';
 import * as UsersSelectors from './users.selectors';
 
@@ -730,7 +725,7 @@ describe('UsersFacade', () => {
   let store: Store<TestSchema>;
   const createUsersEntity = (id: string, name = ''): UsersEntity => ({
     id,
-    name: name || \`name-\${id}\`,
+    name: name || \`name-\${id}\`
   });
 
   describe('used in NgModule', () => {
@@ -738,9 +733,9 @@ describe('UsersFacade', () => {
       @NgModule({
         imports: [
           StoreModule.forFeature(USERS_FEATURE_KEY, usersReducer),
-          EffectsModule.forFeature([UsersEffects]),
+          EffectsModule.forFeature([UsersEffects])
         ],
-        providers: [UsersFacade],
+        providers: [UsersFacade]
       })
       class CustomFeatureModule {}
 
@@ -749,7 +744,7 @@ describe('UsersFacade', () => {
           StoreModule.forRoot({}),
           EffectsModule.forRoot([]),
           CustomFeatureModule,
-        ],
+        ]
       })
       class RootModule {}
       TestBed.configureTestingModule({ imports: [RootModule] });
@@ -787,10 +782,11 @@ describe('UsersFacade', () => {
       expect(list.length).toBe(0);
       expect(isLoaded).toBe(false);
 
-      store.dispatch(
-        UsersActions.loadUsersSuccess({
-          users: [createUsersEntity('AAA'), createUsersEntity('BBB')],
-        })
+      store.dispatch(UsersActions.loadUsersSuccess({
+        users: [
+          createUsersEntity('AAA'),
+          createUsersEntity('BBB')
+        ]})
       );
 
       list = await readFirst(facade.allUsers$);
@@ -808,7 +804,9 @@ exports[`ngrx-feature-store Standalone APIs should generate the files with the c
 "import { createAction, props } from '@ngrx/store';
 import { UsersEntity } from './users.models';
 
-export const initUsers = createAction('[Users Page] Init');
+export const initUsers = createAction(
+  '[Users Page] Init'
+);
 
 export const loadUsersSuccess = createAction(
   '[Users/API] Load Users Success',
@@ -833,16 +831,15 @@ import * as UsersFeature from './users.reducer';
 export class UsersEffects {
   private actions$ = inject(Actions);
 
-  init$ = createEffect(() =>
-    this.actions$.pipe(
-      ofType(UsersActions.initUsers),
-      switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
-      catchError((error) => {
+  init$ = createEffect(() => this.actions$.pipe(
+    ofType(UsersActions.initUsers),
+    switchMap(() => of(UsersActions.loadUsersSuccess({ users: [] }))),
+    catchError((error) => {
         console.error('Error', error);
         return of(UsersActions.loadUsersFailure({ error }));
-      })
+      }
     )
-  );
+  ));
 }
 "
 `;
@@ -868,7 +865,7 @@ describe('UsersEffects', () => {
       providers: [
         UsersEffects,
         provideMockActions(() => actions),
-        provideMockStore(),
+        provideMockStore()
       ],
     });
 
@@ -879,9 +876,7 @@ describe('UsersEffects', () => {
     it('should work', () => {
       actions = hot('-a-|', { a: UsersActions.initUsers() });
 
-      const expected = hot('-a-|', {
-        a: UsersActions.loadUsersSuccess({ users: [] }),
-      });
+      const expected = hot('-a-|', { a: UsersActions.loadUsersSuccess({ users: [] }) });
 
       expect(effects.init$).toBeObservable(expected);
     });
@@ -920,25 +915,24 @@ export interface UsersPartialState {
   readonly [USERS_FEATURE_KEY]: UsersState;
 }
 
-export const usersAdapter: EntityAdapter<UsersEntity> =
-  createEntityAdapter<UsersEntity>();
+export const usersAdapter: EntityAdapter<UsersEntity> = createEntityAdapter<UsersEntity>();
 
 export const initialUsersState: UsersState = usersAdapter.getInitialState({
   // set initial required properties
-  loaded: false,
+  loaded: false
 });
 
 const reducer = createReducer(
   initialUsersState,
-  on(UsersActions.initUsers, (state) => ({
-    ...state,
-    loaded: false,
-    error: null,
-  })),
-  on(UsersActions.loadUsersSuccess, (state, { users }) =>
-    usersAdapter.setAll(users, { ...state, loaded: true })
+  on(UsersActions.initUsers,
+    state => ({ ...state, loaded: false, error: null })
   ),
-  on(UsersActions.loadUsersFailure, (state, { error }) => ({ ...state, error }))
+  on(UsersActions.loadUsersSuccess,
+    (state, { users }) => usersAdapter.setAll(users, { ...state, loaded: true })
+  ),
+  on(UsersActions.loadUsersFailure,
+    (state, { error }) => ({ ...state, error })
+  ),
 );
 
 export function usersReducer(state: UsersState | undefined, action: Action) {
@@ -957,14 +951,14 @@ import { UsersState, initialUsersState, usersReducer } from './users.reducer';
 describe('Users Reducer', () => {
   const createUsersEntity = (id: string, name = ''): UsersEntity => ({
     id,
-    name: name || \`name-\${id}\`,
+    name: name || \`name-\${id}\`
   });
 
   describe('valid Users actions', () => {
     it('loadUsersSuccess should return the list of known Users', () => {
       const users = [
         createUsersEntity('PRODUCT-AAA'),
-        createUsersEntity('PRODUCT-zzz'),
+        createUsersEntity('PRODUCT-zzz')
       ];
       const action = UsersActions.loadUsersSuccess({ users });
 
@@ -993,8 +987,7 @@ exports[`ngrx-feature-store Standalone APIs should generate the files with the c
 import { USERS_FEATURE_KEY, UsersState, usersAdapter } from './users.reducer';
 
 // Lookup the 'Users' feature state managed by NgRx
-export const selectUsersState =
-  createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
+export const selectUsersState = createFeatureSelector<UsersState>(USERS_FEATURE_KEY);
 
 const { selectAll, selectEntities } = usersAdapter.getSelectors();
 
@@ -1033,39 +1026,31 @@ export const selectEntity = createSelector(
 
 exports[`ngrx-feature-store Standalone APIs should generate the files with the correct content 10`] = `
 "import { UsersEntity } from './users.models';
-import {
-  usersAdapter,
-  UsersPartialState,
-  initialUsersState,
-} from './users.reducer';
+import { usersAdapter, UsersPartialState, initialUsersState } from './users.reducer';
 import * as UsersSelectors from './users.selectors';
 
 describe('Users Selectors', () => {
   const ERROR_MSG = 'No Error Available';
   const getUsersId = (it: UsersEntity) => it.id;
-  const createUsersEntity = (id: string, name = '') =>
-    ({
-      id,
-      name: name || \`name-\${id}\`,
-    } as UsersEntity);
+  const createUsersEntity = (id: string, name = '') => ({
+    id,
+    name: name || \`name-\${id}\`
+  }) as UsersEntity;
 
   let state: UsersPartialState;
 
   beforeEach(() => {
     state = {
-      users: usersAdapter.setAll(
-        [
-          createUsersEntity('PRODUCT-AAA'),
-          createUsersEntity('PRODUCT-BBB'),
-          createUsersEntity('PRODUCT-CCC'),
-        ],
-        {
-          ...initialUsersState,
-          selectedId: 'PRODUCT-BBB',
-          error: ERROR_MSG,
-          loaded: true,
-        }
-      ),
+      users: usersAdapter.setAll([
+        createUsersEntity('PRODUCT-AAA'),
+        createUsersEntity('PRODUCT-BBB'),
+        createUsersEntity('PRODUCT-CCC')
+      ], {
+        ...initialUsersState,
+        selectedId: 'PRODUCT-BBB',
+        error: ERROR_MSG,
+        loaded: true
+      })
     };
   });
 
@@ -1111,15 +1096,7 @@ import { UsersEffects } from './+state/users.effects';
 import { UsersFacade } from './+state/users.facade';
 
 export const featureRoutes: Route[] = [
-  {
-    path: '',
-    component: FeatureComponent,
-    providers: [
-      UsersFacade,
-      provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer),
-      provideEffects(UsersEffects),
-    ],
-  },
+  { path: '', component: FeatureComponent , providers: [UsersFacade, provideState(fromUsers.USERS_FEATURE_KEY, fromUsers.usersReducer), provideEffects(UsersEffects)]}
 ];
 "
 `;
@@ -1132,8 +1109,7 @@ export * from './lib/+state/users.reducer';
 export * from './lib/+state/users.actions';
 export * from './lib/lib.routes';
 
-export * from './lib/feature/feature.component';
-"
+export * from './lib/feature/feature.component';"
 `;
 
 exports[`ngrx-feature-store Standalone APIs should have the correct entry point when --barrels=true 1`] = `
@@ -1150,6 +1126,5 @@ export * from './lib/+state/users.models';
 export { UsersActions, UsersFeature, UsersSelectors };
 export * from './lib/lib.routes';
 
-export * from './lib/feature/feature.component';
-"
+export * from './lib/feature/feature.component';"
 `;

@@ -70,6 +70,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
       opts.docker ? `--docker=${opts.docker}` : null,
       opts.js ? `--js` : null,
       opts.nextAppDir ? '--nextAppDir=true' : '--nextAppDir=false',
+      opts.nextSrcDir ? '--nextSrcDir=true' : '--nextSrcDir=false',
       opts.packageManager ? `--packageManager=${opts.packageManager}` : null,
       opts.standaloneApi !== undefined
         ? `--standaloneApi=${opts.standaloneApi}`

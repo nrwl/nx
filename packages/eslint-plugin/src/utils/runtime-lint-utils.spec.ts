@@ -14,7 +14,7 @@ import {
   hasBannedDependencies,
   hasBannedImport,
   hasNoneOfTheseTags,
-  isAngularSecondaryEntrypoint,
+  belongsToDifferentNgEntryPoint,
   isTerminalRun,
 } from './runtime-lint-utils';
 import { vol } from 'memfs';
@@ -456,82 +456,96 @@ describe('isAngularSecondaryEntrypoint', () => {
           '@project/standard/secondary': [
             'libs/standard/secondary/src/index.ts',
           ],
-          '@project/standard/tertiary': [
-            'libs/standard/tertiary/src/public_api.ts',
-          ],
-          '@project/features': ['libs/features/src/index.ts'],
+          '@project/features': ['libs/features/index.ts'],
           '@project/features/*': ['libs/features/*/random/folder/api.ts'],
-          '@project/buildable': ['libs/buildable/src/index.ts'],
         },
       },
     };
     const fsJson = {
       'tsconfig.base.json': JSON.stringify(tsConfig),
-      'apps/app.ts': '',
       'libs/standard/package.json': '{ "version": "0.0.0" }',
+      'libs/standard/src/index.ts': 'const bla = "foo"',
       'libs/standard/secondary/ng-package.json': JSON.stringify({
         lib: { entryFile: 'src/index.ts' },
       }),
       'libs/standard/secondary/src/index.ts': 'const bla = "foo"',
-      'libs/standard/tertiary/ng-package.json': JSON.stringify({
-        lib: { entryFile: 'src/public_api.ts' },
-      }),
-      'libs/standard/tertiary/src/public_api.ts': 'const bla = "foo"',
       'libs/features/package.json': '{ "version": "0.0.0" }',
+      'libs/features/ng-package.json': JSON.stringify({
+        lib: { entryFile: 'index.ts' },
+      }),
+      'libs/features/index.ts': 'const bla = "foo"',
       'libs/features/secondary/ng-package.json': JSON.stringify({
         lib: { entryFile: 'random/folder/api.ts' },
       }),
       'libs/features/secondary/random/folder/api.ts': 'const bla = "foo"',
-      'libs/buildable/ng-package.json': JSON.stringify({
-        lib: { entryFile: 'src/index.ts' },
-      }),
     };
     vol.fromJSON(fsJson, '/root');
   });
 
-  it('should return true for secondary entrypoints', () => {
+  it('should return false if they belong to same entrypoints', () => {
+    // main
     expect(
-      isAngularSecondaryEntrypoint(
+      belongsToDifferentNgEntryPoint(
         '@project/standard',
-        'apps/app.ts',
+        'libs/standard/src/subfolder/index.ts',
         'libs/standard'
       )
     ).toBe(false);
     expect(
-      isAngularSecondaryEntrypoint(
-        '@project/standard/secondary',
-        'apps/app.ts',
-        'libs/standard'
-      )
-    ).toBe(true);
-    expect(
-      isAngularSecondaryEntrypoint(
-        '@project/standard/tertiary',
-        'apps/app.ts',
-        'libs/standard'
-      )
-    ).toBe(true);
-    expect(
-      isAngularSecondaryEntrypoint(
+      belongsToDifferentNgEntryPoint(
         '@project/features',
-        'apps/app.ts',
+        'libs/features/src/subfolder/index.ts',
         'libs/features'
       )
     ).toBe(false);
+    // secondary
     expect(
-      isAngularSecondaryEntrypoint(
+      belongsToDifferentNgEntryPoint(
+        '@project/standard/secondary',
+        'libs/standard/secondary/src/subfolder/index.ts',
+        'libs/standard'
+      )
+    ).toBe(false);
+    expect(
+      belongsToDifferentNgEntryPoint(
         '@project/features/secondary',
-        'apps/app.ts',
+        'libs/features/secondary/random/folder/src/index.ts',
         'libs/features'
+      )
+    ).toBe(false);
+  });
+
+  it('should return true if they belong to different entrypoints', () => {
+    // main
+    expect(
+      belongsToDifferentNgEntryPoint(
+        '@project/standard',
+        'libs/standard/secondary/src/subfolder/index.ts',
+        'libs/standard'
       )
     ).toBe(true);
     expect(
-      isAngularSecondaryEntrypoint(
-        '@project/buildable',
-        'apps/app.ts',
-        'libs/buildable'
+      belongsToDifferentNgEntryPoint(
+        '@project/features',
+        'libs/features/secondary/random/folder/src/index.ts',
+        'libs/features'
       )
-    ).toBe(false);
+    ).toBe(true);
+    // secondary
+    expect(
+      belongsToDifferentNgEntryPoint(
+        '@project/standard/secondary',
+        'libs/standard/src/subfolder/index.ts',
+        'libs/standard'
+      )
+    ).toBe(true);
+    expect(
+      belongsToDifferentNgEntryPoint(
+        '@project/features/secondary',
+        'libs/features/src/subfolder/index.ts',
+        'libs/features'
+      )
+    ).toBe(true);
   });
 });
 

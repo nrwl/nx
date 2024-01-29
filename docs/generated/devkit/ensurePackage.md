@@ -33,7 +33,7 @@ This install the @nx/jest@<nxVersion> and return the module
 When running with --dryRun, the function will throw when dependencies are missing.
 Returns null for ESM dependencies. Import them with a dynamic import instead.
 
-▸ **ensurePackage**<`T`\>(`pkg`, `version`): `T`
+▸ **ensurePackage**\<`T`\>(`pkg`, `version`): `T`
 
 Ensure that dependencies and devDependencies from package.json are installed at the required versions.
 Returns null for ESM dependencies. Import them with a dynamic import instead.

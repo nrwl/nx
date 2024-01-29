@@ -6,9 +6,9 @@ Because we are using an Nx plugin for Express, all the features of Nx are availa
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
 {% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/nx-cloud/features/remote-cache" %}✅ Share Your Cache{% /pill %}
+{% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
 {% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
-{% pill url="/nx-cloud/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
+{% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
 {% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
@@ -26,14 +26,21 @@ Make sure to install the `@nx/express` version that matches the version of `nx` 
 {%tab label="npm"%}
 
 ```shell
-npm i --save-dev @nx/express
+npm add -D @nx/express
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nx/express
+yarn add -D @nx/express
+```
+
+{% /tab %}
+{%tab label="pnpm"%}
+
+```shell
+pnpm add -D @nx/express
 ```
 
 {% /tab %}

@@ -1,6 +1,10 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { getProjectGraphService } from '../machines/get-services';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
+import { FocusedPanel } from '../ui-components/focused-panel';
+import { ShowHideAll } from '../ui-components/show-hide-all';
 import { useProjectGraphSelector } from './hooks/use-project-graph-selector';
+import { TracingAlgorithmType } from './machines/interfaces';
 import {
   collapseEdgesSelector,
   focusedProjectNameSelector,
@@ -12,30 +16,31 @@ import {
   textFilterSelector,
 } from './machines/selectors';
 import { CollapseEdgesPanel } from './panels/collapse-edges-panel';
-import { FocusedPanel } from '../ui-components/focused-panel';
 import { GroupByFolderPanel } from './panels/group-by-folder-panel';
-import { ProjectList } from './project-list';
 import { SearchDepth } from './panels/search-depth';
-import { ShowHideAll } from '../ui-components/show-hide-all';
 import { TextFilterPanel } from './panels/text-filter-panel';
 import { TracingPanel } from './panels/tracing-panel';
-import { useEnvironmentConfig } from '../hooks/use-environment-config';
-import { TracingAlgorithmType } from './machines/interfaces';
-import { getProjectGraphService } from '../machines/get-services';
-import { useIntervalWhen } from '../hooks/use-interval-when';
+import { ProjectList } from './project-list';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
 /* eslint-enable @nx/enforce-module-boundaries */
+import { useFloating } from '@floating-ui/react';
+import {
+  fetchProjectGraph,
+  getProjectGraphDataService,
+  useEnvironmentConfig,
+  useIntervalWhen,
+  useRouteConstructor,
+} from '@nx/graph/shared';
 import {
   useNavigate,
   useParams,
   useRouteLoaderData,
   useSearchParams,
 } from 'react-router-dom';
-import { getProjectGraphDataService } from '../hooks/get-project-graph-data-service';
 import { useCurrentPath } from '../hooks/use-current-path';
-import { useRouteConstructor } from '../util';
+import { ProjectDetailsModal } from '../ui-components/project-details-modal';
 
 export function ProjectsSidebar(): JSX.Element {
   const environmentConfig = useEnvironmentConfig();
@@ -292,28 +297,18 @@ export function ProjectsSidebar(): JSX.Element {
 
   useIntervalWhen(
     () => {
-      const selectedWorkspaceId =
-        params.selectedWorkspaceId ??
-        environmentConfig.appConfig.defaultWorkspaceId;
-
-      const projectInfo = environmentConfig.appConfig.workspaces.find(
-        (graph) => graph.id === selectedWorkspaceId
-      );
-
-      const fetchProjectGraph = async () => {
-        const response: ProjectGraphClientResponse =
-          await projectGraphDataService.getProjectGraph(
-            projectInfo.projectGraphUrl
-          );
+      fetchProjectGraph(
+        projectGraphDataService,
+        params,
+        environmentConfig.appConfig
+      ).then((response: ProjectGraphClientResponse) => {
         projectGraphService.send({
           type: 'updateGraph',
           projects: response.projects,
           dependencies: response.dependencies,
           fileMap: response.fileMap,
         });
-      };
-
-      fetchProjectGraph();
+      });
     },
     5000,
     environmentConfig.watch
@@ -329,6 +324,8 @@ export function ProjectsSidebar(): JSX.Element {
 
   return (
     <>
+      <ProjectDetailsModal />
+
       {focusedProject ? (
         <FocusedPanel
           focusedLabel={focusedProject}

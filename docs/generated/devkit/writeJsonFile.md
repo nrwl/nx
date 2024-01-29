@@ -1,6 +1,6 @@
 # Function: writeJsonFile
 
-▸ **writeJsonFile**<`T`\>(`path`, `data`, `options?`): `void`
+▸ **writeJsonFile**\<`T`\>(`path`, `data`, `options?`): `void`
 
 Serializes the given data to JSON and writes it to a file.
 

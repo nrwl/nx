@@ -5,6 +5,7 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import addKarmaInputs from './add-karma-inputs';
 
 describe('15.0.0 migration (add-karma-inputs)', () => {
@@ -12,6 +13,9 @@ describe('15.0.0 migration (add-karma-inputs)', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   it('should add inputs configuration for karma targets', async () => {

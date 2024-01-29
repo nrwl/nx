@@ -7,9 +7,11 @@ import {
 } from '@nx/graph/ui-tooltips';
 import { TooltipEvent } from './interfaces';
 import { GraphInteractionEvents } from './graph-interaction-events';
+import { getExternalApiService } from '@nx/graph/shared';
 
 export class GraphTooltipService {
   private subscribers: Set<Function> = new Set();
+  private externalApiService = getExternalApiService();
 
   constructor(graph: GraphService) {
     graph.listen((event: GraphInteractionEvents) => {
@@ -21,29 +23,22 @@ export class GraphTooltipService {
           this.hideAll();
           break;
         case 'ProjectNodeClick':
-          const openConfigCallback =
-            graph.renderMode === 'nx-console'
-              ? () =>
-                  graph.broadcast({
-                    type: 'ProjectOpenConfigClick',
-                    projectName: event.data.id,
-                  })
-              : undefined;
           this.openProjectNodeToolTip(event.ref, {
             id: event.data.id,
             tags: event.data.tags,
             type: event.data.type,
             description: event.data.description,
-            openConfigCallback,
           });
           break;
         case 'TaskNodeClick':
           const runTaskCallback =
             graph.renderMode === 'nx-console'
               ? () =>
-                  graph.broadcast({
-                    type: 'RunTaskClick',
-                    taskId: event.data.id,
+                  this.externalApiService.postEvent({
+                    type: 'run-task',
+                    payload: {
+                      taskId: event.data.id,
+                    },
                   })
               : undefined;
           this.openTaskNodeTooltip(event.ref, {
@@ -69,10 +64,12 @@ export class GraphTooltipService {
           const callback =
             graph.renderMode === 'nx-console'
               ? (url) =>
-                  graph.broadcast({
-                    type: 'FileLinkClick',
-                    sourceRoot: event.data.sourceRoot,
-                    file: url,
+                  this.externalApiService.postEvent({
+                    type: 'file-click',
+                    payload: {
+                      sourceRoot: event.data.sourceRoot,
+                      file: url,
+                    },
                   })
               : undefined;
           this.openEdgeToolTip(event.ref, {

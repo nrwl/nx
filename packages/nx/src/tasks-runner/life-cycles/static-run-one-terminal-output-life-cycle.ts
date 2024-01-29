@@ -117,7 +117,6 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     ) {
       const args = getPrintableCommandArgsForTask(task);
       output.logCommand(args.join(' '), status);
-      output.addNewline();
       process.stdout.write(terminalOutput);
     }
   }

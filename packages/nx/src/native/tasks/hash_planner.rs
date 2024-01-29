@@ -189,7 +189,7 @@ impl HashPlanner {
         external_deps_mapped: &hashbrown::HashMap<&str, Vec<&str>>,
         visited: &mut Box<hashbrown::HashSet<String>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
-        let project_deps = &self.project_graph.dependencies[&task.target.project]
+        let project_deps = &self.project_graph.dependencies[project_name]
             .iter()
             .map(|d| d.as_str())
             .collect::<Vec<_>>();
@@ -387,7 +387,10 @@ fn find_external_dependency_node_name<'a>(
 
 fn project_file_set_inputs(project_name: &str, file_sets: Vec<&str>) -> Vec<HashInstruction> {
     vec![
-        HashInstruction::ProjectFileSet(project_name.to_string(), file_sets.join(",")),
+        HashInstruction::ProjectFileSet(
+            project_name.to_string(),
+            file_sets.iter().map(|f| f.to_string()).collect(),
+        ),
         HashInstruction::ProjectConfiguration(project_name.to_string()),
         HashInstruction::TsConfiguration(project_name.to_string()),
     ]

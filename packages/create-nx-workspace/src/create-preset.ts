@@ -14,7 +14,7 @@ export async function createPreset<T extends CreateWorkspaceOptions>(
   packageManager: PackageManager,
   directory: string
 ): Promise<void> {
-  const { skipGit, ci, commit, nxCloud, ...restArgs } = parsedArgs;
+  const { skipGit, commit, nxCloud, ...restArgs } = parsedArgs;
 
   let args = unparse({
     interactive: true,

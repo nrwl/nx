@@ -37,4 +37,4 @@ Nx will set the following environment variables so they can be accessible within
 | NX_DRY_RUN                   | boolean | Set to `true` during dry runs of generators. Use this to avoid side effects during generators.                        |
 | NX_INTERACTIVE               | boolean | Set to `false` when running generators with `--interactive=false`. Use this to prevent prompting during generators    |
 
-When using distributed caching, [Nx Cloud Environment Variables](/nx-cloud/reference/env-vars) are also available.
+When using remote caching, [Nx Cloud Environment Variables](/ci/reference/env-vars) are also available.

@@ -78,5 +78,6 @@ function getNgModuleDeclaration(componentClassName: string): string {
   declarations: [${componentClassName}],
   exports: [${componentClassName}],
 })
-export class ${componentClassName}Module {}`;
+export class ${componentClassName}Module {}
+`;
 }

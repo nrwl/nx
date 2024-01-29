@@ -5,30 +5,27 @@
   "$id": "init-vite-plugin",
   "type": "object",
   "properties": {
-    "uiFramework": {
-      "type": "string",
-      "description": "UI Framework to use for Vite.",
-      "enum": ["react", "none"],
-      "default": "react",
-      "x-prompt": "What UI framework plugin should Vite use?"
-    },
-    "compiler": {
-      "type": "string",
-      "description": "Compiler to use for Vite when UI Framework is React.",
-      "enum": ["babel", "swc"],
-      "default": "babel"
-    },
-    "includeLib": {
+    "skipFormat": {
+      "description": "Skip formatting files.",
       "type": "boolean",
-      "description": "Add dependencies needed to build libraries.",
       "default": false
     },
-    "testEnvironment": {
-      "description": "The vitest environment to use. See https://vitest.dev/config/#environment.",
-      "type": "string",
-      "enum": ["node", "jsdom", "happy-dom", "edge-runtime"],
-      "default": "jsdom"
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
+    },
+    "updatePackageScripts": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Update `package.json` scripts with inferred targets",
+      "default": false
     }
-  },
-  "examplesFile": "../../../docs/init-examples.md"
+  }
 }

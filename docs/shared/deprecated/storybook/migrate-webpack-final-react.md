@@ -205,12 +205,26 @@ Once you've migrated all your libraries, you can think about removing the root-l
 
 If you choose to opt-in to Webpack 5, by specifying `builder: 'webpack5'` in your project's `.storybook/main.(js|ts)` (as shown above, in the example of a newly generated `main.js` file), don't forget to add the Storybook dependencies for Webpack 5 to work:
 
+{% tabs %}
+{% tab label="npm" %}
+
+```shell
+npm add -D @storybook/builder-webpack5 @storybook/manager-webpack5
+```
+
+{% /tab %}
+{% tab label="yarn" %}
+
 ```shell
 yarn add -D @storybook/builder-webpack5 @storybook/manager-webpack5
 ```
 
-or if you're using `npm`:
+{% /tab %}
+{% tab label="pnpm" %}
 
 ```shell
-npm install --save-dev @storybook/builder-webpack5 @storybook/manager-webpack5
+pnpm add -D @storybook/builder-webpack5 @storybook/manager-webpack5
 ```
+
+{% /tab %}
+{% /tabs %}

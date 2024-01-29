@@ -13,7 +13,7 @@ describe('redux', () => {
     await libraryGenerator(appTree, {
       name: 'my-lib',
       linter: Linter.EsLint,
-      skipFormat: false,
+      skipFormat: true,
       skipTsConfig: false,
       style: 'css',
       unitTestRunner: 'jest',

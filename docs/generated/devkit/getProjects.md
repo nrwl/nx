@@ -1,6 +1,6 @@
 # Function: getProjects
 
-▸ **getProjects**(`tree`): `Map`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
+▸ **getProjects**(`tree`): `Map`\<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
 
 Get a map of all projects in a workspace.
 
@@ -14,4 +14,4 @@ Use [readProjectConfiguration](../../devkit/documents/readProjectConfiguration) 
 
 #### Returns
 
-`Map`<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>
+`Map`\<`string`, [`ProjectConfiguration`](../../devkit/documents/ProjectConfiguration)\>

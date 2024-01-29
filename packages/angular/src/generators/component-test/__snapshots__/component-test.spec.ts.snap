@@ -5,28 +5,26 @@ exports[`Angular Cypress Component Test Generator should generate a component te
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(MyLibComponent, {
       add: {
         imports: [],
-        providers: []
-      }
-    })
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(MyLibComponent, {
-           componentProperties: {
-               type:  'button',
-               style:  'default',
-               age:  0,
-               isOn:  false,
-          }
-       });
-  })
-
-})
+    cy.mount(MyLibComponent, {
+      componentProperties: {
+        type: 'button',
+        style: 'default',
+        age: 0,
+        isOn: false,
+      },
+    });
+  });
+});
 "
 `;
 
@@ -35,21 +33,19 @@ exports[`Angular Cypress Component Test Generator should handle component w/o in
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(MyLibComponent, {
       add: {
         imports: [],
         providers: []
       }
-    })
-  })
+    });
+  });
 
   it('renders', () => {
-     cy.mount(MyLibComponent,);
-  })
-
-})
+    cy.mount(MyLibComponent);
+  });
+});
 "
 `;
 
@@ -58,27 +54,25 @@ exports[`Angular Cypress Component Test Generator should work with standalone co
 import { MyLibComponent } from './my-lib.component';
 
 describe(MyLibComponent.name, () => {
-
   beforeEach(() => {
     TestBed.overrideComponent(MyLibComponent, {
       add: {
         imports: [],
-        providers: []
-      }
-    })
-  })
+        providers: [],
+      },
+    });
+  });
 
   it('renders', () => {
-     cy.mount(MyLibComponent, {
-           componentProperties: {
-               type:  'button',
-               style:  'default',
-               age:  0,
-               isOn:  false,
-          }
-       });
-  })
-
-})
+    cy.mount(MyLibComponent, {
+      componentProperties: {
+        type: 'button',
+        style: 'default',
+        age: 0,
+        isOn: false,
+      },
+    });
+  });
+});
 "
 `;

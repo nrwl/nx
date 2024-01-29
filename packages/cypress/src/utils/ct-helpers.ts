@@ -45,8 +45,13 @@ export function getTempTailwindPath(context: ExecutorContext) {
 export function isCtProjectUsingBuildProject(
   graph: ProjectGraph,
   parentProjectName: string,
-  childProjectName: string
+  childProjectName: string,
+  seen = new Set<string>()
 ): boolean {
+  if (seen.has(parentProjectName)) {
+    return false;
+  }
+  seen.add(parentProjectName);
   const isProjectDirectDep = graph.dependencies[parentProjectName].some(
     (p) => p.target === childProjectName
   );
@@ -62,7 +67,8 @@ export function isCtProjectUsingBuildProject(
       isCtProjectUsingBuildProject(
         graph,
         maybeIntermediateProject.target,
-        childProjectName
+        childProjectName,
+        seen
       )
     ) {
       return true;

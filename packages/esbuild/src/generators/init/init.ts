@@ -1,23 +1,33 @@
-import { addDependenciesToPackageJson, formatFiles, Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  formatFiles,
+  GeneratorCallback,
+  Tree,
+} from '@nx/devkit';
 import { Schema } from './schema';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
 import { nxVersion } from '../../utils/versions';
 
 export async function esbuildInitGenerator(tree: Tree, schema: Schema) {
-  const task = addDependenciesToPackageJson(
-    tree,
-    {},
-    {
-      '@nx/esbuild': nxVersion,
-      esbuild: esbuildVersion,
-    }
-  );
+  let installTask: GeneratorCallback = () => {};
+  if (!schema.skipPackageJson) {
+    installTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      {
+        '@nx/esbuild': nxVersion,
+        esbuild: esbuildVersion,
+      },
+      undefined,
+      schema.keepExistingVersions
+    );
+  }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
 
-  return task;
+  return installTask;
 }
 
 export default esbuildInitGenerator;

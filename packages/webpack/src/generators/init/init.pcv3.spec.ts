@@ -18,19 +18,15 @@ describe('webpackInitGenerator (PCv3)', () => {
   });
 
   it('should install webpack-cli', async () => {
-    await webpackInitGenerator(tree, { compiler: 'swc' });
+    await webpackInitGenerator(tree, {});
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toEqual({
       name: expect.any(String),
-      dependencies: {
-        '@swc/helpers': expect.any(String),
-      },
+      dependencies: {},
       devDependencies: {
+        '@nx/web': expect.any(String),
         '@nx/webpack': expect.any(String),
-        '@swc/cli': expect.any(String),
-        '@swc/core': expect.any(String),
-        'swc-loader': expect.any(String),
         'webpack-cli': expect.any(String),
       },
     });

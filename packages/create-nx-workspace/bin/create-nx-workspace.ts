@@ -12,14 +12,12 @@ import { pointToTutorialAndCourse } from '../src/utils/preset/point-to-tutorial-
 import { yargsDecorator } from './decorator';
 import { getThirdPartyPreset } from '../src/utils/preset/get-third-party-preset';
 import {
-  determineCI,
   determineDefaultBase,
   determineNxCloud,
   determinePackageManager,
 } from '../src/internal-utils/prompts';
 import {
   withAllPrompts,
-  withCI,
   withGitOptions,
   withNxCloud,
   withOptions,
@@ -49,6 +47,7 @@ interface ReactArguments extends BaseArguments {
   style: string;
   bundler: 'webpack' | 'vite' | 'rspack';
   nextAppDir: boolean;
+  nextSrcDir: boolean;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
 
@@ -68,14 +67,7 @@ interface VueArguments extends BaseArguments {
   stack: 'vue';
   workspaceType: 'standalone' | 'integrated';
   appName: string;
-  style: string;
-  e2eTestRunner: 'none' | 'cypress' | 'playwright';
-}
-
-interface NuxtArguments extends BaseArguments {
-  stack: 'nuxt';
-  workspaceType: 'standalone' | 'integrated';
-  appName: string;
+  framework: 'none' | 'nuxt';
   style: string;
   e2eTestRunner: 'none' | 'cypress' | 'playwright';
 }
@@ -97,7 +89,6 @@ type Arguments =
   | ReactArguments
   | AngularArguments
   | VueArguments
-  | NuxtArguments
   | NodeArguments
   | UnknownStackArguments;
 
@@ -122,8 +113,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Customizes the initial content of your workspace. Default presets include: [${Object.values(
               Preset
             )
-              // TODO(katerina): Remove this option when @nx/nuxt is released.
-              .filter((p) => p !== Preset.NuxtStandalone && p !== Preset.Nuxt)
               .map((p) => `"${p}"`)
               .join(
                 ', '
@@ -174,6 +163,10 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             describe: chalk.dim`Enable the App Router for Next.js`,
             type: 'boolean',
           })
+          .option('nextSrcDir', {
+            describe: chalk.dim`Generate a 'src/' directory for Next.js`,
+            type: 'boolean',
+          })
           .option('e2eTestRunner', {
             describe: chalk.dim`Test runner to use for end to end (E2E) tests.`,
             choices: ['cypress', 'playwright', 'none'],
@@ -184,7 +177,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
             type: 'boolean',
           }),
         withNxCloud,
-        withCI,
         withAllPrompts,
         withPackageManager,
         withGitOptions
@@ -235,8 +227,11 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
   await recordStat({
     nxVersion,
     command: 'create-nx-workspace',
-    useCloud: parsedArgs.nxCloud,
-    meta: messages.codeOfSelectedPromptMessage('nxCloudCreation'),
+    useCloud: parsedArgs.nxCloud !== 'skip',
+    meta: [
+      messages.codeOfSelectedPromptMessage('setupCI'),
+      messages.codeOfSelectedPromptMessage('setupNxCloud'),
+    ],
   });
 
   if (parsedArgs.nxCloud && workspaceInfo.nxCloudInfo) {
@@ -320,13 +315,11 @@ async function normalizeArgsMiddleware(
     const packageManager = await determinePackageManager(argv);
     const defaultBase = await determineDefaultBase(argv);
     const nxCloud = await determineNxCloud(argv);
-    const ci = await determineCI(argv, nxCloud);
 
     Object.assign(argv, {
       nxCloud,
       packageManager,
       defaultBase,
-      ci,
     });
   } catch (e) {
     console.error(e);
@@ -375,7 +368,7 @@ async function determineFolder(
 
 async function determineStack(
   parsedArgs: yargs.Arguments<Arguments>
-): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'nuxt' | 'unknown'> {
+): Promise<'none' | 'react' | 'angular' | 'vue' | 'node' | 'unknown'> {
   if (parsedArgs.preset) {
     switch (parsedArgs.preset) {
       case Preset.Angular:
@@ -388,12 +381,12 @@ async function determineStack(
       case Preset.NextJs:
       case Preset.NextJsStandalone:
         return 'react';
+      case Preset.Vue:
       case Preset.VueStandalone:
       case Preset.VueMonorepo:
-        return 'vue';
-      case Preset.NuxtStandalone:
       case Preset.Nuxt:
-        return 'nuxt';
+      case Preset.NuxtStandalone:
+        return 'vue';
       case Preset.Nest:
       case Preset.NodeStandalone:
       case Preset.Express:
@@ -429,7 +422,7 @@ async function determineStack(
         },
         {
           name: `vue`,
-          message: `Vue:           Configures a Vue application with modern tooling.`,
+          message: `Vue:           Configures a Vue application with your framework of choice.`,
         },
         {
           name: `angular`,
@@ -458,8 +451,6 @@ async function determinePresetOptions(
       return determineAngularOptions(parsedArgs);
     case 'vue':
       return determineVueOptions(parsedArgs);
-    case 'nuxt':
-      return determineNuxtOptions(parsedArgs);
     case 'node':
       return determineNodeOptions(parsedArgs);
     default:
@@ -507,7 +498,7 @@ async function determineNoneOptions(
             name: 'No',
           },
         ],
-        initial: 'Yes' as any,
+        initial: 0,
       },
     ]);
     js = reply.ts === 'No';
@@ -525,6 +516,7 @@ async function determineReactOptions(
   let bundler: undefined | 'webpack' | 'vite' | 'rspack' = undefined;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
   let nextAppDir = false;
+  let nextSrcDir = false;
 
   if (parsedArgs.preset && parsedArgs.preset !== Preset.React) {
     preset = parsedArgs.preset;
@@ -576,6 +568,7 @@ async function determineReactOptions(
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   } else if (preset === Preset.NextJs || preset === Preset.NextJsStandalone) {
     nextAppDir = await determineNextAppDir(parsedArgs);
+    nextSrcDir = await determineNextSrcDir(parsedArgs);
     e2eTestRunner = await determineE2eTestRunner(parsedArgs);
   }
 
@@ -591,7 +584,7 @@ async function determineReactOptions(
       {
         name: 'style',
         message: `Default stylesheet format`,
-        initial: 'css' as any,
+        initial: 0,
         type: 'autocomplete',
         choices: [
           {
@@ -627,7 +620,15 @@ async function determineReactOptions(
     style = reply.style;
   }
 
-  return { preset, style, appName, bundler, nextAppDir, e2eTestRunner };
+  return {
+    preset,
+    style,
+    appName,
+    bundler,
+    nextAppDir,
+    nextSrcDir,
+    e2eTestRunner,
+  };
 }
 
 async function determineVueOptions(
@@ -638,22 +639,36 @@ async function determineVueOptions(
   let appName: string;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
 
-  if (parsedArgs.preset) {
+  if (parsedArgs.preset && parsedArgs.preset !== Preset.Vue) {
     preset = parsedArgs.preset;
-  } else {
-    const workspaceType = await determineStandaloneOrMonorepo();
-
-    if (workspaceType === 'standalone') {
-      preset = Preset.VueStandalone;
+    if (preset === Preset.VueStandalone || preset === Preset.NuxtStandalone) {
+      appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
-      preset = Preset.VueMonorepo;
+      appName = await determineAppName(parsedArgs);
     }
-  }
-
-  if (preset === Preset.VueStandalone) {
-    appName = parsedArgs.appName ?? parsedArgs.name;
   } else {
-    appName = await determineAppName(parsedArgs);
+    const framework = await determineVueFramework(parsedArgs);
+
+    const workspaceType = await determineStandaloneOrMonorepo();
+    if (workspaceType === 'standalone') {
+      appName = parsedArgs.appName ?? parsedArgs.name;
+    } else {
+      appName = await determineAppName(parsedArgs);
+    }
+
+    if (framework === 'nuxt') {
+      if (workspaceType === 'standalone') {
+        preset = Preset.NuxtStandalone;
+      } else {
+        preset = Preset.Nuxt;
+      }
+    } else {
+      if (workspaceType === 'standalone') {
+        preset = Preset.VueStandalone;
+      } else {
+        preset = Preset.VueMonorepo;
+      }
+    }
   }
 
   e2eTestRunner = await determineE2eTestRunner(parsedArgs);
@@ -665,70 +680,7 @@ async function determineVueOptions(
       {
         name: 'style',
         message: `Default stylesheet format`,
-        initial: 'css' as any,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'css',
-            message: 'CSS',
-          },
-          {
-            name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
-          },
-          {
-            name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
-          },
-          {
-            name: 'none',
-            message: 'None',
-          },
-        ],
-      },
-    ]);
-    style = reply.style;
-  }
-
-  return { preset, style, appName, e2eTestRunner };
-}
-
-async function determineNuxtOptions(
-  parsedArgs: yargs.Arguments<NuxtArguments>
-): Promise<Partial<Arguments>> {
-  let preset: Preset;
-  let style: undefined | string = undefined;
-  let appName: string;
-  let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
-
-  if (parsedArgs.preset) {
-    preset = parsedArgs.preset;
-  } else {
-    const workspaceType = await determineStandaloneOrMonorepo();
-
-    if (workspaceType === 'standalone') {
-      preset = Preset.NuxtStandalone;
-    } else {
-      preset = Preset.Nuxt;
-    }
-  }
-
-  if (preset === Preset.NuxtStandalone) {
-    appName = parsedArgs.appName ?? parsedArgs.name;
-  } else {
-    appName = await determineAppName(parsedArgs);
-  }
-
-  e2eTestRunner = await determineE2eTestRunner(parsedArgs);
-
-  if (parsedArgs.style) {
-    style = parsedArgs.style;
-  } else {
-    const reply = await enquirer.prompt<{ style: string }>([
-      {
-        name: 'style',
-        message: `Default stylesheet format`,
-        initial: 'css' as any,
+        initial: 0,
         type: 'autocomplete',
         choices: [
           {
@@ -807,7 +759,7 @@ async function determineAngularOptions(
             message: 'Webpack [ https://webpack.js.org/ ]',
           },
         ],
-        initial: 'esbuild' as any,
+        initial: 0,
       },
     ]);
     bundler = reply.bundler;
@@ -820,7 +772,7 @@ async function determineAngularOptions(
       {
         name: 'style',
         message: `Default stylesheet format`,
-        initial: 'css' as any,
+        initial: 0,
         type: 'autocomplete',
         choices: [
           {
@@ -851,7 +803,7 @@ async function determineAngularOptions(
           'Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?',
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
-        initial: 'No' as any,
+        initial: 1,
       },
     ]);
     ssr = reply.ssr === 'Yes';
@@ -928,7 +880,7 @@ async function determineNodeOptions(
             name: 'No',
           },
         ],
-        initial: 'No' as any,
+        initial: 1,
       },
     ]);
     docker = reply.docker === 'Yes';
@@ -952,7 +904,7 @@ async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
       type: 'autocomplete',
       name: 'workspaceType',
       message: `Package-based monorepo, integrated monorepo, or standalone project?`,
-      initial: 'package-based' as any,
+      initial: 0,
       choices: [
         {
           name: 'package-based',
@@ -993,7 +945,7 @@ async function determineStandaloneOrMonorepo(): Promise<
       type: 'autocomplete',
       name: 'workspaceType',
       message: `Integrated monorepo, or standalone project?`,
-      initial: 'standalone' as any,
+      initial: 1,
       choices: [
         {
           name: 'integrated',
@@ -1021,11 +973,7 @@ async function determineStandaloneOrMonorepo(): Promise<
 
 async function determineAppName(
   parsedArgs: yargs.Arguments<
-    | ReactArguments
-    | AngularArguments
-    | NodeArguments
-    | VueArguments
-    | NuxtArguments
+    ReactArguments | AngularArguments | NodeArguments | VueArguments
   >
 ): Promise<string> {
   if (parsedArgs.appName) return parsedArgs.appName;
@@ -1074,7 +1022,7 @@ async function determineReactFramework(
           message: 'React Native  [ https://reactnative.dev/ ]',
         },
       ],
-      initial: 'none' as any,
+      initial: 0,
     },
   ]);
   return reply.framework;
@@ -1127,10 +1075,61 @@ async function determineNextAppDir(
           name: 'No',
         },
       ],
-      initial: 'Yes' as any,
+      initial: 0,
     },
   ]);
   return reply.nextAppDir === 'Yes';
+}
+
+async function determineNextSrcDir(
+  parsedArgs: yargs.Arguments<ReactArguments>
+): Promise<boolean> {
+  if (parsedArgs.nextSrcDir !== undefined) return parsedArgs.nextSrcDir;
+  const reply = await enquirer.prompt<{ nextSrcDir: 'Yes' | 'No' }>([
+    {
+      name: 'nextSrcDir',
+      message: 'Would you like to use the src/ directory?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'Yes',
+        },
+        {
+          name: 'No',
+        },
+      ],
+      initial: 0,
+    },
+  ]);
+  return reply.nextSrcDir === 'Yes';
+}
+
+async function determineVueFramework(
+  parsedArgs: yargs.Arguments<VueArguments>
+): Promise<'none' | 'nuxt'> {
+  if (!!parsedArgs.framework) return parsedArgs.framework;
+  const reply = await enquirer.prompt<{
+    framework: 'none' | 'nuxt';
+  }>([
+    {
+      name: 'framework',
+      message: 'What framework would you like to use?',
+      type: 'autocomplete',
+      choices: [
+        {
+          name: 'none',
+          message: 'None',
+          hint: '         I only want vue',
+        },
+        {
+          name: 'nuxt',
+          message: 'Nuxt          [ https://nuxt.com/ ]',
+        },
+      ],
+      initial: 0,
+    },
+  ]);
+  return reply.framework;
 }
 
 async function determineNodeFramework(

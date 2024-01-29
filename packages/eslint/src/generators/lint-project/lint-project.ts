@@ -1,4 +1,5 @@
 import type {
+  GeneratorCallback,
   NxJsonConfiguration,
   ProjectConfiguration,
   Tree,
@@ -8,17 +9,14 @@ import {
   offsetFromRoot,
   readJson,
   readProjectConfiguration,
+  runTasksInSerial,
   updateJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
 
 import { Linter as LinterEnum } from '../utils/linter';
-import {
-  baseEsLintConfigFile,
-  baseEsLintFlatConfigFile,
-  findEslintFile,
-} from '../utils/eslint-file';
+import { findEslintFile } from '../utils/eslint-file';
 import { join } from 'path';
 import { lintInitGenerator } from '../init/init';
 import type { Linter } from 'eslint';
@@ -34,6 +32,12 @@ import {
   generateSpreadElement,
   stringifyNodeList,
 } from '../utils/flat-config/ast-utils';
+import {
+  baseEsLintConfigFile,
+  baseEsLintFlatConfigFile,
+} from '../../utils/config-file';
+import { hasEslintPlugin } from '../utils/plugin';
+import { setupRootEsLint } from './setup-root-eslint';
 
 interface LintProjectOptions {
   project: string;
@@ -45,41 +49,65 @@ interface LintProjectOptions {
   skipPackageJson?: boolean;
   unitTestRunner?: string;
   rootProject?: boolean;
+  keepExistingVersions?: boolean;
 }
 
 export async function lintProjectGenerator(
   tree: Tree,
   options: LintProjectOptions
 ) {
-  const installTask = lintInitGenerator(tree, {
-    linter: options.linter,
+  const tasks: GeneratorCallback[] = [];
+  const initTask = await lintInitGenerator(tree, {
+    skipPackageJson: options.skipPackageJson,
+  });
+  tasks.push(initTask);
+  const rootEsLintTask = setupRootEsLint(tree, {
     unitTestRunner: options.unitTestRunner,
     skipPackageJson: options.skipPackageJson,
     rootProject: options.rootProject,
   });
+  tasks.push(rootEsLintTask);
   const projectConfig = readProjectConfiguration(tree, options.project);
-
-  projectConfig.targets['lint'] = {
-    executor: '@nx/eslint:lint',
-    outputs: ['{options.outputFile}'],
-  };
 
   let lintFilePatterns = options.eslintFilePatterns;
   if (!lintFilePatterns && options.rootProject && projectConfig.root === '.') {
     lintFilePatterns = ['./src'];
   }
-  if (lintFilePatterns && lintFilePatterns.length) {
-    if (
-      isBuildableLibraryProject(projectConfig) &&
-      !lintFilePatterns.includes('{projectRoot}')
-    ) {
-      lintFilePatterns.push(`{projectRoot}/package.json`);
-    }
+  if (
+    lintFilePatterns &&
+    lintFilePatterns.length &&
+    !lintFilePatterns.includes('{projectRoot}') &&
+    isBuildableLibraryProject(projectConfig)
+  ) {
+    lintFilePatterns.push(`{projectRoot}/package.json`);
+  }
 
-    // only add lintFilePatterns if they are explicitly defined
-    projectConfig.targets['lint'].options = {
-      lintFilePatterns,
+  const hasPlugin = hasEslintPlugin(tree);
+  if (hasPlugin) {
+    if (
+      lintFilePatterns &&
+      lintFilePatterns.length &&
+      lintFilePatterns.some(
+        (p) => !['./src', '{projectRoot}', projectConfig.root].includes(p)
+      )
+    ) {
+      projectConfig.targets['lint'] = {
+        command: `eslint ${lintFilePatterns
+          .join(' ')
+          .replace('{projectRoot}', projectConfig.root)}`,
+      };
+    }
+  } else {
+    projectConfig.targets['lint'] = {
+      executor: '@nx/eslint:lint',
     };
+
+    if (lintFilePatterns && lintFilePatterns.length) {
+      // only add lintFilePatterns if they are explicitly defined
+      projectConfig.targets['lint'].options = {
+        lintFilePatterns,
+      };
+    }
   }
 
   // we are adding new project which is not the root project or
@@ -99,7 +127,8 @@ export async function lintProjectGenerator(
       migrateConfigToMonorepoStyle(
         filteredProjects,
         tree,
-        options.unitTestRunner
+        options.unitTestRunner,
+        options.keepExistingVersions
       );
     }
   }
@@ -135,7 +164,7 @@ export async function lintProjectGenerator(
     await formatFiles(tree);
   }
 
-  return installTask;
+  return runTasksInSerial(...tasks);
 }
 
 function createEsLintConfiguration(

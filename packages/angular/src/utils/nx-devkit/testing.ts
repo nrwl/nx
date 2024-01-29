@@ -37,29 +37,27 @@ export function createApp(
 
   tree.write(
     appConfig.appModule,
-    `
-     import { NgModule } from '@angular/core';
-     import { BrowserModule } from '@angular/platform-browser';
-     ${routing ? "import { RouterModule } from '@angular/router'" : ''};
-     import { AppComponent } from './app.component';
-     @NgModule({
-       imports: [BrowserModule, ${routing ? 'RouterModule.forRoot([])' : ''}],
-       declarations: [AppComponent],
-       bootstrap: [AppComponent]
-     })
-     export class AppModule {}
-  `
+    `import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+${routing ? "import { RouterModule } from '@angular/router'" : ''};
+import { AppComponent } from './app.component';
+@NgModule({
+  imports: [BrowserModule, ${routing ? 'RouterModule.forRoot([])' : ''}],
+  declarations: [AppComponent],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+`
   );
   tree.write(
     `${appName}/src/main.ts`,
-    `
-    import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+    `import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 
-    import { AppModule } from './app/app.module';
+import { AppModule } from './app/app.module';
 
-    platformBrowserDynamic()
-      .bootstrapModule(AppModule)
-      .catch(err => console.log(err));
+platformBrowserDynamic()
+  .bootstrapModule(AppModule)
+  .catch(err => console.log(err));
   `
   );
   tree.write(
@@ -102,22 +100,20 @@ export function createLib(tree: Tree, libName: string) {
 
   tree.write(
     libConfig.module,
-    `
-      import { NgModule } from '@angular/core';
-      import { CommonModule } from '@angular/common';
-      @NgModule({
-        imports: [
-          CommonModule
-        ],
-        providers: []
-      })
-      export class ${className}Module { }
+    `import { NgModule } from '@angular/core';
+import { CommonModule } from '@angular/common';
+@NgModule({
+  imports: [
+    CommonModule
+  ],
+  providers: []
+})
+export class ${className}Module { }
   `
   );
   tree.write(
     libConfig.barrel,
-    `
-    export * from './lib/${fileName}.module';
-  `
+    `export * from './lib/${fileName}.module';
+`
   );
 }

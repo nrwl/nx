@@ -1,4 +1,4 @@
-# Interface: ImplicitJsonSubsetDependency<T\>
+# Interface: ImplicitJsonSubsetDependency\<T\>
 
 ## Type parameters
 
@@ -8,4 +8,4 @@
 
 ## Indexable
 
-▪ [key: `string`]: `T` \| [`ImplicitJsonSubsetDependency`](../../devkit/documents/ImplicitJsonSubsetDependency)<`T`\>
+▪ [key: `string`]: `T` \| [`ImplicitJsonSubsetDependency`](../../devkit/documents/ImplicitJsonSubsetDependency)\<`T`\>

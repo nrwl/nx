@@ -34,7 +34,7 @@
               "typescript",
               "@nx/cypress",
               "@nx/playwright",
-              "nuxi"
+              "@nx/vite"
             ]
           }
         ]

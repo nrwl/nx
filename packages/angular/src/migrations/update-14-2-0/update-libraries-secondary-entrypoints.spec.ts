@@ -1,4 +1,5 @@
 import { addProjectConfiguration, readJson, Tree, writeJson } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateLibrariesSecondaryEntrypoints from './update-libraries-secondary-entrypoints';
 
@@ -13,6 +14,9 @@ describe('update-libraries-secondary-entrypoints migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   it.each(libraryExecutors)(

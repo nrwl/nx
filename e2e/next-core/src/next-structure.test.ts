@@ -100,11 +100,11 @@ describe('Next.js Apps Libs', () => {
               `
     );
 
-    const mainPath = `packages/${appName}/pages/index.tsx`;
+    const mainPath = `packages/${appName}/src/pages/index.tsx`;
     const content = readFile(mainPath);
 
     updateFile(
-      `packages/${appName}/pages/api/hello.ts`,
+      `packages/${appName}/src/pages/api/hello.ts`,
       `
               import { jsLibAsync } from '@${proj}/${jsLib}';
     

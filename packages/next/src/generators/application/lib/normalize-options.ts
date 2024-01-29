@@ -53,6 +53,7 @@ export async function normalizeOptions(
   const fileName = 'index';
 
   const appDir = options.appDir ?? true;
+  const src = options.src ?? true;
 
   const styledModule = /^(css|scss|less)$/.test(options.style)
     ? null
@@ -63,6 +64,7 @@ export async function normalizeOptions(
   return {
     ...options,
     appDir,
+    src,
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,

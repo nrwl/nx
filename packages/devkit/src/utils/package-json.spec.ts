@@ -446,6 +446,29 @@ describe('addDependenciesToPackageJson', () => {
     });
     expect(installTask).toBeDefined();
   });
+
+  it('should allow existing versions to be kept', () => {
+    writeJson(tree, 'package.json', {
+      dependencies: {
+        foo: '1.0.0',
+      },
+    });
+
+    addDependenciesToPackageJson(
+      tree,
+      {
+        foo: '2.0.0',
+      },
+      {},
+      undefined,
+      true
+    );
+
+    const result = readJson(tree, 'package.json');
+    expect(result.dependencies).toEqual({
+      foo: '1.0.0',
+    });
+  });
 });
 
 describe('ensurePackage', () => {

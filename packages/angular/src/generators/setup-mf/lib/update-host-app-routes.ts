@@ -28,7 +28,7 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
   tree.write(
     joinPathFragments(sourceRoot, 'app/app.component.html'),
     `<ul class="remote-menu">
-<li><a routerLink='/'>Home</a></li>${remoteRoutes}
+<li><a routerLink="/">Home</a></li>${remoteRoutes}
 </ul>
 <router-outlet></router-outlet>
 `
@@ -68,7 +68,7 @@ export function updateHostAppRoutes(tree: Tree, options: Schema) {
   tree.write(
     pathToHostRootRoutingFile,
     `import { NxWelcomeComponent } from './nx-welcome.component';
-    ${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
+${tree.read(pathToHostRootRoutingFile, 'utf-8')}`
   );
 
   generateFiles(

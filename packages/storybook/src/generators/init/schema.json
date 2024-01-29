@@ -5,41 +5,26 @@
   "$id": "init-storybook-plugin",
   "type": "object",
   "properties": {
-    "uiFramework": {
-      "type": "string",
-      "description": "Storybook UI Framework to use.",
-      "enum": [
-        "@storybook/angular",
-        "@storybook/html-webpack5",
-        "@storybook/nextjs",
-        "@storybook/preact-webpack5",
-        "@storybook/react-webpack5",
-        "@storybook/react-vite",
-        "@storybook/server-webpack5",
-        "@storybook/svelte-webpack5",
-        "@storybook/svelte-vite",
-        "@storybook/sveltekit",
-        "@storybook/vue-webpack5",
-        "@storybook/vue-vite",
-        "@storybook/vue3-webpack5",
-        "@storybook/vue3-vite",
-        "@storybook/web-components-webpack5",
-        "@storybook/web-components-vite",
-        "@storybook/react",
-        "@storybook/html",
-        "@storybook/web-components",
-        "@storybook/vue",
-        "@storybook/vue3",
-        "@storybook/svelte",
-        "@storybook/react-native"
-      ],
-      "x-prompt": "What UI framework plugin should storybook use?",
-      "x-priority": "important",
-      "aliases": ["storybook7UiFramework"]
-    },
-    "js": {
+    "skipFormat": {
+      "description": "Skip formatting files.",
       "type": "boolean",
-      "description": "Generate JavaScript story files rather than TypeScript story files.",
+      "default": false
+    },
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
+      "type": "boolean",
+      "default": false
+    },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
+    },
+    "updatePackageScripts": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Update `package.json` scripts with inferred targets",
       "default": false
     }
   }

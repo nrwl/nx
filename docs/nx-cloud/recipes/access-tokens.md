@@ -61,4 +61,4 @@ You can also configure the access token by setting the `NX_CLOUD_ACCESS_TOKEN` e
 
 ## Using `nx-cloud.env`
 
-You can set locally an environment variable via the `nx-cloud.env` file. Nx Cloud CLI will be looking into this file to load custom configuration like `NX_CLOUD_ACCESS_TOKEN`. These environment variables will take precedence over the configuration in `nx.json`.
+You can set an environment variable locally via the `nx-cloud.env` file. Nx Cloud CLI will look in this file to load custom configuration like `NX_CLOUD_ACCESS_TOKEN`. These environment variables will take precedence over the configuration in `nx.json`.

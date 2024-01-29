@@ -1,0 +1,10 @@
+{
+  "name": "e2e-remix",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "e2e/remix",
+  "projectType": "application",
+  "targets": {
+    "e2e": {}
+  },
+  "implicitDependencies": ["remix"]
+}

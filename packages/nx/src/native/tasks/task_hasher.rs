@@ -190,7 +190,7 @@ impl TaskHasher {
                 trace!(parent: &span, "hash_env: {:?}", now.elapsed());
                 hashed_env
             }
-            HashInstruction::ProjectFileSet(project_name, file_set) => {
+            HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let project = self
                     .project_graph
                     .nodes
@@ -199,7 +199,7 @@ impl TaskHasher {
                 let hashed_project_files = hash_project_files(
                     project_name,
                     &project.root,
-                    file_set,
+                    file_sets,
                     &self.project_file_map,
                 )?;
                 trace!(parent: &span, "hash_project_files: {:?}", now.elapsed());

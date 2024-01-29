@@ -7,7 +7,7 @@ import type {
 /* eslint-enable @nx/enforce-module-boundaries */
 import { interpret } from 'xstate';
 import { projectGraphMachine } from './project-graph.machine';
-import { AppConfig } from '../../interfaces';
+import { AppConfig } from '@nx/graph/shared';
 
 export const mockProjects: ProjectGraphProjectNode[] = [
   {

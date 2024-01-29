@@ -3,7 +3,7 @@ import {
   getMatchingStringsWithCache,
 } from './find-matching-projects';
 import type { ProjectGraphProjectNode } from '../config/project-graph';
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 
 describe('findMatchingProjects', () => {
   let projectGraph: Record<string, ProjectGraphProjectNode> = {

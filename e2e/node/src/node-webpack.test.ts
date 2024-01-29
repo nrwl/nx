@@ -17,9 +17,13 @@ import { execSync } from 'child_process';
 import { join } from 'path';
 
 describe('Node Applications + webpack', () => {
-  beforeEach(() => newProject());
+  beforeAll(() =>
+    newProject({
+      packages: ['@nx/node'],
+    })
+  );
 
-  afterEach(() => cleanupProject());
+  afterAll(() => cleanupProject());
 
   it('should generate an app using webpack', async () => {
     const app = uniq('nodeapp');
@@ -52,7 +56,7 @@ describe('Node Applications + webpack', () => {
 
     await runCLIAsync(`build ${app} --optimization`);
     const optimizedContent = readFile(`dist/apps/${app}/main.js`);
-    expect(optimizedContent).toContain('console.log("foo bar")');
+    expect(optimizedContent).toContain('console.log("foo "+"bar")');
 
     // Test that serve can re-run dependency builds.
     const lib = uniq('nodelib');

@@ -26,6 +26,7 @@ interface Schema {
   docker?: boolean;
   js?: boolean;
   nextAppDir?: boolean;
+  nextSrcDir?: boolean;
   linter?: Linter;
   bundler?: 'vite' | 'webpack';
   standaloneApi?: boolean;

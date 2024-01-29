@@ -131,7 +131,7 @@ describe('setupTailwind generator', () => {
       };
       updateProjectConfiguration(tree, project, projectConfig);
 
-      await setupTailwindGenerator(tree, { project });
+      await setupTailwindGenerator(tree, { project, skipFormat: true });
 
       projectConfig = readProjectConfiguration(tree, project);
       expect(projectConfig.targets.build.options.tailwindConfig).toBe(
@@ -147,7 +147,11 @@ describe('setupTailwind generator', () => {
       };
       updateProjectConfiguration(tree, project, projectConfig);
 
-      await setupTailwindGenerator(tree, { project, buildTarget });
+      await setupTailwindGenerator(tree, {
+        project,
+        buildTarget,
+        skipFormat: true,
+      });
 
       projectConfig = readProjectConfiguration(tree, project);
       expect(projectConfig.targets[buildTarget].options.tailwindConfig).toBe(
@@ -162,7 +166,7 @@ describe('setupTailwind generator', () => {
         projectConfig.targets = { build: { executor, options: {} } };
         updateProjectConfiguration(tree, project, projectConfig);
 
-        await setupTailwindGenerator(tree, { project });
+        await setupTailwindGenerator(tree, { project, skipFormat: true });
 
         projectConfig = readProjectConfiguration(tree, project);
         expect(projectConfig.targets.build.options.tailwindConfig).toBe(
@@ -178,7 +182,7 @@ describe('setupTailwind generator', () => {
       };
       updateProjectConfiguration(tree, project, projectConfig);
 
-      await setupTailwindGenerator(tree, { project });
+      await setupTailwindGenerator(tree, { project, skipFormat: true });
 
       const { devDependencies } = readJson(tree, 'package.json');
       expect(devDependencies.tailwindcss).toBe(tailwindVersion);
@@ -193,7 +197,7 @@ describe('setupTailwind generator', () => {
       };
       updateProjectConfiguration(tree, project, projectConfig);
 
-      await setupTailwindGenerator(tree, { project });
+      await setupTailwindGenerator(tree, { project, skipFormat: true });
 
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -226,7 +230,7 @@ describe('setupTailwind generator', () => {
         JSON.stringify({ devDependencies: { tailwindcss: '^3.0.1' } })
       );
 
-      await setupTailwindGenerator(tree, { project });
+      await setupTailwindGenerator(tree, { project, skipFormat: true });
 
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -259,7 +263,7 @@ describe('setupTailwind generator', () => {
         JSON.stringify({ devDependencies: { tailwindcss: '~2.0.0' } })
       );
 
-      await setupTailwindGenerator(tree, { project });
+      await setupTailwindGenerator(tree, { project, skipFormat: true });
 
       expect(tree.read(`libs/${project}/tailwind.config.js`, 'utf-8'))
         .toMatchInlineSnapshot(`

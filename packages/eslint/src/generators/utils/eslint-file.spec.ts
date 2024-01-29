@@ -1,13 +1,15 @@
 import {
   addExtendsToLintConfig,
-  baseEsLintConfigFile,
-  eslintConfigFileWhitelist,
   findEslintFile,
   lintConfigHasOverride,
 } from './eslint-file';
 
 import { Tree, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
+import {
+  ESLINT_CONFIG_FILENAMES,
+  baseEsLintConfigFile,
+} from '../../utils/config-file';
 
 describe('@nx/eslint:lint-file', () => {
   let tree: Tree;
@@ -21,7 +23,7 @@ describe('@nx/eslint:lint-file', () => {
       expect(findEslintFile(tree)).toBe(null);
     });
 
-    test.each(eslintConfigFileWhitelist)(
+    test.each(ESLINT_CONFIG_FILENAMES)(
       'should return %p when calling findEslintFile',
       (eslintFileName) => {
         tree.write(eslintFileName, '{}');
@@ -29,7 +31,7 @@ describe('@nx/eslint:lint-file', () => {
       }
     );
 
-    test.each(eslintConfigFileWhitelist)(
+    test.each(ESLINT_CONFIG_FILENAMES)(
       'should return base file instead %p when calling findEslintFile',
       (eslintFileName) => {
         tree.write(baseEsLintConfigFile, '{}');

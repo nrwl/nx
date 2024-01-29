@@ -1,14 +1,13 @@
 use napi::bindgen_prelude::External;
 use std::collections::HashMap;
 
-use crate::native::hasher::{hash, hash_file_path};
-use crate::native::utils::Normalize;
+use crate::native::hasher::hash;
+use crate::native::utils::{path::get_child_files, Normalize};
 use rayon::prelude::*;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use std::thread::available_parallelism;
-use std::{cmp, thread};
+use std::thread;
 
 use crate::native::logger::enable_logger;
 use crate::native::project_graph::utils::{find_project_for_path, ProjectRootMappings};
@@ -16,11 +15,12 @@ use crate::native::types::FileData;
 use parking_lot::{Condvar, Mutex};
 use tracing::{trace, warn};
 
-use crate::native::walker::nx_walker;
+use crate::native::workspace::files_archive::{read_files_archive, write_files_archive};
+use crate::native::workspace::files_hashing::{full_files_hash, selective_files_hash};
 use crate::native::workspace::types::{
     FileMap, NxWorkspaceFilesExternals, ProjectFiles, UpdatedWorkspaceFiles,
 };
-use crate::native::workspace::{config_files, workspace_files, types::NxWorkspaceFiles};
+use crate::native::workspace::{config_files, types::NxWorkspaceFiles, workspace_files};
 
 #[napi]
 pub struct WorkspaceContext {
@@ -33,7 +33,7 @@ type Files = Vec<(PathBuf, String)>;
 
 struct FilesWorker(Option<Arc<(Mutex<Files>, Condvar)>>);
 impl FilesWorker {
-    fn gather_files(workspace_root: &Path) -> Self {
+    fn gather_files(workspace_root: &Path, cache_dir: String) -> Self {
         if !workspace_root.exists() {
             warn!(
                 "workspace root does not exist: {}",
@@ -41,6 +41,8 @@ impl FilesWorker {
             );
             return FilesWorker(None);
         }
+
+        let archived_files = read_files_archive(&cache_dir);
 
         let files_lock = Arc::new((Mutex::new(Vec::new()), Condvar::new()));
         let files_lock_clone = Arc::clone(&files_lock);
@@ -50,38 +52,27 @@ impl FilesWorker {
             trace!("locking files");
             let (lock, cvar) = &*files_lock_clone;
             let mut workspace_files = lock.lock();
-
-            let files = nx_walker(workspace_root).collect::<Vec<_>>();
-            let num_parallelism = cmp::max(available_parallelism().map_or(2, |n| n.get()) / 3, 2);
-            let chunks = files.len() / num_parallelism;
-
             let now = std::time::Instant::now();
-
-            let mut files = if chunks < num_parallelism {
-                files
-                    .iter()
-                    .filter_map(|(full_path, path)| {
-                        hash_file_path(full_path).map(|hash| (path.to_owned(), hash))
-                    })
-                    .collect::<Vec<_>>()
+            let file_hashes = if let Some(archived_files) = archived_files {
+                selective_files_hash(&workspace_root, archived_files)
             } else {
-                files
-                    .par_chunks(chunks)
-                    .flat_map_iter(|chunks| {
-                        chunks.iter().filter_map(|(full_path, path)| {
-                            hash_file_path(full_path).map(|hash| (path.to_owned(), hash))
-                        })
-                    })
-                    .collect::<Vec<_>>()
+                full_files_hash(&workspace_root)
             };
 
+            let mut files = file_hashes
+                .iter()
+                .map(|(path, file_hashed)| (PathBuf::from(path), file_hashed.0.to_owned()))
+                .collect::<Vec<_>>();
             files.par_sort();
-            trace!("hashed and sorted workspace files in {:?}", now.elapsed());
+            trace!("hashed and sorted files in {:?}", now.elapsed());
+
             *workspace_files = files;
             let files_len = workspace_files.len();
             trace!(?files_len, "files retrieved");
 
             cvar.notify_all();
+
+            write_files_archive(&cache_dir, file_hashes);
         });
 
         FilesWorker(Some(files_lock))
@@ -162,7 +153,7 @@ impl FilesWorker {
 #[napi]
 impl WorkspaceContext {
     #[napi(constructor)]
-    pub fn new(workspace_root: String) -> Self {
+    pub fn new(workspace_root: String, cache_dir: String) -> Self {
         enable_logger();
 
         trace!(?workspace_root);
@@ -170,7 +161,7 @@ impl WorkspaceContext {
         let workspace_root_path = PathBuf::from(&workspace_root);
 
         WorkspaceContext {
-            files_worker: FilesWorker::gather_files(&workspace_root_path),
+            files_worker: FilesWorker::gather_files(&workspace_root_path, cache_dir),
             workspace_root,
             workspace_root_path,
         }
@@ -180,8 +171,7 @@ impl WorkspaceContext {
     pub fn get_workspace_files(
         &self,
         project_root_map: HashMap<String, String>,
-    ) -> anyhow::Result<NxWorkspaceFiles>
-    {
+    ) -> anyhow::Result<NxWorkspaceFiles> {
         workspace_files::get_files(project_root_map, self.all_file_data())
             .map_err(anyhow::Error::from)
     }
@@ -308,5 +298,10 @@ impl WorkspaceContext {
     #[napi]
     pub fn all_file_data(&self) -> Vec<FileData> {
         self.files_worker.get_files()
+    }
+
+    #[napi]
+    pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
+        get_child_files(&directory, self.files_worker.get_files())
     }
 }

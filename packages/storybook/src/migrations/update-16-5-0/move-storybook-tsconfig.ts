@@ -2,6 +2,7 @@ import { getProjects, joinPathFragments, Tree, formatFiles } from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import {
   addStorybookToNamedInputs,
+  addStorybookToTargetDefaults,
   renameAndMoveOldTsConfig,
 } from '../../generators/configuration/lib/util-functions';
 
@@ -26,5 +27,6 @@ export default async function (tree: Tree) {
   );
 
   addStorybookToNamedInputs(tree);
+  addStorybookToTargetDefaults(tree);
   await formatFiles(tree);
 }

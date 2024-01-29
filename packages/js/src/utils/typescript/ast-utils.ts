@@ -1,11 +1,10 @@
 import type { Tree } from '@nx/devkit';
 import type * as ts from 'typescript';
-// TODO(colum): replace when https://github.com/nrwl/nx/pull/15497 is merged
-import { getSourceNodes } from '@nx/workspace/src/utilities/typescript';
 import { ensureTypescript } from './ensure-typescript';
 import { Node, SyntaxKind } from 'typescript';
 import { workspaceRoot } from '@nx/devkit';
 import { dirname } from 'path';
+import { getSourceNodes } from './get-source-nodes';
 
 const normalizedAppRoot = workspaceRoot.replace(/\\/g, '/');
 

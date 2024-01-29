@@ -4,7 +4,7 @@ There are two general approaches to setting up CI with Nx - using a single job o
 
 ## Process Only Affected Projects With One Job on Circle CI
 
-Below is an example of an Circle CI setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/nx-cloud/features/affected) to run the tasks only for the projects that were affected by that PR.
+Below is an example of an Circle CI setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/ci/features/affected) to run the tasks only for the projects that were affected by that PR.
 
 ```yaml {% fileName=".circleci/config.yml" %}
 version: 2.1
@@ -19,7 +19,7 @@ jobs:
       - run: npm ci
       - nx/set-shas
 
-      - run: npx nx format:check
+      - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=3 --configuration=ci
 workflows:
   build:
@@ -43,7 +43,7 @@ It should be a user token, not the project token.
 
 ## Distribute Tasks Across Agents on Circle CI
 
-To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can run this generator:
+To set up [Distributed Task Execution (DTE)](/ci/features/distribute-task-execution), you can run this generator:
 
 ```shell
 npx nx g ci-workflow --ci=circleci
@@ -67,7 +67,7 @@ jobs:
       # Tell Nx Cloud to use DTE and stop agents when the build tasks are done
       - run: npx nx-cloud start-ci-run --stop-agents-after=build
       # Send logs to Nx Cloud for any CLI command
-      - run: npx nx-cloud record -- npx nx format:check
+      - run: npx nx-cloud record -- nx format:check
       # Lint, test and build on agent jobs everything affected by a change
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=2 --configuration=ci
   agent:

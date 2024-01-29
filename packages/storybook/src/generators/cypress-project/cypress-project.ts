@@ -4,11 +4,9 @@ import {
   ensurePackage,
   formatFiles,
   generateFiles,
-  GeneratorCallback,
   joinPathFragments,
   readJson,
   readProjectConfiguration,
-  runTasksInSerial,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -45,7 +43,7 @@ export async function cypressProjectGeneratorInternal(
   tree: Tree,
   schema: CypressConfigureSchema
 ) {
-  const { configurationGenerator, cypressInitGenerator } = ensurePackage<
+  const { configurationGenerator } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
 
@@ -63,12 +61,6 @@ export async function cypressProjectGeneratorInternal(
   const libConfig = readProjectConfiguration(tree, schema.name);
   const libRoot = libConfig.root;
 
-  const tasks: GeneratorCallback[] = [];
-
-  if (!projectAlreadyHasCypress(tree)) {
-    tasks.push(await cypressInitGenerator(tree, {}));
-  }
-
   addProjectConfiguration(tree, projectName, {
     root: projectRoot,
     projectType: 'application',
@@ -77,7 +69,7 @@ export async function cypressProjectGeneratorInternal(
     implicitDependencies: [projectName],
   });
 
-  const installTask = await configurationGenerator(tree, {
+  const cypressTask = await configurationGenerator(tree, {
     project: projectName,
     js: schema.js,
     linter: schema.linter,
@@ -85,7 +77,6 @@ export async function cypressProjectGeneratorInternal(
     devServerTarget: `${schema.name}:storybook`,
     skipFormat: true,
   });
-  tasks.push(installTask);
 
   const generatedCypressProjectName = getE2eProjectName(
     schema.name,
@@ -104,7 +95,7 @@ export async function cypressProjectGeneratorInternal(
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(...tasks);
+  return cypressTask;
 }
 
 function removeUnneededFiles(tree: Tree, projectName: string, js: boolean) {

@@ -271,7 +271,7 @@ export async function addLint(
 ): Promise<GeneratorCallback> {
   const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
   const projectConfiguration = readProjectConfiguration(tree, options.name);
-  const task = lintProjectGenerator(tree, {
+  const task = await lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
     skipFormat: true,

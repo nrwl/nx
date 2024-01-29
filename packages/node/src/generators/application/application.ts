@@ -21,7 +21,11 @@ import {
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { configurationGenerator } from '@nx/jest';
-import { getRelativePathToRootTsConfig, tsConfigBaseOptions } from '@nx/js';
+import {
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+  tsConfigBaseOptions,
+} from '@nx/js';
 import { esbuildVersion } from '@nx/js/src/utils/versions';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
 import { join } from 'path';
@@ -35,12 +39,15 @@ import {
   koaTypingsVersion,
   koaVersion,
   nxVersion,
+  tslibVersion,
+  typesNodeVersion,
 } from '../../utils/versions';
 import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 import { initGenerator } from '../init/init';
 import { setupDockerGenerator } from '../setup-docker/setup-docker';
 import { Schema } from './schema';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -154,9 +161,11 @@ function addProject(tree: Tree, options: NormalizedSchema) {
   };
 
   if (options.bundler === 'esbuild') {
+    addBuildTargetDefaults(tree, '@nx/esbuild:esbuild');
     project.targets.build = getEsBuildConfig(project, options);
   } else if (options.bundler === 'webpack') {
     if (!hasWebpackPlugin(tree)) {
+      addBuildTargetDefaults(tree, `@nx/webpack:webpack`);
       project.targets.build = getWebpackBuildConfig(project, options);
     }
   }
@@ -332,10 +341,12 @@ function addProjectDependencies(
     tree,
     {
       ...frameworkDependencies[options.framework],
+      tslib: tslibVersion,
     },
     {
       ...frameworkDevDependencies[options.framework],
       ...bundlers[options.bundler],
+      '@types/node': typesNodeVersion,
     }
   );
 }
@@ -381,6 +392,12 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     return await applicationGenerator(tree, { ...options, skipFormat: true });
   }
 
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const initTask = await initGenerator(tree, {
     ...schema,
     skipFormat: true,
@@ -395,10 +412,16 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       typeof import('@nx/webpack')
     >('@nx/webpack', nxVersion);
     const webpackInitTask = await webpackInitGenerator(tree, {
-      uiFramework: 'react',
+      skipPackageJson: options.skipPackageJson,
       skipFormat: true,
     });
     tasks.push(webpackInitTask);
+    if (!options.skipPackageJson) {
+      const { ensureDependencies } = await import(
+        '@nx/webpack/src/utils/ensure-dependencies'
+      );
+      tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
+    }
   }
 
   addAppFiles(tree, options);

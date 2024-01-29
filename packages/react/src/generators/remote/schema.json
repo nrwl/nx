@@ -105,7 +105,7 @@
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["cypress", "none"],
+      "enum": ["cypress", "playwright", "none"],
       "description": "Test runner to use for end to end (e2e) tests.",
       "default": "cypress"
     },

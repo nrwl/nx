@@ -30,6 +30,7 @@ export function convertToDocumentMetadata(
     id: target.id,
     name: target.name ?? '',
     description: target.description ?? '',
+    mediaImage: target.mediaImage ?? '',
     file: target.file ?? '',
     itemList: target.itemList
       ? target.itemList.map((item) => convertToDocumentMetadata(item))

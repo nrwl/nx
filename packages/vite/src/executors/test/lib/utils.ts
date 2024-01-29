@@ -7,7 +7,7 @@ import {
 import { VitestExecutorOptions } from '../schema';
 import { normalizeViteConfigFilePath } from '../../../utils/options-utils';
 import { relative } from 'path';
-import { NxReporter } from './nx-reporter';
+import { loadViteDynamicImport } from '../../../utils/executor-utils';
 
 export async function getOptions(
   options: VitestExecutorOptions,
@@ -16,9 +16,7 @@ export async function getOptions(
   extraArgs: Record<string, any>
 ) {
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { loadConfigFromFile, mergeConfig } = await (Function(
-    'return import("vite")'
-  )() as Promise<typeof import('vite')>);
+  const { loadConfigFromFile, mergeConfig } = await loadViteDynamicImport();
 
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
@@ -76,12 +74,9 @@ export async function getExtraArgs(
   options: VitestExecutorOptions
 ): Promise<Record<string, any>> {
   // support passing extra args to vite cli
-  const schema = await import('../schema.json');
   const extraArgs: Record<string, any> = {};
   for (const key of Object.keys(options)) {
-    if (!schema.properties[key]) {
-      extraArgs[key] = options[key];
-    }
+    extraArgs[key] = options[key];
   }
 
   return extraArgs;

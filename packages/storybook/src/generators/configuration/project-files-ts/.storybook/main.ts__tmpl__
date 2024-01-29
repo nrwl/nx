@@ -14,7 +14,11 @@ const config: StorybookConfig = {
   framework: {
     name: '<%= uiFramework %>',
     options: {
-      <% if (usesVite && viteConfigFilePath) { %>
+      <% if (usesVite && viteConfigFilePath && hasPlugin) { %>
+      builder: {
+        viteConfigPath: '<%= viteConfigFileName %>',
+      },
+      <% } %><% if (usesVite && viteConfigFilePath && !hasPlugin) { %>
       builder: {
         viteConfigPath: '<%= viteConfigFilePath %>',
       },

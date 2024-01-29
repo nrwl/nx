@@ -18,13 +18,20 @@ import {
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { checkAndCleanWithSemver } from '@nx/devkit/src/utils/semver';
-import { getRelativePathToRootTsConfig } from '@nx/js';
+import {
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
 import { Linter } from '@nx/eslint';
 import { join } from 'path';
 import { major } from 'semver';
 import { addLinterToCyProject } from '../../utils/add-linter';
 import { installedCypressVersion } from '../../utils/cypress-version';
-import { cypressVersion, viteVersion } from '../../utils/versions';
+import {
+  cypressVersion,
+  typesNodeVersion,
+  viteVersion,
+} from '../../utils/versions';
 import { cypressInitGenerator } from '../init/init';
 import { Schema } from './schema';
 
@@ -186,18 +193,9 @@ export async function cypressProjectGeneratorInternal(
   // if there is an installed cypress version, then we don't call
   // init since we want to keep the existing version that is installed
   if (!cypressVersion) {
-    tasks.push(await cypressInitGenerator(host, options));
-  }
-
-  if (schema.bundler === 'vite') {
+    tasks.push(await jsInitGenerator(host, { ...options, skipFormat: true }));
     tasks.push(
-      addDependenciesToPackageJson(
-        host,
-        {},
-        {
-          vite: viteVersion,
-        }
-      )
+      await cypressInitGenerator(host, { ...options, skipFormat: true })
     );
   }
 
@@ -211,10 +209,27 @@ export async function cypressProjectGeneratorInternal(
     overwriteExisting: true,
   });
   tasks.push(installTask);
+
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(host, options));
+  }
+
   if (!options.skipFormat) {
     await formatFiles(host);
   }
   return runTasksInSerial(...tasks);
+}
+
+function ensureDependencies(tree: Tree, options: CypressProjectSchema) {
+  const devDependencies: Record<string, string> = {
+    '@types/node': typesNodeVersion,
+  };
+
+  if (options.bundler === 'vite') {
+    devDependencies['vite'] = viteVersion;
+  }
+
+  return addDependenciesToPackageJson(tree, {}, devDependencies);
 }
 
 async function normalizeOptions(

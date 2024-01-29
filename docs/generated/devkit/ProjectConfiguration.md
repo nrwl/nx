@@ -11,6 +11,7 @@ Project configuration
 - [name](../../devkit/documents/ProjectConfiguration#name): string
 - [namedInputs](../../devkit/documents/ProjectConfiguration#namedinputs): Object
 - [projectType](../../devkit/documents/ProjectConfiguration#projecttype): ProjectType
+- [release](../../devkit/documents/ProjectConfiguration#release): Object
 - [root](../../devkit/documents/ProjectConfiguration#root): string
 - [sourceRoot](../../devkit/documents/ProjectConfiguration#sourceroot): string
 - [tags](../../devkit/documents/ProjectConfiguration#tags): string[]
@@ -40,7 +41,7 @@ Example:
 
 #### Index signature
 
-▪ [collectionName: `string`]: { `[generatorName: string]`: `any`; }
+▪ [collectionName: `string`]: \{ `[generatorName: string]`: `any`; }
 
 ---
 
@@ -77,6 +78,20 @@ Named inputs targets can refer to reduce duplication
 • `Optional` **projectType**: [`ProjectType`](../../devkit/documents/ProjectType)
 
 Project type
+
+---
+
+### release
+
+• `Optional` **release**: `Object`
+
+Project specific configuration for `nx release`
+
+#### Type declaration
+
+| Name       | Type                                                                             |
+| :--------- | :------------------------------------------------------------------------------- |
+| `version?` | `Pick`\<`NxReleaseVersionConfiguration`, `"generator"` \| `"generatorOptions"`\> |
 
 ---
 

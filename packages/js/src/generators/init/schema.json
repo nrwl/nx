@@ -21,6 +21,12 @@
       "description": "Skip adding package.json dependencies",
       "x-priority": "internal"
     },
+    "keepExistingVersions": {
+      "type": "boolean",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
+    },
     "tsConfigName": {
       "type": "string",
       "description": "Customize the generated tsconfig file name.",

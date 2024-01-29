@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 // @ts-ignore
 import { CopyToClipboard } from 'react-copy-to-clipboard';
+// @ts-ignore
 import SyntaxHighlighter from 'react-syntax-highlighter';
 
 /* eslint-disable-next-line */

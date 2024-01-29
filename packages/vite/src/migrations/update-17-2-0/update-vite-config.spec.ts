@@ -2,6 +2,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   Tree,
   addProjectConfiguration,
+  logger,
   readProjectConfiguration,
 } from '@nx/devkit';
 
@@ -39,6 +40,36 @@ describe('change-vite-ts-paths-plugin migration', () => {
     expect(
       readProjectConfiguration(tree, 'demo3').targets.build.options.outputPath
     ).toBe('dist/demo3');
+  });
+
+  it('should convert the file correctly', async () => {
+    addProject4(tree, 'demo4');
+    await updateBuildDir(tree);
+    expect(tree.read('demo4/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(
+      readProjectConfiguration(tree, 'demo4').targets.build.options.outputPath
+    ).toBe('dist/demo4');
+  });
+
+  it('should convert the file correctly', async () => {
+    addProject4(tree, 'demo4');
+    await updateBuildDir(tree);
+    expect(tree.read('demo4/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(
+      readProjectConfiguration(tree, 'demo4').targets.build.options.outputPath
+    ).toBe('dist/demo4');
+  });
+
+  it('should show warning to the user if could not recognize config', async () => {
+    jest.spyOn(logger, 'warn');
+    addProject5(tree, 'demo5');
+    await updateBuildDir(tree);
+    expect(tree.read('demo5/vite.config.ts', 'utf-8')).toMatchSnapshot();
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        `Could not migrate your demo5/vite.config.ts file.`
+      )
+    );
   });
 });
 
@@ -257,6 +288,106 @@ export default defineConfig({
   },
 });
 
+`
+  );
+}
+
+function addProject4(tree: Tree, name: string) {
+  addProjectConfiguration(tree, name, {
+    root: `${name}`,
+    sourceRoot: `${name}/src`,
+    targets: {
+      build: {
+        executor: '@nx/vite:build',
+        outputs: ['{options.outputPath}'],
+        defaultConfiguration: 'production',
+        options: {
+          outputPath: `dist/${name}`,
+          buildLibsFromSource: false,
+        },
+        configurations: {
+          development: {
+            mode: 'development',
+          },
+          production: {
+            mode: 'production',
+          },
+        },
+      },
+    },
+  });
+
+  tree.write(
+    `${name}/vite.config.ts`,
+    `
+    /// <reference types='vitest' />
+    import { defineConfig } from 'vite';
+    import react from '@vitejs/plugin-react';
+    import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+    
+    export default defineConfig(({ mode }) => {
+      return {
+        cacheDir: '../../node_modules/.vite/demo4',
+        server: {
+          port: 4200,
+          host: 'localhost',
+        },
+    
+        preview: {
+          port: 4300,
+          host: 'localhost',
+        },
+    
+        plugins: [react(), nxViteTsPaths()],
+    
+        // Uncomment this if you are using workers.
+        // worker: {
+        //  plugins: [ nxViteTsPaths() ],
+        // },
+    
+        test: {
+          globals: true,
+          cache: {
+            dir: '../../node_modules/.vitest',
+          },
+          environment: 'jsdom',
+          include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+        },
+      };
+    });    
+`
+  );
+}
+
+function addProject5(tree: Tree, name: string) {
+  addProjectConfiguration(tree, name, {
+    root: `${name}`,
+    sourceRoot: `${name}/src`,
+    targets: {
+      build: {
+        executor: '@nx/vite:build',
+        outputs: ['{options.outputPath}'],
+        defaultConfiguration: 'production',
+        options: {
+          outputPath: `dist/${name}`,
+          buildLibsFromSource: false,
+        },
+        configurations: {
+          development: {
+            mode: 'development',
+          },
+          production: {
+            mode: 'production',
+          },
+        },
+      },
+    },
+  });
+
+  tree.write(
+    `${name}/vite.config.ts`,
+    `
+ // some invalid config   
 `
   );
 }

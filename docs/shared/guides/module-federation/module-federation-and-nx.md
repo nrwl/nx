@@ -89,6 +89,7 @@ Nx offers out-of-the-box support for Module Federation with React and Angular. T
 - Executors - to aid in building your applications with Module Federation and for great DX when developing locally
 - Type Safety - allowing for type-safety between `hosts` and `remotes` to catch issues early and to take advantage of autocompletion in IDEs
 - Versioning of Libraries - to aid in preventing some common issues regarding incompatible package versions being used by `federated modules`
+- Scaling DX - techniques to ensure a smooth DX regardless of the number of remotes in the workspace
 
 ## Use Cases
 

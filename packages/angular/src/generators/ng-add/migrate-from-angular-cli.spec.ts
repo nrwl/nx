@@ -144,7 +144,7 @@ describe('workspace', () => {
         })
       );
 
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       expect(readJson(tree, 'package.json').scripts).toStrictEqual({
         ng: 'ng',
@@ -208,35 +208,38 @@ describe('workspace', () => {
       tree.write('/projects/myApp/e2e/protractor.conf.js', '// content');
       tree.write('/projects/myApp/src/app/app.module.ts', '// content');
 
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       expect(tree.exists('angular.json')).toBe(false);
     });
 
     it('should set the default project correctly', async () => {
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
       expect(readJson(tree, 'nx.json').defaultProject).toBe('myApp');
     });
 
     it('should create nx.json', async () => {
-      await migrateFromAngularCli(tree, { defaultBase: 'main' });
+      await migrateFromAngularCli(tree, {
+        defaultBase: 'main',
+        skipFormat: true,
+      });
       expect(readJson(tree, 'nx.json')).toMatchSnapshot();
     });
 
     it('should work if angular-cli workspace had tsconfig.base.json', async () => {
       tree.rename('tsconfig.json', 'tsconfig.base.json');
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
       expect(readJson(tree, 'tsconfig.base.json')).toMatchSnapshot();
     });
 
     it('should update tsconfig.base.json if present', async () => {
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
       expect(readJson(tree, 'tsconfig.base.json')).toMatchSnapshot();
     });
 
     it('should work with existing .prettierignore file', async () => {
       tree.write('/.prettierignore', '# existing ignore rules');
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       const prettierIgnore = tree.read('/.prettierignore').toString();
       expect(prettierIgnore).toBe('# existing ignore rules');
@@ -269,19 +272,19 @@ describe('workspace', () => {
         },
       });
 
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       expect(tree.exists('apps/.gitkeep')).toBe(true);
     });
 
     it('should not generate .gitkeep file in apps directory when there is at least one application', async () => {
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       expect(tree.exists('apps/.gitkeep')).toBe(false);
     });
 
     it('should generate .gitkeep file in libs directory when there are no libraries', async () => {
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       expect(tree.exists('libs/.gitkeep')).toBe(true);
     });
@@ -332,13 +335,13 @@ describe('workspace', () => {
         },
       });
 
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       expect(tree.exists('libs/.gitkeep')).toBe(false);
     });
 
     it('should create a root eslint config', async () => {
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       expect(readJson(tree, '.eslintrc.json')).toMatchSnapshot();
     });
@@ -350,7 +353,7 @@ describe('workspace', () => {
         return json;
       });
 
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       expect(tree.exists('.eslintrc.json')).toBe(false);
     });
@@ -415,7 +418,7 @@ describe('workspace', () => {
         },
       });
 
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       expect(tree.exists('angular.json')).toBe(false);
       expect(tree.exists('apps/app1/project.json')).toBe(true);
@@ -511,7 +514,7 @@ describe('workspace', () => {
         },
       });
 
-      await migrateFromAngularCli(tree, {});
+      await migrateFromAngularCli(tree, { skipFormat: true });
 
       expect(tree.exists('angular.json')).toBe(false);
       expect(tree.exists('apps/app1/project.json')).toBe(true);

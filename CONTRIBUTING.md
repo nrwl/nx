@@ -318,11 +318,12 @@ The scope must be one of the following:
 - nest - anything Nest specific
 - nextjs - anything Next specific
 - node - anything Node specific
-- nx-cloud - anything NxCloud specific
+- nx-cloud - anything Nx Cloud specific
 - nx-plugin - anything Nx Plugin specific
 - nx-dev - anything related to docs infrastructure
 - react - anything React specific
 - react-native - anything React Native specific
+- release - anything related to nx release
 - repo - anything related to managing the Nx repo itself
 - storybook - anything Storybook specific
 - testing - anything testing specific (e.g., Jest or Cypress)

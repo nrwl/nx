@@ -4,10 +4,17 @@ import {
   readProjectConfiguration,
   updateNxJson,
 } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import removeKarmaDefaults from './remove-karma-defaults';
 
 describe('removeKarmaDefaults', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
+  });
+
   it('should remove karma as default unit test runner from nx.json when exists', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();

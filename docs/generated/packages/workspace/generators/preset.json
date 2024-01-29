@@ -82,6 +82,11 @@
         "type": "boolean",
         "default": true
       },
+      "nextSrcDir": {
+        "description": "Generate a `src` directory for this project.",
+        "type": "boolean",
+        "default": true
+      },
       "e2eTestRunner": {
         "description": "The tool to use for running e2e tests.",
         "type": "string",

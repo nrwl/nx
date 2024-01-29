@@ -1,7 +1,7 @@
 import { execSync } from 'child_process';
 import { copySync, moveSync, readdirSync, removeSync } from 'fs-extra';
 import { join } from 'path';
-import { InitArgs } from '../../init';
+import { InitArgs } from '../../init-v1';
 import {
   fileExists,
   readJsonFile,
@@ -14,7 +14,7 @@ import {
   PackageManagerCommands,
 } from '../../../../utils/package-manager';
 import { PackageJson } from '../../../../utils/package-json';
-import { askAboutNxCloud, printFinalMessage } from '../utils';
+import { printFinalMessage } from '../utils';
 import { checkForCustomWebpackSetup } from './check-for-custom-webpack-setup';
 import { checkForUncommittedChanges } from './check-for-uncommitted-changes';
 import { cleanUpFiles } from './clean-up-files';
@@ -24,6 +24,7 @@ import { setupTsConfig } from './tsconfig-setup';
 import { writeCracoConfig } from './write-craco-config';
 import { writeViteConfig } from './write-vite-config';
 import { writeViteIndexHtml } from './write-vite-index-html';
+import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
 
 type Options = InitArgs;
 
@@ -93,7 +94,8 @@ async function normalizeOptions(options: Options): Promise<NormalizedOptions> {
   const isStandalone = !options.integrated;
 
   const nxCloud =
-    options.nxCloud ?? (options.interactive ? await askAboutNxCloud() : false);
+    options.nxCloud ??
+    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
   return {
     ...options,
@@ -183,7 +185,7 @@ function createTempWorkspace(options: NormalizedOptions) {
     } --preset=react-monorepo --style=css --bundler=${
       options.isVite ? 'vite' : 'webpack'
     } --packageManager=${options.packageManager} ${
-      options.nxCloud ? '--nxCloud' : '--nxCloud=false'
+      options.nxCloud ? '--nxCloud=yes' : '--nxCloud=skip'
     } ${options.addE2e ? '--e2eTestRunner=cypress' : '--e2eTestRunner=none'}`,
     { stdio: [0, 1, 2] }
   );

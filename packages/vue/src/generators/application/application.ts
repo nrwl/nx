@@ -7,6 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { vueInitGenerator } from '../init/init';
@@ -15,6 +16,7 @@ import { addE2e } from './lib/add-e2e';
 import { createApplicationFiles } from './lib/create-application-files';
 import { addVite } from './lib/add-vite';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -31,11 +33,23 @@ export async function applicationGenerator(
   });
 
   tasks.push(
+    await jsInitGenerator(tree, {
+      ...options,
+      tsConfigName: options.rootProject
+        ? 'tsconfig.json'
+        : 'tsconfig.base.json',
+      skipFormat: true,
+    })
+  );
+  tasks.push(
     await vueInitGenerator(tree, {
       ...options,
       skipFormat: true,
     })
   );
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(tree, options));
+  }
 
   if (!options.rootProject) {
     extractTsConfigBase(tree);

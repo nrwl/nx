@@ -10,9 +10,9 @@ Because we are not using a Nx plugin for Svelte, there are a few items we'll hav
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
 {% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/nx-cloud/features/remote-cache" %}✅ Share Your Cache{% /pill %}
+{% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
 {% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
-{% pill url="/nx-cloud/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
+{% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
 {% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
@@ -28,21 +28,21 @@ Because we are not using a Nx plugin for Svelte, there are a few items we'll hav
 {%tab label="npm"%}
 
 ```shell
-npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=true
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=true --pm yarn
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes --pm yarn
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=true --pm pnpm
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes --pm pnpm
 ```
 
 {% /tab %}
@@ -58,21 +58,21 @@ Make sure to install the `@nx/vite` and `@nx/js` versions that matches the versi
 {%tab label="npm"%}
 
 ```shell
-npm install --save-dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+npm add -D @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+yarn add -D @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-pnpm add --save-dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+pnpm add -D @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
 ```
 
 {% /tab %}

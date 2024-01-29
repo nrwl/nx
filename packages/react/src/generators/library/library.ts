@@ -10,7 +10,7 @@ import {
 } from '@nx/devkit';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
-import { addTsConfigPath } from '@nx/js';
+import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 
 import { nxVersion } from '../../utils/versions';
 import componentGenerator from '../component/component';
@@ -47,11 +47,15 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     options.style = 'none';
   }
 
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
+
   const initTask = await initGenerator(host, {
     ...options,
-    e2eTestRunner: 'none',
     skipFormat: true,
-    skipHelperLibs: options.bundler === 'vite',
   });
   tasks.push(initTask);
 
@@ -207,7 +211,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (!options.skipPackageJson) {
-    const installReactTask = await installCommonDependencies(host, options);
+    const installReactTask = installCommonDependencies(host, options);
     tasks.push(installReactTask);
   }
 

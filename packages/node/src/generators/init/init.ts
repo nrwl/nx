@@ -6,59 +6,36 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { jestInitGenerator } from '@nx/jest';
-
-import { initGenerator as jsInitGenerator } from '@nx/js';
-import {
-  nxVersion,
-  tslibVersion,
-  typesNodeVersion,
-} from '../../utils/versions';
+import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
-function updateDependencies(tree: Tree) {
-  removeDependenciesFromPackageJson(tree, ['@nx/node'], []);
-
-  return addDependenciesToPackageJson(
-    tree,
-    {
-      tslib: tslibVersion,
-    },
-    { '@nx/node': nxVersion, '@types/node': typesNodeVersion }
-  );
-}
-
-function normalizeOptions(schema: Schema) {
-  return {
-    ...schema,
-    unitTestRunner: schema.unitTestRunner ?? 'jest',
-  };
-}
-
-export async function initGenerator(tree: Tree, schema: Schema) {
-  const options = normalizeOptions(schema);
-
+function updateDependencies(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
+  tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/node'], []));
   tasks.push(
-    await jsInitGenerator(tree, {
-      ...schema,
-      tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-      skipFormat: true,
-    })
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@nx/node': nxVersion },
+      undefined,
+      options.keepExistingVersions
+    )
   );
-  if (options.unitTestRunner === 'jest') {
-    tasks.push(
-      await jestInitGenerator(tree, { ...schema, testEnvironment: 'node' })
-    );
-  }
 
-  tasks.push(updateDependencies(tree));
+  return runTasksInSerial(...tasks);
+}
+
+export async function initGenerator(tree: Tree, options: Schema) {
+  let installTask: GeneratorCallback = () => {};
+  if (!options.skipPackageJson) {
+    installTask = updateDependencies(tree, options);
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return runTasksInSerial(...tasks);
+  return installTask;
 }
 
 export default initGenerator;

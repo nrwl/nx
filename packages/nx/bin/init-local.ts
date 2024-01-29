@@ -1,7 +1,5 @@
 import { performance } from 'perf_hooks';
-import { execSync } from 'child_process';
 
-import { getPackageManagerCommand } from '../src/utils/package-manager';
 import { commandsObject } from '../src/command-line/nx-commands';
 import { WorkspaceTypeAndRoot } from '../src/utils/find-workspace-root';
 import { stripIndents } from '../src/utils/strip-indents';
@@ -144,14 +142,7 @@ function isKnownCommand(command: string) {
 
 function shouldDelegateToAngularCLI() {
   const command = process.argv[2];
-  const commands = [
-    'add',
-    'analytics',
-    'config',
-    'doc',
-    'update',
-    'completion',
-  ];
+  const commands = ['analytics', 'config', 'doc', 'update', 'completion'];
   return commands.indexOf(command) > -1;
 }
 
@@ -177,30 +168,6 @@ function handleAngularCLIFallbacks(workspace: WorkspaceTypeAndRoot) {
       `Running "ng update" can still be useful in some dev workflows, so we aren't planning to remove it.`
     );
     console.log(`If you need to use it, run "FORCE_NG_UPDATE=true ng update".`);
-  } else if (process.argv[2] === 'add') {
-    console.log('Ng add is not natively supported by Nx');
-    const pkg = process.argv[2] === 'add' ? process.argv[3] : process.argv[4];
-    if (!pkg) {
-      process.exit(1);
-    }
-
-    const pm = getPackageManagerCommand();
-    const cmd = `${pm.add} ${pkg} && ${pm.exec} nx g ${pkg}:ng-add`;
-    console.log(`Instead, we recommend running \`${cmd}\``);
-
-    import('enquirer').then((x) =>
-      x
-        .prompt<{ c: boolean }>({
-          name: 'c',
-          type: 'confirm',
-          message: 'Run this command?',
-        })
-        .then(({ c }) => {
-          if (c) {
-            execSync(cmd, { stdio: 'inherit' });
-          }
-        })
-    );
   } else if (process.argv[2] === 'completion') {
     if (!process.argv[3]) {
       console.log(`"ng completion" is not natively supported by Nx.

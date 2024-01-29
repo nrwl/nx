@@ -3,68 +3,49 @@ import {
   formatFiles,
   GeneratorCallback,
   readNxJson,
-  runTasksInSerial,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
-
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes, WebpackPluginOptions } from '../../plugins/plugin';
+import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import {
-  nxVersion,
-  reactRefreshVersion,
-  reactRefreshWebpackPluginVersion,
-  svgrWebpackVersion,
-  swcLoaderVersion,
-  tsLibVersion,
-  urlLoaderVersion,
-  webpackCliVersion,
-} from '../../utils/versions';
-import { WebpackPluginOptions } from '../../plugins/plugin';
 
 export async function webpackInitGenerator(tree: Tree, schema: Schema) {
   const shouldAddPlugin = process.env.NX_PCV3 === 'true';
-  const tasks: GeneratorCallback[] = [];
-  const devDependencies = {
-    '@nx/webpack': nxVersion,
-  };
-
   if (shouldAddPlugin) {
-    devDependencies['webpack-cli'] = webpackCliVersion;
+    addPlugin(tree);
   }
 
-  if (schema.compiler === 'swc') {
-    devDependencies['swc-loader'] = swcLoaderVersion;
-    const addSwcTask = addSwcDependencies(tree);
-    tasks.push(addSwcTask);
+  let installTask: GeneratorCallback = () => {};
+  if (!schema.skipPackageJson) {
+    const devDependencies = {
+      '@nx/webpack': nxVersion,
+      '@nx/web': nxVersion,
+    };
+
+    if (shouldAddPlugin) {
+      devDependencies['webpack-cli'] = webpackCliVersion;
+    }
+
+    installTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      devDependencies,
+      undefined,
+      schema.keepExistingVersions
+    );
   }
 
-  if (schema.compiler === 'tsc') {
-    devDependencies['tslib'] = tsLibVersion;
-  }
-
-  if (schema.uiFramework === 'react') {
-    devDependencies['@pmmmwh/react-refresh-webpack-plugin'] =
-      reactRefreshWebpackPluginVersion;
-    devDependencies['@svgr/webpack'] = svgrWebpackVersion;
-    devDependencies['react-refresh'] = reactRefreshVersion;
-    devDependencies['url-loader'] = urlLoaderVersion;
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
 
-  const baseInstallTask = addDependenciesToPackageJson(
-    tree,
-    {},
-    devDependencies
-  );
-  tasks.push(baseInstallTask);
-
-  if (shouldAddPlugin) addPlugin(tree);
-
-  return runTasksInSerial(...tasks);
+  return installTask;
 }
 
 function addPlugin(tree: Tree) {

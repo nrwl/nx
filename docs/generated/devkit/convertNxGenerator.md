@@ -1,6 +1,6 @@
 # Function: convertNxGenerator
 
-▸ **convertNxGenerator**<`T`\>(`generator`, `skipWritingConfigInOldFormat?`): (`generatorOptions`: `T`) => (`tree`: `any`, `context`: `any`) => `Promise`<`any`\>
+▸ **convertNxGenerator**\<`T`\>(`generator`, `skipWritingConfigInOldFormat?`): (`generatorOptions`: `T`) => (`tree`: `any`, `context`: `any`) => `Promise`\<`any`\>
 
 Convert an Nx Generator into an Angular Devkit Schematic.
 
@@ -12,16 +12,16 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 #### Parameters
 
-| Name                            | Type                                                  | Description                                                 |
-| :------------------------------ | :---------------------------------------------------- | :---------------------------------------------------------- |
-| `generator`                     | [`Generator`](../../devkit/documents/Generator)<`T`\> | The Nx generator to convert to an Angular Devkit Schematic. |
-| `skipWritingConfigInOldFormat?` | `boolean`                                             | -                                                           |
+| Name                            | Type                                                   | Description                                                 |
+| :------------------------------ | :----------------------------------------------------- | :---------------------------------------------------------- |
+| `generator`                     | [`Generator`](../../devkit/documents/Generator)\<`T`\> | The Nx generator to convert to an Angular Devkit Schematic. |
+| `skipWritingConfigInOldFormat?` | `boolean`                                              | -                                                           |
 
 #### Returns
 
 `fn`
 
-▸ (`generatorOptions`): (`tree`: `any`, `context`: `any`) => `Promise`<`any`\>
+▸ (`generatorOptions`): (`tree`: `any`, `context`: `any`) => `Promise`\<`any`\>
 
 ##### Parameters
 
@@ -33,7 +33,7 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 `fn`
 
-▸ (`tree`, `context`): `Promise`<`any`\>
+▸ (`tree`, `context`): `Promise`\<`any`\>
 
 ##### Parameters
 
@@ -44,4 +44,4 @@ Convert an Nx Generator into an Angular Devkit Schematic.
 
 ##### Returns
 
-`Promise`<`any`\>
+`Promise`\<`any`\>

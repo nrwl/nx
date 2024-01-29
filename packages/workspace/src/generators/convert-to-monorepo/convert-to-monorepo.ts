@@ -19,9 +19,13 @@ export async function monorepoGenerator(tree: Tree, options: {}) {
 
   // Need to determine libs vs packages directory base on the type of root project.
   for (const [, project] of projects) {
-    if (project.root === '.') rootProject = project;
-    projectsToMove.unshift(project); // move the root project 1st
+    if (project.root === '.') {
+      rootProject = project;
+    } else {
+      projectsToMove.push(project);
+    }
   }
+  projectsToMove.unshift(rootProject); // move the root project 1st
 
   // Currently, Nx only handles apps+libs or packages. You cannot mix and match them.
   // If the standalone project is an app (React, Angular, etc), then use apps+libs.

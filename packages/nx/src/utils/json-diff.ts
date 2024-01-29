@@ -103,7 +103,7 @@ function getJsonValue(path: string[], json: any): void | any {
   return curr;
 }
 
-function deepEquals(a: any, b: any): boolean {
+export function deepEquals(a: any, b: any): boolean {
   if (a === b) {
     return true;
   }

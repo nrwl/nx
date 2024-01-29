@@ -4,12 +4,13 @@ There are two general approaches to setting up CI with Nx - using a single job o
 
 ## Process Only Affected Projects With One Job on GitLab
 
-Below is an example of an GitLab setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/nx-cloud/features/affected) to run the tasks only for the projects that were affected by that PR.
+Below is an example of an GitLab setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/ci/features/affected) to run the tasks only for the projects that were affected by that PR.
 
 ```yaml {% fileName=".gitlab-ci.yml" %}
 image: node:18
 
 stages:
+  - lint
   - test
   - build
 
@@ -36,7 +37,7 @@ format-check:
   stage: test
   extends: .distributed
   script:
-    - npx nx format:check --base=$NX_BASE --head=$NX_HEAD
+    - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
 
 lint:
   stage: test
@@ -61,7 +62,7 @@ The `build` and `test` jobs implement the CI workflow using `.distributed` as a 
 
 ## Distribute Tasks Across Agents on GitLab
 
-To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can run this generator:
+To set up [Distributed Task Execution (DTE)](/ci/features/distribute-task-execution), you can run this generator:
 
 ```shell
 npx nx g ci-workflow --ci=gitlab
@@ -112,7 +113,7 @@ nx-dte:
   extends: .base-pipeline
   script:
     - yarn nx-cloud start-ci-run --stop-agents-after=build
-    - yarn nx-cloud record -- yarn nx format:check --base=$NX_BASE --head=$NX_HEAD
+    - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint,test,build --parallel=2
 
 # Create as many agents as you want

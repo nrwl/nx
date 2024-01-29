@@ -58,7 +58,9 @@ export async function convertToWithMF(tree: Tree, schema: Schema) {
     mfConfig
   );
 
-  await formatFiles(tree);
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
 }
 
 export default convertToWithMF;

@@ -11,7 +11,12 @@ import {
 // This test ensures that when CJS is gone from the published `vite` package, Nx will continue to work.
 
 describe('Vite ESM tests', () => {
-  beforeAll(() => newProject({ unsetProjectNameAndRootFormat: false }));
+  beforeAll(() =>
+    newProject({
+      unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/react'],
+    })
+  );
 
   it('should build with Vite when it is ESM-only', async () => {
     const appName = uniq('viteapp');

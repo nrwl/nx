@@ -1,0 +1,170 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`setup-tailwind generator should add a js tailwind config to an application correctly 1`] = `
+"import { createGlobPatternsForDependencies } from '@nx/react/tailwind';
+export default {
+  content: [
+    './app/**/*.{js,jsx,ts,tsx}',
+    ...createGlobPatternsForDependencies(__dirname),
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+"
+`;
+
+exports[`setup-tailwind generator should add a js tailwind config to an application correctly 2`] = `
+"@tailwind base;
+@tailwind components;
+@tailwind utilities;
+"
+`;
+
+exports[`setup-tailwind generator should add a js tailwind config to an application correctly 3`] = `
+"import {
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from '@remix-run/react';
+import twStyles from './tailwind.css';
+export const links = () => [{ rel: 'stylesheet', href: twStyles }];
+export const meta = () => [
+  {
+    charset: 'utf-8',
+    title: 'New Remix App',
+    viewport: 'width=device-width,initial-scale=1',
+  },
+];
+export default function App() {
+  return (
+    <html lang="en">
+      <head>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Outlet />
+        <ScrollRestoration />
+        <Scripts />
+        <LiveReload />
+      </body>
+    </html>
+  );
+}
+"
+`;
+
+exports[`setup-tailwind generator should add a js tailwind config to an application correctly 4`] = `
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * @type {import('@remix-run/dev').AppConfig}
+ */
+export default {
+  tailwind: true,
+  ignoredRouteFiles: ['**/.*'],
+  // appDirectory: "app",
+  // assetsBuildDirectory: "public/build",
+  // serverBuildPath: "build/index.js",
+  // publicPath: "/build/",
+  watchPaths: () => createWatchPaths(__dirname),
+};
+"
+`;
+
+exports[`setup-tailwind generator should add a tailwind config to an application correctly 1`] = `
+"import type { Config } from "tailwindcss";
+import { createGlobPatternsForDependencies } from '@nx/react/tailwind';
+
+export default {
+  content: [
+    "./app/**/*.{js,jsx,ts,tsx}",
+    ...createGlobPatternsForDependencies(__dirname)
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+} satisfies Config;
+"
+`;
+
+exports[`setup-tailwind generator should add a tailwind config to an application correctly 2`] = `
+"@tailwind base;
+@tailwind components;
+@tailwind utilities;
+"
+`;
+
+exports[`setup-tailwind generator should add a tailwind config to an application correctly 3`] = `
+"import type { MetaFunction, LinksFunction } from '@remix-run/node';
+import {
+  Links,
+  LiveReload,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+} from '@remix-run/react';
+import twStyles from './tailwind.css';
+export const links: LinksFunction = () => [
+  { rel: 'stylesheet', href: twStyles },
+];
+
+export const meta: MetaFunction = () => [
+  {
+    charset: 'utf-8',
+    title: 'New Remix App',
+    viewport: 'width=device-width,initial-scale=1',
+  },
+];
+
+export default function App() {
+  return (
+    <html lang="en">
+      <head>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Outlet />
+        <ScrollRestoration />
+        <Scripts />
+        <LiveReload />
+      </body>
+    </html>
+  );
+}
+"
+`;
+
+exports[`setup-tailwind generator should add a tailwind config to an application correctly 4`] = `
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
+ * @type {import('@remix-run/dev').AppConfig}
+ */
+export default {
+  tailwind: true,
+  ignoredRouteFiles: ['**/.*'],
+  // appDirectory: "app",
+  // assetsBuildDirectory: "public/build",
+  // serverBuildPath: "build/index.js",
+  // publicPath: "/build/",
+  watchPaths: () => createWatchPaths(__dirname),
+};
+"
+`;

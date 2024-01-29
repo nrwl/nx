@@ -29,12 +29,29 @@ The first two options is a matter of changing your build target configuration or
 
 First, install `@types/node` so we can use `process.env` in our code.
 
-```shell
-npm install --save-dev @types/node
+{% tabs %}
+{% tab label="npm" %}
 
-# Or with yarn
-yarn add --dev @types/node
+```shell
+npm add -D @types/node
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @types/node
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @types/node
+```
+
+{% /tab %}
+{% /tabs %}
 
 Next, update the `build` and `serve` targets (in `project.json` or `angular.json` file), to the following.
 
@@ -54,7 +71,7 @@ Next, update the `build` and `serve` targets (in `project.json` or `angular.json
   },
   "serve": {
     // NOTE: use dev-server that supports custom webpack config.
-    "executor": "@nx/angular:webpack-dev-server"
+    "executor": "@nx/angular:dev-server"
     // snip
   }
 }

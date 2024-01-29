@@ -1,26 +1,17 @@
-import {
-  ProjectGraphProcessorContext,
-  ProjectGraphProjectNode,
-} from '../../config/project-graph';
+import { ProjectGraphProjectNode } from '../../config/project-graph';
 import { ProjectGraphBuilder } from '../project-graph-builder';
-import { NxJsonConfiguration } from '../../config/nx-json';
 import {
   ProjectConfiguration,
   TargetConfiguration,
 } from '../../config/workspace-json-project-json';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { NX_PREFIX } from '../../utils/logger';
-import {
-  mergeTargetConfigurations,
-  readTargetDefaultsForTarget,
-  resolveNxTokensInOptions,
-} from '../utils/project-configuration-utils';
+import { resolveNxTokensInOptions } from '../utils/project-configuration-utils';
 import { CreateDependenciesContext } from '../../utils/nx-plugin';
 
 export async function normalizeProjectNodes(
   ctx: CreateDependenciesContext,
-  builder: ProjectGraphBuilder,
-  nxJson: NxJsonConfiguration
+  builder: ProjectGraphBuilder
 ) {
   const toAdd = [];
   // Sorting projects by name to make sure that the order of projects in the graph is deterministic.
@@ -50,7 +41,7 @@ export async function normalizeProjectNodes(
       partialProjectGraphNodes
     );
 
-    p.targets = normalizeProjectTargets(p, nxJson.targetDefaults, key);
+    p.targets = normalizeProjectTargets(p, key);
 
     // TODO: remove in v16
     const projectType =
@@ -92,33 +83,21 @@ export async function normalizeProjectNodes(
  */
 export function normalizeProjectTargets(
   project: ProjectConfiguration,
-  targetDefaults: NxJsonConfiguration['targetDefaults'],
   projectName: string
 ): Record<string, TargetConfiguration> {
   // Any node on the graph will have a targets object, it just may be empty
   const targets = project.targets ?? {};
 
   for (const target in targets) {
-    // We need to know the executor for use in readTargetDefaultsForTarget,
-    // but we haven't resolved the `command` syntactic sugar yet.
-    const executor =
-      targets[target].executor ??
-      (targets[target].command ? 'nx:run-commands' : null);
-
-    // Allows things like { targetDefaults: { build: { command: tsc } } }
-    const defaults = resolveCommandSyntacticSugar(
-      readTargetDefaultsForTarget(target, targetDefaults, executor),
-      `targetDefaults:${target}`
-    );
+    if (!targets[target].command && !targets[target].executor) {
+      delete targets[target];
+      continue;
+    }
 
     targets[target] = resolveCommandSyntacticSugar(
       targets[target],
       `${projectName}:${target}`
     );
-
-    if (defaults) {
-      targets[target] = mergeTargetConfigurations(targets[target], defaults);
-    }
 
     targets[target].options = resolveNxTokensInOptions(
       targets[target].options,

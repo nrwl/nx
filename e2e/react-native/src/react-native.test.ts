@@ -101,8 +101,9 @@ describe('react native', () => {
         `start ${appName} --interactive=false --port=${port}`,
         (output) => {
           return (
-            output.includes(`Packager is ready at http://localhost::${port}`) ||
-            output.includes('Starting JS server...')
+            output.includes(`http://localhost:${port}`) ||
+            output.includes('Starting JS server...') ||
+            output.includes('Welcome to Metro')
           );
         }
       );
@@ -228,7 +229,7 @@ describe('react native', () => {
     const libName = uniq('@my-org/lib1');
 
     runCLI(
-      `generate @nx/react-native:application ${appName} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/react-native:application ${appName} --project-name-and-root-format=as-provided --install=false --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/") and

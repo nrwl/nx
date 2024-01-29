@@ -1,9 +1,17 @@
-import { Tree, formatFiles, getProjects, joinPathFragments } from '@nx/devkit';
+import {
+  Tree,
+  formatFiles,
+  getProjects,
+  joinPathFragments,
+  logger,
+} from '@nx/devkit';
 import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { ViteBuildExecutorOptions } from '../../executors/build/schema';
 import { updateBuildOutDirAndRoot } from './lib/edit-build-config';
 import { updateTestConfig } from './lib/edit-test-config';
 import { addFileReplacements } from './lib/add-file-replacements';
+import { tsquery } from '@phenomnomnominal/tsquery';
+import ts = require('typescript');
 
 export default async function updateBuildDir(tree: Tree) {
   const projects = getProjects(tree);
@@ -25,15 +33,17 @@ export default async function updateBuildDir(tree: Tree) {
         projectConfig,
         targetName,
         tree,
-        projectName
+        projectName,
+        config
       );
 
-      configContents = updateTestConfig(configContents, projectConfig);
+      configContents = updateTestConfig(configContents, projectConfig, config);
 
-      if (options.fileReplacements?.length > 0) {
+      if (options['fileReplacements']?.length > 0) {
         configContents = addFileReplacements(
           configContents,
-          options.fileReplacements
+          options['fileReplacements'],
+          config
         );
       }
 
@@ -52,4 +62,35 @@ function findViteConfig(tree: Tree, searchRoot: string) {
       return joinPathFragments(searchRoot, `vite.config.${ext}`);
     }
   }
+}
+
+export function getConfigNode(configFileContents: string): ts.Node | undefined {
+  if (!configFileContents) {
+    return;
+  }
+  let configNode = tsquery.query(
+    configFileContents,
+    `ObjectLiteralExpression`
+  )?.[0];
+
+  const arrowFunctionReturnStatement = tsquery.query(
+    configFileContents,
+    `ArrowFunction Block ReturnStatement ObjectLiteralExpression`
+  )?.[0];
+
+  if (arrowFunctionReturnStatement) {
+    configNode = arrowFunctionReturnStatement;
+  }
+
+  return configNode;
+}
+
+export function notFoundWarning(configPath: string) {
+  logger.warn(`
+  Could not migrate your ${configPath} file.
+  Please add the build.outDir and root options in your ${configPath} file.
+  You can find more information on how to configure vite for Nx here:
+  
+  https://nx.dev/recipes/vite/configure-vite
+  `);
 }

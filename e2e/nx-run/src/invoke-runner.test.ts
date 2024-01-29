@@ -11,7 +11,7 @@ import { join } from 'path';
 
 describe('Invoke Runner', () => {
   let proj: string;
-  beforeAll(() => (proj = newProject()));
+  beforeAll(() => (proj = newProject({ packages: ['@nx/js'] })));
   afterAll(() => cleanupProject());
 
   it('should invoke runner imperatively ', async () => {

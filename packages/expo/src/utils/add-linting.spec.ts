@@ -16,8 +16,8 @@ describe('Add Linting', () => {
     });
   });
 
-  it('should add update configuration when eslint is passed', () => {
-    addLinting(tree, {
+  it('should add update configuration when eslint is passed', async () => {
+    await addLinting(tree, {
       projectName: 'my-lib',
       linter: Linter.EsLint,
       tsConfigPaths: ['my-lib/tsconfig.lib.json'],
@@ -30,7 +30,7 @@ describe('Add Linting', () => {
   });
 
   it('should not add lint target when "none" is passed', async () => {
-    addLinting(tree, {
+    await addLinting(tree, {
       projectName: 'my-lib',
       linter: Linter.None,
       tsConfigPaths: ['my-lib/tsconfig.lib.json'],

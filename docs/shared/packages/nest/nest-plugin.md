@@ -27,13 +27,29 @@ Make sure to install the `@nx/nest` version that matches the version of `nx` in 
 
 To add the Nest plugin to an existing workspace, run one the following commands:
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install -D @nx/nest
+npm add -D @nx/nest
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
 
 ```shell
 yarn add -D @nx/nest
 ```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @nx/nest
+```
+
+{% /tab %}
+{% /tabs %}
 
 ### Create Applications
 

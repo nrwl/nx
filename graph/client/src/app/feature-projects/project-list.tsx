@@ -15,15 +15,12 @@ import {
   selectedProjectNamesSelector,
   workspaceLayoutSelector,
 } from './machines/selectors';
-import {
-  getProjectsByType,
-  parseParentDirectoriesFromFilePath,
-  useRouteConstructor,
-} from '../util';
+import { getProjectsByType, parseParentDirectoriesFromFilePath } from '../util';
 import { ExperimentalFeature } from '../ui-components/experimental-feature';
 import { TracingAlgorithmType } from './machines/interfaces';
 import { getProjectGraphService } from '../machines/get-services';
 import { Link, useNavigate } from 'react-router-dom';
+import { useRouteConstructor } from '@nx/graph/shared';
 
 interface SidebarProject {
   projectGraphNode: ProjectGraphNode;
