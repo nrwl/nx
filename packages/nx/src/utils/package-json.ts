@@ -134,7 +134,8 @@ export function buildTargetFromScript(
   };
 }
 
-export function readTargetsFromPackageJson({ scripts, nx }: PackageJson) {
+export function readTargetsFromPackageJson(packageJson: PackageJson) {
+  const { scripts, nx } = packageJson;
   const res: Record<string, TargetConfiguration> = {};
   Object.keys(scripts || {}).forEach((script) => {
     if (!nx?.includedScripts || nx?.includedScripts.includes(script)) {
@@ -142,8 +143,12 @@ export function readTargetsFromPackageJson({ scripts, nx }: PackageJson) {
     }
   });
 
-  // Add implicit nx-release-publish target for all package.json files to allow for lightweight configuration for package based repos
-  if (!res['nx-release-publish']) {
+  /**
+   * Add implicit nx-release-publish target for all package.json files that are
+   * not marked as `"private": true` to allow for lightweight configuration for
+   * package based repos.
+   */
+  if (!packageJson.private && !res['nx-release-publish']) {
     res['nx-release-publish'] = {
       dependsOn: ['^nx-release-publish'],
       executor: '@nx/js:release-publish',

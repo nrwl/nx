@@ -7,7 +7,7 @@ const messageOptions = {
     {
       code: 'enable-nx-cloud',
       message: `Do you want Nx Cloud to make your CI fast?`,
-      initial: 'github',
+      initial: 1,
       choices: [
         { value: 'yes', name: 'Yes, enable Nx Cloud' },
         { value: 'github', name: 'Yes, configure Nx Cloud for GitHub Actions' },
@@ -22,7 +22,7 @@ const messageOptions = {
     {
       code: 'set-up-ci',
       message: `Set up CI with caching, distribution and test deflaking`,
-      initial: 'github',
+      initial: 0,
       choices: [
         { value: 'github', name: 'Yes, for GitHub Actions with Nx Cloud' },
         { value: 'circleci', name: 'Yes, for CircleCI with Nx Cloud' },
@@ -38,7 +38,7 @@ const messageOptions = {
     {
       code: 'enable-caching',
       message: `Would you like remote caching to make your build faster?`,
-      initial: 'yes',
+      initial: 0,
       choices: [
         { value: 'yes', name: 'Yes' },
         { value: 'skip', name: 'Skip for now' },

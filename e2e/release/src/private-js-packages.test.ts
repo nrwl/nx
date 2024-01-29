@@ -188,7 +188,9 @@ describe('nx release - private JS packages', () => {
 
     `);
 
-    const privatePkgPublishOutput = runCLI(`release publish -p ${privatePkg}`);
+    const privatePkgPublishOutput = runCLI(`release publish -p ${privatePkg}`, {
+      silenceError: true,
+    });
     expect(privatePkgPublishOutput).toMatchInlineSnapshot(`
 
       >  NX   Your filter "{private-project-name}" matched the following projects:
@@ -196,20 +198,13 @@ describe('nx release - private JS packages', () => {
       - {private-project-name}
 
 
-      >  NX   Running target nx-release-publish for project {private-project-name}:
+      >  NX   Based on your config, the following projects were matched for publishing but do not have the "nx-release-publish" target specified:
 
       - {private-project-name}
 
+      There are a few possible reasons for this: (1) The projects may be private (2) You may not have an appropriate plugin (such as \`@nx/js\`) installed which adds the target automatically to public projects (3) You intended to configure the target manually, or exclude those projects via config in nx.json
 
-
-      > nx run {private-project-name}:nx-release-publish
-
-      Skipped package "@proj/{private-project-name}" from project "{private-project-name}", because it has \`"private": true\` in {private-project-name}/package.json
-
-
-
-      >  NX   Successfully ran target nx-release-publish for project {private-project-name}
-
+      Pass --verbose to see the stacktrace.
 
 
     `);

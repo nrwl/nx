@@ -1,14 +1,14 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodes } from './plugin';
 
+// This will only create test targets since no build targets are defined in vite.config.ts
+
 jest.mock('vite', () => ({
-  loadConfigFromFile: jest.fn().mockImplementation(() => {
+  resolveConfig: jest.fn().mockImplementation(() => {
     return Promise.resolve({
       path: 'vite.config.ts',
-      config: {
-        test: {
-          some: 'option',
-        },
+      test: {
+        some: 'option',
       },
       dependencies: [],
     });
@@ -17,12 +17,10 @@ jest.mock('vite', () => ({
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
-    loadConfigFromFile: jest.fn().mockResolvedValue({
+    resolveConfig: jest.fn().mockResolvedValue({
       path: 'vite.config.ts',
-      config: {
-        test: {
-          some: 'option',
-        },
+      test: {
+        some: 'option',
       },
       dependencies: [],
     }),
