@@ -25,14 +25,14 @@ export function updateModuleFederationProject(
     ...projectConfig.targets.build.options,
     main: `${options.appProjectRoot}/src/main.${options.js ? 'js' : 'ts'}`,
     webpackConfig: `${options.appProjectRoot}/webpack.config.${
-      options.typescriptConfiguration ? 'ts' : 'js'
+      options.typescriptConfiguration && !options.js ? 'ts' : 'js'
     }`,
   };
 
   projectConfig.targets.build.configurations.production = {
     ...projectConfig.targets.build.configurations.production,
     webpackConfig: `${options.appProjectRoot}/webpack.config.prod.${
-      options.typescriptConfiguration ? 'ts' : 'js'
+      options.typescriptConfiguration && !options.js ? 'ts' : 'js'
     }`,
   };
 
@@ -40,7 +40,9 @@ export function updateModuleFederationProject(
   if (options.dynamic) {
     const pathToProdWebpackConfig = joinPathFragments(
       projectConfig.root,
-      `webpack.prod.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+      `webpack.prod.config.${
+        options.typescriptConfiguration && !options.js ? 'ts' : 'js'
+      }`
     );
     if (host.exists(pathToProdWebpackConfig)) {
       host.delete(pathToProdWebpackConfig);

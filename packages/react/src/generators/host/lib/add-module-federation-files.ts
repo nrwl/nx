@@ -55,9 +55,10 @@ export function addModuleFederationFiles(
     templateVariables
   );
 
-  const pathToModuleFederationFiles = options.typescriptConfiguration
-    ? 'module-federation-ts'
-    : 'module-federation';
+  const pathToModuleFederationFiles =
+    options.typescriptConfiguration && !options.js
+      ? 'module-federation-ts'
+      : 'module-federation';
   // New entry file is created here.
   generateFiles(
     host,

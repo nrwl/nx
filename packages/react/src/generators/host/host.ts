@@ -75,6 +75,7 @@ export async function hostGeneratorInternal(
         skipFormat: true,
         projectNameAndRootFormat: options.projectNameAndRootFormat,
         typescriptConfiguration: options.typescriptConfiguration,
+        js: options.js,
         dynamic: options.dynamic,
         host: options.name,
       });
