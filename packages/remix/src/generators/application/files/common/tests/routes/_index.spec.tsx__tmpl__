@@ -12,5 +12,5 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await waitFor(() => screen.findByText('Welcome to Remix'));
+  await waitFor(() => screen.findByText('Hello there,'));
 });
