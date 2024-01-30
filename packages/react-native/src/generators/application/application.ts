@@ -20,6 +20,7 @@ import { createApplicationFiles } from './lib/create-application-files';
 import { addDetox } from './lib/add-detox';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -90,6 +91,10 @@ export async function reactNativeApplicationGeneratorInternal(
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.projectName);
+  });
 
   return runTasksInSerial(...tasks);
 }

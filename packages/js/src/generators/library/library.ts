@@ -41,6 +41,7 @@ import jsInitGenerator from '../init/init';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import setupVerdaccio from '../setup-verdaccio/generator';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -162,6 +163,10 @@ export async function libraryGeneratorInternal(
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.name);
+  });
 
   return runTasksInSerial(...tasks);
 }
