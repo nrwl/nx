@@ -5,9 +5,9 @@ Nx plugins help developers use a tool or framework with Nx. They allow the plugi
 For example, plugins can accomplish the following:
 
 - [Configure Nx cache settings](/concepts/inferred-tasks) for a tool. The [`@nx/webpack`](/nx-api/webpack) plugin can automatically configure the [inputs](/recipes/running-tasks/configure-inputs) and [outputs](/recipes/running-tasks/configure-outputs) for a `build` task based on the settings in the `webpack.config.js` file it uses.
-- [Update tooling configuration](/features/automate-updatings-dependencies) when upgrading the tool version. When Storybook 7 introduced a [new format](https://storybook.js.org/blog/storybook-csf3-is-here) for their configuration files, anyone using the [`@nx/storybook`](/nx-api/storybook) plugin could automatically apply those changes to their repository when upgrading.
+- [Update tooling configuration](/features/automate-updating-dependencies) when upgrading the tool version. When Storybook 7 introduced a [new format](https://storybook.js.org/blog/storybook-csf3-is-here) for their configuration files, anyone using the [`@nx/storybook`](/nx-api/storybook) plugin could automatically apply those changes to their repository when upgrading.
 - [Set up a tool](/features/generate-code) for the first time. With the [`@nx/playwright`](/nx-api/playwright) plugin installed, you can use the `@nx/playwright:configuration` code generator to set up Playwright tests in an existing project.
-- [Run a tool in an advanced way](/concepts/executors-and-configuration). The [`@nx/js`](/nx-api/js) plugin's [`@nx/js:tsc` executor](/nx-api/js/executors/tsc) combines Nx's understanding of your repository with Typescript's native batch mode feature to make your builds [even more performant](/recipes/tips-n-tricks/enable-tsc-batch-mode).
+- [Run a tool in an advanced way](/concepts/executors-and-configurations). The [`@nx/js`](/nx-api/js) plugin's [`@nx/js:tsc` executor](/nx-api/js/executors/tsc) combines Nx's understanding of your repository with Typescript's native batch mode feature to make your builds [even more performant](/recipes/tips-n-tricks/enable-tsc-batch-mode).
 
 ## Plugin Features
 
@@ -15,7 +15,7 @@ For example, plugins can accomplish the following:
 {% card title="Infer tasks" description="Automatically configure Nx settings for tasks based on tooling configuration" type="documentation" url="/concepts/inferred-tasks" /%}
 {% card title="Generate Code" description="Generate and modify code to set up and use the tool or framework" type="documentation" url="/features/generate-code" /%}
 {% card title="Maintain Dependencies" description="Automatically update package versions and tooling configuration" type="documentation" url="/features/generate-code" /%}
-{% card title="Enhance Tooling with Executors" description="Run a tool in an advanced way that may not be possible from the command line" type="documentation" url="/concepts/executors-and-configuration" /%}
+{% card title="Enhance Tooling with Executors" description="Run a tool in an advanced way that may not be possible from the command line" type="documentation" url="/concepts/executors-and-configurations" /%}
 {% /cards %}
 
 ## Types of Plugins
