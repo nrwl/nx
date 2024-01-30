@@ -1,10 +1,8 @@
-import { getPackageManagerCommand } from '../../utils/package-manager';
-import type { ExecutorContext } from '../../config/misc-interfaces';
 import * as path from 'path';
-import { env as appendLocalEnv } from 'npm-run-path';
+import type { ExecutorContext } from '../../config/misc-interfaces';
 import { runCommand } from '../../native';
 import { PseudoTtyProcess } from '../../utils/child-process';
-import { signalToCode } from '../../utils/exit-codes';
+import { getPackageManagerCommand } from '../../utils/package-manager';
 
 export interface RunScriptOptions {
   script: string;
@@ -25,10 +23,7 @@ export default async function (
             context.root,
             context.projectsConfigurations.projects[context.projectName].root
           ),
-          {
-            ...process.env,
-            ...appendLocalEnv(),
-          }
+          process.env
         )
       );
       cp.onExit((code) => {
