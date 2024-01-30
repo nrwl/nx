@@ -2,7 +2,7 @@
   "name": "controller",
   "factory": "./src/generators/controller/controller#controllerGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxNestControllerGenerator",
     "title": "Nest Controller Options Schema",
     "description": "Nest Controller Options Schema.",

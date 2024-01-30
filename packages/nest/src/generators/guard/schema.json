@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxNestGuardGenerator",
   "title": "Nest Guard Options Schema",
   "description": "Nest Guard Options Schema.",

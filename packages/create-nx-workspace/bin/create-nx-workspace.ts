@@ -286,9 +286,6 @@ async function normalizeArgsMiddleware(
   try {
     let thirdPartyPreset: string | null;
 
-    // Node options
-    let docker: boolean;
-
     try {
       thirdPartyPreset = await getThirdPartyPreset(argv.preset);
     } catch (e) {
@@ -593,11 +590,11 @@ async function determineReactOptions(
           },
           {
             name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
             name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
+            message: 'LESS              [ https://lesscss.org     ]',
           },
           {
             name: 'styled-components',
@@ -689,11 +686,11 @@ async function determineVueOptions(
           },
           {
             name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
             name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
+            message: 'LESS              [ https://lesscss.org     ]',
           },
           {
             name: 'none',
@@ -781,11 +778,11 @@ async function determineAngularOptions(
           },
           {
             name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
             name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
+            message: 'LESS              [ https://lesscss.org     ]',
           },
         ],
       },

@@ -2,7 +2,7 @@
   "name": "init",
   "factory": "./src/generators/init/init#nextInitGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxNextNgInit",
     "title": "Init Next Plugin",

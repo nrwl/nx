@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "cli": "nx",
   "$id": "SchematicsNxNodeE2eProject",
   "title": "Node E2E Project Generator",
