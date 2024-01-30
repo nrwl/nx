@@ -655,6 +655,86 @@ describe('native task hasher', () => {
     `);
   });
 
+  it('should include typescript hash in the TsConfig final hash', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+          },
+        },
+      },
+    });
+    builder.addExternalNode({
+      data: {
+        packageName: 'typescript',
+        version: '1.2.3',
+        hash: '1234',
+      },
+      name: 'npm:typescript',
+      type: 'npm',
+    });
+
+    builder.addStaticDependency(
+      'parent',
+      'npm:typescript',
+      'libs/parent/filea.ts'
+    );
+    let projectGraph = builder.getUpdatedProjectGraph();
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent', 'child'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    let hasher = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: true }
+    );
+
+    let typescriptHash = (
+      await hasher.hashTask(taskGraph.tasks['parent:build'], taskGraph, {})
+    ).details['parent:TsConfig'];
+
+    let noTypescriptHash = (
+      await hasher.hashTask(taskGraph.tasks['child:build'], taskGraph, {})
+    ).details['child:TsConfig'];
+
+    expect(typescriptHash).not.toEqual(noTypescriptHash);
+    expect(typescriptHash).toMatchInlineSnapshot(`"8661678577354855152"`);
+    expect(noTypescriptHash).toMatchInlineSnapshot(`"11547179436948425249"`);
+  });
+
   /**
    * commented out to show how to debug issues with hashing
    *
