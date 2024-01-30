@@ -34,6 +34,10 @@ export function readTargetOptions<T = any>(
 
   const targetConfiguration = projectConfiguration.targets[target];
 
+  if (!targetConfiguration) {
+    throw new Error(`Unable to find target ${target} for project ${project}`);
+  }
+
   // TODO(v18): remove Workspaces.
   const ws = new Workspaces(context.root);
   const [nodeModule, executorName] = targetConfiguration.executor.split(':');
