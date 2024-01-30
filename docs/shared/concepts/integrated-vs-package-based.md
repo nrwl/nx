@@ -22,9 +22,9 @@ Lerna, Yarn, Lage, [Turborepo](/concepts/more-concepts/turbo-and-nx) and Nx supp
 
 Someone who appreciates the flexibility of a package-based repository will be most interested in the following features of Nx:
 
-- Add caching and task orchestration without modifying tooling or file structure
+- Add [caching](/features/cache-task-results) and [task orchestration](/features/run-tasks) without modifying tooling or file structure
 - Import existing projects into the repo without modifying their tooling
-- Easily create new projects or tools with code generators
+- Easily create new projects or tools with [code generators](/features/generate-code)
 
 {% cards %}
 {% card title="Tutorial: Getting Started with Package-Based Repos" description="Walkthrough for creating a package-based monorepo with Nx" type="documentation" url="/getting-started/tutorials/package-based-repo-tutorial" /%}
@@ -38,9 +38,9 @@ Bazel and Nx support this style.
 
 Someone who appreciates the structure and consistency of an integrated repository will be most interested in the following features of Nx:
 
-- Enforce architectural decisions with tagging rules
-- Encourage consistency with custom code generators
-- Automate updating dependencies of the entire toolchain
+- [Enforce architectural decisions](/features/enforce-module-boundaries) with tagging rules
+- Encourage consistency with custom [code generators](/features/generate-code)
+- [Automate updating dependencies](/features/automate-updating-dependencies) of the entire toolchain
 
 {% cards %}
 {% card title="Tutorial: Getting Started with Integrated Repos" description="Walkthrough for creating an integrated monorepo with Nx" type="documentation" url="/getting-started/tutorials/integrated-repo-tutorial" /%}
@@ -52,8 +52,8 @@ Nx plugins, especially the [generators](/features/generate-code), [executors](/c
 
 Someone whose main focus is on improving their single application will be most interested in the following features of Nx:
 
-- Set up a fast CI system without CI expertise
-- Easily add new tooling
+- Set up a [fast CI system](/ci/intro/ci-with-nx) without CI expertise
+- Easily [add new tooling](/plugin-registry)
 
 {% cards %}
 {% card title="Standalone Applications with Nx" description="Learn what Standlone Apps are and how Nx can be useful" type="video" url="https://youtu.be/qEaVzh-oBBc" /%}
@@ -63,7 +63,7 @@ Someone whose main focus is on improving their single application will be most i
 
 ## How to Choose
 
-Nx itself doesn't care which style you choose. You can have a package-based repo setup and still host projects that use Nx plugins from the integrated repo setup. Hence you end up with a "hybrid" approach. Similarly, a Standalone App workspace setup is none other than an integrated Nx monorepo, but with only one application using a different folder layout.
+Nx itself doesn't care which style you choose. You can use all the features of Nx whether you are in a package based repo or integrated repo. Certain Nx features will be more or less valuable for a standalone app, but all the features of Nx are still available to be put in place as soon as that repo grows to include more apps.
 
 You can be successful working in any style, and there are ways to transition between them. At a high level
 

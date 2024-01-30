@@ -1,5 +1,3 @@
----
-
 # Inputs and Named Inputs
 
 When Nx [computes the hash for a given operation](/concepts/how-caching-works), it takes into account the `inputs` of the target.

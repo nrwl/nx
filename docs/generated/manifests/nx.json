@@ -816,17 +816,6 @@
         "tags": ["cache-task-results"]
       },
       {
-        "id": "types-of-configuration",
-        "name": "Types of Configuration",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/concepts/types-of-configuration",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/concepts/types-of-configuration",
-        "tags": []
-      },
-      {
         "id": "task-pipeline-configuration",
         "name": "What is a Task Pipeline",
         "description": "",
@@ -838,6 +827,17 @@
         "tags": ["run-tasks"]
       },
       {
+        "id": "nx-plugins",
+        "name": "What Are Nx Plugins",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/nx-plugins",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/nx-plugins",
+        "tags": ["generate-code", "create-your-own-plugin"]
+      },
+      {
         "id": "inferred-tasks",
         "name": "Inferred Tasks",
         "description": "",
@@ -847,6 +847,17 @@
         "isExternal": false,
         "path": "/concepts/inferred-tasks",
         "tags": ["inferred-tasks"]
+      },
+      {
+        "id": "types-of-configuration",
+        "name": "Types of Configuration",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/concepts/types-of-configuration",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/concepts/types-of-configuration",
+        "tags": []
       },
       {
         "id": "executors-and-configurations",
@@ -1152,17 +1163,6 @@
     "path": "/concepts/how-caching-works",
     "tags": ["cache-task-results"]
   },
-  "/concepts/types-of-configuration": {
-    "id": "types-of-configuration",
-    "name": "Types of Configuration",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/concepts/types-of-configuration",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/concepts/types-of-configuration",
-    "tags": []
-  },
   "/concepts/task-pipeline-configuration": {
     "id": "task-pipeline-configuration",
     "name": "What is a Task Pipeline",
@@ -1174,6 +1174,17 @@
     "path": "/concepts/task-pipeline-configuration",
     "tags": ["run-tasks"]
   },
+  "/concepts/nx-plugins": {
+    "id": "nx-plugins",
+    "name": "What Are Nx Plugins",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/nx-plugins",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/nx-plugins",
+    "tags": ["generate-code", "create-your-own-plugin"]
+  },
   "/concepts/inferred-tasks": {
     "id": "inferred-tasks",
     "name": "Inferred Tasks",
@@ -1184,6 +1195,17 @@
     "isExternal": false,
     "path": "/concepts/inferred-tasks",
     "tags": ["inferred-tasks"]
+  },
+  "/concepts/types-of-configuration": {
+    "id": "types-of-configuration",
+    "name": "Types of Configuration",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/concepts/types-of-configuration",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/concepts/types-of-configuration",
+    "tags": []
   },
   "/concepts/executors-and-configurations": {
     "id": "executors-and-configurations",

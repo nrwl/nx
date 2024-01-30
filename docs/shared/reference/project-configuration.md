@@ -53,8 +53,7 @@ The project details view also shows where each setting is defined so that you kn
 
 ## Project Level Configuration Files
 
-Projects can be configured in `package.json` (if you use npm scripts and not Nx executors) and `project.json` (if you
-[use task executors](/concepts/executors-and-configurations)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
+If you need to edit your project settings or modify an inferred task, you can do so in either `package.json` or `project.json` files. The examples on this page show both styles, and the only functional difference is that tasks that use executors must be defined in a `project.json`. Nx merges the two
 files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on GitHub.
 
 The following configuration creates `build` and `test` targets for Nx.
@@ -100,7 +99,7 @@ The following configuration creates `build` and `test` targets for Nx.
 
 You can invoke `nx build mylib` or `nx test mylib` without any extra configuration.
 
-Below are some more complete examples of project configuration files. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories.
+Below are some more complete examples of project configuration files. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories. Orchestration settings control the way [Nx runs tasks](/features/run-tasks). Execution settings control the actual task that is run. Caching settings control when [Nx caches a task](/features/cache-task-results) and what is actually cached.
 
 {% tabs %}
 {% tab label="package.json" %}
@@ -174,6 +173,26 @@ Below are some more complete examples of project configuration files. For a more
 ## Task Definitions (Targets)
 
 A large portion of project configuration is related to defining the tasks for the project. In addition, to defining what the task actually does, a task definition also has properties that define the way that Nx should run that task. Those properties are described in detail below.
+
+### Cache
+
+In Nx 17 and higher, caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
+
+```json {% fileName="project.json" %}
+{
+  "targets": {
+    "test": {
+      "cache": true
+    }
+  }
+}
+```
+
+{% callout type="warning" title="Per Project Caching + DTE" %}
+
+If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with DTE enabled.
+
+{% /callout %}
 
 ### Inputs and Named Inputs
 
@@ -286,26 +305,6 @@ More advanced patterns can be used to exclude files and folders in a single line
 }
 ```
 
-### Cache
-
-In Nx 17 and higher, caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
-
-```json {% fileName="project.json" %}
-{
-  "targets": {
-    "test": {
-      "cache": true
-    }
-  }
-}
-```
-
-{% callout type="warning" title="Per Project Caching + DTE" %}
-
-If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with DTE enabled.
-
-{% /callout %}
-
 ### dependsOn
 
 Targets can depend on other targets. This is the relevant portion of the configuration file:
@@ -338,25 +337,6 @@ result in `mylib`'s dependencies being built as well.
 You can also express task dependencies with an object syntax:
 
 {% tabs %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      "dependsOn": [
-        {
-          "projects": "dependencies", // "dependencies" or "self"
-          "target": "build", // target name
-          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-        }
-      ]
-    }
-  }
-}
-```
-
-{% /tab %}
 {% tab label="Version 16+ (self)" %}
 
 ```json
@@ -413,6 +393,25 @@ You can also express task dependencies with an object syntax:
 ```
 
 {% /tab %}
+{% tab label="Version < 16" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "projects": "dependencies", // "dependencies" or "self"
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        }
+      ]
+    }
+  }
+}
+```
+
+{% /tab %}
 {% /tabs %}
 
 #### Examples
@@ -420,22 +419,6 @@ You can also express task dependencies with an object syntax:
 You can write the shorthand configuration above in the object syntax like this:
 
 {% tabs %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
-    },
-    "test": {
-      "dependsOn": [{ "projects": "self", "target": "build" }]
-    }
-  }
-}
-```
-
-{% /tab %}
 {% tab label="Version 16+" %}
 
 ```json
@@ -452,37 +435,27 @@ You can write the shorthand configuration above in the object syntax like this:
 ```
 
 {% /tab %}
-{% /tabs %}
-
-With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target. You can either forward them or you can ignore them (default).
-
-{% tabs %}
 {% tab label="Version < 16" %}
 
 ```json
 {
   "targets": {
     "build": {
-      // forward params passed to this target to the dependency targets
-      "dependsOn": [
-        { "projects": "dependencies", "target": "build", "params": "forward" }
-      ]
+      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
     },
     "test": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [
-        { "projects": "dependencies", "target": "build", "params": "ignore" }
-      ]
-    },
-    "lint": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+      "dependsOn": [{ "projects": "self", "target": "build" }]
     }
   }
 }
 ```
 
 {% /tab %}
+{% /tabs %}
+
+With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target. You can either forward them or you can ignore them (default).
+
+{% tabs %}
 {% tab label="Version 16+" %}
 
 ```json
@@ -509,11 +482,51 @@ With the expanded syntax, you also have a third option available to configure ho
 ```
 
 {% /tab %}
+{% tab label="Version < 16" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the dependency targets
+      "dependsOn": [
+        { "projects": "dependencies", "target": "build", "params": "forward" }
+      ]
+    },
+    "test": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [
+        { "projects": "dependencies", "target": "build", "params": "ignore" }
+      ]
+    },
+    "lint": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+    }
+  }
+}
+```
+
+{% /tab %}
 {% /tabs %}
 
 This also works when defining a relation for the target of the project itself using `"projects": "self"`:
 
 {% tabs %}
+{% tab label="Version 16+" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the project target
+      "dependsOn": [{ "target": "pre-build", "params": "forward" }]
+    }
+  }
+}
+```
+
+{% /tab %}
 {% tab label="Version < 16" %}
 
 ```json
@@ -524,20 +537,6 @@ This also works when defining a relation for the target of the project itself us
       "dependsOn": [
         { "projects": "self", "target": "pre-build", "params": "forward" }
       ]
-    }
-  }
-}
-```
-
-{% /tab %}
-{% tab label="Version 16+" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      // forward params passed to this target to the project target
-      "dependsOn": [{ "target": "pre-build", "params": "forward" }]
     }
   }
 }
@@ -595,7 +594,7 @@ You can annotate your projects with `tags` as follows:
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "/libs/mylib",
+  "root": "libs/mylib",
   "tags": ["scope:myteam"]
 }
 ```
@@ -627,7 +626,7 @@ Nx uses powerful source-code analysis to figure out your workspace's project gra
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "/libs/mylib",
+  "root": "libs/mylib",
   "implicitDependencies": ["anotherlib"]
 }
 ```
@@ -654,7 +653,7 @@ You can also remove a dependency as follows:
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "/libs/mylib",
+  "root": "libs/mylib",
   "implicitDependencies": ["!anotherlib"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
 }
 ```
@@ -681,7 +680,7 @@ An implicit dependency could also be a glob pattern:
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "/libs/mylib",
+  "root": "libs/mylib",
   "implicitDependencies": ["shop-*"] # "mylib" depends on all projects beginning with "shop-"
 }
 ```
@@ -697,7 +696,7 @@ If you want to ignore a particular `package.json` file, exclude it from those to
 
 ### Ignoring package.json scripts
 
-Nx merges `package.json` scripts with your targets that are defined in `project.json`.
+Nx merges `package.json` scripts with any targets defined in `project.json`.
 If you only wish for some scripts to be used as Nx targets, you can specify them in the `includedScripts` property of the project's `package.json`.
 
 ```json {% filename="packages/my-library/package.json" }
@@ -714,7 +713,7 @@ If you only wish for some scripts to be used as Nx targets, you can specify them
 }
 ```
 
-{% short-embeds %}
+<!-- {% short-embeds %}
 {% short-video
 title="Two Places To Define Tasks"
 embedUrl="https://www.youtube.com/embed/_oFHSXxa77E" /%}
@@ -724,4 +723,4 @@ embedUrl="https://www.youtube.com/embed/VnIDJYqipdY" /%}
 {% short-video
 title="Running Many Tasks at Once"
 embedUrl="https://www.youtube.com/embed/-lyN72D13uc" /%}
-{% /short-embeds %}
+{% /short-embeds %} -->
