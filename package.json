@@ -343,7 +343,7 @@
     "next-seo": "^5.13.0",
     "node-machine-id": "1.1.12",
     "npm-run-path": "^4.0.1",
-    "preact": "10.6.4",
+    "preact": "10.19.3",
     "react": "18.2.0",
     "react-copy-to-clipboard": "^5.0.3",
     "react-dom": "18.2.0",
@@ -374,4 +374,3 @@
     ]
   }
 }
-
