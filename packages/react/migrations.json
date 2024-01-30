@@ -47,6 +47,12 @@
       "version": "16.7.0-beta.2",
       "description": "Add @nx/react types to tsconfig types array",
       "implementation": "./src/migrations/update-16-7-0-add-typings/update-16-7-0-add-typings"
+    },
+    "add-module-federation-env-var-to-target-defaults": {
+      "cli": "nx",
+      "version": "17.8.0-beta.0",
+      "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/webpack:webpack' is used for Module Federation.",
+      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
     }
   },
   "packageJsonUpdates": {
