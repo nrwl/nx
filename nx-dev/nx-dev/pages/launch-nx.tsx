@@ -4,11 +4,11 @@ import {
   LaunchWeekAnnouncements,
   LaunchWeekSpeakers,
   LaunchNxCommunityPartners,
+  ConfHealthAndSafety,
 } from '@nx/nx-dev/ui-conference';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import Script from 'next/script';
 
 export default function ConfPage(): JSX.Element {
   const router = useRouter();
@@ -107,6 +107,15 @@ export default function ConfPage(): JSX.Element {
                       className="text-blue-500 dark:text-sky-500"
                     >
                       Linkedin
+                    </a>
+                    ,{' '}
+                    <a
+                      href="https://youtube.com/@nxdevtools"
+                      rel="noreferrer"
+                      target="_blank"
+                      className="text-blue-500 dark:text-sky-500"
+                    >
+                      Youtube
                     </a>{' '}
                     or{' '}
                     <a
@@ -186,6 +195,12 @@ export default function ConfPage(): JSX.Element {
                 >
                   Community Partners
                 </Link>
+                {/* <Link
+                  href="#code-of-conduct"
+                  className="cursor-pointer bg-white/40 py-8 transition hover:bg-white dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                >
+                  Code of Conduct
+                </Link> */}
               </div>
             </div>
           </div>
@@ -231,6 +246,19 @@ export default function ConfPage(): JSX.Element {
             </div>
           </div>
           <LaunchNxCommunityPartners />
+
+          {/*HEALTH AND SAFETY*/}
+          {/* <div className="mx-auto max-w-screen-lg px-5 py-5 xl:max-w-screen-xl">
+            <div className="mt-24">
+              <h2
+                id="code-of-conduct"
+                className="font-input-mono my-20 text-3xl"
+              >
+                Code of Conduct (CoC)
+              </h2>
+            </div>
+          </div>
+          <ConfHealthAndSafety /> */}
         </div>
       </main>
       <Footer />
