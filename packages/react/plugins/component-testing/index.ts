@@ -259,7 +259,7 @@ function buildTargetWebpack(
 
   return async () => {
     customWebpack = await customWebpack;
-    // TODO(v18): Once webpackConfig is always set in @nx/webpack:webpack and isolatedConfig is removed, we no longer need this default.
+    // TODO(v19): Once webpackConfig is always set in @nx/webpack:webpack and isolatedConfig is removed, we no longer need this default.
     const configure = composePluginsSync(withNx(), withWeb());
     const defaultWebpack = configure(
       {},

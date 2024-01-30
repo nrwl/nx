@@ -201,7 +201,7 @@
     "presets": []
   },
   "description": "Creates and runs the E2E tests for an Nx Plugin.",
-  "x-deprecated": "@nx/plugin:e2e is deprecated and will be removed in Nx 18. Use @nx/jest:jest instead.",
+  "x-deprecated": "@nx/plugin:e2e is deprecated and will be removed in Nx v19. Use @nx/jest:jest instead.",
   "aliases": [],
   "hidden": false,
   "path": "/packages/plugin/src/executors/e2e/schema.json",

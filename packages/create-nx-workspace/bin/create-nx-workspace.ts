@@ -194,7 +194,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     [
       normalizeArgsMiddleware,
       normalizeAndWarnOnDeprecatedPreset({
-        // TODO(v18): Remove Empty and Core presets
+        // TODO(v19): Remove Empty and Core presets
         [Preset.Core]: Preset.NPM,
         [Preset.Empty]: Preset.Apps,
       }),

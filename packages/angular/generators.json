@@ -86,7 +86,7 @@
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
-      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v18."
+      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v19."
     },
     "convert-to-with-mf": {
       "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
