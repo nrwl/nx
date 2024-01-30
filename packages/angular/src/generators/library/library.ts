@@ -31,6 +31,7 @@ import { addProject } from './lib/add-project';
 import { addJest } from '../utils/add-jest';
 import { setGeneratorDefaults } from './lib/set-generator-defaults';
 import { ensureAngularDependencies } from '../utils/ensure-angular-dependencies';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -119,6 +120,7 @@ export async function libraryGeneratorInternal(
 
   return () => {
     installPackagesTask(tree);
+    logShowProjectCommand(libraryOptions.name);
   };
 }
 

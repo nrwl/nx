@@ -37,6 +37,7 @@ import { Schema } from './schema';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -431,6 +432,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   if (!schema.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.projectName);
+  });
+
   return runTasksInSerial(...tasks);
 }
 

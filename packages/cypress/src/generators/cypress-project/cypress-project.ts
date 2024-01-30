@@ -34,6 +34,7 @@ import {
 } from '../../utils/versions';
 import { cypressInitGenerator } from '../init/init';
 import { Schema } from './schema';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export interface CypressProjectSchema extends Schema {
   projectName: string;
@@ -229,7 +230,14 @@ function ensureDependencies(tree: Tree, options: CypressProjectSchema) {
     devDependencies['vite'] = viteVersion;
   }
 
-  return addDependenciesToPackageJson(tree, {}, devDependencies);
+  return runTasksInSerial(
+    ...[
+      addDependenciesToPackageJson(tree, {}, devDependencies),
+      () => {
+        logShowProjectCommand(options.projectName);
+      },
+    ]
+  );
 }
 
 async function normalizeOptions(
