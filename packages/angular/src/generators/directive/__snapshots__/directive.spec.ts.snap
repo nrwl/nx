@@ -52,7 +52,7 @@ exports[`directive generator --no-standalone should import the directive correct
 "import { Directive } from '@angular/core';
 
 @Directive({
-  selector: '[projTest]',
+  selector: '[projTest]'
 })
 export class TestDirective {
   constructor() {}
@@ -88,7 +88,7 @@ exports[`directive generator --no-standalone should import the directive correct
 "import { Directive } from '@angular/core';
 
 @Directive({
-  selector: '[projTest]',
+  selector: '[projTest]'
 })
 export class TestDirective {
   constructor() {}

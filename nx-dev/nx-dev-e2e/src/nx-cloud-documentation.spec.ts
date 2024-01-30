@@ -23,12 +23,12 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/ci/recipes/security/access-tokens',
   },
   {
-    title: 'Security Scenarios',
-    path: '/ci/concepts/scenarios',
+    title: 'Cache Security',
+    path: '/ci/concepts/cache-security',
   },
   {
-    title: 'End to End Encryption',
-    path: '/ci/concepts/encryption',
+    title: 'Enable End to End Encryption',
+    path: '/ci/recipes/security/encryption',
   },
   {
     title: 'Running Nx Cloud Enterprise',
@@ -47,7 +47,7 @@ const pages: Array<{ title: string; path: string }> = [
     path: '/ci/recipes/on-premise/auth-gitlab',
   },
   {
-    title: 'Setting up a dedicated NxCloud VM',
+    title: 'Setting up a dedicated Nx Cloud VM',
     path: '/ci/recipes/on-premise/ami-setup',
   },
   {

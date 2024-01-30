@@ -19,6 +19,7 @@ describe('ngrx-feature-store', () => {
           minimal: true,
           directory: '+state',
           parent,
+          skipFormat: true,
         })
       ).rejects.toThrowError(
         `Parent does not exist: feature-module/src/lib/feature-module.module.ts.`
@@ -36,6 +37,7 @@ describe('ngrx-feature-store', () => {
         minimal: true,
         directory: '+state',
         parent,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -70,6 +72,7 @@ describe('ngrx-feature-store', () => {
         directory: '+state',
         skipPackageJson: true,
         parent,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -97,6 +100,7 @@ describe('ngrx-feature-store', () => {
         minimal: false,
         directory: '+state',
         parent,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -124,6 +128,7 @@ describe('ngrx-feature-store', () => {
         directory: '+state',
         facade: true,
         parent,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -151,6 +156,7 @@ describe('ngrx-feature-store', () => {
         directory: 'custom',
         facade: true,
         parent,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -226,6 +232,7 @@ describe('ngrx-feature-store', () => {
         directory: '+state',
         facade: true,
         parent,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -247,6 +254,7 @@ describe('ngrx-feature-store', () => {
         facade: true,
         parent,
         barrels: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -267,6 +275,7 @@ describe('ngrx-feature-store', () => {
         directory: '+state',
         facade: true,
         parent,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -320,6 +329,7 @@ describe('ngrx-feature-store', () => {
           minimal: true,
           directory: '+state',
           parent,
+          skipFormat: true,
         })
       ).rejects.toThrowError(
         `Parent does not exist: feature/src/lib/lib.routes.ts`
@@ -337,6 +347,7 @@ describe('ngrx-feature-store', () => {
         minimal: true,
         parent,
         directory: '+state',
+        skipFormat: true,
       });
 
       // ASSERT
@@ -371,6 +382,7 @@ describe('ngrx-feature-store', () => {
         parent,
         directory: '+state',
         skipPackageJson: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -398,6 +410,7 @@ describe('ngrx-feature-store', () => {
         minimal: false,
         parent,
         directory: '+state',
+        skipFormat: true,
       });
 
       // ASSERT
@@ -425,6 +438,7 @@ describe('ngrx-feature-store', () => {
         parent,
         directory: '+state',
         facade: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -452,6 +466,7 @@ describe('ngrx-feature-store', () => {
         parent,
         directory: 'custom',
         facade: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -479,6 +494,7 @@ describe('ngrx-feature-store', () => {
         parent,
         directory: '+state',
         facade: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -529,6 +545,7 @@ describe('ngrx-feature-store', () => {
         parent,
         directory: '+state',
         facade: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -548,6 +565,7 @@ describe('ngrx-feature-store', () => {
         directory: '+state',
         facade: true,
         barrels: true,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -560,6 +578,7 @@ async function addNgModuleLib(tree: Tree, name = 'feature-module') {
   await libraryGenerator(tree, {
     name,
     standalone: false,
+    skipFormat: true,
   });
 }
 
@@ -568,5 +587,6 @@ async function addStandaloneLib(tree: Tree, name = 'feature') {
     name,
     standalone: true,
     routing: true,
+    skipFormat: true,
   });
 }

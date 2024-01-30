@@ -51,12 +51,12 @@ Details about the composition of the hash
 
 #### Type declaration
 
-| Name            | Type                                | Description                                                    |
-| :-------------- | :---------------------------------- | :------------------------------------------------------------- |
-| `command`       | `string`                            | Command of the task                                            |
-| `implicitDeps?` | { `[fileName: string]`: `string`; } | Hashes of implicit dependencies which are included in the hash |
-| `nodes`         | { `[name: string]`: `string`; }     | Hashes of inputs used in the hash                              |
-| `runtime?`      | { `[input: string]`: `string`; }    | Hash of the runtime environment which the task was executed    |
+| Name            | Type                                 | Description                                                    |
+| :-------------- | :----------------------------------- | :------------------------------------------------------------- |
+| `command`       | `string`                             | Command of the task                                            |
+| `implicitDeps?` | \{ `[fileName: string]`: `string`; } | Hashes of implicit dependencies which are included in the hash |
+| `nodes`         | \{ `[name: string]`: `string`; }     | Hashes of inputs used in the hash                              |
+| `runtime?`      | \{ `[input: string]`: `string`; }    | Hash of the runtime environment which the task was executed    |
 
 ---
 

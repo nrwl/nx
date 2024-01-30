@@ -7,7 +7,10 @@ import type * as Prettier from 'prettier';
  * @param tree - the file system tree
  */
 export async function formatChangedFilesWithPrettierIfAvailable(
-  tree: Tree
+  tree: Tree,
+  options?: {
+    silent?: boolean;
+  }
 ): Promise<void> {
   let prettier: typeof Prettier;
   try {
@@ -51,7 +54,9 @@ export async function formatChangedFilesWithPrettierIfAvailable(
             | string)
         );
       } catch (e) {
-        console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
+        if (!options?.silent) {
+          console.warn(`Could not format ${file.path}. Error: "${e.message}"`);
+        }
       }
     })
   );

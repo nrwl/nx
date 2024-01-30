@@ -7,15 +7,16 @@ import { output } from '../../../../utils/output';
 import type { PackageJson } from '../../../../utils/package-json';
 import {
   addDepsToPackageJson,
-  askAboutNxCloud,
   initCloud,
   printFinalMessage,
   runInstall,
+  updateGitIgnore,
 } from '../utils';
 import { setupIntegratedWorkspace } from './integrated-workspace';
 import { getLegacyMigrationFunctionIfApplicable } from './legacy-angular-versions';
 import { setupStandaloneWorkspace } from './standalone-workspace';
 import type { AngularJsonConfig, Options } from './types';
+import { connectExistingRepoToNxCloudPrompt } from '../../../connect/connect-to-nx-cloud';
 
 const defaultCacheableOperations: string[] = [
   'build',
@@ -51,7 +52,8 @@ export async function addNxToAngularCliRepo(options: Options) {
     ? await collectCacheableOperations(options)
     : [];
   const useNxCloud =
-    options.nxCloud ?? (options.interactive ? await askAboutNxCloud() : false);
+    options.nxCloud ??
+    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
   output.log({ title: '📦 Installing dependencies' });
   installDependencies();
@@ -147,6 +149,8 @@ async function setupWorkspace(
   cacheableOperations: string[],
   isIntegratedMigration: boolean
 ): Promise<void> {
+  updateGitIgnore(repoRoot);
+
   if (isIntegratedMigration) {
     setupIntegratedWorkspace();
   } else {

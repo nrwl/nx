@@ -8,9 +8,8 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { basename, dirname, isAbsolute, join, relative } from 'path';
+import { dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { WebpackExecutorOptions } from '../executors/webpack/schema';
 import { WebDevServerOptions } from '../executors/dev-server/schema';
 import { existsSync, readdirSync } from 'fs';
@@ -23,7 +22,7 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 export interface WebpackPluginOptions {
   buildTargetName?: string;
   serveTargetName?: string;
-  staticServeTargetName?: string;
+  serveStaticTargetName?: string;
   previewTargetName?: string;
 }
 
@@ -54,12 +53,12 @@ export const createDependencies: CreateDependencies = () => {
 };
 
 export const createNodes: CreateNodes<WebpackPluginOptions> = [
-  '**/webpack.config.{js,ts,mjs,mts,cjs,cts}',
+  '**/webpack.config.{js,ts,mjs,cjs}',
   async (configFilePath, options, context) => {
     options ??= {};
     options.buildTargetName ??= 'build';
     options.serveTargetName ??= 'serve';
-    options.staticServeTargetName ??= 'static-serve';
+    options.serveStaticTargetName ??= 'serve-static';
     options.previewTargetName ??= 'preview';
 
     const projectRoot = dirname(configFilePath);
@@ -108,41 +107,33 @@ async function createWebpackTargets(
   >
 > {
   const namedInputs = getNamedInputs(projectRoot, context);
+
+  global.NX_GRAPH_CREATION = true;
   const webpackConfig = resolveUserDefinedWebpackConfig(
     join(context.workspaceRoot, configFilePath),
-    getRootTsConfigPath()
+    getRootTsConfigPath(),
+    true
   );
+  delete global.NX_GRAPH_CREATION;
+
   const webpackOptions = await readWebpackOptions(webpackConfig);
 
-  const outputPath =
-    normalizeOutputPath(webpackOptions.output?.path) ??
-    '{workspaceRoot}/dist/{projectRoot}';
+  const outputPath = normalizeOutputPath(
+    webpackOptions.output?.path,
+    projectRoot
+  );
 
   const targets = {};
 
-  const configBasename = basename(configFilePath);
-
   targets[options.buildTargetName] = {
-    command: `webpack -c ${configBasename} --node-env=production`,
-    options: {
-      cwd: projectRoot,
-    },
-  };
-
-  const buildTargetDefaults = readTargetDefaultsForTarget(
-    options.buildTargetName,
-    context.nxJsonConfiguration.targetDefaults
-  );
-
-  if (buildTargetDefaults?.cache === undefined) {
-    targets[options.buildTargetName].cache = true;
-  }
-
-  if (buildTargetDefaults?.inputs === undefined) {
-    targets[options.buildTargetName].inputs =
+    command: `webpack-cli build`,
+    options: { cwd: projectRoot, args: ['--node-env=production'] },
+    cache: true,
+    dependsOn: [`^${options.buildTargetName}`],
+    inputs:
       'production' in namedInputs
         ? [
-            'default',
+            'production',
             '^production',
             {
               externalDependencies: ['webpack-cli'],
@@ -154,31 +145,30 @@ async function createWebpackTargets(
             {
               externalDependencies: ['webpack-cli'],
             },
-          ];
-  }
-
-  if (buildTargetDefaults?.outputs === undefined) {
-    targets[options.buildTargetName].outputs = [outputPath];
-  }
+          ],
+    outputs: [outputPath],
+  };
 
   targets[options.serveTargetName] = {
-    command: `webpack serve -c ${configBasename} --node-env=development`,
+    command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
+      args: ['--node-env=development'],
     },
   };
 
   targets[options.previewTargetName] = {
-    command: `webpack serve -c ${configBasename} --node-env=production`,
+    command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
+      args: ['--node-env=production'],
     },
   };
 
-  targets[options.staticServeTargetName] = {
+  targets[options.serveStaticTargetName] = {
     executor: '@nx/web:file-server',
     options: {
-      buildTarget: `${projectRoot}:${options.buildTargetName}`,
+      buildTarget: options.buildTargetName,
     },
   };
 
@@ -186,12 +176,25 @@ async function createWebpackTargets(
 }
 
 function normalizeOutputPath(
-  outputPath: string | undefined
+  outputPath: string | undefined,
+  projectRoot: string
 ): string | undefined {
-  if (!outputPath) return undefined;
-  if (isAbsolute(outputPath)) {
-    return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+  if (!outputPath) {
+    // If outputPath is undefined, use webpack's default `dist` directory.
+    if (projectRoot === '.') {
+      return `{projectRoot}/dist}`;
+    } else {
+      return `{workspaceRoot}/dist/{projectRoot}`;
+    }
   } else {
-    return outputPath;
+    if (isAbsolute(outputPath)) {
+      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+    } else {
+      if (outputPath.startsWith('..')) {
+        return join('{workspaceRoot}', join(projectRoot, outputPath));
+      } else {
+        return join('{projectRoot}', outputPath);
+      }
+    }
   }
 }

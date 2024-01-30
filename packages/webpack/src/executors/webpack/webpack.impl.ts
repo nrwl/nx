@@ -1,4 +1,9 @@
-import { ExecutorContext, logger, stripIndents } from '@nx/devkit';
+import {
+  ExecutorContext,
+  logger,
+  stripIndents,
+  targetToTargetString,
+} from '@nx/devkit';
 import { eachValueFrom } from '@nx/devkit/src/utils/rxjs-for-await';
 import type { Configuration, Stats } from 'webpack';
 import { from, of } from 'rxjs';
@@ -23,7 +28,7 @@ import type {
 } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import {
-  composePlugins,
+  composePluginsSync,
   isNxWebpackComposablePlugin,
 } from '../../utils/config';
 import { withNx } from '../../utils/with-nx';
@@ -54,9 +59,15 @@ async function getWebpackConfigs(
 
   const config = options.isolatedConfig
     ? {}
-    : composePlugins(withNx(options), withWeb(options));
+    : (options.target === 'web'
+        ? composePluginsSync(withNx(options), withWeb(options))
+        : withNx(options))({}, { options, context });
 
-  if (isNxWebpackComposablePlugin(userDefinedWebpackConfig)) {
+  if (
+    typeof userDefinedWebpackConfig === 'function' &&
+    (isNxWebpackComposablePlugin(userDefinedWebpackConfig) ||
+      !options.standardWebpackConfigFunction)
+  ) {
     // Old behavior, call the Nx-specific webpack config function that user exports
     return await userDefinedWebpackConfig(config, {
       options,
@@ -110,6 +121,13 @@ export async function* webpackExecutor(
     ? 'production'
     : 'development';
 
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${options.buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = targetToTargetString({
+    project: context.projectName,
+    target: context.targetName,
+    configuration: context.configurationName,
+  });
+
   if (options.compiler === 'swc') {
     try {
       require.resolve('swc-loader');
@@ -140,6 +158,7 @@ export async function* webpackExecutor(
       metadata.root,
       dependencies
     );
+    process.env.NX_TSCONFIG_PATH = options.tsConfig;
   }
 
   // Delete output path before bundling

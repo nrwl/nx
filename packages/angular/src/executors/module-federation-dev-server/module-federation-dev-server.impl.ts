@@ -28,7 +28,7 @@ import { validateDevRemotes } from '../../builders/utilities/module-federation';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
 
-export default async function* moduleFederationDevServerExecutor(
+export async function* moduleFederationDevServerExecutor(
   schema: Schema,
   context: ExecutorContext
 ) {
@@ -125,6 +125,8 @@ export default async function* moduleFederationDevServerExecutor(
         context.projectGraph.nodes[r].data.targets['serve'].options.port;
       if (remotePort >= portToUse) {
         return remotePort + 1;
+      } else {
+        return portToUse;
       }
     }, options.staticRemotesPort);
   }
@@ -196,3 +198,5 @@ export default async function* moduleFederationDevServerExecutor(
     )
   );
 }
+
+export default moduleFederationDevServerExecutor;

@@ -59,7 +59,7 @@ Create a new Angular monorepo with the following command:
 ✔ Default stylesheet format · css
 ✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
 ✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 ```
 
 Let's name the initial application `angular-store`. In this tutorial we're going to use `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
@@ -981,7 +981,7 @@ Learn more about how to [enforce module boundaries](/core-features/enforce-modul
 
 ## Setting Up CI
 
-Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps decrease the average CI time with the [`affected` command](/ci/features/affected) and Nx Cloud's [distributed caching](/ci/features/remote-cache). Nx also [decreases the worst case CI time](/ci/concepts/dte) with Nx Cloud's distributed task execution.
+Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Cloud's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Cloud's distributed task execution.
 
 To set up Nx Cloud run:
 

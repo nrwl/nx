@@ -24,7 +24,8 @@
     "http-server",
     "magic-string",
     "enquirer",
-    "find-cache-dir"
+    "find-cache-dir",
+    "piscina"
   ],
   "keepLifecycleScripts": true
 }

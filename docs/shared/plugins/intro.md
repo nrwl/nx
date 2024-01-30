@@ -15,7 +15,7 @@ Nx plugins contain [generators](/core-features/plugin-features/use-code-generato
 
 Nx plugins help you scaffold new projects, pre-configure tooling, follow best practices, and modularize your codebase.
 
-{% cards cols="2" %}
+{% cards cols="3" %}
 
 {% card title="Browse Existing Plugins" description="Find a plugin to use" url="/plugin-registry" /%}
 {% card title="Use Task Executors" description="Run operations on your code" url="/core-features/plugin-features/use-task-executors" /%}

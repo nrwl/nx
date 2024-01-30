@@ -1,5 +1,4 @@
 import {
-  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
@@ -19,7 +18,7 @@ describe('Cypress E2E Test runner', () => {
   const myapp = uniq('myapp');
 
   beforeAll(() => {
-    newProject();
+    newProject({ packages: ['@nx/angular', '@nx/next', '@nx/react'] });
     ensureCypressInstallation();
   });
 
@@ -113,6 +112,9 @@ export default defineConfig({
   ...nxE2EPreset(__dirname),
   fixturesFolder: undefined,
   },
+  env: {
+    fromCyConfig: 'i am from the cypress config file'
+  }
 });`
         );
 
@@ -142,6 +144,13 @@ describe('env vars', () => {
     assert.equal(
       Cypress.env('projectJson'),
       'i am from the nx project json file'
+    );
+  });
+
+  it('should have cypress config vars', () => {
+    assert.equal(
+      Cypress.env('fromCyConfig'),
+      'i am from the cypress config file'
     );
   });
 });`

@@ -5,7 +5,7 @@
 ### Properties
 
 - [dependencies](../../devkit/documents/TargetDependencyConfig#dependencies): boolean
-- [params](../../devkit/documents/TargetDependencyConfig#params): &quot;ignore&quot; | &quot;forward&quot;
+- [params](../../devkit/documents/TargetDependencyConfig#params): "ignore" | "forward"
 - [projects](../../devkit/documents/TargetDependencyConfig#projects): string | string[]
 - [target](../../devkit/documents/TargetDependencyConfig#target): string
 

@@ -28,7 +28,7 @@ export function updatePackageJson(
     packageJson.module = esmExports['.'];
 
     if (!hasCjsFormat) {
-      packageJson.type = 'module';
+      if (!options.skipTypeField) packageJson.type = 'module';
       packageJson.main ??= esmExports['.'];
     }
 

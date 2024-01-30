@@ -47,13 +47,12 @@
     "figures": "3.2.0",
     "flat": "^5.0.2",
     "fs-extra": "^11.1.0",
-    "glob": "7.1.4",
     "ignore": "^5.0.4",
     "jest-diff": "^29.4.1",
     "js-yaml": "4.1.0",
     "jsonc-parser": "3.2.0",
     "lines-and-columns": "~2.0.3",
-    "minimatch": "3.0.5",
+    "minimatch": "9.0.3",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
     "semver": "7.5.3",
@@ -65,7 +64,8 @@
     "tslib": "^2.3.0",
     "yargs": "^17.6.2",
     "yargs-parser": "21.1.1",
-    "node-machine-id": "1.1.12"
+    "node-machine-id": "1.1.12",
+    "ora": "5.3.0"
   },
   "peerDependencies": {
     "@swc-node/register": "^1.6.7",
@@ -134,6 +134,8 @@
       "@nrwl/react-native",
       "@nx/rollup",
       "@nrwl/rollup",
+      "@nx/remix",
+      "@nrwl/remix",
       "@nx/storybook",
       "@nrwl/storybook",
       "@nrwl/tao",

@@ -256,7 +256,7 @@ const diataxis = {
   '/ci/monorepo-ci-gitlab': '/recipes/ci/monorepo-ci-gitlab',
   '/ci/monorepo-ci-bitbucket-pipelines':
     '/recipes/ci/monorepo-ci-bitbucket-pipelines',
-  '/ci/distributed-builds': '/concepts/dte', // 👀
+  '/ci/distributed-builds': '/nx-cloud/concepts/parallelization-distribution', // 👀
   '/ci/incremental-builds': '/concepts/more-concepts/incremental-builds',
   '/ci/setup-incremental-builds-angular':
     '/recipes/other/setup-incremental-builds-angular',
@@ -381,10 +381,13 @@ const recipesUrls = {
     '/recipes/next/next-config-setup',
   '/packages/vite/documents/set-up-vite-manually':
     '/recipes/vite/set-up-vite-manually',
+  '/recipes/vite/set-up-vite-manually': '/recipes/vite/configure-vite',
   '/packages/webpack/documents/webpack-plugins':
     '/recipes/webpack/webpack-plugins',
   '/packages/webpack/documents/webpack-config-setup':
     '/recipes/webpack/webpack-config-setup',
+  '/showcase/example-repos/add-nuxt': '/nx-api/nuxt',
+  '/showcase/example-repos/add-vue': '/nx-api/vue',
 };
 
 /**
@@ -441,13 +444,18 @@ const nxCloudUrls = {
     '/nx-cloud/recipes/on-premise/auth-saml-managed',
   '/nx-cloud/private-cloud/advanced-config':
     '/nx-cloud/recipes/on-premise/advanced-config',
-  '/concepts/dte': '/ci/concepts/dte',
+  '/concepts/dte': '/ci/concepts/parallelization-distribution',
+  '/nx-cloud/concepts/dte': '/ci/concepts/parallelization-distribution',
   '/nx-cloud/intro/nx-cloud-workflows': '/ci/features/nx-cloud-workflows',
   '/nx-cloud/account': '/ci/recipes/security',
   '/nx-cloud/account/google-auth': '/ci/recipes/security/google-auth',
   '/nx-cloud/account/access-tokens': '/ci/recipes/security/access-tokens',
-  '/nx-cloud/account/scenarios': '/ci/concepts/scenarios',
-  '/nx-cloud/account/encryption': '/ci/concepts/encryption',
+  '/nx-cloud/account/scenarios': '/ci/concepts/cache-security',
+  '/nx-cloud/concepts/scenarios': '/ci/concepts/cache-security',
+  '/nx-cloud/account/encryption': '/ci/recipes/security/encryption',
+  '/nx-cloud/concepts/encryption': '/ci/recipes/security/encryption',
+  '/nx-cloud/features/nx-cloud-workflows': '/ci/features/nx-agents',
+  '/ci': '/ci/intro/ci-with-nx',
   '/nx-cloud/:path*': '/ci/:path*',
 };
 

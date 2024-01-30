@@ -1,10 +1,17 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
+import {
+  testingLibraryReactVersion,
+  typesReactDomVersion,
+  typesReactVersion,
+} from '@nx/react/src/utils/versions';
 
 import { normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
@@ -20,6 +27,7 @@ import { addLinting } from './lib/add-linting';
 import { customServerGenerator } from '../custom-server/custom-server';
 import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
 import { showPossibleWarnings } from './lib/show-possible-warnings';
+import { tsLibVersion } from '../../utils/versions';
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
@@ -34,6 +42,13 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   showPossibleWarnings(host, options);
 
+  const jsInitTask = await jsInitGenerator(host, {
+    js: options.js,
+    skipPackageJson: options.skipPackageJson,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
+
   const nextTask = await nextInitGenerator(host, {
     ...options,
     skipFormat: true,
@@ -41,6 +56,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   tasks.push(nextTask);
 
   createApplicationFiles(host, options);
+
   addProject(host, options);
 
   const e2eTask = await addE2e(host, options);
@@ -67,6 +83,25 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       project: options.projectName,
       compiler: options.swc ? 'swc' : 'tsc',
     });
+  }
+
+  if (!options.skipPackageJson) {
+    const devDependencies: Record<string, string> = {
+      '@types/react': typesReactVersion,
+      '@types/react-dom': typesReactDomVersion,
+    };
+
+    if (schema.unitTestRunner && schema.unitTestRunner !== 'none') {
+      devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+    }
+
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        { tslib: tsLibVersion },
+        devDependencies
+      )
+    );
   }
 
   if (!options.skipFormat) {

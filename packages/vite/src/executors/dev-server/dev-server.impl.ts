@@ -1,29 +1,30 @@
-import { ExecutorContext, joinPathFragments } from '@nx/devkit';
 import {
-  loadConfigFromFile,
-  type InlineConfig,
-  type ViteDevServer,
-} from 'vite';
-
+  ExecutorContext,
+  joinPathFragments,
+  parseTargetString,
+} from '@nx/devkit';
 import {
   getNxTargetOptions,
   getViteServerOptions,
   normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
-
 import { ViteDevServerExecutorOptions } from './schema';
 import { ViteBuildExecutorOptions } from '../build/schema';
-import { createBuildableTsConfig } from '../../utils/executor-utils';
+import {
+  createBuildableTsConfig,
+  loadViteDynamicImport,
+} from '../../utils/executor-utils';
 import { relative } from 'path';
+import { getBuildExtraArgs } from '../build/build.impl';
 
 export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
+  process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, createServer } = await (Function(
-    'return import("vite")'
-  )() as Promise<typeof import('vite')>);
+  const { mergeConfig, createServer, loadConfigFromFile } =
+    await loadViteDynamicImport();
 
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
@@ -38,21 +39,33 @@ export async function* viteDevServerExecutor(
     options.buildTarget,
     context
   );
+
+  const { configuration } = parseTargetString(options.buildTarget, context);
+
+  const { buildOptions, otherOptions: otherOptionsFromBuild } =
+    await getBuildExtraArgs(buildTargetOptions);
+
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
     projectRoot,
     buildTargetOptions.configFile
   );
-  const extraArgs = await getExtraArgs(options);
+  const { serverOptions, otherOptions } = await getServerExtraArgs(
+    options,
+    configuration,
+    buildOptions,
+    otherOptionsFromBuild
+  );
   const resolved = await loadConfigFromFile(
     {
-      mode: extraArgs?.mode ?? 'production',
-      command: 'build',
+      mode: otherOptions?.mode ?? buildTargetOptions?.['mode'] ?? 'development',
+      command: 'serve',
     },
     viteConfigPath
   );
 
-  const serverConfig: InlineConfig = mergeConfig(
+  // vite InlineConfig
+  const serverConfig = mergeConfig(
     {
       // This should not be needed as it's going to be set in vite.config.ts
       // but leaving it here in case someone did not migrate correctly
@@ -62,9 +75,9 @@ export async function* viteDevServerExecutor(
     {
       server: {
         ...(await getViteServerOptions(options, context)),
-        ...extraArgs,
+        ...serverOptions,
       },
-      ...extraArgs,
+      ...otherOptions,
     }
   );
 
@@ -94,8 +107,8 @@ export async function* viteDevServerExecutor(
     process.once('exit', () => resolve());
   });
 }
-
-async function runViteDevServer(server: ViteDevServer): Promise<void> {
+// vite ViteDevServer
+async function runViteDevServer(server: Record<string, any>): Promise<void> {
   await server.listen();
 
   server.printUrls();
@@ -111,9 +124,16 @@ async function runViteDevServer(server: ViteDevServer): Promise<void> {
 
 export default viteDevServerExecutor;
 
-async function getExtraArgs(
-  options: ViteDevServerExecutorOptions
-): Promise<InlineConfig> {
+async function getServerExtraArgs(
+  options: ViteDevServerExecutorOptions,
+  configuration: string | undefined,
+  buildOptionsFromBuildTarget: Record<string, unknown> | undefined,
+  otherOptionsFromBuildTarget: Record<string, unknown> | undefined
+): Promise<{
+  // vite ServerOptions
+  serverOptions: Record<string, unknown>;
+  otherOptions: Record<string, any>;
+}> {
   // support passing extra args to vite cli
   const schema = await import('./schema.json');
   const extraArgs = {};
@@ -123,5 +143,48 @@ async function getExtraArgs(
     }
   }
 
-  return extraArgs as InlineConfig;
+  let serverOptions: Record<string, unknown> = {};
+  const serverSchemaKeys = [
+    'hmr',
+    'warmup',
+    'watch',
+    'middlewareMode',
+    'fs',
+    'origin',
+    'preTransformRequests',
+    'sourcemapIgnoreList',
+    'port',
+    'strictPort',
+    'host',
+    'https',
+    'open',
+    'proxy',
+    'cors',
+    'headers',
+  ];
+
+  let otherOptions = {};
+  for (const key of Object.keys(extraArgs)) {
+    if (serverSchemaKeys.includes(key)) {
+      serverOptions[key] = extraArgs[key];
+    } else {
+      otherOptions[key] = extraArgs[key];
+    }
+  }
+
+  if (configuration) {
+    serverOptions = {
+      ...serverOptions,
+      watch: buildOptionsFromBuildTarget?.watch ?? serverOptions?.watch,
+    };
+    otherOptions = {
+      ...otherOptions,
+      ...(otherOptionsFromBuildTarget ?? {}),
+    };
+  }
+
+  return {
+    serverOptions,
+    otherOptions,
+  };
 }

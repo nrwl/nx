@@ -43,6 +43,11 @@ describe('Cypress e2e configuration', () => {
       await cypressE2EConfigurationGenerator(tree, {
         project: 'my-app',
         baseUrl: 'http://localhost:4200',
+        webServerCommands: {
+          default: 'nx run my-app:serve',
+          production: 'nx run my-app:serve:production',
+        },
+        ciWebServerCommand: 'nx run my-app:serve-static',
       });
       expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`

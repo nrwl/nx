@@ -66,23 +66,6 @@
     },
     "lint": {
       "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "packages/vite/**/*.ts",
-          "packages/vite/**/*.spec.ts",
-          "packages/vite/**/*_spec.ts",
-          "packages/vite/**/*.spec.tsx",
-          "packages/vite/**/*.spec.js",
-          "packages/vite/**/*.spec.jsx",
-          "packages/vite/**/*.d.ts",
-          "packages/vite/**/executors/**/schema.json",
-          "packages/vite/**/generators/**/schema.json",
-          "packages/vite/generators.json",
-          "packages/vite/executors.json",
-          "packages/vite/package.json",
-          "packages/vite/migrations.json"
-        ]
-      },
       "outputs": ["{options.outputFile}"]
     }
   }

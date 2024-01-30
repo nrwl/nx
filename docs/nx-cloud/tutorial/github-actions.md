@@ -314,9 +314,8 @@ Merge your PR into the `main` branch when you're ready to move to the next secti
 Reducing the number of tasks to run via [affected commands](/ci/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/core-features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. The [Nx Cloud remote cache](/ci/features/remote-cache) can eliminate that waste for you.
 
 ```{% command="pnpm nx connect" %}
-✔ Enable distributed caching to make your CI faster · Yes
 
- >  NX   Distributed caching via Nx Cloud has been enabled
+ >  NX   Remote caching via Nx Cloud has been enabled
 
    In addition to the caching, Nx Cloud provides config-free distributed execution,
    UI for viewing complex runs and GitHub integration. Learn more at https://nx.app
@@ -350,7 +349,7 @@ When GitHub Actions now processes our tasks they'll only take a fraction of the 
 
 ![GitHub Actions after enabling remote caching](/nx-cloud/tutorial/gh-ci-remote-cache.png)
 
-The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on various scenarios](/ci/concepts/scenarios) and how to configure them.
+The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on security settings for your remote cache](/ci/concepts/cache-security).
 
 You might also want to learn more about [how to fine-tune caching](/recipes/running-tasks/customizing-inputs) to get even better results.
 
@@ -436,5 +435,5 @@ With this pipeline configuration in place, no matter how large the repository sc
 You now have a highly optimized CI configuration that will scale as your repository scales. See what else you can do with Nx Cloud.
 
 - Set up [GitHub PR integration](/ci/recipes/source-control-integration/github) to view Nx Cloud results directly in your PR
-- Choose the [security scenario](/ci/concepts/scenarios) that makes sense for your organization
+- Choose the [security settings](/ci/concepts/cache-security) that make sense for your organization
 - [Record non-Nx commands](/ci/recipes/other/record-commands) and view the results in the Nx Cloud interface

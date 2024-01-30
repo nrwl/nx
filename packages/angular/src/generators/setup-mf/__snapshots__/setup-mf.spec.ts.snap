@@ -5,9 +5,8 @@ exports[`Init MF --federationType=dynamic should create a host with the correct 
 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
-  .then((definitions) => setRemoteDefinitions(definitions))
-  .then(() => import('./bootstrap').catch((err) => console.error(err)));
-"
+  .then(definitions => setRemoteDefinitions(definitions))
+  .then(() => import('./bootstrap').catch(err => console.error(err));)"
 `;
 
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations when --typescriptConfiguration=true 1`] = `
@@ -15,9 +14,8 @@ exports[`Init MF --federationType=dynamic should create a host with the correct 
 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
-  .then((definitions) => setRemoteDefinitions(definitions))
-  .then(() => import('./bootstrap').catch((err) => console.error(err)));
-"
+  .then(definitions => setRemoteDefinitions(definitions))
+  .then(() => import('./bootstrap').catch(err => console.error(err));)"
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications router config 1`] = `
@@ -25,21 +23,18 @@ exports[`Init MF should add a remote application and add it to a specified host 
 import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-  {
+    {
     path: 'remote2',
-    loadChildren: () =>
-      import('remote2/Module').then((m) => m.RemoteEntryModule),
-  },
-  {
+    loadChildren: () => import('remote2/Module').then(m => m.RemoteEntryModule)
+    },
+    {
     path: 'remote1',
-    loadChildren: () =>
-      import('remote1/Module').then((m) => m.RemoteEntryModule),
-  },
-  {
-    path: '',
-    component: NxWelcomeComponent,
-  },
-];
+    loadChildren: () => import('remote1/Module').then(m => m.RemoteEntryModule)
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },];
 "
 `;
 
@@ -58,7 +53,7 @@ exports[`Init MF should add a remote application and add it to a specified host 
    * declare module 'my-external-remote';
    *
    */
-  remotes: ['remote1', 'remote2'],
+  remotes: ['remote1','remote2',]
 };
 "
 `;
@@ -80,7 +75,7 @@ const config: ModuleFederationConfig = {
    * declare module 'my-external-remote';
    *
    */
-  remotes: ['remote1', 'remote2'],
+  remotes: ['remote1','remote2',]
 };
 
 export default config;
@@ -124,7 +119,7 @@ const config: ModuleFederationConfig = {
    * declare module 'my-external-remote';
    *
    */
-  remotes: ['remote1'],
+  remotes: ['remote1',]
 };
 
 export default config;
@@ -137,16 +132,14 @@ import { Route } from '@angular/router';
 import { loadRemoteModule } from '@nx/angular/mf';
 
 export const appRoutes: Route[] = [
-  {
+    {
     path: 'remote1',
-    loadChildren: () =>
-      loadRemoteModule('remote1', './Module').then((m) => m.RemoteEntryModule),
-  },
-  {
-    path: '',
-    component: NxWelcomeComponent,
-  },
-];
+    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },];
 "
 `;
 
@@ -156,16 +149,14 @@ import { Route } from '@angular/router';
 import { loadRemoteModule } from '@nx/angular/mf';
 
 export const appRoutes: Route[] = [
-  {
+    {
     path: 'remote1',
-    loadChildren: () =>
-      loadRemoteModule('remote1', './Module').then((m) => m.RemoteEntryModule),
-  },
-  {
-    path: '',
-    component: NxWelcomeComponent,
-  },
-];
+    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },];
 "
 `;
 
@@ -191,7 +182,7 @@ exports[`Init MF should create webpack and mf configs correctly 2`] = `
    * declare module 'my-external-remote';
    *
    */
-  remotes: [],
+  remotes: []
 };
 "
 `;
@@ -238,7 +229,7 @@ const config: ModuleFederationConfig = {
    * declare module 'my-external-remote';
    *
    */
-  remotes: [],
+  remotes: []
 };
 
 export default config;
@@ -272,7 +263,7 @@ exports[`Init MF should generate the remote entry component correctly when prefi
 
 @Component({
   selector: 'proj-remote1-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`,
+  template: \`<proj-nx-welcome></proj-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
 "

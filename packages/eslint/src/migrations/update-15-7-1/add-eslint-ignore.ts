@@ -5,13 +5,13 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { eslintConfigFileWhitelist } from '../../generators/utils/eslint-file';
 import { getEslintTargets } from '../../generators/utils/eslint-targets';
+import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
 
 export default async function addEslintIgnore(tree: Tree) {
   const nxJson = readJson(tree, 'nx.json');
 
-  const globalEslintFile = eslintConfigFileWhitelist.find((file) =>
+  const globalEslintFile = ESLINT_CONFIG_FILENAMES.find((file) =>
     tree.exists(file)
   );
 

@@ -4,12 +4,12 @@ import {
   Tree,
   applyChangesToString,
   joinPathFragments,
-  logger,
   offsetFromRoot,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { tsquery } from '@phenomnomnominal/tsquery';
 import ts = require('typescript');
+import { getConfigNode, notFoundWarning } from '../update-vite-config';
 
 export function updateBuildOutDirAndRoot(
   options: Record<string, any>,
@@ -17,7 +17,8 @@ export function updateBuildOutDirAndRoot(
   projectConfig: ProjectConfiguration,
   targetName: string,
   tree: Tree,
-  projectName: string
+  projectName: string,
+  configPath: string
 ): string {
   const foundDefineConfig = tsquery.query(
     configContents,
@@ -25,10 +26,8 @@ export function updateBuildOutDirAndRoot(
   )?.[0];
 
   if (!foundDefineConfig) {
-    logger.warn(`
-    Could not find defineConfig in your vite.config file.
-    Please add the build.outDir and root options to your vite.config file.
-    `);
+    notFoundWarning(configPath);
+    return;
   }
 
   configContents = fixBuild(
@@ -38,10 +37,10 @@ export function updateBuildOutDirAndRoot(
     targetName,
     tree,
     projectName,
-    foundDefineConfig
+    configPath
   );
 
-  configContents = addRoot(configContents, foundDefineConfig);
+  configContents = addRoot(configContents, configPath);
 
   return configContents;
 }
@@ -53,8 +52,14 @@ function fixBuild(
   targetName: string,
   tree: Tree,
   projectName: string,
-  foundDefineConfig?: ts.Node
+  configPath: string
 ) {
+  const configNode = getConfigNode(configContents);
+  if (!configNode) {
+    notFoundWarning(configPath);
+    return configContents;
+  }
+
   let outputPath = '';
 
   // In vite.config.ts, we want to keep the path relative to workspace root
@@ -78,50 +83,88 @@ function fixBuild(
   updateProjectConfiguration(tree, projectName, projectConfig);
 
   const buildObject = tsquery.query(
-    configContents,
+    configNode,
     `PropertyAssignment:has(Identifier[name="build"])`
   )?.[0];
-  let buildOutDir: ts.Node[];
+
   if (buildObject) {
-    buildOutDir = tsquery.query(
+    const reportCompressedSizeExists =
+      tsquery.query(
+        buildObject,
+        `PropertyAssignment:has(Identifier[name="reportCompressedSize"])`
+      )?.length > 0;
+
+    const commonjsOptionsExists =
+      tsquery.query(
+        buildObject,
+        `PropertyAssignment:has(Identifier[name="commonjsOptions"])`
+      )?.length > 0;
+
+    const buildOutDir = tsquery.query(
       buildObject,
       `PropertyAssignment:has(Identifier[name="outDir"])`
-    );
-  }
+    )?.length;
 
-  if (buildOutDir?.length > 0) {
-    return configContents;
-  } else if (buildObject) {
-    // has build, has no outDir
-    // so add outDir
-    return applyChangesToString(configContents, [
-      {
+    // Array to store changes
+    let changes = [];
+
+    // Add outDir if not present
+    if (!buildOutDir) {
+      changes.push({
         type: ChangeType.Insert,
         index: buildObject.getStart() + `build: {`.length + 1,
         text: `outDir: '${outputPath}',`,
-      },
-    ]);
+      });
+    }
+
+    // Add reportCompressedSize if not present
+    if (!reportCompressedSizeExists) {
+      changes.push({
+        type: ChangeType.Insert,
+        index: buildObject.getStart() + `build: {`.length + 1,
+        text: `reportCompressedSize: true,`,
+      });
+    }
+
+    // Add commonjsOptions if not present
+    if (!commonjsOptionsExists) {
+      changes.push({
+        type: ChangeType.Insert,
+        index: buildObject.getStart() + `build: {`.length + 1,
+        text: `commonjsOptions: { transformMixedEsModules: true },`,
+      });
+    }
+
+    if (changes.length > 0) {
+      return applyChangesToString(configContents, changes);
+    }
   } else {
-    return addBuildProperty(configContents, outputPath, foundDefineConfig);
+    return addBuildProperty(configContents, outputPath, configPath);
   }
+
+  return configContents;
 }
 
-function addRoot(
-  configFileContents: string,
-  foundDefineConfig?: ts.Node
-): string {
+function addRoot(configFileContents: string, configPath: string): string {
+  const configNode = getConfigNode(configFileContents);
+
+  if (!configNode) {
+    notFoundWarning(configPath);
+    return configFileContents;
+  }
+
   const rootOption = tsquery.query(
-    configFileContents,
+    configNode,
     `PropertyAssignment:has(Identifier[name="root"]) Identifier[name="__dirname"]`
   )?.[0];
 
-  if (rootOption || !foundDefineConfig) {
+  if (rootOption) {
     return configFileContents;
   } else {
     return applyChangesToString(configFileContents, [
       {
         type: ChangeType.Insert,
-        index: foundDefineConfig.getStart() + 14,
+        index: configNode.getStart() + 1,
         text: `root: __dirname,`,
       },
     ]);
@@ -131,19 +174,25 @@ function addRoot(
 function addBuildProperty(
   configFileContents: string,
   outputPath: string,
-  foundDefineConfig: ts.Node
+  configPath: string
 ): string {
-  if (foundDefineConfig) {
-    return applyChangesToString(configFileContents, [
-      {
-        type: ChangeType.Insert,
-        index: foundDefineConfig.getStart() + 14,
-        text: `build: {
-                outDir: '${outputPath}',
-              },`,
-      },
-    ]);
-  } else {
+  const configNode = getConfigNode(configFileContents);
+  if (!configNode) {
+    notFoundWarning(configPath);
     return configFileContents;
   }
+
+  return applyChangesToString(configFileContents, [
+    {
+      type: ChangeType.Insert,
+      index: configNode.getStart() + 1,
+      text: `build: {
+                outDir: '${outputPath}',
+                reportCompressedSize: true,
+                commonjsOptions: {
+                  transformMixedEsModules: true,
+                },
+              },`,
+    },
+  ]);
 }

@@ -1,5 +1,6 @@
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import {
+  getProjects,
   readNxJson,
   readProjectConfiguration,
   Tree,
@@ -28,6 +29,7 @@ describe('web app generator (PCv3)', () => {
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
     nxJson.plugins.push('@nx/webpack/plugin');
+    nxJson.plugins.push('@nx/vite/plugin');
     updateNxJson(tree, nxJson);
   });
 
@@ -49,5 +51,17 @@ describe('web app generator (PCv3)', () => {
     expect(webpackConfig).toContain(
       `assets: ['./src/favicon.ico', './src/assets']`
     );
+  });
+
+  it('should not add targets for vite', async () => {
+    await applicationGenerator(tree, {
+      name: 'my-vite-app',
+      bundler: 'vite',
+    });
+    const projects = getProjects(tree);
+    expect(projects.get('my-vite-app').targets.build).toBeUndefined();
+    expect(projects.get('my-vite-app').targets.serve).toBeUndefined();
+    expect(projects.get('my-vite-app').targets.preview).toBeUndefined();
+    expect(projects.get('my-vite-app').targets.test).toBeUndefined();
   });
 });

@@ -11,11 +11,11 @@
 
 ### retrieve
 
-• **retrieve**: (`hash`: `string`, `cacheDirectory`: `string`) => `Promise`<`boolean`\>
+• **retrieve**: (`hash`: `string`, `cacheDirectory`: `string`) => `Promise`\<`boolean`\>
 
 #### Type declaration
 
-▸ (`hash`, `cacheDirectory`): `Promise`<`boolean`\>
+▸ (`hash`, `cacheDirectory`): `Promise`\<`boolean`\>
 
 ##### Parameters
 
@@ -26,17 +26,17 @@
 
 ##### Returns
 
-`Promise`<`boolean`\>
+`Promise`\<`boolean`\>
 
 ---
 
 ### store
 
-• **store**: (`hash`: `string`, `cacheDirectory`: `string`) => `Promise`<`boolean`\>
+• **store**: (`hash`: `string`, `cacheDirectory`: `string`) => `Promise`\<`boolean`\>
 
 #### Type declaration
 
-▸ (`hash`, `cacheDirectory`): `Promise`<`boolean`\>
+▸ (`hash`, `cacheDirectory`): `Promise`\<`boolean`\>
 
 ##### Parameters
 
@@ -47,4 +47,4 @@
 
 ##### Returns
 
-`Promise`<`boolean`\>
+`Promise`\<`boolean`\>

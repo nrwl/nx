@@ -1,4 +1,4 @@
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import { TouchedProjectLocator } from '../affected-project-graph-models';
 import { NxJsonConfiguration } from '../../../config/nx-json';
 import {

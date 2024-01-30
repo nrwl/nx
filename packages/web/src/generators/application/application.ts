@@ -19,15 +19,24 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getRelativePathToRootTsConfig } from '@nx/js';
+import {
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
 import type { Linter } from '@nx/eslint';
 import { join } from 'path';
-import { nxVersion, swcLoaderVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  swcLoaderVersion,
+  tsLibVersion,
+  typesNodeVersion,
+} from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -167,6 +176,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
     // TODO(jack): Flush this out... no bundler should be possible for web but the experience isn't holistic due to missing features (e.g. writing index.html).
   } else if (options.bundler === 'none') {
     const project = readProjectConfiguration(tree, options.projectName);
+    addBuildTargetDefaults(tree, `@nx/js:${options.compiler}`);
     project.targets.build = {
       executor: `@nx/js:${options.compiler}`,
       outputs: ['{options.outputPath}'],
@@ -224,6 +234,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
+  const jsInitTask = await jsInitGenerator(host, {
+    js: false,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const webTask = await webInitGenerator(host, {
     ...options,
     skipFormat: true,
@@ -404,6 +419,14 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   setDefaults(host, options);
+
+  tasks.push(
+    addDependenciesToPackageJson(
+      host,
+      { tslib: tsLibVersion },
+      { '@types/node': typesNodeVersion }
+    )
+  );
 
   if (!schema.skipFormat) {
     await formatFiles(host);

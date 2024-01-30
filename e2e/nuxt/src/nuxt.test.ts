@@ -13,6 +13,7 @@ describe('Nuxt Plugin', () => {
 
   beforeAll(() => {
     proj = newProject({
+      packages: ['@nx/nuxt', '@nx/storybook'],
       unsetProjectNameAndRootFormat: false,
     });
     runCLI(`generate @nx/nuxt:app ${app} --unitTestRunner=vitest`);

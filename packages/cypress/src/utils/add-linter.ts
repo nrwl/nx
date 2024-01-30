@@ -17,7 +17,10 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
-import { javaScriptOverride } from '@nx/eslint/src/generators/init/global-eslint-config';
+import {
+  javaScriptOverride,
+  typeScriptOverride,
+} from '@nx/eslint/src/generators/init/global-eslint-config';
 
 export interface CyLinterOptions {
   project: string;
@@ -68,6 +71,8 @@ export async function addLinterToCyProject(
     return runTasksInSerial(...tasks);
   }
 
+  options.overwriteExisting = options.overwriteExisting || !eslintFile;
+
   tasks.push(
     !options.skipPackageJson
       ? addDependenciesToPackageJson(
@@ -82,6 +87,7 @@ export async function addLinterToCyProject(
     const overrides = [];
     if (options.rootProject) {
       addPluginsToLintConfig(tree, projectConfig.root, '@nx');
+      overrides.push(typeScriptOverride);
       overrides.push(javaScriptOverride);
     }
     addExtendsToLintConfig(
@@ -104,7 +110,7 @@ export async function addLinterToCyProject(
     const addCy6Override = cyVersion && cyVersion < 7;
 
     if (options.overwriteExisting) {
-      overrides.push({
+      overrides.unshift({
         files: ['*.ts', '*.tsx', '*.js', '*.jsx'],
         parserOptions: !options.setParserOptionsProject
           ? undefined

@@ -5,10 +5,7 @@ exports[`setupTailwind generator application should add tailwind styles to "apps
 @tailwind components;
 @tailwind utilities;
 
-p {
-  margin: 0;
-}
-"
+p { margin: 0; }"
 `;
 
 exports[`setupTailwind generator application should add tailwind styles to "apps/app1/src/styles.less" when not provided 1`] = `
@@ -16,10 +13,7 @@ exports[`setupTailwind generator application should add tailwind styles to "apps
 @tailwind components;
 @tailwind utilities;
 
-p {
-  margin: 0;
-}
-"
+p { margin: 0; }"
 `;
 
 exports[`setupTailwind generator application should add tailwind styles to "apps/app1/src/styles.sass" when not provided 1`] = `
@@ -35,8 +29,5 @@ exports[`setupTailwind generator application should add tailwind styles to "apps
 @tailwind components;
 @tailwind utilities;
 
-p {
-  margin: 0;
-}
-"
+p { margin: 0; }"
 `;

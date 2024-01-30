@@ -1,0 +1,51 @@
+{
+  "name": "serve",
+  "implementation": "/packages/remix/src/executors/serve/serve.impl.ts",
+  "schema": {
+    "version": 2,
+    "outputCapture": "pipe",
+    "cli": "nx",
+    "title": "Remix Serve",
+    "description": "Serve a Remix app.",
+    "type": "object",
+    "properties": {
+      "port": {
+        "type": "number",
+        "description": "Set PORT environment variable that can be used to serve the Remix application.",
+        "default": 4200
+      },
+      "devServerPort": {
+        "type": "number",
+        "description": "Port to start the dev server on."
+      },
+      "debug": {
+        "type": "boolean",
+        "description": "Attach a Node.js inspector.",
+        "default": false
+      },
+      "command": {
+        "type": "string",
+        "description": "Command used to run your app server."
+      },
+      "manual": {
+        "type": "boolean",
+        "description": "Enable manual mode",
+        "default": false
+      },
+      "tlsKey": {
+        "type": "string",
+        "description": "Path to TLS key (key.pem)."
+      },
+      "tlsCert": {
+        "type": "string",
+        "description": "Path to TLS certificate (cert.pem)."
+      }
+    },
+    "presets": []
+  },
+  "description": "Serve a Remix application.",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/remix/src/executors/serve/schema.json",
+  "type": "executor"
+}

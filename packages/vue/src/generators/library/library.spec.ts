@@ -43,7 +43,6 @@ describe('lib', () => {
     expect(project.targets.build).toBeUndefined();
     expect(project.targets.lint).toEqual({
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
     });
   });
 
@@ -79,6 +78,7 @@ describe('lib', () => {
   it('should add vue, vite and vitest to package.json', async () => {
     await libraryGenerator(tree, defaultSchema);
     expect(readJson(tree, '/package.json')).toMatchSnapshot();
+    expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
   });
 
   it('should update root tsconfig.base.json', async () => {
@@ -244,9 +244,6 @@ describe('lib', () => {
       expect(config.targets.lint).toMatchInlineSnapshot(`
         {
           "executor": "@nx/eslint:lint",
-          "outputs": [
-            "{options.outputFile}",
-          ],
         }
       `);
     });

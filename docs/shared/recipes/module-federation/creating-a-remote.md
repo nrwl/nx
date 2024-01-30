@@ -227,6 +227,9 @@ This is less memory and CPU intensive than `webpack-dev-server` but it does not 
 The purpose of the `serve-static` target is to allow you to serve your `host` application, along with all of
 the `remote` applications it depends on without being too resource intensive.
 
+This has been further expanded upon. When you serve the `host` application, Nx will build (or pull from cache) your
+`remote` applications and serve them all via a single file server, to further reduce resource consumption.
+
 ### Serving your Remote via your Host
 
 Generally, your `host` is the main application that you deploy and that users visit. It consumes modules from `remote`

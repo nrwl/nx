@@ -1,6 +1,6 @@
 # Use Remote Caching
 
-By default Nx [caches task computations locally](/core-features/cache-task-results). However, to benefit from the cache across your team and in particular on CI, the computation cache can also be distributed across multiple machines. Nx Cloud is an app that provides a fast and zero-config implementation of distributed caching. It is a commercial add-on to Nx, is completely free for OSS projects and comes with generous plans for startups and dedicated offerings for enterprise customers ([read more here](https://nx.app/pricing)).
+By default Nx [caches task computations locally](/core-features/cache-task-results). However, to benefit from the cache across your team and in particular on CI, the computation cache can also be distributed across multiple machines. Nx Cloud is an app that provides a fast and zero-config implementation of remote caching. It is a commercial add-on to Nx, is completely free for OSS projects and comes with generous plans for startups and dedicated offerings for enterprise customers ([read more here](https://nx.app/pricing)).
 
 ![Diagram showing Teika sharing his cache with CI, Kimiko and James](/shared/images/dte/distributed-caching.svg)
 
@@ -14,7 +14,7 @@ To enable remote caching for your Nx workspace run the following command:
 npx nx connect
 ```
 
-This connects your workspace with Nx Cloud's remote caching service. It will also allow you to benefit from other Nx Cloud features such as [distributed task execution](/nx-cloud/features/distribute-task-execution).
+This connects your workspace with Nx Cloud's remote caching service. It will also allow you to benefit from other Nx Cloud features such as [distributed task execution](/ci/features/distribute-task-execution).
 
 To see the remote cache in action, run:
 
@@ -86,8 +86,8 @@ Click on this link to associate the workspace with your Nx Cloud account. If you
 Claiming your workspace allows you to
 
 - see stats about your CI runs, cache hits number of agents used for distributing tasks
-- enable [source control integrations](/nx-cloud/recipes/source-control-integration) to get information embedded in your GitHub, Bitbucket or GitLab PRs
-- manage and create access tokens and [adjust access and permission](/nx-cloud/concepts/scenarios)
+- enable [source control integrations](/ci/recipes/source-control-integration) to get information embedded in your GitHub, Bitbucket or GitLab PRs
+- manage and create access tokens and [adjust access and permission](/ci/concepts/cache-security)
 - manage your organization & user permissions for your Nx Cloud workspace
 
 **If you lose this link, you can still connect your workspace to Nx Cloud**. Go to [nx.app](https://nx.app), create an account, and connect your workspace using the access token from `nx.json`.

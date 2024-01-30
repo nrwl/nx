@@ -2,7 +2,7 @@ export const nxVersion = require('../../package.json').version;
 
 export const reactNativeVersion = '0.72.6';
 
-export const typesNodeVersion = '18.14.4';
+export const typesNodeVersion = '18.16.9';
 
 export const metroVersion = '0.76.8';
 export const reactNativeMetroConfigVersion = '^0.72.11';

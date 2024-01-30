@@ -1,6 +1,5 @@
-use std::fs::File;
-use std::io::{BufRead, BufReader};
 use std::path::Path;
+
 use tracing::trace;
 use xxhash_rust::xxh3;
 
@@ -23,23 +22,17 @@ pub fn hash_file(file: String) -> Option<String> {
 #[inline]
 pub fn hash_file_path<P: AsRef<Path>>(path: P) -> Option<String> {
     let path = path.as_ref();
-    let Ok(file) = File::open(path) else {
-        trace!("could not open file: {path:?}");
+    let Ok(content) = std::fs::read(path) else {
+        trace!("Failed to read file: {:?}", path);
         return None;
     };
 
-    let mut buffer = BufReader::new(file);
-    let Ok(content) = buffer.fill_buf() else {
-        trace!("could not read file: {path:?}");
-        return None;
-    };
-
-    Some(hash(content))
+    Some(hash(&content))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::native::hasher::hash_file;
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
 

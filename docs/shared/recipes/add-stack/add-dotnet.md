@@ -26,14 +26,21 @@ Make sure you have .NET installed on your machine. Consult the [.NET docs for mo
 {%tab label="npm"%}
 
 ```shell
-npm i --save-dev @nx-dotnet/core
+npm add -D @nx-dotnet/core
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nx-dotnet/core
+yarn add -D @nx-dotnet/core
+```
+
+{% /tab %}
+{%tab label="pnpm"%}
+
+```shell
+pnpm add -D @nx-dotnet/core
 ```
 
 {% /tab %}

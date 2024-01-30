@@ -4,19 +4,14 @@ import {
   calculateProjectBuildableDependencies,
   checkDependentProjectsHaveBeenBuilt,
   createTmpTsConfig,
-  DependentBuildableProjectNode,
+  type DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import type { NgPackagr } from 'ng-packagr';
 import { resolve } from 'path';
 import { from } from 'rxjs';
-import { mapTo, switchMap, tap } from 'rxjs/operators';
+import { mapTo, switchMap } from 'rxjs/operators';
 import { parseRemappedTsConfigAndMergeDefaults } from '../utilities/typescript';
-import { NX_ENTRY_POINT_PROVIDERS } from './ng-packagr-adjustments/ng-package/entry-point/entry-point.di';
-import { nxProvideOptions } from './ng-packagr-adjustments/ng-package/options.di';
-import {
-  NX_PACKAGE_PROVIDERS,
-  NX_PACKAGE_TRANSFORM,
-} from './ng-packagr-adjustments/ng-package/package.di';
+import { getNgPackagrInstance } from './ng-packagr-adjustments/ng-packagr';
 import type { BuildAngularLibraryExecutorOptions } from './schema';
 
 async function initializeNgPackagr(
@@ -24,17 +19,8 @@ async function initializeNgPackagr(
   context: ExecutorContext,
   projectDependencies: DependentBuildableProjectNode[]
 ): Promise<NgPackagr> {
-  const packager = new (await import('ng-packagr')).NgPackagr([
-    ...NX_PACKAGE_PROVIDERS,
-    ...NX_ENTRY_POINT_PROVIDERS,
-    nxProvideOptions({
-      tailwindConfig: options.tailwindConfig,
-      watch: options.watch,
-    }),
-  ]);
-
-  packager.forProject(resolve(context.root, options.project));
-  packager.withBuildTransform(NX_PACKAGE_TRANSFORM.provide);
+  const ngPackagr = await getNgPackagrInstance(options);
+  ngPackagr.forProject(resolve(context.root, options.project));
 
   if (options.tsConfig) {
     const remappedTsConfigFilePath = createTmpTsConfig(
@@ -48,10 +34,10 @@ async function initializeNgPackagr(
       options.tsConfig,
       remappedTsConfigFilePath
     );
-    packager.withTsConfig(tsConfig);
+    ngPackagr.withTsConfig(tsConfig);
   }
 
-  return packager;
+  return ngPackagr;
 }
 
 /**

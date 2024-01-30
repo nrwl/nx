@@ -23,6 +23,12 @@
       "version": "16.4.0-beta.3",
       "description": "Update package.json moving @nx/next from dependency to devDependency",
       "implementation": "./src/migrations/update-16-4-0/update-nx-next-dependency"
+    },
+    "update-17-2-7": {
+      "cli": "nx",
+      "version": "17.2.7",
+      "description": "Remove patched eslint rule for @next/next/no-html-link-for-pages",
+      "implementation": "./src/migrations/update-17-2-7/remove-eslint-rules-patch"
     }
   },
   "packageJsonUpdates": {

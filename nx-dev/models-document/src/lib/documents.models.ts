@@ -13,6 +13,7 @@ export interface DocumentMetadata {
   id: string;
   name: string;
   description: string;
+  mediaImage?: string;
   file: string;
   path: string;
   isExternal: boolean;
@@ -23,6 +24,7 @@ export interface DocumentMetadata {
 export interface ProcessedDocument {
   content: string;
   description: string;
+  mediaImage?: string;
   filePath: string;
   id: string;
   name: string;

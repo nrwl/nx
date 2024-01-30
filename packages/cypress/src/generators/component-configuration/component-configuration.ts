@@ -53,9 +53,8 @@ export async function componentConfigurationGenerator(
   if (!opts.skipFormat) {
     await formatFiles(tree);
   }
-  return () => {
-    installDepsTask();
-  };
+
+  return installDepsTask;
 }
 
 function normalizeOptions(options: CypressComponentConfigurationSchema) {

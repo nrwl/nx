@@ -16,7 +16,6 @@ import {
   workspaceRoot,
   logger,
   readJsonFile,
-  ProjectGraphProjectNode,
   joinPathFragments,
 } from '@nx/devkit';
 import { existsSync } from 'fs';

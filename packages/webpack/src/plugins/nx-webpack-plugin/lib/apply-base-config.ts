@@ -95,6 +95,11 @@ function applyNxIndependentConfig(
 
   config.output = {
     ...config.output,
+    libraryTarget:
+      (config as Configuration).output?.libraryTarget ??
+      options.target === 'node'
+        ? 'commonjs'
+        : undefined,
     path:
       config.output?.path ??
       (options.outputPath
@@ -331,17 +336,18 @@ function applyNxDependentConfig(
 
   config.resolve = {
     ...config.resolve,
-    extensions: [...extensions, ...(config?.resolve?.extensions ?? [])],
-    alias:
-      options.fileReplacements &&
-      options.fileReplacements.reduce(
+    extensions: [...(config?.resolve?.extensions ?? []), ...extensions],
+    alias: {
+      ...(config.resolve?.alias ?? {}),
+      ...(options.fileReplacements?.reduce(
         (aliases, replacement) => ({
           ...aliases,
           [replacement.replace]: replacement.with,
         }),
         {}
-      ),
-    mainFields,
+      ) ?? {}),
+    },
+    mainFields: config.resolve?.mainFields ?? mainFields,
   };
 
   config.externals = externals;

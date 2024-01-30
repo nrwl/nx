@@ -107,6 +107,22 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
     NxGlobSetBuilder::new(&result)?.build()
 }
 
+pub(crate) fn contains_glob_pattern(value: &str) -> bool {
+    value.contains('!')
+        || value.contains('?')
+        || value.contains('@')
+        || value.contains('+')
+        || value.contains('*')
+        || value.contains('|')
+        || value.contains(',')
+        || value.contains('{')
+        || value.contains('}')
+        || value.contains('[')
+        || value.contains(']')
+        || value.contains('(')
+        || value.contains(')')
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -342,5 +358,21 @@ mod test {
         assert!(glob_set.is_match("packages/package-b/package.json"));
         assert!(glob_set.is_match("packages/package-c/package.json"));
         assert!(!glob_set.is_match("packages/package-a/package.json"));
+    }
+
+    #[test]
+    fn should_handle_invalid_group_globs() {
+        let glob_set = build_glob_set(&[
+            "libs/**/*",
+            "!libs/**/?(*.)+spec.ts?(.snap)",
+            "!libs/tsconfig.spec.json",
+            "!libs/jest.config.ts",
+            "!libs/.eslintrc.json",
+            "!libs/**/test-setup.ts",
+        ])
+        .unwrap();
+
+        assert!(glob_set.is_match("libs/src/index.ts"));
+        assert!(!glob_set.is_match("libs/src/index.spec.ts"));
     }
 }

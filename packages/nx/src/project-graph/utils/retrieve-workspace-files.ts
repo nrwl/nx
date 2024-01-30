@@ -1,9 +1,6 @@
 import { performance } from 'perf_hooks';
 import { getNxRequirePaths } from '../../utils/installation-directory';
-import {
-  ProjectConfiguration,
-  ProjectsConfigurations,
-} from '../../config/workspace-json-project-json';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 import {
   NX_ANGULAR_JSON_PLUGIN_NAME,
   NxAngularJsonPlugin,
@@ -11,21 +8,20 @@ import {
 } from '../../adapter/angular-json';
 import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
-import type { NxWorkspaceFiles } from '../../native';
-import { getNxPackageJsonWorkspacesPlugin } from '../../../plugins/package-json-workspaces';
+import { getNxPackageJsonWorkspacesPlugin } from '../../plugins/package-json-workspaces';
 import {
-  ConfigurationSourceMaps,
   buildProjectsConfigurationsFromProjectPathsAndPlugins,
+  ConfigurationSourceMaps,
 } from './project-configuration-utils';
 import {
   getDefaultPlugins,
   LoadedNxPlugin,
   loadNxPlugins,
 } from '../../utils/nx-plugin';
-import { CreateProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
+import { ProjectJsonProjectsPlugin } from '../../plugins/project-json/build-nodes/project-json';
 import {
-  globWithWorkspaceContext,
   getNxWorkspaceFilesFromContext,
+  globWithWorkspaceContext,
 } from '../../utils/workspace-context';
 import { buildAllWorkspaceFiles } from './build-all-workspace-files';
 
@@ -163,7 +159,7 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
     projectFiles,
     [
       { plugin: getNxPackageJsonWorkspacesPlugin(root) },
-      { plugin: CreateProjectJsonProjectsPlugin },
+      { plugin: ProjectJsonProjectsPlugin },
     ]
   );
 

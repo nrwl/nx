@@ -8,8 +8,7 @@ export function addBuildableLibrariesPostCssDependencies(tree: Tree): void {
     {},
     {
       postcss: pkgVersions.postcssVersion,
-      'postcss-import': pkgVersions.postcssImportVersion,
-      'postcss-preset-env': pkgVersions.postcssPresetEnvVersion,
+      autoprefixer: pkgVersions.autoprefixerVersion,
       'postcss-url': pkgVersions.postcssUrlVersion,
     }
   );

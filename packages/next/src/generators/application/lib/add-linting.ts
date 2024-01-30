@@ -15,21 +15,28 @@ import {
   isEslintConfigSupported,
   updateOverrideInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import { eslintConfigNextVersion } from '../../../utils/versions';
 
 export async function addLinting(
   host: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
-  const lintTask = await lintProjectGenerator(host, {
-    linter: options.linter,
-    project: options.projectName,
-    tsConfigPaths: [
-      joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
-    ],
-    unitTestRunner: options.unitTestRunner,
-    skipFormat: true,
-    rootProject: options.rootProject,
-  });
+  const tasks: GeneratorCallback[] = [];
+
+  tasks.push(
+    await lintProjectGenerator(host, {
+      linter: options.linter,
+      project: options.projectName,
+      tsConfigPaths: [
+        joinPathFragments(options.appProjectRoot, 'tsconfig.app.json'),
+      ],
+      unitTestRunner: options.unitTestRunner,
+      skipFormat: true,
+      rootProject: options.rootProject,
+      setParserOptionsProject: options.setParserOptionsProject,
+    })
+  );
+
   if (options.linter === Linter.EsLint && isEslintConfigSupported(host)) {
     addExtendsToLintConfig(host, options.appProjectRoot, [
       'plugin:@nx/react-typescript',
@@ -37,19 +44,6 @@ export async function addLinting(
       'next/core-web-vitals',
     ]);
 
-    // Turn off @next/next/no-html-link-for-pages since there is an issue with nextjs throwing linting errors
-    // TODO(nicholas): remove after Vercel updates nextjs linter to only lint ["*.ts", "*.tsx", "*.js", "*.jsx"]
-    addOverrideToLintConfig(
-      host,
-      options.appProjectRoot,
-      {
-        files: ['*.*'],
-        rules: {
-          '@next/next/no-html-link-for-pages': 'off',
-        },
-      },
-      { insertAtTheEnd: false }
-    );
     updateOverrideInLintConfig(
       host,
       options.appProjectRoot,
@@ -82,11 +76,14 @@ export async function addLinting(
     addIgnoresToLintConfig(host, options.appProjectRoot, ['.next/**/*']);
   }
 
-  const installTask = addDependenciesToPackageJson(
-    host,
-    extraEslintDependencies.dependencies,
-    extraEslintDependencies.devDependencies
-  );
+  if (!options.skipPackageJson) {
+    tasks.push(
+      addDependenciesToPackageJson(host, extraEslintDependencies.dependencies, {
+        ...extraEslintDependencies.devDependencies,
+        'eslint-config-next': eslintConfigNextVersion,
+      })
+    );
+  }
 
-  return runTasksInSerial(lintTask, installTask);
+  return runTasksInSerial(...tasks);
 }

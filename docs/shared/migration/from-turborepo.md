@@ -20,7 +20,7 @@ The command will ask you three questions.
 
 2. Which scripts are cacheable?
 
-   Any scripts you select in this step will be added to the `cacheableOperations` in `nx.json`. i.e. `"cacheableOperations": ["build", "test", "lint"]`
+   Any scripts you select in this step will be made cacheable, i.e. the `cache` property will be set to `true` (`false` by default) in the `targetDefaults` section.
 
 3. For each cacheable script, does it produce output in the file system?
 
@@ -34,7 +34,7 @@ This process adds `nx` to your `package.json` at the root of your workspace:
   ...
   "devDependencies": {
     ...
-    "nx": "16.8.0"
+    "nx": "17.2.0"
   }
 }
 ```

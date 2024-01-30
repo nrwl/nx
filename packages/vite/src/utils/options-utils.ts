@@ -6,8 +6,8 @@ import {
   readTargetOptions,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
-import { PreviewOptions, ServerOptions } from 'vite';
 import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
+import { loadViteDynamicImport } from './executor-utils';
 
 /**
  * Returns the path to the vite config file or undefined when not found.
@@ -89,14 +89,13 @@ export function getViteServerProxyConfigPath(
 export async function getViteServerOptions(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
-): Promise<ServerOptions> {
+): Promise<Record<string, unknown>> {
+  // returns vite ServerOptions
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { searchForWorkspaceRoot } = await (Function(
-    'return import("vite")'
-  )() as Promise<typeof import('vite')>);
+  const { searchForWorkspaceRoot } = await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  const serverOptions: ServerOptions = {
+  const serverOptions: Record<string, unknown> = {
     fs: {
       allow: [
         searchForWorkspaceRoot(joinPathFragments(projectRoot)),
@@ -117,24 +116,16 @@ export async function getViteServerOptions(
   return serverOptions;
 }
 
-/**
- * Builds the options for the vite preview server.
- */
-export function getVitePreviewOptions(
-  options: Record<string, any>,
-  context: ExecutorContext
-): PreviewOptions {
-  const serverOptions: ServerOptions = {};
-  const proxyConfigPath = getViteServerProxyConfigPath(
-    options.proxyConfig,
-    context
-  );
+export function getProxyConfig(
+  context: ExecutorContext,
+  proxyConfig?: string
+): Record<string, string | unknown> | undefined {
+  const proxyConfigPath = getViteServerProxyConfigPath(proxyConfig, context);
   if (proxyConfigPath) {
     logger.info(`Loading proxy configuration from: ${proxyConfigPath}`);
-    serverOptions.proxy = require(proxyConfigPath);
+    return require(proxyConfigPath);
   }
-
-  return serverOptions;
+  return;
 }
 
 export function getNxTargetOptions(target: string, context: ExecutorContext) {

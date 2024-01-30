@@ -23,7 +23,7 @@ describe('expo', () => {
   let libName = uniq('lib');
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/expo'] });
     // we create empty preset above which skips creation of `production` named input
     updateJson('nx.json', (nxJson) => {
       nxJson.namedInputs = {
@@ -117,9 +117,7 @@ describe('expo', () => {
     // run start command
     const startProcess = await runCommandUntil(
       `start ${appName} -- --port=8081`,
-      (output) =>
-        output.includes(`Packager is ready at http://localhost:8081`) ||
-        output.includes(`Web is waiting on http://localhost:8081`)
+      (output) => output.includes(`http://localhost:8081`)
     );
 
     // port and process cleanup

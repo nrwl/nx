@@ -8,6 +8,7 @@ import {
   readFile,
   runCLI,
   runCommandUntil,
+  runE2ETests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -41,7 +42,7 @@ describe('Next.js Applications', () => {
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
-    checkFilesExist(`${appName}/app/page.tsx`);
+    checkFilesExist(`${appName}/src/app/page.tsx`);
     // check build works
     expect(runCLI(`build ${appName}`)).toContain(
       `Successfully ran target build for project ${appName}`
@@ -178,7 +179,7 @@ describe('Next.js Applications', () => {
       `generate @nx/next:app ${appName} --no-interactive --js --appDir=false`
     );
 
-    checkFilesExist(`apps/${appName}/pages/index.js`);
+    checkFilesExist(`apps/${appName}/src/pages/index.js`);
 
     await checkApp(appName, {
       checkUnitTest: true,
@@ -194,7 +195,7 @@ describe('Next.js Applications', () => {
       `generate @nx/next:lib ${libName} --no-interactive --style=none --js`
     );
 
-    const mainPath = `apps/${appName}/pages/index.js`;
+    const mainPath = `apps/${appName}/src/pages/index.js`;
     updateFile(
       mainPath,
       `import '@${proj}/${libName}';\n` + readFile(mainPath)
@@ -287,16 +288,59 @@ describe('Next.js Applications', () => {
       `generate @nx/next:app ${appName} --style=css --appDir --no-interactive`
     );
 
-    const port = 4000;
-    const selfContainedProcess = await runCommandUntil(
-      `run ${appName}:serve --port=${port} --turbo`,
-      (output) => {
-        return output.includes(`TURBOPACK`);
-      }
-    );
-    selfContainedProcess.kill();
-    await killPort(port);
-    await killPorts();
+    // add a new target to project.json to run with turbo enabled
+    updateFile(`apps/${appName}/project.json`, (content) => {
+      const json = JSON.parse(content);
+      const updateJson = {
+        ...json,
+        targets: {
+          ...json.targets,
+          turbo: {
+            executor: '@nx/next:server',
+            defaultConfiguration: 'development',
+            options: {
+              buildTarget: `${appName}:build`,
+              dev: true,
+              turbo: true,
+            },
+            configurations: {
+              development: {
+                buildTarget: `${appName}:build:development`,
+                dev: true,
+                turbo: true,
+              },
+            },
+          },
+        },
+      };
+      return JSON.stringify(updateJson, null, 2);
+    });
+
+    // update cypress to use the new target
+    updateFile(`apps/${appName}-e2e/project.json`, (content) => {
+      const json = JSON.parse(content);
+      const updatedJson = {
+        ...json,
+        targets: {
+          ...json.targets,
+          e2e: {
+            ...json.targets.e2e,
+            executor: '@nx/cypress:cypress',
+            options: {
+              ...json.targets.e2e.options,
+              devServerTarget: `${appName}:turbo`,
+            },
+            configurations: {},
+          },
+        },
+      };
+      return JSON.stringify(updatedJson, null, 2);
+    });
+
+    if (runE2ETests()) {
+      const e2eResult = runCLI(`e2e ${appName}-e2e --verbose`);
+      expect(e2eResult).toContain('All specs passed!');
+    }
   }, 300_000);
 });
 

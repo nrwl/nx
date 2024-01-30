@@ -1,4 +1,3 @@
-import { writeFileSync } from 'fs';
 import { NxJsonConfiguration, TargetDefaults } from '../../config/nx-json';
 import { ProjectGraphExternalNode } from '../../config/project-graph';
 import {
@@ -7,11 +6,14 @@ import {
 } from '../../config/workspace-json-project-json';
 import { NX_PREFIX } from '../../utils/logger';
 import { CreateNodesResult, LoadedNxPlugin } from '../../utils/nx-plugin';
+import { readJsonFile } from '../../utils/fileutils';
 import { workspaceRoot } from '../../utils/workspace-root';
+import { ONLY_MODIFIES_EXISTING_TARGET } from '../../plugins/target-defaults/target-defaults-plugin';
 
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
+import { join } from 'path';
 
-export type SourceInformation = [string, string];
+export type SourceInformation = [file: string, plugin: string];
 export type ConfigurationSourceMaps = Record<
   string,
   Record<string, SourceInformation>
@@ -19,9 +21,17 @@ export type ConfigurationSourceMaps = Record<
 
 export function mergeProjectConfigurationIntoRootMap(
   projectRootMap: Map<string, ProjectConfiguration>,
-  project: ProjectConfiguration,
+  project: ProjectConfiguration & {
+    targets?: Record<
+      string,
+      TargetConfiguration & { [ONLY_MODIFIES_EXISTING_TARGET]?: boolean }
+    >;
+  },
   configurationSourceMaps?: ConfigurationSourceMaps,
-  sourceInformation?: SourceInformation
+  sourceInformation?: SourceInformation,
+  // This function is used when reading project configuration
+  // in generators, where we don't want to do this.
+  skipCommandNormalization?: boolean
 ): void {
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
     configurationSourceMaps[project.root] = {};
@@ -121,22 +131,44 @@ export function mergeProjectConfigurationIntoRootMap(
   }
 
   if (project.targets) {
-    updatedProjectConfiguration.targets = {
-      ...matchingProject.targets,
-      ...project.targets,
-    };
+    // We merge the targets with special handling, so clear this back to the
+    // targets as defined originally before merging.
+    updatedProjectConfiguration.targets = matchingProject?.targets ?? {};
 
-    for (const target in project.targets) {
-      if (sourceMap) {
-        sourceMap[`targets.${target}`] = sourceInformation;
+    // For each target defined in the new config
+    for (const targetName in project.targets) {
+      // Always set source map info for the target, but don't overwrite info already there
+      // if augmenting an existing target.
+
+      const target = project.targets?.[targetName];
+
+      if (sourceMap && !target?.[ONLY_MODIFIES_EXISTING_TARGET]) {
+        sourceMap[`targets.${targetName}`] = sourceInformation;
       }
-      updatedProjectConfiguration.targets[target] = mergeTargetConfigurations(
-        project.targets[target],
-        matchingProject.targets?.[target],
-        sourceMap,
-        sourceInformation,
-        `targets.${target}`
-      );
+
+      // If ONLY_MODIFIES_EXISTING_TARGET is true, and its not on the matching project
+      // we shouldn't merge its info into the graph
+      if (
+        target?.[ONLY_MODIFIES_EXISTING_TARGET] &&
+        !matchingProject.targets?.[targetName]
+      ) {
+        continue;
+      }
+
+      // We don't want the symbol to live on past the merge process
+      if (target?.[ONLY_MODIFIES_EXISTING_TARGET])
+        delete target?.[ONLY_MODIFIES_EXISTING_TARGET];
+
+      updatedProjectConfiguration.targets[targetName] =
+        mergeTargetConfigurations(
+          skipCommandNormalization
+            ? target
+            : resolveCommandSyntacticSugar(target, project.root),
+          matchingProject.targets?.[targetName],
+          sourceMap,
+          sourceInformation,
+          `targets.${targetName}`
+        );
     }
   }
 
@@ -287,6 +319,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
       Object.assign(externalNodes, pluginExternalNodes);
     }
 
+    const projects = readProjectConfigurationsFromRootMap(projectRootMap);
     const rootMap = createRootMap(projectRootMap);
 
     performance.mark('createNodes:merge - end');
@@ -297,7 +330,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     );
 
     return {
-      projects: readProjectConfigurationsFromRootMap(projectRootMap),
+      projects,
       externalNodes,
       rootMap,
       sourceMaps: configurationSourceMaps,
@@ -316,8 +349,14 @@ export function readProjectConfigurationsFromRootMap(
 
   for (const [root, configuration] of projectRootMap.entries()) {
     if (!configuration.name) {
-      throw new Error(`Project at ${root} has no name provided.`);
-    } else if (configuration.name in projects) {
+      try {
+        const { name } = readJsonFile(join(root, 'package.json'));
+        configuration.name = name;
+      } catch {
+        throw new Error(`Project at ${root} has no name provided.`);
+      }
+    }
+    if (configuration.name in projects) {
       let rootErrors = errors.get(configuration.name) ?? [
         projects[configuration.name].root,
       ];
@@ -383,12 +422,12 @@ export function mergeTargetConfigurations(
   const {
     configurations: defaultConfigurations,
     options: defaultOptions,
-    ...defaults
+    ...baseTargetProperties
   } = baseTarget ?? {};
 
   // Target is "compatible", e.g. executor is defined only once or is the same
   // in both places. This means that it is likely safe to merge
-  const isCompatible = isCompatibleTarget(defaults, target);
+  const isCompatible = isCompatibleTarget(baseTargetProperties, target);
 
   if (!isCompatible && projectConfigSourceMap) {
     // if the target is not compatible, we will simply override the options
@@ -402,7 +441,7 @@ export function mergeTargetConfigurations(
 
   // merge top level properties if they're compatible
   const result = {
-    ...(isCompatible ? defaults : {}),
+    ...(isCompatible ? baseTargetProperties : {}),
     ...target,
   };
 
@@ -454,25 +493,35 @@ export function isCompatibleTarget(
   a: TargetConfiguration,
   b: TargetConfiguration
 ) {
-  if (a.command || b.command) {
-    const aCommand =
-      a.command ??
-      (a.executor === 'nx:run-commands' ? a.options?.command : null);
-    const bCommand =
-      b.command ??
-      (b.executor === 'nx:run-commands' ? b.options?.command : null);
-
-    const sameCommand = aCommand === bCommand;
-    const aHasNoExecutor = !a.command && !a.executor;
-    const bHasNoExecutor = !b.command && !b.executor;
-
-    return sameCommand || aHasNoExecutor || bHasNoExecutor;
-  }
-
   const oneHasNoExecutor = !a.executor || !b.executor;
   const bothHaveSameExecutor = a.executor === b.executor;
 
-  return oneHasNoExecutor || bothHaveSameExecutor;
+  if (oneHasNoExecutor) return true;
+  if (!bothHaveSameExecutor) return false;
+
+  const isRunCommands = a.executor === 'nx:run-commands';
+  if (isRunCommands) {
+    const aCommand = a.options?.command ?? a.options?.commands.join(' && ');
+    const bCommand = b.options?.command ?? b.options?.commands.join(' && ');
+
+    const oneHasNoCommand = !aCommand || !bCommand;
+    const hasSameCommand = aCommand === bCommand;
+
+    return oneHasNoCommand || hasSameCommand;
+  }
+
+  const isRunScript = a.executor === 'nx:run-script';
+  if (isRunScript) {
+    const aScript = a.options?.script;
+    const bScript = b.options?.script;
+
+    const oneHasNoScript = !aScript || !bScript;
+    const hasSameScript = aScript === bScript;
+
+    return oneHasNoScript || hasSameScript;
+  }
+
+  return true;
 }
 
 function mergeConfigurations<T extends Object>(
@@ -583,10 +632,37 @@ export function readTargetDefaultsForTarget(
     return targetDefaults?.[targetName];
   }
 }
+
 function createRootMap(projectRootMap: Map<string, ProjectConfiguration>) {
   const map: Record<string, string> = {};
   for (const [projectRoot, { name: projectName }] of projectRootMap) {
     map[projectRoot] = projectName;
   }
   return map;
+}
+
+function resolveCommandSyntacticSugar(
+  target: TargetConfiguration,
+  key: string
+): TargetConfiguration {
+  const { command, ...config } = target ?? {};
+
+  if (!command) {
+    return target;
+  }
+
+  if (config.executor) {
+    throw new Error(
+      `${NX_PREFIX} Project at ${key} should not have executor and command both configured.`
+    );
+  } else {
+    return {
+      ...config,
+      executor: 'nx:run-commands',
+      options: {
+        ...config.options,
+        command: command,
+      },
+    };
+  }
 }
