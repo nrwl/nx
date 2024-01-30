@@ -39,6 +39,11 @@ export function LaunchNxCommunityPartners(): JSX.Element {
       name: 'Epic Web',
       linkTarget: 'https://www.epicweb.dev/',
     },
+    {
+      imageUrl: '/images/launch-nx/viteconf.svg',
+      name: 'ViteConf',
+      linkTarget: 'https://viteconf.org ',
+    },
   ];
 
   return (
