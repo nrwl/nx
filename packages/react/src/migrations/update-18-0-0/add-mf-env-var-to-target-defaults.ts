@@ -3,6 +3,7 @@ import {
   type Tree,
   type ProjectConfiguration,
   joinPathFragments,
+  formatFiles,
 } from '@nx/devkit';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 
@@ -11,6 +12,8 @@ export default async function (tree: Tree) {
     return;
   }
   addMfEnvToTargetDefaultInputs(tree);
+
+  await formatFiles(tree);
 }
 
 function hasModuleFederationProject(tree: Tree) {
