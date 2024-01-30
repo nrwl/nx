@@ -10,7 +10,6 @@ import {
   vueRouterVersion,
   vueTestUtilsVersion,
   vueTscVersion,
-  vueTsconfigVersion,
 } from './versions';
 
 export type EnsureDependenciesOptions = {
@@ -24,7 +23,6 @@ export function ensureDependencies(
 ): GeneratorCallback {
   const dependencies: Record<string, string> = {};
   const devDependencies: Record<string, string> = {
-    '@vue/tsconfig': vueTsconfigVersion,
     '@vue/test-utils': vueTestUtilsVersion,
     '@vitejs/plugin-vue': vitePluginVueVersion,
     'vue-tsc': vueTscVersion,
