@@ -4,7 +4,7 @@ import { join } from 'path';
 import { output } from './output';
 import { readJsonFile } from '../utils/fileutils';
 
-//TODO: vsavkin remove after Nx 18
+//TODO: vsavkin remove after Nx 19
 export function workspaceConfigurationCheck() {
   if (existsSync(join(workspaceRoot, 'workspace.json'))) {
     output.warn({

@@ -20,7 +20,7 @@ import { getFileMap } from './build-project-graph';
 
 /**
  * A class which builds up a project graph
- * @deprecated The {@link ProjectGraphProcessor} has been deprecated. Use a {@link CreateNodes} and/or a {@link CreateDependencies} instead. This will be removed in Nx 18.
+ * @deprecated The {@link ProjectGraphProcessor} has been deprecated. Use a {@link CreateNodes} and/or a {@link CreateDependencies} instead. This will be removed in Nx 19.
  */
 export class ProjectGraphBuilder {
   // TODO(FrozenPandaz): make this private

@@ -14,7 +14,7 @@ import { stripSourceCode } from './strip-source-code';
 let tsModule: typeof import('typescript');
 
 /**
- * @deprecated This is deprecated and will be removed in Nx 18.
+ * @deprecated This is deprecated and will be removed in Nx 19.
  * This was not intended to be exposed.
  * Please talk to us if you need this.
  */
