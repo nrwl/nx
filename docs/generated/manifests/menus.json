@@ -5650,14 +5650,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Use Remote Caching",
-            "path": "/ci/features/remote-cache",
-            "id": "remote-cache",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Run Only Tasks Affected by a PR",
             "path": "/ci/features/affected",
             "id": "affected",
@@ -5666,9 +5658,17 @@
             "disableCollapsible": false
           },
           {
-            "name": "Distribute Task Execution",
-            "path": "/ci/features/distribute-task-execution",
-            "id": "distribute-task-execution",
+            "name": "Use Remote Caching (Nx Replay)",
+            "path": "/ci/features/remote-cache",
+            "id": "remote-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Distribute Task Execution (Nx Agents)",
+            "path": "/ci/features/nx-agents",
+            "id": "nx-agents",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5680,24 +5680,8 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Nx Agents",
-            "path": "/ci/features/nx-agents",
-            "id": "nx-agents",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Use Remote Caching",
-        "path": "/ci/features/remote-cache",
-        "id": "remote-cache",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -5709,9 +5693,17 @@
         "disableCollapsible": false
       },
       {
-        "name": "Distribute Task Execution",
-        "path": "/ci/features/distribute-task-execution",
-        "id": "distribute-task-execution",
+        "name": "Use Remote Caching (Nx Replay)",
+        "path": "/ci/features/remote-cache",
+        "id": "remote-cache",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Distribute Task Execution (Nx Agents)",
+        "path": "/ci/features/nx-agents",
+        "id": "nx-agents",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5720,14 +5712,6 @@
         "name": "Set up Nx Cloud On-Premise",
         "path": "/ci/features/on-premise",
         "id": "on-premise",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Agents",
-        "path": "/ci/features/nx-agents",
-        "id": "nx-agents",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6487,6 +6471,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Launch Templates",
+            "path": "/ci/reference/launch-templates",
+            "id": "launch-templates",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Environment Variables",
             "path": "/ci/reference/env-vars",
             "id": "env-vars",
@@ -6525,6 +6517,14 @@
         "name": "nx-cloud CLI",
         "path": "/ci/reference/nx-cloud-cli",
         "id": "nx-cloud-cli",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Launch Templates",
+        "path": "/ci/reference/launch-templates",
+        "id": "launch-templates",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

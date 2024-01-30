@@ -70,47 +70,34 @@ It is possible in a smaller repository to manually calculate the best order for 
 | Debuggability  | ⛔️ Con | Build artifacts and logs are scattered across agent machines.                                                       |
 | Speed          | 🎉 Pro  | Faster than using a single machine                                                                                  |
 
-### Nx Cloud Distributed Task Execution
+### Distributed Task Execution Using Nx Agents
 
-When you use Nx Cloud's distributed task execution you gain even more speed than manual distribution while preserving the simple set up and easy debuggability of the single machine scenario.
+When you use **Nx Agents** (feature of Nx Cloud) you gain even more speed than manual distribution while preserving the simple set up and easy debuggability of the single machine scenario.
 
 The setup looks like this:
 
 ```yaml {% fileName="main-job.yml" %}
 # Coordinate the agents to run the tasks and stop agents when the build tasks are done
-- npx nx-cloud start-ci-run --stop-agents-after=build
+- npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js" --stop-agents-after=build
 # Run any commands you want here
-- nx affected -t lint,test,build
+- nx affected -t lint test build
 ```
-
-```yaml {% fileName="agent.yml" %}
-# Wait for tasks to execute
-- npx nx-cloud start-agent
-```
-
-The visualization for distributed task execution looks like this:
-![CI using DTE](/shared/images/dte/3agents.svg)
+The visualization looks like this:
+![CI using Agents](/shared/images/dte/3agents.svg)
 
 In the same way that Nx efficiently assigns tasks to parallel processes on a single machine so that pre-requisite tasks are executed first, Nx Cloud's distributed task execution efficiently assigns tasks to agent machines so that the idle time of each agent machine is kept to a minimum. Nx performs these calculations for each PR, so no matter which projects are affected or how your project structure changes, Nx will optimally assign tasks to the agents available.
 
-As your repository grows and CI runs start to slow down, add another agent machine to your pipeline and Nx Cloud will use that extra capacity to handle the larger volume of tasks. If you would like Nx Cloud to automatically provision the agents for you, check out [Nx Agents](/ci/features/nx-agents).
-
 #### Pros and Cons of Using Nx Cloud's Distributed Task Execution:
 
-| Characteristic | Pro/Con | Notes                                                                                                                                                                       |
-| -------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Complexity     | 🎉 Pro  | The pipeline uses the same commands a developer would use on their local machine, but with one extra line before running tasks and a single line for each agent to execute. |
-| Debuggability  | 🎉 Pro  | Build artifacts and logs are collated to the main machine as if all tasks were executed on that machine                                                                     |
-| Speed          | 🎉 Pro  | Fastest possible task distribution for each PR                                                                                                                              |
+| Characteristic | Pro/Con | Notes                                                                                                                           |
+| -------------- | ------- |---------------------------------------------------------------------------------------------------------------------------------|
+| Complexity     | 🎉 Pro  | The pipeline uses the same commands a developer would use on their local machine, but with one extra line before running tasks. |
+| Debuggability  | 🎉 Pro  | Build artifacts and logs are collated to the main machine as if all tasks were executed on that machine                         |
+| Speed          | 🎉 Pro  | Fastest possible task distribution for each PR                                                                                  |
 
-### Nx Cloud Concurrency Limits
-
-As you scale your usage of Nx Cloud, you may run into concurrency limits. Nx Cloud puts a [limit on the number of CI machines](https://nx.app/pricing) in your workspace that are simultaneously connecting to Nx Cloud. This includes any machine running in CI - both the main CI pipeline machine and any agent machines.
-
-The Free plan offers 30 concurrent connections, the Startup plan offers 50 concurrent connections, the Pro plan offers 70 concurrent connections and the enterprise plan has no limit on concurrent connections. If each pipeline uses 9 agents in addition to the main job, that makes 10 concurrent connections for each PR. This would mean that on a Pro plan, you can have a maximum of 7 PRs running in CI simultaneously. If an eighth PR was submitted while those 7 were still running, your CI pipeline would experience some degradation and eventually failed CI runs. Once your organization's usage goes below the limit, Nx Cloud will resume functioning as normal.
 
 ## Conclusion
 
-If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Cloud with Distributed Task Execution](/ci/features/distribute-task-execution). You can [generate a simple workflow](/nx-api/workspace/generators/ci-workflow) for common CI providers with a `nx g ci-workflow` or follow one of the [CI setup recipes](/ci/recipes/set-up).
+If your repo is starting to grow large enough that CI times are suffering, or if your parallelization strategy is growing too complex to manage effectively, try [setting up Nx Agents](/ci/features/disthhribute-task-execution). You can [generate a simple workflow](/nx-api/workspace/generators/ci-workflow) for common CI providers with a `nx g ci-workflow` or follow one of the [CI setup recipes](/ci/recipes/set-up).
 
 Organizations that want extra help setting up Nx Cloud or getting the most out of Nx can [sign up for Nx Enterprise](https://nx.app/enterprise/). This package comes with extra support from the Nx team and the option to host Nx Cloud on your own servers.

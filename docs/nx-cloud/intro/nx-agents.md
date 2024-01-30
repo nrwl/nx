@@ -1,35 +1,13 @@
-# Nx Agents: The Next Leap in Distributed Task Execution
-
-{% callout type="note" title="Early Preview Doc - Subject to Change" %}
-**Early Preview of Nx Agents:** This is a work-in-progress feature, with a public launch anticipated in Feb 2024. Keep an eye on this document for continuous updates. Interested in early access? [Sign up here](https://go.nx.dev/nx-agents-ea).
-{% /callout %}
+# Distribute Task Execution (Nx Agents)
 
 {% youtube
 src="https://youtu.be/XLOUFZeqRpM"
 title="Nx Agents in action splitting e2e tests at a file level"
  /%}
 
-Nx Agents represent the next evolution of [Nx Cloud's Distributed Task Execution (DTE)](/ci/features/distribute-task-execution), bringing a new level of efficiency and simplicity to your CI/CD pipelines. It takes away the complexity of configuring agents and comes with features such as scaling of agents based on the PR, flaky task re-running, and intelligent task splitting and distribution. Keep reading to learn more.
+**Nx Agents** lets you distribute your CI across many machines without adding any configuration to your workspace.  It comes with features such as scaling of agents based on the PR, flaky task re-running, and intelligent task splitting and distribution. Keep reading to learn more.
 
-Currently in private beta, Nx Agents are slated for public release in February 2024. Don't miss the opportunity to be among the first to experience this groundbreaking tool. Sign up now for early access.
-
-{% call-to-action title="Sign Up for Early Access" icon="nxcloud" description="Experience Nx Agents for yourself" url="https://go.nx.dev/nx-agents-ea" /%}
-
-## What's the Difference to DTE?
-
-Nx Cloud's [Distributed Task Execution (DTE)](/ci/features/distribute-task-execution) introduced an easy way to intelligently distribute tasks across machines, allowing for a more fine-grained distribution taking historical data as well as the task dependencies into account.
-
-Using DTE you have to configure and instantiate your agents, which might be more or less complex depending on your CI provider. We have some guides on how to do that [here](/ci/recipes/set-up).
-
-![Diagram showing Nx Cloud distributing tasks to multiple agents on your CI provider](/shared/images/dte/distributed-caching-and-task-execution.svg)
-
-Nx Agents take away that complexity by delegating the agent management to Nx Cloud. You can think of them as a managed version of DTE.
-
-![Diagram showing Nx Cloud distributing tasks to multiple Nx Agents](/shared/images/dte/distributed-task-execution-on-workflows.svg)
-
-Keep reading to learn what the configuration and setup looks like.
-
-## Managed Agents, Seamless Configuration
+## Enabling Nx Agents
 
 Enabling task distribution with Nx Agents can be done in a single line. Simply add the `--distribute-on` property to the `start-ci-run` line in your CI pipeline configuration:
 
@@ -39,7 +17,7 @@ Enabling task distribution with Nx Agents can be done in a single line. Simply a
   ...
 ```
 
-This instructs Nx Cloud to distribute tasks across 8 agents of type `linux-medium-js`. `linux-medium-js` is the name of the launch template that will be used to provision the agent. The default launch templates [can be found here](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) (there will be more once Nx Agents is publicly available).
+This instructs Nx Cloud to distribute tasks across 8 agents of type `linux-medium-js`. `linux-medium-js` is the name of the launch template that will be used to provision the agent. The default launch templates [can be found here](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) 
 
 You can also define your own "launch templates" (here's an [example from the Nx repo](https://github.com/nrwl/nx/blob/master/.nx/workflows/agents.yaml)):
 
@@ -48,17 +26,7 @@ You can also define your own "launch templates" (here's an [example from the Nx 
 launch-templates:
   linux-medium:
     resource-class: 'docker_linux_amd64/medium+'
-    env:
-      CI: 'true'
-      GIT_AUTHOR_EMAIL: test@test.com
-      ...
-      NX_CLOUD_ACCESS_TOKEN: '{{secrets.NX_CLOUD_ACCESS_TOKEN}}'
     init-steps:
-	    ...
-      - name: Install Pnpm
-        script: |
-          npm install -g @pnpm/exe@8.7.4
-
       - name: Pnpm Install
         script: |
           pnpm install --frozen-lockfile
@@ -90,7 +58,7 @@ distribute-on:
 ```
 
 {% callout type="note" title="How is the size of the PR determined?" %}
-To determine the size of the PR, Nx Cloud calculates the relationship between the number of [affected projects](/ci/features/affected) and the total number of projects in the workspace. It then assigns it to one of the three categories: small, medium, or large. This calculation is static right now but might be configurable once Nx Agents is publicly available.
+To determine the size of the PR, Nx Cloud calculates the relationship between the number of [affected projects](/ci/features/affected) and the total number of projects in the workspace. It then assigns it to one of the three categories: small, medium, or large. 
 {% /callout %}
 
 You can then reference it in your CI pipeline configuration:
@@ -103,7 +71,7 @@ jobs:
     ...
     steps:
       - checkout
-      - run: npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e-wrapper"
+      - run: npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e-ci"
       - ...
 ```
 
@@ -111,7 +79,7 @@ jobs:
 
 Imagine you're working on an end-to-end (e2e) project using tools like Cypress or Playwright. Traditionally, to make the most of features like [affected](/ci/features/affected), [caching](/ci/features/remote-cache), and [distribution](/ci/features/distribute-task-execution), you'd need to divide your project into smaller parts. But this approach can often be cumbersome and less efficient for developers.
 
-Nx is on the verge of introducing a game-changing feature that enables dynamic target definitions for projects (more details to come). Paired with Nx Agents, this innovation allows you to distribute e2e tests at the file level across various agents.
+Nx 18 in combination with Nx Agents is able to split your e2e target into multiple smaller targets that can be distributed across machines. `e2e-ci` targets does the splitting, where as `e2e` will run all the tests in the same projects together, as part of the same target.
 
 This significantly cuts down the time required to run e2e tests. For instance, in the video shown at the beginning of the page, e2e test durations plummeted from 90 minutes to just 10 minutes.
 
@@ -131,10 +99,4 @@ Consider this scenario:
 - This time, `myapp:e2e` **succeeds**.
 - Nx Cloud identifies the task as flaky and stores this data temporarily.
 
-As a result, if Nx Cloud has marked a task as flaky, it will be automatically retried, ideally on a different Nx Agent to prevent issues from any residues of earlier runs.
-
----
-
-Sign up now for early access and be one of the first to try Nx Agents.
-
-{% call-to-action title="Sign Up for Early Access" icon="nxcloud" description="Experience Nx Cloud Agents for yourself" url="https://go.nx.dev/nx-agents-ea" /%}
+As a result, if Nx Cloud has marked a task as flaky, it will be automatically retried, on a different Nx Agent to prevent issues from any residues of earlier runs.

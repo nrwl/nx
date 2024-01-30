@@ -49,10 +49,10 @@ To get started:
 4. Finally, make sure all task are working on your machine, by running lint, test, build and e2e on all projects of the workspace
 
    ```shell
-   pnpm nx run-many -t lint,test,build,e2e
+   pnpm nx run-many -t lint test build e2e
    ```
 
-## Set-up GitHub Actions
+## Set Up GitHub Actions
 
 To get started with GitHub Actions, we'll create a pipeline that just logs a message. First, checkout a new branch:
 
@@ -286,7 +286,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v3
       # This line is needed for nx affected to work when CI is running on a PR
       - run: git branch --track main origin/main
-      - run: pnpm nx affected -t lint,test,build --parallel=3 --configuration=ci
+      - run: pnpm nx affected -t lint test build --parallel=3
       - run: pnpm nx affected -t e2e --parallel=1
 ```
 
@@ -324,7 +324,7 @@ Click the link in the terminal to claim your workspace on [nx.app](https://nx.ap
 Once your workspace is connected to Nx Cloud, run some tasks locally to prime the cache:
 
 ```shell
-pnpm nx run-many -t lint,test,build,e2e
+pnpm nx run-many -t lint test build e2e
 ```
 
 Now let's commit the changes to a new `ci-caching` branch and create a PR. The only change to the source code is adding an `nxCloudAccessToken` property to `nx.json`.
@@ -375,7 +375,7 @@ The affected command and remote caching help speed up the average CI time, but t
 
 Nx Cloud's DTE feature
 
-- takes a command (e.g. `run-many -t build,lint,test,e2e`) and splits it into individual tasks which it then distributes across multiple agents
+- takes a command (e.g. `run-many -t build lint test e2e`) and splits it into individual tasks which it then distributes across multiple agents
 - distributes tasks by considering the dependencies between them; e.g. if `e2e` depends on `build`, Nx Cloud will make sure that `build` is executed before `e2e`; it does this across machines
 - distributes tasks to optimize for CPU processing time and reduce idle time by taking into account historical data about how long each task takes to run
 - collects the results and logs of all the tasks and presents them in a single view
@@ -398,7 +398,7 @@ jobs:
     with:
       number-of-agents: 3
       parallel-commands-on-agents: |
-        npx nx affected -t lint,test,build,e2e --parallel=2
+        npx nx affected -t lint test build,e2e --parallel=2
 
   agents:
     name: Nx Cloud - Agents

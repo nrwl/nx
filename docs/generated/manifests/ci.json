@@ -131,17 +131,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "remote-cache",
-        "name": "Use Remote Caching",
-        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-        "mediaImage": "",
-        "file": "shared/features/remote-cache",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/features/remote-cache",
-        "tags": ["remote-cache"]
-      },
-      {
         "id": "affected",
         "name": "Run Only Tasks Affected by a PR",
         "description": "",
@@ -153,15 +142,26 @@
         "tags": ["run-tasks"]
       },
       {
-        "id": "distribute-task-execution",
-        "name": "Distribute Task Execution",
-        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
+        "id": "remote-cache",
+        "name": "Use Remote Caching (Nx Replay)",
+        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
         "mediaImage": "",
-        "file": "shared/features/distribute-task-execution",
+        "file": "shared/features/remote-cache",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/features/distribute-task-execution",
-        "tags": ["distribute-task-execution"]
+        "path": "/ci/features/remote-cache",
+        "tags": ["remote-cache"]
+      },
+      {
+        "id": "nx-agents",
+        "name": "Distribute Task Execution (Nx Agents)",
+        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
+        "mediaImage": "",
+        "file": "nx-cloud/intro/nx-agents",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/nx-agents",
+        "tags": []
       },
       {
         "id": "on-premise",
@@ -173,33 +173,11 @@
         "isExternal": false,
         "path": "/ci/features/on-premise",
         "tags": ["on-premise"]
-      },
-      {
-        "id": "nx-agents",
-        "name": "Nx Agents",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/intro/nx-agents",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/features/nx-agents",
-        "tags": []
       }
     ],
     "isExternal": false,
     "path": "/ci/features",
     "tags": []
-  },
-  "/ci/features/remote-cache": {
-    "id": "remote-cache",
-    "name": "Use Remote Caching",
-    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-    "mediaImage": "",
-    "file": "shared/features/remote-cache",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/features/remote-cache",
-    "tags": ["remote-cache"]
   },
   "/ci/features/affected": {
     "id": "affected",
@@ -212,16 +190,27 @@
     "path": "/ci/features/affected",
     "tags": ["run-tasks"]
   },
-  "/ci/features/distribute-task-execution": {
-    "id": "distribute-task-execution",
-    "name": "Distribute Task Execution",
-    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
+  "/ci/features/remote-cache": {
+    "id": "remote-cache",
+    "name": "Use Remote Caching (Nx Replay)",
+    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
     "mediaImage": "",
-    "file": "shared/features/distribute-task-execution",
+    "file": "shared/features/remote-cache",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/features/distribute-task-execution",
-    "tags": ["distribute-task-execution"]
+    "path": "/ci/features/remote-cache",
+    "tags": ["remote-cache"]
+  },
+  "/ci/features/nx-agents": {
+    "id": "nx-agents",
+    "name": "Distribute Task Execution (Nx Agents)",
+    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
+    "mediaImage": "",
+    "file": "nx-cloud/intro/nx-agents",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/nx-agents",
+    "tags": []
   },
   "/ci/features/on-premise": {
     "id": "on-premise",
@@ -233,17 +222,6 @@
     "isExternal": false,
     "path": "/ci/features/on-premise",
     "tags": ["on-premise"]
-  },
-  "/ci/features/nx-agents": {
-    "id": "nx-agents",
-    "name": "Nx Agents",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/intro/nx-agents",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/features/nx-agents",
-    "tags": []
   },
   "/ci/concepts": {
     "id": "concepts",
@@ -1277,6 +1255,17 @@
         "tags": []
       },
       {
+        "id": "launch-templates",
+        "name": "Launch Templates",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/launch-templates",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/launch-templates",
+        "tags": []
+      },
+      {
         "id": "env-vars",
         "name": "Environment Variables",
         "description": "",
@@ -1334,6 +1323,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/nx-cloud-cli",
+    "tags": []
+  },
+  "/ci/reference/launch-templates": {
+    "id": "launch-templates",
+    "name": "Launch Templates",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/launch-templates",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/launch-templates",
     "tags": []
   },
   "/ci/reference/env-vars": {
