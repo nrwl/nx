@@ -83,7 +83,7 @@ export async function* viteBuildExecutor(
     await validateTypes({
       workspaceRoot: context.root,
       projectRoot: projectRoot,
-      tsconfig: getProjectTsConfigPath(projectRoot),
+      tsconfig: options.tsConfig ?? getProjectTsConfigPath(projectRoot),
     });
   }
 

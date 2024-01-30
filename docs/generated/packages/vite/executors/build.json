@@ -26,6 +26,12 @@
         "description": "Skip type-checking via TypeScript. Skipping type-checking speeds up the build but type errors are not caught.",
         "default": false
       },
+      "tsConfig": {
+        "type": "string",
+        "description": "The path to custom tsconfig file for type-checking when skipTypeCheck is false. Required when tsconfig file is not at the projectRoot level.",
+        "x-completion-type": "file",
+        "x-completion-glob": "tsconfig.*.json"
+      },
       "configFile": {
         "type": "string",
         "description": "The name of the Vite.js configuration file.",
