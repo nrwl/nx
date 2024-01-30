@@ -25,6 +25,11 @@ export function LaunchNxCommunityPartners(): JSX.Element {
       linkTarget: 'https://www.thisdot.co/',
     },
     {
+      imageUrl: '/images/launch-nx/rspack.png',
+      name: 'Rspack',
+      linkTarget: 'https://www.rspack.dev',
+    },
+    {
       imageUrl: '/images/launch-nx/storybook.svg',
       name: 'Storybook',
       linkTarget: 'https://storybook.js.org/',
