@@ -133,7 +133,7 @@
     - [Vite](/recipes/vite)
       - [Configure Vite on your Nx workspace](/recipes/vite/configure-vite)
     - [Webpack](/recipes/webpack)
-      - [How to configure webpack on your Nx workspace](/recipes/webpack/webpack-config-setup)
+      - [How to configure Webpack in your Nx workspace](/recipes/webpack/webpack-config-setup)
       - [Webpack plugins](/recipes/webpack/webpack-plugins)
     - [Module Federation](/recipes/module-federation)
       - [How to create a Module Federation Host Application](/recipes/module-federation/create-a-host)
