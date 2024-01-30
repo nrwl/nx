@@ -211,10 +211,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   output.log({
     title: `Creating your v${nxVersion} workspace.`,
-    bodyLines: [
-      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
-      `Nx will run "${parsedArgs.packageManager} install" several times. Please wait.`,
-    ],
   });
 
   const workspaceInfo = await createWorkspace<Arguments>(
