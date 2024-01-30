@@ -15,9 +15,19 @@ export function LaunchNxCommunityPartners(): JSX.Element {
       linkTarget: 'https://ng-conf.org/',
     },
     {
+      imageUrl: '/images/launch-nx/rxjs-logo.png',
+      name: 'RxJS',
+      linkTarget: 'https://rxjs.dev/',
+    },
+    {
       imageUrl: '/images/launch-nx/thisdot.png',
       name: 'ThisDot',
       linkTarget: 'https://www.thisdot.co/',
+    },
+    {
+      imageUrl: '/images/launch-nx/rspack.png',
+      name: 'Rspack',
+      linkTarget: 'https://www.rspack.dev',
     },
     {
       imageUrl: '/images/launch-nx/storybook.svg',
@@ -33,6 +43,11 @@ export function LaunchNxCommunityPartners(): JSX.Element {
       imageUrl: '/images/launch-nx/epicweb.svg',
       name: 'Epic Web',
       linkTarget: 'https://www.epicweb.dev/',
+    },
+    {
+      imageUrl: '/images/launch-nx/viteconf.svg',
+      name: 'ViteConf',
+      linkTarget: 'https://viteconf.org ',
     },
   ];
 
