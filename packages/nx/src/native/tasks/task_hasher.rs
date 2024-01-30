@@ -222,8 +222,20 @@ impl TaskHasher {
                         project_root_mappings,
                     )?
                 };
+
+                let ts_hash = self
+                    .project_graph
+                    .external_nodes
+                    .get("typescript")
+                    .and_then(|pkg| pkg.hash.as_deref())
+                    .map(|pkg_hash| {
+                        hash(&[pkg_hash.as_bytes(), ts_config_hash.as_bytes()].concat())
+                    })
+                    // the unwrap_or is for the case where typescript is not installed
+                    .unwrap_or(ts_config_hash);
+
                 trace!(parent: &span, "hash_tsconfig: {:?}", now.elapsed());
-                ts_config_hash
+                ts_hash
             }
             HashInstruction::TaskOutput(glob, outputs) => {
                 let hashed_task_output = hash_task_output(&self.workspace_root, glob, outputs)?;
