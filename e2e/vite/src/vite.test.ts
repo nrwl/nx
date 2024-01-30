@@ -117,6 +117,29 @@ describe('Vite Plugin', () => {
         });
         rmDist();
       }, 200_000);
+
+      it('should build application without copying exisiting package json when generatePackageJson=false', async () => {
+        createFile(
+          `apps/${myApp}/package.json`,
+          JSON.stringify({
+            name: 'my-existing-app',
+            version: '1.0.1',
+            scripts: {
+              start: 'node server.js',
+            },
+          })
+        );
+        runCLI(`build ${myApp} --generatePackageJson=false`);
+        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+        const mainBundle = fileArray.find((file) => file.endsWith('.js'));
+        expect(
+          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
+        ).toBeDefined();
+
+        expect(fileExists(`dist/apps/${myApp}/package.json`)).toBe(false);
+        rmDist();
+      }, 200_000);
     });
 
     100_000;
