@@ -77,6 +77,8 @@ export function getTsNodeTranspiler(
   const service = register({
     transpileOnly: true,
     compilerOptions: getTsNodeCompilerOptions(compilerOptions),
+    // we already read and provide the compiler options, so prevent ts-node from reading them again
+    skipProject: true,
   });
 
   const { transpiler, swc } = service.options;
