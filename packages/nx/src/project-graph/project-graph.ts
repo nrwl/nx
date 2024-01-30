@@ -12,7 +12,10 @@ import { daemonClient } from '../daemon/client/client';
 import { fileExists } from '../utils/fileutils';
 import { workspaceRoot } from '../utils/workspace-root';
 import { performance } from 'perf_hooks';
-import { retrieveWorkspaceFiles } from './utils/retrieve-workspace-files';
+import {
+  retrieveProjectConfigurations,
+  retrieveWorkspaceFiles,
+} from './utils/retrieve-workspace-files';
 import { readNxJson } from '../config/nx-json';
 import { unregisterPluginTSTranspiler } from '../utils/nx-plugin';
 
@@ -27,7 +30,7 @@ export function readCachedProjectGraph(): ProjectGraph {
       ? stripIndents`
       Make sure invoke 'node ./decorate-angular-cli.js' in your postinstall script.
       The decorated CLI will compute the project graph.
-      'ng --help' should say 'Smart, Fast and Extensible Build System'.
+      'ng --help' should say 'Smart Monorepos · Fast CI'.
       `
       : '';
 
@@ -74,27 +77,37 @@ export function readProjectsConfigurationFromProjectGraph(
   };
 }
 
-export async function buildProjectGraphWithoutDaemon() {
+export async function buildProjectGraphAndSourceMapsWithoutDaemon() {
   const nxJson = readNxJson();
 
-  const { allWorkspaceFiles, fileMap, projectConfigurations, externalNodes } =
-    await retrieveWorkspaceFiles(workspaceRoot, nxJson);
+  performance.mark('retrieve-project-configurations:start');
+  const { projects, externalNodes, sourceMaps, projectRootMap } =
+    await retrieveProjectConfigurations(workspaceRoot, nxJson);
+  performance.mark('retrieve-project-configurations:end');
+
+  performance.mark('retrieve-workspace-files:start');
+  const { allWorkspaceFiles, fileMap, rustReferences } =
+    await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
+  performance.mark('retrieve-workspace-files:end');
 
   const cacheEnabled = process.env.NX_CACHE_PROJECT_GRAPH !== 'false';
+  performance.mark('build-project-graph-using-project-file-map:start');
   const projectGraph = (
     await buildProjectGraphUsingProjectFileMap(
-      projectConfigurations.projects,
+      projects,
       externalNodes,
       fileMap,
       allWorkspaceFiles,
+      rustReferences,
       cacheEnabled ? readFileMapCache() : null,
       cacheEnabled
     )
   ).projectGraph;
+  performance.mark('build-project-graph-using-project-file-map:end');
 
   unregisterPluginTSTranspiler();
 
-  return projectGraph;
+  return { projectGraph, sourceMaps };
 }
 
 function handleProjectGraphError(opts: { exitOnError: boolean }, e) {
@@ -140,11 +153,38 @@ export async function createProjectGraphAsync(
     resetDaemonClient: false,
   }
 ): Promise<ProjectGraph> {
+  const projectGraphAndSourceMaps = await createProjectGraphAndSourceMapsAsync(
+    opts
+  );
+  return projectGraphAndSourceMaps.projectGraph;
+}
+
+export async function createProjectGraphAndSourceMapsAsync(
+  opts: { exitOnError: boolean; resetDaemonClient?: boolean } = {
+    exitOnError: false,
+    resetDaemonClient: false,
+  }
+) {
   performance.mark('create-project-graph-async:start');
 
   if (!daemonClient.enabled()) {
     try {
-      const res = await buildProjectGraphWithoutDaemon();
+      const res = await buildProjectGraphAndSourceMapsWithoutDaemon();
+      performance.measure(
+        'create-project-graph-async >> retrieve-project-configurations',
+        'retrieve-project-configurations:start',
+        'retrieve-project-configurations:end'
+      );
+      performance.measure(
+        'create-project-graph-async >> retrieve-workspace-files',
+        'retrieve-workspace-files:start',
+        'retrieve-workspace-files:end'
+      );
+      performance.measure(
+        'create-project-graph-async >> build-project-graph-using-project-file-map',
+        'build-project-graph-using-project-file-map:start',
+        'build-project-graph-using-project-file-map:end'
+      );
       performance.mark('create-project-graph-async:end');
       performance.measure(
         'create-project-graph-async',
@@ -157,7 +197,8 @@ export async function createProjectGraphAsync(
     }
   } else {
     try {
-      const projectGraph = await daemonClient.getProjectGraph();
+      const projectGraphAndSourceMaps =
+        await daemonClient.getProjectGraphAndSourceMaps();
       if (opts.resetDaemonClient) {
         daemonClient.reset();
       }
@@ -167,7 +208,7 @@ export async function createProjectGraphAsync(
         'create-project-graph-async:start',
         'create-project-graph-async:end'
       );
-      return projectGraph;
+      return projectGraphAndSourceMaps;
     } catch (e) {
       if (e.message.indexOf('inotify_add_watch') > -1) {
         // common errors with the daemon due to OS settings (cannot watch all the files available)
@@ -179,7 +220,7 @@ export async function createProjectGraphAsync(
           ],
         });
         markDaemonAsDisabled();
-        return buildProjectGraphWithoutDaemon();
+        return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
       if (e.internalDaemonError) {
@@ -193,7 +234,7 @@ export async function createProjectGraphAsync(
           ],
         });
         markDaemonAsDisabled();
-        return buildProjectGraphWithoutDaemon();
+        return buildProjectGraphAndSourceMapsWithoutDaemon();
       }
 
       handleProjectGraphError(opts, e);

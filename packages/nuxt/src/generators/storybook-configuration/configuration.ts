@@ -21,7 +21,7 @@ export async function storybookConfigurationGenerator(
       ...options,
     });
 
-  const projectConfiguration = readProjectConfiguration(host, options.name);
+  const projectConfiguration = readProjectConfiguration(host, options.project);
 
   const storybookConfigFolder =
     projectConfiguration.targets?.storybook?.options?.configDir;

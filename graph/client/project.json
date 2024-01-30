@@ -68,6 +68,7 @@
             "graph/client/src/assets/generated-project-graphs/",
             "graph/client/src/assets/generated-task-graphs/",
             "graph/client/src/assets/generated-task-inputs/",
+            "graph/client/src/assets/generated-source-maps/",
             {
               "input": "graph/client/src/assets/dev",
               "output": "/",
@@ -81,6 +82,7 @@
             "graph/client/src/assets/project-graphs/",
             "graph/client/src/assets/task-graphs/",
             "graph/client/src/assets/task-inputs/",
+            "graph/client/src/assets/source-maps/",
             {
               "input": "graph/client/src/assets/dev-e2e",
               "output": "/",
@@ -114,6 +116,11 @@
             {
               "input": "graph/client/src/assets/task-graphs",
               "output": "/assets/task-graphs",
+              "glob": "e2e.json"
+            },
+            {
+              "input": "graph/client/src/assets/source-maps",
+              "output": "/assets/source-maps",
               "glob": "e2e.json"
             },
             {

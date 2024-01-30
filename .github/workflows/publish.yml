@@ -1,15 +1,18 @@
 name: publish
-env:
-  DEBUG: napi:*
-  NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
-  NPM_CONFIG_PROVENANCE: true
+
 on:
+  schedule:
+    - cron: "0 3 * * 2-6" # Tuesdays - Saturdays, at 3am UTC
   workflow_dispatch:
   release:
     types: [published]
+
+env:
+  DEBUG: napi:*
+  NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
+
 jobs:
   build:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
     strategy:
       fail-fast: false
       matrix:
@@ -82,14 +85,14 @@ jobs:
     name: stable - ${{ matrix.settings.target }} - node@18
     runs-on: ${{ matrix.settings.host }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - uses: pnpm/action-setup@v2
         with:
-          version: 8.2
+          version: 8
 
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         if: ${{ !matrix.settings.docker }}
         with:
           node-version: 18
@@ -128,7 +131,7 @@ jobs:
         run: pnpm install --frozen-lockfile
         timeout-minutes: 30
       - name: Setup node x86
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         if: matrix.settings.target == 'i686-pc-windows-msvc'
         with:
           node-version: 18
@@ -152,15 +155,18 @@ jobs:
           name: bindings-${{ matrix.settings.target }}
           path: packages/**/*.node
           if-no-files-found: error
+
   build-freebsd:
      runs-on: macos-12
      name: Build FreeBSD
      timeout-minutes: 45
      steps:
-       - uses: actions/checkout@v3
+       - uses: actions/checkout@v4
+         if: ${{ github.event_name != 'schedule' }}
        - name: Build
          id: build
-         uses: cross-platform-actions/action@v0.21.0
+         if: ${{ github.event_name != 'schedule' }}
+         uses: cross-platform-actions/action@v0.21.1
          env:
            DEBUG: napi:*
            RUSTUP_IO_THREADS: 1
@@ -197,32 +203,36 @@ jobs:
              rm -rf node_modules
              rm -rf dist
              echo "KILL ALL NODE PROCESSES"
-             killall node
+             killall node || true
              echo "COMPLETE"
        - name: Upload artifact
+         if: ${{ github.event_name != 'schedule' }}
          uses: actions/upload-artifact@v3
          with:
            name: bindings-freebsd
            path: packages/**/*.node
            if-no-files-found: error
+
   publish:
-    if: ${{ github.event_name == 'release' && github.repository_owner == 'nrwl' }}
+    if: ${{ github.repository_owner == 'nrwl' }}
     name: Publish
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+      contents: write
     needs:
       - build-freebsd
       - build
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
         with:
-          version: 8.2
+          version: 8
       - name: Setup node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
+          registry-url: 'https://registry.npmjs.org'
           check-latest: true
           cache: 'pnpm'
       - name: Install dependencies
@@ -237,15 +247,31 @@ jobs:
       - name: Publish
         run: |
           git checkout -b publish/$GITHUB_REF_NAME
-          npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-          pnpm nx-release --local=false $GITHUB_REF_NAME
+          # If triggered by the cron, create a canary release
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            VERSION="canary"
+          else
+            # Otherwise, use the tag name (if triggered via release), or explicit version (if triggered via workflow_dispatch)
+            VERSION="${GITHUB_REF_NAME}"
+          fi
+          # If triggered via workflow_dispatch, perform a dry-run
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            DRY_RUN="--dry-run"
+          else
+            DRY_RUN=""
+          fi
+          pnpm nx-release --local=false $VERSION $DRY_RUN
       - name: Trigger Docs Release
-        # Publish docs only on a full release and when publishing the latest version
-        if: ${{ !github.event.release.prerelease && github.event.release.target_commitish == 'master' }}
+        # Publish docs only on a full release
+        if: ${{ !github.event.release.prerelease }}
         run: |
+          # Publish docs only when publishing the latest version
+          if [ "$(git describe --tags `git rev-list --tags --max-count=1`)" = "$GITHUB_REF_NAME" ]; then
           # We force recreate the branch in order to always be up to date and avoid merge conflicts within the automated workflow
           git branch -f website
           git push -f origin website
+          fi
     env:
       GH_TOKEN: ${{ github.token }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NPM_CONFIG_PROVENANCE: true

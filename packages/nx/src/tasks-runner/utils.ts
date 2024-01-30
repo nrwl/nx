@@ -10,6 +10,7 @@ import { serializeOverridesIntoCommandLine } from '../utils/serialize-overrides-
 import { splitByColons } from '../utils/split-target';
 import { getExecutorInformation } from '../command-line/run/executor-utils';
 import { CustomHasher } from '../config/misc-interfaces';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
 
 export function getCommandAsString(execCommand: string, task: Task) {
   const args = getPrintableCommandArgsForTask(task);
@@ -262,7 +263,12 @@ export async function getExecutorForTask(
   const executor = await getExecutorNameForTask(task, projectGraph);
   const [nodeModule, executorName] = executor.split(':');
 
-  return getExecutorInformation(nodeModule, executorName, workspaceRoot);
+  return getExecutorInformation(
+    nodeModule,
+    executorName,
+    workspaceRoot,
+    readProjectsConfigurationFromProjectGraph(projectGraph).projects
+  );
 }
 
 export async function getCustomHasher(

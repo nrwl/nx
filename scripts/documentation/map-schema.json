@@ -37,6 +37,10 @@
           "type": "string",
           "description": "Description for the item"
         },
+        "mediaImage": {
+          "type": "string",
+          "description": "Path to an alternate open graph image, relative to /docs"
+        },
         "file": {
           "type": "string",
           "description": "Path to the markdown file"

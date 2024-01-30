@@ -12,11 +12,13 @@ describe('Init MF', () => {
       name: 'app1',
       routing: true,
       standalone: false,
+      skipFormat: true,
     });
     await generateTestApplication(tree, {
       name: 'remote1',
       routing: true,
       standalone: false,
+      skipFormat: true,
     });
   });
 
@@ -32,6 +34,7 @@ describe('Init MF', () => {
         mfType: type,
         typescriptConfiguration: false,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -62,6 +65,7 @@ describe('Init MF', () => {
         mfType: type,
         typescriptConfiguration: true,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -94,6 +98,7 @@ describe('Init MF', () => {
         appName: app,
         mfType: type,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -119,13 +124,14 @@ describe('Init MF', () => {
         appName: app,
         mfType: type,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
       const updatedMainContents = tree.read(`${app}/src/main.ts`, 'utf-8');
 
       expect(updatedMainContents).toEqual(
-        `import('./bootstrap').catch((err) => console.error(err));\n`
+        `import('./bootstrap').catch(err => console.error(err));`
       );
       expect(updatedMainContents).not.toEqual(mainContents);
     }
@@ -143,6 +149,7 @@ describe('Init MF', () => {
         mfType: type,
         typescriptConfiguration: false,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -151,7 +158,7 @@ describe('Init MF', () => {
       expect(serve.executor).toEqual(
         type === 'host'
           ? '@nx/angular:module-federation-dev-server'
-          : '@nx/angular:webpack-dev-server'
+          : '@nx/angular:dev-server'
       );
       expect(build.executor).toEqual('@nx/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
@@ -172,6 +179,7 @@ describe('Init MF', () => {
         mfType: type,
         typescriptConfiguration: true,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -180,7 +188,7 @@ describe('Init MF', () => {
       expect(serve.executor).toEqual(
         type === 'host'
           ? '@nx/angular:module-federation-dev-server'
-          : '@nx/angular:webpack-dev-server'
+          : '@nx/angular:dev-server'
       );
       expect(build.executor).toEqual('@nx/angular:webpack-browser');
       expect(build.options.customWebpackConfig.path).toEqual(
@@ -196,6 +204,7 @@ describe('Init MF', () => {
       mfType: 'host',
       federationType: 'dynamic',
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -228,6 +237,7 @@ describe('Init MF', () => {
       appName: 'remote1',
       mfType: 'remote',
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -244,6 +254,7 @@ describe('Init MF', () => {
       remotes: ['remote1'],
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -263,6 +274,7 @@ describe('Init MF', () => {
       remotes: ['remote1'],
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -281,6 +293,7 @@ describe('Init MF', () => {
       mfType: 'host',
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -304,6 +317,7 @@ describe('Init MF', () => {
       mfType: 'host',
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -313,6 +327,7 @@ describe('Init MF', () => {
       host: 'app1',
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -325,6 +340,7 @@ describe('Init MF', () => {
     await generateTestApplication(tree, {
       name: 'remote2',
       standalone: false,
+      skipFormat: true,
     });
 
     await setupMf(tree, {
@@ -332,6 +348,7 @@ describe('Init MF', () => {
       mfType: 'host',
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     await setupMf(tree, {
@@ -341,6 +358,7 @@ describe('Init MF', () => {
       port: 4201,
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -351,6 +369,7 @@ describe('Init MF', () => {
       port: 4202,
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -363,6 +382,7 @@ describe('Init MF', () => {
     await generateTestApplication(tree, {
       name: 'remote2',
       standalone: false,
+      skipFormat: true,
     });
 
     await setupMf(tree, {
@@ -370,6 +390,7 @@ describe('Init MF', () => {
       mfType: 'host',
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     await setupMf(tree, {
@@ -379,6 +400,7 @@ describe('Init MF', () => {
       port: 4201,
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -389,6 +411,7 @@ describe('Init MF', () => {
       port: 4202,
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -402,6 +425,7 @@ describe('Init MF', () => {
       name: 'remote2',
       routing: true,
       standalone: false,
+      skipFormat: true,
     });
 
     await setupMf(tree, {
@@ -409,6 +433,7 @@ describe('Init MF', () => {
       mfType: 'host',
       routing: true,
       standalone: false,
+      skipFormat: true,
     });
 
     await setupMf(tree, {
@@ -418,6 +443,7 @@ describe('Init MF', () => {
       port: 4201,
       routing: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -428,6 +454,7 @@ describe('Init MF', () => {
       port: 4202,
       routing: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -441,6 +468,7 @@ describe('Init MF', () => {
       name: 'test-app',
       routing: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -450,6 +478,7 @@ describe('Init MF', () => {
       routing: true,
       e2eProjectName: 'test-app-e2e',
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -472,6 +501,7 @@ describe('Init MF', () => {
         federationType: 'dynamic',
         typescriptConfiguration: false,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -493,6 +523,7 @@ describe('Init MF', () => {
         federationType: 'dynamic',
         typescriptConfiguration: true,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -515,6 +546,7 @@ describe('Init MF', () => {
       federationType: 'dynamic',
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -526,6 +558,7 @@ describe('Init MF', () => {
       routing: true,
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -549,6 +582,7 @@ describe('Init MF', () => {
       federationType: 'dynamic',
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -560,6 +594,7 @@ describe('Init MF', () => {
       routing: true,
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT

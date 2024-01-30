@@ -665,8 +665,7 @@ fn find_imports(
 #[cfg(test)]
 mod find_imports {
     use super::*;
-    use crate::native::utils::glob::build_glob_set;
-    use crate::native::utils::path::Normalize;
+    use crate::native::glob::build_glob_set;
     use crate::native::walker::nx_walker;
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
@@ -1361,16 +1360,11 @@ import('./dynamic-import.vue')
         ancestors.next();
         let root = PathBuf::from(ancestors.next().unwrap());
 
-        let files = nx_walker(root.clone(), move |receiver| {
-            let mut files = vec![];
-            let glob = build_glob_set(&["**/*.[jt]s"]).unwrap();
-            for (path, _) in receiver {
-                if glob.is_match(&path) {
-                    files.push(root.join(path).to_normalized_string());
-                }
-            }
-            files
-        });
+        let glob = build_glob_set(&["**/*.[jt]s"]).unwrap();
+        let files = nx_walker(root.clone())
+            .filter(|file| glob.is_match(&file.full_path))
+            .map(|file| file.full_path)
+            .collect::<Vec<_>>();
 
         let results: HashMap<_, _> =
             find_imports(HashMap::from([(String::from("nx"), files.clone())]))

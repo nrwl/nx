@@ -138,7 +138,7 @@ export function findNextConfigPath(
 ): string {
   if (userDefinedConfigPath) {
     const file = userDefinedConfigPath;
-    if (existsSync(file)) return file;
+    if (existsSync(join(dirname, file))) return file;
     throw new Error(
       `Cannot find the Next.js config file: ${userDefinedConfigPath}. Is the path correct in project.json?`
     );

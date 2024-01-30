@@ -9,7 +9,7 @@ export default async function update(tree: Tree) {
 
   const rootMappings = createProjectRootMappingsFromProjectConfigurations(proj);
 
-  replaceProjectConfigurationsWithPlugin(
+  await replaceProjectConfigurationsWithPlugin(
     tree,
     rootMappings,
     '@nx/<%= dirName %>/plugin',

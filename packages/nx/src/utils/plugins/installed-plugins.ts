@@ -7,8 +7,9 @@ import { readJsonFile } from '../fileutils';
 import { PackageJson, readModulePackageJson } from '../package-json';
 import { workspaceRoot } from '../workspace-root';
 import { join } from 'path';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import { readNxJson } from '../../config/nx-json';
 import { getNxRequirePaths } from '../installation-directory';
+import { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
 export function findInstalledPlugins(): PackageJson[] {
   const packageJsonDeps = getDependenciesFromPackageJson();
@@ -64,14 +65,19 @@ function getDependenciesFromNxJson(): string[] {
 }
 
 export async function getInstalledPluginsAndCapabilities(
-  workspaceRoot: string
+  workspaceRoot: string,
+  projects: Record<string, ProjectConfiguration>
 ): Promise<Map<string, PluginCapabilities>> {
   const plugins = findInstalledPlugins().map((p) => p.name);
 
   const result = new Map<string, PluginCapabilities>();
   for (const plugin of Array.from(plugins).sort()) {
     try {
-      const capabilities = await getPluginCapabilities(workspaceRoot, plugin);
+      const capabilities = await getPluginCapabilities(
+        workspaceRoot,
+        plugin,
+        projects
+      );
       if (
         capabilities &&
         (capabilities.executors ||

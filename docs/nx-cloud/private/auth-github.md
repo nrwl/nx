@@ -85,5 +85,5 @@ This will point all auth endpoints to your GitHub server (rather the public one)
 
 {% callout type="check" title="Good to know!" %}
 The above environment variable, also helps with setting up the GitHub app integration, so you can have Nx Cloud build
-stats directly on your pull request. See full set up instructions [here](/nx-cloud/recipes/source-control-integration/github).
+stats directly on your pull request. See full set up instructions [here](/ci/recipes/source-control-integration/github).
 {% /callout %}

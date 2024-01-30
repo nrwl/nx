@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020"
+  },
+  "include": [
+    "src/main.ts",
+    <% if(type === "remote") { %> "src/remote-entry/<% if(standalone) { %>entry.routes.ts", <% } else { %> entry.module.ts", <% } } %>
+    "webpack.config.ts",
+    "webpack.prod.config.ts"
+  ]
+}

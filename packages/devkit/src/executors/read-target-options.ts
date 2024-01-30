@@ -38,7 +38,12 @@ export function readTargetOptions<T = any>(
   const ws = new Workspaces(context.root);
   const [nodeModule, executorName] = targetConfiguration.executor.split(':');
   const { schema } = getExecutorInformation
-    ? getExecutorInformation(nodeModule, executorName, context.root)
+    ? getExecutorInformation(
+        nodeModule,
+        executorName,
+        context.root,
+        context.projectsConfigurations?.projects ?? context.workspace.projects
+      )
     : // TODO(v18): remove readExecutor. This is to be backwards compatible with Nx 16.5 and below.
       (ws as any).readExecutor(nodeModule, executorName);
 

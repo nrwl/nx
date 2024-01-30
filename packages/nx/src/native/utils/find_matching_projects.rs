@@ -1,5 +1,5 @@
+use crate::native::glob::{build_glob_set, NxGlobSet};
 use crate::native::project_graph::types::{Project, ProjectGraph};
-use crate::native::utils::glob::{build_glob_set, NxGlobSet};
 use hashbrown::HashSet;
 use std::collections::HashMap;
 
@@ -212,7 +212,7 @@ fn add_matching_projects_by_tag<'a>(
             .get(*project_name)
             .and_then(|p| p.tags.as_ref())
             .map(|tags| tags.iter().map(|tag| tag.as_str()).collect::<Vec<_>>());
-        let Some(tags) =  project_tags else {
+        let Some(tags) = project_tags else {
             continue;
         };
 

@@ -23,7 +23,7 @@ describe('lib', () => {
   let defaultSchema: Schema = {
     name: 'my-lib',
     linter: Linter.EsLint,
-    skipFormat: false,
+    skipFormat: true,
     skipTsConfig: false,
     unitTestRunner: 'jest',
     style: 'css',
@@ -54,10 +54,6 @@ describe('lib', () => {
     expect(project.targets.build).toBeUndefined();
     expect(project.targets.lint).toEqual({
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
-      options: {
-        lintFilePatterns: ['my-lib/**/*.{ts,tsx,js,jsx}'],
-      },
     });
   });
 
@@ -186,7 +182,7 @@ describe('lib', () => {
   });
 
   it('should generate files', async () => {
-    await libraryGenerator(tree, defaultSchema);
+    await libraryGenerator(tree, { ...defaultSchema, skipFormat: false });
     expect(tree.exists('my-lib/package.json')).toBeFalsy();
     expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
     expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
@@ -318,10 +314,6 @@ describe('lib', () => {
       expect(config.root).toEqual('my-dir/my-lib');
       expect(config.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: ['my-dir/my-lib/**/*.{ts,tsx,js,jsx}'],
-        },
       });
     });
 
@@ -416,14 +408,6 @@ describe('lib', () => {
       expect(config.targets.lint).toMatchInlineSnapshot(`
         {
           "executor": "@nx/eslint:lint",
-          "options": {
-            "lintFilePatterns": [
-              "my-lib/**/*.{ts,tsx,js,jsx}",
-            ],
-          },
-          "outputs": [
-            "{options.outputFile}",
-          ],
         }
       `);
     });

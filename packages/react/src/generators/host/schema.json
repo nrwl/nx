@@ -74,6 +74,11 @@
       "enum": ["eslint"],
       "default": "eslint"
     },
+    "dynamic": {
+      "type": "boolean",
+      "description": "Should the host application use dynamic federation?",
+      "default": false
+    },
     "skipFormat": {
       "description": "Skip formatting files.",
       "type": "boolean",
@@ -94,7 +99,7 @@
     },
     "e2eTestRunner": {
       "type": "string",
-      "enum": ["cypress", "none"],
+      "enum": ["cypress", "playwright", "none"],
       "description": "Test runner to use for end to end (e2e) tests.",
       "default": "cypress"
     },

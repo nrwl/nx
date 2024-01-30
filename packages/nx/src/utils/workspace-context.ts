@@ -1,5 +1,6 @@
-import type { WorkspaceContext } from '../native';
+import type { NxWorkspaceFilesExternals, WorkspaceContext } from '../native';
 import { performance } from 'perf_hooks';
+import { cacheDirectoryForWorkspace } from './cache-directory';
 
 let workspaceContext: WorkspaceContext | undefined;
 
@@ -7,7 +8,10 @@ export function setupWorkspaceContext(workspaceRoot: string) {
   const { WorkspaceContext } =
     require('../native') as typeof import('../native');
   performance.mark('workspace-context');
-  workspaceContext = new WorkspaceContext(workspaceRoot);
+  workspaceContext = new WorkspaceContext(
+    workspaceRoot,
+    cacheDirectoryForWorkspace(workspaceRoot)
+  );
   performance.mark('workspace-context:end');
   performance.measure(
     'workspace context init',
@@ -18,28 +22,28 @@ export function setupWorkspaceContext(workspaceRoot: string) {
 
 export function getNxWorkspaceFilesFromContext(
   workspaceRoot: string,
-  globs: string[],
-  parseConfigurations: (files: string[]) => Record<string, string>
+  projectRootMap: Record<string, string>
 ) {
   ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getWorkspaceFiles(globs, parseConfigurations);
+  return workspaceContext.getWorkspaceFiles(projectRootMap);
 }
 
 export function globWithWorkspaceContext(
   workspaceRoot: string,
-  globs: string[]
+  globs: string[],
+  exclude?: string[]
 ) {
   ensureContextAvailable(workspaceRoot);
-  return workspaceContext.glob(globs);
+  return workspaceContext.glob(globs, exclude);
 }
 
-export function getProjectConfigurationsFromContext(
+export function hashWithWorkspaceContext(
   workspaceRoot: string,
   globs: string[],
-  parseConfigurations: (files: string[]) => Record<string, string>
+  exclude?: string[]
 ) {
   ensureContextAvailable(workspaceRoot);
-  return workspaceContext.getProjectConfigurations(globs, parseConfigurations);
+  return workspaceContext.hashFilesMatchingGlob(globs, exclude);
 }
 
 export function updateFilesInContext(
@@ -52,6 +56,29 @@ export function updateFilesInContext(
 export function getAllFileDataInContext(workspaceRoot: string) {
   ensureContextAvailable(workspaceRoot);
   return workspaceContext.allFileData();
+}
+
+export function getFilesInDirectoryUsingContext(
+  workspaceRoot: string,
+  dir: string
+) {
+  ensureContextAvailable(workspaceRoot);
+  return workspaceContext.getFilesInDirectory(dir);
+}
+
+export function updateProjectFiles(
+  projectRootMappings: Record<string, string>,
+  rustReferences: NxWorkspaceFilesExternals,
+  updatedFiles: Record<string, string>,
+  deletedFiles: string[]
+) {
+  return workspaceContext?.updateProjectFiles(
+    projectRootMappings,
+    rustReferences.projectFiles,
+    rustReferences.globalFiles,
+    updatedFiles,
+    deletedFiles
+  );
 }
 
 function ensureContextAvailable(workspaceRoot: string) {

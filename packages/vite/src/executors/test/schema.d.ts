@@ -1,12 +1,6 @@
 export interface VitestExecutorOptions {
-  config?: string;
-  passWithNoTests?: boolean;
-  testNamePattern?: string;
-  mode?: 'test' | 'benchmark' | 'typecheck';
-  reporters?: string[];
-  watch?: boolean;
-  update?: boolean;
+  configFile?: string;
   reportsDirectory?: string;
-  coverage?: boolean;
   testFiles?: string[];
+  watch?: boolean;
 }

@@ -180,6 +180,29 @@ describe('Run Commands', () => {
       ).toEqual('echo one -a=b');
     });
 
+    it('should add all args when forwardAllArgs is true', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          { args: '--additional-arg', __unparsed__: [] } as any,
+          true
+        )
+      ).toEqual('echo --additional-arg');
+    });
+
+    it('should add all args and unparsed args when forwardAllArgs is true', () => {
+      expect(
+        interpolateArgsIntoCommand(
+          'echo',
+          {
+            args: '--additional-arg',
+            __unparsed__: ['--additional-unparsed-arg'],
+          } as any,
+          true
+        )
+      ).toEqual('echo --additional-arg --additional-unparsed-arg');
+    });
+
     it("shouldn't add literal `undefined` if arg is not provided", () => {
       expect(
         interpolateArgsIntoCommand(
@@ -398,6 +421,59 @@ describe('Run Commands', () => {
         `${childFolder}/node_modules/.bin`
       );
       expect(normalize(readFile(f))).toContain(`${root}/node_modules/.bin`);
+    });
+  });
+
+  describe('env', () => {
+    afterAll(() => {
+      delete process.env.MY_ENV_VAR;
+      unlinkSync('.env');
+    });
+
+    it('should add the env to the command', async () => {
+      const root = dirSync().name;
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "$MY_ENV_VAR" >> ${f}`,
+            },
+          ],
+          env: {
+            MY_ENV_VAR: 'my-value',
+          },
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('my-value');
+    });
+    it('should prioritize env setting over local dotenv files', async () => {
+      writeFileSync('.env', 'MY_ENV_VAR=from-dotenv');
+      const root = dirSync().name;
+      const f = fileSync().name;
+      const result = await runCommands(
+        {
+          commands: [
+            {
+              command: `echo "$MY_ENV_VAR" >> ${f}`,
+            },
+          ],
+          env: {
+            MY_ENV_VAR: 'from-options',
+          },
+          parallel: true,
+          __unparsed__: [],
+        },
+        { root } as any
+      );
+
+      expect(result).toEqual(expect.objectContaining({ success: true }));
+      expect(readFile(f)).toEqual('from-options');
     });
   });
 

@@ -1,7 +1,7 @@
 import {
+  checkFilesExist,
   cleanupProject,
   newProject,
-  packageInstall,
   rmDist,
   runCLI,
   runCommand,
@@ -125,14 +125,55 @@ module.exports = composePlugins(withNx(), (config) => {
           path: path.join(__dirname, '../../dist/${appName}')
         },
         plugins: [
-          new NxWebpackPlugin()
+          new NxWebpackPlugin({
+            compiler: 'tsc',
+            main: 'apps/${appName}/src/main.ts',
+            tsConfig: 'apps/${appName}/tsconfig.app.json',
+            outputHashing: 'none',
+            optimization: false,
+          })
         ]
       };`
     );
 
-    runCLI(`build ${appName} --outputHashing none`);
+    runCLI(`build ${appName}`);
 
     let output = runCommand(`node dist/${appName}/main.js`);
     expect(output).toMatch(/Hello/);
   }, 500_000);
+
+  // Issue: https://github.com/nrwl/nx/issues/20179
+  it('should allow main/styles entries to be spread within composePlugins() function (#20179)', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    updateFile(`apps/${appName}/src/main.ts`, `console.log('Hello');\n`);
+
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+        const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+        module.exports = composePlugins(withNx(), withWeb(), (config) => {
+          return {
+            ...config,
+            entry: {
+              main: [...config.entry.main],
+              styles: [...config.entry.styles],
+            }
+          };
+        });
+      `
+    );
+
+    expect(() => {
+      runCLI(`build ${appName} --outputHashing none`);
+    }).not.toThrow();
+    checkFilesExist(`dist/apps/${appName}/styles.css`);
+
+    expect(() => {
+      runCLI(`build ${appName} --outputHashing none --extractCss false`);
+    }).not.toThrow();
+    expect(() => {
+      checkFilesExist(`dist/apps/${appName}/styles.css`);
+    }).toThrow();
+  });
 });

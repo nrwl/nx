@@ -24,16 +24,10 @@ import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
-import {
-  DaemonBasedTaskHasher,
-  InProcessTaskHasher,
-  TaskHasher,
-} from '../hasher/task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { getFileMap } from '../project-graph/build-project-graph';
-import { performance } from 'perf_hooks';
+import { createTaskHasher } from '../hasher/create-task-hasher';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -233,32 +227,18 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  let hasher: TaskHasher;
-  if (daemonClient.enabled()) {
-    hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
-  } else {
-    const { fileMap, allWorkspaceFiles } = getFileMap();
-    hasher = new InProcessTaskHasher(
-      fileMap?.projectFileMap,
-      allWorkspaceFiles,
-      projectGraph,
-      nxJson,
-      runnerOptions
-    );
-  }
+  let hasher = createTaskHasher(projectGraph, nxJson, runnerOptions);
 
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in
   // a distributed fashion
-  performance.mark('hashing:start');
+
   await hashTasksThatDoNotDependOnOutputsOfOtherTasks(
     hasher,
     projectGraph,
     taskGraph,
     nxJson
   );
-  performance.mark('hashing:end');
-  performance.measure('hashing', 'hashing:start', 'hashing:end');
 
   const promiseOrObservable = tasksRunner(
     tasks,

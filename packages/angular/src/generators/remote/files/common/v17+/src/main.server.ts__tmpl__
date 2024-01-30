@@ -24,11 +24,10 @@ export function app(): express.Express {
   server.set('view engine', 'html');
   server.set('views', browserBundles);
 
-
   // Example Express Rest API endpoints
   // server.get('/api/**', (req, res) => { });
   // Serve static files from /browser
-  server.use('/', express.static(browserBundles, { maxAge: '1y' }));
+  server.get('*.*', express.static(browserBundles, { maxAge: '1y' }));
   // Serve static files from /server
   server.use('/server', express.static(serverBundles, { maxAge: '1y' }));
 

@@ -24,10 +24,6 @@ describe('lib', () => {
       expect(config.targets.build).toBeUndefined();
       expect(config.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: [`my-lib/**/*.ts`],
-        },
       });
       expect(config.targets.test).toEqual({
         executor: '@nx/jest:jest',
@@ -213,10 +209,6 @@ describe('lib', () => {
       expect(project.root).toEqual(`my-dir/my-lib`);
       expect(project.targets.lint).toEqual({
         executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-        options: {
-          lintFilePatterns: [`my-dir/my-lib/**/*.ts`],
-        },
       });
     });
 

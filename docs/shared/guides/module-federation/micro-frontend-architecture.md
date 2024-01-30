@@ -51,15 +51,24 @@ Keeping the applications independent allows them to be deployed on different cad
 The generator for MFEs is the same as with basic Module Federation. You can use `nx g host` to create a new host
 application, and `nx g remote` for remote applications.
 
+{% tabs %}
+{% tab label="React" %}
+
 ```shell
-# React
 nx g @nx/react:host shell --remotes=shop,cart
 nx g @nx/react:remote about --host=shell
+```
 
-#a Angular
+{% /tab %}
+{% tab label="Angular" %}
+
+```shell
 nx g @nx/angular:host shell --remotes=shop,cart
 nx g @nx/angular:remote about --host=shell
 ```
+
+{% /tab %}
+{% /tabs %}
 
 That is! You can now run `nx serve shell` to develop on the `shell` application, while keeping all remotes static. To
 develop on one or more remote applications, pass the `--devRemotes` option.
@@ -93,7 +102,8 @@ between applications.
 
 For example, you can create a base configuration file that only shares core libraries that _have_ to be shared.
 
-```javascript {% fileName="module-federation.config.js" %}
+```javascript {% fileName="module-federation.config.ts" %}
+import { ModuleFederationConfig } from '@nx/webpack';
 // Core libraries such as react, angular, redux, ngrx, etc. must be
 // singletons. Otherwise the applications will not work together.
 const coreLibraries = new Set([
@@ -105,7 +115,7 @@ const coreLibraries = new Set([
   '@acme/pub-sub',
 ]);
 
-module.exports = {
+export const config: ModuleFederationConfig = {
   // Share core libraries, and avoid everything else
   shared: (libraryName, defaultConfig) => {
     if (coreLibraries.has(libraryName)) {
@@ -116,18 +126,23 @@ module.exports = {
     return false;
   },
 };
+
+export default config;
 ```
 
 Then, in the `shell` and remote applications, you can extend from the base configuration.
 
-```javascript {% fileName="apps/shell/module-federation.config.js" %}
-const baseConfig = require('../../module-federation.config');
+```javascript {% fileName="apps/shell/module-federation.config.ts" %}
+import { ModuleFederationConfig } from '@nx/webpack';
+import baseConfig from '../../module-federation.config';
 
-module.exports = {
+export const config: ModuleFederationConfig = {
   ...baseConfig,
   name: 'shell',
   remotes: ['shop', 'cart', 'about'],
 };
+
+export default config;
 ```
 
 {% callout type="note" title="More details" %}
@@ -160,7 +175,7 @@ changes should occur infrequently as to not disrupt other releases for bug fixes
 Since deployments are not atomic, there can be cases of mismatched libraries between the host and remotes. We recommend
 that teams deploy their applications whenever changes to a shared library affects them. You can further mitigate mismatch
 issues by minimizing the amount of libraries you share (using the `shared` configuration option in
-`module-federation.config.js`).
+`module-federation.config.ts`).
 
 Teams should also avoid MFE anarchy, where competing technologies are mixed together. Instead, teams should agree upon
 the adopted technologies, which allows easier collaboration across teams.

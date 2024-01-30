@@ -37,6 +37,11 @@ describe('Cypress Component Testing Configuration', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     tree.write('.gitignore', '');
     mockedInstalledCypressVersion.mockReturnValue(10);
+
+    projectGraph = {
+      dependencies: {},
+      nodes: {},
+    };
   });
 
   afterEach(() => {
@@ -47,14 +52,17 @@ describe('Cypress Component Testing Configuration', () => {
     it('should add project config with --target=<project>:<target>', async () => {
       await generateTestApplication(tree, {
         name: 'fancy-app',
+        skipFormat: true,
       });
       await generateTestLibrary(tree, {
         name: 'fancy-lib',
+        skipFormat: true,
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
         project: 'fancy-lib',
         export: true,
+        skipFormat: true,
       });
       projectGraph = {
         nodes: {
@@ -83,11 +91,14 @@ describe('Cypress Component Testing Configuration', () => {
           ],
         },
       };
+
       await cypressComponentConfiguration(tree, {
         project: 'fancy-lib',
         buildTarget: 'fancy-app:build',
         generateTests: false,
+        skipFormat: true,
       });
+
       expect(
         tree.exists('fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts')
       ).toBeFalsy();
@@ -107,14 +118,17 @@ describe('Cypress Component Testing Configuration', () => {
     it('should add project config with --target=<project>:<target>:<config>', async () => {
       await generateTestApplication(tree, {
         name: 'fancy-app',
+        skipFormat: true,
       });
       await generateTestLibrary(tree, {
         name: 'fancy-lib',
+        skipFormat: true,
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
         project: 'fancy-lib',
         export: true,
+        skipFormat: true,
       });
       projectGraph = {
         nodes: {
@@ -143,11 +157,14 @@ describe('Cypress Component Testing Configuration', () => {
           ],
         },
       };
+
       await cypressComponentConfiguration(tree, {
         project: 'fancy-lib',
         buildTarget: 'fancy-app:build:development',
         generateTests: false,
+        skipFormat: true,
       });
+
       expect(
         tree.exists('fancy-lib/src/lib/fancy-cmp/fancy-cmp.component.cy.ts')
       ).toBeFalsy();
@@ -167,15 +184,21 @@ describe('Cypress Component Testing Configuration', () => {
     it('should not throw with invalid --build-target', async () => {
       await generateTestApplication(tree, {
         name: 'fancy-app',
+        skipFormat: true,
       });
       await generateTestLibrary(tree, {
         name: 'fancy-lib',
+        skipFormat: true,
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
         project: 'fancy-lib',
         export: true,
+        skipFormat: true,
       });
+
+      jest.clearAllMocks();
+
       const appConfig = readProjectConfiguration(tree, 'fancy-app');
       appConfig.targets['build'].executor = 'something/else';
       updateProjectConfiguration(tree, 'fancy-app', appConfig);
@@ -206,23 +229,28 @@ describe('Cypress Component Testing Configuration', () => {
           ],
         },
       };
+
       await expect(async () => {
         await cypressComponentConfiguration(tree, {
           project: 'fancy-lib',
           buildTarget: 'fancy-app:build',
           generateTests: false,
+          skipFormat: true,
         });
       }).resolves;
     });
+
     it('should use own project config', async () => {
       await generateTestApplication(tree, {
         name: 'fancy-app',
         bundler: 'webpack',
+        skipFormat: true,
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
         project: 'fancy-app',
         export: true,
+        skipFormat: true,
       });
       projectGraph = {
         nodes: {
@@ -236,10 +264,13 @@ describe('Cypress Component Testing Configuration', () => {
         },
         dependencies: {},
       };
+
       await cypressComponentConfiguration(tree, {
         project: 'fancy-app',
         generateTests: false,
+        skipFormat: true,
       });
+
       expect(
         readProjectConfiguration(tree, 'fancy-app').targets['component-test']
       ).toEqual({
@@ -257,14 +288,17 @@ describe('Cypress Component Testing Configuration', () => {
       await generateTestApplication(tree, {
         name: 'fancy-app',
         bundler: 'webpack',
+        skipFormat: true,
       });
       await generateTestLibrary(tree, {
         name: 'fancy-lib',
+        skipFormat: true,
       });
       await componentGenerator(tree, {
         name: 'fancy-cmp',
         project: 'fancy-lib',
         export: true,
+        skipFormat: true,
       });
       tree.write(
         'fancy-app/src/app/blah.component.ts',
@@ -297,10 +331,13 @@ describe('Cypress Component Testing Configuration', () => {
           ],
         },
       };
+
       await cypressComponentConfiguration(tree, {
         project: 'fancy-lib',
         generateTests: false,
+        skipFormat: true,
       });
+
       expect(
         readProjectConfiguration(tree, 'fancy-lib').targets['component-test']
       ).toEqual({
@@ -314,11 +351,12 @@ describe('Cypress Component Testing Configuration', () => {
       });
     });
   });
+
   it('should setup angular specific configs', async () => {
     await generateTestLibrary(tree, {
       name: 'my-lib',
+      skipFormat: true,
     });
-
     await setup(tree, {
       project: 'my-lib',
       name: 'something',
@@ -351,10 +389,12 @@ describe('Cypress Component Testing Configuration', () => {
         ],
       },
     };
+
     await cypressComponentConfiguration(tree, {
       project: 'my-lib',
       buildTarget: 'something:build',
       generateTests: true,
+      skipFormat: true,
     });
 
     expect(tree.read('my-lib/cypress.config.ts', 'utf-8'))
@@ -363,7 +403,7 @@ describe('Cypress Component Testing Configuration', () => {
       import { defineConfig } from 'cypress';
 
       export default defineConfig({
-        component: nxComponentTestingPreset(__filename),
+        component: nxComponentTestingPreset(__filename)
       });
       "
     `);
@@ -371,11 +411,12 @@ describe('Cypress Component Testing Configuration', () => {
       tree.read('my-lib/cypress/support/component.ts', 'utf-8')
     ).toMatchSnapshot('component.ts');
   });
+
   it('should work with simple components', async () => {
     await generateTestLibrary(tree, {
       name: 'my-lib',
+      skipFormat: true,
     });
-
     await setup(tree, {
       project: 'my-lib',
       name: 'something',
@@ -408,10 +449,12 @@ describe('Cypress Component Testing Configuration', () => {
         ],
       },
     };
+
     await cypressComponentConfiguration(tree, {
       project: 'my-lib',
       buildTarget: 'something:build',
       generateTests: true,
+      skipFormat: true,
     });
 
     const [one, two, three] = getCmpsFromTree(tree, {
@@ -426,8 +469,8 @@ describe('Cypress Component Testing Configuration', () => {
   it('should work with standalone component', async () => {
     await generateTestLibrary(tree, {
       name: 'my-lib-standalone',
+      skipFormat: true,
     });
-
     await setup(tree, {
       project: 'my-lib-standalone',
       name: 'something',
@@ -460,6 +503,7 @@ describe('Cypress Component Testing Configuration', () => {
         ],
       },
     };
+
     await cypressComponentConfiguration(tree, {
       project: 'my-lib-standalone',
       buildTarget: 'something:build',
@@ -478,8 +522,8 @@ describe('Cypress Component Testing Configuration', () => {
   it('should work with complex component', async () => {
     await generateTestLibrary(tree, {
       name: 'with-inputs-cmp',
+      skipFormat: true,
     });
-
     await setup(tree, {
       project: 'with-inputs-cmp',
       name: 'something',
@@ -514,10 +558,12 @@ describe('Cypress Component Testing Configuration', () => {
         ],
       },
     };
+
     await cypressComponentConfiguration(tree, {
       project: 'with-inputs-cmp',
       buildTarget: 'something:build',
       generateTests: true,
+      skipFormat: true,
     });
 
     const [one, two, three] = getCmpsFromTree(tree, {
@@ -532,8 +578,8 @@ describe('Cypress Component Testing Configuration', () => {
   it('should work with complex standalone component', async () => {
     await generateTestLibrary(tree, {
       name: 'with-inputs-standalone-cmp',
+      skipFormat: true,
     });
-
     await setup(tree, {
       project: 'with-inputs-standalone-cmp',
       name: 'something',
@@ -568,6 +614,7 @@ describe('Cypress Component Testing Configuration', () => {
         ],
       },
     };
+
     await cypressComponentConfiguration(tree, {
       project: 'with-inputs-standalone-cmp',
       buildTarget: 'something:build',
@@ -586,20 +633,24 @@ describe('Cypress Component Testing Configuration', () => {
   it('should work with secondary entry point libs', async () => {
     await generateTestApplication(tree, {
       name: 'my-cool-app',
+      skipFormat: true,
     });
     await generateTestLibrary(tree, {
       name: 'secondary',
       buildable: true,
+      skipFormat: true,
     });
     await librarySecondaryEntryPointGenerator(tree, {
       name: 'button',
       library: 'secondary',
+      skipFormat: true,
     });
     await componentGenerator(tree, {
       name: 'fancy-button',
       path: 'secondary/src/lib/button',
       project: 'secondary',
       flat: true,
+      skipFormat: true,
     });
     await componentGenerator(tree, {
       name: 'standalone-fancy-button',
@@ -607,6 +658,7 @@ describe('Cypress Component Testing Configuration', () => {
       project: 'secondary',
       standalone: true,
       flat: true,
+      skipFormat: true,
     });
     projectGraph = {
       nodes: {
@@ -632,7 +684,9 @@ describe('Cypress Component Testing Configuration', () => {
       generateTests: true,
       project: 'secondary',
       buildTarget: 'my-cool-app:build',
+      skipFormat: true,
     });
+
     expect(
       tree.read(
         'secondary/src/lib/button/fancy-button.component.cy.ts',
@@ -651,6 +705,7 @@ describe('Cypress Component Testing Configuration', () => {
     await generateTestLibrary(tree, {
       name: 'cool-lib',
       flat: true,
+      skipFormat: true,
     });
     await setup(tree, { project: 'cool-lib', name: 'abc', standalone: false });
     tree.write(
@@ -684,29 +739,27 @@ describe('Cypress Component Testing Configuration', () => {
       },
       dependencies: {},
     };
+
     await cypressComponentConfiguration(tree, {
       project: 'cool-lib',
       buildTarget: 'abc:build',
       generateTests: true,
+      skipFormat: true,
     });
 
     const [one, two, three] = getCmpsFromTree(tree, {
       name: 'abc',
       basePath: 'cool-lib/src/lib',
     });
-
-    expect(one.cy).toMatchInlineSnapshot(`
-      "const msg = 'should not overwrite abc-one';
-      "
-    `);
-    expect(two.cy).toMatchInlineSnapshot(`
-      "const msg = 'should not overwrite abc-two';
-      "
-    `);
-    expect(three.cy).toMatchInlineSnapshot(`
-      "const msg = 'should not overwrite abc-three';
-      "
-    `);
+    expect(one.cy).toMatchInlineSnapshot(
+      `"const msg = 'should not overwrite abc-one';"`
+    );
+    expect(two.cy).toMatchInlineSnapshot(
+      `"const msg = 'should not overwrite abc-two';"`
+    );
+    expect(three.cy).toMatchInlineSnapshot(
+      `"const msg = 'should not overwrite abc-three';"`
+    );
   });
 
   // TODO: should we support this?
@@ -714,17 +767,19 @@ describe('Cypress Component Testing Configuration', () => {
     await generateTestLibrary(tree, {
       name: 'multiple-components',
       flat: true,
+      skipFormat: true,
     });
-
     await componentGenerator(tree, {
       name: 'cmp-one',
       project: 'multiple-components',
       flat: true,
+      skipFormat: true,
     });
     await componentGenerator(tree, {
       name: 'cmp-two',
       project: 'multiple-components',
       flat: true,
+      skipFormat: true,
     });
     tree.write(
       `multiple-components/src/lib/cmp-one.component.ts`,
@@ -757,7 +812,6 @@ export class CmpMultiComponent implements OnInit {
 }
 `
     );
-
     tree.write(
       '',
       `
@@ -782,7 +836,9 @@ export class MultipleComponentsModule { }
     await cypressComponentConfiguration(tree, {
       project: 'multiple-components',
       generateTests: true,
+      skipFormat: true,
     });
+
     expect(
       tree.read('multiple-components/src/lib/cmp-one.component.cy.ts', 'utf-8')
     ).toEqual('');
@@ -802,13 +858,18 @@ async function setup(
   await generateTestApplication(tree, {
     name: options.name,
     standalone: options.standalone,
+    skipFormat: true,
   });
   for (const name of [
     `${options.name}-one`,
     `${options.name}-two`,
     `${options.name}-three`,
   ]) {
-    await componentGenerator(tree, { project: options.project, name });
+    await componentGenerator(tree, {
+      project: options.project,
+      name,
+      skipFormat: true,
+    });
 
     if (options.withInputs) {
       const cmpPath = joinPathFragments(
@@ -816,11 +877,7 @@ async function setup(
         name,
         `${name}.component.ts`
       );
-      const oldContent = tree.read(
-        cmpPath,
-
-        'utf-8'
-      );
+      const oldContent = tree.read(cmpPath, 'utf-8');
 
       const newContent = oldContent.replace(
         'constructor()',

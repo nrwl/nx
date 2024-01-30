@@ -1,10 +1,10 @@
 # Configuring CI Using GitHub Actions and Nx
 
-There are two general approaches to setting up CI with Nx - using a single pipeline or using distributed task execution. For smaller repositories, a single pipeline is faster and cheaper, but once a full CI run starts taking 10 to 15 minutes, distributed task execution becomes the better option. Distributed task execution allows you to keep the CI pipeline fast as you scale. As the repository grows, all you need to do is add more agents.
+There are two general approaches to setting up CI with Nx - using a single job or distributing tasks across multiple jobs. For smaller repositories, a single job is faster and cheaper, but once a full CI run starts taking 10 to 15 minutes, using multiple jobs becomes the better option. Nx Cloud's distributed task execution allows you to keep the CI pipeline fast as you scale. As the repository grows, all you need to do is add more agents.
 
-## Single Pipeline
+## Process Only Affected Projects With One Job on GitHub Actions
 
-This is an example of a GitHub Actions setup that runs on a single pipeline, building and testing only what is affected.
+Below is an example of an GitHub Actions setup that runs on a single job, building and testing only what is affected. This uses the [`nx affected` command](/ci/features/affected) to run the tasks only for the projects that were affected by that PR.
 
 ```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI
@@ -14,6 +14,11 @@ on:
       # Change this if your primary branch is not main
       - main
   pull_request:
+
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
 
 jobs:
   main:
@@ -32,16 +37,18 @@ jobs:
       # This line is needed for nx affected to work when CI is running on a PR
       - run: git branch --track main origin/main
 
-      - run: npx nx format:check
+      - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t lint,test,build --parallel=3
 ```
+
+### Get the Commit of the Last Successful Build
 
 `GitHub` can track the last successful run on the `main` branch and use this as a reference point for the `BASE`. The `nrwl/nx-set-shas` provides a convenient implementation of this functionality which you can drop into your existing CI config.
 To understand why knowing the last successful build is important for the affected command, check out the [in-depth explanation in Actions's docs](https://github.com/marketplace/actions/nx-set-shas#background).
 
-## Distributed Task Execution
+## Distribute Tasks Across Agents on GitHub Actions
 
-To set up [Distributed Task Execution (DTE)](/nx-cloud/features/distribute-task-execution), you can run this generator:
+To set up [Distributed Task Execution (DTE)](/ci/features/distribute-task-execution), you can run this generator:
 
 ```shell
 npx nx g ci-workflow --ci=github
@@ -57,6 +64,11 @@ on:
       - main
   pull_request:
 
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
+
 jobs:
   main:
     name: Nx Cloud - Main Job
@@ -64,7 +76,7 @@ jobs:
     with:
       number-of-agents: 3
       parallel-commands: |
-        npx nx-cloud record -- npx nx format:check
+        npx nx-cloud record -- nx format:check
       parallel-commands-on-agents: |
         npx nx affected -t lint,test,build --parallel=2
 
@@ -94,10 +106,10 @@ The second workflow is for the agents:
 The `number-of-agents` property controls how many agent jobs are created. Note that this property should be the same number for each workflow.
 
 {% callout type="warning" title="Two Types of Parallelization" %}
-The `number-of-agents` property and the `--parallel` flag both parallelize tasks, but in different ways. The way this workflow is written, there will 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
+The `number-of-agents` property and the `--parallel` flag both parallelize tasks, but in different ways. The way this workflow is written, there will be 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
 {% /callout %}
 
-## Custom Distributed CI with Nx Cloud
+## Custom Distributed CI with Nx Cloud on GitHub Actions
 
 Our [reusable GitHub workflow](https://github.com/nrwl/ci) represents a good set of defaults that works for a large number of our users. However, reusable GitHub workflows come with their [limitations](https://docs.github.com/en/actions/using-workflows/reusing-workflows).
 
@@ -110,6 +122,11 @@ on:
     branches:
       - main
   pull_request:
+
+# Needed for nx-set-shas when run on the main branch
+permissions:
+  actions: read
+  contents: read
 
 env:
   NX_CLOUD_DISTRIBUTED_EXECUTION: true # this enables DTE
@@ -156,32 +173,35 @@ jobs:
       - name: Check out the default branch
         run: git branch --track main origin/main
 
-      - name: Initialize the Nx Cloud distributed CI run
-        run: npx nx-cloud start-ci-run
+      - name: Initialize the Nx Cloud distributed CI run and stop agents when the build tasks are done
+        run: npx nx-cloud start-ci-run --stop-agents-after=build
 
       - name: Run commands in parallel
         run: |
+          # initialize an array to store process IDs (PIDs)
           pids=()
+
+          # function to run commands and store the PID
+          function run_command() {
+            local command=$1
+            $command &  # run the command in the background
+            pids+=($!)  # store the PID of the background process
+          }
+
           # list of commands to be run on main has env flag NX_CLOUD_DISTRIBUTED_EXECUTION set to false
-          NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx-cloud record -- npx nx format:check & pids+=($!)
+          run_command "NX_CLOUD_DISTRIBUTED_EXECUTION=false npx nx-cloud record -- nx format:check"
 
           # list of commands to be run on agents
-          npx nx affected -t lint,test,build --parallel=3 & 
-          pids+=($!)
+          run_command "npx nx affected -t lint,test,build --parallel=3"
 
-          # run all commands in parallel and bail if one of them fails
+          # wait for all background processes to finish
           for pid in ${pids[*]}; do
             if ! wait $pid; then
-              exit 1
+              exit 1  # exit with an error status if any process fails
             fi
           done
 
-          exit 0
-
-      - name: Stop all running agents for this CI run
-        # It's important that we always run this step, otherwise in the case of any failures in preceding non-Nx steps, the agents will keep running and waste billable minutes
-        if: ${{ always() }}
-        run: npx nx-cloud stop-all-agents
+          exit 0 # exits with success status if a all processes complete successfully
 
   agents:
     name: Agent ${{ matrix.agent }}

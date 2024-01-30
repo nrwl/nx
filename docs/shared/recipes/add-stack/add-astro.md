@@ -10,9 +10,9 @@ Because we are not using an Nx plugin for Astro, there are few items we'll have 
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
 {% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/nx-cloud/features/remote-cache" %}✅ Remote Caching{% /pill %}
+{% pill url="/ci/features/remote-cache" %}✅ Remote Caching{% /pill %}
 {% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
-{% pill url="/nx-cloud/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
+{% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
 {% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/recipes/enforce-module-boundaries" %}✅ Enforce Project Boundaries{% /pill %}
@@ -39,7 +39,7 @@ We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#inst
 ✔ Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts. · build
 
 ✔ Does the "build" script create any outputs? If not, leave blank, otherwise provide a path (e.g. dist, lib, build, coverage) · dist
-✔ Enable distributed caching to make your CI faster · No
+✔ Would you like remote caching to make your build faster? · Yes
 
  >  NX   📦 Installing dependencies
 
@@ -83,9 +83,29 @@ Install `@nx/js` plugin.
 
 > Note: you should make sure any first party, `@nx/` scoped, plugins match the `nx` package version
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm i -DE @nx/js@<nx-version>
+npm add -DE @nx/js@<nx-version>
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -DE @nx/js@<nx-version>
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -DE @nx/js@<nx-version>
+```
+
+{% /tab %}
+{% /tabs %}
 
 Then generate a project
 

@@ -5,7 +5,7 @@ import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   await storiesGenerator(host, {
-    project: schema.name,
+    project: schema.project,
     js: schema.js,
     ignorePaths: schema.ignorePaths,
     skipFormat: true,
@@ -22,7 +22,7 @@ export async function storybookConfigurationGenerator(
   >('@nx/storybook', nxVersion);
 
   const installTask = await configurationGenerator(host, {
-    name: schema.name,
+    project: schema.project,
     js: schema.js,
     linter: schema.linter,
     tsConfiguration: schema.tsConfiguration ?? true, // default is true

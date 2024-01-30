@@ -68,6 +68,12 @@ description: This is a custom description
 ---
 ```
 
+### Social Media Images
+
+You can specify a custom social media image for a page by specifying `mediaImage` in the `map.json` entry for that page. `mediaImage` is a path relative to `/docs`.
+
+Note that you won't see the social media image in the preview generated for your PR, because it loads from the live `nx.dev` site. You can make sure the image is correct by looking at `[preview-url]/images/open-graph/[page-url].[image-extension]`.
+
 ### Custom markdown syntax
 
 The documentation website [nx.dev](https://nx.dev) is using custom Markdown syntax to enable the authors to add functionality to its content.
@@ -80,6 +86,16 @@ Callouts are available to get the attention of the reader on some specific type 
 {% callout type="caution|check|note|warning" title="string" %}
 Your content goes here.
 {% /callout %}
+```
+
+#### Disclosure
+
+A disclosure can be used for less important information that is initially collapsed.
+
+```markdown
+{% disclosure title="string" %}
+Your content goes here.
+{% /disclosure %}
 ```
 
 #### Cards
@@ -148,6 +164,8 @@ You can also statically highlight a set of lines (the user won't be able to chan
 ‎ Neither is this
 ‎```
 ````
+
+You can also specify ranges like `highlightLines=[2,3,"8-10"]`.
 
 #### Terminal command
 
@@ -267,6 +285,49 @@ Have a more decent button-like widget that you can place below sections of a tut
 ```markdown
 {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%}
 ```
+
+#### Project Details View
+
+Embed a Project Details View that is identical what is shown in Nx Console or `nx show project myproject --web`
+
+````markdown
+{% project-details title="Test" height="100px" %}
+
+```json
+{
+  "project": {
+    "name": "demo",
+    "data": {
+      "root": " packages/demo",
+      "projectType": "application",
+      "targets": {
+        "dev": {
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "vite dev"
+          }
+        },
+        "build": {
+          "executor": "nx:run-commands",
+          "inputs": ["production", "^production"],
+          "outputs": ["{projectRoot}/dist"],
+          "options": {
+            "command": "vite build"
+          }
+        }
+      }
+    }
+  },
+  "sourceMap": {
+    "targets": ["packages/demo/vite.config.ts", "@nx/vite"],
+    "targets.dev": ["packages/demo/vite.config.ts", "@nx/vite"],
+    "targets.build": ["packages/demo/vite.config.ts", "@nx/vite"]
+  }
+}
+```
+
+{% /project-details %}
+````
 
 #### Graph
 

@@ -33,7 +33,7 @@ import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 const DEFAULT_PORT = 4400;
 
-export function addStorybookTask(
+export function addStorybookTarget(
   tree: Tree,
   projectName: string,
   uiFramework: UiFramework,
@@ -82,7 +82,7 @@ export function addStorybookTask(
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
-export function addAngularStorybookTask(
+export function addAngularStorybookTarget(
   tree: Tree,
   projectName: string,
   interactionTests: boolean
@@ -141,20 +141,20 @@ export function addAngularStorybookTask(
 export function addStaticTarget(tree: Tree, opts: StorybookConfigureSchema) {
   const nrwlWeb = ensurePackage<typeof import('@nx/web')>('@nx/web', nxVersion);
   nrwlWeb.webStaticServeGenerator(tree, {
-    buildTarget: `${opts.name}:build-storybook`,
-    outputPath: joinPathFragments('dist/storybook', opts.name),
+    buildTarget: `${opts.project}:build-storybook`,
+    outputPath: joinPathFragments('dist/storybook', opts.project),
     targetName: 'static-storybook',
   });
 
-  const projectConfig = readProjectConfiguration(tree, opts.name);
+  const projectConfig = readProjectConfiguration(tree, opts.project);
 
   projectConfig.targets['static-storybook'].configurations = {
     ci: {
-      buildTarget: `${opts.name}:build-storybook:ci`,
+      buildTarget: `${opts.project}:build-storybook:ci`,
     },
   };
 
-  updateProjectConfiguration(tree, opts.name, projectConfig);
+  updateProjectConfiguration(tree, opts.project, projectConfig);
 }
 
 export function createStorybookTsconfigFile(
@@ -282,7 +282,7 @@ export function configureTsProjectConfig(
   tree: Tree,
   schema: StorybookConfigureSchema
 ) {
-  const { name: projectName } = schema;
+  const { project: projectName } = schema;
 
   let tsConfigPath: string;
   let tsConfigContent: TsConfig;
@@ -323,7 +323,7 @@ export function configureTsSolutionConfig(
   tree: Tree,
   schema: StorybookConfigureSchema
 ) {
-  const { name: projectName } = schema;
+  const { project: projectName } = schema;
 
   const { root } = readProjectConfiguration(tree, projectName);
   const tsConfigPath = join(root, 'tsconfig.json');
@@ -368,7 +368,7 @@ export function configureTsSolutionConfig(
  * This is done within the eslint config file.
  */
 export function updateLintConfig(tree: Tree, schema: StorybookConfigureSchema) {
-  const { name: projectName } = schema;
+  const { project: projectName } = schema;
 
   const { root } = readProjectConfiguration(tree, projectName);
 
@@ -481,45 +481,53 @@ export function addStorybookToNamedInputs(tree: Tree) {
       }
     }
 
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['build-storybook'] ??= {};
-    nxJson.targetDefaults['build-storybook'].inputs ??= [
-      'default',
-      hasProductionFileset ? '^production' : '^default',
-    ];
-
-    if (
-      !nxJson.targetDefaults['build-storybook'].inputs.includes(
-        '{projectRoot}/.storybook/**/*'
-      )
-    ) {
-      nxJson.targetDefaults['build-storybook'].inputs.push(
-        '{projectRoot}/.storybook/**/*'
-      );
-    }
-
-    // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
-    // because we want to rebuild Storybook if the .storybook folder changes
-    const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
-      '!{projectRoot}/.storybook/**/*'
-    );
-
-    if (index !== -1) {
-      nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
-    }
-
-    if (
-      !nxJson.targetDefaults['build-storybook'].inputs.includes(
-        '{projectRoot}/tsconfig.storybook.json'
-      )
-    ) {
-      nxJson.targetDefaults['build-storybook'].inputs.push(
-        '{projectRoot}/tsconfig.storybook.json'
-      );
-    }
-
     updateNxJson(tree, nxJson);
   }
+}
+
+export function addStorybookToTargetDefaults(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['build-storybook'] ??= {};
+  nxJson.targetDefaults['build-storybook'].inputs ??= [
+    'default',
+    nxJson.namedInputs && 'production' in nxJson.namedInputs
+      ? '^production'
+      : '^default',
+  ];
+
+  if (
+    !nxJson.targetDefaults['build-storybook'].inputs.includes(
+      '{projectRoot}/.storybook/**/*'
+    )
+  ) {
+    nxJson.targetDefaults['build-storybook'].inputs.push(
+      '{projectRoot}/.storybook/**/*'
+    );
+  }
+
+  // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
+  // because we want to rebuild Storybook if the .storybook folder changes
+  const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
+    '!{projectRoot}/.storybook/**/*'
+  );
+
+  if (index !== -1) {
+    nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
+  }
+
+  if (
+    !nxJson.targetDefaults['build-storybook'].inputs.includes(
+      '{projectRoot}/tsconfig.storybook.json'
+    )
+  ) {
+    nxJson.targetDefaults['build-storybook'].inputs.push(
+      '{projectRoot}/tsconfig.storybook.json'
+    );
+  }
+
+  updateNxJson(tree, nxJson);
 }
 
 export function createProjectStorybookDir(
@@ -536,7 +544,9 @@ export function createProjectStorybookDir(
   isNextJs?: boolean,
   usesSwc?: boolean,
   usesVite?: boolean,
-  viteConfigFilePath?: string
+  viteConfigFilePath?: string,
+  hasPlugin?: boolean,
+  viteConfigFileName?: string
 ) {
   let projectDirectory =
     projectType === 'application'
@@ -579,6 +589,8 @@ export function createProjectStorybookDir(
     usesVite,
     isRootProject: projectIsRootProjectInStandaloneWorkspace,
     viteConfigFilePath,
+    hasPlugin,
+    viteConfigFileName,
   });
 
   if (js) {
@@ -696,18 +708,38 @@ export async function getE2EProjectName(
   return e2eProject;
 }
 
-export function getViteConfigFilePath(
+export function findViteConfig(
   tree: Tree,
-  projectRoot: string,
-  configFile?: string
+  projectRoot: string
+): {
+  fullConfigPath: string | undefined;
+  viteConfigFileName: string | undefined;
+} {
+  const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
+
+  for (const ext of allowsExt) {
+    const viteConfigPath = joinPathFragments(projectRoot, `vite.config.${ext}`);
+    if (tree.exists(viteConfigPath)) {
+      return {
+        fullConfigPath: viteConfigPath,
+        viteConfigFileName: `vite.config.${ext}`,
+      };
+    }
+  }
+}
+
+export function findNextConfig(
+  tree: Tree,
+  projectRoot: string
 ): string | undefined {
-  return configFile && tree.exists(configFile)
-    ? configFile
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
-    : undefined;
+  const allowsExt = ['js', 'mjs', 'cjs'];
+
+  for (const ext of allowsExt) {
+    const nextConfigPath = joinPathFragments(projectRoot, `next.config.${ext}`);
+    if (tree.exists(nextConfigPath)) {
+      return nextConfigPath;
+    }
+  }
 }
 
 export function renameAndMoveOldTsConfig(

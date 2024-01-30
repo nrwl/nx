@@ -2,31 +2,56 @@ import { CreateNodesContext } from '@nx/devkit';
 import { defineConfig } from 'cypress';
 
 import { createNodes } from './plugin';
+import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { join } from 'path';
+import { nxE2EPreset } from '../../plugins/cypress-preset';
 
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
+  let tempFs: TempFs;
 
   beforeEach(async () => {
+    tempFs = new TempFs('cypress-plugin');
+
+    await tempFs.createFiles({
+      'package.json': '{}',
+      'src/test.cy.ts': '',
+    });
+    process.chdir(tempFs.tempDir);
     context = {
       nxJsonConfiguration: {
+        // These defaults should be overridden by plugin
+        targetDefaults: {
+          e2e: {
+            cache: false,
+            inputs: ['foo', '^foo'],
+          },
+        },
         namedInputs: {
           default: ['{projectRoot}/**/*'],
           production: ['!{projectRoot}/**/*.spec.ts'],
         },
       },
-      workspaceRoot: '',
+      workspaceRoot: tempFs.tempDir,
     };
   });
 
   afterEach(() => {
     jest.resetModules();
+    tempFs.cleanup();
   });
 
   it('should add a target for e2e', () => {
     mockCypressConfig(
       defineConfig({
         e2e: {
+          ...nxE2EPreset('.', {
+            webServerCommands: {
+              default: 'nx run my-app:serve',
+              production: 'nx run my-app:serve:production',
+            },
+          }),
           videosFolder: './dist/videos',
           screenshotsFolder: './dist/screenshots',
         },
@@ -45,22 +70,28 @@ describe('@nx/cypress/plugin', () => {
         "projects": {
           ".": {
             "projectType": "application",
-            "root": ".",
             "targets": {
               "e2e": {
                 "cache": true,
-                "executor": "@nx/cypress:cypress",
+                "command": "cypress run",
+                "configurations": {
+                  "production": {
+                    "command": "cypress run --env webServerCommand="nx run my-app:serve:production"",
+                  },
+                },
                 "inputs": [
                   "default",
                   "^production",
+                  {
+                    "externalDependencies": [
+                      "cypress",
+                    ],
+                  },
                 ],
                 "options": {
-                  "cypressConfig": "cypress.config.js",
-                  "testingType": "e2e",
+                  "cwd": ".",
                 },
                 "outputs": [
-                  "{options.videosFolder}",
-                  "{options.screenshotsFolder}",
                   "{projectRoot}/dist/videos",
                   "{projectRoot}/dist/screenshots",
                 ],
@@ -98,22 +129,23 @@ describe('@nx/cypress/plugin', () => {
         "projects": {
           ".": {
             "projectType": "application",
-            "root": ".",
             "targets": {
               "component-test": {
                 "cache": true,
-                "executor": "@nx/cypress:cypress",
+                "command": "cypress open --component",
                 "inputs": [
                   "default",
                   "^production",
+                  {
+                    "externalDependencies": [
+                      "cypress",
+                    ],
+                  },
                 ],
                 "options": {
-                  "cypressConfig": "cypress.config.js",
-                  "testingType": "component",
+                  "cwd": ".",
                 },
                 "outputs": [
-                  "{options.videosFolder}",
-                  "{options.screenshotsFolder}",
                   "{projectRoot}/dist/videos",
                   "{projectRoot}/dist/screenshots",
                 ],
@@ -125,17 +157,20 @@ describe('@nx/cypress/plugin', () => {
     `);
   });
 
-  it('should use nxMetadata to create additional configurations', () => {
+  it('should use ciDevServerTarget to create additional configurations', () => {
     mockCypressConfig(
       defineConfig({
         e2e: {
-          env: {
-            devServerTargets: {
+          specPattern: '**/*.cy.ts',
+          videosFolder: './dist/videos',
+          screenshotsFolder: './dist/screenshots',
+          ...nxE2EPreset('.', {
+            webServerCommands: {
               default: 'my-app:serve',
               production: 'my-app:serve:production',
             },
-            ciDevServerTarget: 'my-app:serve-static',
-          },
+            ciWebServerCommand: 'my-app:serve-static',
+          }),
         },
       })
     );
@@ -152,31 +187,74 @@ describe('@nx/cypress/plugin', () => {
         "projects": {
           ".": {
             "projectType": "application",
-            "root": ".",
             "targets": {
               "e2e": {
                 "cache": true,
+                "command": "cypress run",
                 "configurations": {
-                  "ci": {
-                    "devServerTarget": "my-app:serve-static",
-                  },
                   "production": {
-                    "devServerTarget": "my-app:serve:production",
+                    "command": "cypress run --env webServerCommand="my-app:serve:production"",
                   },
                 },
-                "executor": "@nx/cypress:cypress",
                 "inputs": [
                   "default",
                   "^production",
+                  {
+                    "externalDependencies": [
+                      "cypress",
+                    ],
+                  },
                 ],
                 "options": {
-                  "cypressConfig": "cypress.config.js",
-                  "devServerTarget": "my-app:serve",
-                  "testingType": "e2e",
+                  "cwd": ".",
                 },
                 "outputs": [
-                  "{options.videosFolder}",
-                  "{options.screenshotsFolder}",
+                  "{projectRoot}/dist/cypress/videos",
+                  "{projectRoot}/dist/cypress/screenshots",
+                ],
+              },
+              "e2e-ci": {
+                "cache": true,
+                "dependsOn": [
+                  {
+                    "params": "forward",
+                    "projects": "self",
+                    "target": "e2e-ci--src/test.cy.ts",
+                  },
+                ],
+                "executor": "nx:noop",
+                "inputs": [
+                  "default",
+                  "^production",
+                  {
+                    "externalDependencies": [
+                      "cypress",
+                    ],
+                  },
+                ],
+                "outputs": [
+                  "{projectRoot}/dist/cypress/videos",
+                  "{projectRoot}/dist/cypress/screenshots",
+                ],
+              },
+              "e2e-ci--src/test.cy.ts": {
+                "cache": true,
+                "command": "cypress run --env webServerCommand="my-app:serve-static" --spec src/test.cy.ts",
+                "inputs": [
+                  "default",
+                  "^production",
+                  {
+                    "externalDependencies": [
+                      "cypress",
+                    ],
+                  },
+                ],
+                "options": {
+                  "cwd": ".",
+                },
+                "outputs": [
+                  "{projectRoot}/dist/cypress/videos",
+                  "{projectRoot}/dist/cypress/screenshots",
                 ],
               },
             },
@@ -185,16 +263,16 @@ describe('@nx/cypress/plugin', () => {
       }
     `);
   });
-});
 
-function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
-  jest.mock(
-    'cypress.config.js',
-    () => ({
-      default: cypressConfig,
-    }),
-    {
-      virtual: true,
-    }
-  );
-}
+  function mockCypressConfig(cypressConfig: Cypress.ConfigOptions) {
+    jest.mock(
+      join(tempFs.tempDir, 'cypress.config.js'),
+      () => ({
+        default: cypressConfig,
+      }),
+      {
+        virtual: true,
+      }
+    );
+  }
+});

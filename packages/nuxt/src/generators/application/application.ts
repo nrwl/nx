@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   addProjectConfiguration,
   formatFiles,
   generateFiles,
@@ -13,28 +14,37 @@ import { Schema } from './schema';
 import nuxtInitGenerator from '../init/init';
 import { normalizeOptions } from './lib/normalize-options';
 import { createTsConfig } from '../../utils/create-ts-config';
-import { getRelativePathToRootTsConfig } from '@nx/js';
+import {
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
 import { updateGitIgnore } from '../../utils/update-gitignore';
-import { addBuildTarget, addServeTarget } from './lib/add-targets';
 import { Linter } from '@nx/eslint';
 import { addE2e } from './lib/add-e2e';
 import { addLinting } from '../../utils/add-linting';
 import { addVitest } from './lib/add-vitest';
+import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
+import { ensureDependencies } from './lib/ensure-dependencies';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   const options = await normalizeOptions(tree, schema);
 
-  const outputPath = joinPathFragments('dist', options.appProjectRoot);
-
   const projectOffsetFromRoot = offsetFromRoot(options.appProjectRoot);
 
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const nuxtInitTask = await nuxtInitGenerator(tree, {
     ...options,
     skipFormat: true,
   });
   tasks.push(nuxtInitTask);
+  tasks.push(ensureDependencies(tree, options));
 
   addProjectConfiguration(tree, options.name, {
     root: options.appProjectRoot,
@@ -54,6 +64,12 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       dot: '.',
       tmpl: '',
       style: options.style,
+      projectRoot: options.appProjectRoot,
+      buildDirectory: joinPathFragments(`dist/${options.appProjectRoot}/.nuxt`),
+      nitroOutputDir: joinPathFragments(
+        `dist/${options.appProjectRoot}/.output`
+      ),
+      hasVitest: options.unitTestRunner === 'vitest',
     }
   );
 
@@ -69,13 +85,9 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
       projectRoot: options.appProjectRoot,
       rootProject: options.rootProject,
       unitTestRunner: options.unitTestRunner,
-      outputPath,
     },
     getRelativePathToRootTsConfig(tree, options.appProjectRoot)
   );
-
-  addServeTarget(tree, options.name);
-  addBuildTarget(tree, options.name, outputPath);
 
   updateGitIgnore(tree);
 
@@ -90,7 +102,18 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
   );
 
   if (options.unitTestRunner === 'vitest') {
-    addVitest(tree, options, options.appProjectRoot, projectOffsetFromRoot);
+    tasks.push(
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@vue/test-utils': vueTestUtilsVersion,
+          '@vitejs/plugin-vue': vitePluginVueVersion,
+        }
+      )
+    );
+
+    tasks.push(await addVitest(tree, options));
   }
 
   tasks.push(await addE2e(tree, options));

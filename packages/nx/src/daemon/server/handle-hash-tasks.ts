@@ -16,7 +16,7 @@ export async function handleHashTasks(payload: {
   tasks: Task[];
   taskGraph: TaskGraph;
 }) {
-  const { projectGraph, allWorkspaceFiles, fileMap } =
+  const { projectGraph, allWorkspaceFiles, fileMap, rustReferences } =
     await getCachedSerializedProjectGraphPromise();
   const nxJson = readNxJson();
 
@@ -27,6 +27,7 @@ export async function handleHashTasks(payload: {
       allWorkspaceFiles,
       projectGraph,
       nxJson,
+      rustReferences,
       payload.runnerOptions
     );
   }

@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
+  joinPathFragments,
   readProjectConfiguration,
   Tree,
   updateProjectConfiguration,
@@ -14,6 +15,7 @@ export function updateModuleFederationProject(
     appProjectRoot: string;
     devServerPort?: number;
     typescriptConfiguration?: boolean;
+    dynamic?: boolean;
   }
 ): GeneratorCallback {
   const projectConfig = readProjectConfiguration(host, options.projectName);
@@ -32,6 +34,19 @@ export function updateModuleFederationProject(
       options.typescriptConfiguration ? 'ts' : 'js'
     }`,
   };
+
+  // If host should be configured to use dynamic federation
+  if (options.dynamic) {
+    const pathToProdWebpackConfig = joinPathFragments(
+      projectConfig.root,
+      `webpack.prod.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
+    );
+    if (host.exists(pathToProdWebpackConfig)) {
+      host.delete(pathToProdWebpackConfig);
+    }
+
+    delete projectConfig.targets.build.configurations.production?.webpackConfig;
+  }
 
   projectConfig.targets.serve.executor =
     '@nx/react:module-federation-dev-server';

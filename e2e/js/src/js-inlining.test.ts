@@ -148,4 +148,25 @@ describe('inlining', () => {
     );
     expect(childFileContent).toContain(`${grandChild}/src`);
   }, 240_000);
+
+  it('should allow inlining to be enabled without imports', async () => {
+    const parent = uniq('parent');
+    runCLI(`generate @nx/js:lib ${parent} --no-interactive`);
+
+    updateFile(`libs/${parent}/src/lib/${parent}.ts`, () => {
+      return `
+          export function ${parent}() {
+            console.log('hello');
+          }
+        `;
+    });
+
+    // 1. external is set to all
+    execSync(`rm -rf dist`);
+    runCLI(`build ${parent} --external=all`);
+
+    // 1. external is set to none
+    execSync(`rm -rf dist`);
+    runCLI(`build ${parent} --external=none`);
+  }, 240_000);
 });

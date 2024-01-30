@@ -11,9 +11,9 @@ export async function createFiles(
   options: NormalizedSchema,
   rootOffset: string
 ) {
-  const installedAngularInfo = getInstalledAngularVersionInfo(tree);
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
   const isUsingApplicationBuilder =
-    installedAngularInfo.major >= 17 && options.bundler === 'esbuild';
+    angularMajorVersion >= 17 && options.bundler === 'esbuild';
 
   const substitutions = {
     rootSelector: `${options.prefix}-root`,
@@ -27,7 +27,7 @@ export async function createFiles(
     minimal: options.minimal,
     nxWelcomeSelector: `${options.prefix}-nx-welcome`,
     rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
-    installedAngularInfo,
+    angularMajorVersion,
     rootOffset,
     isUsingApplicationBuilder,
     tpl: '',

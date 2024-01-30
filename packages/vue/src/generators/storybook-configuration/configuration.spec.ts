@@ -44,7 +44,7 @@ describe('vue:storybook-configuration', () => {
   it('should configure everything and install correct dependencies', async () => {
     appTree = await createTestUILib('test-ui-lib');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-lib',
+      project: 'test-ui-lib',
     });
 
     expect(
@@ -72,7 +72,7 @@ describe('vue:storybook-configuration', () => {
     );
 
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-lib',
+      project: 'test-ui-lib',
       generateStories: true,
     });
 
@@ -90,7 +90,7 @@ describe('vue:storybook-configuration', () => {
   it('should configure everything at once', async () => {
     appTree = await createTestAppLib('test-ui-app');
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
     });
 
     expect(appTree.exists('test-ui-app/.storybook/main.ts')).toBeTruthy();
@@ -104,7 +104,7 @@ describe('vue:storybook-configuration', () => {
       componentContent
     );
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
       generateStories: true,
     });
 
@@ -123,7 +123,7 @@ describe('vue:storybook-configuration', () => {
       componentContent
     );
     await storybookConfigurationGenerator(appTree, {
-      name: 'test-ui-app',
+      project: 'test-ui-app',
       generateStories: true,
       interactionTests: false,
     });

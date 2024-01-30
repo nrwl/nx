@@ -36,16 +36,6 @@ exports[`preset should create files (preset = angular-monorepo) 3`] = `
 ]
 `;
 
-exports[`preset should create files (preset = nuxt-standalone) 1`] = `
-{
-  "executor": "@nx/nuxt:serve",
-  "options": {},
-  "outputs": [
-    "{options.outputFile}",
-  ],
-}
-`;
-
 exports[`preset should create files (preset = react-standalone bundler = vite) 1`] = `
 {
   "configurations": {

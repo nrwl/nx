@@ -5,6 +5,7 @@ import type {
 import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
+  logger,
   readNxJson,
   readProjectConfiguration,
   updateNxJson,
@@ -12,6 +13,11 @@ import {
 } from '@nx/devkit';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { Schema } from '../schema';
+import {
+  DEFAULT_BROWSER_DIR,
+  DEFAULT_MEDIA_DIR,
+  DEFAULT_SERVER_DIR,
+} from './constants';
 
 export function updateProjectConfigForApplicationBuilder(
   tree: Tree,
@@ -20,7 +26,33 @@ export function updateProjectConfigForApplicationBuilder(
   const project = readProjectConfiguration(tree, options.project);
   const buildTarget = project.targets.build;
 
+  let outputPath = buildTarget.options?.outputPath;
+  if (
+    outputPath &&
+    typeof outputPath !== 'string' &&
+    outputPath.browser === ''
+  ) {
+    const base = outputPath.base as string;
+    logger.warn(
+      `The output location of the browser build has been updated from "${base}" to "${joinPathFragments(
+        base,
+        DEFAULT_BROWSER_DIR
+      )}".
+          You might need to adjust your deployment pipeline.`
+    );
+
+    if (
+      (outputPath.media && outputPath.media !== DEFAULT_MEDIA_DIR) ||
+      (outputPath.server && outputPath.server !== DEFAULT_SERVER_DIR)
+    ) {
+      delete outputPath.browser;
+    } else {
+      outputPath = outputPath.base;
+    }
+  }
+
   buildTarget.options ??= {};
+  buildTarget.options.outputPath = outputPath;
   buildTarget.options.server = joinPathFragments(
     project.sourceRoot ?? joinPathFragments(project.root, 'src'),
     options.main
@@ -108,16 +140,14 @@ export function updateProjectConfigForBrowserBuilder(
 
   const nxJson = readNxJson(tree);
   if (
-    nxJson.tasksRunnerOptions?.default &&
+    nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations &&
     !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
       'server'
     )
   ) {
-    nxJson.tasksRunnerOptions.default.options.cacheableOperations = [
-      ...nxJson.tasksRunnerOptions.default.options.cacheableOperations,
-      'server',
-    ];
-    updateNxJson(tree, nxJson);
+    nxJson.tasksRunnerOptions.default.options.cacheableOperations.push(
+      'server'
+    );
   }
   nxJson.targetDefaults ??= {};
   nxJson.targetDefaults.server ??= {};

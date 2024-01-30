@@ -34,7 +34,7 @@ describe('Cypress e2e configuration', () => {
       mockedInstalledCypressVersion.mockReturnValue(10);
     });
 
-    it('should add dev server targets to the cypress config when the @nx/cypress/plugin is present', async () => {
+    it('should add web server commands to the cypress config when the @nx/cypress/plugin is present', async () => {
       process.env.NX_PCV3 = 'true';
       await cypressInitGenerator(tree, {});
 
@@ -42,6 +42,12 @@ describe('Cypress e2e configuration', () => {
 
       await cypressE2EConfigurationGenerator(tree, {
         project: 'my-app',
+        baseUrl: 'http://localhost:4200',
+        webServerCommands: {
+          default: 'nx run my-app:serve',
+          production: 'nx run my-app:serve:production',
+        },
+        ciWebServerCommand: 'nx run my-app:serve-static',
       });
       expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -53,12 +59,13 @@ describe('Cypress e2e configuration', () => {
           e2e: {
             ...nxE2EPreset(__filename, {
               cypressDir: 'src',
-              devServerTargets: {
-                default: 'my-app:serve',
-                production: 'my-app:serve:production',
+              webServerCommands: {
+                default: 'nx run my-app:serve',
+                production: 'nx run my-app:serve:production',
               },
-              ciDevServerTarget: 'my-app:serve-static',
+              ciWebServerCommand: 'nx run my-app:serve-static',
             }),
+            baseUrl: 'http://localhost:4200',
           },
         });
         "
@@ -188,9 +195,20 @@ describe('Cypress e2e configuration', () => {
         baseUrl: 'http://localhost:4200',
       });
       assertCypressFiles(tree, 'apps/my-app/src');
-      expect(
-        readProjectConfiguration(tree, 'my-app').targets.e2e.options.baseUrl
-      ).toEqual('http://localhost:4200');
+      expect(tree.read('apps/my-app/cypress.config.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+        import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
+      `);
     });
 
     it('should not overwrite existing e2e target', async () => {

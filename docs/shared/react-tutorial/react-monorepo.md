@@ -61,7 +61,7 @@ Create a new React monorepo with the following command:
 ✔ Which bundler would you like to use? · vite
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 ```
 
 Let's name the initial application `react-store`. In this tutorial we're going to use `vite` as a bundler, `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
@@ -407,9 +407,29 @@ export * from './lib/product-list/product-list';
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up React Router.
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install react-router-dom
+npm add react-router-dom
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add react-router-dom
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add react-router-dom
+```
+
+{% /tab %}
+{% /tabs %}
 
 Configure it in the `main.tsx`.
 
@@ -997,7 +1017,7 @@ Learn more about how to [enforce module boundaries](/core-features/enforce-modul
 
 ## Setting Up CI
 
-Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps decrease the average CI time with the [`affected` command](/nx-cloud/features/affected) and Nx Cloud's [distributed caching](/nx-cloud/features/remote-cache). Nx also [decreases the worst case CI time](/concepts/dte) with Nx Cloud's distributed task execution.
+Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Cloud's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Cloud's distributed task execution.
 
 To set up Nx Cloud run:
 
@@ -1017,7 +1037,7 @@ nx generate ci-workflow --ci=github
 You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
 {% /callout %}
 
-This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/nx-cloud/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
+This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
 
 ## Next Steps
 
@@ -1028,8 +1048,8 @@ Here's some more things you can dive into next:
 - [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/nx-cloud/features/remote-cache)
-- [Speed up CI: Distribute your tasks across machines](/nx-cloud/features/distribute-task-execution)
+- [Speed up CI: Share your cache](/ci/features/remote-cache)
+- [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you
 

@@ -25,8 +25,9 @@ The following environment variables are ones that you can set to change the beha
 | NX_GENERATE_QUIET                | boolean | If set to `true`, will prevent Nx logging file operations during generate                                                                                                                                                              |
 | NX_PREFER_TS_NODE                | boolean | If set to `true`, Nx will use ts-node for local execution of plugins even if `@swc-node/register` is installed.                                                                                                                        |
 | NX_IGNORE_CYCLES                 | boolean | If set to `true`, Nx will ignore errors created by a task graph circular dependency. Can be overriden on the command line with `--nxIgnoreCycles`                                                                                      |
+| NX_BATCH_MODE                    | boolean | If set to `true`, Nx will run task(s) in batches for executors which support batches.                                                                                                                                                  |
 
-Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators
+Nx will set the following environment variables so they can be accessible within the process even outside of executors and generators.
 
 | Property                     | Type    | Description                                                                                                           |
 | ---------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -36,4 +37,4 @@ Nx will set the following environment variables so they can be accessible within
 | NX_DRY_RUN                   | boolean | Set to `true` during dry runs of generators. Use this to avoid side effects during generators.                        |
 | NX_INTERACTIVE               | boolean | Set to `false` when running generators with `--interactive=false`. Use this to prevent prompting during generators    |
 
-When using distributed caching, [Nx Cloud Environment Variables](/nx-cloud/reference/env-vars) are also available.
+When using remote caching, [Nx Cloud Environment Variables](/ci/reference/env-vars) are also available.

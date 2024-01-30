@@ -12,22 +12,24 @@ Below is a reference table that matches versions of Angular to the version of Nx
 
 We provide a recommended version, and it is usually the latest minor version of Nx in the range provided because there will have been bug fixes added since the first release in the range.
 
-| Angular Version | **Nx Version _(recommended)_** | Nx Version _(range)_                    |
-| --------------- | ------------------------------ | --------------------------------------- |
-| ~16.2.0         | **latest**                     | 16.7.0 <= latest                        |
-| ~16.1.0         | **latest**                     | 16.4.0 <= latest                        |
-| ~16.0.0         | **latest**                     | 16.1.0 <= latest                        |
-| ~15.2.0         | **latest**                     | 15.8.0 <= latest                        |
-| ~15.1.0         | **latest**                     | 15.5.0 <= latest                        |
-| ~15.0.0         | **latest**                     | 15.2.0 <= 15.4.8 \|\| 15.7.0 <= latest  |
-| ~14.2.0         | **latest**                     | 14.6.0 <= 15.1.1 \|\| 15.7.0 <= latest  |
-| ~14.1.0         | **latest**                     | 14.5.0 <= 14.5.10 \|\| 15.7.0 <= latest |
-| ~14.0.0         | **latest**                     | 14.2.1 <= 14.4.3 \|\| 15.7.0 <= latest  |
-| ^13.0.0         | **14.1.9**                     | 13.2.0 <= 14.1.9                        |
-| ^12.0.0         | **13.1.4**                     | 12.3.0 <= 13.1.4                        |
-| ^11.0.0         | **12.2.0**                     | 11.0.0 <= 12.2.0                        |
-| ^10.0.0         | **10.4.15**                    | 9.7.0 <= 10.4.15                        |
-| ^9.0.0          | **9.6.0**                      | 8.12.4 <= 9.6.0                         |
-| ^8.0.0          | **8.12.2**                     | 8.7.0 <= 8.12.2                         |
+| Angular Version | **Nx Version _(recommended)_** | Nx Version _(range)_                   |
+| --------------- | ------------------------------ | -------------------------------------- |
+| ~17.1.0         | **latest**                     | 17.3.0 <= latest                       |
+| ~17.0.0         | **latest**                     | 17.1.0 <= latest                       |
+| ~16.2.0         | **latest**                     | 16.7.0 <= latest                       |
+| ~16.1.0         | **latest**                     | 16.4.0 <= latest                       |
+| ~16.0.0         | **latest**                     | 16.1.0 <= latest                       |
+| ~15.2.0         | **latest**                     | 15.8.0 <= latest                       |
+| ~15.1.0         | **latest**                     | 15.5.0 <= latest                       |
+| ~15.0.0         | **latest**                     | 15.2.0 <= 15.4.8 \|\| 15.7.0 <= latest |
+| ~14.2.0         | **~17.0.0**                    | 14.6.0 <= 15.1.1 \|\| 15.7.0 < 17.1.0  |
+| ~14.1.0         | **~17.0.0**                    | 14.5.0 <= 14.5.10 \|\| 15.7.0 < 17.1.0 |
+| ~14.0.0         | **~17.0.0**                    | 14.2.1 <= 14.4.3 \|\| 15.7.0 < 17.1.0  |
+| ^13.0.0         | **14.1.9**                     | 13.2.0 <= 14.1.9                       |
+| ^12.0.0         | **13.1.4**                     | 12.3.0 <= 13.1.4                       |
+| ^11.0.0         | **12.2.0**                     | 11.0.0 <= 12.2.0                       |
+| ^10.0.0         | **10.4.15**                    | 9.7.0 <= 10.4.15                       |
+| ^9.0.0          | **9.6.0**                      | 8.12.4 <= 9.6.0                        |
+| ^8.0.0          | **8.12.2**                     | 8.7.0 <= 8.12.2                        |
 
 Additionally, you can check the supported versions of Node and Typescript for the version of Angular you are using in the [Angular docs](https://angular.io/guide/versions#actively-supported-versions).

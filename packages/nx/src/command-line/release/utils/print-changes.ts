@@ -34,7 +34,7 @@ export function printDiff(
   console.log('');
 }
 
-export function printChanges(
+export function printAndFlushChanges(
   tree: Tree,
   isDryRun: boolean,
   diffContextLines = 1,

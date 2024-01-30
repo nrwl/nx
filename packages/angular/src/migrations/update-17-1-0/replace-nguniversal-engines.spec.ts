@@ -14,6 +14,7 @@ let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
+  formatFiles: jest.fn(),
 }));
 
 describe('replace-nguniversal-engines migration', () => {
@@ -60,7 +61,9 @@ describe('replace-nguniversal-engines migration', () => {
     };
     projectGraph = {
       dependencies: {
-        app1: [{ source: 'app1', target: 'npm:@angular/core', type: 'static' }],
+        app1: [
+          { source: 'app1', target: 'npm:@nguniversal/common', type: 'static' },
+        ],
       },
       nodes: { app1: { data: project, name: 'app1', type: 'app' } },
     };
@@ -214,6 +217,20 @@ if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
     expect(tree.exists('src/express.tokens.ts')).toBe(true);
   });
 
+  it('should import tokens file correctly in nested paths', async () => {
+    const filePath = 'src/nested/folder/home/home.component.ts';
+    tree.write(
+      filePath,
+      `import { RESPONSE } from '@nguniversal/express-engine/tokens';`
+    );
+
+    await migration(tree);
+
+    expect(tree.read(filePath, 'utf-8')).toContain(
+      `import { RESPONSE } from '../../../express.tokens';`
+    );
+  });
+
   it('should not create tokens file when "@nguniversal/express-engine/tokens" is not used', async () => {
     await migration(tree);
 
@@ -223,5 +240,14 @@ if (moduleFilename === __filename || moduleFilename.includes('iisnode')) {
       `import { REQUEST, RESPONSE } from './src/express.tokens';`
     );
     expect(tree.exists('src/express.tokens.ts')).toBe(false);
+  });
+
+  it('should not process non-TypeScript files', async () => {
+    const content = `import { ngExpressEngine } from '@nguniversal/express-engine';`;
+    tree.write('src/foo.txt', content);
+
+    await migration(tree);
+
+    expect(tree.read('src/foo.txt', 'utf-8')).toBe(content);
   });
 });

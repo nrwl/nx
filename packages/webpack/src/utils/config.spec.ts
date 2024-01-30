@@ -2,6 +2,7 @@ import {
   composePluginsSync,
   composePlugins,
   NxWebpackExecutionContext,
+  isNxWebpackComposablePlugin,
 } from './config';
 
 describe('composePlugins', () => {
@@ -29,6 +30,7 @@ describe('composePlugins', () => {
     };
 
     const combined = composePlugins(a(), b(), c(), d());
+    expect(isNxWebpackComposablePlugin(combined)).toBeTruthy();
     const config = await combined(
       { plugins: [] },
       {} as NxWebpackExecutionContext
@@ -59,6 +61,7 @@ describe('composePluginsSync', () => {
     };
 
     const combined = composePluginsSync(a(), b());
+    expect(isNxWebpackComposablePlugin(combined)).toBeTruthy();
     const config = await combined(
       { plugins: [] },
       {} as NxWebpackExecutionContext

@@ -73,7 +73,7 @@ ${e.stack ? e.stack : e}`
   const buildTarget = getBuildableTarget(ctContext);
 
   if (!buildTarget.project && !graph.nodes?.[buildTarget.project]?.data) {
-    throw new Error(stripIndents`Unable to find project configuration for build target. 
+    throw new Error(stripIndents`Unable to find project configuration for build target.
     Project Name? ${buildTarget.project}
     Has project config? ${!!graph.nodes?.[buildTarget.project]?.data}`);
   }
@@ -295,8 +295,8 @@ Note: this may fail, setting the correct 'sourceRoot' for ${buildContext.project
 }
 
 function withSchemaDefaults(options: any): BrowserBuilderSchema {
-  if (!options.main) {
-    throw new Error('Missing executor options "main"');
+  if (!options.main && !options.browser) {
+    throw new Error('Missing executor options "main" and "browser"');
   }
   if (!options.index) {
     throw new Error('Missing executor options "index"');
@@ -322,6 +322,7 @@ function withSchemaDefaults(options: any): BrowserBuilderSchema {
   options.outputHashing ??= 'none';
   options.progress ??= true;
   options.scripts ??= [];
+  options.main ??= options.browser;
 
   return options;
 }

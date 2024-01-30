@@ -15,7 +15,7 @@ import {
 import { join } from 'path';
 
 describe('cache', () => {
-  beforeEach(() => newProject());
+  beforeEach(() => newProject({ packages: ['@nx/web', '@nx/js'] }));
 
   afterEach(() => cleanupProject());
 

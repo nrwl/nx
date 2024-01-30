@@ -6,7 +6,7 @@ This guide has not been updated for Angular 17. We will be updating it shortly.
 
 Dynamic Module Federation is a technique that allows an application to determine the location of its remote applications at runtime. It helps to achieve the use case of **“Build once, deploy everywhere”**.
 
-“Build once, deploy everywhere” is the concept of being able to create a single build artefact of your application and deploy it to multiple environments such as staging and production.
+“Build once, deploy everywhere” is the concept of being able to create a single build artifact of your application and deploy it to multiple environments such as staging and production.
 
 The difficulty in achieving this with a Micro Frontend Architecture using Static Module Federation is that our Remote applications will have a different location (or URL) in each environment. Previously, to account for this, we would have had to specify the deployed location of the Remote applications and rebuild the application for the target environment.
 
@@ -99,7 +99,7 @@ For both applications, the generator did the following:
 - Moved the code that is normally in `main.ts` to `bootstrap.ts`
 - Changed `main.ts` to dynamically import `bootstrap.ts` _(this is required for the Module Federation to correct load versions of shared libraries)_
 - Updated the `build` target in the `project.json` to use the `@nx/angular:webpack-browser` executor _(this is required as it supports passing a custom Webpack configuration to the Angular compiler)_
-- Updated the `serve` target to use `@nx/angular:webpack-dev-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
+- Updated the `serve` target to use `@nx/angular:dev-server` _(this is required as we first need Webpack to build the application with our custom Webpack configuration)_
 
 The key differences reside within the configuration of the Module Federation Plugin within each application's `module-federation.config.js`.
 

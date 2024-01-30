@@ -6,8 +6,12 @@ import { scamToStandalone } from './scam-to-standalone';
 describe('scam-to-standalone', () => {
   it('should convert an inline scam to standalone', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: 'foo' });
-    await scamGenerator(tree, { name: 'bar', project: 'foo' });
+    await generateTestApplication(tree, { name: 'foo', skipFormat: true });
+    await scamGenerator(tree, {
+      name: 'bar',
+      project: 'foo',
+      skipFormat: true,
+    });
 
     tree.write(
       'foo/src/app/mymodule.module.ts',
@@ -34,7 +38,7 @@ describe('scam-to-standalone', () => {
         imports: [CommonModule],
         selector: 'proj-bar',
         templateUrl: './bar.component.html',
-        styleUrls: ['./bar.component.css'],
+        styleUrl: './bar.component.css',
       })
       export class BarComponent {}
       "

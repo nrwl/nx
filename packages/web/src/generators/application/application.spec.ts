@@ -35,7 +35,7 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'my-app-e2e'
       );
-    });
+    }, 60_000);
 
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
@@ -53,7 +53,7 @@ describe('app', () => {
           implicitDependencies: ['my-app'],
         },
       });
-    });
+    }, 60_000);
 
     it('should generate files', async () => {
       await applicationGenerator(tree, {
@@ -225,7 +225,7 @@ describe('app', () => {
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
         'my-dir/my-app-e2e'
       );
-    });
+    }, 60_000);
 
     it('should update tags and implicit dependencies', async () => {
       await applicationGenerator(tree, {
@@ -349,7 +349,7 @@ describe('app', () => {
     );
   });
 
-  it('should setup the nrwl web build builder', async () => {
+  it('should setup the web build builder', async () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
@@ -358,6 +358,7 @@ describe('app', () => {
     expect(targets.build.executor).toEqual('@nx/webpack:webpack');
     expect(targets.build.outputs).toEqual(['{options.outputPath}']);
     expect(targets.build.options).toEqual({
+      target: 'web',
       compiler: 'babel',
       assets: ['my-app/src/favicon.ico', 'my-app/src/assets'],
       index: 'my-app/src/index.html',
@@ -385,7 +386,7 @@ describe('app', () => {
     });
   });
 
-  it('should setup the nrwl web dev server builder', async () => {
+  it('should setup the web dev server builder', async () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
@@ -403,7 +404,6 @@ describe('app', () => {
   it('should setup the nrwl vite:build builder if bundler is vite', async () => {
     await applicationGenerator(tree, {
       name: 'my-app',
-
       bundler: 'vite',
       projectNameAndRootFormat: 'as-provided',
     });
@@ -440,10 +440,6 @@ describe('app', () => {
     });
     expect(readProjectConfiguration(tree, 'my-app').targets.lint).toEqual({
       executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
-      options: {
-        lintFilePatterns: ['my-app/**/*.ts'],
-      },
     });
   });
 
@@ -478,14 +474,6 @@ describe('app', () => {
       expect(projectConfiguration.targets.lint).toMatchInlineSnapshot(`
         {
           "executor": "@nx/eslint:lint",
-          "options": {
-            "lintFilePatterns": [
-              "my-app/**/*.ts",
-            ],
-          },
-          "outputs": [
-            "{options.outputFile}",
-          ],
         }
       `);
     });

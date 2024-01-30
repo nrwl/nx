@@ -48,6 +48,14 @@ export function getFunctionDeterminateRemoteUrl(isServer: boolean = false) {
   const remoteEntry = isServer ? 'server/remoteEntry.js' : 'remoteEntry.mjs';
 
   return function (remote: string) {
+    const mappedStaticRemotesFromEnv = process.env
+      .NX_MF_DEV_SERVER_STATIC_REMOTES
+      ? JSON.parse(process.env.NX_MF_DEV_SERVER_STATIC_REMOTES)
+      : undefined;
+    if (mappedStaticRemotesFromEnv && mappedStaticRemotesFromEnv[remote]) {
+      return `${mappedStaticRemotesFromEnv[remote]}/${remoteEntry}`;
+    }
+
     let remoteConfiguration = null;
     try {
       remoteConfiguration = readCachedProjectConfiguration(remote);

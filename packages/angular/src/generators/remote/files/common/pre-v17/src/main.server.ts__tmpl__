@@ -31,17 +31,15 @@ export function app(): express.Express {
   server.set('view engine', 'html');
   server.set('views', browserBundles);
 
-
   // Example Express Rest API endpoints
   // server.get('/api/**', (req, res) => { });
   // Serve static files from /browser
   // serve static files
-  server.use('/', express.static(browserBundles, { maxAge: '1y' }));
+  server.get('*.*', express.static(browserBundles, { maxAge: '1y' }));
   server.use('/server', express.static(serverBundles, { maxAge: '1y' }));
 
   // All regular routes use the Universal engine
   server.get('*', (req, res) => {
-
     res.render(indexHtml, {
       req,
       providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }],

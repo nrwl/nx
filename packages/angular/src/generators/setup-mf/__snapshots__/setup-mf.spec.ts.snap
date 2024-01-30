@@ -5,9 +5,8 @@ exports[`Init MF --federationType=dynamic should create a host with the correct 
 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
-  .then((definitions) => setRemoteDefinitions(definitions))
-  .then(() => import('./bootstrap').catch((err) => console.error(err)));
-"
+  .then(definitions => setRemoteDefinitions(definitions))
+  .then(() => import('./bootstrap').catch(err => console.error(err));)"
 `;
 
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations when --typescriptConfiguration=true 1`] = `
@@ -15,9 +14,8 @@ exports[`Init MF --federationType=dynamic should create a host with the correct 
 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
-  .then((definitions) => setRemoteDefinitions(definitions))
-  .then(() => import('./bootstrap').catch((err) => console.error(err)));
-"
+  .then(definitions => setRemoteDefinitions(definitions))
+  .then(() => import('./bootstrap').catch(err => console.error(err));)"
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications router config 1`] = `
@@ -25,28 +23,37 @@ exports[`Init MF should add a remote application and add it to a specified host 
 import { Route } from '@angular/router';
 
 export const appRoutes: Route[] = [
-  {
+    {
     path: 'remote2',
-    loadChildren: () =>
-      import('remote2/Module').then((m) => m.RemoteEntryModule),
-  },
-  {
+    loadChildren: () => import('remote2/Module').then(m => m.RemoteEntryModule)
+    },
+    {
     path: 'remote1',
-    loadChildren: () =>
-      import('remote1/Module').then((m) => m.RemoteEntryModule),
-  },
-  {
-    path: '',
-    component: NxWelcomeComponent,
-  },
-];
+    loadChildren: () => import('remote1/Module').then(m => m.RemoteEntryModule)
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },];
 "
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config that contains a remote application already 1`] = `
 "module.exports = {
   name: 'app1',
-  remotes: ['remote1', 'remote2'],
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
+  remotes: ['remote1','remote2',]
 };
 "
 `;
@@ -56,7 +63,19 @@ exports[`Init MF should add a remote application and add it to a specified host 
 
 const config: ModuleFederationConfig = {
   name: 'app1',
-  remotes: ['remote1', 'remote2'],
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
+  remotes: ['remote1','remote2',]
 };
 
 export default config;
@@ -66,6 +85,18 @@ export default config;
 exports[`Init MF should add a remote application and add it to a specified host applications webpack config when no other remote has been added to it 1`] = `
 "module.exports = {
   name: 'app1',
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
   remotes: ['remote1'],
 };
 "
@@ -76,7 +107,19 @@ exports[`Init MF should add a remote application and add it to a specified host 
 
 const config: ModuleFederationConfig = {
   name: 'app1',
-  remotes: ['remote1'],
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
+  remotes: ['remote1',]
 };
 
 export default config;
@@ -89,16 +132,14 @@ import { Route } from '@angular/router';
 import { loadRemoteModule } from '@nx/angular/mf';
 
 export const appRoutes: Route[] = [
-  {
+    {
     path: 'remote1',
-    loadChildren: () =>
-      loadRemoteModule('remote1', './Module').then((m) => m.RemoteEntryModule),
-  },
-  {
-    path: '',
-    component: NxWelcomeComponent,
-  },
-];
+    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },];
 "
 `;
 
@@ -108,16 +149,14 @@ import { Route } from '@angular/router';
 import { loadRemoteModule } from '@nx/angular/mf';
 
 export const appRoutes: Route[] = [
-  {
+    {
     path: 'remote1',
-    loadChildren: () =>
-      loadRemoteModule('remote1', './Module').then((m) => m.RemoteEntryModule),
-  },
-  {
-    path: '',
-    component: NxWelcomeComponent,
-  },
-];
+    loadChildren: () => loadRemoteModule('remote1', './Module').then(m => m.RemoteEntryModule)
+    },
+    {
+      path: '',
+      component: NxWelcomeComponent
+    },];
 "
 `;
 
@@ -131,7 +170,19 @@ module.exports = withModuleFederation(config);
 exports[`Init MF should create webpack and mf configs correctly 2`] = `
 "module.exports = {
   name: 'app1',
-  remotes: [],
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
+  remotes: []
 };
 "
 `;
@@ -166,7 +217,19 @@ exports[`Init MF should create webpack and mf configs correctly when --typescrip
 
 const config: ModuleFederationConfig = {
   name: 'app1',
-  remotes: [],
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
+  remotes: []
 };
 
 export default config;
@@ -200,7 +263,7 @@ exports[`Init MF should generate the remote entry component correctly when prefi
 
 @Component({
   selector: 'proj-remote1-entry',
-  template: \`<proj-nx-welcome></proj-nx-welcome>\`,
+  template: \`<proj-nx-welcome></proj-nx-welcome>\`
 })
 export class RemoteEntryComponent {}
 "

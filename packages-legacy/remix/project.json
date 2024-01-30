@@ -1,0 +1,38 @@
+{
+  "name": "remix-legacy",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages-legacy/remix",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "outputs": ["{workspaceRoot}/build/packages/{projectName}/README.md"],
+      "command": "node ./scripts/copy-readme.js remix-legacy"
+    },
+    "build-base": {
+      "executor": "@nrwl/js:tsc",
+      "dependsOn": ["^build"],
+      "options": {
+        "main": "packages-legacy/remix/index.ts",
+        "tsConfig": "packages-legacy/remix/tsconfig.json",
+        "outputPath": "build/packages/remix-legacy",
+        "updateBuildableProjectDepsInPackageJson": false,
+        "assets": [
+          "packages-legacy/remix/*.md",
+          {
+            "input": "packages-legacy/remix",
+            "glob": "**/*.json",
+            "ignore": ["**/tsconfig*.json", "project.json"],
+            "output": "/"
+          },
+          {
+            "input": "packages-legacy/remix",
+            "glob": "**/*.d.ts",
+            "output": "/"
+          },
+          "LICENSE"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

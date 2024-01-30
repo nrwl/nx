@@ -2,7 +2,7 @@
  * Adapted from the original ng-packagr source.
  *
  * Changes made:
- * - Use custom cacheCompilerHost instead of the one provided by ng-packagr.
+ * - Use custom StylesheetProcessor instead of the one provided by ng-packagr.
  * - Support ngcc for Angular < 16.
  * - Support Angular Compiler `incrementalDriver` for Angular < 16.
  */
@@ -19,16 +19,16 @@ import {
   isPackage,
 } from 'ng-packagr/lib/ng-package/nodes';
 import * as log from 'ng-packagr/lib/utils/log';
+import {
+  augmentProgramWithVersioning,
+  cacheCompilerHost,
+} from 'ng-packagr/lib/ts/cache-compiler-host';
 import { join } from 'node:path';
 import * as ts from 'typescript';
 import { getInstalledAngularVersionInfo } from '../../../utilities/angular-version-utils';
 import { ngCompilerCli } from '../../../utilities/ng-compiler-cli';
 import { NgPackagrOptions } from '../ng-package/options.di';
 import { StylesheetProcessor } from '../styles/stylesheet-processor';
-import {
-  augmentProgramWithVersioning,
-  cacheCompilerHost,
-} from '../ts/cache-compiler-host';
 
 export async function compileSourceFiles(
   graph: BuildGraph,
@@ -63,7 +63,7 @@ export async function compileSourceFiles(
     entryPoint,
     tsConfigOptions,
     moduleResolutionCache,
-    stylesheetProcessor,
+    stylesheetProcessor as any,
     inlineStyleLanguage
   );
 
@@ -113,9 +113,10 @@ export async function compileSourceFiles(
       );
     cache.oldNgtscProgram = angularProgram;
   } else {
-    // When not in watch mode, the startup cost of the incremental analysis can be avoided by
-    // using an abstract builder that only wraps a TypeScript program.
-    builder = ts.createAbstractBuilder(typeScriptProgram, tsCompilerHost);
+    builder = ts.createEmitAndSemanticDiagnosticsBuilderProgram(
+      typeScriptProgram,
+      tsCompilerHost
+    );
   }
 
   // Update semantic diagnostics cache

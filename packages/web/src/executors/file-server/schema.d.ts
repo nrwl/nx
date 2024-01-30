@@ -1,11 +1,11 @@
 export interface Schema {
-  host: string;
-  port: number;
-  ssl: boolean;
+  host?: string;
+  port?: number;
+  ssl?: boolean;
   sslKey?: string;
   sslCert?: string;
   proxyUrl?: string;
-  buildTarget: string;
+  buildTarget?: string;
   parallel: boolean;
   maxParallel?: number;
   withDeps: boolean;

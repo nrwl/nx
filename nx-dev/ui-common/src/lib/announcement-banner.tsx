@@ -8,24 +8,26 @@ export function AnnouncementBanner(): JSX.Element {
           <p className="text-sm font-medium">
             <span className="md:hidden">
               <Link
-                href="https://www.producthunt.com/posts/nx-cloud#nx-cloud"
+                href="https://go.nx.dev/january-webinar?utm_source=nx.dev"
                 className="underline"
               >
-                Missed Nx Conf? Watch the recording!
+                Nx Webinar: Monorepos - The Benefits, Challenges and Importance
+                of Tooling Support
               </Link>
             </span>
             <span className="hidden md:inline">
               <span className="font-semibold">
-                Missed Nx Conf? Watch the recording!
+                Nx Webinar: Monorepos - The Benefits, Challenges and Importance
+                of Tooling Support
               </span>
             </span>
             <span className="ml-2 inline-block">
               <Link
-                href="/conf"
+                href="https://go.nx.dev/january-webinar?utm_source=nx.dev"
                 className="font-semibold text-blue-500 underline dark:text-sky-500"
               >
                 <span className="absolute inset-0" aria-hidden="true" />
-                Details here
+                Register
                 <span aria-hidden="true">&rarr;</span>
               </Link>
             </span>

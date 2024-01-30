@@ -5,50 +5,12 @@
 import type { NextConfig } from 'next';
 import type { NextConfigFn } from '../src/utils/config';
 import type { NextBuildBuilderOptions } from '../src/utils/types';
-import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
-import type {
-  ExecutorContext,
-  ProjectGraph,
-  ProjectGraphProjectNode,
-  Target,
+import {
+  type ExecutorContext,
+  type ProjectGraph,
+  type ProjectGraphProjectNode,
+  type Target,
 } from '@nx/devkit';
-
-const baseNXEnvironmentVariables = [
-  'NX_BASE',
-  'NX_CACHE_DIRECTORY',
-  'NX_CACHE_PROJECT_GRAPH',
-  'NX_DAEMON',
-  'NX_DEFAULT_PROJECT',
-  'NX_HEAD',
-  'NX_PERF_LOGGING',
-  'NX_PROFILE',
-  'NX_PROJECT_GRAPH_CACHE_DIRECTORY',
-  'NX_INVOKED_BY_RUNNER', // This is from nx cloud runner
-  'NX_PROJECT_GRAPH_MAX_WORKERS',
-  'NX_RUNNER',
-  'NX_SKIP_NX_CACHE',
-  'NX_TASKS_RUNNER',
-  'NX_TASKS_RUNNER_DYNAMIC_OUTPUT',
-  'NX_VERBOSE_LOGGING',
-  'NX_DRY_RUN',
-  'NX_INTERACTIVE',
-  'NX_GENERATE_QUIET',
-  'NX_PREFER_TS_NODE',
-  'NX_TASK_TARGET_PROJECT',
-  'NX_TASK_TARGET_TARGET',
-  'NX_TASK_TARGET_CONFIGURATION',
-  'NX_CLI_SET',
-  'NX_LOAD_DOT_ENV_FILES',
-  'NX_WORKSPACE_ROOT',
-  'NX_TASK_HASH',
-  'NX_NEXT_DIR',
-  'NX_NEXT_OUTPUT_PATH',
-  'NX_E2E_RUN_E2E',
-  'NX_E2E_CI_CACHE_KEY',
-  'NX_MAPPINGS',
-  'NX_FILE_TO_RUN',
-  'NX_NEXT_PUBLIC_DIR',
-];
 
 export interface WithNxOptions extends NextConfig {
   nx?: {
@@ -147,8 +109,13 @@ function withNx(
   context: WithNxContext = getWithNxContext()
 ): NextConfigFn {
   return async (phase: string) => {
-    const { PHASE_PRODUCTION_SERVER } = await import('next/constants');
-    if (phase === PHASE_PRODUCTION_SERVER) {
+    const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = await import(
+      'next/constants'
+    );
+    if (
+      PHASE_PRODUCTION_SERVER === phase ||
+      !process.env.NX_TASK_TARGET_TARGET
+    ) {
       // If we are running an already built production server, just return the configuration.
       // NOTE: Avoid any `require(...)` or `import(...)` statements here. Development dependencies are not available at production runtime.
       const { nx, ...validNextConfig } = _nextConfig;
@@ -159,15 +126,22 @@ function withNx(
     } else {
       const {
         createProjectGraphAsync,
+        readCachedProjectGraph,
         joinPathFragments,
         offsetFromRoot,
         workspaceRoot,
       } = require('@nx/devkit');
 
-      // Otherwise, add in webpack and eslint configuration for build or test.
-      let dependencies: DependentBuildableProjectNode[] = [];
-
-      const graph = await createProjectGraphAsync();
+      let graph = readCachedProjectGraph();
+      if (!graph) {
+        try {
+          graph = await createProjectGraphAsync();
+        } catch (e) {
+          throw new Error(
+            'Could not create project graph. Please ensure that your workspace is valid.'
+          );
+        }
+      }
 
       const originalTarget = {
         project: process.env.NX_TASK_TARGET_PROJECT,
@@ -179,24 +153,8 @@ function withNx(
         node: projectNode,
         options,
         projectName: project,
-        targetName,
-        configurationName,
       } = getNxContext(graph, originalTarget);
       const projectDirectory = projectNode.data.root;
-
-      if (options.buildLibsFromSource === false && targetName) {
-        const {
-          calculateProjectDependencies,
-        } = require('@nx/js/src/utils/buildable-libs-utils');
-        const result = calculateProjectDependencies(
-          graph,
-          workspaceRoot,
-          project,
-          targetName,
-          configurationName
-        );
-        dependencies = result.dependencies;
-      }
 
       // Get next config
       const nextConfig = getNextConfig(_nextConfig, context);
@@ -227,10 +185,12 @@ function withNx(
 
       // outputPath may be undefined if using run-commands or other executors other than @nx/next:build.
       // In this case, the user should set distDir in their next.config.js.
-      if (options.outputPath) {
+      if (options.outputPath && phase !== PHASE_DEVELOPMENT_SERVER) {
         const outputDir = `${offsetFromRoot(projectDirectory)}${
           options.outputPath
         }`;
+        // If running dev-server, we should keep `.next` inside project directory since Turbopack expects this.
+        // See: https://github.com/nrwl/nx/issues/19365
         nextConfig.distDir =
           nextConfig.distDir && nextConfig.distDir !== '.next'
             ? joinPathFragments(outputDir, nextConfig.distDir)
@@ -414,12 +374,6 @@ export function getNextConfig(
   };
 }
 
-function getNonBaseVariables(oldEnv) {
-  return Object.keys(oldEnv).filter(
-    (env) => !baseNXEnvironmentVariables.includes(env)
-  );
-}
-
 function getNxEnvironmentVariables() {
   return Object.keys(process.env)
     .filter((env) => /^NX_/i.test(env))
@@ -428,8 +382,6 @@ function getNxEnvironmentVariables() {
       return env;
     }, {});
 }
-
-let hasWarnedAboutDeprecatedEnvVariables = false;
 
 /**
  * TODO(v18)
@@ -449,16 +401,6 @@ function addNxEnvVariables(config: any) {
       .forEach(
         ([name, value]) => (maybeDefinePlugin.definitions[name] = value)
       );
-
-    const vars = getNonBaseVariables(env);
-    if (vars.length > 0 && !hasWarnedAboutDeprecatedEnvVariables) {
-      hasWarnedAboutDeprecatedEnvVariables = true;
-      console.warn(
-        `Warning, in Nx 18 environment variables starting with NX_ will not be available in the browser, and currently will not work with @nx/next:server executor.\nPlease rename the following environment variables: ${vars.join(
-          ', '
-        )} using Next.js' built-in support for environment variables. Reference https://nextjs.org/docs/pages/api-reference/next-config-js/env`
-      );
-    }
   }
 }
 
@@ -467,7 +409,7 @@ export function getAliasForProject(
   paths: Record<string, string[]>
 ): null | string {
   // Match workspace libs to their alias in tsconfig paths.
-  for (const [alias, lookup] of Object.entries(paths)) {
+  for (const [alias, lookup] of Object.entries(paths ?? {})) {
     const lookupContainsDepNode = lookup.some(
       (lookupPath) =>
         lookupPath.startsWith(node?.data?.root) ||

@@ -58,9 +58,12 @@ const schemaUrls = {
   '/angular/ng-packagr-lite': '/packages/angular/executors/ng-packagr-lite',
   '/angular/package': '/packages/angular/executors/package',
   '/angular/webpack-browser': '/packages/angular/executors/webpack-browser',
-  '/angular/webpack-server': '/packages/angular/executors/webpack-dev-server',
+  '/angular/webpack-server': '/packages/angular/executors/dev-server',
   '/packages/angular/executors/webpack-server':
-    '/packages/angular/executors/webpack-dev-server',
+    '/packages/angular/executors/dev-server',
+  '/angular/webpack-dev-server': '/packages/angular/executors/dev-server',
+  '/packages/angular/executors/webpack-dev-server':
+    '/packages/angular/executors/dev-server',
   '/react/application': '/packages/react/generators/application',
   '/react/component': '/packages/react/generators/component',
   '/react/component-cypress-spec':
@@ -253,7 +256,7 @@ const diataxis = {
   '/ci/monorepo-ci-gitlab': '/recipes/ci/monorepo-ci-gitlab',
   '/ci/monorepo-ci-bitbucket-pipelines':
     '/recipes/ci/monorepo-ci-bitbucket-pipelines',
-  '/ci/distributed-builds': '/concepts/dte', // 👀
+  '/ci/distributed-builds': '/nx-cloud/concepts/parallelization-distribution', // 👀
   '/ci/incremental-builds': '/concepts/more-concepts/incremental-builds',
   '/ci/setup-incremental-builds-angular':
     '/recipes/other/setup-incremental-builds-angular',
@@ -378,10 +381,13 @@ const recipesUrls = {
     '/recipes/next/next-config-setup',
   '/packages/vite/documents/set-up-vite-manually':
     '/recipes/vite/set-up-vite-manually',
+  '/recipes/vite/set-up-vite-manually': '/recipes/vite/configure-vite',
   '/packages/webpack/documents/webpack-plugins':
     '/recipes/webpack/webpack-plugins',
   '/packages/webpack/documents/webpack-config-setup':
     '/recipes/webpack/webpack-config-setup',
+  '/showcase/example-repos/add-nuxt': '/nx-api/nuxt',
+  '/showcase/example-repos/add-vue': '/nx-api/vue',
 };
 
 /**
@@ -391,12 +397,13 @@ const nxCloudUrls = {
   '/nx-cloud/set-up/add-nx-cloud': '/core-features/remote-cache',
   '/nx-cloud/set-up/set-up-caching': '/core-features/remote-cache',
   '/nx-cloud/set-up/set-up-dte': '/core-features/distribute-task-execution',
-  '/nx-cloud/private-cloud/standalone': '/nx-cloud/private-cloud/ami-setup',
+  '/nx-cloud/private-cloud/standalone': '/ci/private-cloud/ami-setup',
   '/nx-cloud/private-cloud/kubernetes-setup':
     '/nx-cloud/private-cloud/get-started',
-  '/recipes/ci': '/nx-cloud/recipes',
-  '/recipes/ci/ci-setup': '/nx-cloud/recipes/set-up/ci-setup',
-  '/recipes/ci/monorepo-ci-azure': '/nx-cloud/recipes/set-up/monorepo-ci-azure',
+  '/recipes/ci': '/ci/recipes',
+  '/recipes/ci/ci-setup': '/ci/recipes/set-up',
+  '/nx-cloud/recipes/set-up/ci-setup': '/ci/recipes/set-up',
+  '/recipes/ci/monorepo-ci-azure': '/ci/recipes/set-up/monorepo-ci-azure',
   '/recipes/ci/monorepo-ci-circle-ci':
     '/nx-cloud/recipes/set-up/monorepo-ci-circle-ci',
   '/recipes/ci/monorepo-ci-github-action':
@@ -407,36 +414,49 @@ const nxCloudUrls = {
     '/nx-cloud/recipes/set-up/monorepo-ci-gitlab',
   '/recipes/ci/monorepo-ci-bitbucket-pipelines':
     '/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines',
-  '/recipes/ci/ci-deployment': '/nx-cloud/recipes/other/ci-deployment',
-  '/nx-cloud/intro/what-is-nx-cloud': '/nx-cloud/intro/ci-with-nx',
-  '/nx-cloud/set-up': '/nx-cloud/recipes/set-up',
-  '/nx-cloud/set-up/record-commands': '/nx-cloud/recipes/other/record-commands',
+  '/recipes/ci/ci-deployment': '/ci/recipes/other/ci-deployment',
+  '/nx-cloud/intro/what-is-nx-cloud': '/ci/intro/ci-with-nx',
+  '/nx-cloud/set-up': '/ci/recipes/set-up',
+  '/nx-cloud/set-up/record-commands': '/ci/recipes/other/record-commands',
   '/nx-cloud/set-up/github':
     '/nx-cloud/recipes/source-control-integration/github',
   '/nx-cloud/set-up/bitbucket-cloud':
     '/nx-cloud/recipes/source-control-integration/bitbucket-cloud',
   '/nx-cloud/set-up/gitlab':
     '/nx-cloud/recipes/source-control-integration/gitlab',
-  '/core-features/remote-cache': '/nx-cloud/features/remote-cache',
+  '/core-features/remote-cache': '/ci/features/remote-cache',
   '/core-features/distribute-task-execution':
     '/nx-cloud/features/distribute-task-execution',
-  '/concepts/affected': '/nx-cloud/features/affected',
-  '/nx-cloud/private-cloud': '/nx-cloud/recipes/on-premise',
-  '/nx-cloud/private-cloud/get-started': '/nx-cloud/features/on-premise',
+  '/concepts/affected': '/ci/features/affected',
+  '/nx-cloud/private-cloud': '/ci/recipes/on-premise',
+  '/nx-cloud/private-cloud/get-started': '/ci/features/on-premise',
   '/nx-cloud/private-cloud/auth-single-admin':
     '/nx-cloud/recipes/on-premise/auth-single-admin',
   '/nx-cloud/private-cloud/auth-github':
     '/nx-cloud/recipes/on-premise/auth-github',
-  '/nx-cloud/private-cloud/ami-setup': '/nx-cloud/recipes/on-premise/ami-setup',
+  '/nx-cloud/private-cloud/ami-setup': '/ci/recipes/on-premise/ami-setup',
   '/nx-cloud/private-cloud/auth-gitlab':
     '/nx-cloud/recipes/on-premise/auth-gitlab',
   '/nx-cloud/private-cloud/auth-bitbucket':
     '/nx-cloud/recipes/on-premise/auth-bitbucket',
-  '/nx-cloud/private-cloud/auth-saml': '/nx-cloud/recipes/on-premise/auth-saml',
+  '/nx-cloud/private-cloud/auth-saml': '/ci/recipes/on-premise/auth-saml',
   '/nx-cloud/private-cloud/auth-saml-managed':
     '/nx-cloud/recipes/on-premise/auth-saml-managed',
   '/nx-cloud/private-cloud/advanced-config':
     '/nx-cloud/recipes/on-premise/advanced-config',
+  '/concepts/dte': '/ci/concepts/parallelization-distribution',
+  '/nx-cloud/concepts/dte': '/ci/concepts/parallelization-distribution',
+  '/nx-cloud/intro/nx-cloud-workflows': '/ci/features/nx-cloud-workflows',
+  '/nx-cloud/account': '/ci/recipes/security',
+  '/nx-cloud/account/google-auth': '/ci/recipes/security/google-auth',
+  '/nx-cloud/account/access-tokens': '/ci/recipes/security/access-tokens',
+  '/nx-cloud/account/scenarios': '/ci/concepts/cache-security',
+  '/nx-cloud/concepts/scenarios': '/ci/concepts/cache-security',
+  '/nx-cloud/account/encryption': '/ci/recipes/security/encryption',
+  '/nx-cloud/concepts/encryption': '/ci/recipes/security/encryption',
+  '/nx-cloud/features/nx-cloud-workflows': '/ci/features/nx-agents',
+  '/ci': '/ci/intro/ci-with-nx',
+  '/nx-cloud/:path*': '/ci/:path*',
 };
 
 /**

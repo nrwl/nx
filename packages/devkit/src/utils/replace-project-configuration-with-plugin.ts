@@ -15,13 +15,13 @@ const {
   updateProjectConfiguration,
 } = requireNx();
 
-export function replaceProjectConfigurationsWithPlugin<T = unknown>(
+export async function replaceProjectConfigurationsWithPlugin<T = unknown>(
   tree: Tree,
   rootMappings: Map<string, string>,
   pluginPath: string,
   createNodes: CreateNodes<T>,
   pluginOptions: T
-): void {
+): Promise<void> {
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
     typeof p === 'string' ? p === pluginPath : p.plugin === pluginPath
@@ -45,7 +45,7 @@ export function replaceProjectConfigurationsWithPlugin<T = unknown>(
     try {
       const projectName = findProjectForPath(configFile, rootMappings);
       const projectConfig = readProjectConfiguration(tree, projectName);
-      const nodes = createNodesFunction(configFile, pluginOptions, {
+      const nodes = await createNodesFunction(configFile, pluginOptions, {
         workspaceRoot: tree.root,
         nxJsonConfiguration: readNxJson(tree),
       });
@@ -134,7 +134,7 @@ function removeConfigurationDefinedByPlugin<T>(
   for (const [optionName, optionValue] of Object.entries(
     targetFromProjectConfig.options ?? {}
   )) {
-    if (targetFromCreateNodes.options[optionName] === optionValue) {
+    if (equals(targetFromCreateNodes.options[optionName], optionValue)) {
       delete targetFromProjectConfig.options[optionName];
     }
   }
@@ -165,6 +165,16 @@ function removeConfigurationDefinedByPlugin<T>(
   if (Object.keys(targetFromProjectConfig).length === 0) {
     delete projectConfig.targets[targetName];
   }
+}
+
+function equals<T extends unknown>(a: T, b: T) {
+  if (Array.isArray(a) && Array.isArray(b)) {
+    return a.length === b.length && a.every((v, i) => v === b[i]);
+  }
+  if (typeof a === 'object' && typeof b === 'object') {
+    return hashObject(a) === hashObject(b);
+  }
+  return a === b;
 }
 
 function shouldRemoveArrayProperty(

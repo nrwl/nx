@@ -101,27 +101,62 @@
       "description": "Configuration for the nx release commands.",
       "additionalProperties": false,
       "properties": {
+        "projects": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "A project name"
+            },
+            {
+              "type": "array",
+              "description": "An array of project names",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
         "groups": {
           "type": "object",
           "additionalProperties": {
             "type": "object",
             "properties": {
+              "projectsRelationship": {
+                "type": "string",
+                "enum": ["fixed", "independent"]
+              },
               "projects": {
                 "oneOf": [
                   {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    },
-                    "minItems": 1
+                    "type": "string",
+                    "description": "A project name"
                   },
                   {
-                    "type": "string"
+                    "type": "array",
+                    "description": "An array of project names",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 ]
               },
               "version": {
-                "$ref": "#/definitions/NxReleaseVersionConfiguration"
+                "allOf": [
+                  {
+                    "$ref": "#/definitions/NxReleaseVersionConfiguration"
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "not": {
+                          "required": ["git"]
+                        }
+                      }
+                    ]
+                  }
+                ]
               },
               "changelog": {
                 "oneOf": [
@@ -129,8 +164,7 @@
                     "$ref": "#/definitions/NxReleaseChangelogConfiguration"
                   },
                   {
-                    "type": "boolean",
-                    "enum": [false]
+                    "type": "boolean"
                   }
                 ]
               },
@@ -150,8 +184,7 @@
                   "$ref": "#/definitions/NxReleaseChangelogConfiguration"
                 },
                 {
-                  "type": "boolean",
-                  "enum": [false]
+                  "type": "boolean"
                 }
               ]
             },
@@ -161,12 +194,25 @@
                   "$ref": "#/definitions/NxReleaseChangelogConfiguration"
                 },
                 {
-                  "type": "boolean",
-                  "enum": [false]
+                  "type": "boolean"
                 }
               ]
+            },
+            "automaticFromRef": {
+              "type": "boolean",
+              "description": "Whether or not to automatically look up the first commit for the workspace (or package, if versioning independently) and use that as the starting point for changelog generation. If this is not enabled, changelog generation will fail if there is no previous matching git tag to use as a starting point."
+            },
+            "git": {
+              "$ref": "#/definitions/NxReleaseGitConfiguration"
             }
           }
+        },
+        "projectsRelationship": {
+          "type": "string",
+          "enum": ["fixed", "independent"]
+        },
+        "git": {
+          "$ref": "#/definitions/NxReleaseGitConfiguration"
         },
         "version": {
           "$ref": "#/definitions/NxReleaseVersionConfiguration"
@@ -400,6 +446,7 @@
                       {
                         "type": "array",
                         "description": "An array of project names",
+                        "minItems": 1,
                         "items": {
                           "type": "string"
                         }
@@ -470,15 +517,56 @@
         }
       ]
     },
+    "NxReleaseGitConfiguration": {
+      "type": "object",
+      "properties": {
+        "commit": {
+          "type": "boolean",
+          "description": "Whether or not to automatically commit the changes made by current command"
+        },
+        "commitMessage": {
+          "type": "string",
+          "description": "Custom git commit message to use when committing the changes made by this command"
+        },
+        "commitArgs": {
+          "type": "string",
+          "description": "Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes"
+        },
+        "stageChanges": {
+          "type": "boolean",
+          "description": "Whether or not to stage the changes made by this command. Always treated as true if commit is true."
+        },
+        "tag": {
+          "type": "boolean",
+          "description": "Whether or not to automatically tag the changes made by this command"
+        },
+        "tagMessage": {
+          "type": "string",
+          "description": "Custom git tag message to use when tagging the changes made by this command. This defaults to be the same value as the tag itself."
+        },
+        "tagArgs": {
+          "type": "string",
+          "description": "Additional arguments to pass to the `git tag` command invoked behind the scenes"
+        }
+      }
+    },
     "NxReleaseVersionConfiguration": {
       "type": "object",
       "properties": {
+        "conventionalCommits": {
+          "type": "boolean",
+          "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
+          "default": false
+        },
         "generator": {
           "type": "string"
         },
         "generatorOptions": {
           "type": "object",
           "additionalProperties": true
+        },
+        "git": {
+          "$ref": "#/definitions/NxReleaseGitConfiguration"
         }
       }
     },

@@ -21,7 +21,7 @@ describe('React Applications', () => {
   let proj: string;
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/react'] });
     ensureCypressInstallation();
   });
 
@@ -34,13 +34,13 @@ describe('React Applications', () => {
     const logoSvg = readFileSync(join(__dirname, 'logo.svg')).toString();
 
     runCLI(
-      `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive`
+      `generate @nx/react:app ${appName} --style=css --bundler=webpack --no-interactive --skipFormat`
     );
     runCLI(
-      `generate @nx/react:lib ${libName} --style=css --no-interactive --unit-test-runner=jest`
+      `generate @nx/react:lib ${libName} --style=css --no-interactive --unit-test-runner=jest --skipFormat`
     );
     runCLI(
-      `generate @nx/react:lib ${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest`
+      `generate @nx/react:lib ${libWithNoComponents} --no-interactive --no-component --unit-test-runner=jest --skipFormat`
     );
 
     // Libs should not include package.json by default
@@ -106,7 +106,7 @@ describe('React Applications', () => {
     });
 
     // Set up SSR and check app
-    runCLI(`generate @nx/react:setup-ssr ${appName}`);
+    runCLI(`generate @nx/react:setup-ssr ${appName} --skipFormat`);
     checkFilesExist(`apps/${appName}/src/main.server.tsx`);
     checkFilesExist(`apps/${appName}/server.ts`);
 
@@ -128,15 +128,15 @@ describe('React Applications', () => {
     const plainJsLib = uniq('jslib');
 
     runCLI(
-      `generate @nx/react:app ${appName} --bundler=webpack --no-interactive --js`
+      `generate @nx/react:app ${appName} --bundler=webpack --no-interactive --js --skipFormat`
     );
     runCLI(
-      `generate @nx/react:lib ${libName} --no-interactive --js --unit-test-runner=none`
+      `generate @nx/react:lib ${libName} --no-interactive --js --unit-test-runner=none --skipFormat`
     );
     // Make sure plain JS libs can be imported as well.
     // There was an issue previously: https://github.com/nrwl/nx/issues/10990
     runCLI(
-      `generate @nx/js:lib ${plainJsLib} --js --unit-test-runner=none --bundler=none --compiler=tsc --no-interactive`
+      `generate @nx/js:lib ${plainJsLib} --js --unit-test-runner=none --bundler=none --compiler=tsc --no-interactive --skipFormat`
     );
 
     const mainPath = `apps/${appName}/src/main.js`;
@@ -158,9 +158,11 @@ describe('React Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(`generate @nx/react:app ${appName} --bundler=vite --no-interactive`);
     runCLI(
-      `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest`
+      `generate @nx/react:app ${appName} --bundler=vite --no-interactive --skipFormat`
+    );
+    runCLI(
+      `generate @nx/react:lib ${libName} --bundler=none --no-interactive --unit-test-runner=vitest --skipFormat`
     );
 
     // Library generated with Vite
@@ -190,7 +192,7 @@ describe('React Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/react:app ${appName} --routing --bundler=webpack --no-interactive`
+      `generate @nx/react:app ${appName} --routing --bundler=webpack --no-interactive --skipFormat`
     );
 
     runCLI(`build ${appName} --outputHashing none`);
@@ -206,12 +208,14 @@ describe('React Applications', () => {
     const appName = uniq('app');
     const libName = uniq('lib');
 
-    runCLI(`g @nx/react:app ${appName} --bundler=webpack --no-interactive`);
-    runCLI(`g @nx/react:redux lemon --project=${appName}`);
     runCLI(
-      `g @nx/react:lib ${libName} --unit-test-runner=jest --no-interactive`
+      `g @nx/react:app ${appName} --bundler=webpack --no-interactive --skipFormat`
     );
-    runCLI(`g @nx/react:redux orange --project=${libName}`);
+    runCLI(`g @nx/react:redux lemon --project=${appName} --skipFormat`);
+    runCLI(
+      `g @nx/react:lib ${libName} --unit-test-runner=jest --no-interactive --skipFormat`
+    );
+    runCLI(`g @nx/react:redux orange --project=${libName} --skipFormat`);
 
     let lintResults = runCLI(`lint ${appName}`);
     expect(lintResults).toContain('All files pass linting.');
@@ -233,7 +237,7 @@ describe('React Applications', () => {
     const libName = uniq('@my-org/lib1');
 
     runCLI(
-      `generate @nx/react:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/react:app ${appName} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive --skipFormat`
     );
 
     // check files are generated without the layout directory ("apps/") and
@@ -252,12 +256,12 @@ describe('React Applications', () => {
     // assert scoped project names are not supported when --project-name-and-root-format=derived
     expect(() =>
       runCLI(
-        `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --project-name-and-root-format=derived --no-interactive`
+        `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --project-name-and-root-format=derived --no-interactive --skipFormat`
       )
     ).toThrow();
 
     runCLI(
-      `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/react:lib ${libName} --unit-test-runner=jest --buildable --project-name-and-root-format=as-provided --no-interactive --skipFormat`
     );
 
     // check files are generated without the layout directory ("libs/") and
@@ -278,7 +282,7 @@ describe('React Applications', () => {
     it('should support styled-jsx', async () => {
       const appName = uniq('app');
       runCLI(
-        `generate @nx/react:app ${appName} --style=styled-jsx --bundler=vite --no-interactive`
+        `generate @nx/react:app ${appName} --style=styled-jsx --bundler=vite --no-interactive --skipFormat`
       );
 
       // update app to use styled-jsx
@@ -331,7 +335,7 @@ describe('React Applications', () => {
     `('should support global and css modules', async ({ style }) => {
       const appName = uniq('app');
       runCLI(
-        `generate @nx/react:app ${appName} --style=${style} --bundler=webpack --no-interactive`
+        `generate @nx/react:app ${appName} --style=${style} --bundler=webpack --no-interactive --skipFormat`
       );
 
       // make sure stylePreprocessorOptions works
@@ -367,9 +371,11 @@ describe('React Applications', () => {
       const appName = uniq('app');
       const libName = uniq('lib');
 
-      runCLI(`g @nx/react:app ${appName} --bundler=webpack --no-interactive`);
       runCLI(
-        `g @nx/react:lib ${libName} --no-interactive --unit-test-runner=none`
+        `g @nx/react:app ${appName} --bundler=webpack --no-interactive --skipFormat`
+      );
+      runCLI(
+        `g @nx/react:lib ${libName} --no-interactive --unit-test-runner=none --skipFormat`
       );
 
       const mainPath = `apps/${appName}/src/main.tsx`;
@@ -409,6 +415,20 @@ describe('React Applications', () => {
       expect(buildResults.combinedOutput).toMatch(/HELLO FROM APP/);
       expect(buildResults.combinedOutput).not.toMatch(/HELLO FROM LIB/);
     }, 250_000);
+  });
+
+  describe('--format', () => {
+    it('should be formatted on freshly created apps', async () => {
+      const appName = uniq('app');
+      runCLI(
+        `generate @nx/react:app ${appName} --bundler=webpack --no-interactive`
+      );
+
+      const stdout = runCLI(`format:check --projects=${appName}`, {
+        silenceError: true,
+      });
+      expect(stdout).toEqual('');
+    });
   });
 });
 

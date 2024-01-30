@@ -156,11 +156,11 @@ export default defineConfig({
 `,
       {
         cypressDir: 'cypress',
-        devServerTargets: {
+        webServerCommands: {
           default: 'my-app:serve',
           production: 'my-app:serve:production',
         },
-        ciDevServerTarget: 'my-app:serve-static',
+        ciWebServerCommand: 'my-app:serve-static',
       },
       undefined
     );
@@ -171,7 +171,7 @@ export default defineConfig({
       import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';
 
       export default defineConfig({
-        e2e: { ...nxE2EPreset(__filename, {"cypressDir":"cypress","devServerTargets":{"default":"my-app:serve","production":"my-app:serve:production"},"ciDevServerTarget":"my-app:serve-static"}) }
+        e2e: { ...nxE2EPreset(__filename, {"cypressDir":"cypress","webServerCommands":{"default":"my-app:serve","production":"my-app:serve:production"},"ciWebServerCommand":"my-app:serve-static"}) }
       });
       "
     `);

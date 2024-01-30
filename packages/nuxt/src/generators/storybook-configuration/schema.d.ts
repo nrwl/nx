@@ -1,7 +1,7 @@
 import { Linter } from '@nx/eslint';
 
 export interface Schema {
-  name: string;
+  project: string;
   interactionTests?: boolean;
   generateStories?: boolean;
   js?: boolean;

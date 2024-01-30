@@ -11,6 +11,7 @@ import { createProjectConfigurationInNewDestination } from './create-project-con
 describe('moveProjectConfiguration', () => {
   let tree: Tree;
   let projectConfig: ProjectConfiguration;
+  let projectConfigFlat: ProjectConfiguration;
   let schema: NormalizedSchema;
 
   const setupWorkspace = (version: 1 | 2 = 1) => {
@@ -100,13 +101,6 @@ describe('moveProjectConfiguration', () => {
         },
         lint: {
           executor: '@nx/eslint:lint',
-          options: {
-            lintFilePatterns: [
-              '{projectRoot}/**/*.{ts,tsx,js,jsx}',
-              '{projectRoot}/**/*.{html,htm}',
-              '{projectRoot}/project.json',
-            ],
-          },
         },
         test: {
           executor: '@nx/jest:jest',
@@ -141,18 +135,84 @@ describe('moveProjectConfiguration', () => {
         },
         lint: {
           executor: '@nx/eslint:lint',
-          options: {
-            lintFilePatterns: [
-              '{projectRoot}/**/*.{ts,tsx,js,jsx}',
-              '{projectRoot}/**/*.{html,htm}',
-              '{projectRoot}/project.json',
-            ],
-          },
         },
       },
     });
 
+    addProjectConfiguration(tree, 'my-flat-source', {
+      root: 'my-flat-source',
+      name: 'my-flat-source',
+      sourceRoot: 'my-flat-source/src',
+      projectType: 'application',
+      targets: {
+        build: {
+          cache: true,
+          dependsOn: ['^build'],
+          inputs: ['production', '^production'],
+          executor: '@nx/vite:build',
+          outputs: ['{options.outputPath}'],
+          defaultConfiguration: 'production',
+          options: { outputPath: 'dist/my-flat-source' },
+          configurations: {
+            development: { mode: 'development' },
+            production: { mode: 'production' },
+          },
+        },
+        serve: {
+          executor: '@nx/vite:dev-server',
+          defaultConfiguration: 'development',
+          options: {
+            buildTarget: 'my-flat-source:build:development',
+            hmr: true,
+          },
+          configurations: {
+            development: {
+              buildTarget: 'my-flat-source:build:development',
+              hmr: true,
+            },
+            production: {
+              buildTarget: 'my-flat-source:build:production',
+              hmr: false,
+            },
+          },
+        },
+        preview: {
+          executor: '@nx/vite:preview-server',
+          defaultConfiguration: 'development',
+          options: { buildTarget: 'my-flat-source:build' },
+          configurations: {
+            development: { buildTarget: 'my-flat-source:build:development' },
+            production: { buildTarget: 'my-flat-source:build:production' },
+          },
+        },
+        test: {
+          cache: true,
+          inputs: ['default', '^production'],
+          executor: '@nx/vite:test',
+          outputs: ['{options.reportsDirectory}'],
+          options: { reportsDirectory: '../coverage/my-flat-source' },
+          configurations: {},
+        },
+        lint: {
+          cache: true,
+          inputs: [
+            'default',
+            '{workspaceRoot}/.eslintrc.json',
+            '{workspaceRoot}/.eslintignore',
+            '{workspaceRoot}/eslint.config.js',
+          ],
+          executor: '@nx/eslint:lint',
+          outputs: ['{options.outputFile}'],
+          options: {},
+          configurations: {},
+        },
+      },
+      tags: [],
+      implicitDependencies: [],
+    });
+
     projectConfig = readProjectConfiguration(tree, 'my-source');
+    projectConfigFlat = readProjectConfiguration(tree, 'my-flat-source');
   };
 
   it('should rename the project', async () => {
@@ -162,7 +222,28 @@ describe('moveProjectConfiguration', () => {
 
     expect(
       readProjectConfiguration(tree, 'subfolder-my-destination')
-    ).toBeDefined();
+    ).toMatchSnapshot();
+  });
+
+  it('should rename the project correctly except for build targets', async () => {
+    setupWorkspace();
+
+    createProjectConfigurationInNewDestination(
+      tree,
+      { ...schema, projectName: 'my-flat-source' },
+      projectConfigFlat
+    );
+
+    const projectConfigFlatDestination = readProjectConfiguration(
+      tree,
+      'subfolder-my-destination'
+    );
+
+    expect(
+      projectConfigFlatDestination.targets['preview'].options.buildTarget
+    ).toBe('my-flat-source:build');
+
+    expect(projectConfigFlatDestination).toMatchSnapshot();
   });
 
   it('should update paths in only the intended project', async () => {

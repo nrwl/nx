@@ -81,6 +81,7 @@ export async function componentGeneratorInternal(host: Tree, options: Schema) {
 
   const componentInstall = await reactComponentGenerator(host, {
     ...options,
+    name,
     nameAndDirectoryFormat: 'as-provided', // already determined the directory so use as is
     project: undefined,
     directory,

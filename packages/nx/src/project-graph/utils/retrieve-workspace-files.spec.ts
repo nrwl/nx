@@ -1,3 +1,4 @@
+import { getDefaultPlugins } from '../../utils/nx-plugin';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { retrieveProjectConfigurationPaths } from './retrieve-workspace-files';
 
@@ -24,11 +25,13 @@ describe('retrieveProjectConfigurationPaths', () => {
         name: 'project-1',
       })
     );
-    expect(
-      await retrieveProjectConfigurationPaths(fs.tempDir, {})
-    ).not.toContain('not-projects/project.json');
-    expect(await retrieveProjectConfigurationPaths(fs.tempDir, {})).toContain(
-      'projects/project.json'
+
+    const configPaths = await retrieveProjectConfigurationPaths(
+      fs.tempDir,
+      await getDefaultPlugins(fs.tempDir)
     );
+
+    expect(configPaths).not.toContain('not-projects/project.json');
+    expect(configPaths).toContain('projects/project.json');
   });
 });

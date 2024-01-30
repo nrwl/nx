@@ -3,10 +3,11 @@ import { TempFs } from '../../internal-testing-utils/temp-fs';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { dirname, join } from 'path';
 import { readJsonFile } from '../../utils/fileutils';
+import { cacheDirectoryForWorkspace } from '../../utils/cache-directory';
 
 describe('workspace files', () => {
   function createParseConfigurationsFunction(tempDir: string) {
-    return (filenames: string[]) => {
+    return async (filenames: string[]) => {
       const res = {};
       for (const filename of filenames) {
         const json = readJsonFile(join(tempDir, filename));
@@ -48,13 +49,18 @@ describe('workspace files', () => {
       './libs/package-project/index.js': '',
       './nested/non-project/file.txt': '',
     });
-    let globs = ['project.json', '**/project.json', 'libs/*/package.json'];
 
-    const context = new WorkspaceContext(fs.tempDir);
-    let { projectFileMap, globalFiles } = context.getWorkspaceFiles(
-      globs,
-      createParseConfigurationsFunction(fs.tempDir)
+    const context = new WorkspaceContext(
+      fs.tempDir,
+      cacheDirectoryForWorkspace(fs.tempDir)
     );
+    let { projectFileMap, globalFiles } = await context.getWorkspaceFiles({
+      'libs/project1': 'project1',
+      'libs/project2': 'project2',
+      'libs/project3': 'project3',
+      'libs/nested/project': 'nested-project',
+      'libs/package-project': 'package-project',
+    });
 
     expect(projectFileMap).toMatchInlineSnapshot(`
       {
@@ -145,13 +151,14 @@ describe('workspace files', () => {
       './jest.config.js': '',
     });
 
-    const context = new WorkspaceContext(fs.tempDir);
-
-    const globs = ['project.json', '**/project.json', '**/package.json'];
-    const { globalFiles, projectFileMap } = context.getWorkspaceFiles(
-      globs,
-      createParseConfigurationsFunction(fs.tempDir)
+    const context = new WorkspaceContext(
+      fs.tempDir,
+      cacheDirectoryForWorkspace(fs.tempDir)
     );
+
+    const { globalFiles, projectFileMap } = await context.getWorkspaceFiles({
+      '.': 'repo-name',
+    });
 
     expect(globalFiles).toEqual([]);
     expect(projectFileMap['repo-name']).toMatchInlineSnapshot(`

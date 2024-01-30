@@ -11,7 +11,10 @@ import {
 describe('Storybook executors for Angular', () => {
   const angularStorybookLib = uniq('test-ui-ng-lib');
   beforeAll(() => {
-    newProject();
+    newProject({
+      packages: ['@nx/angular'],
+      unsetProjectNameAndRootFormat: false,
+    });
     runCLI(
       `g @nx/angular:library ${angularStorybookLib} --project-name-and-root-format=as-provided --no-interactive`
     );

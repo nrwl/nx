@@ -20,6 +20,7 @@ import { Schema } from './schema';
 import setupSsrGenerator from '../setup-ssr/setup-ssr';
 import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
 import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
+import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -72,6 +73,7 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   const options: NormalizedSchema<Schema> = {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:remote')),
     typescriptConfiguration: schema.typescriptConfiguration ?? false,
+    dynamic: schema.dynamic ?? false,
   };
   const initAppTask = await applicationGenerator(host, {
     ...options,
@@ -118,6 +120,25 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
       `webpack.server.config.${options.typescriptConfiguration ? 'ts' : 'js'}`
     );
     updateProjectConfiguration(host, options.projectName, projectConfig);
+  }
+  if (!options.setParserOptionsProject) {
+    host.delete(
+      joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
+    );
+  }
+
+  if (options.host && options.dynamic) {
+    const hostConfig = readProjectConfiguration(host, schema.host);
+    const pathToMFManifest = joinPathFragments(
+      hostConfig.sourceRoot,
+      'assets/module-federation.manifest.json'
+    );
+    addRemoteToDynamicHost(
+      host,
+      options.name,
+      options.devServerPort,
+      pathToMFManifest
+    );
   }
 
   if (!options.skipFormat) {

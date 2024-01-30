@@ -12,25 +12,19 @@ const config = {
 };
 
 // Nx plugins for webpack to build config object from Nx options and context.
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(config)
-);
+module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config));
 "
 `;
 
-exports[`remote generator should create the remote with the correct config files 2`] = `
-"module.exports = require('./webpack.config');
-"
-`;
+exports[`remote generator should create the remote with the correct config files 2`] = `"module.exports = require('./webpack.config');"`;
 
 exports[`remote generator should create the remote with the correct config files 3`] = `
 "module.exports = {
-  name: 'test',
-  exposes: {
-    './Module': './src/remote-entry.ts',
-  },
+   name: 'test',
+   
+   exposes: {
+     './Module': './src/remote-entry.ts',
+   },
 };
 "
 `;
@@ -65,6 +59,7 @@ exports[`remote generator should create the remote with the correct config files
 
 const config: ModuleFederationConfig = {
   name: 'test',
+
   exposes: {
     './Module': './src/remote-entry.ts',
   },
@@ -75,31 +70,27 @@ export default config;
 `;
 
 exports[`remote generator should generate correct remote with config files when using --ssr 1`] = `
-"const { composePlugins, withNx } = require('@nx/webpack');
-const { withReact } = require('@nx/react');
-const { withModuleFederationForSSR } = require('@nx/react/module-federation');
+"const {composePlugins, withNx} = require('@nx/webpack');
+const {withReact} = require('@nx/react');
+const {withModuleFederationForSSR} = require('@nx/react/module-federation');
 
-const baseConfig = require('./module-federation.server.config');
+const baseConfig = require("./module-federation.server.config");
 
 const defaultConfig = {
-  ...baseConfig,
+    ...baseConfig,
 };
 
 // Nx plugins for webpack to build config object from Nx options and context.
-module.exports = composePlugins(
-  withNx(),
-  withReact({ ssr: true }),
-  withModuleFederationForSSR(defaultConfig)
-);
+module.exports = composePlugins(withNx(), withReact({ssr: true}), withModuleFederationForSSR(defaultConfig));
 "
 `;
 
 exports[`remote generator should generate correct remote with config files when using --ssr 2`] = `
 "module.exports = {
-  name: 'test',
-  exposes: {
-    './Module': 'test/src/remote-entry.ts',
-  },
+    name: 'test',
+   exposes: {
+     './Module': 'test/src/remote-entry.ts',
+   },
 };
 "
 `;

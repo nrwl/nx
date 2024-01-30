@@ -45,6 +45,7 @@
             "ignoredDependencies": [
               "nx",
               "eslint",
+              "vite",
               "rxjs",
               "semver",
               // These are installed by ensurePackage so missing in package.json
@@ -84,8 +85,7 @@
               "ora",
               "convert-source-map",
               "postcss",
-              "postcss-import",
-              "postcss-preset-env",
+              "autoprefixer",
               "postcss-url",
               "sass",
               "stylus",

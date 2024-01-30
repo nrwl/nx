@@ -19,6 +19,7 @@ import {
 } from '../../utils/command-line-utils';
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { ShowProjectOptions, ShowProjectsOptions } from './command-object';
+import { generateGraph } from '../graph/graph';
 
 export async function showProjectsHandler(
   args: ShowProjectsOptions
@@ -94,6 +95,16 @@ export async function showProjectHandler(
   }
   if (args.json) {
     console.log(JSON.stringify(node.data));
+  } else if (args.web) {
+    await generateGraph(
+      {
+        view: 'project-details',
+        focus: node.name,
+        watch: true,
+        open: true,
+      },
+      []
+    );
   } else {
     const chalk = require('chalk') as typeof import('chalk');
     const logIfExists = (label, key: keyof typeof node['data']) => {

@@ -2,7 +2,7 @@
 
 ## Why do users need access?
 
-While just adding an Nx Cloud access token to your monorepo gives you distributed caching and distributed tasks
+While just adding an Nx Cloud access token to your monorepo gives you remote caching and distributed tasks
 execution, the Nx Cloud web app gives you analytics about tasks running in your workspace, allows devs to easily inspect
 terminal output, and works seamlessly with our GitHub integration for your Pull Requests. Here is
 a [video walkthrough of this](https://youtu.be/GT7XIwG1i5A?t=409).
@@ -10,14 +10,14 @@ a [video walkthrough of this](https://youtu.be/GT7XIwG1i5A?t=409).
 By default, when you connect your token to a workspace on your Nx Cloud web app, all links and runs are private to only
 members of your organisation. This means that you'll either need to explicitly add members, or make your organisation
 public (which means anyone with access to your Nx Cloud instance will be able to see your runs)
-. [More details here.](/nx-cloud/account/users#managing-members)
+.
 
 ## Setting up a single admin user
 
 If you just want to try out running Nx Cloud on prem and set up full membership management later, then the simplest
 option is to
 just set up a single admin user. This option might also work for you if you are okay
-with [making your organisation public](/nx-cloud/account/users#public-organizations) to anyone that has access to your
+with making your organisation public to anyone that has access to your
 Nx Cloud installation.
 
 To do that provision the `ADMIN_PASSWORD` env variable for the `nx-cloud-aggregator` container (if you are running Nx
@@ -33,10 +33,10 @@ than 1 admin to your workspace, to reduce the chance of losing access to it.
 
 For instructions on how to set up third-party auth providers, please refer to these guides:
 
-- [GitHub Auth](/nx-cloud/recipes/on-premise/auth-github)
-- [GitLab Auth](/nx-cloud/recipes/on-premise/auth-gitlab)
-- [BitBucket Auth](/nx-cloud/recipes/on-premise/auth-bitbucket)
-- [SAML Auth](/nx-cloud/recipes/on-premise/auth-saml)
+- [GitHub Auth](/ci/recipes/on-premise/auth-github)
+- [GitLab Auth](/ci/recipes/on-premise/auth-gitlab)
+- [BitBucket Auth](/ci/recipes/on-premise/auth-bitbucket)
+- [SAML Auth](/ci/recipes/on-premise/auth-saml)
 
 ## Inviting users
 

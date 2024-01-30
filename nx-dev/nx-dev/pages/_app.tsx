@@ -22,19 +22,19 @@ export default function CustomApp({
   return (
     <>
       <DefaultSeo
-        title="Nx: Smart, Fast and Extensible Build System"
-        description="Next generation build system with first class monorepo support and powerful integrations."
+        title="Nx: Smart Monorepos · Fast CI"
+        description="Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI."
         openGraph={{
           url: 'https://nx.dev' + router.asPath,
-          title: 'Nx: Smart, Fast and Extensible Build System',
+          title: 'Nx: Smart Monorepos · Fast CI',
           description:
-            'Next generation build system with first class monorepo support and powerful integrations.',
+            'Nx is a build system with built-in tooling and advanced CI capabilities. It helps you maintain and scale monorepos, both locally and on CI.',
           images: [
             {
               url: 'https://nx.dev/images/nx-media.jpg',
               width: 800,
               height: 421,
-              alt: 'Nx: Smart, Fast and Extensible Build System',
+              alt: 'Nx: Smart Monorepos · Fast CI',
               type: 'image/jpeg',
             },
           ],
@@ -115,6 +115,18 @@ export default function CustomApp({
           r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
           a.appendChild(r);
         })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');`,
+        }}
+      />
+      <Script
+        id="twitter-campain-pixelcode"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+        !function(e,t,n,s,u,a){e.twq||(s=e.twq=function(){s.exe?s.exe.apply(s,arguments):s.queue.push(arguments);
+        },s.version='1.1',s.queue=[],u=t.createElement(n),u.async=!0,u.src='https://static.ads-twitter.com/uwt.js',
+        a=t.getElementsByTagName(n)[0],a.parentNode.insertBefore(u,a))}(window,document,'script');
+        twq('config','obtp4'); 
+        `,
         }}
       />
     </>

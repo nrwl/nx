@@ -42,7 +42,7 @@ describe('Build React libraries and apps', () => {
     childLib = uniq('childlib');
     childLib2 = uniq('childlib2');
 
-    proj = newProject();
+    proj = newProject({ packages: ['@nx/react'] });
 
     // create dependencies by importing
     const createDep = (parent, children: string[]) => {
@@ -79,13 +79,13 @@ describe('Build React libraries and apps', () => {
     }));
     // generate buildable libs
     runCLI(
-      `generate @nx/react:library ${parentLib} --bundler=rollup --importPath=@${proj}/${parentLib} --no-interactive --unitTestRunner=jest`
+      `generate @nx/react:library ${parentLib} --bundler=rollup --importPath=@${proj}/${parentLib} --no-interactive --unitTestRunner=jest --skipFormat`
     );
     runCLI(
-      `generate @nx/react:library ${childLib} --bundler=rollup --importPath=@${proj}/${childLib} --no-interactive --unitTestRunner=jest`
+      `generate @nx/react:library ${childLib} --bundler=rollup --importPath=@${proj}/${childLib} --no-interactive --unitTestRunner=jest --skipFormat`
     );
     runCLI(
-      `generate @nx/react:library ${childLib2} --bundler=rollup --importPath=@${proj}/${childLib2} --no-interactive --unitTestRunner=jest`
+      `generate @nx/react:library ${childLib2} --bundler=rollup --importPath=@${proj}/${childLib2} --no-interactive --unitTestRunner=jest --skipFormat`
     );
 
     createDep(parentLib, [childLib, childLib2]);

@@ -2,7 +2,7 @@ import { Linter } from '@nx/eslint';
 import { UiFramework } from '../../utils/models';
 
 export interface StorybookConfigureSchema {
-  name: string;
+  project: string;
   uiFramework?: UiFramework;
   linter?: Linter;
   js?: boolean;

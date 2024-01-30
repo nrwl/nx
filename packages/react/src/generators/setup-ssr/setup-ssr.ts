@@ -11,7 +11,6 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import initGenerator from '../init/init';
 
 import type { Schema } from './schema';
 import {
@@ -53,7 +52,6 @@ interface AppComponentInfo {
 }
 
 export async function setupSsrGenerator(tree: Tree, options: Schema) {
-  await initGenerator(tree, { skipFormat: true });
   const projectConfig = readProjectConfiguration(tree, options.project);
   const projectRoot = projectConfig.root;
   const appImportCandidates: AppComponentInfo[] = [
@@ -120,7 +118,6 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
         compiler: 'babel',
         externalDependencies: 'all',
         outputHashing: 'none',
-        isolatedConfig: true,
         webpackConfig: joinPathFragments(projectRoot, 'webpack.config.js'),
       },
       configurations: {

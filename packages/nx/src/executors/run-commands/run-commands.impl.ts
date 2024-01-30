@@ -4,6 +4,8 @@ import * as yargsParser from 'yargs-parser';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import * as chalk from 'chalk';
+import { runCommand } from '../../native';
+import { PseudoTtyProcess } from '../../utils/child-process';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 
@@ -20,7 +22,9 @@ async function loadEnvVars(path?: string) {
   }
 }
 
-export type Json = { [k: string]: any };
+export type Json = {
+  [k: string]: any;
+};
 
 export interface RunCommandsOptions extends Json {
   command?: string;
@@ -43,7 +47,8 @@ export interface RunCommandsOptions extends Json {
   parallel?: boolean;
   readyWhen?: string;
   cwd?: string;
-  args?: string;
+  env?: Record<string, string>;
+  args?: string | string[];
   envFile?: string;
   __unparsed__: string[];
 }
@@ -64,13 +69,18 @@ export interface NormalizedRunCommandsOptions extends RunCommandsOptions {
     command: string;
     forwardAllArgs?: boolean;
   }[];
-  parsedArgs: { [k: string]: any };
+  parsedArgs: {
+    [k: string]: any;
+  };
+  args?: string;
 }
 
 export default async function (
   options: RunCommandsOptions,
   context: ExecutorContext
-): Promise<{ success: boolean }> {
+): Promise<{
+  success: boolean;
+}> {
   await loadEnvVars(options.envFile);
   const normalized = normalizeOptions(options);
 
@@ -113,7 +123,9 @@ async function runInParallel(
       c,
       options.readyWhen,
       options.color,
-      calculateCwd(options.cwd, context)
+      calculateCwd(options.cwd, context),
+      options.env ?? {},
+      true
     ).then((result) => ({
       result,
       command: c.command,
@@ -149,8 +161,6 @@ async function runInParallel(
 function normalizeOptions(
   options: RunCommandsOptions
 ): NormalizedRunCommandsOptions {
-  options.parsedArgs = parseArgs(options);
-
   if (options.command) {
     options.commands = [{ command: options.command }];
     options.parallel = !!options.readyWhen;
@@ -159,6 +169,12 @@ function normalizeOptions(
       typeof c === 'string' ? { command: c } : c
     );
   }
+
+  if (options.args && Array.isArray(options.args)) {
+    options.args = options.args.join(' ');
+  }
+  options.parsedArgs = parseArgs(options, options.args as string);
+
   (options as NormalizedRunCommandsOptions).commands.forEach((c) => {
     c.command = interpolateArgsIntoCommand(
       c.command,
@@ -166,7 +182,7 @@ function normalizeOptions(
       c.forwardAllArgs ?? true
     );
   });
-  return options as any;
+  return options as NormalizedRunCommandsOptions;
 }
 
 async function runSerially(
@@ -178,7 +194,9 @@ async function runSerially(
       c,
       undefined,
       options.color,
-      calculateCwd(options.cwd, context)
+      calculateCwd(options.cwd, context),
+      options.env ?? {},
+      false
     );
     if (!success) {
       process.stderr.write(
@@ -191,7 +209,7 @@ async function runSerially(
   return true;
 }
 
-function createProcess(
+async function createProcess(
   commandConfig: {
     command: string;
     color?: string;
@@ -200,18 +218,67 @@ function createProcess(
   },
   readyWhen: string,
   color: boolean,
-  cwd: string
+  cwd: string,
+  env: Record<string, string>,
+  isParallel: boolean
+): Promise<boolean> {
+  env = processEnv(color, cwd, env);
+  // The rust runCommand is always a tty, so it will not look nice in parallel and if we need prefixes
+  // currently does not work properly in windows
+  if (
+    process.env.NX_NATIVE_COMMAND_RUNNER !== 'false' &&
+    process.stdout.isTTY &&
+    !commandConfig.prefix &&
+    !isParallel
+  ) {
+    const cp = new PseudoTtyProcess(
+      runCommand(commandConfig.command, cwd, env)
+    );
+
+    return new Promise((res) => {
+      cp.onOutput((output) => {
+        if (readyWhen && output.indexOf(readyWhen) > -1) {
+          res(true);
+        }
+      });
+
+      cp.onExit((code) => {
+        if (code === 0) {
+          res(true);
+        } else if (code >= 128) {
+          process.exit(code);
+        } else {
+          res(false);
+        }
+      });
+    });
+  }
+
+  return nodeProcess(commandConfig, color, cwd, env, readyWhen);
+}
+
+function nodeProcess(
+  commandConfig: {
+    command: string;
+    color?: string;
+    bgColor?: string;
+    prefix?: string;
+  },
+  color: boolean,
+  cwd: string,
+  env: Record<string, string>,
+  readyWhen: string
 ): Promise<boolean> {
   return new Promise((res) => {
     const childProcess = exec(commandConfig.command, {
       maxBuffer: LARGE_BUFFER,
-      env: processEnv(color, cwd),
+      env,
       cwd,
     });
     /**
      * Ensure the child process is killed when the parent exits
      */
-    const processExitListener = (signal?: number | NodeJS.Signals) => () =>
+    const processExitListener = (signal?: number | NodeJS.Signals) =>
       childProcess.kill(signal);
 
     process.on('exit', processExitListener);
@@ -277,21 +344,25 @@ function calculateCwd(
   return path.join(context.root, cwd);
 }
 
-function processEnv(color: boolean, cwd: string) {
-  const env = {
+function processEnv(color: boolean, cwd: string, env: Record<string, string>) {
+  const res = {
     ...process.env,
     ...appendLocalEnv({ cwd: cwd ?? process.cwd() }),
+    ...env,
   };
 
   if (color) {
-    env.FORCE_COLOR = `${color}`;
+    res.FORCE_COLOR = `${color}`;
   }
-  return env;
+  return res;
 }
 
 export function interpolateArgsIntoCommand(
   command: string,
-  opts: Pick<NormalizedRunCommandsOptions, 'parsedArgs' | '__unparsed__'>,
+  opts: Pick<
+    NormalizedRunCommandsOptions,
+    'args' | 'parsedArgs' | '__unparsed__'
+  >,
   forwardAllArgs: boolean
 ) {
   if (command.indexOf('{args.') > -1) {
@@ -300,7 +371,7 @@ export function interpolateArgsIntoCommand(
       opts.parsedArgs[group] !== undefined ? opts.parsedArgs[group] : ''
     );
   } else if (forwardAllArgs) {
-    return `${command}${
+    return `${command}${opts.args ? ' ' + opts.args : ''}${
       opts.__unparsed__.length > 0 ? ' ' + opts.__unparsed__.join(' ') : ''
     }`;
   } else {
@@ -308,8 +379,7 @@ export function interpolateArgsIntoCommand(
   }
 }
 
-function parseArgs(options: RunCommandsOptions) {
-  const args = options.args;
+function parseArgs(options: RunCommandsOptions, args?: string) {
   if (!args) {
     const unknownOptionsTreatedAsArgs = Object.keys(options)
       .filter((p) => propKeys.indexOf(p) === -1)

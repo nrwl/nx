@@ -5,10 +5,17 @@ import {
   readProjectConfiguration,
   updateNxJson,
 } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateFileServerExecutor from './update-file-server-executor';
 
 describe('updateFileServerExecutor', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
+  });
+
   it('it should change the executor correctly', async () => {
     // ARRANGE
     const tree = createTreeWithEmptyWorkspace();

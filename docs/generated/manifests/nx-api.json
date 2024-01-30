@@ -67,6 +67,24 @@
         "path": "/nx-api/angular/executors/browser-esbuild",
         "type": "executor"
       },
+      "/nx-api/angular/executors/module-federation-dev-server": {
+        "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
+        "file": "generated/packages/angular/executors/module-federation-dev-server.json",
+        "hidden": false,
+        "name": "module-federation-dev-server",
+        "originalFilePath": "/packages/angular/src/executors/module-federation-dev-server/schema.json",
+        "path": "/nx-api/angular/executors/module-federation-dev-server",
+        "type": "executor"
+      },
+      "/nx-api/angular/executors/application": {
+        "description": "Builds an application with esbuild with support for incremental builds. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "file": "generated/packages/angular/executors/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/angular/src/executors/application/schema.json",
+        "path": "/nx-api/angular/executors/application",
+        "type": "executor"
+      },
       "/nx-api/angular/executors/webpack-browser": {
         "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building",
         "file": "generated/packages/angular/executors/webpack-browser.json",
@@ -76,13 +94,13 @@
         "path": "/nx-api/angular/executors/webpack-browser",
         "type": "executor"
       },
-      "/nx-api/angular/executors/webpack-dev-server": {
-        "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
-        "file": "generated/packages/angular/executors/webpack-dev-server.json",
+      "/nx-api/angular/executors/dev-server": {
+        "description": "The `dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+        "file": "generated/packages/angular/executors/dev-server.json",
         "hidden": false,
-        "name": "webpack-dev-server",
-        "originalFilePath": "/packages/angular/src/builders/webpack-dev-server/schema.json",
-        "path": "/nx-api/angular/executors/webpack-dev-server",
+        "name": "dev-server",
+        "originalFilePath": "/packages/angular/src/builders/dev-server/schema.json",
+        "path": "/nx-api/angular/executors/dev-server",
         "type": "executor"
       },
       "/nx-api/angular/executors/webpack-server": {
@@ -92,15 +110,6 @@
         "name": "webpack-server",
         "originalFilePath": "/packages/angular/src/builders/webpack-server/schema.json",
         "path": "/nx-api/angular/executors/webpack-server",
-        "type": "executor"
-      },
-      "/nx-api/angular/executors/module-federation-dev-server": {
-        "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host.",
-        "file": "generated/packages/angular/executors/module-federation-dev-server.json",
-        "hidden": false,
-        "name": "module-federation-dev-server",
-        "originalFilePath": "/packages/angular/src/builders/module-federation-dev-server/schema.json",
-        "path": "/nx-api/angular/executors/module-federation-dev-server",
         "type": "executor"
       },
       "/nx-api/angular/executors/module-federation-dev-ssr": {
@@ -412,7 +421,7 @@
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "create-nx-workspace",
     "packageName": "create-nx-workspace",
-    "description": "Smart, Fast and Extensible Build System",
+    "description": "Smart Monorepos · Fast CI",
     "documents": {},
     "root": "/packages/create-nx-workspace",
     "source": "/packages/create-nx-workspace/src",
@@ -682,6 +691,15 @@
       }
     },
     "generators": {
+      "/nx-api/eslint/generators/init": {
+        "description": "Set up the ESLint plugin.",
+        "file": "generated/packages/eslint/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/eslint/src/generators/init/schema.json",
+        "path": "/nx-api/eslint/generators/init",
+        "type": "generator"
+      },
       "/nx-api/eslint/generators/workspace-rules-project": {
         "description": "Create the Workspace Lint Rules Project.",
         "file": "generated/packages/eslint/generators/workspace-rules-project.json",
@@ -1504,6 +1522,58 @@
     },
     "path": "/nx-api/node"
   },
+  "nuxt": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "nuxt",
+    "packageName": "@nx/nuxt",
+    "description": "The Nuxt plugin for Nx contains executors and generators for managing Nuxt applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Cypress, and Storybook.\n\n- Generators for applications, libraries, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+    "documents": {
+      "/nx-api/nuxt/documents/overview": {
+        "id": "overview",
+        "name": "Overview of the Nx Nuxt Plugin",
+        "description": "The Nx Plugin for Nuxt contains generators for managing Nuxt applications within a Nx workspace. This page also explains how to configure Nuxt on your Nx workspace.",
+        "file": "generated/packages/nuxt/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nuxt/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/nuxt/nuxt-plugin"
+      }
+    },
+    "root": "/packages/nuxt",
+    "source": "/packages/nuxt/src",
+    "executors": {},
+    "generators": {
+      "/nx-api/nuxt/generators/init": {
+        "description": "Initialize the `@nx/nuxt` plugin.",
+        "file": "generated/packages/nuxt/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/nuxt/src/generators/init/schema.json",
+        "path": "/nx-api/nuxt/generators/init",
+        "type": "generator"
+      },
+      "/nx-api/nuxt/generators/application": {
+        "description": "Create a Nuxt application.",
+        "file": "generated/packages/nuxt/generators/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/nuxt/src/generators/application/schema.json",
+        "path": "/nx-api/nuxt/generators/application",
+        "type": "generator"
+      },
+      "/nx-api/nuxt/generators/storybook-configuration": {
+        "description": "Set up storybook for a Nuxt app.",
+        "file": "generated/packages/nuxt/generators/storybook-configuration.json",
+        "hidden": false,
+        "name": "storybook-configuration",
+        "originalFilePath": "/packages/nuxt/src/generators/storybook-configuration/schema.json",
+        "path": "/nx-api/nuxt/generators/storybook-configuration",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/nuxt"
+  },
   "nx": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
     "name": "nx",
@@ -1762,6 +1832,17 @@
         "path": "/nx-api/nx/documents/release",
         "tags": [],
         "originalFilePath": "generated/cli/release"
+      },
+      "/nx-api/nx/documents/add": {
+        "id": "add",
+        "name": "add",
+        "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
+        "file": "generated/packages/nx/documents/add",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/nx/documents/add",
+        "tags": [],
+        "originalFilePath": "generated/cli/add"
       }
     },
     "root": "/packages/nx",
@@ -2352,6 +2433,194 @@
       }
     },
     "path": "/nx-api/react-native"
+  },
+  "remix": {
+    "githubRoot": "https://github.com/nrwl/nx/blob/master",
+    "name": "remix",
+    "packageName": "@nx/remix",
+    "description": "The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, routes, loaders, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+    "documents": {
+      "/nx-api/remix/documents/overview": {
+        "id": "overview",
+        "name": "Overview",
+        "description": "The Remix plugin for Nx contains executors and generators for managing Remix applications and libraries within an Nx workspace. It provides:\n\n\n- Integration with libraries such as Vitest, Jest, Cypress, and Storybook.\n\n- Generators for applications, libraries, routes, loaders, and more.\n\n- Library build support for publishing packages to npm or other registries.\n\n- Utilities for automatic workspace refactoring.",
+        "file": "generated/packages/remix/documents/overview",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/nx-api/remix/documents/overview",
+        "tags": [],
+        "originalFilePath": "shared/packages/remix/remix-plugin"
+      }
+    },
+    "root": "/packages/remix",
+    "source": "/packages/remix/src",
+    "executors": {
+      "/nx-api/remix/executors/serve": {
+        "description": "Serve a Remix application.",
+        "file": "generated/packages/remix/executors/serve.json",
+        "hidden": false,
+        "name": "serve",
+        "originalFilePath": "/packages/remix/src/executors/serve/schema.json",
+        "path": "/nx-api/remix/executors/serve",
+        "type": "executor"
+      },
+      "/nx-api/remix/executors/build": {
+        "description": "Build a Remix application.",
+        "file": "generated/packages/remix/executors/build.json",
+        "hidden": false,
+        "name": "build",
+        "originalFilePath": "/packages/remix/src/executors/build/schema.json",
+        "path": "/nx-api/remix/executors/build",
+        "type": "executor"
+      }
+    },
+    "generators": {
+      "/nx-api/remix/generators/preset": {
+        "description": "Generate a new Remix workspace",
+        "file": "generated/packages/remix/generators/preset.json",
+        "hidden": true,
+        "name": "preset",
+        "originalFilePath": "/packages/remix/src/generators/preset/schema.json",
+        "path": "/nx-api/remix/generators/preset",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/setup": {
+        "description": "Setup a Remix in an existing workspace",
+        "file": "generated/packages/remix/generators/setup.json",
+        "hidden": true,
+        "name": "setup",
+        "originalFilePath": "/packages/remix/src/generators/setup/schema.json",
+        "path": "/nx-api/remix/generators/setup",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/application": {
+        "description": "Generate a new Remix application",
+        "file": "generated/packages/remix/generators/application.json",
+        "hidden": false,
+        "name": "application",
+        "originalFilePath": "/packages/remix/src/generators/application/schema.json",
+        "path": "/nx-api/remix/generators/application",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/cypress-component-configuration": {
+        "description": "Generate a Cypress Component Testing configuration for a Remix project",
+        "file": "generated/packages/remix/generators/cypress-component-configuration.json",
+        "hidden": false,
+        "name": "cypress-component-configuration",
+        "originalFilePath": "/packages/remix/src/generators/cypress-component-configuration/schema.json",
+        "path": "/nx-api/remix/generators/cypress-component-configuration",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/library": {
+        "description": "Generate a new library",
+        "file": "generated/packages/remix/generators/library.json",
+        "hidden": false,
+        "name": "library",
+        "originalFilePath": "/packages/remix/src/generators/library/schema.json",
+        "path": "/nx-api/remix/generators/library",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/init": {
+        "description": "Initialize the `@nx/remix` plugin.",
+        "file": "generated/packages/remix/generators/init.json",
+        "hidden": true,
+        "name": "init",
+        "originalFilePath": "/packages/remix/src/generators/init/schema.json",
+        "path": "/nx-api/remix/generators/init",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/route": {
+        "description": "Generate a new route",
+        "file": "generated/packages/remix/generators/route.json",
+        "hidden": false,
+        "name": "route",
+        "originalFilePath": "/packages/remix/src/generators/route/schema.json",
+        "path": "/nx-api/remix/generators/route",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/resource-route": {
+        "description": "Generate a new resource route",
+        "file": "generated/packages/remix/generators/resource-route.json",
+        "hidden": false,
+        "name": "resource-route",
+        "originalFilePath": "/packages/remix/src/generators/resource-route/schema.json",
+        "path": "/nx-api/remix/generators/resource-route",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/action": {
+        "description": "Add an action function to an existing route",
+        "file": "generated/packages/remix/generators/action.json",
+        "hidden": false,
+        "name": "action",
+        "originalFilePath": "/packages/remix/src/generators/action/schema.json",
+        "path": "/nx-api/remix/generators/action",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/loader": {
+        "description": "Add a loader function to an existing route",
+        "file": "generated/packages/remix/generators/loader.json",
+        "hidden": false,
+        "name": "loader",
+        "originalFilePath": "/packages/remix/src/generators/loader/schema.json",
+        "path": "/nx-api/remix/generators/loader",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/style": {
+        "description": "Generates a new stylesheet and adds it to an existing route",
+        "file": "generated/packages/remix/generators/style.json",
+        "hidden": false,
+        "name": "style",
+        "originalFilePath": "/packages/remix/src/generators/style/schema.json",
+        "path": "/nx-api/remix/generators/style",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/setup-tailwind": {
+        "description": "Generates a TailwindCSS configuration for the Remix application",
+        "file": "generated/packages/remix/generators/setup-tailwind.json",
+        "hidden": false,
+        "name": "setup-tailwind",
+        "originalFilePath": "/packages/remix/src/generators/setup-tailwind/schema.json",
+        "path": "/nx-api/remix/generators/setup-tailwind",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/storybook-configuration": {
+        "description": "Generates a Storybook configuration for a Remix application",
+        "file": "generated/packages/remix/generators/storybook-configuration.json",
+        "hidden": false,
+        "name": "storybook-configuration",
+        "originalFilePath": "/packages/remix/src/generators/storybook-configuration/schema.json",
+        "path": "/nx-api/remix/generators/storybook-configuration",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/meta": {
+        "description": "Add a meta function to an existing route",
+        "file": "generated/packages/remix/generators/meta.json",
+        "hidden": false,
+        "name": "meta",
+        "originalFilePath": "/packages/remix/src/generators/meta/schema.json",
+        "path": "/nx-api/remix/generators/meta",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/error-boundary": {
+        "description": "Add an ErrorBoundary to an existing route",
+        "file": "generated/packages/remix/generators/error-boundary.json",
+        "hidden": false,
+        "name": "error-boundary",
+        "originalFilePath": "/packages/remix/src/generators/error-boundary/schema.json",
+        "path": "/nx-api/remix/generators/error-boundary",
+        "type": "generator"
+      },
+      "/nx-api/remix/generators/cypress": {
+        "description": "Generate a project for testing Remix apps using Cypress",
+        "file": "generated/packages/remix/generators/cypress.json",
+        "hidden": false,
+        "name": "cypress",
+        "originalFilePath": "/packages/remix/src/generators/cypress/schema.json",
+        "path": "/nx-api/remix/generators/cypress",
+        "type": "generator"
+      }
+    },
+    "path": "/nx-api/remix"
   },
   "rollup": {
     "githubRoot": "https://github.com/nrwl/nx/blob/master",

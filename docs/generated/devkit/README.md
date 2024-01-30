@@ -25,6 +25,7 @@ It only uses language primitives and immutable objects
 
 - [CreateDependenciesContext](../../devkit/documents/CreateDependenciesContext)
 - [CreateNodesContext](../../devkit/documents/CreateNodesContext)
+- [CreateNodesResult](../../devkit/documents/CreateNodesResult)
 - [DefaultTasksRunnerOptions](../../devkit/documents/DefaultTasksRunnerOptions)
 - [ExecutorContext](../../devkit/documents/ExecutorContext)
 - [ExecutorsJson](../../devkit/documents/ExecutorsJson)
@@ -86,6 +87,7 @@ It only uses language primitives and immutable objects
 - [StringChange](../../devkit/documents/StringChange)
 - [TargetDefaults](../../devkit/documents/TargetDefaults)
 - [TaskGraphExecutor](../../devkit/documents/TaskGraphExecutor)
+- [ToJSOptions](../../devkit/documents/ToJSOptions)
 - [WorkspaceJsonConfiguration](../../devkit/documents/WorkspaceJsonConfiguration)
 
 ### Variables

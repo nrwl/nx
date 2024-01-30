@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, readJson } from '@nx/devkit';
+import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
 import { applicationGenerator } from './application';
 
 describe('app', () => {
@@ -40,8 +40,7 @@ describe('app', () => {
         ).toMatchSnapshot();
         expect(tree.read('my-app/tsconfig.json', 'utf-8')).toMatchSnapshot();
         const packageJson = readJson(tree, 'package.json');
-        expect(packageJson.devDependencies['vitest']).toEqual('0.31.4');
-        expect(packageJson.devDependencies['nuxt-vitest']).toEqual('^0.11.0');
+        expect(packageJson.devDependencies['vitest']).toEqual('^1.0.4');
       });
 
       it('should configure tsconfig and project.json correctly', () => {
@@ -96,6 +95,36 @@ describe('app', () => {
         });
         expect(tree.exists('myapp4/src/assets/css/styles.css')).toBeFalsy();
         expect(tree.read('myapp4/nuxt.config.ts', 'utf-8')).toMatchSnapshot();
+      });
+    });
+
+    describe('pcv3', () => {
+      let originalValue: string | undefined;
+      beforeEach(() => {
+        tree = createTreeWithEmptyWorkspace();
+        originalValue = process.env['NX_PCV3'];
+        process.env['NX_PCV3'] = 'true';
+      });
+
+      afterEach(() => {
+        if (originalValue) {
+          process.env['NX_PCV3'] = originalValue;
+        } else {
+          delete process.env['NX_PCV3'];
+        }
+      });
+
+      it('should not add targets', async () => {
+        await applicationGenerator(tree, {
+          name,
+          projectNameAndRootFormat: 'as-provided',
+          unitTestRunner: 'vitest',
+        });
+
+        const projectConfi = readProjectConfiguration(tree, name);
+        expect(projectConfi.targets.build).toBeUndefined();
+        expect(projectConfi.targets.serve).toBeUndefined();
+        expect(projectConfi.targets.test).toBeUndefined();
       });
     });
   });

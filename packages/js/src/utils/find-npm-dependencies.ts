@@ -1,10 +1,6 @@
 import { join, relative } from 'path';
 import { readNxJson } from 'nx/src/config/configuration';
 import {
-  filterUsingGlobPatterns,
-  getTargetInputs,
-} from 'nx/src/hasher/task-hasher';
-import {
   joinPathFragments,
   normalizePath,
   type ProjectFileMap,
@@ -15,6 +11,10 @@ import {
 import { fileExists } from 'nx/src/utils/fileutils';
 import { fileDataDepTarget } from 'nx/src/config/project-graph';
 import { readTsConfig } from './typescript/ts-config';
+import {
+  filterUsingGlobPatterns,
+  getTargetInputs,
+} from 'nx/src/hasher/task-hasher';
 
 /**
  * Finds all npm dependencies and their expected versions for a given project.

@@ -1,20 +1,20 @@
 # Function: extractLayoutDirectory
 
-▸ **extractLayoutDirectory**(`directory`): `Object`
+▸ **extractLayoutDirectory**(`directory?`): `Object`
 
 Experimental
 
 #### Parameters
 
-| Name        | Type     |
-| :---------- | :------- |
-| `directory` | `string` |
+| Name         | Type     |
+| :----------- | :------- |
+| `directory?` | `string` |
 
 #### Returns
 
 `Object`
 
-| Name               | Type     |
-| :----------------- | :------- |
-| `layoutDirectory`  | `string` |
-| `projectDirectory` | `string` |
+| Name                | Type               |
+| :------------------ | :----------------- |
+| `layoutDirectory`   | `string` \| `null` |
+| `projectDirectory?` | `string`           |

@@ -194,7 +194,8 @@ ${e.message || e}`);
     const { schema } = getExecutorInformation(
       collection,
       executor,
-      context.root
+      context.root,
+      context.projectsConfigurations.projects
     );
 
     // NOTE: schema won't have a default since readTargetOptions would have

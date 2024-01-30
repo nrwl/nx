@@ -1,4 +1,4 @@
-import { ApplicationConfig } from <% if (installedAngularInfo.major >= 16) { %>'@angular/core';<% } else { %>'@angular/platform-browser';<% } %><% if (routing) { %>
+import { ApplicationConfig } from <% if (angularMajorVersion >= 16) { %>'@angular/core';<% } else { %>'@angular/platform-browser';<% } %><% if (routing) { %>
 import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';<% } %>
 

@@ -1,7 +1,8 @@
 use std::path::PathBuf;
+use tracing::trace;
 
-use crate::native::utils::glob::build_glob_set;
-use crate::native::utils::path::Normalize;
+use crate::native::glob::{build_glob_set, contains_glob_pattern};
+use crate::native::utils::Normalize;
 use crate::native::walker::nx_walker_sync;
 
 #[napi]
@@ -10,17 +11,46 @@ use crate::native::walker::nx_walker_sync;
 pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result<Vec<String>> {
     let directory: PathBuf = directory.into();
 
-    let (existing_paths, not_found): (Vec<_>, Vec<_>) = entries.into_iter().partition(|entry| {
-        let path = directory.join(entry);
-        path.exists()
-    });
+    let has_glob_pattern = entries.iter().any(|entry| contains_glob_pattern(entry));
 
-    if not_found.is_empty() {
-        return Ok(existing_paths);
+    if !has_glob_pattern {
+        trace!("No glob patterns found, checking if entries exist");
+        let existing_directories = entries
+            .into_iter()
+            .filter(|entry| {
+                let path = directory.join(entry);
+                path.exists()
+            })
+            .collect();
+        return Ok(existing_directories);
     }
 
-    let glob_set = build_glob_set(&not_found)?;
-    let found_paths = nx_walker_sync(directory)
+    let (regular_globs, negated_globs): (Vec<_>, Vec<_>) = entries
+        .into_iter()
+        .partition(|entry| !entry.starts_with('!'));
+
+    let negated_globs = negated_globs
+        .into_iter()
+        .map(|s| s[1..].to_string())
+        .collect::<Vec<_>>();
+
+    let regular_globs = regular_globs
+        .into_iter()
+        .map(|s| {
+            if !s.ends_with('/') {
+                let path = directory.join(&s);
+                if path.is_dir() {
+                    return format!("{}/", s);
+                }
+            }
+            s
+        })
+        .collect::<Vec<_>>();
+
+    trace!(?negated_globs, ?regular_globs, "Expanding globs");
+
+    let glob_set = build_glob_set(&regular_globs)?;
+    let found_paths = nx_walker_sync(directory, Some(&negated_globs))
         .filter_map(|path| {
             if glob_set.is_match(&path) {
                 Some(path.to_normalized_string())
@@ -28,9 +58,9 @@ pub fn expand_outputs(directory: String, entries: Vec<String>) -> anyhow::Result
                 None
             }
         })
-        .chain(existing_paths);
+        .collect();
 
-    Ok(found_paths.collect())
+    Ok(found_paths)
 }
 
 #[napi]
@@ -58,8 +88,9 @@ pub fn get_files_for_outputs(
     }
 
     if !globs.is_empty() {
+        // todo(jcammisuli): optimize this as nx_walker_sync is very slow on the root directory. We need to change this to only search smaller directories
         let glob_set = build_glob_set(&globs)?;
-        let found_paths = nx_walker_sync(&directory).filter_map(|path| {
+        let found_paths = nx_walker_sync(&directory, None).filter_map(|path| {
             if glob_set.is_match(&path) {
                 Some(path.to_normalized_string())
             } else {
@@ -74,17 +105,15 @@ pub fn get_files_for_outputs(
         for dir in directories {
             let dir = PathBuf::from(dir);
             let dir_path = directory.join(&dir);
-            let files_in_dir: Vec<String> = nx_walker_sync(&dir_path)
-                .filter_map(|e| {
-                    let path = dir_path.join(&e);
+            let files_in_dir = nx_walker_sync(&dir_path, None).filter_map(|e| {
+                let path = dir_path.join(&e);
 
-                    if path.is_file() {
-                        Some(dir.join(e).to_normalized_string())
-                    } else {
-                        None
-                    }
-                })
-                .collect();
+                if path.is_file() {
+                    Some(dir.join(e).to_normalized_string())
+                } else {
+                    None
+                }
+            });
             files.extend(files_in_dir);
         }
     }
@@ -124,6 +153,15 @@ mod test {
         temp.child("multi").child("src.ts").touch().unwrap();
         temp.child("multi").child("file.map").touch().unwrap();
         temp.child("multi").child("file.txt").touch().unwrap();
+        temp.child("apps/web/.next/cache")
+            .child("contents")
+            .touch()
+            .unwrap();
+        temp.child("apps/web/.next/static")
+            .child("contents")
+            .touch()
+            .unwrap();
+        temp.child("apps/web/.next/content-file").touch().unwrap();
         temp
     }
     #[test]
@@ -155,6 +193,25 @@ mod test {
         assert_eq!(
             result,
             vec!["multi/file.js", "multi/file.map", "multi/src.ts"]
+        );
+    }
+
+    #[test]
+    fn should_handle_multiple_outputs_with_negation() {
+        let temp = setup_fs();
+        let entries = vec![
+            "apps/web/.next".to_string(),
+            "!apps/web/.next/cache".to_string(),
+        ];
+        let mut result = expand_outputs(temp.display().to_string(), entries).unwrap();
+        result.sort();
+        assert_eq!(
+            result,
+            vec![
+                "apps/web/.next/content-file",
+                "apps/web/.next/static",
+                "apps/web/.next/static/contents"
+            ]
         );
     }
 }

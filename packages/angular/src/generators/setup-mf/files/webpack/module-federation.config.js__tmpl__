@@ -1,8 +1,20 @@
 module.exports = {
   name: '<%= name %>',<% if(type === 'host') { %>
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a `remotes.d.ts` file to your `src/` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
   remotes: [<% remotes.forEach(function(remote) { %>'<%= remote.remoteName %>',<% }); %>]<% } %><% if(type === 'remote') { %>
   exposes: {<% if(standalone) { %>
     './Routes': '<%= projectRoot %>/src/app/remote-entry/entry.routes.ts',<% } else { %>
     './Module': '<%= projectRoot %>/src/app/remote-entry/entry.module.ts',<% } %>
   },<% } %>
-}
+};

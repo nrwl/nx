@@ -6,7 +6,6 @@ export default {
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'html', 'json'],
   globals: {},
   displayName: 'react-native',
-  testEnvironment: 'node',
   verbose: true,
   preset: '../../jest.preset.js',
 };

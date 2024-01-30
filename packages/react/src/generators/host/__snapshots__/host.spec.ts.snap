@@ -12,20 +12,29 @@ const config = {
 };
 
 // Nx plugins for webpack to build config object from Nx options and context.
-module.exports = composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(config)
-);
+module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config));
 "
 `;
 
 exports[`hostGenerator should generate host files and configs 2`] = `
 "module.exports = {
   name: 'test',
-  remotes: [],
-};
-"
+  /**
+   * To use a remote that does not exist in your current Nx Workspace
+   * You can use the tuple-syntax to define your remote
+   *
+   * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+   *
+   * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+   * following content:
+   *
+   * declare module 'my-external-remote';
+   *
+   */
+  remotes: [
+    
+  ],
+};"
 `;
 
 exports[`hostGenerator should generate host files and configs for SSR 1`] = `
@@ -96,22 +105,18 @@ export default config;
 `;
 
 exports[`hostGenerator should generate host files and configs when --typescriptConfiguration=true 1`] = `
-"import { composePlugins, withNx } from '@nx/webpack';
-import { withReact } from '@nx/react';
-import { withModuleFederation } from '@nx/react/module-federation';
+"import {composePlugins, withNx} from '@nx/webpack';
+import {withReact} from '@nx/react';
+import {withModuleFederation} from '@nx/react/module-federation';
 
 import baseConfig from './module-federation.config';
 
 const config = {
-  ...baseConfig,
+    ...baseConfig,
 };
 
 // Nx plugins for webpack to build config object from Nx options and context.
-export default composePlugins(
-  withNx(),
-  withReact(),
-  withModuleFederation(config)
-);
+export default composePlugins(withNx(), withReact(), withModuleFederation(config));
 "
 `;
 
@@ -119,8 +124,22 @@ exports[`hostGenerator should generate host files and configs when --typescriptC
 "import { ModuleFederationConfig } from '@nx/webpack';
 
 const config: ModuleFederationConfig = {
-  name: 'test',
-  remotes: [],
+    name: 'test',
+    /**
+     * To use a remote that does not exist in your current Nx Workspace
+     * You can use the tuple-syntax to define your remote
+     *
+     * remotes: [['my-external-remote', 'https://nx-angular-remote.netlify.app']]
+     *
+     * You _may_ need to add a \`remotes.d.ts\` file to your \`src/\` folder declaring the external remote for tsc, with the
+     * following content:
+     *
+     * declare module 'my-external-remote';
+     *
+     */
+    remotes: [
+            
+  ],
 };
 
 export default config;

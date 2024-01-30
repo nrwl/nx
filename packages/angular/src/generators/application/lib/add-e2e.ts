@@ -32,6 +32,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
       devServerTarget: `${options.name}:serve:development`,
+      baseUrl: 'http://localhost:4200',
       rootProject: options.rootProject,
     });
   } else if (options.e2eTestRunner === 'playwright') {

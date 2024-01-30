@@ -2,23 +2,19 @@ import * as memfs from 'memfs';
 
 import '../../../internal-testing-utils/mock-fs';
 
-import { CreatePackageJsonProjectsNextToProjectJson } from './package-json-next-to-project-json';
-import {
-  CreateNodesContext,
-  CreateNodesFunction,
-} from '../../../utils/nx-plugin';
-const { createNodes } = CreatePackageJsonProjectsNextToProjectJson;
+import { PackageJsonProjectsNextToProjectJsonPlugin } from './package-json-next-to-project-json';
+import { CreateNodesContext } from '../../../utils/nx-plugin';
+const { createNodes } = PackageJsonProjectsNextToProjectJsonPlugin;
 
 describe('nx project.json plugin', () => {
   let context: CreateNodesContext;
-  let createNodesFunction: CreateNodesFunction;
+  let createNodesFunction = createNodes[1];
 
   beforeEach(() => {
     context = {
       nxJsonConfiguration: {},
       workspaceRoot: '/root',
     };
-    createNodesFunction = createNodes[1];
   });
 
   it('should build projects from project.json', () => {

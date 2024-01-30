@@ -67,7 +67,7 @@ impl From<&Event> for WatchEventInternal {
             .expect("there should always be a file event kind");
 
         let path_ref = path.0;
-        let event_type = if matches!(path.1, None) && !path_ref.exists() {
+        let event_type = if path.1.is_none() && !path_ref.exists() {
             EventType::delete
         } else {
             #[cfg(target_os = "macos")]

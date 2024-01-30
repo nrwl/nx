@@ -2,23 +2,46 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::thread::available_parallelism;
 
-use crossbeam_channel::{unbounded, Receiver};
+use crossbeam_channel::unbounded;
 use ignore::WalkBuilder;
+use tracing::trace;
 
-use crate::native::utils::glob::build_glob_set;
+use crate::native::glob::build_glob_set;
 
+use crate::native::utils::{get_mod_time, Normalize};
 use walkdir::WalkDir;
+
+#[derive(PartialEq, Debug, Ord, PartialOrd, Eq, Clone)]
+pub struct NxFile {
+    pub full_path: String,
+    pub normalized_path: String,
+    pub mod_time: i64,
+}
 
 /// Walks the directory in a single thread and does not ignore any files
 /// Should only be used for small directories, and not traversing the whole workspace
-pub fn nx_walker_sync<'a, P>(directory: P) -> impl Iterator<Item = PathBuf>
+///
+/// The `ignores` argument is used to filter entries. This is important to make sure that any ignore globs are applied on the `filter_entry` function
+pub fn nx_walker_sync<'a, P>(
+    directory: P,
+    ignores: Option<&[String]>,
+) -> impl Iterator<Item = PathBuf>
 where
     P: AsRef<Path> + 'a,
 {
     let base_dir: PathBuf = directory.as_ref().into();
 
-    let ignore_glob_set =
-        build_glob_set(&["**/node_modules", "**/.git"]).expect("These static ignores always build");
+    let mut base_ignores: Vec<String> = vec![
+        "**/node_modules".into(),
+        "**/.git".into(),
+        "**/.nx/cache".into(),
+    ];
+
+    if let Some(additional_ignores) = ignores {
+        base_ignores.extend(additional_ignores.iter().map(|s| format!("**/{}", s)));
+    };
+
+    let ignore_glob_set = build_glob_set(&base_ignores).expect("Should be valid globs");
 
     // Use WalkDir instead of ignore::WalkBuilder because it's faster
     WalkDir::new(&base_dir)
@@ -35,21 +58,18 @@ where
 }
 
 /// Walk the directory and ignore files from .gitignore and .nxignore
-pub fn nx_walker<P, Fn, Re>(directory: P, f: Fn) -> Re
+pub fn nx_walker<P>(directory: P) -> impl Iterator<Item = NxFile>
 where
     P: AsRef<Path>,
-    Fn: FnOnce(Receiver<(PathBuf, Vec<u8>)>) -> Re + Send + 'static,
-    Re: Send + 'static,
 {
     let directory = directory.as_ref();
-    let nx_ignore = directory.join(".nxignore");
 
-    let ignore_glob_set =
-        build_glob_set(&["**/node_modules", "**/.git"]).expect("These static ignores always build");
+    let ignore_glob_set = build_glob_set(&["**/node_modules", "**/.git", "**/.nx/cache"])
+        .expect("These static ignores always build");
 
     let mut walker = WalkBuilder::new(directory);
     walker.hidden(false);
-    walker.add_custom_ignore_filename(&nx_ignore);
+    walker.add_custom_ignore_filename(".nxignore");
 
     // We should make sure to always ignore node_modules and the .git folder
     walker.filter_entry(move |entry| {
@@ -59,10 +79,11 @@ where
 
     let cpus = available_parallelism().map_or(2, |n| n.get()) - 1;
 
-    let (sender, receiver) = unbounded::<(PathBuf, Vec<u8>)>();
+    let (sender, receiver) = unbounded();
 
-    let receiver_thread = thread::spawn(|| f(receiver));
+    trace!(?directory, "walking");
 
+    let now = std::time::Instant::now();
     walker.threads(cpus).build_parallel().run(|| {
         let tx = sender.clone();
         Box::new(move |entry| {
@@ -72,33 +93,41 @@ where
                 return Continue;
             };
 
-            let Ok(content) = std::fs::read(dir_entry.path()) else {
+            if dir_entry.file_type().is_some_and(|d| d.is_dir()) {
                 return Continue;
-            };
+            }
 
             let Ok(file_path) = dir_entry.path().strip_prefix(directory) else {
                 return Continue;
             };
 
-            tx.send((file_path.into(), content)).ok();
+            let Ok(metadata) = dir_entry.metadata() else {
+                return Continue;
+            };
+
+            tx.send(NxFile {
+                full_path: String::from(dir_entry.path().to_string_lossy()),
+                normalized_path: file_path.to_normalized_string(),
+                mod_time: get_mod_time(&metadata),
+            })
+            .ok();
 
             Continue
         })
     });
+    trace!("walked in {:?}", now.elapsed());
 
+    let receiver_thread = thread::spawn(move || receiver.into_iter());
     drop(sender);
     receiver_thread.join().unwrap()
 }
 
 #[cfg(test)]
 mod test {
-    use std::collections::HashMap;
     use std::{assert_eq, vec};
 
     use assert_fs::prelude::*;
     use assert_fs::TempDir;
-
-    use crate::native::utils::path::Normalize;
 
     use super::*;
 
@@ -124,32 +153,25 @@ mod test {
     #[test]
     fn it_walks_a_directory() {
         // handle empty workspaces
-        let content = nx_walker("/does/not/exist", |rec| {
-            let mut paths = vec![];
-            for (path, _) in rec {
-                paths.push(path);
-            }
-            paths
-        });
+        let content = nx_walker("/does/not/exist").collect::<Vec<_>>();
         assert!(content.is_empty());
 
         let temp_dir = setup_fs();
 
-        let content = nx_walker(temp_dir, |rec| {
-            let mut paths = HashMap::new();
-            for (path, content) in rec {
-                paths.insert(path, content);
-            }
-            paths
-        });
+        let mut content = nx_walker(&temp_dir).collect::<Vec<_>>();
+        content.sort();
+        let content = content
+            .into_iter()
+            .map(|f| (f.full_path.into(), f.normalized_path.into()))
+            .collect::<Vec<_>>();
         assert_eq!(
             content,
-            HashMap::from([
-                (PathBuf::from("baz/qux.txt"), "content@qux".into()),
-                (PathBuf::from("foo.txt"), "content1".into()),
-                (PathBuf::from("test.txt"), "content".into()),
-                (PathBuf::from("bar.txt"), "content2".into()),
-            ])
+            vec![
+                (temp_dir.join("bar.txt"), PathBuf::from("bar.txt")),
+                (temp_dir.join("baz/qux.txt"), PathBuf::from("baz/qux.txt")),
+                (temp_dir.join("foo.txt"), PathBuf::from("foo.txt")),
+                (temp_dir.join("test.txt"), PathBuf::from("test.txt")),
+            ]
         );
     }
 
@@ -168,6 +190,26 @@ mod test {
             .child("grand_child.txt")
             .write_str("data")
             .unwrap();
+        temp_dir
+            .child("v1")
+            .child("packages")
+            .child("pkg-a")
+            .child("pkg-a.txt")
+            .write_str("data")
+            .unwrap();
+        temp_dir
+            .child("v1")
+            .child("packages")
+            .child("pkg-b")
+            .child("pkg-b.txt")
+            .write_str("data")
+            .unwrap();
+        temp_dir
+            .child("packages")
+            .child("pkg-c")
+            .child("pkg-c.txt")
+            .write_str("data")
+            .unwrap();
 
         // add nxignore file
         temp_dir
@@ -176,23 +218,34 @@ mod test {
                 r"baz/
 nested/child.txt
 nested/child-two/
+
+# this should only ignore root level packages, not nested
+/packages
     ",
             )
             .unwrap();
 
-        let mut file_names = nx_walker(temp_dir, |rec| {
-            let mut file_names = vec![];
-            for (path, _) in rec {
-                file_names.push(path.to_normalized_string());
-            }
-            file_names
-        });
+        let mut file_names = nx_walker(temp_dir)
+            .map(
+                |NxFile {
+                     normalized_path: relative_path,
+                     ..
+                 }| relative_path,
+            )
+            .collect::<Vec<_>>();
 
         file_names.sort();
 
         assert_eq!(
             file_names,
-            vec!(".nxignore", "bar.txt", "foo.txt", "test.txt")
+            vec!(
+                ".nxignore",
+                "bar.txt",
+                "foo.txt",
+                "test.txt",
+                "v1/packages/pkg-a/pkg-a.txt",
+                "v1/packages/pkg-b/pkg-b.txt"
+            )
         );
     }
 }

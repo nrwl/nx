@@ -9,7 +9,8 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/react-lib-nonb-jest',
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
 
   plugins: [
     react(),
@@ -29,6 +30,11 @@ export default defineConfig({
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
+    outDir: '../../dist/libs/react-lib-nonb-jest',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
     lib: {
       // Could also be a dictionary or array of multiple entry points.
       entry: 'src/index.ts',
@@ -56,7 +62,8 @@ import * as path from 'path';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/react-lib-nonb-jest',
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-jest',
 
   plugins: [
     react(),
@@ -76,6 +83,11 @@ export default defineConfig({
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
   build: {
+    outDir: '../../dist/libs/react-lib-nonb-jest',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
     lib: {
       // Could also be a dictionary or array of multiple entry points.
       entry: 'src/index.ts',
@@ -98,6 +110,12 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/libs/react-lib-nonb-jest',
+      provider: 'v8',
+    },
   },
 });
 "
@@ -115,12 +133,7 @@ exports[`@nx/vite:configuration library mode should set up non buildable library
       "targets": {
         "lint": {
           "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": [
-              "libs/react-lib-nonb-jest/**/*.{ts,tsx,js,jsx}"
-            ]
-          }
+          "outputs": ["{options.outputFile}"]
         },
         "test": {
           "executor": "@nx/jest:jest",
@@ -148,8 +161,13 @@ import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 export default defineConfig({
   // Configuration for building your library.
   // See: https://vitejs.dev/guide/build.html#library-mode
-  cacheDir: '../../node_modules/.vite/react-lib-nonb-vitest',
+  cacheDir: '../../node_modules/.vite/libs/react-lib-nonb-vitest',
   build: {
+    outDir: '../../dist/libs/react-lib-nonb-vitest',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
     lib: {
       // Could also be a dictionary or array of multiple entry points.
       entry: 'src/index.ts',
@@ -179,6 +197,11 @@ export default defineConfig({
     cache: { dir: '../../node_modules/.vitest' },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/libs/react-lib-nonb-vitest',
+      provider: 'v8',
+    },
   },
 });
 "
@@ -196,12 +219,7 @@ exports[`@nx/vite:configuration library mode should set up non buildable library
       "targets": {
         "lint": {
           "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": [
-              "libs/react-lib-nonb-vitest/**/*.{ts,tsx,js,jsx}"
-            ]
-          }
+          "outputs": ["{options.outputFile}"]
         },
         "test": {
           "executor": "@nx/vite:test",
@@ -256,12 +274,7 @@ exports[`@nx/vite:configuration transform React app to use Vite by providing cus
         },
         "lint": {
           "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": [
-              "apps/my-test-mixed-react-app/**/*.{ts,tsx,js,jsx}"
-            ]
-          }
+          "outputs": ["{options.outputFile}"]
         },
         "test": {
           "executor": "@nx/jest:jest",
@@ -286,7 +299,8 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/my-test-react-app',
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
 
   server: {
     port: 4200,
@@ -304,6 +318,14 @@ export default defineConfig({
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
+
+  build: {
+    outDir: '../../dist/apps/my-test-react-app',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
 });
 "
 `;
@@ -399,10 +421,7 @@ exports[`@nx/vite:configuration transform React app to use Vite should transform
         },
         "lint": {
           "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": ["apps/my-test-react-app/**/*.{ts,tsx,js,jsx}"]
-          }
+          "outputs": ["{options.outputFile}"]
         },
         "test": {
           "executor": "@nx/jest:jest",
@@ -427,7 +446,8 @@ import { defineConfig } from 'vite';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/my-test-web-app',
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-test-web-app',
 
   server: {
     port: 4200,
@@ -445,6 +465,14 @@ export default defineConfig({
   // worker: {
   //  plugins: [ nxViteTsPaths() ],
   // },
+
+  build: {
+    outDir: '../../dist/apps/my-test-web-app',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
 });
 "
 `;
@@ -528,10 +556,7 @@ exports[`@nx/vite:configuration transform Web app to use Vite should transform w
         },
         "lint": {
           "executor": "@nx/eslint:lint",
-          "outputs": ["{options.outputFile}"],
-          "options": {
-            "lintFilePatterns": ["apps/my-test-web-app/**/*.ts"]
-          }
+          "outputs": ["{options.outputFile}"]
         },
         "test": {
           "executor": "@nx/jest:jest",
@@ -555,7 +580,8 @@ import react from '@vitejs/plugin-react';
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
 
 export default defineConfig({
-  cacheDir: '../../node_modules/.vite/my-test-react-app',
+  root: __dirname,
+  cacheDir: '../../node_modules/.vite/apps/my-test-react-app',
 
   server: {
     port: 4200,
@@ -574,6 +600,14 @@ export default defineConfig({
   //  plugins: [ nxViteTsPaths() ],
   // },
 
+  build: {
+    outDir: '../../dist/apps/my-test-react-app',
+    reportCompressedSize: true,
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+
   test: {
     globals: true,
     cache: {
@@ -581,6 +615,12 @@ export default defineConfig({
     },
     environment: 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../../coverage/apps/my-test-react-app',
+      provider: 'v8',
+    },
   },
 });
 "

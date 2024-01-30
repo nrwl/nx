@@ -9,7 +9,7 @@
     "cli": "nx",
     "outputCapture": "pipe",
     "properties": {},
-    "additionalProperties": false,
+    "additionalProperties": true,
     "presets": []
   },
   "description": "An executor that does nothing",

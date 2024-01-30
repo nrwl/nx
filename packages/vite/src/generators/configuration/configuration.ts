@@ -2,11 +2,13 @@ import {
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   addOrChangeBuildTarget,
@@ -26,6 +28,7 @@ import {
 import initGenerator from '../init/init';
 import vitestGenerator from '../vitest/vitest-generator';
 import { ViteConfigurationGeneratorSchema } from './schema';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function viteConfigurationGenerator(
   tree: Tree,
@@ -33,10 +36,11 @@ export async function viteConfigurationGenerator(
 ) {
   const tasks: GeneratorCallback[] = [];
 
-  const { targets, projectType, root } = readProjectConfiguration(
-    tree,
-    schema.project
-  );
+  const {
+    targets,
+    projectType,
+    root: projectRoot,
+  } = readProjectConfiguration(tree, schema.project);
   let buildTargetName = 'build';
   let serveTargetName = 'serve';
   let testTargetName = 'test';
@@ -147,55 +151,68 @@ export async function viteConfigurationGenerator(
 
     deleteWebpackConfig(
       tree,
-      root,
+      projectRoot,
       targets?.[buildTargetName]?.options?.webpackConfig
     );
 
     editTsConfig(tree, schema);
   }
 
-  const initTask = await initGenerator(tree, {
-    uiFramework: schema.uiFramework,
-    includeLib: schema.includeLib,
-    compiler: schema.compiler,
-    testEnvironment: schema.testEnvironment,
-    rootProject: root === '.',
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    skipFormat: true,
+    tsConfigName: projectRoot === '.' ? 'tsconfig.json' : 'tsconfig.base.json',
   });
+  tasks.push(jsInitTask);
+  const initTask = await initGenerator(tree, { skipFormat: true });
   tasks.push(initTask);
+  tasks.push(ensureDependencies(tree, schema));
 
-  if (!projectAlreadyHasViteTargets.build) {
-    addOrChangeBuildTarget(tree, schema, buildTargetName);
-  }
+  const nxJson = readNxJson(tree);
+  const hasPlugin = nxJson.plugins?.some((p) =>
+    typeof p === 'string'
+      ? p === '@nx/vite/plugin'
+      : p.plugin === '@nx/vite/plugin'
+  );
 
-  if (!schema.includeLib) {
-    if (!projectAlreadyHasViteTargets.serve) {
-      addOrChangeServeTarget(tree, schema, serveTargetName);
+  if (!hasPlugin) {
+    if (!projectAlreadyHasViteTargets.build) {
+      addOrChangeBuildTarget(tree, schema, buildTargetName);
     }
-    if (!projectAlreadyHasViteTargets.preview) {
-      addPreviewTarget(tree, schema, serveTargetName);
+
+    if (!schema.includeLib) {
+      if (!projectAlreadyHasViteTargets.serve) {
+        addOrChangeServeTarget(tree, schema, serveTargetName);
+      }
+      if (!projectAlreadyHasViteTargets.preview) {
+        addPreviewTarget(tree, schema, serveTargetName);
+      }
     }
   }
-
   if (projectType === 'library') {
     // update tsconfig.lib.json to include vite/client
-    updateJson(tree, joinPathFragments(root, 'tsconfig.lib.json'), (json) => {
-      if (!json.compilerOptions) {
-        json.compilerOptions = {};
+    updateJson(
+      tree,
+      joinPathFragments(projectRoot, 'tsconfig.lib.json'),
+      (json) => {
+        if (!json.compilerOptions) {
+          json.compilerOptions = {};
+        }
+        if (!json.compilerOptions.types) {
+          json.compilerOptions.types = [];
+        }
+        if (!json.compilerOptions.types.includes('vite/client')) {
+          return {
+            ...json,
+            compilerOptions: {
+              ...json.compilerOptions,
+              types: [...json.compilerOptions.types, 'vite/client'],
+            },
+          };
+        }
+        return json;
       }
-      if (!json.compilerOptions.types) {
-        json.compilerOptions.types = [];
-      }
-      if (!json.compilerOptions.types.includes('vite/client')) {
-        return {
-          ...json,
-          compilerOptions: {
-            ...json.compilerOptions,
-            types: [...json.compilerOptions.types, 'vite/client'],
-          },
-        };
-      }
-      return json;
-    });
+    );
   }
 
   if (!schema.newProject) {
@@ -220,7 +237,8 @@ export async function viteConfigurationGenerator(
           ],
           plugins: ['react()'],
         },
-        false
+        false,
+        undefined
       );
     } else {
       createOrEditViteConfig(tree, schema, false, projectAlreadyHasViteTargets);

@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 #[napi(object)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FileData {
     pub file: String,
     pub hash: String,
@@ -17,7 +17,7 @@ impl PartialEq<Self> for FileData {
 
 impl PartialOrd<Self> for FileData {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.file.partial_cmp(&other.file)
+        Some(self.cmp(other))
     }
 }
 

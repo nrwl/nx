@@ -14,8 +14,31 @@ In order to use your plugin in other workspaces or share it with the community, 
 Currently you will have to modify the `package.json` version by yourself or with a tool.
 {% /callout %}
 
-After that, you can then install your plugin like any other npm package,
-`npm i -D @my-org/my-plugin` or `yarn add -D @my-org/my-plugin`.
+After that, you can then install your plugin like any other npm package -
+
+{% tabs %}
+{% tab label="npm" %}
+
+```shell
+npm add -D @my-org/my-plugin
+```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @my-org/my-plugin
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @my-org/my-plugin
+```
+
+{% /tab %}
+{% /tabs %}
 
 ## List your Nx Plugin
 

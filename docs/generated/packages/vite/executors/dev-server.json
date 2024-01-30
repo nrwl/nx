@@ -27,45 +27,6 @@
         "type": "string",
         "description": "Path to the proxy configuration file.",
         "x-completion-type": "file"
-      },
-      "port": {
-        "type": "number",
-        "description": "Port to listen on.",
-        "x-priority": "important"
-      },
-      "host": {
-        "description": "Specify which IP addresses the server should listen on.",
-        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
-      },
-      "https": {
-        "oneOf": [{ "type": "boolean" }, { "type": "object" }],
-        "description": "Serve using HTTPS. https://vitejs.dev/config/server-options.html#server-https"
-      },
-      "hmr": {
-        "description": "Enable hot module replacement. For more options, use the 'hmr' option in the Vite configuration file.",
-        "type": "boolean"
-      },
-      "open": {
-        "description": "Automatically open the app in the browser on server start. When the value is a string, it will be used as the URL's pathname.",
-        "oneOf": [{ "type": "boolean" }, { "type": "string" }]
-      },
-      "cors": {
-        "description": "Configure CORS for the dev server.",
-        "type": "boolean"
-      },
-      "logLevel": {
-        "type": "string",
-        "description": "Adjust console output verbosity.",
-        "enum": ["info", "warn", "error", "silent"]
-      },
-      "mode": { "type": "string", "description": "Mode to run the server in." },
-      "clearScreen": {
-        "description": "Set to false to prevent Vite from clearing the terminal screen when logging certain messages.",
-        "type": "boolean"
-      },
-      "force": {
-        "description": "Force the optimizer to ignore the cache and re-bundle",
-        "type": "boolean"
       }
     },
     "definitions": {},

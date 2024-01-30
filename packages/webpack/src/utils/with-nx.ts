@@ -1,18 +1,20 @@
 import { Configuration } from 'webpack';
-import { NxWebpackExecutionContext, NxWebpackPlugin } from './config';
+import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config';
 import { applyBaseConfig } from '../plugins/nx-webpack-plugin/lib/apply-base-config';
+import { NxWebpackPluginOptions } from '../plugins/nx-webpack-plugin/nx-webpack-plugin-options';
+import { normalizeAssets } from '../plugins/nx-webpack-plugin/lib/normalize-options';
 
 const processed = new Set();
 
-export interface WithNxOptions {
-  skipTypeChecking?: boolean;
-}
+export type WithNxOptions = Partial<NxWebpackPluginOptions>;
 
 /**
  * @param {WithNxOptions} pluginOptions
  * @returns {NxWebpackPlugin}
  */
-export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
+export function withNx(
+  pluginOptions: WithNxOptions = {}
+): NxComposableWebpackPlugin {
   return function configure(
     config: Configuration,
     { options, context }: NxWebpackExecutionContext
@@ -23,6 +25,15 @@ export function withNx(pluginOptions?: WithNxOptions): NxWebpackPlugin {
       {
         ...options,
         ...pluginOptions,
+        assets: options.assets
+          ? options.assets
+          : pluginOptions.assets
+          ? normalizeAssets(
+              pluginOptions.assets,
+              options.root,
+              options.sourceRoot
+            )
+          : [],
         root: context.root,
         projectName: context.projectName,
         targetName: context.targetName,

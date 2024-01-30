@@ -196,8 +196,7 @@ export const webpack = async (
   // ESM build for modern browsers.
   let baseWebpackConfig: Configuration = {};
   const configure = composePluginsSync(
-    withNx({ skipTypeChecking: true }),
-    withWeb(),
+    withNx({ target: 'web', skipTypeChecking: true }),
     withReact()
   );
   const finalConfig = configure(baseWebpackConfig, {

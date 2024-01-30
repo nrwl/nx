@@ -46,8 +46,9 @@ describe('StorybookConfiguration generator', () => {
 
   it('should only configure storybook', async () => {
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: false,
+      skipFormat: true,
     });
 
     expect(tree.exists('test-ui-lib/.storybook/main.ts')).toBeTruthy();
@@ -66,9 +67,10 @@ describe('StorybookConfiguration generator', () => {
 
   it('should configure storybook to use webpack 5', async () => {
     await storybookConfigurationGenerator(tree, {
-      name: libName,
+      project: libName,
       generateStories: false,
       linter: Linter.None,
+      skipFormat: true,
     });
 
     expect(
@@ -78,7 +80,7 @@ describe('StorybookConfiguration generator', () => {
 
   it('should configure storybook with interaction tests and install dependencies', async () => {
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: true,
     });
 
@@ -114,12 +116,14 @@ describe('StorybookConfiguration generator', () => {
       name: 'standalone',
       project: libName,
       standalone: true,
+      skipFormat: true,
     });
     // add secondary entrypoint
     writeJson(tree, `${libName}/package.json`, { name: libName });
     await librarySecondaryEntryPointGenerator(tree, {
       library: libName,
       name: 'secondary-entry-point',
+      skipFormat: true,
     });
     // add a regular component to the secondary entrypoint
     await componentGenerator(tree, {
@@ -127,6 +131,7 @@ describe('StorybookConfiguration generator', () => {
       project: libName,
       path: `${libName}/secondary-entry-point/src/lib`,
       export: true,
+      skipFormat: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
@@ -135,11 +140,13 @@ describe('StorybookConfiguration generator', () => {
       path: `${libName}/secondary-entry-point/src/lib`,
       standalone: true,
       export: true,
+      skipFormat: true,
     });
 
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: true,
+      skipFormat: true,
     });
 
     expect(listFiles(tree)).toMatchSnapshot();
@@ -151,12 +158,14 @@ describe('StorybookConfiguration generator', () => {
       name: 'standalone',
       project: libName,
       standalone: true,
+      skipFormat: true,
     });
     // add secondary entrypoint
     writeJson(tree, `${libName}/package.json`, { name: libName });
     await librarySecondaryEntryPointGenerator(tree, {
       library: libName,
       name: 'secondary-entry-point',
+      skipFormat: true,
     });
     // add a regular component to the secondary entrypoint
     await componentGenerator(tree, {
@@ -164,6 +173,7 @@ describe('StorybookConfiguration generator', () => {
       project: libName,
       path: `${libName}/secondary-entry-point/src/lib`,
       export: true,
+      skipFormat: true,
     });
     // add a standalone component to the secondary entrypoint
     await componentGenerator(tree, {
@@ -172,11 +182,13 @@ describe('StorybookConfiguration generator', () => {
       path: `${libName}/secondary-entry-point/src/lib`,
       standalone: true,
       export: true,
+      skipFormat: true,
     });
 
     await storybookConfigurationGenerator(tree, <StorybookConfigurationOptions>{
-      name: libName,
+      project: libName,
       generateStories: true,
+      skipFormat: true,
     });
 
     expect(listFiles(tree)).toMatchSnapshot();

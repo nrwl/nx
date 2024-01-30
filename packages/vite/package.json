@@ -29,22 +29,23 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "@nx/devkit": "file:../devkit",
     "@phenomnomnominal/tsquery": "~5.0.1",
     "@swc/helpers": "~0.5.0",
     "enquirer": "~2.3.6",
-    "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "tsconfig-paths": "^4.1.2"
   },
   "peerDependencies": {
-    "vite": "^4.3.4",
-    "vitest": ">=0.31.0 <1.0.0"
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0"
   },
   "publishConfig": {
     "access": "public"
   },
   "exports": {
     ".": "./index.js",
+    "./plugin": "./plugin.js",
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
@@ -53,6 +54,7 @@
     "./src/executors/*/schema.json": "./src/executors/*/schema.json",
     "./src/executors/*.impl": "./src/executors/*.impl.js",
     "./src/executors/*/compat": "./src/executors/*/compat.js",
-    "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js"
+    "./plugins/nx-tsconfig-paths.plugin": "./plugins/nx-tsconfig-paths.plugin.js",
+    "./plugins/rollup-replace-files.plugin": "./plugins/rollup-replace-files.plugin.js"
   }
 }

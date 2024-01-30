@@ -14,14 +14,14 @@ type Story = StoryObj<<%=componentName%>>;
 
 export const Primary: Story = {
   args: {<% for (let prop of props) { %>
-    <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+    <%= prop.name %>: <%- prop.defaultValue %>,<% } %>
   },
 };
 
 <% if ( interactionTests ) { %>
 export const Heading: Story = {
   args: {<% for (let prop of props) { %>
-    <%= prop.name %>:  <%- prop.defaultValue %>,<% } %>
+    <%= prop.name %>: <%- prop.defaultValue %>,<% } %>
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

@@ -1,10 +1,5 @@
 import * as devkit from '@nx/devkit';
-import {
-  addProjectConfiguration,
-  readJson,
-  readProjectConfiguration,
-  Tree,
-} from '@nx/devkit';
+import { addProjectConfiguration, readJson, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { generateTestLibrary } from '../utils/testing';
 import { librarySecondaryEntryPointGenerator } from './library-secondary-entry-point';
@@ -21,6 +16,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       librarySecondaryEntryPointGenerator(tree, {
         name: 'testing',
         library: 'lib1',
+        skipFormat: true,
       })
     ).rejects.toThrow();
   });
@@ -35,6 +31,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       librarySecondaryEntryPointGenerator(tree, {
         name: 'testing',
         library: 'app1',
+        skipFormat: true,
       })
     ).rejects.toThrow();
   });
@@ -54,6 +51,7 @@ describe('librarySecondaryEntryPoint generator', () => {
       librarySecondaryEntryPointGenerator(tree, {
         name: 'testing',
         library: 'lib1',
+        skipFormat: true,
       })
     ).rejects.toThrow();
   });
@@ -71,6 +69,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     await librarySecondaryEntryPointGenerator(tree, {
       name: 'testing',
       library: 'lib1',
+      skipFormat: true,
     });
 
     expect(tree.exists('libs/lib1/testing/ng-package.json')).toBeTruthy();
@@ -97,6 +96,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     await librarySecondaryEntryPointGenerator(tree, {
       name: 'testing',
       library: 'lib1',
+      skipFormat: true,
     });
 
     const ngPackageJson = readJson(tree, 'libs/lib1/testing/ng-package.json');
@@ -116,6 +116,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     await librarySecondaryEntryPointGenerator(tree, {
       name: 'testing',
       library: 'lib1',
+      skipFormat: true,
     });
 
     const tsConfig = readJson(tree, 'tsconfig.base.json');
@@ -138,6 +139,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     await librarySecondaryEntryPointGenerator(tree, {
       name: 'testing',
       library: 'lib1',
+      skipFormat: true,
     });
 
     const tsConfig = readJson(tree, 'tsconfig.json');
@@ -146,47 +148,13 @@ describe('librarySecondaryEntryPoint generator', () => {
     ).toStrictEqual(['libs/lib1/testing/src/index.ts']);
   });
 
-  it('should add the entry point file patterns to the lint target', async () => {
-    addProjectConfiguration(tree, 'lib1', {
-      root: 'libs/lib1',
-      projectType: 'library',
-      targets: {
-        lint: {
-          executor: '',
-          options: {
-            lintFilePatterns: [
-              'libs/lib1/src/**/*.ts',
-              'libs/lib1/src/**/*.html',
-            ],
-          },
-        },
-      },
-    });
-    tree.write(
-      'libs/lib1/package.json',
-      JSON.stringify({ name: '@my-org/lib1' })
-    );
-
-    await librarySecondaryEntryPointGenerator(tree, {
-      name: 'testing',
-      library: 'lib1',
-    });
-
-    const project = readProjectConfiguration(tree, 'lib1');
-    expect(project.targets!.lint.options.lintFilePatterns).toEqual(
-      expect.arrayContaining([
-        'libs/lib1/testing/**/*.ts',
-        'libs/lib1/testing/**/*.html',
-      ])
-    );
-  });
-
   it('should update the tsconfig "include" and "exclude" options', async () => {
     await generateTestLibrary(tree, {
       name: 'lib1',
       directory: 'libs/lib1',
       importPath: '@my-org/lib1',
       publishable: true,
+      skipFormat: true,
     });
     // verify initial state
     let tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
@@ -201,6 +169,7 @@ describe('librarySecondaryEntryPoint generator', () => {
     await librarySecondaryEntryPointGenerator(tree, {
       name: 'testing',
       library: 'lib1',
+      skipFormat: true,
     });
 
     tsConfig = readJson(tree, 'libs/lib1/tsconfig.lib.json');
@@ -230,6 +199,12 @@ describe('librarySecondaryEntryPoint generator', () => {
     });
 
     expect(devkit.formatFiles).toHaveBeenCalled();
+    expect(
+      tree.read('libs/lib1/testing/src/index.ts', 'utf-8')
+    ).toMatchSnapshot();
+    expect(
+      tree.read('libs/lib1/testing/src/lib/testing.module.ts', 'utf-8')
+    ).toMatchSnapshot();
   });
 
   describe('--skipModule', () => {
@@ -247,6 +222,7 @@ describe('librarySecondaryEntryPoint generator', () => {
         name: 'testing',
         library: 'lib1',
         skipModule: true,
+        skipFormat: true,
       });
 
       expect(

@@ -30,6 +30,7 @@ export interface GitCommit extends RawGitCommit {
   authors: GitCommitAuthor[];
   isBreaking: boolean;
   affectedFiles: string[];
+  revertedHashes: string[];
 }
 
 function escapeRegExp(string) {
@@ -58,25 +59,30 @@ export async function getLatestGitTagForPattern(
     }
 
     const interpolatedTagPattern = interpolate(releaseTagPattern, {
-      version: ' ',
+      version: '%v%',
+      projectName: '%p%',
       ...additionalInterpolationData,
     });
 
-    const tagRegexp = `^${escapeRegExp(interpolatedTagPattern).replace(
-      ' ',
-      '(.+)'
-    )}`;
+    const tagRegexp = `^${escapeRegExp(interpolatedTagPattern)
+      .replace('%v%', '(.+)')
+      .replace('%p%', '(.+)')}`;
+
     const matchingSemverTags = tags.filter(
       (tag) =>
         // Do the match against SEMVER_REGEX to ensure that we skip tags that aren't valid semver versions
-        !!tag.match(tagRegexp) && tag.match(tagRegexp)[1]?.match(SEMVER_REGEX)
+        !!tag.match(tagRegexp) &&
+        tag.match(tagRegexp).some((r) => r.match(SEMVER_REGEX))
     );
 
     if (!matchingSemverTags.length) {
       return null;
     }
 
-    const [latestMatchingTag, version] = matchingSemverTags[0].match(tagRegexp);
+    const [latestMatchingTag, ...rest] = matchingSemverTags[0].match(tagRegexp);
+    const version = rest.filter((r) => {
+      return r.match(SEMVER_REGEX);
+    })[0];
 
     return {
       tag: latestMatchingTag,
@@ -116,6 +122,149 @@ export async function getGitDiff(
     });
 }
 
+export async function gitAdd({
+  changedFiles,
+  dryRun,
+  verbose,
+  logFn,
+}: {
+  changedFiles: string[];
+  dryRun?: boolean;
+  verbose?: boolean;
+  logFn?: (...messages: string[]) => void;
+}): Promise<string> {
+  logFn = logFn || console.log;
+  const commandArgs = ['add', ...changedFiles];
+  const message = dryRun
+    ? `Would stage files in git with the following command, but --dry-run was set:`
+    : `Staging files in git with the following command:`;
+  if (verbose) {
+    logFn(message);
+    logFn(`git ${commandArgs.join(' ')}`);
+  }
+  if (dryRun) {
+    return;
+  }
+  return execCommand('git', commandArgs);
+}
+
+export async function gitCommit({
+  messages,
+  additionalArgs,
+  dryRun,
+  verbose,
+  logFn,
+}: {
+  messages: string[];
+  additionalArgs?: string;
+  dryRun?: boolean;
+  verbose?: boolean;
+  logFn?: (message: string) => void;
+}): Promise<string> {
+  logFn = logFn || console.log;
+
+  const commandArgs = ['commit'];
+  for (const message of messages) {
+    commandArgs.push('--message', message);
+  }
+  if (additionalArgs) {
+    commandArgs.push(...additionalArgs.split(' '));
+  }
+
+  if (verbose) {
+    logFn(
+      dryRun
+        ? `Would commit all previously staged files in git with the following command, but --dry-run was set:`
+        : `Committing files in git with the following command:`
+    );
+    logFn(`git ${commandArgs.join(' ')}`);
+  }
+
+  if (dryRun) {
+    return;
+  }
+
+  let hasStagedFiles = false;
+  try {
+    // This command will error if there are staged changes
+    await execCommand('git', ['diff-index', '--quiet', 'HEAD', '--cached']);
+  } catch {
+    hasStagedFiles = true;
+  }
+
+  if (!hasStagedFiles) {
+    logFn('\nNo staged files found. Skipping commit.');
+    return;
+  }
+
+  return execCommand('git', commandArgs);
+}
+
+export async function gitTag({
+  tag,
+  message,
+  additionalArgs,
+  dryRun,
+  verbose,
+  logFn,
+}: {
+  tag: string;
+  message?: string;
+  additionalArgs?: string;
+  dryRun?: boolean;
+  verbose?: boolean;
+  logFn?: (message: string) => void;
+}): Promise<string> {
+  logFn = logFn || console.log;
+
+  const commandArgs = [
+    'tag',
+    // Create an annotated tag (recommended for releases here: https://git-scm.com/docs/git-tag)
+    '--annotate',
+    tag,
+    '--message',
+    message || tag,
+  ];
+  if (additionalArgs) {
+    commandArgs.push(...additionalArgs.split(' '));
+  }
+
+  if (verbose) {
+    logFn(
+      dryRun
+        ? `Would tag the current commit in git with the following command, but --dry-run was set:`
+        : `Tagging the current commit in git with the following command:`
+    );
+    logFn(`git ${commandArgs.join(' ')}`);
+  }
+
+  if (dryRun) {
+    return;
+  }
+
+  try {
+    return await execCommand('git', commandArgs);
+  } catch (err) {
+    throw new Error(`Unexpected error when creating tag ${tag}:\n\n${err}`);
+  }
+}
+
+export async function gitPush(gitRemote?: string) {
+  try {
+    await execCommand('git', [
+      'push',
+      // NOTE: It's important we use --follow-tags, and not --tags, so that we are precise about what we are pushing
+      '--follow-tags',
+      '--no-verify',
+      '--atomic',
+      // Set custom git remote if provided
+      ...(gitRemote ? [gitRemote] : []),
+    ]);
+  } catch (err) {
+    throw new Error(`Unexpected git push error: ${err}`);
+  }
+}
+
 export function parseCommits(commits: RawGitCommit[]): GitCommit[] {
   return commits.map((commit) => parseGitCommit(commit)).filter(Boolean);
 }
@@ -128,6 +277,7 @@ const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
 const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
+const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
 export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const match = commit.message.match(ConventionalCommitRegex);
@@ -135,11 +285,10 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     return null;
   }
 
-  const type = match.groups.type;
-
   const scope = match.groups.scope || '';
 
-  const isBreaking = Boolean(match.groups.breaking);
+  const isBreaking =
+    Boolean(match.groups.breaking) || commit.body.includes('BREAKING CHANGE:');
   let description = match.groups.description;
 
   // Extract references from message
@@ -156,6 +305,18 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
 
   // Remove references and normalize
   description = description.replace(PullRequestRE, '').trim();
+
+  let type = match.groups.type;
+  // Extract any reverted hashes, if applicable
+  const revertedHashes = [];
+  const matchedHashes = commit.body.matchAll(RevertHashRE);
+  for (const matchedHash of matchedHashes) {
+    revertedHashes.push(matchedHash.groups.hash);
+  }
+  if (revertedHashes.length) {
+    type = 'revert';
+    description = commit.message;
+  }
 
   // Find all authors
   const authors: GitCommitAuthor[] = [commit.author];
@@ -187,6 +348,7 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     scope,
     references,
     isBreaking,
+    revertedHashes,
     affectedFiles,
   };
 }
@@ -196,5 +358,15 @@ export async function getCommitHash(ref: string) {
     return (await execCommand('git', ['rev-parse', ref])).trim();
   } catch (e) {
     throw new Error(`Unknown revision: ${ref}`);
+  }
+}
+
+export async function getFirstGitCommit() {
+  try {
+    return (
+      await execCommand('git', ['rev-list', '--max-parents=0', 'HEAD'])
+    ).trim();
+  } catch (e) {
+    throw new Error(`Unable to find first commit in git history`);
   }
 }

@@ -23,18 +23,30 @@ interface LocalPackageDependency extends ProjectGraphDependency {
 export function resolveLocalPackageDependencies(
   tree: Tree,
   projectGraph: ProjectGraph,
-  projects: ProjectGraphProjectNode[],
-  projectNameToPackageRootMap: Map<string, string>
+  filteredProjects: ProjectGraphProjectNode[],
+  projectNameToPackageRootMap: Map<string, string>,
+  resolvePackageRoot: (projectNode: ProjectGraphProjectNode) => string,
+  includeAll = false
 ): Record<string, LocalPackageDependency[]> {
   const localPackageDependencies: Record<string, LocalPackageDependency[]> = {};
   const projectNodeToPackageMap = new Map<ProjectGraphProjectNode, Package>();
 
+  const projects = includeAll
+    ? Object.values(projectGraph.nodes)
+    : filteredProjects;
+
   // Iterate through the projects being released and resolve any relevant package.json data
   for (const projectNode of projects) {
     // Resolve the package.json path for the project, taking into account any custom packageRoot settings
-    const packageRoot = projectNameToPackageRootMap.get(projectNode.name);
-    if (!packageRoot) {
-      continue;
+    let packageRoot = projectNameToPackageRootMap.get(projectNode.name);
+    // packageRoot wasn't added to the map yet, try to resolve it dynamically
+    if (!packageRoot && includeAll) {
+      packageRoot = resolvePackageRoot(projectNode);
+      if (!packageRoot) {
+        continue;
+      }
+      // Append it to the map for later use within the release version generator
+      projectNameToPackageRootMap.set(projectNode.name, packageRoot);
     }
     const packageJsonPath = joinPathFragments(packageRoot, 'package.json');
     if (!tree.exists(packageJsonPath)) {

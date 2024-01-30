@@ -30,7 +30,7 @@ describe('Nx Watch', () => {
   let proj2 = uniq('proj2');
   let proj3 = uniq('proj3');
   beforeAll(() => {
-    newProject();
+    newProject({ packages: ['@nx/js'] });
     runCLI(`generate @nx/js:lib ${proj1}`);
     runCLI(`generate @nx/js:lib ${proj2}`);
     runCLI(`generate @nx/js:lib ${proj3}`);
@@ -44,9 +44,11 @@ describe('Nx Watch', () => {
   });
 
   afterEach(() => {
-    let daemonLog = readFile(join(cacheDirectory, 'd/daemon.log'));
-    const testName = expect.getState().currentTestName;
-    console.log(`${testName} daemon log: \n${daemonLog}`);
+    if (process.env.NX_E2E_OUTPUT_DAEMON_LOGS === 'true') {
+      let daemonLog = readFile(join(cacheDirectory, 'd/daemon.log'));
+      const testName = expect.getState().currentTestName;
+      console.log(`${testName} daemon log: \n${daemonLog}`);
+    }
     runCLI('reset');
   });
 

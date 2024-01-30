@@ -1,14 +1,15 @@
 import { SectionHeading } from '@nx/nx-dev/ui-common';
+import { LogoCloud } from './logo-cloud';
 
 export function NxStatistics(): JSX.Element {
   return (
-    <div className="bg-white pt-12 dark:bg-slate-900 sm:pt-16">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div className="bg-white pt-12 dark:bg-slate-900 sm:pt-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-12">
         <div className="mx-auto max-w-4xl text-center">
           <SectionHeading as="h2" variant="display" id="trusted-by-all">
             Trusted by developers, enterprises and open-source projects.
           </SectionHeading>
-          <p className="mt-3 text-lg text-slate-700 dark:text-slate-400 sm:mt-4">
+          <p className="mt-3 text-lg text-slate-700 dark:text-slate-400 sm:mt-4 sr-only">
             Whether your workspace{' '}
             <span className="font-semibold">
               has a single project or a thousand
@@ -17,6 +18,9 @@ export function NxStatistics(): JSX.Element {
           </p>
         </div>
       </div>
+      {/*LOGO CLOUD*/}
+      <LogoCloud />
+      {/*STATISTICS*/}
       <div className="mt-10 bg-slate-50 pb-12 dark:bg-slate-800/40 sm:pb-16">
         <div className="relative">
           <div className="absolute inset-0 h-1/2 border-b border-slate-200 bg-white dark:border-black dark:bg-slate-900"></div>
@@ -28,7 +32,7 @@ export function NxStatistics(): JSX.Element {
                     developers use it every day
                   </dt>
                   <dd className="order-1 text-4xl font-semibold text-slate-800 drop-shadow-sm dark:text-slate-200 dark:drop-shadow-[0_1px_1px_rgba(255,255,255,0.35)]">
-                    1.5M+
+                    2M+
                   </dd>
                 </div>
                 <div className="flex flex-col border-t border-b border-slate-50 p-6 text-center dark:border-slate-800/40 sm:border-0 sm:border-l sm:border-r">
@@ -44,7 +48,7 @@ export function NxStatistics(): JSX.Element {
                     monthly npm downloads
                   </dt>
                   <dd className="order-1 text-4xl font-semibold text-slate-800 drop-shadow-sm dark:text-slate-200 dark:drop-shadow-[0_1px_1px_rgba(255,255,255,0.35)]">
-                    11M+
+                    16M+
                   </dd>
                 </div>
               </dl>

@@ -1,4 +1,5 @@
-use std::{collections::HashMap, ptr};
+use std::fmt::Formatter;
+use std::{collections::HashMap, fmt, ptr};
 
 use napi::{
     bindgen_prelude::{check_status, ToNapiValue},
@@ -29,12 +30,12 @@ pub struct TaskGraph {
     pub dependencies: HashMap<String, Vec<String>>,
 }
 
-#[derive(PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum HashInstruction {
     WorkspaceFileSet(String),
     Runtime(String),
     Environment(String),
-    ProjectFileSet(String, String),
+    ProjectFileSet(String, Vec<String>),
     ProjectConfiguration(String),
     TsConfiguration(String),
     TaskOutput(String, Vec<String>),
@@ -49,7 +50,7 @@ impl ToNapiValue for HashInstruction {
     ) -> napi::Result<napi::sys::napi_value> {
         let mut ptr = ptr::null_mut();
 
-        let val: String = val.into();
+        let val = val.to_string();
 
         check_status!(
             unsafe {
@@ -62,27 +63,31 @@ impl ToNapiValue for HashInstruction {
     }
 }
 
-impl From<HashInstruction> for String {
-    fn from(instruction: HashInstruction) -> Self {
-        match instruction {
-            HashInstruction::AllExternalDependencies => "AllExternalDependencies".to_string(),
-            HashInstruction::ProjectFileSet(project_name, file_set) => {
-                format!("{project_name}:{file_set}")
+impl fmt::Display for HashInstruction {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                HashInstruction::AllExternalDependencies => "AllExternalDependencies".to_string(),
+                HashInstruction::ProjectFileSet(project_name, file_set) => {
+                    format!("{project_name}:{}", file_set.join(","))
+                }
+                HashInstruction::WorkspaceFileSet(file_set) => file_set.to_string(),
+                HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
+                HashInstruction::Environment(env) => format!("env:{}", env),
+                HashInstruction::TaskOutput(task_output, dep_outputs) => {
+                    let dep_outputs = dep_outputs.join(",");
+                    format!("{task_output}:{dep_outputs}")
+                }
+                HashInstruction::External(external) => external.to_string(),
+                HashInstruction::ProjectConfiguration(project_name) => {
+                    format!("{project_name}:ProjectConfiguration")
+                }
+                HashInstruction::TsConfiguration(project_name) => {
+                    format!("{project_name}:TsConfig")
+                }
             }
-            HashInstruction::WorkspaceFileSet(file_set) => file_set,
-            HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),
-            HashInstruction::Environment(env) => format!("env:{}", env),
-            HashInstruction::TaskOutput(task_output, dep_outputs) => {
-                let dep_outputs = dep_outputs.join(",");
-                format!("{task_output}:{dep_outputs}")
-            },
-            HashInstruction::External(external) => external,
-            HashInstruction::ProjectConfiguration(project_name) => {
-                format!("{project_name}:ProjectConfiguration")
-            }
-            HashInstruction::TsConfiguration(project_name) => {
-                format!("{project_name}:TsConfig")
-            }
-        }
+        )
     }
 }

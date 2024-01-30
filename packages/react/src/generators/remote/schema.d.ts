@@ -9,7 +9,7 @@ export interface Schema {
   devServerPort?: number;
   directory?: string;
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
-  e2eTestRunner: 'cypress' | 'none';
+  e2eTestRunner: 'cypress' | 'playwright' | 'none';
   globalCss?: boolean;
   host?: string;
   js?: boolean;
@@ -26,6 +26,7 @@ export interface Schema {
   tags?: string;
   unitTestRunner: 'jest' | 'vitest' | 'none';
   typescriptConfiguration?: boolean;
+  dynamic?: boolean;
 }
 
 export interface NormalizedSchema extends ApplicationNormalizedSchema {

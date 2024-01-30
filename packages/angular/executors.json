@@ -19,6 +19,16 @@
       "implementation": "./src/executors/browser-esbuild/browser-esbuild.impl",
       "schema": "./src/executors/browser-esbuild/schema.json",
       "description": "Builds your application with esbuild and adds support for incremental builds."
+    },
+    "module-federation-dev-server": {
+      "implementation": "./src/executors/module-federation-dev-server/module-federation-dev-server.impl",
+      "schema": "./src/executors/module-federation-dev-server/schema.json",
+      "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host."
+    },
+    "application": {
+      "implementation": "./src/executors/application/application.impl",
+      "schema": "./src/executors/application/schema.json",
+      "description": "Builds an application with esbuild with support for incremental builds. _Note: this is only supported in Angular versions >= 17.0.0_."
     }
   },
   "builders": {
@@ -27,20 +37,15 @@
       "schema": "./src/builders/webpack-browser/schema.json",
       "description": "The `webpack-browser` executor is very similar to the standard `browser` builder provided by the Angular Devkit. It allows you to build your Angular application to a build artifact that can be hosted online. There are some key differences:   \n- Supports Custom Webpack Configurations  \n- Supports Incremental Building"
     },
-    "webpack-dev-server": {
-      "implementation": "./src/builders/webpack-dev-server/webpack-dev-server.impl",
-      "schema": "./src/builders/webpack-dev-server/schema.json",
-      "description": "The `webpack-dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
+    "dev-server": {
+      "implementation": "./src/builders/dev-server/dev-server.impl",
+      "schema": "./src/builders/dev-server/schema.json",
+      "description": "The `dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
     },
     "webpack-server": {
       "implementation": "./src/builders/webpack-server/webpack-server.impl",
       "schema": "./src/builders/webpack-server/schema.json",
       "description": "The `webpack-server` executor is very similar to the standard `server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration and NgUniversal for SSR."
-    },
-    "module-federation-dev-server": {
-      "implementation": "./src/builders/module-federation-dev-server/module-federation-dev-server.impl",
-      "schema": "./src/builders/module-federation-dev-server/schema.json",
-      "description": "The module-federation-dev-server executor is reserved exclusively for use with host Module Federation applications. It allows the user to specify which remote applications should be served with the host."
     },
     "module-federation-dev-ssr": {
       "implementation": "./src/builders/module-federation-dev-ssr/module-federation-dev-ssr.impl",

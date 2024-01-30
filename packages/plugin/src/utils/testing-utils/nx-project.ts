@@ -1,4 +1,4 @@
-import { workspaceRoot } from '@nx/devkit';
+import { detectPackageManager, workspaceRoot } from '@nx/devkit';
 import {
   getPackageManagerCommand,
   readJsonFile,
@@ -50,9 +50,10 @@ export function uniq(prefix: string) {
  * @param silent silent output from the install
  */
 export function runPackageManagerInstall(silent: boolean = true) {
-  const pmc = getPackageManagerCommand();
+  const cwd = tmpProjPath();
+  const pmc = getPackageManagerCommand(detectPackageManager(cwd));
   const install = execSync(pmc.install, {
-    cwd: tmpProjPath(),
+    cwd,
     ...(silent ? { stdio: ['ignore', 'ignore', 'ignore'] } : {}),
   });
   return install ? install.toString() : '';

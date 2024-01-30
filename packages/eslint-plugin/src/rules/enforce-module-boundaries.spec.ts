@@ -1168,6 +1168,42 @@ Violation detected in:
       expect(failures[0].message).toEqual(message);
       expect(failures[1].message).toEqual(message);
     });
+
+    it('should error when relatively importing the external resources', () => {
+      const failures = runRule(
+        {},
+        `${process.cwd()}/proj/libs/mylib/src/main.ts`,
+        `
+          import '../../../non-project';
+          import('/tmp/some/path/to/file');
+        `,
+        {
+          nodes: {
+            mylibName: {
+              name: 'mylibName',
+              type: 'lib',
+              data: {
+                root: 'libs/mylib',
+                tags: [],
+                implicitDependencies: [],
+                targets: {},
+              },
+            },
+          },
+          dependencies: {},
+        },
+        {
+          mylibName: [createFile(`libs/mylib/src/main.ts`)],
+        }
+      );
+      expect(failures.length).toEqual(2);
+      expect(failures[0].message).toEqual(
+        'External resources cannot be imported using a relative or absolute path'
+      );
+      expect(failures[1].message).toEqual(
+        'External resources cannot be imported using a relative or absolute path'
+      );
+    });
   });
 
   it('should error on absolute imports into libraries without using the npm scope', () => {

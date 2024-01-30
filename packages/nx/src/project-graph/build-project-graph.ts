@@ -22,10 +22,8 @@ import {
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 import {
   FileMap,
-  ProjectFileMap,
   ProjectGraph,
   ProjectGraphExternalNode,
-  ProjectGraphProcessorContext,
 } from '../config/project-graph';
 import { readJsonFile } from '../utils/fileutils';
 import { NxJsonConfiguration } from '../config/nx-json';
@@ -34,18 +32,24 @@ import { ProjectConfiguration } from '../config/workspace-json-project-json';
 import { readNxJson } from '../config/configuration';
 import { existsSync } from 'fs';
 import { PackageJson } from '../utils/package-json';
+import { getNxRequirePaths } from '../utils/installation-directory';
+import { output } from '../utils/output';
+import { ExternalObject, NxWorkspaceFilesExternals } from '../native';
 
 let storedFileMap: FileMap | null = null;
 let storedAllWorkspaceFiles: FileData[] | null = null;
+let storedRustReferences: NxWorkspaceFilesExternals | null = null;
 
 export function getFileMap(): {
   fileMap: FileMap;
   allWorkspaceFiles: FileData[];
+  rustReferences: NxWorkspaceFilesExternals | null;
 } {
   if (!!storedFileMap) {
     return {
       fileMap: storedFileMap,
       allWorkspaceFiles: storedAllWorkspaceFiles,
+      rustReferences: storedRustReferences,
     };
   } else {
     return {
@@ -54,6 +58,7 @@ export function getFileMap(): {
         projectFileMap: {},
       },
       allWorkspaceFiles: [],
+      rustReferences: null,
     };
   }
 }
@@ -63,6 +68,7 @@ export async function buildProjectGraphUsingProjectFileMap(
   externalNodes: Record<string, ProjectGraphExternalNode>,
   fileMap: FileMap,
   allWorkspaceFiles: FileData[],
+  rustReferences: NxWorkspaceFilesExternals,
   fileMapCache: FileMapCache | null,
   shouldWriteCache: boolean
 ): Promise<{
@@ -71,6 +77,7 @@ export async function buildProjectGraphUsingProjectFileMap(
 }> {
   storedFileMap = fileMap;
   storedAllWorkspaceFiles = allWorkspaceFiles;
+  storedRustReferences = rustReferences;
 
   const nxJson = readNxJson();
   const projectGraphVersion = '6.0';
@@ -169,7 +176,7 @@ async function buildProjectGraphUsingContext(
     builder.addExternalNode(knownExternalNodes[node]);
   }
 
-  await normalizeProjectNodes(ctx, builder, nxJson);
+  await normalizeProjectNodes(ctx, builder);
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
   const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
@@ -231,7 +238,12 @@ async function updateProjectGraphWithPlugins(
   context: CreateDependenciesContext,
   initProjectGraph: ProjectGraph
 ) {
-  const plugins = await loadNxPlugins(context.nxJsonConfiguration?.plugins);
+  const plugins = await loadNxPlugins(
+    context.nxJsonConfiguration?.plugins,
+    getNxRequirePaths(),
+    context.workspaceRoot,
+    context.projects
+  );
   let graph = initProjectGraph;
   for (const { plugin } of plugins) {
     try {
@@ -240,13 +252,13 @@ async function updateProjectGraphWithPlugins(
         plugin.processProjectGraph &&
         !plugin.createDependencies
       ) {
-        // TODO(@AgentEnder): Enable after rewriting nx-js-graph-plugin to v2
-        // output.warn({
-        //   title: `${plugin.name} is a v1 plugin.`,
-        //   bodyLines: [
-        //     'Nx has recently released a v2 model for project graph plugins. The `processProjectGraph` method is deprecated. Plugins should use some combination of `createNodes` and `createDependencies` instead.',
-        //   ],
-        // });
+        output.warn({
+          title: `${plugin.name} is a v1 plugin.`,
+          bodyLines: [
+            'Nx has recently released a v2 model for project graph plugins. The `processProjectGraph` method is deprecated. Plugins should use some combination of `createNodes` and `createDependencies` instead.',
+          ],
+        });
+        performance.mark(`${plugin.name}:processProjectGraph - start`);
         graph = await plugin.processProjectGraph(graph, {
           ...context,
           projectsConfigurations: {
@@ -261,6 +273,12 @@ async function updateProjectGraphWithPlugins(
             ...context.nxJsonConfiguration,
           },
         });
+        performance.mark(`${plugin.name}:processProjectGraph - end`);
+        performance.measure(
+          `${plugin.name}:processProjectGraph`,
+          `${plugin.name}:processProjectGraph - start`,
+          `${plugin.name}:processProjectGraph - end`
+        );
       }
     } catch (e) {
       let message = `Failed to process the project graph with "${plugin.name}".`;
@@ -283,6 +301,7 @@ async function updateProjectGraphWithPlugins(
   );
   await Promise.all(
     createDependencyPlugins.map(async ({ plugin, options }) => {
+      performance.mark(`${plugin.name}:createDependencies - start`);
       try {
         const dependencies = await plugin.createDependencies(options, {
           ...context,
@@ -304,6 +323,12 @@ async function updateProjectGraphWithPlugins(
         }
         throw new Error(message);
       }
+      performance.mark(`${plugin.name}:createDependencies - end`);
+      performance.measure(
+        `${plugin.name}:createDependencies`,
+        `${plugin.name}:createDependencies - start`,
+        `${plugin.name}:createDependencies - end`
+      );
     })
   );
   return builder.getUpdatedProjectGraph();
