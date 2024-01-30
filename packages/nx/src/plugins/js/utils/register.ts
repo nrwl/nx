@@ -99,8 +99,7 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
   }
 
   compilerOptions.lib = ['es2021'];
-  compilerOptions.module = compilerOptions.module ||
-    ts.ModuleKind.CommonJS;
+  compilerOptions.module = compilerOptions.module || ts.ModuleKind.CommonJS;
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
