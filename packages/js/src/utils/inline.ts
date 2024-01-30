@@ -278,10 +278,12 @@ function updateImports(
   destOutputPath: string,
   inlinedDepsDestOutputRecord: Record<string, string>
 ) {
+  const pathAliases = Object.keys(inlinedDepsDestOutputRecord);
+  if (pathAliases.length == 0) {
+    return;
+  }
   const importRegex = new RegExp(
-    Object.keys(inlinedDepsDestOutputRecord)
-      .map((pathAlias) => `["'](${pathAlias})["']`)
-      .join('|'),
+    pathAliases.map((pathAlias) => `["'](${pathAlias})["']`).join('|'),
     'g'
   );
   recursiveUpdateImport(
