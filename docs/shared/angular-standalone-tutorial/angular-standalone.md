@@ -137,7 +137,276 @@ Nx uses the following syntax to run tasks:
 
 ![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
-All targets, such as `serve`, `build`, `test` or your custom ones, are defined in the `project.json` file.
+### Inferred Tasks
+
+Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors) project detail view or run:
+
+```shell
+nx show project myngapp --web
+```
+
+{% project-details title="Project Details View" height="100px" %}
+
+```json
+{
+  "project": {
+    "name": "myngapp",
+    "data": {
+      "root": ".",
+      "includedScripts": [],
+      "name": "myngapp",
+      "targets": {
+        "lint": {
+          "cache": true,
+          "inputs": [
+            "default",
+            "{workspaceRoot}/.eslintrc.json",
+            "{workspaceRoot}/tools/eslint-rules/**/*",
+            {
+              "externalDependencies": ["eslint"]
+            }
+          ],
+          "executor": "nx:run-commands",
+          "options": {
+            "cwd": ".",
+            "command": "eslint ./src"
+          },
+          "configurations": {}
+        },
+        "test": {
+          "options": {
+            "cwd": ".",
+            "command": "jest"
+          },
+          "cache": true,
+          "inputs": [
+            "default",
+            "^production",
+            {
+              "externalDependencies": ["jest"]
+            }
+          ],
+          "outputs": ["{projectRoot}/coverage/myngapp"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        },
+        "build": {
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": ["production", "^production"],
+          "executor": "@angular-devkit/build-angular:application",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/myngapp",
+            "index": "./src/index.html",
+            "browser": "./src/main.ts",
+            "polyfills": ["zone.js"],
+            "tsConfig": "./tsconfig.app.json",
+            "assets": ["./src/favicon.ico", "./src/assets"],
+            "styles": ["./src/styles.css"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kb",
+                  "maximumError": "1mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kb",
+                  "maximumError": "4kb"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "executor": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "myngapp:build:production"
+            },
+            "development": {
+              "buildTarget": "myngapp:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {}
+        },
+        "extract-i18n": {
+          "executor": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "buildTarget": "myngapp:build"
+          },
+          "configurations": {}
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "myngapp:build",
+            "staticFilePath": "dist/myngapp/browser"
+          },
+          "configurations": {}
+        }
+      },
+      "sourceRoot": "./src",
+      "projectType": "application",
+      "$schema": "node_modules/nx/schemas/project-schema.json",
+      "prefix": "myngapp",
+      "tags": [],
+      "implicitDependencies": []
+    }
+  },
+  "sourceMap": {
+    "root": ["project.json", "nx/core/project-json"],
+    "includedScripts": ["package.json", "nx/core/package-json-workspaces"],
+    "name": ["project.json", "nx/core/project-json"],
+    "targets": ["project.json", "nx/core/project-json"],
+    "targets.lint": ["project.json", "@nx/eslint/plugin"],
+    "targets.lint.cache": ["project.json", "@nx/eslint/plugin"],
+    "targets.lint.options": ["project.json", "@nx/eslint/plugin"],
+    "targets.lint.inputs": ["project.json", "@nx/eslint/plugin"],
+    "targets.lint.executor": ["project.json", "@nx/eslint/plugin"],
+    "targets.lint.options.cwd": ["project.json", "@nx/eslint/plugin"],
+    "targets.lint.options.command": ["project.json", "@nx/eslint/plugin"],
+    "targets.test": ["jest.config.ts", "@nx/jest/plugin"],
+    "targets.test.options": ["jest.config.ts", "@nx/jest/plugin"],
+    "targets.test.cache": ["jest.config.ts", "@nx/jest/plugin"],
+    "targets.test.inputs": ["jest.config.ts", "@nx/jest/plugin"],
+    "targets.test.outputs": ["jest.config.ts", "@nx/jest/plugin"],
+    "targets.test.executor": ["jest.config.ts", "@nx/jest/plugin"],
+    "targets.test.options.cwd": ["jest.config.ts", "@nx/jest/plugin"],
+    "targets.test.options.command": ["jest.config.ts", "@nx/jest/plugin"],
+    "targets.build": ["project.json", "nx/core/project-json"],
+    "targets.build.cache": ["project.json", "nx/core/target-defaults"],
+    "targets.build.dependsOn": ["project.json", "nx/core/target-defaults"],
+    "targets.build.inputs": ["project.json", "nx/core/target-defaults"],
+    "sourceRoot": ["project.json", "nx/core/project-json"],
+    "projectType": ["project.json", "nx/core/project-json"],
+    "$schema": ["project.json", "nx/core/project-json"],
+    "prefix": ["project.json", "nx/core/project-json"],
+    "tags": ["project.json", "nx/core/project-json"],
+    "targets.build.executor": ["project.json", "nx/core/project-json"],
+    "targets.build.outputs": ["project.json", "nx/core/project-json"],
+    "targets.build.options": ["project.json", "nx/core/project-json"],
+    "targets.build.configurations": ["project.json", "nx/core/project-json"],
+    "targets.build.defaultConfiguration": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.outputPath": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.index": ["project.json", "nx/core/project-json"],
+    "targets.build.options.browser": ["project.json", "nx/core/project-json"],
+    "targets.build.options.polyfills": ["project.json", "nx/core/project-json"],
+    "targets.build.options.tsConfig": ["project.json", "nx/core/project-json"],
+    "targets.build.options.assets": ["project.json", "nx/core/project-json"],
+    "targets.build.options.styles": ["project.json", "nx/core/project-json"],
+    "targets.build.options.scripts": ["project.json", "nx/core/project-json"],
+    "targets.build.configurations.production": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.budgets": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.outputHashing": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.optimization": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.extractLicenses": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.sourceMap": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve": ["project.json", "nx/core/project-json"],
+    "targets.serve.executor": ["project.json", "nx/core/project-json"],
+    "targets.serve.configurations": ["project.json", "nx/core/project-json"],
+    "targets.serve.defaultConfiguration": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.production": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.production.buildTarget": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.development": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.development.buildTarget": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.extract-i18n": ["project.json", "nx/core/project-json"],
+    "targets.extract-i18n.executor": ["project.json", "nx/core/project-json"],
+    "targets.extract-i18n.options": ["project.json", "nx/core/project-json"],
+    "targets.extract-i18n.options.buildTarget": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static": ["project.json", "nx/core/project-json"],
+    "targets.serve-static.executor": ["project.json", "nx/core/project-json"],
+    "targets.serve-static.options": ["project.json", "nx/core/project-json"],
+    "targets.serve-static.options.buildTarget": [
+      "project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static.options.staticFilePath": [
+      "project.json",
+      "nx/core/project-json"
+    ]
+  }
+}
+```
+
+{% /project-details %}
+
+If you expand the `test` task, you can see that it was created by the `@nx/jest` plugin by analyzing your `jest.config.ts` file. Notice the outputs are defined as `{projectRoot}/coverage/myngapp`. This value is being read from the `coverageDirectory` defined in your `jest.config.ts` file. Let's change that value in your `jest.config.ts` file:
+
+```ts {% fileName="jest.config.ts" %}
+export default {
+  // ...
+  coverageDirectory: './coverage/myngapp-changed',
+  // ...
+};
+```
+
+Now if you look at the project details view, the outputs for the `test` target will say `{projectRoot}/coverage/angular-store-changed`. This feature ensures that Nx will always cache the correct files.
+
+You can also override the settings for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
+
+### Manually Defined Tasks
+
+The `serve` and `build` tasks are defined in the `project.json` file.
 
 ```json {% fileName="project.json"}
 {
@@ -499,7 +768,7 @@ import { CommonModule } from '@angular/common';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './products.component.html',
-  styleUrls: ['./products.component.css'],
+  styleUrl: './products.component.css',
 })
 export class ProductsComponent {}
 ```
