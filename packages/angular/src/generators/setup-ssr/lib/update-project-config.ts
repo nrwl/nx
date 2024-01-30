@@ -84,7 +84,9 @@ export function updateProjectConfigForBrowserBuilder(
 
   projectConfig.targets.server = {
     dependsOn: ['build'],
-    executor: '@angular-devkit/build-angular:server',
+    executor: buildTarget.executor.startsWith('@angular-devkit/build-angular:')
+      ? '@angular-devkit/build-angular:server'
+      : '@nx/angular:webpack-server',
     options: {
       outputPath: joinPathFragments(baseOutputPath, 'server'),
       main: joinPathFragments(projectConfig.root, schema.serverFileName),

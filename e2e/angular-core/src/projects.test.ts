@@ -1,5 +1,6 @@
 import { names } from '@nx/devkit';
 import {
+  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   getSize,
@@ -8,6 +9,7 @@ import {
   newProject,
   readFile,
   removeFile,
+  rmDist,
   runCLI,
   runCommandUntil,
   runE2ETests,
@@ -551,5 +553,53 @@ describe('Angular Projects', () => {
     expect(libTestResult).toContain(
       `Successfully ran target test for project ${libName}`
     );
+  }, 500_000);
+
+  it('should support generating applications with SSR and converting targets with webpack-based executors to use the application executor', async () => {
+    const esbuildApp = uniq('esbuild-app');
+    const webpackApp = uniq('webpack-app');
+
+    runCLI(
+      `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --ssr --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check build produces both the browser and server bundles
+    runCLI(`build ${esbuildApp} --output-hashing none`);
+    checkFilesExist(
+      `dist/${esbuildApp}/browser/main.js`,
+      `dist/${esbuildApp}/server/server.mjs`
+    );
+
+    runCLI(
+      `generate @nx/angular:app ${webpackApp} --bundler=webpack --ssr --project-name-and-root-format=as-provided --no-interactive`
+    );
+
+    // check build only produces the browser bundle
+    runCLI(`build ${webpackApp} --output-hashing none`);
+    checkFilesExist(`dist/${webpackApp}/browser/main.js`);
+    checkFilesDoNotExist(`dist/${webpackApp}/server/main.js`);
+
+    // check server produces the server bundle
+    runCLI(`server ${webpackApp} --output-hashing none`);
+    checkFilesExist(`dist/${webpackApp}/server/main.js`);
+
+    rmDist();
+
+    // convert target with webpack-based executors to use the application executor
+    runCLI(
+      `generate @nx/angular:convert-to-application-executor ${webpackApp}`
+    );
+
+    // check build now produces both the browser and server bundles
+    runCLI(`build ${webpackApp} --output-hashing none`);
+    checkFilesExist(
+      `dist/${webpackApp}/browser/main.js`,
+      `dist/${webpackApp}/server/server.mjs`
+    );
+
+    // check server target is no longer available
+    expect(() =>
+      runCLI(`server ${webpackApp} --output-hashing none`)
+    ).toThrow();
   }, 500_000);
 });
