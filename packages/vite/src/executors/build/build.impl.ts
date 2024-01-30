@@ -142,6 +142,7 @@ export async function* viteBuildExecutor(
   }
   // For buildable libs, copy package.json if it exists.
   else if (
+    options.generatePackageJson !== false &&
     !existsSync(distPackageJson) &&
     existsSync(libraryPackageJson) &&
     rootPackageJson !== libraryPackageJson
