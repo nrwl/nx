@@ -2,7 +2,7 @@
   "name": "executor",
   "factory": "./src/generators/executor/executor#executorGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxPluginExecutor",
     "title": "Create an Executor for an Nx Plugin",

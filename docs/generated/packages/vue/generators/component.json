@@ -2,7 +2,7 @@
   "name": "component",
   "factory": "./src/generators/component/component#componentGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxVueComponent",
     "title": "Create a Vue Component",

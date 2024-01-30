@@ -2,7 +2,7 @@
   "name": "setup-ssr",
   "factory": "./src/generators/setup-ssr/setup-ssr",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorAngularUniversalSetup",
     "cli": "nx",
     "title": "Generate Angular Universal (SSR) setup for an Angular App",

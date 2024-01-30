@@ -2,7 +2,7 @@
   "name": "generator",
   "factory": "./src/generators/generator/generator#generatorGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxPluginGenerator",
     "title": "Create a Generator for an Nx Plugin",

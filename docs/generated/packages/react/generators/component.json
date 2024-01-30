@@ -2,7 +2,7 @@
   "name": "component",
   "factory": "./src/generators/component/component#componentGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxReactComponent",
     "title": "Create a React Component",
@@ -35,11 +35,11 @@
             { "value": "css", "label": "CSS" },
             {
               "value": "scss",
-              "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+              "label": "SASS(.scss)       [ https://sass-lang.com          ]"
             },
             {
               "value": "less",
-              "label": "LESS              [ http://lesscss.org            ]"
+              "label": "LESS              [ https://lesscss.org            ]"
             },
             {
               "value": "styled-components",

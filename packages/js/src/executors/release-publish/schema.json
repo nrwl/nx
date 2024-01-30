@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "version": 2,
   "title": "Implementation details of `nx release publish`",
   "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",

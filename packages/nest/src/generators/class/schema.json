@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxNestClassGenerator",
   "title": "Nest Class Options Schema",
   "description": "Nest Class Options Schema.",

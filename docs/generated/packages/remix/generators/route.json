@@ -2,7 +2,7 @@
   "name": "route",
   "implementation": "/packages/remix/src/generators/route/route.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixRoute",
     "title": "Create a Route",
     "description": "Generate a route.",

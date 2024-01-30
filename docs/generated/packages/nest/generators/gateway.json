@@ -2,7 +2,7 @@
   "name": "gateway",
   "factory": "./src/generators/gateway/gateway#gatewayGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxNestGatewayGenerator",
     "title": "Nest Gateway Options Schema",
     "description": "Nest Gateway Options Schema.",

@@ -2,7 +2,7 @@
   "name": "action",
   "implementation": "/packages/remix/src/generators/action/action.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "action",
     "type": "object",
     "description": "Generate an action for a given route.",
