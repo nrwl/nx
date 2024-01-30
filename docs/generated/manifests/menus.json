@@ -599,14 +599,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Types of Configuration",
-            "path": "/concepts/types-of-configuration",
-            "id": "types-of-configuration",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "What is a Task Pipeline",
             "path": "/concepts/task-pipeline-configuration",
             "id": "task-pipeline-configuration",
@@ -615,9 +607,25 @@
             "disableCollapsible": false
           },
           {
+            "name": "What Are Nx Plugins",
+            "path": "/concepts/nx-plugins",
+            "id": "nx-plugins",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Inferred Tasks",
             "path": "/concepts/inferred-tasks",
             "id": "inferred-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Types of Configuration",
+            "path": "/concepts/types-of-configuration",
+            "id": "types-of-configuration",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -844,14 +852,6 @@
         "disableCollapsible": false
       },
       {
-        "name": "Types of Configuration",
-        "path": "/concepts/types-of-configuration",
-        "id": "types-of-configuration",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "What is a Task Pipeline",
         "path": "/concepts/task-pipeline-configuration",
         "id": "task-pipeline-configuration",
@@ -860,9 +860,25 @@
         "disableCollapsible": false
       },
       {
+        "name": "What Are Nx Plugins",
+        "path": "/concepts/nx-plugins",
+        "id": "nx-plugins",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Inferred Tasks",
         "path": "/concepts/inferred-tasks",
         "id": "inferred-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Types of Configuration",
+        "path": "/concepts/types-of-configuration",
+        "id": "types-of-configuration",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
