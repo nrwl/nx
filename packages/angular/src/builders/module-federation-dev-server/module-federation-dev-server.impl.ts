@@ -21,7 +21,8 @@ import {
   getRemotes,
 } from '@nx/webpack/src/utils/module-federation';
 import { fork } from 'child_process';
-import { combineLatest, concatMap, from, switchMap } from 'rxjs';
+import { combineLatest, from } from 'rxjs';
+import { concatMap, switchMap } from 'rxjs/operators';
 
 export function executeModuleFederationDevServerBuilder(
   schema: Schema,
