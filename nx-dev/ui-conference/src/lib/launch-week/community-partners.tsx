@@ -45,6 +45,11 @@ export function LaunchNxCommunityPartners(): JSX.Element {
       linkTarget: 'https://www.epicweb.dev/',
     },
     {
+      imageUrl: '/images/launch-nx/nuxt-logo.svg',
+      name: 'Nuxt',
+      linkTarget: 'https://nuxt.com/',
+    },
+    {
       imageUrl: '/images/launch-nx/viteconf.svg',
       name: 'ViteConf',
       linkTarget: 'https://viteconf.org ',
