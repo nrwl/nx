@@ -15,6 +15,11 @@ export function LaunchNxCommunityPartners(): JSX.Element {
       linkTarget: 'https://ng-conf.org/',
     },
     {
+      imageUrl: '/images/launch-nx/rxjs.png',
+      name: 'Epic Web',
+      linkTarget: 'https://rxjs.dev/',
+    },
+    {
       imageUrl: '/images/launch-nx/thisdot.png',
       name: 'ThisDot',
       linkTarget: 'https://www.thisdot.co/',
