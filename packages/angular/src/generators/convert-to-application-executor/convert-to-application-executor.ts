@@ -6,14 +6,16 @@ import {
   readJson,
   readProjectConfiguration,
   updateProjectConfiguration,
+  writeJson,
   type TargetConfiguration,
   type Tree,
-  writeJson,
 } from '@nx/devkit';
 import { dirname, join } from 'node:path/posix';
+import { gte, lt } from 'semver';
 import { allTargetOptions } from '../../utils/targets';
 import { setupSsr } from '../setup-ssr/setup-ssr';
 import { validateProject } from '../utils/validations';
+import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import type { GeneratorOptions } from './schema';
 
 const executorsToConvert = new Set([
@@ -38,15 +40,32 @@ export async function convertToApplicationExecutor(
   tree: Tree,
   options: GeneratorOptions
 ) {
+  const { major: angularMajorVersion, version: angularVersion } =
+    getInstalledAngularVersionInfo(tree);
+  if (angularMajorVersion < 17) {
+    throw new Error(
+      `The "convert-to-application-executor" generator is only supported in Angular >= 17.0.0. You are currently using "${angularVersion}".`
+    );
+  }
+
   let didAnySucceed = false;
   if (options.project) {
     validateProject(tree, options.project);
-    didAnySucceed = await convertProjectTargets(tree, options.project, true);
+    didAnySucceed = await convertProjectTargets(
+      tree,
+      options.project,
+      angularVersion,
+      true
+    );
   } else {
     const projects = getProjects(tree);
     for (const [projectName] of projects) {
       logger.info(`Converting project "${projectName}"...`);
-      const success = await convertProjectTargets(tree, projectName);
+      const success = await convertProjectTargets(
+        tree,
+        projectName,
+        angularVersion
+      );
 
       if (success) {
         logger.info(`Project "${projectName}" converted successfully.`);
@@ -70,6 +89,7 @@ export async function convertToApplicationExecutor(
 async function convertProjectTargets(
   tree: Tree,
   projectName: string,
+  angularVersion: string,
   isProvidedProject = false
 ): Promise<boolean> {
   function warnIfProvided(message: string): void {
@@ -107,7 +127,7 @@ async function convertProjectTargets(
   const buildTarget = project.targets[buildTargetName];
   buildTarget.executor = newExecutor;
 
-  if (buildTarget.outputs) {
+  if (gte(angularVersion, '17.1.0') && buildTarget.outputs) {
     buildTarget.outputs = buildTarget.outputs.map((output) =>
       output === '{options.outputPath}' ? '{options.outputPath.base}' : output
     );
@@ -131,7 +151,9 @@ async function convertProjectTargets(
     }
 
     let outputPath = options['outputPath'];
-    if (typeof outputPath === 'string') {
+    if (lt(angularVersion, '17.1.0')) {
+      options['outputPath'] = outputPath?.replace(/\/browser\/?$/, '');
+    } else if (typeof outputPath === 'string') {
       if (!/\/browser\/?$/.test(outputPath)) {
         logger.warn(
           `The output location of the browser build has been updated from "${outputPath}" to ` +

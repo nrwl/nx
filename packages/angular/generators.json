@@ -42,7 +42,7 @@
     "convert-to-application-executor": {
       "factory": "./src/generators/convert-to-application-executor/convert-to-application-executor",
       "schema": "./src/generators/convert-to-application-executor/schema.json",
-      "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder."
+      "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. _Note: this is only supported in Angular versions >= 17.0.0_."
     },
     "directive": {
       "factory": "./src/generators/directive/directive",
