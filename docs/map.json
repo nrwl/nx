@@ -220,22 +220,28 @@
               "file": "shared/concepts/how-caching-works"
             },
             {
-              "name": "Types of Configuration",
-              "tags": [],
-              "id": "types-of-configuration",
-              "file": "shared/concepts/types-of-configuration"
-            },
-            {
               "name": "What is a Task Pipeline",
               "tags": ["run-tasks"],
               "id": "task-pipeline-configuration",
               "file": "shared/concepts/task-pipeline-configuration"
             },
             {
+              "name": "What Are Nx Plugins",
+              "tags": ["generate-code", "create-your-own-plugin"],
+              "id": "nx-plugins",
+              "file": "shared/concepts/nx-plugins"
+            },
+            {
               "name": "Inferred Tasks",
               "tags": ["inferred-tasks"],
               "id": "inferred-tasks",
               "file": "shared/concepts/inferred-tasks"
+            },
+            {
+              "name": "Types of Configuration",
+              "tags": [],
+              "id": "types-of-configuration",
+              "file": "shared/concepts/types-of-configuration"
             },
             {
               "name": "Executors and Configurations",
