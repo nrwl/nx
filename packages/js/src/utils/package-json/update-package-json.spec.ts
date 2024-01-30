@@ -186,6 +186,37 @@ describe('getUpdatedPackageJsonContent', () => {
       });
     });
 
+    it('should support different CJS output files', () => {
+      const json = getUpdatedPackageJsonContent(
+        {
+          name: 'test',
+          version: '0.0.1',
+        },
+        {
+          main: 'proj/src/index.ts',
+          outputPath: 'dist/proj',
+          projectRoot: 'proj',
+          format: ['esm', 'cjs'],
+          outputFileExtensionForCjs: '.cjs',
+          generateExportsField: true,
+          outputFileName: 'index.js',
+          outputFileNameForCjs: 'main.cjs',
+        }
+      );
+
+      expect(json).toEqual({
+        name: 'test',
+        main: './main.cjs',
+        module: './index.js',
+        types: './src/index.d.ts',
+        version: '0.0.1',
+        exports: {
+          '.': { default: './main.cjs', import: './index.js' },
+          './package.json': './package.json',
+        },
+      });
+    });
+
     it('should add additional entry-points into package.json', () => {
       // CJS only
       expect(

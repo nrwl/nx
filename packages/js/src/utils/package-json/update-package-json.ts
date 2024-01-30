@@ -38,6 +38,7 @@ export interface UpdatePackageJsonOption {
   format?: SupportedFormat[];
   outputPath: string;
   outputFileName?: string;
+  outputFileNameForCjs?: string;
   outputFileExtensionForCjs?: `.${string}`;
   outputFileExtensionForEsm?: `.${string}`;
   skipTypings?: boolean;
@@ -205,15 +206,25 @@ interface Exports {
 export function getExports(
   options: Pick<
     UpdatePackageJsonOption,
-    'main' | 'projectRoot' | 'outputFileName' | 'additionalEntryPoints'
+    | 'main'
+    | 'projectRoot'
+    | 'outputFileName'
+    | 'outputFileNameForCjs'
+    | 'additionalEntryPoints'
   > & {
     fileExt: string;
-  }
+  },
+  hasCjsFormat?: boolean
 ): Exports {
-  const mainFile = options.outputFileName
-    ? options.outputFileName.replace(/\.[tj]s$/, '')
-    : basename(options.main).replace(/\.[tj]s$/, '');
-  const relativeMainFileDir = options.outputFileName
+  const outputFileName = hasCjsFormat
+    ? options.outputFileNameForCjs
+    : options.outputFileName;
+
+  const mainFile = outputFileName
+    ? outputFileName.replace(/\.(c?[tj]s)$/, '')
+    : basename(options.main).replace(/\.(c?[tj]s)$/, '');
+
+  const relativeMainFileDir = outputFileName
     ? './'
     : getRelativeDirectoryToProjectRoot(options.main, options.projectRoot);
   const exports: Exports = {
@@ -221,7 +232,7 @@ export function getExports(
   };
 
   if (options.additionalEntryPoints) {
-    const jsRegex = /\.[jt]sx?$/;
+    const jsRegex = /\.(c?[jt]sx?)$/;
 
     for (const file of options.additionalEntryPoints) {
       const { ext: fileExt, name: fileName } = parse(file);
@@ -280,10 +291,13 @@ export function getUpdatedPackageJsonContent(
   // Bundlers like rollup and esbuild supports .cjs for CJS and .js for ESM.
   // Bundlers/Compilers like webpack, tsc, swc do not have different file extensions (unless you use .mts or .cts in source).
   if (hasCjsFormat) {
-    const cjsExports = getExports({
-      ...options,
-      fileExt: options.outputFileExtensionForCjs ?? '.js',
-    });
+    const cjsExports = getExports(
+      {
+        ...options,
+        fileExt: options.outputFileExtensionForCjs ?? '.js',
+      },
+      hasCjsFormat
+    );
 
     packageJson.main = cjsExports['.'];
     if (!hasEsmFormat) {
