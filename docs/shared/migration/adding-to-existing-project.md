@@ -252,7 +252,7 @@ Now if you run `npm run test` or `nx test` twice, the results will be retrieved 
 
 {% /cards %}
 
-{% short-embeds %}
+<!-- {% short-embeds %}
 {% short-video
 title="Nx Tips: Nx Init"
 embedUrl="https://www.youtube.com/embed/Wpj3KSpN0Xw" /%}
@@ -262,4 +262,4 @@ embedUrl="https://www.youtube.com/embed/fPt_pFP6hn8" /%}
 {% short-video
 title="Nx is Complicated?"
 embedUrl="https://www.youtube.com/embed/AQbSwPtPBiw" /%}
-{% /short-embeds %}
+{% /short-embeds %} -->

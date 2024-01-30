@@ -253,6 +253,13 @@
     },
     {
       "description": "",
+      "file": "shared/concepts/nx-plugins",
+      "id": "nx-plugins",
+      "name": "What Are Nx Plugins",
+      "path": "/concepts/nx-plugins"
+    },
+    {
+      "description": "",
       "file": "shared/monorepo-nx-enterprise",
       "id": "monorepo-nx-enterprise",
       "name": "Using Nx at Enterprises",
@@ -514,6 +521,50 @@
       "path": "/concepts/integrated-vs-package-based"
     }
   ],
+  "create-your-own-plugin": [
+    {
+      "description": "",
+      "file": "shared/concepts/nx-plugins",
+      "id": "nx-plugins",
+      "name": "What Are Nx Plugins",
+      "path": "/concepts/nx-plugins"
+    },
+    {
+      "description": "",
+      "file": "shared/guides/nx-devkit-angular-devkit",
+      "id": "nx-devkit-angular-devkit",
+      "name": "Nx Devkit and Angular Devkit",
+      "path": "/concepts/more-concepts/nx-devkit-angular-devkit"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/migration-generators",
+      "id": "migration-generators",
+      "name": "Write a Migration",
+      "path": "/extending-nx/recipes/migration-generators"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/create-preset",
+      "id": "create-preset",
+      "name": "Create a Preset",
+      "path": "/extending-nx/recipes/create-preset"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/create-install-package",
+      "id": "create-install-package",
+      "name": "Create an Install Package",
+      "path": "/extending-nx/recipes/create-install-package"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/plugins/project-graph-plugins",
+      "id": "project-graph-plugins",
+      "name": "Modify the Project Graph",
+      "path": "/extending-nx/recipes/project-graph-plugins"
+    }
+  ],
   "inferred-tasks": [
     {
       "description": "",
@@ -685,43 +736,6 @@
       "id": "connect-to-nx-cloud",
       "name": "connect-to-nx-cloud",
       "path": "/nx-api/nx/documents/connect-to-nx-cloud"
-    }
-  ],
-  "create-your-own-plugin": [
-    {
-      "description": "",
-      "file": "shared/guides/nx-devkit-angular-devkit",
-      "id": "nx-devkit-angular-devkit",
-      "name": "Nx Devkit and Angular Devkit",
-      "path": "/concepts/more-concepts/nx-devkit-angular-devkit"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/migration-generators",
-      "id": "migration-generators",
-      "name": "Write a Migration",
-      "path": "/extending-nx/recipes/migration-generators"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/create-preset",
-      "id": "create-preset",
-      "name": "Create a Preset",
-      "path": "/extending-nx/recipes/create-preset"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/create-install-package",
-      "id": "create-install-package",
-      "name": "Create an Install Package",
-      "path": "/extending-nx/recipes/create-install-package"
-    },
-    {
-      "description": "",
-      "file": "shared/recipes/plugins/project-graph-plugins",
-      "id": "project-graph-plugins",
-      "name": "Modify the Project Graph",
-      "path": "/extending-nx/recipes/project-graph-plugins"
     }
   ],
   "workspace-watching": [
