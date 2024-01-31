@@ -30,9 +30,8 @@ describe('Storybook generators and executors for Vue projects', () => {
 
   describe('build storybook', () => {
     it('should build a vue based storybook setup', () => {
-      // build
       runCLI(`run ${vueStorybookApp}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${vueStorybookApp}/index.html`);
+      checkFilesExist(`${vueStorybookApp}/storybook-static/index.html`);
     }, 300_000);
   });
 });
