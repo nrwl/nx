@@ -166,7 +166,7 @@ jobs:
        - name: Build
          id: build
          if: ${{ github.event_name != 'schedule' }}
-         uses: cross-platform-actions/action@v0.21.1
+         uses: cross-platform-actions/action@v0.22.0
          env:
            DEBUG: napi:*
            RUSTUP_IO_THREADS: 1
