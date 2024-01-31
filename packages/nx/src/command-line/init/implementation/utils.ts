@@ -25,12 +25,13 @@ export function createNxJsonFile(
   scriptOutputs: { [name: string]: string }
 ) {
   const nxJsonPath = joinPathFragments(repoRoot, 'nx.json');
-  let nxJson = {} as Partial<NxJsonConfiguration>;
+  let nxJson = {} as Partial<NxJsonConfiguration> & { $schema: string };
   try {
     nxJson = readJsonFile(nxJsonPath);
     // eslint-disable-next-line no-empty
   } catch {}
 
+  nxJson.$schema = './node_modules/nx/schemas/nx-schema.json';
   nxJson.targetDefaults ??= {};
 
   if (topologicalTargets.length > 0) {
