@@ -327,7 +327,7 @@
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.0-rc.46",
     "@zkochan/js-yaml": "0.0.6",
-    "axios": "^1.5.1",
+    "axios": "^1.6.0",
     "classnames": "^2.3.1",
     "cliui": "^8.0.1",
     "core-js": "^3.6.5",
