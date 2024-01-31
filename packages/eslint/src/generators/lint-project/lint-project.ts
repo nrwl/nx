@@ -35,6 +35,7 @@ import {
 import {
   baseEsLintConfigFile,
   baseEsLintFlatConfigFile,
+  ESLINT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { hasEslintPlugin } from '../utils/plugin';
 import { setupRootEsLint } from './setup-root-eslint';
@@ -299,11 +300,15 @@ function isMigrationToMonorepoNeeded(
   if (!rootProject || !rootProject.targets) {
     return false;
   }
+  // check if we're inferring lint target from `@nx/eslint/plugin`
+  if (hasEslintPlugin(tree)) {
+    for (const f of ESLINT_CONFIG_FILENAMES) {
+      if (tree.exists(f)) {
+        return true;
+      }
+    }
+  }
   // find if root project has lint target
   const lintTarget = findLintTarget(rootProject);
-  if (!lintTarget) {
-    return false;
-  }
-
-  return true;
+  return !!lintTarget;
 }
