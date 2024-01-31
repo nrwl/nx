@@ -10,10 +10,9 @@ This is an example of a launch template using all built-in features:
 ```yaml
 launch-templates:
   my-linux-medium-js:
-    resourceClass: ""
+    resourceClass: ''
     image: 'ubuntu22.04-node20.9-v1'
-    env:
-      MY_ENV_VAR=shared
+    env: MY_ENV_VAR=shared
     init-steps:
       - name: Checkout # using a reusable step
         uses: 'nrwl/nx-cloud-workflows/v1.1/workflow-steps/checkout/main.yaml'
@@ -33,33 +32,32 @@ launch-templates:
       - name: Print path
         script: echo $PATH # will include my-folder
       - name: Define env var for a step
-        env:
-          MY_ENV_VAR=for-step
+        env: MY_ENV_VAR=for-step
         script: echo $MY_ENV_VAR # will print for-step
 ```
 
 ## Resource Classes
 
 The following resource classes are available:
- 
-* `docker_linux_amd64/small`
-* `docker_linux_amd64/medium`
-* `docker_linux_amd64/medium+`
-* `docker_linux_amd64/large`
-* `docker_linux_amd64/large+`
-* `docker_linux_amd64/extra_large`
-* `docker_linux_amd64/extra_large+`
 
-See their detailed description and pricing at [nx.app/pricing](https://nx.app/pricing). 
+- `docker_linux_amd64/small`
+- `docker_linux_amd64/medium`
+- `docker_linux_amd64/medium+`
+- `docker_linux_amd64/large`
+- `docker_linux_amd64/large+`
+- `docker_linux_amd64/extra_large`
+- `docker_linux_amd64/extra_large+`
+
+See their detailed description and pricing at [nx.app/pricing](https://nx.app/pricing).
 
 ## Image
 
 The following images are avialable:
 
-* `ubuntu22.04-node20.9-v1`
-* `ubuntu22.04-node20.9-withDind-v1`
-* `ubuntu22.04-node20.9-v2`
-* `ubuntu22.04-node20.9-withDind-v2`
+- `ubuntu22.04-node20.9-v1`
+- `ubuntu22.04-node20.9-withDind-v1`
+- `ubuntu22.04-node20.9-v2`
+- `ubuntu22.04-node20.9-withDind-v2`
 
 Enterprise users can use custom images.
 

@@ -1,6 +1,6 @@
 # Configuring CI Using Jenkins and Nx
 
-Below is an example of an Jenkins setup, building and testing only what is affected. 
+Below is an example of an Jenkins setup, building and testing only what is affected.
 
 ```groovy
 pipeline {

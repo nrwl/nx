@@ -55,6 +55,7 @@ fails. We recommend using `npx nx-cloud start-ci-run --stop-agents-on-failure=tr
 ### NX_CLOUD_DISTRIBUTED_EXECUTION
 
 Setting `NX_CLOUD_DISTRIBUTED_EXECUTION` to `false` disables distributed task execution. We recommend passing `--no-dte` or `--no-agents` instead.
+
 ## See Also
 
 - [Nx Environment Variables](/reference/environment-variables)

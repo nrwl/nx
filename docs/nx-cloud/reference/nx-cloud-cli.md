@@ -28,8 +28,8 @@ distribute-on:
 
 ### --with-env-vars
 
-By default, invoking `npx nx-cloud start-ci-run` will take all env vars prefixed with `NX_` and send them over to agents. 
-This means that your access token, verbose logging configuration and other NX related env vars will be the same on your 
+By default, invoking `npx nx-cloud start-ci-run` will take all env vars prefixed with `NX_` and send them over to agents.
+This means that your access token, verbose logging configuration and other NX related env vars will be the same on your
 main CI jobs and on agents.
 
 If you want to pass other env vars from the main job to agents, you can do it as follows: `--with-env-vars="VAR1,VAR2"`.
@@ -37,7 +37,7 @@ This will set `VAR1` and `VAR2` on agents to the same values set on the main job
 
 You can also pass `--with-env-vars="auto"` which will filter out all OS-specific env vars and pass the rest to agents.
 
-Note, none of values passed to agents stored on Nx Cloud side. 
+Note, none of values passed to agents stored on Nx Cloud side.
 
 ### --use-dte-by-default
 
@@ -61,7 +61,7 @@ target: `npx nx-cloud start-ci-run --stop-agents-after=e2e`.
 ### --require-explicit-completion
 
 By default, Nx Cloud will monitor the main CI job and once it completes it will complete the associated CIPE object on the
-Nx Cloud side. You can disable this by passing `--require-explicit-completion`. In this case, you will have to add 
+Nx Cloud side. You can disable this by passing `--require-explicit-completion`. In this case, you will have to add
 `npx nx-cloud complete-ci-run`.
 
 ## Enabling/Disabling Distribution
@@ -81,4 +81,3 @@ Same as `npx nx-cloud complete-ci-run` and `npx nx-cloud complete-run-group`.
 This command tells Nx Cloud to terminate all agents associated with this CI pipeline execution.
 Invoking this command is not needed anymore. New versions of Nx Cloud can track when the main job terminates
 and terminate associated agents automatically.
-

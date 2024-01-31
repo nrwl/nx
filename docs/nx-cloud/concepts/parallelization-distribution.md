@@ -82,6 +82,7 @@ The setup looks like this:
 # Run any commands you want here
 - nx affected -t lint test build
 ```
+
 The visualization looks like this:
 ![CI using Agents](/shared/images/dte/3agents.svg)
 
@@ -90,11 +91,10 @@ In the same way that Nx efficiently assigns tasks to parallel processes on a sin
 #### Pros and Cons of Using Nx Cloud's Distributed Task Execution:
 
 | Characteristic | Pro/Con | Notes                                                                                                                           |
-| -------------- | ------- |---------------------------------------------------------------------------------------------------------------------------------|
+| -------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | Complexity     | 🎉 Pro  | The pipeline uses the same commands a developer would use on their local machine, but with one extra line before running tasks. |
 | Debuggability  | 🎉 Pro  | Build artifacts and logs are collated to the main machine as if all tasks were executed on that machine                         |
 | Speed          | 🎉 Pro  | Fastest possible task distribution for each PR                                                                                  |
-
 
 ## Conclusion
 

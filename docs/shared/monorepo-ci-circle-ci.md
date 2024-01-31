@@ -1,6 +1,6 @@
 # Configuring CI Using Circle CI and Nx
 
-Below is an example of an Circle CI setup, building and testing only what is affected. 
+Below is an example of an Circle CI setup, building and testing only what is affected.
 
 ```yaml {% fileName=".circleci/config.yml" %}
 version: 2.1

@@ -1,6 +1,6 @@
 # Configuring CI Using GitHub Actions and Nx
 
-Below is an example of an GitHub Actions setup, building and testing only what is affected. 
+Below is an example of an GitHub Actions setup, building and testing only what is affected.
 
 ```yaml {% fileName=".github/workflows/ci.yml" %}
 name: CI

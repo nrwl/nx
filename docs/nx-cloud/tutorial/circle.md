@@ -308,7 +308,6 @@ When you check the CI logs for this PR, you'll notice that no tasks were run by 
 
 Merge your PR into the `main` branch when you're ready to move to the next section.
 
-
 ## Enable Remote Caching And Distributed Task Execution Using Nx Cloud
 
 Reducing the number of tasks to run via [affected commands](/ci/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. Also, as your repository grows, running all the tasks on a single agent will no longer work. The only way to fix it is to distribute your CI across many machines. Let's solve both of these problems using Nx Cloud.
@@ -323,12 +322,11 @@ After that connect you repository.
 
 SCREENSHOT OF THE SCREEN WHERE WE CAN SELECT THE OPTION
 
-This will send a pull request to your repository that will add the `nxCloudAccessToken` property to `nx.json`. 
+This will send a pull request to your repository that will add the `nxCloudAccessToken` property to `nx.json`.
 
 SCREENSHOT OF THE PR
 
 This wires up all the CI for you and configures access. Folks who can see your repository can see your workspace on nx.app.
-
 
 ### Enable Remote Caching using Nx Replay
 
@@ -337,7 +335,6 @@ This wires up all the CI for you and configures access. Folks who can see your r
 [Nx Replay] is enabled by default. To see it in action, rerun the CI for the PR opened by Nx Cloud.
 
 When Circle CI now processes our tasks they'll only take a fraction of the usual time. If you inspect the logs a little closer you'll see a note saying `[remote cache]`, indicating that the output has been pulled from the remote cache rather than running it. The full log of each command will still be printed since Nx restores that from the cache as well.
-
 
 ![Circle CI after enabling remote caching](/nx-cloud/tutorial/circle-ci-remote-cache.png)
 
@@ -382,7 +379,6 @@ SCREENSHOT OF CIPE PAGE AGENT VIZ (showing both the top and the bottom)
 
 With this pipeline configuration in place, no matter how large the repository scales, Nx Cloud will adjust and distribute tasks across agents in the optimal way. If CI pipelines start to slow down, just add some agent. One of the main advantages is that such a pipeline definition is declarative. We just give instructions what commands to run, but not how to distribute them. As such even if our monorepo structure changes and evolves over time, the distribution will be taken care of by Nx Cloud.
 
-
 ### Running Commands Without Distribution
 
 Sometimes you want to distribute most of your commands, but run some of them in Circle CI. You can do it as follows:
@@ -418,7 +414,6 @@ workflows:
     jobs:
       - main
 ```
-
 
 ## Next Steps
 

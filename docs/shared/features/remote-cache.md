@@ -1,6 +1,6 @@
 # Use Remote Caching (Nx Replay)
 
-By default Nx [caches task computations locally](/features/cache-task-results). However, to benefit from the cache across your team and in particular on CI, the computation cache can also be distributed across multiple machines. 
+By default Nx [caches task computations locally](/features/cache-task-results). However, to benefit from the cache across your team and in particular on CI, the computation cache can also be distributed across multiple machines.
 
 **Nx Replay** feature of Nx Cloud is a fast, secure and zero-config implementation of remote caching.
 

@@ -1,6 +1,6 @@
 # Configuring CI Using GitLab and Nx
 
-Below is an example of an GitLab setup, building and testing only what is affected. 
+Below is an example of an GitLab setup, building and testing only what is affected.
 
 ```yaml {% fileName=".gitlab-ci.yml" %}
 image: node:18
@@ -46,7 +46,7 @@ test:
   stage: test
   extends: .distributed
   script:
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t test --parallel=3 
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t test --parallel=3
 
 build:
   stage: build

@@ -1,6 +1,6 @@
 # Configuring CI Using Bitbucket Pipelines and Nx
 
-Below is an example of an Bitbucket Pipelines, building and testing only what is affected. 
+Below is an example of an Bitbucket Pipelines, building and testing only what is affected.
 
 ```yaml {% fileName="bitbucket-pipelines.yml" %}
 image: node:20

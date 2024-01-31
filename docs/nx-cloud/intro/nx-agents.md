@@ -5,7 +5,7 @@ src="https://youtu.be/XLOUFZeqRpM"
 title="Nx Agents in action splitting e2e tests at a file level"
  /%}
 
-**Nx Agents** lets you distribute your CI across many machines without adding any configuration to your workspace.  It comes with features such as scaling of agents based on the PR, flaky task re-running, and intelligent task splitting and distribution. Keep reading to learn more.
+**Nx Agents** lets you distribute your CI across many machines without adding any configuration to your workspace. It comes with features such as scaling of agents based on the PR, flaky task re-running, and intelligent task splitting and distribution. Keep reading to learn more.
 
 ## Enabling Nx Agents
 
@@ -17,7 +17,7 @@ Enabling task distribution with Nx Agents can be done in a single line. Simply a
   ...
 ```
 
-This instructs Nx Cloud to distribute tasks across 8 agents of type `linux-medium-js`. `linux-medium-js` is the name of the launch template that will be used to provision the agent. The default launch templates [can be found here](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml) 
+This instructs Nx Cloud to distribute tasks across 8 agents of type `linux-medium-js`. `linux-medium-js` is the name of the launch template that will be used to provision the agent. The default launch templates [can be found here](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml)
 
 You can also define your own "launch templates" (here's an [example from the Nx repo](https://github.com/nrwl/nx/blob/master/.nx/workflows/agents.yaml)):
 
@@ -58,7 +58,7 @@ distribute-on:
 ```
 
 {% callout type="note" title="How is the size of the PR determined?" %}
-To determine the size of the PR, Nx Cloud calculates the relationship between the number of [affected projects](/ci/features/affected) and the total number of projects in the workspace. It then assigns it to one of the three categories: small, medium, or large. 
+To determine the size of the PR, Nx Cloud calculates the relationship between the number of [affected projects](/ci/features/affected) and the total number of projects in the workspace. It then assigns it to one of the three categories: small, medium, or large.
 {% /callout %}
 
 You can then reference it in your CI pipeline configuration:
