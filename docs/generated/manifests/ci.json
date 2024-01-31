@@ -153,14 +153,14 @@
         "tags": ["remote-cache"]
       },
       {
-        "id": "nx-agents",
+        "id": "distribute-task-execution",
         "name": "Distribute Task Execution (Nx Agents)",
         "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
         "mediaImage": "",
-        "file": "nx-cloud/intro/nx-agents",
+        "file": "shared/features/distribute-task-execution",
         "itemList": [],
         "isExternal": false,
-        "path": "/ci/features/nx-agents",
+        "path": "/ci/features/distribute-task-execution",
         "tags": []
       },
       {
@@ -201,15 +201,15 @@
     "path": "/ci/features/remote-cache",
     "tags": ["remote-cache"]
   },
-  "/ci/features/nx-agents": {
-    "id": "nx-agents",
+  "/ci/features/distribute-task-execution": {
+    "id": "distribute-task-execution",
     "name": "Distribute Task Execution (Nx Agents)",
     "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
     "mediaImage": "",
-    "file": "nx-cloud/intro/nx-agents",
+    "file": "shared/features/distribute-task-execution",
     "itemList": [],
     "isExternal": false,
-    "path": "/ci/features/nx-agents",
+    "path": "/ci/features/distribute-task-execution",
     "tags": []
   },
   "/ci/features/on-premise": {

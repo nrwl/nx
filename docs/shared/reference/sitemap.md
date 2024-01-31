@@ -274,7 +274,7 @@
   - [Features](/ci/features)
     - [Run Only Tasks Affected by a PR](/ci/features/affected)
     - [Use Remote Caching (Nx Replay)](/ci/features/remote-cache)
-    - [Distribute Task Execution (Nx Agents)](/ci/features/nx-agents)
+    - [Distribute Task Execution (Nx Agents)](/ci/features/distribute-task-execution)
     - [Set up Nx Cloud On-Premise](/ci/features/on-premise)
   - [Concepts](/ci/concepts)
     - [The Building Blocks of Fast CI](/ci/concepts/building-blocks-fast-ci)

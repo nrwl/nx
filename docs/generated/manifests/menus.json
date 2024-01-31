@@ -5667,8 +5667,8 @@
           },
           {
             "name": "Distribute Task Execution (Nx Agents)",
-            "path": "/ci/features/nx-agents",
-            "id": "nx-agents",
+            "path": "/ci/features/distribute-task-execution",
+            "id": "distribute-task-execution",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5702,8 +5702,8 @@
       },
       {
         "name": "Distribute Task Execution (Nx Agents)",
-        "path": "/ci/features/nx-agents",
-        "id": "nx-agents",
+        "path": "/ci/features/distribute-task-execution",
+        "id": "distribute-task-execution",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

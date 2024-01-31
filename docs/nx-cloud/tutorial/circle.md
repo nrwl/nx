@@ -310,39 +310,69 @@ Merge your PR into the `main` branch when you're ready to move to the next secti
 
 ## Enable Remote Caching And Distributed Task Execution Using Nx Cloud
 
-Reducing the number of tasks to run via [affected commands](/ci/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. Also, as your repository grows, running all the tasks on a single agent will no longer work. The only way to fix it is to distribute your CI across many machines. Let's solve both of these problems using Nx Cloud.
+Only running necessary tasks via [affected commands](/ci/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/features/cache-task-results) on your local machine. But CI and other developer machines will still perform the same tasks on the same code - wasting time and money. Also, as your repository grows, running all the tasks on a single agent will cause the CI pipeline to take too long. The only way to decrease the CI pipeline time is to distribute your CI across many machines. Let's solve both of these problems using Nx Cloud.
 
 ### Connect Your Workspace to Nx Cloud
 
-Create an account on [nx.app](https://nx.app). There are several ways to connect your repository to Nx Cloud. The easiest way is to create an Nx Cloud org based on your GitHub org.
+Create an account on [nx.app](https://nx.app). There are several ways to connect your repository to Nx Cloud.
 
-SCREENSHOT OF THE SCREEN WHERE WE CAN SELECT THE OPTION
+#### Connect Directly Through GitHub
 
-After that connect you repository.
+The easiest way is to create an Nx Cloud organization based on your GitHub organization.
 
-SCREENSHOT OF THE SCREEN WHERE WE CAN SELECT THE OPTION
+![Connect Your VCS Account](/nx-cloud/tutorial/connect-vcs-account.png)
+
+After that, connect you repository.
+
+![Connect Your Repository](/nx-cloud/tutorial/connect-repository.png)
 
 This will send a pull request to your repository that will add the `nxCloudAccessToken` property to `nx.json`.
 
-SCREENSHOT OF THE PR
+![Nx Cloud Setup PR](/nx-cloud/tutorial/nx-cloud-setup-pr.png)
 
 This wires up all the CI for you and configures access. Folks who can see your repository can see your workspace on nx.app.
 
+#### Manually Connect Your Workspace
+
+To manually connect your workspace to Nx Cloud, run the following command in your repository:
+
+```shell
+pnpm nx connect
+```
+
+Click the link in the terminal to claim your workspace on [nx.app](https://nx.app).
+
+The command generates an `nxCloudAccessToken` property inside of `nx.json`. This is a read-only token that should be committed to the repository.
+
 ### Enable Remote Caching using Nx Replay
 
-[Nx Cloud] provides [Nx Replay], which is a powerful, scalable and, very importantly, secure way to share task artifacts across machines. It lets you configure permissions and guarantees the cached artifacts cannot be tempered with.
+[Nx Cloud](https://nx.app) provides [Nx Replay](/ci/features/remote-cache), which is a powerful, scalable and, very importantly, secure way to share task artifacts across machines. It lets you configure permissions and guarantees the cached artifacts cannot be tempered with.
 
-[Nx Replay] is enabled by default. To see it in action, rerun the CI for the PR opened by Nx Cloud.
+[Nx Replay](/ci/features/remote-cache) is enabled by default. To see it in action, rerun the CI for the PR opened by Nx Cloud.
 
 When Circle CI now processes our tasks they'll only take a fraction of the usual time. If you inspect the logs a little closer you'll see a note saying `[remote cache]`, indicating that the output has been pulled from the remote cache rather than running it. The full log of each command will still be printed since Nx restores that from the cache as well.
 
 ![Circle CI after enabling remote caching](/nx-cloud/tutorial/circle-ci-remote-cache.png)
 
-MAYBE SCREENSHOT OF RUN DETAILS PAGE SHOWING REMOTE CACHES EVERYWHERE
+![Run Details with remote cache hits](/nx-cloud/tutorial/nx-cloud-run-details.png)
 
-What is more, if you run say the builds locally, you will also get cache hits:
+What is more, if you run tasks locally, you will also get cache hits:
 
-SCREENSHOT OF TERMINAL SHOWING REMOTE CACHES
+```{% command="nx run-many -t build" %}
+...
+    ✔  nx run express-legacy:build  [remote cache]
+    ✔  nx run nx-plugin-legacy:build  [remote cache]
+    ✔  nx run esbuild-legacy:build  [remote cache]
+    ✔  nx run react-native-legacy:build  [remote cache]
+    ✔  nx run angular-legacy:build  [remote cache]
+    ✔  nx run remix-legacy:build  [remote cache]
+
+ ————————————————————————————————————————————————
+
+ >  NX   Successfully ran target build for 58 projects and 62 tasks they depend on (1m)
+
+   Nx read the output from the cache instead of running the command for 116 out of 120 tasks.
+```
 
 You might also want to learn more about [how to fine-tune caching](/recipes/running-tasks/configure-inputs) to get even better results.
 
@@ -352,7 +382,7 @@ Merge your PR into the `main` branch when you're ready to move to the next secti
 
 The affected command and Nx Replay help speed up the average CI time, but there will be some PRs that affect everything in the repository. The only way to speed up that worst case scenario is through efficient parallelization. The best way to parallelize CI with Nx is to use Nx Agents.
 
-Nx Cloud's Agents feature
+The Nx Agents feature
 
 - takes a command (e.g. `run-many -t build lint test e2e-ci`) and splits it into individual tasks which it then distributes across multiple agents
 - distributes tasks by considering the dependencies between them; e.g. if `e2e-ci` depends on `build`, Nx Cloud will make sure that `build` is executed before `e2e-ci`; it does this across machines
@@ -360,7 +390,7 @@ Nx Cloud's Agents feature
 - collects the results and logs of all the tasks and presents them in a single view
 - automatically shuts down agents when they are no longer needed
 
-Let's enable Nx Cloud agents
+Let's enable Nx Agents
 
 ```
 pnpm nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
@@ -373,15 +403,15 @@ We recommend you add this line right after you check out the repo, before instal
 
 Try it out by creating a new PR with the above changes.
 
-Once Circle CI starts, you should see multiple agents running in parallel:
+Once Circle CI starts, you should see multiple agents running in parallel similar to this:
 
-SCREENSHOT OF CIPE PAGE AGENT VIZ (showing both the top and the bottom)
+![CIPE Agents In Progress](/nx-cloud/tutorial/cipe-agents-in-progress.png)
 
-With this pipeline configuration in place, no matter how large the repository scales, Nx Cloud will adjust and distribute tasks across agents in the optimal way. If CI pipelines start to slow down, just add some agent. One of the main advantages is that such a pipeline definition is declarative. We just give instructions what commands to run, but not how to distribute them. As such even if our monorepo structure changes and evolves over time, the distribution will be taken care of by Nx Cloud.
+With this pipeline configuration in place, no matter how large the repository scales, Nx Cloud will adjust and distribute tasks across agents in the optimal way. If CI pipelines start to slow down, just add some agents. One of the main advantages is that this pipeline definition is declarative. We tell Nx what commands to run, but not how to distribute them. That way even if our monorepo structure changes and evolves over time, the distribution will be taken care of by Nx Cloud.
 
 ### Running Commands Without Distribution
 
-Sometimes you want to distribute most of your commands, but run some of them in Circle CI. You can do it as follows:
+Sometimes you want to distribute most of your commands, but run some of them in Circle CI. You can do this with the `--no-agents` flag as follows:
 
 ```yaml {% fileName=".circleci/config.yml" highlightLines=[24] %}
 version: 2.1

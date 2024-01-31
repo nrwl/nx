@@ -1674,9 +1674,9 @@
             },
             {
               "name": "Distribute Task Execution (Nx Agents)",
-              "id": "nx-agents",
+              "id": "distribute-task-execution",
               "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
-              "file": "nx-cloud/intro/nx-agents"
+              "file": "shared/features/distribute-task-execution"
             },
             {
               "name": "Set up Nx Cloud On-Premise",
