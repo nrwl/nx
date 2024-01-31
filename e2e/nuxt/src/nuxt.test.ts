@@ -51,6 +51,6 @@ describe('Nuxt Plugin', () => {
       `generate @nx/nuxt:storybook-configuration ${app} --generateStories --no-interactive`
     );
     runCLI(`run ${app}:build-storybook --verbose`);
-    checkFilesExist(`dist/storybook/${app}/index.html`);
+    checkFilesExist(`${app}/storybook-static/index.html`);
   }, 300_000);
 });
