@@ -15,11 +15,18 @@ const myVueApp = uniq('my-vue-app');
 describe('@nx/vite/plugin', () => {
   let proj: string;
   let originalEnv: string;
+  beforeAll(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'true';
+  });
+
+  afterAll(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+    cleanupProject();
+  });
 
   describe('with react', () => {
     beforeAll(() => {
-      originalEnv = process.env.NX_ADD_PLUGINS;
-      process.env.NX_ADD_PLUGINS = 'true';
       proj = newProject({
         packages: ['@nx/react', '@nx/vue'],
       });
@@ -30,7 +37,6 @@ describe('@nx/vite/plugin', () => {
     });
 
     afterAll(() => {
-      process.env.NODE_ENV = originalEnv;
       cleanupProject();
     });
 
@@ -83,8 +89,6 @@ describe('@nx/vite/plugin', () => {
     const reactVitest = uniq('reactVitest');
 
     beforeAll(() => {
-      originalEnv = process.env.NX_ADD_PLUGINS;
-      process.env.NX_ADD_PLUGINS = 'false';
       proj = newProject({
         packages: ['@nx/vite', '@nx/react'],
       });
@@ -94,7 +98,6 @@ describe('@nx/vite/plugin', () => {
     });
 
     afterAll(() => {
-      process.env.NODE_ENV = originalEnv;
       cleanupProject();
     });
 

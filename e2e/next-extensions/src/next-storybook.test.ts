@@ -19,8 +19,7 @@ describe('Next.js Storybook', () => {
 
   afterAll(() => cleanupProject());
 
-  // TODO(@ndcunningham): This test is failing, please re-enable when it is fixed.
-  xit('should run a Next.js based Storybook setup', async () => {
+  it('should run a Next.js based Storybook setup', async () => {
     const appName = uniq('app');
 
     runCLI(`generate @nx/next:app ${appName} --no-interactive`);
@@ -37,6 +36,6 @@ describe('Next.js Storybook', () => {
     runCommand(pmc.install);
 
     runCLI(`build-storybook ${appName}`);
-    checkFilesExist(`dist/storybook/${appName}/index.html`);
-  }, 1_000_000);
+    checkFilesExist(`${appName}/storybook-static/index.html`);
+  }, 600_000);
 });

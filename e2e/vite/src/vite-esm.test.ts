@@ -9,7 +9,6 @@ import {
 
 // TODO(jack): This test file can be removed when Vite goes ESM-only.
 // This test ensures that when CJS is gone from the published `vite` package, Nx will continue to work.
-
 describe('Vite ESM tests', () => {
   beforeAll(() =>
     newProject({
@@ -23,7 +22,10 @@ describe('Vite ESM tests', () => {
     runCLI(`generate @nx/react:app ${appName} --bundler=vite`);
 
     // .mts file is needed because Nx will transpile .ts files as CJS
-    renameFile(`${appName}/vite.config.ts`, `${appName}/vite.config.mts`);
+    renameFile(
+      `apps/${appName}/vite.config.ts`,
+      `apps/${appName}/vite.config.mts`
+    );
 
     // Remove CJS entry point for Vite
     updateJson('node_modules/vite/package.json', (json) => {
@@ -37,6 +39,6 @@ describe('Vite ESM tests', () => {
 
     runCLI(`build ${appName}`);
 
-    checkFilesExist(`dist/${appName}/index.html`);
+    checkFilesExist(`dist/apps/${appName}/index.html`);
   });
 });
