@@ -36,7 +36,7 @@
     "@yarnpkg/lockfile": "^1.1.0",
     "@yarnpkg/parsers": "3.0.0-rc.46",
     "@zkochan/js-yaml": "0.0.6",
-    "axios": "^1.5.1",
+    "axios": "^1.6.0",
     "chalk": "^4.1.0",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
