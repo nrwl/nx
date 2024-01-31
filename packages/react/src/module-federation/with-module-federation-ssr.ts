@@ -4,6 +4,10 @@ import { getModuleFederationConfig } from './utils';
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig
 ) {
+  if (global.NX_GRAPH_CREATION) {
+    return (config) => config;
+  }
+
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
     await getModuleFederationConfig(options, {
       isServer: true,

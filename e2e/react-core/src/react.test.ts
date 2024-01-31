@@ -218,14 +218,18 @@ describe('React Applications', () => {
     runCLI(`g @nx/react:redux orange --project=${libName} --skipFormat`);
 
     let lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain(
+      `Successfully ran target lint for project ${appName}`
+    );
     const appTestResults = await runCLIAsync(`test ${appName}`);
     expect(appTestResults.combinedOutput).toContain(
       'Test Suites: 2 passed, 2 total'
     );
 
     lintResults = runCLI(`lint ${libName}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain(
+      `Successfully ran target lint for project ${libName}`
+    );
     const libTestResults = await runCLIAsync(`test ${libName}`);
     expect(libTestResults.combinedOutput).toContain(
       'Test Suites: 2 passed, 2 total'
