@@ -102,8 +102,8 @@ dependencies:
     specifier: ^4.0.1
     version: 4.0.1
   preact:
-    specifier: 10.6.4
-    version: 10.6.4
+    specifier: 10.19.3
+    version: 10.19.3
   react:
     specifier: 18.2.0
     version: 18.2.0
@@ -25378,8 +25378,8 @@ packages:
       source-map-js: 1.0.2
     dev: true
 
-  /preact@10.6.4:
-    resolution: {integrity: sha512-WyosM7pxGcndU8hY0OQlLd54tOU+qmG45QXj2dAYrL11HoyU/EzOSTlpJsirbBr1QW7lICxSsVJJmcmUglovHQ==}
+  /preact@10.19.3:
+    resolution: {integrity: sha512-nHHTeFVBTHRGxJXKkKu5hT8C/YWBkPso4/Gad6xuj5dbptt9iF9NZr9pHbPhBrnT2klheu7mHTxTZ/LjwJiEiQ==}
     dev: false
 
   /prelude-ls@1.1.2:
