@@ -19,6 +19,7 @@ describe('Storybook generators and executors for monorepos', () => {
   beforeAll(async () => {
     proj = newProject({
       packages: ['@nx/react', '@nx/storybook'],
+      unsetProjectNameAndRootFormat: false,
     });
     runCLI(
       `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
@@ -65,10 +66,6 @@ describe('Storybook generators and executors for monorepos', () => {
       createFileSync(
         tmpProjPath(`${reactStorybookApp}/src/app/test-button.tsx`)
       );
-      console.log(
-        'Katerina 1',
-        tmpProjPath(`${reactStorybookApp}/src/app/test-button.tsx`)
-      );
       writeFileSync(
         tmpProjPath(`${reactStorybookApp}/src/app/test-button.tsx`),
         `
@@ -88,10 +85,6 @@ describe('Storybook generators and executors for monorepos', () => {
 
       // create a story in the first lib to reference the cmp from the 2nd lib
       createFileSync(
-        tmpProjPath(`${reactStorybookApp}/src/app/test-button.stories.tsx`)
-      );
-      console.log(
-        'Katerina 1',
         tmpProjPath(`${reactStorybookApp}/src/app/test-button.stories.tsx`)
       );
       writeFileSync(
