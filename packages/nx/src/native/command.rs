@@ -13,6 +13,9 @@ use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
 use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
 
+#[cfg(target_os = "windows")]
+static CURSOR_POSITION: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+
 fn command_builder() -> CommandBuilder {
     if cfg!(target_os = "windows") {
         let comspec = std::env::var("COMSPEC");
@@ -170,6 +173,16 @@ pub fn run_command(
                 // remove cursor position 1,1
                 content = content.replacen("\x1B[H", "", 1);
             }
+
+            #[cfg(target_os = "windows")]
+            {
+                let regex = CURSOR_POSITION.get_or_init(|| {
+                    regex::Regex::new(r"\x1B\[\d+;\d+H")
+                        .expect("failed to compile CURSOR ansi regex")
+                });
+                content = regex.replace_all(&content, "").to_string();
+            }
+
             message_tx.send(content.to_string()).ok();
             if !quiet {
                 stdout.write_all(content.as_bytes()).ok();
