@@ -170,9 +170,6 @@ async function buildProjectGraphUsingContext(
 ) {
   performance.mark('build project graph:start');
 
-  // Set this globally to allow plugins to know if they are being called from the project graph creation
-  global.NX_GRAPH_CREATION = true;
-
   const builder = new ProjectGraphBuilder(null, ctx.fileMap.projectFileMap);
   builder.setVersion(projectGraphVersion);
   for (const node in knownExternalNodes) {
@@ -203,8 +200,6 @@ async function buildProjectGraphUsingContext(
   applyImplicitDependencies(ctx.projects, updatedBuilder);
 
   const finalGraph = updatedBuilder.getUpdatedProjectGraph();
-
-  delete global.NX_GRAPH_CREATION;
 
   performance.mark('build project graph:end');
   performance.measure(
