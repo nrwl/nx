@@ -14,7 +14,7 @@ import { angularStoriesGenerator } from './stories';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
-// TODO(katerina): Nx 18 -> remove Cypress
+// TODO(katerina): Nx 19 -> remove Cypress
 
 describe('angularStories generator: libraries', () => {
   const libName = 'test-ui-lib';

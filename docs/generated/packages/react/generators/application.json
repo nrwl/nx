@@ -2,7 +2,7 @@
   "name": "application",
   "factory": "./src/generators/application/application#applicationGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxReactApp",
     "title": "Create a React Application",
@@ -53,11 +53,11 @@
             { "value": "css", "label": "CSS" },
             {
               "value": "scss",
-              "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
+              "label": "SASS(.scss)       [ https://sass-lang.com                     ]"
             },
             {
               "value": "less",
-              "label": "LESS              [ http://lesscss.org                       ]"
+              "label": "LESS              [ https://lesscss.org                       ]"
             },
             {
               "value": "styled-components",

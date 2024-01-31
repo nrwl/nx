@@ -31,6 +31,7 @@ import {
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
@@ -110,6 +111,10 @@ export async function reactNativeLibraryGeneratorInternal(
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.name);
+  });
 
   return runTasksInSerial(...tasks);
 }

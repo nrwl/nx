@@ -45,7 +45,13 @@ function startAsync(
     childProcess = fork(
       require.resolve('@expo/cli/build/bin/cli'),
       ['start', ...createStartOptions(options)],
-      { cwd: pathResolve(workspaceRoot, projectRoot), env: process.env }
+      {
+        cwd: pathResolve(workspaceRoot, projectRoot),
+        env: {
+          RCT_METRO_PORT: options.port.toString(),
+          ...process.env,
+        },
+      }
     );
 
     // Ensure the child process is killed when the parent exits

@@ -12,6 +12,7 @@ export async function createApp(tree: Tree, appName: string): Promise<void> {
     e2eTestRunner: 'none',
     install: false,
     projectNameAndRootFormat: 'as-provided',
+    bundler: 'webpack',
   });
 }
 

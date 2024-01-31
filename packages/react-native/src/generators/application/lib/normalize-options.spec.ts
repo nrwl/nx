@@ -18,11 +18,14 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       install: false,
       projectNameAndRootFormat: 'as-provided',
+      unitTestRunner: 'none',
+      bundler: 'vite',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
+      fileName: 'my-app',
       className: 'MyApp',
       displayName: 'MyApp',
       iosProjectRoot: 'my-app/ios',
@@ -34,8 +37,12 @@ describe('Normalize Options', () => {
       linter: Linter.EsLint,
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
-      unitTestRunner: 'jest',
+      unitTestRunner: 'none',
       install: false,
+      bundler: 'vite',
+      rootProject: false,
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectRoot: 'my-app-e2e',
     });
   });
 
@@ -45,12 +52,16 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       install: false,
       projectNameAndRootFormat: 'as-provided',
+      linter: Linter.None,
+      unitTestRunner: 'none',
+      bundler: 'vite',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'myApp/android',
       appProjectRoot: 'myApp',
       className: 'MyApp',
+      fileName: 'my-app',
       displayName: 'MyApp',
       iosProjectRoot: 'myApp/ios',
       lowerCaseName: 'myapp',
@@ -60,8 +71,13 @@ describe('Normalize Options', () => {
       projectNameAndRootFormat: 'as-provided',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
-      unitTestRunner: 'jest',
+      unitTestRunner: 'none',
       install: false,
+      bundler: 'vite',
+      linter: Linter.None,
+      rootProject: false,
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectRoot: 'myApp-e2e',
     });
   });
 
@@ -72,12 +88,16 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       install: false,
       projectNameAndRootFormat: 'as-provided',
+      linter: Linter.None,
+      unitTestRunner: 'none',
+      bundler: 'vite',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
       className: 'MyApp',
+      fileName: 'my-app',
       displayName: 'MyApp',
       iosProjectRoot: 'directory/my-app/ios',
       lowerCaseName: 'myapp',
@@ -88,8 +108,13 @@ describe('Normalize Options', () => {
       projectNameAndRootFormat: 'as-provided',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
-      unitTestRunner: 'jest',
+      unitTestRunner: 'none',
       install: false,
+      bundler: 'vite',
+      linter: Linter.None,
+      rootProject: false,
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectRoot: 'directory/my-app-e2e',
     });
   });
 
@@ -99,12 +124,16 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       install: false,
       projectNameAndRootFormat: 'as-provided',
+      linter: Linter.None,
+      unitTestRunner: 'none',
+      bundler: 'vite',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
       className: 'DirectoryMyApp',
+      fileName: 'directory/my-app',
       displayName: 'DirectoryMyApp',
       iosProjectRoot: 'directory/my-app/ios',
       lowerCaseName: 'directorymyapp',
@@ -114,8 +143,13 @@ describe('Normalize Options', () => {
       projectNameAndRootFormat: 'as-provided',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
-      unitTestRunner: 'jest',
+      unitTestRunner: 'none',
       install: false,
+      bundler: 'vite',
+      linter: Linter.None,
+      rootProject: false,
+      e2eProjectName: 'directory/my-app-e2e',
+      e2eProjectRoot: 'directory/my-app-e2e',
     });
   });
 
@@ -126,12 +160,16 @@ describe('Normalize Options', () => {
       e2eTestRunner: 'none',
       install: false,
       projectNameAndRootFormat: 'as-provided',
+      linter: Linter.None,
+      unitTestRunner: 'none',
+      bundler: 'vite',
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
       androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
       className: 'MyApp',
+      fileName: 'my-app',
       displayName: 'My App',
       iosProjectRoot: 'my-app/ios',
       lowerCaseName: 'myapp',
@@ -141,8 +179,13 @@ describe('Normalize Options', () => {
       projectNameAndRootFormat: 'as-provided',
       entryFile: 'src/main.tsx',
       e2eTestRunner: 'none',
-      unitTestRunner: 'jest',
+      unitTestRunner: 'none',
       install: false,
+      bundler: 'vite',
+      linter: Linter.None,
+      rootProject: false,
+      e2eProjectName: 'my-app-e2e',
+      e2eProjectRoot: 'my-app-e2e',
     });
   });
 });

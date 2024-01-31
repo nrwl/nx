@@ -5,7 +5,7 @@ export interface ErrorBoundarySchema {
   skipFormat?: false;
   nameAndDirectoryFormat?: NameAndDirectoryFormat;
   /**
-   * @deprecated Provide the `path` option instead. The project will be determined from the path provided. It will be removed in Nx v18.
+   * @deprecated Provide the `path` option instead. The project will be determined from the path provided. It will be removed in Nx v19.
    */
   project?: string;
 }

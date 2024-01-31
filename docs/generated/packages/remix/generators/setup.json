@@ -2,7 +2,7 @@
   "name": "setup",
   "implementation": "/packages/remix/src/generators/setup/setup.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixSetup",
     "title": "",
     "type": "object",

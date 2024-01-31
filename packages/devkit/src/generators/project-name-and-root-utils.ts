@@ -130,7 +130,7 @@ function logDeprecationMessage(
   formats: ProjectNameAndRootFormats
 ) {
   logger.warn(stripIndents`
-    In Nx 18, generating projects will no longer derive the name and root.
+    In Nx 19, generating projects will no longer derive the name and root.
     Please provide the exact project name and root in the future.
     Example: nx g ${callingGenerator} ${formats['derived'].projectName} --directory ${formats['derived'].projectRoot}
   `);

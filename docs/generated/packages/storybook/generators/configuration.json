@@ -2,7 +2,7 @@
   "name": "configuration",
   "factory": "./src/generators/configuration/configuration",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxStorybookConfigure",
     "title": "Storybook Configuration",
@@ -28,12 +28,12 @@
       "configureCypress": {
         "type": "boolean",
         "description": "Run the cypress-configure generator.",
-        "x-deprecated": "Use interactionTests instead. This option will be removed in v18."
+        "x-deprecated": "Use interactionTests instead. This option will be removed in v19."
       },
       "cypressDirectory": {
         "type": "string",
         "description": "A directory where the Cypress project will be placed. Added at root by default.",
-        "x-deprecated": "Use interactionTests instead. This option will be removed in v18."
+        "x-deprecated": "Use interactionTests instead. This option will be removed in v19."
       },
       "linter": {
         "description": "The tool to use for running lint checks.",
@@ -62,13 +62,6 @@
         "type": "boolean",
         "description": "Add a static-storybook to serve the static storybook built files.",
         "default": false
-      },
-      "bundler": {
-        "description": "The Storybook builder to use.",
-        "type": "string",
-        "enum": ["vite", "webpack"],
-        "default": "webpack",
-        "x-priority": "important"
       },
       "uiFramework": {
         "type": "string",

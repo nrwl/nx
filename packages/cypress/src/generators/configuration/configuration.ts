@@ -264,7 +264,9 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
     options: {
       cypressConfig: joinPathFragments(
         projectConfig.root,
-        cyVersion && cyVersion < 10 ? 'cypress.json' : 'cypress.config.ts'
+        cyVersion && cyVersion < 10
+          ? 'cypress.json'
+          : `cypress.config.${opts.js ? 'js' : 'ts'}`
       ),
       testingType: 'e2e',
     },

@@ -30,6 +30,7 @@
       "bundler": "metro"
     },
     "plugins": [
+      <% if (e2eTestRunner === 'detox') { %>
       [
         "@config-plugins/detox",
         {
@@ -37,6 +38,7 @@
           "subdomains": ["10.0.2.2", "localhost"]
         }
       ]
+      <% } %>
     ]
   }
 }

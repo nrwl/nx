@@ -11,6 +11,10 @@ import {
 } from '../sync-deps/sync-deps.impl';
 import { writeFileSync } from 'fs-extra';
 
+/**
+ * TODO (@xiongemi): remove this function in v19.
+ * @deprecated Going to use the default react storybook target. Use @nx/react:storybook executor instead.
+ */
 export default async function* reactNativeStorybookExecutor(
   options: ReactNativeStorybookOptions,
   context: ExecutorContext
@@ -28,21 +32,15 @@ export default async function* reactNativeStorybookExecutor(
   if (fileExists(packageJsonPath))
     displayNewlyAddedDepsMessage(
       context.projectName,
-      await syncDeps(
-        context.projectName,
-        projectRoot,
-        context.root,
-        context.projectGraph,
-        [
-          `@storybook/react-native`,
-          '@storybook/addon-ondevice-actions',
-          '@storybook/addon-ondevice-backgrounds',
-          '@storybook/addon-ondevice-controls',
-          '@storybook/addon-ondevice-notes',
-          '@react-native-async-storage/async-storage',
-          'react-native-safe-area-context',
-        ]
-      )
+      await syncDeps(projectRoot, context.root, [
+        `@storybook/react-native`,
+        '@storybook/addon-ondevice-actions',
+        '@storybook/addon-ondevice-backgrounds',
+        '@storybook/addon-ondevice-controls',
+        '@storybook/addon-ondevice-notes',
+        '@react-native-async-storage/async-storage',
+        'react-native-safe-area-context',
+      ])
     );
 
   runCliStorybook(context.root, options);

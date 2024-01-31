@@ -133,7 +133,7 @@ function defaultReadFileAtRevision(
 }
 
 /**
- * TODO(v18): Remove this function
+ * TODO(v19): Remove this function
  * @deprecated To get projects use {@link retrieveProjectConfigurations} instead
  */
 export function readWorkspaceConfig(opts: {
@@ -179,7 +179,7 @@ export { FileData };
 export { readNxJson, workspaceLayout } from '../config/configuration';
 
 /**
- * TODO(v18): Remove this function.
+ * TODO(v19): Remove this function.
  */
 function getProjectsSyncNoInference(root: string, nxJson: NxJsonConfiguration) {
   const projectFiles = retrieveProjectConfigurationPaths(

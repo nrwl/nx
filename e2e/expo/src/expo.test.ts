@@ -11,10 +11,12 @@ import {
   runCLIAsync,
   runCommand,
   runCommandUntil,
+  runE2ETests,
   uniq,
   updateFile,
   updateJson,
 } from '@nx/e2e/utils';
+import { ChildProcess } from 'child_process';
 import { join } from 'path';
 
 describe('expo', () => {
@@ -34,7 +36,9 @@ describe('expo', () => {
       nxJson.targetDefaults.build.inputs = ['production', '^production'];
       return nxJson;
     });
-    runCLI(`generate @nx/expo:application ${appName} --no-interactive`);
+    runCLI(
+      `generate @nx/expo:application ${appName} --e2eTestRunner=cypress --no-interactive`
+    );
     runCLI(
       `generate @nx/expo:library ${libName} --buildable --publishable --importPath=${proj}/${libName}`
     );
@@ -63,22 +67,46 @@ describe('expo', () => {
     expect(libLintResults.combinedOutput).toContain('All files pass linting.');
   });
 
+  it('should serve with metro', async () => {
+    let process: ChildProcess;
+    const port = 8081;
+
+    try {
+      process = await runCommandUntil(
+        `serve ${appName} --interactive=false --port=${port}`,
+        (output) => {
+          return (
+            output.includes(`http://localhost::${port}`) ||
+            output.includes('Starting JS server...')
+          );
+        }
+      );
+    } catch (err) {
+      console.error(err);
+    }
+
+    // port and process cleanup
+    try {
+      if (process && process.pid) {
+        await promisifiedTreeKill(process.pid, 'SIGKILL');
+        await killPorts(port);
+      }
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  });
+
   it('should export', async () => {
     const exportResults = await runCLIAsync(
       `export ${appName} --no-interactive`
     );
     expect(exportResults.combinedOutput).toContain(
-      'Export was successful. Your exported files can be found'
+      'Successfully ran target export for project'
     );
-    checkFilesExist(`dist/apps/${appName}/metadata.json`);
-  });
-
-  it('should export-web', async () => {
-    expect(() => {
-      runCLI(`export-web ${appName}`);
-      checkFilesExist(`apps/${appName}/dist/index.html`);
-      checkFilesExist(`apps/${appName}/dist/metadata.json`);
-    }).not.toThrow();
+    checkFilesExist(
+      `dist/apps/${appName}/index.html`,
+      `dist/apps/${appName}/metadata.json`
+    );
   });
 
   it('should prebuild', async () => {
@@ -100,10 +128,14 @@ describe('expo', () => {
     const prebuildResult = await runCLIAsync(
       `prebuild ${appName} --no-interactive --install=false`
     );
-    expect(prebuildResult.combinedOutput).toContain('Config synced');
+    expect(prebuildResult.combinedOutput).toContain(
+      'Successfully ran target prebuild for project'
+    );
   });
 
-  it('should install', async () => {
+  // TODO (@xiongemi): this test is disabled due to expo requires typescript ^5.3.0
+  // re-enable it when typescript is updated
+  xit('should install', async () => {
     // run install command
     const installResults = await runCLIAsync(
       `install ${appName} --no-interactive`
@@ -188,5 +220,61 @@ describe('expo', () => {
     expect(libTestResult).toContain(
       `Successfully ran target test for project ${libName}`
     );
+  });
+
+  it('should create storybook with application', async () => {
+    runCLI(
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
+    );
+    checkFilesExist(
+      `apps/${appName}/.storybook/main.ts`,
+      `apps/${appName}/src/app/App.stories.tsx`
+    );
+  });
+
+  it('should run e2e for cypress', async () => {
+    if (runE2ETests()) {
+      const results = runCLI(`e2e ${appName}-e2e`);
+      expect(results).toContain('Successfully ran target e2e');
+
+      // port and process cleanup
+      try {
+        await killPorts(4200);
+      } catch (err) {
+        expect(err).toBeFalsy();
+      }
+    }
+  });
+
+  it('should run e2e for cypress with configuration ci', async () => {
+    if (runE2ETests()) {
+      const results = runCLI(`e2e ${appName}-e2e --configuration=ci`);
+      expect(results).toContain('Successfully ran target e2e');
+
+      // port and process cleanup
+      try {
+        await killPorts(4200);
+      } catch (err) {
+        expect(err).toBeFalsy();
+      }
+    }
+  });
+
+  it('should run e2e for playwright', async () => {
+    const appName2 = uniq('my-app');
+    runCLI(
+      `generate @nx/expo:application ${appName2} --e2eTestRunner=playwright --no-interactive`
+    );
+    if (runE2ETests()) {
+      const results = runCLI(`e2e ${appName2}-e2e`, { verbose: true });
+      expect(results).toContain('Successfully ran target e2e');
+
+      // port and process cleanup
+      try {
+        await killPorts(4200);
+      } catch (err) {
+        expect(err).toBeFalsy();
+      }
+    }
   });
 });

@@ -83,7 +83,7 @@ As a reminder, we now only support MongoDB 6+. If you are running an older versi
 
 ### 2308.22.7.patch5
 
-- Fixes a UI issue when navigating to branches containg slashes
+- Fixes a UI issue when navigating to branches containing slashes
 
 ### 2308.22.7.patch4
 
@@ -203,7 +203,7 @@ You can read more about the recent DTE improvements in our [Nx Cloud 3.0 blog po
 
 ##### Breaking changes
 
-Nx Cloud uses MongoDB internally as its data store. While we've always used Mongo 4.2, in the latest release we started targetting Mongo 6.0. It's a much lighter process, with improved performance, and quicker reads and writes.
+Nx Cloud uses MongoDB internally as its data store. While we've always used Mongo 4.2, in the latest release we started targeting Mongo 6.0. It's a much lighter process, with improved performance, and quicker reads and writes.
 
 While you can still upgrade to this new image even if you are on Mongo 4.2 (nothing will break), **we strongly recommend you upgrade your Database to Mongo 6.0 to make sure nothing breaks in the future.** [We wrote a full guide on how you can approach the upgrade here](https://github.com/nrwl/nx-cloud-helm/blob/main/MONGO-OPERATOR-GUIDE.md#upgrading-to-mongo-6).
 If you need assistance, please get in touch at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io).
