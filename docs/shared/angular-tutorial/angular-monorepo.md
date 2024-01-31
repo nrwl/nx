@@ -125,7 +125,389 @@ Nx uses the following syntax to run tasks:
 
 ![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
-All targets, such as `serve`, `build`, `test` or your custom ones, are defined in the `project.json` file.
+### Inferred Tasks
+
+Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors) project detail view or run:
+
+```shell
+nx show project angular-store --web
+```
+
+{% project-details title="Project Details View" height="100px" %}
+
+```json
+{
+  "project": {
+    "name": "angular-store",
+    "data": {
+      "root": "apps/angular-store",
+      "targets": {
+        "lint": {
+          "cache": true,
+          "options": {
+            "cwd": "apps/angular-store",
+            "command": "eslint ."
+          },
+          "inputs": [
+            "default",
+            "{workspaceRoot}/.eslintrc.json",
+            "{workspaceRoot}/apps/angular-store/.eslintrc.json",
+            "{workspaceRoot}/tools/eslint-rules/**/*",
+            {
+              "externalDependencies": ["eslint"]
+            }
+          ],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        },
+        "test": {
+          "options": {
+            "cwd": "apps/angular-store",
+            "command": "jest"
+          },
+          "cache": true,
+          "inputs": [
+            "default",
+            "^production",
+            {
+              "externalDependencies": ["jest"]
+            }
+          ],
+          "outputs": ["{workspaceRoot}/coverage/apps/angular-store"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        },
+        "build": {
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": ["production", "^production"],
+          "executor": "@angular-devkit/build-angular:application",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/apps/angular-store",
+            "index": "apps/angular-store/src/index.html",
+            "browser": "apps/angular-store/src/main.ts",
+            "polyfills": ["zone.js"],
+            "tsConfig": "apps/angular-store/tsconfig.app.json",
+            "assets": [
+              "apps/angular-store/src/favicon.ico",
+              "apps/angular-store/src/assets"
+            ],
+            "styles": ["apps/angular-store/src/styles.css"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kb",
+                  "maximumError": "1mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kb",
+                  "maximumError": "4kb"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "executor": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "angular-store:build:production"
+            },
+            "development": {
+              "buildTarget": "angular-store:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {}
+        },
+        "extract-i18n": {
+          "executor": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "buildTarget": "angular-store:build"
+          },
+          "configurations": {}
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "angular-store:build",
+            "staticFilePath": "dist/apps/angular-store/browser"
+          },
+          "configurations": {}
+        }
+      },
+      "name": "angular-store",
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "projectType": "application",
+      "prefix": "angular-monorepo",
+      "sourceRoot": "apps/angular-store/src",
+      "tags": [],
+      "implicitDependencies": []
+    }
+  },
+  "sourceMap": {
+    "root": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "targets": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "targets.lint": ["apps/angular-store/project.json", "@nx/eslint/plugin"],
+    "targets.lint.cache": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.options": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.inputs": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.executor": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.options.cwd": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.options.command": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.test": ["apps/angular-store/jest.config.ts", "@nx/jest/plugin"],
+    "targets.test.options": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.cache": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.inputs": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.outputs": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.executor": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.options.cwd": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.options.command": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.build": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.cache": [
+      "apps/angular-store/project.json",
+      "nx/core/target-defaults"
+    ],
+    "targets.build.dependsOn": [
+      "apps/angular-store/project.json",
+      "nx/core/target-defaults"
+    ],
+    "targets.build.inputs": [
+      "apps/angular-store/project.json",
+      "nx/core/target-defaults"
+    ],
+    "name": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "$schema": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "projectType": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "prefix": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "sourceRoot": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "tags": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "targets.build.executor": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.outputs": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.defaultConfiguration": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.outputPath": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.index": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.browser": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.polyfills": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.tsConfig": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.assets": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.styles": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.scripts": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.budgets": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.outputHashing": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.optimization": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.extractLicenses": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.sourceMap": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.executor": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.defaultConfiguration": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.production": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.production.buildTarget": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.development": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.development.buildTarget": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.extract-i18n": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.extract-i18n.executor": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.extract-i18n.options": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.extract-i18n.options.buildTarget": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static.executor": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static.options": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static.options.buildTarget": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static.options.staticFilePath": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ]
+  }
+}
+```
+
+{% /project-details %}
+
+If you expand the `test` task, you can see that it was created by the `@nx/jest` plugin by analyzing your `jest.config.ts` file. Notice the outputs are defined as `{workspaceRoot}/coverage/apps/angular-store`. This value is being read from the `coverageDirectory` defined in your `jest.config.ts` file. Let's change that value in your `jest.config.ts` file:
+
+```ts {% fileName="apps/angular-store/jest.config.ts" %}
+export default {
+  // ...
+  coverageDirectory: '../../coverage/apps/angular-store-changed',
+  // ...
+};
+```
+
+Now if you look at the project details view, the outputs for the `test` target will say `{workspaceRoot}/coverage/apps/angular-store-changed`. This feature ensures that Nx will always cache the correct files.
+
+You can also override the settings for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
+
+### Manually Defined Tasks
+
+The `serve` and `build` tasks are defined in the `project.json` file.
 
 ```json {% fileName="apps/angular-store/project.json"}
 {
@@ -135,8 +517,6 @@ All targets, such as `serve`, `build`, `test` or your custom ones, are defined i
     "build": { ... },
     "serve": { ... },
     "extract-i18n": { ... },
-    "lint": { ... },
-    "test": { ... },
     "serve-static": { ... },
   },
 }
@@ -385,7 +765,7 @@ All libraries that we generate automatically have aliases created in the root-le
 Hence we can easily import them into other libraries and our Angular application. As an example, let's create and expose a `ProductListComponent` component from our `libs/products` library. Either create it by hand or run
 
 ```shell
-nx g @nx/angular:component product-list --directory=libs/products/src/lib/product-list --nameAndDirectoryFormat=as-provided --standalone --export
+nx g @nx/angular:component product-list --directory=libs/products/src/lib/product-list --standalone --export
 ```
 
 We don't need to implement anything fancy as we just want to learn how to import it into our main Angular application.
@@ -835,7 +1215,7 @@ Nx comes with a generic mechanism that allows you to assign "tags" to projects. 
 ```json {% fileName="libs/orders/project.json" %}
 {
   ...
-  "tags": ["type:feature", "scope:orders"]
+  "tags": ["type:feature", "scope:orders"],
 }
 ```
 
@@ -844,7 +1224,7 @@ Then go to the `project.json` of your `products` library and assign the tags `ty
 ```json {% fileName="libs/products/project.json" %}
 {
   ...
-  "tags": ["type:feature", "scope:products"]
+  "tags": ["type:feature", "scope:products"],
 }
 ```
 
@@ -853,7 +1233,7 @@ Finally, go to the `project.json` of the `shared-ui` library and assign the tags
 ```json {% fileName="libs/shared/ui/project.json" %}
 {
   ...
-  "tags": ["type:ui", "scope:shared"]
+  "tags": ["type:ui", "scope:shared"],
 }
 ```
 
