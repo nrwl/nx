@@ -1,7 +1,6 @@
 import { ExecutorContext, names } from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { ExpoInstallOptions } from './schema';
 
 export interface ExpoInstallOutput {
@@ -19,7 +18,6 @@ export default async function* installExecutor(
 
   try {
     await installAsync(context.root, options);
-    ensureNodeModulesSymlink(context.root, projectRoot);
 
     yield {
       success: true,

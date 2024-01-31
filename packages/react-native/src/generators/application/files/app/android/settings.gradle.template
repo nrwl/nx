@@ -1,4 +1,4 @@
 rootProject.name = '<%= className %>'
-apply from: file("../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
+apply from: file("<%= offsetFromRoot %>../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesSettingsGradle(settings)
 include ':app'
-includeBuild('../node_modules/@react-native/gradle-plugin')
+includeBuild('<%= offsetFromRoot %>../node_modules/@react-native/gradle-plugin')

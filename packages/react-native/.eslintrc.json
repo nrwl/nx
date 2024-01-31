@@ -32,7 +32,12 @@
               "react-native",
               // These are in ensurePackage
               "@nx/rollup",
-              "@nx/storybook"
+              "@nx/storybook",
+              "@nx/vite",
+              "@nx/webpack",
+              "@nx/detox",
+              "@nx/cypress",
+              "@nx/playwright"
             ]
           }
         ]

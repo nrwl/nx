@@ -63,13 +63,6 @@
       "description": "Add a static-storybook to serve the static storybook built files.",
       "default": false
     },
-    "bundler": {
-      "description": "The Storybook builder to use.",
-      "type": "string",
-      "enum": ["vite", "webpack"],
-      "default": "webpack",
-      "x-priority": "important"
-    },
     "uiFramework": {
       "type": "string",
       "description": "Storybook UI Framework to use.",

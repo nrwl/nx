@@ -14,5 +14,4 @@ export type UiFramework =
   | '@storybook/vue3-webpack5'
   | '@storybook/vue3-vite'
   | '@storybook/web-components-webpack5'
-  | '@storybook/web-components-vite'
-  | '@storybook/react-native';
+  | '@storybook/web-components-vite';

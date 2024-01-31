@@ -26,6 +26,7 @@ import {
   createProjectStorybookDir,
   createStorybookTsconfigFile,
   editTsconfigBaseJson,
+  findMetroConfig,
   findNextConfig,
   findViteConfig,
   getE2EProjectName,
@@ -71,6 +72,7 @@ export async function configurationGenerator(
   const viteConfigFilePath = viteConfig?.fullConfigPath;
   const viteConfigFileName = viteConfig?.viteConfigFileName;
   const nextConfigFilePath = findNextConfig(tree, root);
+  const metroConfigFilePath = findMetroConfig(tree, root);
 
   if (viteConfigFilePath) {
     if (schema.uiFramework === '@storybook/react-webpack5') {
@@ -118,6 +120,7 @@ export async function configurationGenerator(
 
   const usesVite =
     !!viteConfigFilePath || schema.uiFramework?.endsWith('-vite');
+  const useReactNative = !!metroConfigFilePath;
 
   createProjectStorybookDir(
     tree,
@@ -135,7 +138,8 @@ export async function configurationGenerator(
     usesVite,
     viteConfigFilePath,
     hasPlugin,
-    viteConfigFileName
+    viteConfigFileName,
+    useReactNative
   );
 
   if (schema.uiFramework !== '@storybook/angular') {
