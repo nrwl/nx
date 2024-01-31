@@ -432,7 +432,11 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       const { ensureDependencies } = await import(
         '@nx/webpack/src/utils/ensure-dependencies'
       );
-      tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
+      tasks.push(
+        ensureDependencies(tree, {
+          uiFramework: options.isNest ? 'none' : 'react',
+        })
+      );
     }
   }
 
