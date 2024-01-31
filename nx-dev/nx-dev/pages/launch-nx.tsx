@@ -4,7 +4,7 @@ import {
   LaunchWeekAnnouncements,
   LaunchWeekSpeakers,
   LaunchNxCommunityPartners,
-  ConfHealthAndSafety,
+  CodeOfConduct,
 } from '@nx/nx-dev/ui-conference';
 import { NextSeo } from 'next-seo';
 import Link from 'next/link';
@@ -195,12 +195,12 @@ export default function ConfPage(): JSX.Element {
                 >
                   Community Partners
                 </Link>
-                {/* <Link
+                <Link
                   href="#code-of-conduct"
                   className="cursor-pointer bg-white/40 py-8 transition hover:bg-white dark:bg-slate-800/60 dark:hover:bg-slate-800"
                 >
                   Code of Conduct
-                </Link> */}
+                </Link>
               </div>
             </div>
           </div>
@@ -247,8 +247,8 @@ export default function ConfPage(): JSX.Element {
           </div>
           <LaunchNxCommunityPartners />
 
-          {/*HEALTH AND SAFETY*/}
-          {/* <div className="mx-auto max-w-screen-lg px-5 py-5 xl:max-w-screen-xl">
+          {/*CODE OF CONDUCT*/}
+          <div className="mx-auto max-w-screen-lg px-5 py-5 xl:max-w-screen-xl">
             <div className="mt-24">
               <h2
                 id="code-of-conduct"
@@ -258,7 +258,7 @@ export default function ConfPage(): JSX.Element {
               </h2>
             </div>
           </div>
-          <ConfHealthAndSafety /> */}
+          <CodeOfConduct />
         </div>
       </main>
       <Footer />
