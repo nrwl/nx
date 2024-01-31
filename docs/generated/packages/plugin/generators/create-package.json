@@ -2,7 +2,7 @@
   "name": "create-package",
   "factory": "./src/generators/create-package/create-package#createPackageGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxPluginCreatePackage",
     "title": "Create a framework package",

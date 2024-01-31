@@ -2,7 +2,7 @@
   "name": "redux",
   "factory": "./src/generators/redux/redux#reduxGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "redux",
     "title": "Create Redux state",
@@ -20,7 +20,7 @@
         "description": "The name of the project to add the slice to. If it is an application, then the store configuration will be updated too.",
         "alias": "p",
         "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
       },
       "directory": {
         "type": "string",

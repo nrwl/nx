@@ -16,7 +16,7 @@ pub fn hash_workspace_files(
 
     let Some(file_set) = file_set else {
         warn!(
-            "{workspace_file_set} does not start with {}. This will throw an error in Nx 18.",
+            "{workspace_file_set} does not start with {}. This will throw an error in Nx 19.",
             "{workspaceRoot}/"
         );
         return Ok(hash(b""));

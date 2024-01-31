@@ -2,7 +2,7 @@
   "name": "executor",
   "factory": "./src/generators/executor/executor#executorGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxPluginExecutor",
     "title": "Create an Executor for an Nx Plugin",
@@ -60,7 +60,7 @@
         "description": "The name of the project.",
         "alias": "p",
         "$default": { "$source": "projectName" },
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
       },
       "skipFormat": {
         "type": "boolean",

@@ -47,7 +47,7 @@ The `@nx/javascript` ESLint plugin contains best practices when using JavaScript
 
 ### TypeScript
 
-The `@nx/typescript` ESLint plugin contains best practices when using TypeSript.
+The `@nx/typescript` ESLint plugin contains best practices when using TypeScript.
 
 ### Angular
 

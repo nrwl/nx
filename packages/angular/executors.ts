@@ -11,9 +11,9 @@ export * from './src/executors/application/application.impl';
 import { executeDevServerBuilder } from './src/builders/dev-server/dev-server.impl';
 
 export {
-  // TODO(v18): remove this alias
+  // TODO(v19): remove this alias
   /**
-   * @deprecated Use executeDevServerBuilder instead. It will be removed in Nx v18.
+   * @deprecated Use executeDevServerBuilder instead. It will be removed in Nx v19.
    */
   executeDevServerBuilder as executeWebpackDevServerBuilder,
   executeDevServerBuilder,

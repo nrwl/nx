@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxTypescriptLibrary",
   "cli": "nx",
   "title": "Convert a TSC library to SWC",

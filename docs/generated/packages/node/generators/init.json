@@ -2,7 +2,7 @@
   "name": "init",
   "factory": "./src/generators/init/init",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxNodeInit",
     "title": "Init Node Plugin",

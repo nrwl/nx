@@ -17,6 +17,7 @@ import { createApplicationFiles } from './lib/create-application-files';
 import { addVite } from './lib/add-vite';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -80,6 +81,10 @@ export async function applicationGenerator(
   if (options.js) toJS(tree);
 
   if (!options.skipFormat) await formatFiles(tree);
+
+  tasks.push(() => {
+    logShowProjectCommand(options.projectName);
+  });
 
   return runTasksInSerial(...tasks);
 }

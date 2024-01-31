@@ -4,7 +4,7 @@
   "schema": {
     "cli": "nx",
     "$id": "NxExpoInit",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "description": "Add Nx Expo Schematics.",
     "type": "object",
     "properties": {
@@ -23,6 +23,12 @@
         "type": "boolean",
         "x-priority": "internal",
         "description": "Keep existing dependencies versions",
+        "default": false
+      },
+      "updatePackageScripts": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Update `package.json` scripts with inferred targets",
         "default": false
       }
     },

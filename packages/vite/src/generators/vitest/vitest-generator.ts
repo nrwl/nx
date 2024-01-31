@@ -40,6 +40,11 @@ export async function vitestGenerator(
     schema.project
   );
 
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
+  const initTask = await initGenerator(tree, { skipFormat: true });
+  tasks.push(initTask);
+  tasks.push(ensureDependencies(tree, schema));
+
   const nxJson = readNxJson(tree);
   const hasPluginCheck = nxJson.plugins?.some(
     (p) =>
@@ -54,11 +59,6 @@ export async function vitestGenerator(
       'test';
     addOrChangeTestTarget(tree, schema, testTarget);
   }
-
-  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
-  const initTask = await initGenerator(tree, { skipFormat: true });
-  tasks.push(initTask);
-  tasks.push(ensureDependencies(tree, schema));
 
   if (!schema.skipViteConfig) {
     if (schema.uiFramework === 'react') {

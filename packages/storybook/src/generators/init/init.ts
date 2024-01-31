@@ -9,7 +9,9 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { gte } from 'semver';
+import { createNodes } from '../../plugins/plugin';
 import {
   addPlugin,
   getInstalledStorybookVersion,
@@ -17,6 +19,7 @@ import {
 } from '../../utils/utilities';
 import { nxVersion, storybookVersion } from '../../utils/versions';
 import { Schema } from './schema';
+import { updateGitignore } from './lib/update-gitignore';
 
 function checkDependenciesInstalled(
   host: Tree,
@@ -90,6 +93,7 @@ function moveToDevDependencies(tree: Tree): GeneratorCallback {
 export async function initGenerator(tree: Tree, schema: Schema) {
   if (process.env.NX_PCV3 === 'true') {
     addPlugin(tree);
+    updateGitignore(tree);
   } else {
     addCacheableOperation(tree);
   }
@@ -98,6 +102,10 @@ export async function initGenerator(tree: Tree, schema: Schema) {
   if (!schema.skipPackageJson) {
     tasks.push(moveToDevDependencies(tree));
     tasks.push(checkDependenciesInstalled(tree, schema));
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!schema.skipFormat) {

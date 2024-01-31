@@ -6,7 +6,9 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 
+import { createNodes } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';
 import {
   addPlugin,
@@ -57,6 +59,10 @@ export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
   if (!schema.skipPackageJson) {
     tasks.push(moveToDevDependencies(tree));
     tasks.push(checkDependenciesInstalled(tree, schema));
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!schema.skipFormat) {

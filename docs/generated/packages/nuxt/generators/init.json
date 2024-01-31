@@ -2,7 +2,7 @@
   "name": "init",
   "factory": "./src/generators/init/init",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxNuxtInit",
     "title": "Init Nuxt Plugin",
     "description": "Initialize a Nuxt Plugin.",
@@ -23,6 +23,12 @@
         "type": "boolean",
         "x-priority": "internal",
         "description": "Keep existing dependencies versions",
+        "default": false
+      },
+      "updatePackageScripts": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Update `package.json` scripts with inferred targets",
         "default": false
       }
     },

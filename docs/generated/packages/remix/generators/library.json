@@ -2,7 +2,7 @@
   "name": "library",
   "implementation": "/packages/remix/src/generators/library/library.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixLibrary",
     "title": "Create a Library",
     "description": "Generate a Remix library to help structure workspace and application.",

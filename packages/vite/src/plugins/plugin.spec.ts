@@ -3,10 +3,11 @@ import { createNodes } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 
 jest.mock('vite', () => ({
-  loadConfigFromFile: jest.fn().mockImplementation(() => {
+  resolveConfig: jest.fn().mockImplementation(() => {
     return Promise.resolve({
       path: 'vite.config.ts',
       config: {},
+      build: {},
       dependencies: [],
     });
   }),
@@ -14,7 +15,7 @@ jest.mock('vite', () => ({
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
-    loadConfigFromFile: jest.fn().mockResolvedValue({
+    resolveConfig: jest.fn().mockResolvedValue({
       path: 'vite.config.ts',
       config: {},
       dependencies: [],
@@ -26,7 +27,9 @@ describe('@nx/vite/plugin', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
   describe('root project', () => {
+    let tempFs;
     beforeEach(async () => {
+      tempFs = new TempFs('');
       context = {
         nxJsonConfiguration: {
           // These defaults should be overridden by plugin
@@ -43,6 +46,7 @@ describe('@nx/vite/plugin', () => {
         },
         workspaceRoot: '',
       };
+      tempFs.createFileSync('index.html', '');
     });
 
     afterEach(() => {
@@ -67,8 +71,9 @@ describe('@nx/vite/plugin', () => {
   });
 
   describe('not root project', () => {
-    const tempFs = new TempFs('test');
+    let tempFs;
     beforeEach(() => {
+      tempFs = new TempFs('test');
       context = {
         nxJsonConfiguration: {
           namedInputs: {
@@ -84,6 +89,7 @@ describe('@nx/vite/plugin', () => {
         JSON.stringify({ name: 'my-app' })
       );
       tempFs.createFileSync('my-app/vite.config.ts', '');
+      tempFs.createFileSync('my-app/index.html', '');
     });
 
     afterEach(() => {

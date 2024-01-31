@@ -3,6 +3,7 @@ import {
   joinPathFragments,
   stripIndents,
   type Tree,
+  updateJson,
   workspaceRoot,
 } from '@nx/devkit';
 import {
@@ -55,6 +56,32 @@ export function updateUnitTestConfig(
         .replace('jest.preset.js', 'jest.preset.cjs')
     );
   }
+
+  const pathToTsConfigSpec = joinPathFragments(
+    pathToRoot,
+    `tsconfig.spec.json`
+  );
+
+  updateJson(tree, pathToTsConfigSpec, (json) => {
+    json.includes = [
+      'vite.config.ts',
+      'vitest.config.ts',
+      'app/**/*.ts',
+      'app/**/*.tsx',
+      'app/**/*.js',
+      'app/**/*.jsx',
+      'tests/**/*.spec.ts',
+      'tests/**/*.test.ts',
+      'tests/**/*.spec.tsx',
+      'tests/**/*.test.tsx',
+      'tests/**/*.spec.js',
+      'tests/**/*.test.js',
+      'tests/**/*.spec.jsx',
+      'tests/**/*.test.jsx',
+    ];
+
+    return json;
+  });
 
   return addDependenciesToPackageJson(
     tree,

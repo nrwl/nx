@@ -15,7 +15,6 @@ import { existsSync, readdirSync } from 'fs';
 
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { type NextConfig } from 'next';
 import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 import { getLockFileName } from '@nx/js';
 
@@ -114,7 +113,7 @@ async function buildNextTargets(
 async function getBuildTargetConfig(
   namedInputs: { [inputName: string]: any[] },
   projectRoot: string,
-  nextConfig: NextConfig
+  nextConfig: any
 ) {
   const nextOutputPath = await getOutputs(projectRoot, nextConfig);
   // Set output path here so that `withNx` can pick it up.

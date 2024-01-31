@@ -74,7 +74,11 @@ export function addPlugin(tree: Tree) {
     nxJson.plugins.push({
       plugin: '@nx/vite/plugin',
       options: {
+        buildTargetName: 'build',
+        previewTargetName: 'preview',
         testTargetName: 'test',
+        serveTargetName: 'serve',
+        serveStaticTargetName: 'serve-static',
       },
     });
   }

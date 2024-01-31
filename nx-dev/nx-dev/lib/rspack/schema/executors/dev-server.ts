@@ -3,7 +3,7 @@ export const schema = {
   implementation:
     '/packages/rspack/src/executors/dev-server/dev-server.impl.ts',
   schema: {
-    $schema: 'http://json-schema.org/schema',
+    $schema: 'https://json-schema.org/schema',
     version: 2,
     cli: 'nx',
     title: 'Rspack dev-server executor',

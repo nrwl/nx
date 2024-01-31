@@ -8,6 +8,8 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes } from '../../plugins/plugin';
 import { cypressVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 import { CypressPluginOptions } from '../../plugins/plugin';
@@ -106,6 +108,10 @@ export async function cypressInitGenerator(tree: Tree, options: Schema) {
   let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {
     installTask = updateDependencies(tree, options);
+  }
+
+  if (options.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!options.skipFormat) {

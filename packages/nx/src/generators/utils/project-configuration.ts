@@ -59,7 +59,7 @@ export function addProjectConfiguration(
 
   if (tree.exists(projectConfigFile)) {
     throw new Error(
-      `Cannot create a new project ${projectName} at ${projectConfiguration.root}. It already exists.`
+      `Cannot create a new project ${projectName} at ${projectConfiguration.root}. A project already exists in this directory.`
     );
   }
 
@@ -211,7 +211,13 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
     if (basename(projectFile) === 'project.json') {
       const json = readJson(tree, projectFile);
       const config = buildProjectFromProjectJson(json, projectFile);
-      mergeProjectConfigurationIntoRootMap(rootMap, config);
+      mergeProjectConfigurationIntoRootMap(
+        rootMap,
+        config,
+        undefined,
+        undefined,
+        true
+      );
     } else if (basename(projectFile) === 'package.json') {
       const packageJson = readJson<PackageJson>(tree, projectFile);
       const config = buildProjectConfigurationFromPackageJson(
@@ -227,7 +233,10 @@ function readAndCombineAllProjectConfigurations(tree: Tree): {
           {
             name: config.name,
             root: config.root,
-          }
+          },
+          undefined,
+          undefined,
+          true
         );
       }
     }

@@ -2,7 +2,7 @@
   "name": "setup-docker",
   "factory": "./src/generators/setup-docker/setup-docker",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "SchematicsNxSetupDocker",
     "title": "Nx Node Docker Options Schema",

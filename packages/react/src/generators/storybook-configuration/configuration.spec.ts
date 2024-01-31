@@ -1,4 +1,4 @@
-// TODO(katerina): Nx 18 -> remove Cypress
+// TODO(katerina): Nx 19 -> remove Cypress
 import { installedCypressVersion } from '@nx/cypress/src/utils/cypress-version';
 import { logger, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';

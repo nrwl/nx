@@ -2,7 +2,7 @@
   "name": "release-version",
   "factory": "./src/generators/release-version/release-version#releaseVersionGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxJSReleaseVersionGenerator",
     "cli": "nx",
     "title": "Implementation details of `nx release version`",

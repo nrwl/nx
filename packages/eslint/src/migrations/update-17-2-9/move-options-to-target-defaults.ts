@@ -134,7 +134,9 @@ export default async function update(tree: Tree) {
       }
 
       // remove options if empty
-      if (Object.keys(projConfig.targets[targetName].options).length === 0) {
+      if (
+        Object.keys(projConfig.targets[targetName]?.options ?? {}).length === 0
+      ) {
         delete projConfig.targets[targetName].options;
       }
 

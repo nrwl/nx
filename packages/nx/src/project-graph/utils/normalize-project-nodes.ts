@@ -94,11 +94,6 @@ export function normalizeProjectTargets(
       continue;
     }
 
-    targets[target] = resolveCommandSyntacticSugar(
-      targets[target],
-      `${projectName}:${target}`
-    );
-
     targets[target].options = resolveNxTokensInOptions(
       targets[target].options,
       project,
@@ -133,30 +128,4 @@ export function normalizeImplicitDependencies(
       // implicit-project-dependencies.ts after explicit deps are added to graph.
       .concat(implicitDependencies.filter((x) => x.startsWith('!')))
   );
-}
-
-function resolveCommandSyntacticSugar(
-  target: TargetConfiguration,
-  key: string
-): TargetConfiguration {
-  const { command, ...config } = target ?? {};
-
-  if (!command) {
-    return target;
-  }
-
-  if (config.executor) {
-    throw new Error(
-      `${NX_PREFIX} ${key} should not have executor and command both configured.`
-    );
-  } else {
-    return {
-      ...config,
-      executor: 'nx:run-commands',
-      options: {
-        ...config.options,
-        command: command,
-      },
-    };
-  }
 }

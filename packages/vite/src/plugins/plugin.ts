@@ -92,17 +92,21 @@ async function buildViteTargets(
   options: VitePluginOptions,
   context: CreateNodesContext
 ) {
-  const { loadConfigFromFile } = await loadViteDynamicImport();
-  const viteConfig = await loadConfigFromFile(
-    {
-      command: 'build',
-      mode: 'production',
-    },
+  const absoluteConfigFilePath = joinPathFragments(
+    context.workspaceRoot,
     configFilePath
   );
+  const { resolveConfig } = await loadViteDynamicImport();
+  const viteConfig = await resolveConfig(
+    {
+      configFile: absoluteConfigFilePath,
+      mode: 'development',
+    },
+    'build'
+  );
 
-  const { buildOutputs, testOutputs, hasTest } = getOutputs(
-    viteConfig?.config,
+  const { buildOutputs, testOutputs, hasTest, isBuildable } = getOutputs(
+    viteConfig,
     projectRoot
   );
 
@@ -110,8 +114,8 @@ async function buildViteTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
-  // If file is not vitest.config, create targets for build, serve, preview and serve-static
-  if (!configFilePath.includes('vitest.config')) {
+  // If file is not vitest.config and buildable, create targets for build, serve, preview and serve-static
+  if (!configFilePath.includes('vitest.config') && isBuildable) {
     targets[options.buildTargetName] = await buildTarget(
       options.buildTargetName,
       namedInputs,
@@ -226,6 +230,7 @@ function getOutputs(
   buildOutputs: string[];
   testOutputs: string[];
   hasTest: boolean;
+  isBuildable: boolean;
 } {
   const { build, test } = viteConfig;
 
@@ -234,6 +239,11 @@ function getOutputs(
     projectRoot,
     'dist'
   );
+
+  const isBuildable =
+    build?.lib ||
+    build?.rollupOptions?.inputs ||
+    existsSync(join(workspaceRoot, projectRoot, 'index.html'));
 
   const reportsDirectoryPath = normalizeOutputPath(
     test?.coverage?.reportsDirectory,
@@ -245,6 +255,7 @@ function getOutputs(
     buildOutputs: [buildOutputPath],
     testOutputs: [reportsDirectoryPath],
     hasTest: !!test,
+    isBuildable,
   };
 }
 

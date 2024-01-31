@@ -49,6 +49,12 @@ Type: `string`
 
 The package name and optional version (e.g. `@nx/react` or `@nx/react@latest`) to install and initialize. If the version is not specified it will install the same version as the `nx` package for Nx core plugins or the latest version for other packages
 
+### updatePackageScripts
+
+Type: `boolean`
+
+Update `package.json` scripts with inferred targets. Defaults to `true` when `NX_PCV3=true` and the package is a core Nx plugin
+
 ### verbose
 
 Type: `boolean`

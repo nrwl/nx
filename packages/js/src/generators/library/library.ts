@@ -41,6 +41,7 @@ import jsInitGenerator from '../init/init';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import setupVerdaccio from '../setup-verdaccio/generator';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -163,6 +164,10 @@ export async function libraryGeneratorInternal(
     await formatFiles(tree);
   }
 
+  tasks.push(() => {
+    logShowProjectCommand(options.name);
+  });
+
   return runTasksInSerial(...tasks);
 }
 
@@ -271,7 +276,7 @@ export async function addLint(
 ): Promise<GeneratorCallback> {
   const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
   const projectConfiguration = readProjectConfiguration(tree, options.name);
-  const task = lintProjectGenerator(tree, {
+  const task = await lintProjectGenerator(tree, {
     project: options.name,
     linter: options.linter,
     skipFormat: true,

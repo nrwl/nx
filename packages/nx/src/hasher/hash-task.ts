@@ -64,7 +64,7 @@ export async function hashTask(
         hasher,
         projectGraph,
         taskGraph,
-        workspaceConfig: projectsConfigurations, // to make the change non-breaking. Remove after v18
+        workspaceConfig: projectsConfigurations, // to make the change non-breaking. Remove after v19
         projectsConfigurations,
         nxJsonConfiguration: readNxJson(),
         env,

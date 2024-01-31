@@ -5,6 +5,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 import { nextVersion, nxVersion } from '../../utils/versions';
@@ -45,6 +46,11 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
     installTask = updateDependencies(host, schema);
+  }
+
+  if (schema.updatePackageScripts) {
+    const { createNodes } = await import('../../plugins/plugin');
+    await updatePackageScripts(host, createNodes);
   }
 
   return installTask;

@@ -65,7 +65,7 @@ export class DaemonClient {
 
   enabled() {
     if (this._enabled === undefined) {
-      // TODO(v18): Add migration to move it out of existing configs and remove the ?? here.
+      // TODO(v19): Add migration to move it out of existing configs and remove the ?? here.
       const useDaemonProcessOption =
         this.nxJson.useDaemonProcess ??
         this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
@@ -267,6 +267,12 @@ export class DaemonClient {
               `If you get this error again, check for any errors in the daemon process logs found in: ${DAEMON_OUTPUT_LOG_FILE}`,
             ],
           });
+          this._daemonStatus = DaemonStatus.DISCONNECTED;
+          this.currentReject?.(
+            daemonProcessException(
+              'Daemon process terminated and closed the connection'
+            )
+          );
           process.exit(1);
         }
       },

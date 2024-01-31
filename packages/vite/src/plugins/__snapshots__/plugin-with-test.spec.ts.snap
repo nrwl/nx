@@ -6,46 +6,6 @@ exports[`@nx/vite/plugin with test node root project should create nodes - with 
     ".": {
       "root": ".",
       "targets": {
-        "build": {
-          "cache": true,
-          "command": "vite build",
-          "dependsOn": [
-            "^build",
-          ],
-          "inputs": [
-            "production",
-            "^production",
-            {
-              "externalDependencies": [
-                "vite",
-              ],
-            },
-          ],
-          "options": {
-            "cwd": ".",
-          },
-          "outputs": [
-            "{projectRoot}/dist",
-          ],
-        },
-        "preview": {
-          "command": "vite preview",
-          "options": {
-            "cwd": ".",
-          },
-        },
-        "serve": {
-          "command": "vite serve",
-          "options": {
-            "cwd": ".",
-          },
-        },
-        "serve-static": {
-          "executor": "@nx/web:file-server",
-          "options": {
-            "buildTarget": "build",
-          },
-        },
         "test": {
           "cache": true,
           "command": "vitest run",

@@ -13,22 +13,22 @@ export function LaunchWeekAgenda(): JSX.Element {
     {
       type: 'event',
       time: '2:10pm',
-      title: 'Next Gen Nx',
+      title: 'Nx Project Crystal',
       description: '',
       speakers: ['Juri Strumpflohner'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '2:35p',
-      title: 'Next Gen Nx + .NET in Action',
+      time: '2:35pm',
+      title: 'Project Crystal + .NET in Action',
       description: '',
       speakers: ['Craigory Coppola'],
       videoUrl: '',
     },
     {
       type: 'event',
-      time: '2:45p',
+      time: '2:45pm',
       title: 'Nx Agents Walkthrough: Effortlessly Fast CI Built for Monorepos',
       description: '',
       speakers: ['Rareş Matei'],
@@ -111,7 +111,8 @@ export function LaunchWeekAgenda(): JSX.Element {
               Thursday, February 8th
             </span>
             <p className="mt-4">
-              Note: all time indications are in New York timezone (UTC-04:00).
+              Note: all time indications are in the Eastern Standard timezone
+              (UTC-05:00).
             </p>
           </div>
         </div>

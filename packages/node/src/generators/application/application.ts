@@ -48,6 +48,7 @@ import { setupDockerGenerator } from '../setup-docker/setup-docker';
 import { Schema } from './schema';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
@@ -389,7 +390,18 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   if (options.framework === 'nest') {
     const { applicationGenerator } = ensurePackage('@nx/nest', nxVersion);
-    return await applicationGenerator(tree, { ...options, skipFormat: true });
+    const nestTasks = await applicationGenerator(tree, {
+      ...options,
+      skipFormat: true,
+    });
+    return runTasksInSerial(
+      ...[
+        nestTasks,
+        () => {
+          logShowProjectCommand(options.name);
+        },
+      ]
+    );
   }
 
   const jsInitTask = await jsInitGenerator(tree, {
@@ -489,6 +501,10 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.name);
+  });
 
   return runTasksInSerial(...tasks);
 }

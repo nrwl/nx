@@ -58,12 +58,16 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
       const packageJson = readJsonOrNull<PackageJson>(
         join(ctx.workspaceRoot, root, 'package.json')
       );
-      const projectDefinedTargets = new Set(
-        Object.keys({
-          ...packageJson?.scripts,
-          ...projectJson?.targets,
-        })
-      );
+      const includedScripts = packageJson?.nx?.includedScripts;
+      const projectDefinedTargets = new Set([
+        ...Object.keys(packageJson?.scripts ?? {}).filter((script) => {
+          if (includedScripts) {
+            return includedScripts.includes(script);
+          }
+          return true;
+        }),
+        ...Object.keys(projectJson?.targets ?? {}),
+      ]);
 
       const executorToTargetMap = getExecutorToTargetMap(
         packageJson,

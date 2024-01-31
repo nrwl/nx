@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "name": "NxRemix",
   "version": "0.0.1",
   "extends": ["@nx/react"],

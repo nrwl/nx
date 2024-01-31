@@ -8,7 +8,11 @@ import {
 } from '@nx/graph/ui-tooltips';
 import { ProjectNodeActions } from './project-node-actions';
 import { TaskNodeActions } from './task-node-actions';
-import { useEnvironmentConfig, useRouteConstructor } from '@nx/graph/shared';
+import {
+  getExternalApiService,
+  useEnvironmentConfig,
+  useRouteConstructor,
+} from '@nx/graph/shared';
 import { useNavigate } from 'react-router-dom';
 
 const tooltipService = getTooltipService();
@@ -17,6 +21,7 @@ export function TooltipDisplay() {
   const environment = useEnvironmentConfig()?.environment;
   const navigate = useNavigate();
   const routeConstructor = useRouteConstructor();
+  const externalApiService = getExternalApiService();
 
   const currentTooltip = useSyncExternalStore(
     (callback) => tooltipService.subscribe(callback),
@@ -32,7 +37,9 @@ export function TooltipDisplay() {
             navigate(
               routeConstructor(
                 {
-                  pathname: `/project-details/${currentTooltip.props.id}`,
+                  pathname: `/project-details/${encodeURIComponent(
+                    currentTooltip.props.id
+                  )}`,
                 },
                 false
               )
@@ -40,7 +47,7 @@ export function TooltipDisplay() {
           };
         } else {
           return () =>
-            this.externalApiService.postEvent({
+            externalApiService.postEvent({
               type: 'open-project-config',
               payload: {
                 projectName: currentTooltip.props.id,
@@ -68,7 +75,9 @@ export function TooltipDisplay() {
             navigate(
               routeConstructor(
                 {
-                  pathname: `/project-details/${projectName}`,
+                  pathname: `/project-details/${encodeURIComponent(
+                    projectName
+                  )}`,
                   search: `expanded=${targetName}`,
                 },
                 false
@@ -77,7 +86,7 @@ export function TooltipDisplay() {
           };
         } else {
           return () =>
-            this.externalApiService.postEvent({
+            externalApiService.postEvent({
               type: 'open-project-config',
               payload: {
                 projectName,

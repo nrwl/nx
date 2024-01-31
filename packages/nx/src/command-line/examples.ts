@@ -369,6 +369,12 @@ export const examples: Record<string, Example[]> = {
       description:
         'Show information about "my-app" in a human readable format.',
     },
+
+    {
+      command: 'show project my-app --web',
+      description:
+        'Opens a web browser to explore the configuration of "my-app"',
+    },
   ],
   watch: [
     {

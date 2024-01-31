@@ -3,7 +3,7 @@
   "aliases": ["webpack-project"],
   "factory": "./src/generators/configuration/configuration",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxWebpackProject",
     "cli": "nx",
     "title": "Add Webpack Configuration to a project",

@@ -32,11 +32,11 @@ export type NestGeneratorOptions = {
   nameAndDirectoryFormat?: NameAndDirectoryFormat;
 
   /**
-   * @deprecated Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18.
+   * @deprecated Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19.
    */
   flat?: boolean;
   /**
-   * @deprecated Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18.
+   * @deprecated Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19.
    */
   project?: string;
 };

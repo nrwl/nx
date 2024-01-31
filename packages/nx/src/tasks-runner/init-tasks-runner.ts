@@ -23,7 +23,7 @@ export async function initTasksRunner(nxArgs: NxArgs) {
     }): Promise<{ status: number; taskGraph: TaskGraph }> => {
       performance.mark('code-loading:end');
 
-      // TODO: This polyfills the outputs if someone doesn't pass a task with outputs. Remove this in Nx 18
+      // TODO: This polyfills the outputs if someone doesn't pass a task with outputs. Remove this in Nx 19
       opts.tasks.forEach((t) => {
         if (!t.outputs) {
           t.outputs = getOutputs(projectGraph.nodes, t.target, t.overrides);

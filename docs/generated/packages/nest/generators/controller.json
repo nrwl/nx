@@ -2,7 +2,7 @@
   "name": "controller",
   "factory": "./src/generators/controller/controller#controllerGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxNestControllerGenerator",
     "title": "Nest Controller Options Schema",
     "description": "Nest Controller Options Schema.",
@@ -20,7 +20,7 @@
         "type": "string",
         "$default": { "$source": "projectName" },
         "alias": "p",
-        "x-deprecated": "Provide The `directory` option instead and use the `as-provided` format. the project will be determined from the directory provided. it will be removed in nx v18."
+        "x-deprecated": "Provide The `directory` option instead and use the `as-provided` format. the project will be determined from the directory provided. it will be removed in nx v19."
       },
       "nameAndDirectoryFormat": {
         "description": "Whether to generate the component in the directory as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
@@ -46,7 +46,7 @@
       },
       "flat": {
         "description": "Flag to indicate if a directory is created.",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18.",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19.",
         "type": "boolean",
         "default": false
       },

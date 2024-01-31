@@ -2,7 +2,7 @@
   "name": "migrate-to-cypress-11",
   "factory": "./src/generators/migrate-to-cypress-11/migrate-to-cypress-11#migrateCypressProject",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxCypressMigrateTo11",
     "cli": "nx",
     "title": "Migrate e2e project to Cypress 11",

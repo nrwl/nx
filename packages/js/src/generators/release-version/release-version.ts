@@ -12,28 +12,34 @@ import {
 import * as chalk from 'chalk';
 import { exec } from 'child_process';
 import { IMPLICIT_DEFAULT_RELEASE_GROUP } from 'nx/src/command-line/release/config/config';
-import { getLatestGitTagForPattern } from 'nx/src/command-line/release/utils/git';
+import {
+  getFirstGitCommit,
+  getLatestGitTagForPattern,
+} from 'nx/src/command-line/release/utils/git';
 import {
   resolveSemverSpecifierFromConventionalCommits,
   resolveSemverSpecifierFromPrompt,
 } from 'nx/src/command-line/release/utils/resolve-semver-specifier';
 import { isValidSemverSpecifier } from 'nx/src/command-line/release/utils/semver';
 import {
+  ReleaseVersionGeneratorResult,
   VersionData,
   deriveNewSemverVersion,
   validReleaseVersionPrefixes,
 } from 'nx/src/command-line/release/version';
+
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import * as ora from 'ora';
 import { relative } from 'path';
 import { prerelease } from 'semver';
 import { ReleaseVersionGeneratorSchema } from './schema';
 import { resolveLocalPackageDependencies } from './utils/resolve-local-package-dependencies';
+import { updateLockFile } from './utils/update-lock-file';
 
 export async function releaseVersionGenerator(
   tree: Tree,
   options: ReleaseVersionGeneratorSchema
-) {
+): Promise<ReleaseVersionGeneratorResult> {
   try {
     const versionData: VersionData = {};
 
@@ -201,7 +207,7 @@ To fix this you will either need to add a package.json file at that location, or
                 currentVersionResolvedFromFallback = true;
               } else {
                 throw new Error(
-                  `Unable to resolve the current version from the registry ${registry}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can set the "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`
+                  `Unable to resolve the current version from the registry ${registry}. Please ensure that the package exists in the registry in order to use the "registry" currentVersionResolver. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when the registry lookup fails.`
                 );
               }
             }
@@ -246,7 +252,7 @@ To fix this you will either need to add a package.json file at that location, or
                 currentVersionResolvedFromFallback = true;
               } else {
                 throw new Error(
-                  `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can set the "version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`
+                  `No git tags matching pattern "${releaseTagPattern}" for project "${project.name}" were found. You will need to create an initial matching tag to use as a base for determining the next version. Alternatively, you can use the --first-release option or set "release.version.generatorOptions.fallbackCurrentVersionResolver" to "disk" in order to fallback to the version on disk when no matching git tags are found.`
                 );
               }
             } else {
@@ -307,8 +313,25 @@ To fix this you will either need to add a package.json file at that location, or
                 ? [projectName]
                 : projects.map((p) => p.name);
 
+            // latestMatchingGitTag will be undefined if the current version was resolved from the disk fallback.
+            // In this case, we want to use the first commit as the ref to be consistent with the changelog command.
+            const previousVersionRef = latestMatchingGitTag
+              ? latestMatchingGitTag.tag
+              : options.fallbackCurrentVersionResolver === 'disk'
+              ? await getFirstGitCommit()
+              : undefined;
+
+            if (!previousVersionRef) {
+              // This should never happen since the checks above should catch if the current version couldn't be resolved
+              throw new Error(
+                `Unable to determine previous version ref for the projects ${affectedProjects.join(
+                  ', '
+                )}. This is likely a bug in Nx.`
+              );
+            }
+
             specifier = await resolveSemverSpecifierFromConventionalCommits(
-              latestMatchingGitTag.tag,
+              previousVersionRef,
               options.projectGraph,
               affectedProjects
             );
@@ -473,7 +496,14 @@ To fix this you will either need to add a package.json file at that location, or
     await formatFiles(tree);
 
     // Return the version data so that it can be leveraged by the overall version command
-    return versionData;
+    return {
+      data: versionData,
+      callback: async (tree, opts) => {
+        const cwd = tree.root;
+        const updatedFiles = await updateLockFile(cwd, opts);
+        return updatedFiles;
+      },
+    };
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       output.error({

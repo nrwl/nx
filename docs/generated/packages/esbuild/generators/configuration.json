@@ -3,7 +3,7 @@
   "aliases": ["esbuild-project"],
   "factory": "./src/generators/configuration/configuration",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxEsBuildProject",
     "cli": "nx",
     "title": "Add esbuild configuration to a project",

@@ -41,9 +41,9 @@ export default async function setupTailwind(
   upsertLinksFunction(
     tree,
     pathToRoot,
-    'styles',
+    'twStyles',
     './tailwind.css',
-    `{ rel: "stylesheet", href: styles }`
+    `{ rel: "stylesheet", href: twStyles }`
   );
 
   addDependenciesToPackageJson(

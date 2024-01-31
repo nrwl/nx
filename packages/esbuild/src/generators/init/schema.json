@@ -1,9 +1,9 @@
 {
-  "$schema": "http://json-schema.org/schema",
-  "$id": "NxWebpackInit",
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxEsbuildInit",
   "cli": "nx",
-  "title": "Init Webpack Plugin",
-  "description": "Init Webpack Plugin.",
+  "title": "Init Esbuild Plugin",
+  "description": "Init Esbuild Plugin.",
   "type": "object",
   "properties": {
     "skipFormat": {

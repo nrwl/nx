@@ -2,7 +2,7 @@
 
 **`Deprecated`**
 
-This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph) instead.
+This will be removed in v19. Use [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph) instead.
 
 ## Table of contents
 

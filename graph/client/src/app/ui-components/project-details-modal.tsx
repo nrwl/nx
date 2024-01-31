@@ -2,7 +2,7 @@
 // nx-ignore-next-line
 import { useFloating } from '@floating-ui/react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import { ProjectDetails } from '@nx/graph/project-details';
+import { ProjectDetailsWrapper } from '@nx/graph/project-details';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
@@ -46,6 +46,7 @@ export function ProjectDetailsModal() {
     setSearchParams(searchParams);
     setIsOpen(false);
   }
+
   return (
     isOpen && (
       <div
@@ -56,7 +57,7 @@ export function ProjectDetailsModal() {
         ref={refs.setFloating}
       >
         <div className="rounded-md h-full border border-slate-500">
-          <ProjectDetails project={project} sourceMap={sourceMap} />
+          <ProjectDetailsWrapper project={project} sourceMap={sourceMap} />
           <div className="top-2 right-2 absolute" onClick={onClose}>
             <XMarkIcon className="h-4 w-4" />
           </div>

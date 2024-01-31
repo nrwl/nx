@@ -323,6 +323,6 @@ function expectTargetsToBeCorrect(tree: Tree, projectRoot: string) {
   expect(targets.start.command).toEqual('remix-serve build/index.js');
   expect(targets.start.options.cwd).toEqual(projectRoot);
   expect(targets.typecheck).toBeTruthy();
-  expect(targets.typecheck.command).toEqual('tsc');
+  expect(targets.typecheck.command).toEqual('tsc --project tsconfig.app.json');
   expect(targets.typecheck.options.cwd).toEqual(projectRoot);
 }

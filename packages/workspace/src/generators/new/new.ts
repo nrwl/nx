@@ -50,14 +50,22 @@ export async function newGenerator(tree: Tree, opts: Schema) {
   addPresetDependencies(tree, options);
 
   return async () => {
-    const pmc = getPackageManagerCommand(options.packageManager);
-    if (pmc.preInstall) {
-      execSync(pmc.preInstall, {
-        cwd: joinPathFragments(tree.root, options.directory),
-        stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
-      });
+    if (!options.skipInstall) {
+      const pmc = getPackageManagerCommand(options.packageManager);
+      if (pmc.preInstall) {
+        execSync(pmc.preInstall, {
+          cwd: joinPathFragments(tree.root, options.directory),
+          stdio:
+            process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
+        });
+      }
+      installPackagesTask(
+        tree,
+        false,
+        options.directory,
+        options.packageManager
+      );
     }
-    installPackagesTask(tree, false, options.directory, options.packageManager);
     // TODO: move all of these into create-nx-workspace
     if (options.preset !== Preset.NPM && !options.isCustomPreset) {
       await generatePreset(tree, options);

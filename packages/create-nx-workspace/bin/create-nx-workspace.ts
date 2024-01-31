@@ -194,7 +194,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     [
       normalizeArgsMiddleware,
       normalizeAndWarnOnDeprecatedPreset({
-        // TODO(v18): Remove Empty and Core presets
+        // TODO(v19): Remove Empty and Core presets
         [Preset.Core]: Preset.NPM,
         [Preset.Empty]: Preset.Apps,
       }),
@@ -211,10 +211,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   output.log({
     title: `Creating your v${nxVersion} workspace.`,
-    bodyLines: [
-      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
-      `Nx will run "${parsedArgs.packageManager} install" several times. Please wait.`,
-    ],
   });
 
   const workspaceInfo = await createWorkspace<Arguments>(
@@ -285,9 +281,6 @@ async function normalizeArgsMiddleware(
 
   try {
     let thirdPartyPreset: string | null;
-
-    // Node options
-    let docker: boolean;
 
     try {
       thirdPartyPreset = await getThirdPartyPreset(argv.preset);
@@ -381,6 +374,7 @@ async function determineStack(
       case Preset.NextJs:
       case Preset.NextJsStandalone:
         return 'react';
+      case Preset.Vue:
       case Preset.VueStandalone:
       case Preset.VueMonorepo:
       case Preset.Nuxt:
@@ -497,7 +491,7 @@ async function determineNoneOptions(
             name: 'No',
           },
         ],
-        initial: 'Yes' as any,
+        initial: 0,
       },
     ]);
     js = reply.ts === 'No';
@@ -583,7 +577,7 @@ async function determineReactOptions(
       {
         name: 'style',
         message: `Default stylesheet format`,
-        initial: 'css' as any,
+        initial: 0,
         type: 'autocomplete',
         choices: [
           {
@@ -592,11 +586,11 @@ async function determineReactOptions(
           },
           {
             name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
             name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
+            message: 'LESS              [ https://lesscss.org     ]',
           },
           {
             name: 'styled-components',
@@ -638,7 +632,7 @@ async function determineVueOptions(
   let appName: string;
   let e2eTestRunner: undefined | 'none' | 'cypress' | 'playwright' = undefined;
 
-  if (parsedArgs.preset) {
+  if (parsedArgs.preset && parsedArgs.preset !== Preset.Vue) {
     preset = parsedArgs.preset;
     if (preset === Preset.VueStandalone || preset === Preset.NuxtStandalone) {
       appName = parsedArgs.appName ?? parsedArgs.name;
@@ -646,13 +640,14 @@ async function determineVueOptions(
       appName = await determineAppName(parsedArgs);
     }
   } else {
+    const framework = await determineVueFramework(parsedArgs);
+
     const workspaceType = await determineStandaloneOrMonorepo();
     if (workspaceType === 'standalone') {
       appName = parsedArgs.appName ?? parsedArgs.name;
     } else {
       appName = await determineAppName(parsedArgs);
     }
-    const framework = await determineVueFramework(parsedArgs);
 
     if (framework === 'nuxt') {
       if (workspaceType === 'standalone') {
@@ -678,7 +673,7 @@ async function determineVueOptions(
       {
         name: 'style',
         message: `Default stylesheet format`,
-        initial: 'css' as any,
+        initial: 0,
         type: 'autocomplete',
         choices: [
           {
@@ -687,11 +682,11 @@ async function determineVueOptions(
           },
           {
             name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
             name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
+            message: 'LESS              [ https://lesscss.org     ]',
           },
           {
             name: 'none',
@@ -757,7 +752,7 @@ async function determineAngularOptions(
             message: 'Webpack [ https://webpack.js.org/ ]',
           },
         ],
-        initial: 'esbuild' as any,
+        initial: 0,
       },
     ]);
     bundler = reply.bundler;
@@ -770,7 +765,7 @@ async function determineAngularOptions(
       {
         name: 'style',
         message: `Default stylesheet format`,
-        initial: 'css' as any,
+        initial: 0,
         type: 'autocomplete',
         choices: [
           {
@@ -779,11 +774,11 @@ async function determineAngularOptions(
           },
           {
             name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
             name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
+            message: 'LESS              [ https://lesscss.org     ]',
           },
         ],
       },
@@ -801,7 +796,7 @@ async function determineAngularOptions(
           'Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?',
         type: 'autocomplete',
         choices: [{ name: 'Yes' }, { name: 'No' }],
-        initial: 'No' as any,
+        initial: 1,
       },
     ]);
     ssr = reply.ssr === 'Yes';
@@ -878,7 +873,7 @@ async function determineNodeOptions(
             name: 'No',
           },
         ],
-        initial: 'No' as any,
+        initial: 1,
       },
     ]);
     docker = reply.docker === 'Yes';
@@ -902,7 +897,7 @@ async function determinePackageBasedOrIntegratedOrStandalone(): Promise<
       type: 'autocomplete',
       name: 'workspaceType',
       message: `Package-based monorepo, integrated monorepo, or standalone project?`,
-      initial: 'package-based' as any,
+      initial: 0,
       choices: [
         {
           name: 'package-based',
@@ -943,7 +938,7 @@ async function determineStandaloneOrMonorepo(): Promise<
       type: 'autocomplete',
       name: 'workspaceType',
       message: `Integrated monorepo, or standalone project?`,
-      initial: 'standalone' as any,
+      initial: 1,
       choices: [
         {
           name: 'integrated',
@@ -1020,7 +1015,7 @@ async function determineReactFramework(
           message: 'React Native  [ https://reactnative.dev/ ]',
         },
       ],
-      initial: 'none' as any,
+      initial: 0,
     },
   ]);
   return reply.framework;
@@ -1073,7 +1068,7 @@ async function determineNextAppDir(
           name: 'No',
         },
       ],
-      initial: 'Yes' as any,
+      initial: 0,
     },
   ]);
   return reply.nextAppDir === 'Yes';
@@ -1096,7 +1091,7 @@ async function determineNextSrcDir(
           name: 'No',
         },
       ],
-      initial: 'Yes' as any,
+      initial: 0,
     },
   ]);
   return reply.nextSrcDir === 'Yes';
@@ -1124,7 +1119,7 @@ async function determineVueFramework(
           message: 'Nuxt          [ https://nuxt.com/ ]',
         },
       ],
-      initial: 'none' as any,
+      initial: 0,
     },
   ]);
   return reply.framework;

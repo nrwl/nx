@@ -2,7 +2,7 @@
   "name": "convert-to-swc",
   "factory": "./src/generators/convert-to-swc/convert-to-swc#convertToSwcGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxTypescriptLibrary",
     "cli": "nx",
     "title": "Convert a TSC library to SWC",

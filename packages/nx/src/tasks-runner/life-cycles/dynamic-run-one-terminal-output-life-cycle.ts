@@ -224,7 +224,6 @@ export async function createRunOneDynamicOutputRenderer({
   lifeCycle.printTaskTerminalOutput = (task, cacheStatus, terminalOutput) => {
     if (task.target.project === initiatingProject) {
       output.logCommand(task.id, cacheStatus);
-      output.addNewline();
       process.stdout.write(terminalOutput);
     } else {
       tasksToTerminalOutputs[task.id] = terminalOutput;
@@ -256,7 +255,6 @@ export async function createRunOneDynamicOutputRenderer({
             renderDependentTargets(false);
             output.addVerticalSeparator('red');
             output.logCommand(t.task.id, t.status);
-            output.addNewline();
             process.stdout.write(tasksToTerminalOutputs[t.task.id]);
           }
           break;

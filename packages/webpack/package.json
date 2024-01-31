@@ -29,7 +29,7 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
-    "@babel/core": "^7.22.9",
+    "@babel/core": "^7.23.2",
     "autoprefixer": "^10.4.9",
     "babel-loader": "^9.1.2",
     "browserslist": "^4.21.4",

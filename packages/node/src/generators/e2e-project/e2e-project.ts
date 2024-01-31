@@ -25,6 +25,7 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
@@ -133,6 +134,10 @@ export async function e2eProjectGeneratorInternal(
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.e2eProjectName);
+  });
 
   return runTasksInSerial(...tasks);
 }

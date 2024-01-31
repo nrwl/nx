@@ -131,8 +131,7 @@ describe('lib', () => {
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeUndefined();
       expect(packageJson.devDependencies['postcss']).toBeUndefined();
-      expect(packageJson.devDependencies['postcss-import']).toBeUndefined();
-      expect(packageJson.devDependencies['postcss-preset-env']).toBeUndefined();
+      expect(packageJson.devDependencies['autoprefixer']).toBeUndefined();
       expect(packageJson.devDependencies['postcss-url']).toBeUndefined();
     });
 
@@ -147,8 +146,7 @@ describe('lib', () => {
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-import']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-preset-env']).toBeDefined();
+      expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
       expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
@@ -160,8 +158,7 @@ describe('lib', () => {
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-import']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-preset-env']).toBeDefined();
+      expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
       expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 

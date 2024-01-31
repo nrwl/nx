@@ -178,7 +178,7 @@ export async function configurationGenerator(
     devDeps['storybook'] = storybookVersion;
   }
 
-  // TODO(katerina): Nx 18 -> remove Cypress
+  // TODO(katerina): Nx 19 -> remove Cypress
   if (schema.configureCypress) {
     const e2eProject = await getE2EProjectName(tree, schema.project);
     if (!e2eProject) {

@@ -2,7 +2,7 @@
   "name": "remove",
   "factory": "./src/generators/remove/remove#removeGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxWorkspaceRemove",
     "cli": "nx",
     "title": "Nx Remove",

@@ -45,7 +45,7 @@ The `depConstraints` is an array of objects representing the constraints defined
 | Property                 | Type            | Description                                                                        |
 | ------------------------ | --------------- | ---------------------------------------------------------------------------------- |
 | sourceTag                | _string_        | Tag that source project must contain to match the constraint                       |
-| allSourceTags            | _Array<string>_ | List of targs the source project must contain to match the constraint              |
+| allSourceTags            | _Array<string>_ | List of tags the source project must contain to match the constraint               |
 | onlyDependOnLibsWithTags | _Array<string>_ | The source **can depend only** on projects that contain at least one of these tags |
 | notDependOnLibsWithTags  | _Array<string>_ | The source **can not depend** on projects that contain at least one of these tags  |
 | allowedExternalImports   | _Array<string>_ | Exclusive list of external (npm) packages that are allowed to be imported          |

@@ -2,7 +2,7 @@
   "name": "submit",
   "implementation": "/packages/expo/src/executors/submit/submit.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "version": 2,
     "title": "EXPO EAS Submit Executor",
     "description": "Submit app binary to App Store and/or Play Store.",

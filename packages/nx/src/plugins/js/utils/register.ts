@@ -28,7 +28,7 @@ export function registerTsProject(tsConfigPath: string): () => void;
  * workspace path mapping will not, for example).
  *
  * @returns cleanup function
- * @deprecated This signature will be removed in Nx v18. You should pass the full path to the tsconfig in the first argument.
+ * @deprecated This signature will be removed in Nx v19. You should pass the full path to the tsconfig in the first argument.
  */
 export function registerTsProject(path: string, configFilename: string);
 export function registerTsProject(
@@ -77,6 +77,8 @@ export function getTsNodeTranspiler(
   const service = register({
     transpileOnly: true,
     compilerOptions: getTsNodeCompilerOptions(compilerOptions),
+    // we already read and provide the compiler options, so prevent ts-node from reading them again
+    skipProject: true,
   });
 
   const { transpiler, swc } = service.options;

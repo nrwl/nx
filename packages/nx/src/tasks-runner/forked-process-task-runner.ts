@@ -19,6 +19,7 @@ import { ChildProcess as NativeChildProcess, nxFork } from '../native';
 import { PsuedoIPCServer } from './psuedo-ipc';
 import { FORKED_PROCESS_OS_SOCKET_PATH } from '../daemon/socket-utils';
 import { PseudoTtyProcess } from '../utils/child-process';
+import { signalToCode } from '../utils/exit-codes';
 
 const forkScript = join(__dirname, './fork.js');
 
@@ -61,7 +62,6 @@ export class ForkedProcessTaskRunner {
             Object.values(batchTaskGraph.tasks)[0]
           );
           output.logCommand(args.join(' '));
-          output.addNewline();
         }
 
         const p = fork(workerPath, {
@@ -72,7 +72,7 @@ export class ForkedProcessTaskRunner {
 
         p.once('exit', (code, signal) => {
           this.processes.delete(p);
-          if (code === null) code = this.signalToCode(signal);
+          if (code === null) code = signalToCode(signal);
           if (code !== 0) {
             const results: BatchResults = {};
             for (const rootTaskId of batchTaskGraph.roots) {
@@ -206,7 +206,6 @@ export class ForkedProcessTaskRunner {
     const args = getPrintableCommandArgsForTask(task);
     if (streamOutput) {
       output.logCommand(args.join(' '));
-      output.addNewline();
     }
 
     const childId = task.id;
@@ -238,6 +237,11 @@ export class ForkedProcessTaskRunner {
 
     return new Promise((res) => {
       p.onExit((code) => {
+        // If the exit code is greater than 128, it's a special exit code for a signal
+        if (code >= 128) {
+          process.exit(code);
+        }
+
         res({
           code,
           terminalOutput,
@@ -287,7 +291,6 @@ export class ForkedProcessTaskRunner {
         const args = getPrintableCommandArgsForTask(task);
         if (streamOutput) {
           output.logCommand(args.join(' '));
-          output.addNewline();
         }
 
         const p = fork(this.cliPath, {
@@ -342,7 +345,7 @@ export class ForkedProcessTaskRunner {
 
         p.on('exit', (code, signal) => {
           this.processes.delete(p);
-          if (code === null) code = this.signalToCode(signal);
+          if (code === null) code = signalToCode(signal);
           // we didn't print any output as we were running the command
           // print all the collected output|
           const terminalOutput = outWithErr.join('');
@@ -383,7 +386,6 @@ export class ForkedProcessTaskRunner {
         const args = getPrintableCommandArgsForTask(task);
         if (streamOutput) {
           output.logCommand(args.join(' '));
-          output.addNewline();
         }
         const p = fork(this.cliPath, {
           stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
@@ -407,7 +409,7 @@ export class ForkedProcessTaskRunner {
         });
 
         p.on('exit', (code, signal) => {
-          if (code === null) code = this.signalToCode(signal);
+          if (code === null) code = signalToCode(signal);
           // we didn't print any output as we were running the command
           // print all the collected output
           let terminalOutput = '';
@@ -449,13 +451,6 @@ export class ForkedProcessTaskRunner {
     writeFileSync(outputPath, content);
   }
 
-  private signalToCode(signal: string) {
-    if (signal === 'SIGHUP') return 128 + 1;
-    if (signal === 'SIGINT') return 128 + 2;
-    if (signal === 'SIGTERM') return 128 + 15;
-    return 128;
-  }
-
   private setupProcessEventListeners() {
     this.psuedoIPC.onMessageFromChildren((message: Serializable) => {
       process.send(message);
@@ -488,7 +483,7 @@ export class ForkedProcessTaskRunner {
         }
       });
       // we exit here because we don't need to write anything to cache.
-      process.exit();
+      process.exit(signalToCode('SIGINT'));
     });
     process.on('SIGTERM', () => {
       this.processes.forEach((p) => {

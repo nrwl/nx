@@ -46,3 +46,34 @@ exports[`new should generate an empty nx.json 1`] = `
   },
 }
 `;
+
+exports[`new should skip install 1`] = `
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals",
+    ],
+    "production": [
+      "default",
+    ],
+    "sharedGlobals": [],
+  },
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": [
+        "^build",
+      ],
+      "inputs": [
+        "production",
+        "^production",
+      ],
+    },
+    "lint": {
+      "cache": true,
+    },
+  },
+}
+`;

@@ -2,7 +2,7 @@
   "name": "cypress",
   "implementation": "/packages/remix/src/generators/cypress/cypress.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixCypress",
     "title": "",
     "type": "object",

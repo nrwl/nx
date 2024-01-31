@@ -286,6 +286,49 @@ Have a more decent button-like widget that you can place below sections of a tut
 {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=64" /%}
 ```
 
+#### Project Details View
+
+Embed a Project Details View that is identical what is shown in Nx Console or `nx show project myproject --web`
+
+````markdown
+{% project-details title="Test" height="100px" %}
+
+```json
+{
+  "project": {
+    "name": "demo",
+    "data": {
+      "root": " packages/demo",
+      "projectType": "application",
+      "targets": {
+        "dev": {
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "vite dev"
+          }
+        },
+        "build": {
+          "executor": "nx:run-commands",
+          "inputs": ["production", "^production"],
+          "outputs": ["{projectRoot}/dist"],
+          "options": {
+            "command": "vite build"
+          }
+        }
+      }
+    }
+  },
+  "sourceMap": {
+    "targets": ["packages/demo/vite.config.ts", "@nx/vite"],
+    "targets.dev": ["packages/demo/vite.config.ts", "@nx/vite"],
+    "targets.build": ["packages/demo/vite.config.ts", "@nx/vite"]
+  }
+}
+```
+
+{% /project-details %}
+````
+
 #### Graph
 
 Embed an Nx Graph visualization that can be panned by the user.

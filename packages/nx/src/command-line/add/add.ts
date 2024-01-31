@@ -15,8 +15,8 @@ import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import type { AddOptions } from './command-object';
 
-export function addHandler(args: AddOptions): Promise<void> {
-  if (args.verbose) {
+export function addHandler(options: AddOptions): Promise<void> {
+  if (options.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
@@ -24,10 +24,10 @@ export function addHandler(args: AddOptions): Promise<void> {
   return handleErrors(isVerbose, async () => {
     output.addNewline();
 
-    const [pkgName, version] = parsePackageSpecifier(args.packageSpecifier);
+    const [pkgName, version] = parsePackageSpecifier(options.packageSpecifier);
 
     await installPackage(pkgName, version);
-    await initializePlugin(pkgName);
+    await initializePlugin(pkgName, options);
 
     output.success({
       title: `Package ${pkgName} added successfully.`,
@@ -82,7 +82,10 @@ async function installPackage(pkgName: string, version: string): Promise<void> {
   spinner.succeed();
 }
 
-async function initializePlugin(pkgName: string): Promise<void> {
+async function initializePlugin(
+  pkgName: string,
+  options: AddOptions
+): Promise<void> {
   const capabilities = await getPluginCapabilities(workspaceRoot, pkgName, {});
   const generators = capabilities?.generators;
   if (!generators) {
@@ -104,7 +107,18 @@ async function initializePlugin(pkgName: string): Promise<void> {
   spinner.start();
 
   try {
-    await runNxAsync(`g ${pkgName}:${initGenerator}`);
+    let updatePackageScripts: boolean;
+    if (options.updatePackageScripts !== undefined) {
+      updatePackageScripts = options.updatePackageScripts;
+    } else {
+      updatePackageScripts =
+        process.env.NX_PCV3 === 'true' && coreNxPlugins.includes(pkgName);
+    }
+    await runNxAsync(
+      `g ${pkgName}:${initGenerator} --keepExistingVersions${
+        updatePackageScripts ? ' --updatePackageScripts' : ''
+      }`
+    );
   } catch (e) {
     spinner.fail();
     output.addNewline();

@@ -6,7 +6,7 @@
     "outputCapture": "direct-nodejs",
     "cli": "nx",
     "$id": "NxReactNativeSyncDeps",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Sync Deps for React Native",
     "description": "Updates `package.json` with project dependencies.",
     "type": "object",

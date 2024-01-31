@@ -97,13 +97,21 @@ export async function initHandler(options: InitArgs): Promise<void> {
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     execSync(
-      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init-pcv3 --quiet --no-interactive`,
+      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init-pcv3 --quiet --hideFormatLogs --no-interactive`,
       {
         stdio: [0, 1, 2],
         cwd: repoRoot,
       }
     );
   }
+
+  output.log({
+    title: '👀 Explore Your Workspace',
+    bodyLines: [
+      `Run "nx graph" to show the graph of the workspace. It will show tasks that you can run with Nx.`,
+      `Read this guide on exploring your workspace: https://nx.dev/core-features/explore-graph`,
+    ],
+  });
 }
 
 const npmPackageToPluginMap: Record<string, string> = {
@@ -194,7 +202,7 @@ async function detectPlugins(): Promise<
           name: 'No',
         },
       ],
-      initial: 'Yes' as any,
+      initial: 0,
     },
   ]).then((r) => r.updatePackageScripts === 'Yes');
 

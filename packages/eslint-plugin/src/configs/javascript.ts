@@ -18,9 +18,6 @@ const isPrettierAvailable =
  * it should yield a performance improvement but could introduce subtle
  * breaking changes - we should also look to replace all the @typescript-eslint
  * related plugins and rules below.
- *
- * TODO: Reevaluate stylistic plugin and added specific rules in the next major
- * version of Nx. Related to https://github.com/nrwl/nx/pull/21066
  */
 export default {
   env: {
@@ -37,33 +34,12 @@ export default {
     'eslint:recommended',
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
-    /**
-     * This was added to preserve the linting rules that were previously
-     * defined v5 of @typescript-eslint. v6 of @typescript-eslint changed
-     * how configurations are defined. This should be reevaluated in the
-     * next major version of Nx.
-     */
-    'plugin:@typescript-eslint/stylistic',
     ...(isPrettierAvailable ? ['prettier'] : []),
   ],
   rules: {
     '@typescript-eslint/explicit-member-accessibility': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
-    /**
-     * These 3 rules:
-     *   `no-extra-semi`
-     *   `@typescript-eslint/no-extra-semi`
-     *   `@typescript-eslint/no-non-null-assertion`
-     * were added to preserve the linting rules that were
-     * previously defined v5 of `@typescript-eslint`. v6 of `@typescript-eslint`
-     * changed how configurations are defined. This should be reevaluated in
-     * the next major version of Nx.
-     */
-    'no-extra-semi': 'off',
-    '@typescript-eslint/no-extra-semi': 'error',
-    '@typescript-eslint/no-non-null-assertion': 'warn',
-
     '@typescript-eslint/no-parameter-properties': 'off',
     /**
      * Until ESM usage in Node matures, using require in e.g. JS config files
@@ -71,5 +47,26 @@ export default {
      * having to frequently use "eslint-disable-next-line" in their configs.
      */
     '@typescript-eslint/no-var-requires': 'off',
+
+    /**
+     * From https://typescript-eslint.io/blog/announcing-typescript-eslint-v6/#updated-configuration-rules
+     *
+     * The following rules were added to preserve the linting rules that were
+     * previously defined v5 of `@typescript-eslint`. v6 of `@typescript-eslint`
+     * changed how configurations are defined.
+     *
+     * TODO(v19): re-evalute these deviations from @typescript-eslint/recommended in v19 of Nx
+     */
+    'no-extra-semi': 'off',
+    '@typescript-eslint/no-extra-semi': 'error',
+    '@typescript-eslint/no-non-null-assertion': 'warn',
+    '@typescript-eslint/adjacent-overload-signatures': 'error',
+    '@typescript-eslint/prefer-namespace-keyword': 'error',
+    'no-empty-function': 'off',
+    '@typescript-eslint/no-empty-function': 'error',
+    '@typescript-eslint/no-inferrable-types': 'error',
+    '@typescript-eslint/no-unused-vars': 'warn',
+    '@typescript-eslint/no-empty-interface': 'error',
+    '@typescript-eslint/no-explicit-any': 'warn',
   },
 };

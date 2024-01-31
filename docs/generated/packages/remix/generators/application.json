@@ -2,7 +2,7 @@
   "name": "application",
   "implementation": "/packages/remix/src/generators/application/application.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixApplication",
     "title": "Create an Application",
     "description": "Generate a new Remix application.",

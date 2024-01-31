@@ -177,6 +177,15 @@
         "path": "/nx-api/angular/generators/component-test",
         "type": "generator"
       },
+      "/nx-api/angular/generators/convert-to-application-executor": {
+        "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "file": "generated/packages/angular/generators/convert-to-application-executor.json",
+        "hidden": false,
+        "name": "convert-to-application-executor",
+        "originalFilePath": "/packages/angular/src/generators/convert-to-application-executor/schema.json",
+        "path": "/nx-api/angular/generators/convert-to-application-executor",
+        "type": "generator"
+      },
       "/nx-api/angular/generators/directive": {
         "description": "Generate an Angular directive.",
         "file": "generated/packages/angular/generators/directive.json",

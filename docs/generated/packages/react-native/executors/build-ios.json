@@ -2,7 +2,7 @@
   "name": "build-ios",
   "implementation": "/packages/react-native/src/executors/build-ios/build-ios.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "version": 2,
     "cli": "nx",
     "title": "React Native Build iOS executor",

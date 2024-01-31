@@ -8,7 +8,8 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { ReactNativePluginOptions } from '../../../plugins/plugin';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes, ReactNativePluginOptions } from '../../../plugins/plugin';
 import {
   nxVersion,
   reactDomVersion,
@@ -32,6 +33,10 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
     tasks.push(updateDependencies(host, schema));
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(host, createNodes);
   }
 
   if (!schema.skipFormat) {

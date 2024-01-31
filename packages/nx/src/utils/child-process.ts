@@ -76,14 +76,36 @@ export async function runNxAsync(
   });
 }
 
+function messageToCode(message: string): number {
+  if (message.startsWith('Terminated by ')) {
+    switch (message.replace('Terminated by ', '').trim()) {
+      case 'Termination':
+        return 143;
+      case 'Interrupt':
+        return 130;
+      default:
+        return 128;
+    }
+  } else if (message.startsWith('Exited with code ')) {
+    return parseInt(message.replace('Exited with code ', '').trim());
+  } else if (message === 'Success') {
+    return 0;
+  } else {
+    return 1;
+  }
+}
+
 export class PseudoTtyProcess {
   isAlive = true;
 
   exitCallbacks = [];
 
   constructor(private childProcess: ChildProcess) {
-    childProcess.onExit((exitCode) => {
+    childProcess.onExit((message) => {
       this.isAlive = false;
+
+      const exitCode = messageToCode(message);
+
       this.exitCallbacks.forEach((cb) => cb(exitCode));
     });
   }

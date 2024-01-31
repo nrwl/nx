@@ -385,7 +385,7 @@ All libraries that we generate automatically have aliases created in the root-le
 Hence we can easily import them into other libraries and our Angular application. As an example, let's create and expose a `ProductListComponent` component from our `libs/products` library. Either create it by hand or run
 
 ```shell
-nx g @nx/angular:component product-list --project=products --standalone --export
+nx g @nx/angular:component product-list --directory=libs/products/src/lib/product-list --nameAndDirectoryFormat=as-provided --standalone --export
 ```
 
 We don't need to implement anything fancy as we just want to learn how to import it into our main Angular application.
