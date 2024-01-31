@@ -19,7 +19,10 @@ export const App = () => {
   return (
     <>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
+      <SafeAreaView
+       style={{
+          flex: 1,
+        }}>
         <ScrollView
           ref={(ref) => {
             scrollViewRef.current = ref;
@@ -29,7 +32,7 @@ export const App = () => {
         >
           <View style={styles.section}>
             <Text style={styles.textLg}>Hello there,</Text>
-            <Text style={[styles.textXL, styles.appTitleText]} testID="heading">
+            <Text style={[styles.textXL, styles.appTitleText]} testID="heading" role="heading">
               Welcome <%= displayName %> 👋
             </Text>
           </View>

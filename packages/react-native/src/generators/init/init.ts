@@ -13,9 +13,6 @@ import { createNodes, ReactNativePluginOptions } from '../../../plugins/plugin';
 import {
   nxVersion,
   reactDomVersion,
-  reactNativeCommunityCli,
-  reactNativeCommunityCliAndroid,
-  reactNativeCommunityCliIos,
   reactNativeVersion,
   reactVersion,
 } from '../../utils/versions';
@@ -56,10 +53,6 @@ export function updateDependencies(host: Tree, schema: Schema) {
     },
     {
       '@nx/react-native': nxVersion,
-      '@react-native-community/cli': reactNativeCommunityCli,
-      '@react-native-community/cli-platform-android':
-        reactNativeCommunityCliAndroid,
-      '@react-native-community/cli-platform-ios': reactNativeCommunityCliIos,
     },
     undefined,
     schema.keepExistingVersions

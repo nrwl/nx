@@ -6,6 +6,10 @@ export interface ExpoEnsureSymlinkOutput {
   success: boolean;
 }
 
+/**
+ * TODO (@xiongemi): remove this function in v19.
+ * @deprecated It is no longer needed for react native 73.
+ */
 export default async function* ensureSymlinkExecutor(
   _,
   context: ExecutorContext
