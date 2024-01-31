@@ -157,7 +157,7 @@ jobs:
           if-no-files-found: error
 
   build-freebsd:
-     runs-on: macos-12
+     runs-on: macos-13-large
      name: Build FreeBSD
      timeout-minutes: 45
      steps:
@@ -223,6 +223,10 @@ jobs:
     needs:
       - build-freebsd
       - build
+    env:
+      GH_TOKEN: ${{ github.token }}
+      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      NPM_CONFIG_PROVENANCE: true
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v2
@@ -235,6 +239,8 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
           check-latest: true
           cache: 'pnpm'
+      - name: Check NPM Credentials
+        run: npm whoami && echo "NPM credentials are valid" || (echo "NPM credentials are invalid or have expired." && exit 1)
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Download all artifacts
@@ -271,7 +277,3 @@ jobs:
           git branch -f website
           git push -f origin website
           fi
-    env:
-      GH_TOKEN: ${{ github.token }}
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      NPM_CONFIG_PROVENANCE: true
