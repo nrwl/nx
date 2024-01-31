@@ -860,7 +860,7 @@ devDependencies:
     specifier: ^12.2.0
     version: 12.6.0(sass@1.55.0)(webpack@5.88.0)
   semver:
-    specifier: 7.5.3
+    specifier: ^7.5.3
     version: 7.5.3
   source-map:
     specifier: 0.7.3
