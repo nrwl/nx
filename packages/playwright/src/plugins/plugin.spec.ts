@@ -8,7 +8,7 @@ import { PlaywrightTestConfig } from '@playwright/test';
 // we overwrite the dynamic import function to use the regular syntax, which
 // jest does handle.
 import * as lcf from '../utils/load-config-file';
-(lcf as any).dynamicImport = (m) => import(m);
+(lcf as any).dynamicImport = (m) => require(m.split('?')[0]);
 
 describe('@nx/playwright/plugin', () => {
   let createNodesFunction = createNodes[1];
@@ -34,7 +34,7 @@ describe('@nx/playwright/plugin', () => {
   });
 
   afterEach(() => {
-    tempFs.cleanup();
+    // tempFs.cleanup();
     jest.resetModules();
   });
 
