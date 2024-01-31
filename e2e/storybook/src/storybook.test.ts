@@ -37,7 +37,7 @@ describe('Storybook generators and executors for monorepos', () => {
   xdescribe('serve storybook', () => {
     afterEach(() => killPorts());
 
-    it('should serve a React based Storybook setup that uses Vite', async () => {
+    it('should serve a React based Storybook setup that uses webpack', async () => {
       const p = await runCommandUntil(
         `run ${reactStorybookApp}:storybook`,
         (output) => {
@@ -52,7 +52,7 @@ describe('Storybook generators and executors for monorepos', () => {
     it('should build a React based storybook setup that uses webpack', () => {
       // build
       runCLI(`run ${reactStorybookApp}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${reactStorybookApp}/index.html`);
+      checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
     }, 300_000);
 
     // This test makes sure path resolution works
@@ -106,7 +106,7 @@ describe('Storybook generators and executors for monorepos', () => {
 
       // build React lib
       runCLI(`run ${reactStorybookApp}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${reactStorybookApp}/index.html`);
+      checkFilesExist(`${reactStorybookApp}/storybook-static/index.html`);
     }, 300_000);
   });
 });
