@@ -443,7 +443,9 @@ async function testGeneratedApp(
 ) {
   if (opts.checkLinter) {
     const lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain(
+      `Successfully ran target lint for project ${appName}`
+    );
   }
 
   runCLI(
