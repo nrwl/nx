@@ -1,5 +1,167 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`CI Workflow generator optional e2e should add e2e to azure CI config 1`] = `
+"name: CI
+
+trigger:
+  - main
+pr:
+  - main
+
+variables:
+  CI: 'true'
+  \${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(System.PullRequest.PullRequestNumber)
+    TARGET_BRANCH: $[replace(variables['System.PullRequest.TargetBranch'],'refs/heads/','origin/')]
+    BASE_SHA: $(git merge-base $(TARGET_BRANCH) HEAD)
+  \${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+    NX_BRANCH: $(Build.SourceBranchName)
+    BASE_SHA: $(git rev-parse HEAD~1)
+  HEAD_SHA: $(git rev-parse HEAD)
+
+jobs:
+  - job: main
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+      - script: npm ci
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "e2e" targets have been requested
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e"
+
+      - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint test build e2e
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to bitbucket pipelines config 1`] = `
+"image: node:20
+
+clone:
+  depth: full
+
+pipelines:
+  pull-requests:
+    '**':
+      - parallel:
+          - step:
+              name: CI
+              script:
+                - export NX_BRANCH=$BITBUCKET_PR_ID
+
+                - npm ci
+
+                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "e2e" targets have been requested
+                # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e"
+
+                - npx nx-cloud record -- nx format:check
+                - npx nx affected -t=lint test build e2e
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to circleci CI config 1`] = `
+"version: 2.1
+
+orbs:
+  nx: nrwl/nx@1.6.2
+
+jobs:
+  main:
+    docker:
+      - image: cimg/node:lts-browsers
+    steps:
+      - checkout
+      - run: npm ci
+      - nx/set-shas:
+          main-branch-name: 'main'
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "e2e" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e"
+
+      - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build e2e
+
+workflows:
+  version: 2
+
+  ci:
+    jobs:
+      - main
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to github CI config 1`] = `
+"name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Cache node_modules
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - uses: nrwl/nx-set-shas@v4
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "e2e" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e"
+
+      - run: npx nx-cloud record -- nx format:check
+      - run: npx nx affected -t=lint test build e2e
+"
+`;
+
+exports[`CI Workflow generator optional e2e should add e2e to github CI config with custom name 1`] = `
+"name: My custom-workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      # Cache node_modules
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - uses: nrwl/nx-set-shas@v4
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "e2e" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e"
+
+      - run: npx nx-cloud record -- nx format:check
+      - run: npx nx affected -t=lint test build e2e
+"
+`;
+
 exports[`CI Workflow generator with npm should generate azure CI config 1`] = `
 "name: CI
 
@@ -30,7 +192,7 @@ jobs:
       # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint test build
 "
 `;
 
@@ -55,7 +217,7 @@ pipelines:
                 # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
                 - npx nx-cloud record -- nx format:check
-                - npx nx affected -t=lint,test,build
+                - npx nx affected -t=lint test build
 "
 `;
 
@@ -79,7 +241,7 @@ jobs:
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
 
 workflows:
   version: 2
@@ -122,7 +284,7 @@ jobs:
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t=lint,test,build
+      - run: npx nx affected -t=lint test build
 "
 `;
 
@@ -158,7 +320,7 @@ jobs:
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t=lint,test,build
+      - run: npx nx affected -t=lint test build
 "
 `;
 
@@ -182,7 +344,7 @@ CI:
     # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
     - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
 "
 `;
 
@@ -220,7 +382,7 @@ jobs:
       # - script: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: pnpm exec nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint test build
 "
 `;
 
@@ -247,7 +409,7 @@ pipelines:
                 # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
                 - pnpm exec nx-cloud record -- nx format:check
-                - pnpm exec nx affected -t=lint,test,build
+                - pnpm exec nx affected -t=lint test build
 "
 `;
 
@@ -275,7 +437,7 @@ jobs:
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
 
 workflows:
   version: 2
@@ -322,7 +484,7 @@ jobs:
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -t=lint,test,build
+      - run: pnpm exec nx affected -t=lint test build
 "
 `;
 
@@ -362,7 +524,7 @@ jobs:
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -t=lint,test,build
+      - run: pnpm exec nx affected -t=lint test build
 "
 `;
 
@@ -388,7 +550,7 @@ CI:
     # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
     - pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
 "
 `;
 
@@ -424,7 +586,7 @@ jobs:
       # - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint test build
 "
 `;
 
@@ -449,7 +611,7 @@ pipelines:
                 # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
                 - yarn nx-cloud record -- nx format:check
-                - yarn nx affected -t=lint,test,build
+                - yarn nx affected -t=lint test build
 "
 `;
 
@@ -473,7 +635,7 @@ jobs:
       # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
 
 workflows:
   version: 2
@@ -516,7 +678,7 @@ jobs:
       # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn nx-cloud record -- nx format:check
-      - run: yarn nx affected -t=lint,test,build
+      - run: yarn nx affected -t=lint test build
 "
 `;
 
@@ -552,7 +714,7 @@ jobs:
       # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn nx-cloud record -- nx format:check
-      - run: yarn nx affected -t=lint,test,build
+      - run: yarn nx affected -t=lint test build
 "
 `;
 
@@ -576,7 +738,7 @@ CI:
     # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
     - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
 "
 `;
 

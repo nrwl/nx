@@ -131,6 +131,61 @@ describe('CI Workflow generator', () => {
       });
     });
   });
+
+  describe('optional e2e', () => {
+    beforeEach(() => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          '@nrwl/cypress': 'latest',
+        };
+        return json;
+      });
+    });
+
+    it('should add e2e to github CI config', async () => {
+      setNxCloud(tree);
+      await ciWorkflowGenerator(tree, { ci: 'github', name: 'CI' });
+
+      expect(tree.read('.github/workflows/ci.yml', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should add e2e to circleci CI config', async () => {
+      setNxCloud(tree);
+      await ciWorkflowGenerator(tree, { ci: 'circleci', name: 'CI' });
+
+      expect(tree.read('.circleci/config.yml', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should add e2e to azure CI config', async () => {
+      setNxCloud(tree);
+      await ciWorkflowGenerator(tree, { ci: 'azure', name: 'CI' });
+
+      expect(tree.read('azure-pipelines.yml', 'utf-8')).toMatchSnapshot();
+    });
+
+    it('should add e2e to github CI config with custom name', async () => {
+      setNxCloud(tree);
+      await ciWorkflowGenerator(tree, {
+        ci: 'github',
+        name: 'My custom-workflow',
+      });
+
+      expect(
+        tree.read('.github/workflows/my-custom-workflow.yml', 'utf-8')
+      ).toMatchSnapshot();
+    });
+
+    it('should add e2e to bitbucket pipelines config', async () => {
+      setNxCloud(tree);
+      await ciWorkflowGenerator(tree, {
+        ci: 'bitbucket-pipelines',
+        name: 'CI',
+      });
+
+      expect(tree.read('bitbucket-pipelines.yml', 'utf-8')).toMatchSnapshot();
+    });
+  });
 });
 
 function setNxCloud(tree: Tree) {

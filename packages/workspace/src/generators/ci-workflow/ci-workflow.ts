@@ -35,7 +35,8 @@ export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
     ...packageJson.dependencies,
     ...packageJson.devDependencies,
   };
-  const hasE2E = allDependencies['@nrwl/cypress'] || allDependencies['@nrwl/playwright'];
+  const hasE2E =
+    allDependencies['@nrwl/cypress'] || allDependencies['@nrwl/playwright'];
 
   if (ci === 'bitbucket-pipelines' && defaultBranchNeedsOriginPrefix(nxJson)) {
     writeJson(host, 'nx.json', appendOriginPrefix(nxJson));
