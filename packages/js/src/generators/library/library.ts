@@ -244,7 +244,6 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
 
     if (options.publishable) {
       projectConfiguration.targets['nx-release-publish'] = {
-        dependsOn: ['build', '^nx-release-publish'],
         options: {
           packageRoot: getOutputPath(options).replaceAll(
             options.name,
