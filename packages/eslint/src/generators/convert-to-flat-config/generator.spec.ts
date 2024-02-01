@@ -453,6 +453,8 @@ describe('convert-to-flat-config generator', () => {
       }
     );
 
+    expect(tree.exists('eslint.config.js')).toBeFalsy();
+    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeFalsy();
     await convertToFlatConfigGenerator(tree, options);
     expect(tree.exists('eslint.config.js')).toBeTruthy();
     expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
@@ -486,6 +488,8 @@ describe('convert-to-flat-config generator', () => {
       }
     );
 
+    expect(tree.exists('eslint.config.js')).toBeFalsy();
+    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeFalsy();
     await convertToFlatConfigGenerator(tree, options);
     expect(tree.exists('eslint.config.js')).toBeTruthy();
     expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
