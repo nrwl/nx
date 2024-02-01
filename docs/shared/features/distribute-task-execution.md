@@ -7,7 +7,7 @@ title="Nx Agents in action splitting e2e tests at a file level"
 
 **Nx Agents** lets you distribute your CI across many machines without adding any configuration to your workspace. It comes with features such as scaling of agents based on the PR, flaky task re-running, and intelligent task splitting and distribution. Keep reading to learn more.
 
-![Distribute Task Execution with Nx Agents](/shared/images/dte/distributed-task-execution-on-workflows.svg)
+![Distribute Task Execution with Nx Agents](/shared/images/dte/nx-agents-orchestration-diagram.svg)
 
 For a more thorough explanation of how Nx Agents optimizes your CI pipeline, read this [guide to parallelization and distribution in CI](/ci/concepts/parallelization-distribution).
 
@@ -24,6 +24,10 @@ Enabling task distribution with Nx Agents can be done in a single line. Add the 
 ```
 
 The `--distribute-on` flag instructs Nx Cloud to distribute tasks across 8 agents of type `linux-medium-js`. `linux-medium-js` is the name of the launch template that will be used to provision the agent. The default launch templates [can be found here](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml)
+
+{% callout type="note" title="Enable VCS Integration" %}
+Nx Agents require a version control system integration with your repository in order to function. The integrations currently available are GitHub, GitLab and Bitbucket. These integrations can be enabled from your [Nx Cloud dashboard](https://nx.app).
+{% /callout %}
 
 ## Launch Templates
 

@@ -2,7 +2,7 @@
 
 You can find built-in launch templates [here](https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates).
 
-The easiest way to create a new custom launch template is to modify one of built-in ones. To do that, create a file in the
+The easiest way to create a new custom launch template is to modify one of the built-in ones. To do that, create a file in the
 `.nx/workflows` folder and copy one of the built-in templates there. You can name the file any way you want (e.g., `agents.yaml`).
 
 This is an example of a launch template using all built-in features:
@@ -52,14 +52,14 @@ See their detailed description and pricing at [nx.app/pricing](https://nx.app/pr
 
 ## Image
 
-The following images are avialable:
+The following images are available:
 
 - `ubuntu22.04-node20.9-v1`
 - `ubuntu22.04-node20.9-withDind-v1`
 - `ubuntu22.04-node20.9-v2`
 - `ubuntu22.04-node20.9-withDind-v2`
 
-Enterprise users can use custom images.
+Enterprise accounts can use custom images.
 
 ## Reusable Steps
 

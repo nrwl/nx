@@ -37,7 +37,7 @@ This will set `VAR1` and `VAR2` on agents to the same values set on the main job
 
 You can also pass `--with-env-vars="auto"` which will filter out all OS-specific env vars and pass the rest to agents.
 
-Note, none of values passed to agents stored on Nx Cloud side.
+Note: none of the values passed to agents are stored by Nx Cloud.
 
 ### --use-dte-by-default
 
@@ -69,10 +69,20 @@ Nx Cloud side. You can disable this by passing `--require-explicit-completion`. 
 Invoking `npx nx-cloud start-ci-run` will tell Nx to distribute by default. You can enable/disable distribution for
 individual commands as follows:
 
-- `nx affected -t build --agents` (explicitly enable distribution, Nx >= 18)
-- `nx affected -t build --no-agents` (explicitly disable distribution, Nx >= 18)
-- `nx affected -t build --dte` (explicitly enable distribution, Nx >= 14.7)
-- `nx affected -t build --no-dte` (explicitly disable distribution, Nx >= 14.7)
+{% tabs %}
+{% tab label="Nx >= 18" %}
+
+- `nx affected -t build --agents` (explicitly enable distribution)
+- `nx affected -t build --no-agents` (explicitly disable distribution)
+
+{% /tab %}
+{% tab label="Nx >= 14.7" %}
+
+- `nx affected -t build --dte` (explicitly enable distribution)
+- `nx affected -t build --no-dte` (explicitly disable distribution)
+
+{% /tab %}
+{% /tabs %}
 
 ## npx nx-cloud stop-all-agents
 
