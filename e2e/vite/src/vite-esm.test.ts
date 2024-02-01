@@ -19,7 +19,9 @@ describe('Vite ESM tests', () => {
 
   it('should build with Vite when it is ESM-only', async () => {
     const appName = uniq('viteapp');
-    runCLI(`generate @nx/react:app ${appName} --bundler=vite`);
+    runCLI(
+      `generate @nx/react:app ${appName} --bundler=vite --project-name-and-root-format=as-provided`
+    );
 
     // .mts file is needed because Nx will transpile .ts files as CJS
     renameFile(`${appName}/vite.config.ts`, `${appName}/vite.config.mts`);
