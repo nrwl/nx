@@ -31,13 +31,27 @@ export async function updateLockFile(
     return [];
   }
 
+  const packageManager = detectPackageManager(cwd);
+
+  if (
+    packageManager === 'yarn' &&
+    !gte(getPackageManagerVersion(packageManager), '2.0.0')
+  ) {
+    // yarn classic does not store workspace data in the lock file, so we don't need to update it
+    if (verbose) {
+      console.log(
+        '\nSkipped lock file update because it is not necessary for Yarn Classic.'
+      );
+    }
+    return [];
+  }
+
   const isDaemonEnabled = daemonClient.enabled();
   if (isDaemonEnabled) {
     // temporarily stop the daemon, as it will error if the lock file is updated
     await daemonClient.stop();
   }
 
-  const packageManager = detectPackageManager(cwd);
   const packageManagerCommands = getPackageManagerCommand(packageManager);
 
   let installArgs = generatorOptions?.installArgs || '';
@@ -47,13 +61,10 @@ export async function updateLockFile(
   let env: object = {};
 
   if (generatorOptions?.installIgnoreScripts) {
-    if (
-      packageManager === 'yarn' &&
-      gte(getPackageManagerVersion(packageManager), '2.0.0')
-    ) {
+    if (packageManager === 'yarn') {
       env = { YARN_ENABLE_SCRIPTS: 'false' };
     } else {
-      // npm, pnpm, and yarn classic all use the same --ignore-scripts option
+      // npm and pnpm use the same --ignore-scripts option
       installArgs = `${installArgs} --ignore-scripts`.trim();
     }
   }
