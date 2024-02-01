@@ -182,9 +182,13 @@ async function addFiles(
       project: options.project,
       directory: options.directory,
       jsx: options.jsx,
+      js: options.js,
     });
 
-    const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
+    const cyFile = joinPathFragments(
+      projectConfig.root,
+      options.js ? 'cypress.config.js' : 'cypress.config.ts'
+    );
     let webServerCommands: Record<string, string>;
 
     let ciWebServerCommand: string;

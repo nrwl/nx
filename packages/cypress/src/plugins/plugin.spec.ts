@@ -6,6 +6,12 @@ import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { join } from 'path';
 import { nxE2EPreset } from '../../plugins/cypress-preset';
 
+// Jest can't handle the dynamic import, and mocking it doesn't work either.
+// we overwrite the dynamic import function to use the regular syntax, which
+// jest does handle.
+import * as lcf from '../utils/load-config-file';
+(lcf as any).dynamicImport = (m) => require(m.split('?')[0]);
+
 describe('@nx/cypress/plugin', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
@@ -42,7 +48,7 @@ describe('@nx/cypress/plugin', () => {
     tempFs.cleanup();
   });
 
-  it('should add a target for e2e', () => {
+  it('should add a target for e2e', async () => {
     mockCypressConfig(
       defineConfig({
         e2e: {
@@ -57,7 +63,7 @@ describe('@nx/cypress/plugin', () => {
         },
       })
     );
-    const nodes = createNodesFunction(
+    const nodes = await createNodesFunction(
       'cypress.config.js',
       {
         targetName: 'e2e',
@@ -103,7 +109,7 @@ describe('@nx/cypress/plugin', () => {
     `);
   });
 
-  it('should add a target for component testing', () => {
+  it('should add a target for component testing', async () => {
     mockCypressConfig(
       defineConfig({
         component: {
@@ -116,7 +122,7 @@ describe('@nx/cypress/plugin', () => {
         },
       })
     );
-    const nodes = createNodesFunction(
+    const nodes = await createNodesFunction(
       'cypress.config.js',
       {
         componentTestingTargetName: 'component-test',
@@ -157,7 +163,7 @@ describe('@nx/cypress/plugin', () => {
     `);
   });
 
-  it('should use ciDevServerTarget to create additional configurations', () => {
+  it('should use ciDevServerTarget to create additional configurations', async () => {
     mockCypressConfig(
       defineConfig({
         e2e: {
@@ -174,7 +180,7 @@ describe('@nx/cypress/plugin', () => {
         },
       })
     );
-    const nodes = createNodesFunction(
+    const nodes = await createNodesFunction(
       'cypress.config.js',
       {
         componentTestingTargetName: 'component-test',

@@ -7,8 +7,9 @@ import type {
 } from 'typescript';
 import { NxCypressE2EPresetOptions } from '../../plugins/cypress-preset';
 
-const TS_QUERY_EXPORT_CONFIG_PREFIX =
-  ':matches(ExportAssignment, BinaryExpression:has(Identifier[name="module"]):has(Identifier[name="exports"]))';
+const TS_QUERY_COMMON_JS_EXPORT_SELECTOR =
+  'BinaryExpression:has(Identifier[name="module"]):has(Identifier[name="exports"])';
+const TS_QUERY_EXPORT_CONFIG_PREFIX = `:matches(ExportAssignment, ${TS_QUERY_COMMON_JS_EXPORT_SELECTOR}) `;
 
 export async function addDefaultE2EConfig(
   cyConfigContents: string,
@@ -20,6 +21,9 @@ export async function addDefaultE2EConfig(
   }
   const { tsquery } = await import('@phenomnomnominal/tsquery');
 
+  const isCommonJS =
+    tsquery.query(cyConfigContents, TS_QUERY_COMMON_JS_EXPORT_SELECTOR).length >
+    0;
   const testingTypeConfig = tsquery.query<PropertyAssignment>(
     cyConfigContents,
     `${TS_QUERY_EXPORT_CONFIG_PREFIX} PropertyAssignment:has(Identifier[name="e2e"])`
@@ -47,7 +51,11 @@ export async function addDefaultE2EConfig(
       }
     );
 
-    return `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+    return isCommonJS
+      ? `const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+    
+    ${updatedConfigContents}`
+      : `import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
     
     ${updatedConfigContents}`;
   }
