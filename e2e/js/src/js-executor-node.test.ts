@@ -152,17 +152,6 @@ describe('js:node executor', () => {
           watch: false,
         },
       };
-      config.targets.build = {
-        ...config.targets.build,
-        configurations: {
-          development: {
-            outputPath: 'dist/packages/api-dev',
-          },
-          production: {
-            outputPath: 'dist/packages/api-prod',
-          },
-        },
-      };
       return config;
     });
 
