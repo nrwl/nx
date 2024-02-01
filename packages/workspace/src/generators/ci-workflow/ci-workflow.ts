@@ -11,6 +11,7 @@ import {
 } from '@nx/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { join } from 'path';
+import { all } from 'axios';
 
 export interface Schema {
   name: string;
@@ -19,7 +20,6 @@ export interface Schema {
 
 export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
   const ci = schema.ci;
-  const options = normalizeOptions(schema);
 
   const nxJson: NxJsonConfiguration = readJson(host, 'nx.json');
   const nxCloudUsed =
@@ -30,11 +30,18 @@ export async function ciWorkflowGenerator(host: Tree, schema: Schema) {
   if (!nxCloudUsed) {
     throw new Error('This workspace is not connected to Nx Cloud.');
   }
+  const packageJson = readJson(host, 'package.json');
+  const allDependencies = {
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies,
+  };
+  const hasE2E = allDependencies['@nrwl/cypress'] || allDependencies['@nrwl/playwright'];
 
   if (ci === 'bitbucket-pipelines' && defaultBranchNeedsOriginPrefix(nxJson)) {
     writeJson(host, 'nx.json', appendOriginPrefix(nxJson));
   }
 
+  const options = normalizeOptions(schema, hasE2E);
   generateFiles(host, join(__dirname, 'files', ci), '', options);
   await formatFiles(host);
 }
@@ -46,16 +53,18 @@ interface Substitutes {
   packageManager: string;
   packageManagerInstall: string;
   packageManagerPrefix: string;
+  hasE2E: boolean;
   tmpl: '';
 }
 
-function normalizeOptions(options: Schema): Substitutes {
+function normalizeOptions(options: Schema, hasE2E): Substitutes {
   const { name: workflowName, fileName: workflowFileName } = names(
     options.name
   );
   const packageManager = detectPackageManager();
   const { exec: packageManagerPrefix, ciInstall: packageManagerInstall } =
     getPackageManagerCommand(packageManager);
+
   return {
     workflowName,
     workflowFileName,
@@ -63,6 +72,7 @@ function normalizeOptions(options: Schema): Substitutes {
     packageManagerInstall,
     packageManagerPrefix,
     mainBranch: deduceDefaultBase(),
+    hasE2E,
     tmpl: '',
   };
 }

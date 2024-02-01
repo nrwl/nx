@@ -21,7 +21,7 @@ jobs:
       # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+      - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test<% if(hasE2E){ %>,e2e<% } %>,build
 
 workflows:
   version: 2
