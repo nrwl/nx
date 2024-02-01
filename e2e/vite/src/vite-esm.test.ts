@@ -23,8 +23,8 @@ describe('Vite ESM tests', () => {
 
     // .mts file is needed because Nx will transpile .ts files as CJS
     renameFile(
-      `apps/${appName}/vite.config.ts`,
-      `apps/${appName}/vite.config.mts`
+      `${appName}/vite.config.ts`,
+      `${appName}/vite.config.mts`
     );
 
     // Remove CJS entry point for Vite
@@ -39,6 +39,6 @@ describe('Vite ESM tests', () => {
 
     runCLI(`build ${appName}`);
 
-    checkFilesExist(`dist/apps/${appName}/index.html`);
+    checkFilesExist(`dist/${appName}/index.html`);
   });
 });
