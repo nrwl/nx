@@ -25,11 +25,3 @@ Every time you use Nx to run a task, Nx will attempt to run the task and all its
 There's a limit to how many tasks can be run in parallel on the same machine, but the logic that Nx uses to assign tasks to parallel processes can also be used by Nx Cloud to efficiently [distribute tasks across multiple agent machines](/ci/features/distribute-task-execution). Once those tasks are run, the [remote cache](/ci/features/remote-cache) is used to replay those task results on the main machine. After the pipeline is finished, it looks like all the tasks were run on a single machine - but much faster than a single machine could do it.
 
 For a detailed analysis of different strategies for running tasks concurrently, read the [Parallelization and Distribution guide](/ci/concepts/parallelization-distribution)
-
-## More CI Performance Features Coming Soon
-
-The Nx team is continuing to push the limits of how fast CI can be.
-
-Soon, you'll be able to use [Nx Agents](/ci/features/nx-agents) to have Nx Cloud spin up agents for you based on how large your PR is. [Nx Agents](/ci/features/nx-agents) will also allow you to automatically identify and re-run flaky tests in their own agent. Later, Nx Workflows will enable you to use Nx Cloud directly as your CI provider, which will open up the possibility for more optimizations.
-
-{% call-to-action title="Sign Up for Early Access" icon="nxcloud" description="Experience Nx Cloud Agents for yourself" url="https://cloud.nx.app/workflows-early-access" /%}

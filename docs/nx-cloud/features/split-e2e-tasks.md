@@ -55,4 +55,4 @@ Smaller e2e tasks enable the following benefits:
 
 - Nx's cache can be used for all the e2e tasks that succeeded and only the failed tasks need to be re-run
 - Distributed Task Execution allows your e2e tests to be run on multiple machines simultaneously, which reduces the total time of the CI pipeline
-- Nx Agents can [automatically re-run failed flaky e2e tests](/ci/concepts/flaky-tasks) on a separate agent without a developer needing to manually re-run the CI pipeline
+- Nx Agents can [automatically re-run failed flaky e2e tests](/ci/features/flaky-tasks) on a separate agent without a developer needing to manually re-run the CI pipeline

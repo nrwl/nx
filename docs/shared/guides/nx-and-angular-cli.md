@@ -213,7 +213,7 @@ Features like
 - running [tasks in parallel](/features/run-tasks#run-tasks-for-multiple-projects)
 - applying [computation caching](/features/cache-task-results)
 - offering [remote caching abilities](/ci/features/remote-cache) on CI
-- offering [task distribution across machines (DTE)](/ci/features/distribute-task-execution)
+- offering [task distribution across machines (Nx Agents)](/ci/features/distribute-task-execution)
 
 And, Nx already uses fast, modern tooling like [ESBuild](/nx-api/esbuild), [Vite](/nx-api/vite), Vitest and [Rspack](/nx-api/rspack) for non-Angular stacks. So once Angular is ready to use these tools, Nx will also be ready.
 

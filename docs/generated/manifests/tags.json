@@ -710,13 +710,6 @@
       "path": "/ci/intro/ci-with-nx"
     },
     {
-      "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
-      "file": "shared/features/distribute-task-execution",
-      "id": "distribute-task-execution",
-      "name": "Distribute Task Execution",
-      "path": "/ci/features/distribute-task-execution"
-    },
-    {
       "description": "",
       "file": "nx-cloud/concepts/parallelization-distribution",
       "id": "parallelization-distribution",
@@ -1135,7 +1128,7 @@
       "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
       "file": "shared/features/remote-cache",
       "id": "remote-cache",
-      "name": "Use Remote Caching",
+      "name": "Use Remote Caching (Nx Replay)",
       "path": "/ci/features/remote-cache"
     }
   ],
