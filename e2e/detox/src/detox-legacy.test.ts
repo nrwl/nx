@@ -30,7 +30,9 @@ describe('@nx/detox (legacy)', () => {
     checkFilesExist(`apps/${appName}-e2e/src/app.spec.ts`);
 
     const lintResults = await runCLIAsync(`lint ${appName}-e2e`);
-    expect(lintResults.combinedOutput).toContain('All files pass linting');
+    expect(lintResults.combinedOutput).toContain(
+      'Successfully ran target lint'
+    );
   });
 
   it('should create files and run lint command for expo apps', async () => {
@@ -46,7 +48,9 @@ describe('@nx/detox (legacy)', () => {
     checkFilesExist(`apps/${expoAppName}-e2e/src/app.spec.ts`);
 
     const lintResults = await runCLIAsync(`lint ${expoAppName}-e2e`);
-    expect(lintResults.combinedOutput).toContain('All files pass linting');
+    expect(lintResults.combinedOutput).toContain(
+      'Successfully ran target lint'
+    );
   });
 
   it('should support generating projects with the new name and root format', async () => {
@@ -68,7 +72,9 @@ describe('@nx/detox (legacy)', () => {
     );
 
     const lintResults = await runCLIAsync(`lint ${appName}-e2e`);
-    expect(lintResults.combinedOutput).toContain('All files pass linting');
+    expect(lintResults.combinedOutput).toContain(
+      'Successfully ran target lint'
+    );
   });
 
   // TODO: @xiongemi please fix or remove this test

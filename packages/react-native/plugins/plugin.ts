@@ -106,6 +106,7 @@ function buildReactNativeTargets(
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
       command: `react-native start`,
+      options: { cwd: projectRoot },
     },
     [options.podInstallTargetName]: {
       command: `pod install`,
@@ -150,7 +151,6 @@ function buildReactNativeTargets(
     },
     [options.syncDepsTargetName]: {
       executor: '@nx/react-native:sync-deps',
-      options: { cwd: projectRoot },
     },
     [options.upgradeTargetname]: {
       command: `react-native upgrade`,
