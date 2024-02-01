@@ -22,10 +22,22 @@ import {
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
-export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
+export function reactNativeInitGenerator(host: Tree, schema: Schema) {
+  return reactNativeInitGeneratorInternal(host, {
+    addPlugin: false,
+    ...schema,
+  });
+}
+
+export async function reactNativeInitGeneratorInternal(
+  host: Tree,
+  schema: Schema
+) {
   addGitIgnoreEntry(host);
 
-  if (process.env.NX_ADD_PLUGINS !== 'false') {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  if (schema.addPlugin) {
     addPlugin(host);
   }
 

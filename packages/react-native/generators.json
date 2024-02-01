@@ -4,7 +4,7 @@
   "extends": ["@nx/workspace"],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#reactNativeInitGenerator",
+      "factory": "./src/generators/init/init#reactNativeInitGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nrwl/react-native` plugin.",
       "hidden": true
@@ -30,7 +30,7 @@
       "aliases": ["c"]
     },
     "storybook-configuration": {
-      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGenerator",
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Set up Storybook for a React-native application or library.",
       "hidden": false

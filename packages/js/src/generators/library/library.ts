@@ -48,6 +48,7 @@ export async function libraryGenerator(
   schema: LibraryGeneratorSchema
 ) {
   return await libraryGeneratorInternal(tree, {
+    addPlugin: false,
     // provide a default projectNameAndRootFormat to avoid breaking changes
     // to external generators invoking this one
     projectNameAndRootFormat: 'derived',
@@ -94,6 +95,7 @@ export async function libraryGeneratorInternal(
       includeLib: true,
       skipFormat: true,
       testEnvironment: options.testEnvironment,
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -268,6 +270,7 @@ export type AddLintOptions = Pick<
   | 'setParserOptionsProject'
   | 'rootProject'
   | 'bundler'
+  | 'addPlugin'
 >;
 
 export async function addLint(
@@ -286,6 +289,7 @@ export async function addLint(
     unitTestRunner: options.unitTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
+    addPlugin: options.addPlugin,
   });
   const {
     addOverrideToLintConfig,
@@ -558,6 +562,8 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedSchema> {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   /**
    * We are deprecating the compiler and the buildable options.
    * However, we want to keep the existing behavior for now.

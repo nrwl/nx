@@ -296,6 +296,7 @@ export async function addLintingToApplication(
     skipFormat: true,
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
+    addPlugin: options.addPlugin,
   });
 
   return lintTask;
@@ -390,6 +391,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   if (options.framework === 'nest') {
+    // nx-ignore-next-line
     const { applicationGenerator } = ensurePackage('@nx/nest', nxVersion);
     const nestTasks = await applicationGenerator(tree, {
       ...options,
@@ -538,6 +540,7 @@ async function normalizeOptions(
     : [];
 
   return {
+    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
     ...options,
     name: appProjectName,
     frontendProject: options.frontendProject

@@ -29,13 +29,25 @@ async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
   });
 }
 
-export async function storybookConfigurationGenerator(
+export function storybookConfigurationGenerator(
+  tree: Tree,
+  schema: StorybookConfigureSchema
+) {
+  return storybookConfigurationGeneratorInternal(tree, {
+    addPlugin: false,
+    ...schema,
+  });
+}
+
+export async function storybookConfigurationGeneratorInternal(
   host: Tree,
   schema: StorybookConfigureSchema
 ): Promise<GeneratorCallback> {
   const { configurationGenerator } = ensurePackage<
     typeof import('@nx/storybook')
   >('@nx/storybook', nxVersion);
+
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   const installTask = await configurationGenerator(host, {
     project: schema.name,
@@ -46,6 +58,7 @@ export async function storybookConfigurationGenerator(
     standaloneConfig: schema.standaloneConfig,
     tsConfiguration: schema.tsConfiguration,
     skipFormat: true,
+    addPlugin: schema.addPlugin,
   });
 
   const installRequiredPackagesTask = await addDependenciesToPackageJson(

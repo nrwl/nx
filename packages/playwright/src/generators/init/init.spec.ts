@@ -1,5 +1,4 @@
-import { Tree, readNxJson, updateNxJson } from '@nx/devkit';
-import { withEnvironmentVariables } from '@nx/devkit/internal-testing-utils';
+import { readNxJson, Tree, updateNxJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { initGenerator } from './init';
@@ -14,6 +13,7 @@ describe('@nx/playwright:init', () => {
   it('should add the plugin', async () => {
     await initGenerator(tree, {
       skipFormat: true,
+      addPlugin: false,
       skipPackageJson: false,
     });
     const nxJson = readNxJson(tree);
@@ -35,6 +35,7 @@ describe('@nx/playwright:init', () => {
     });
     await initGenerator(tree, {
       skipFormat: true,
+      addPlugin: false,
       skipPackageJson: false,
     });
     const nxJson = readNxJson(tree);
@@ -57,6 +58,7 @@ describe('@nx/playwright:init', () => {
     });
     await initGenerator(tree, {
       skipFormat: true,
+      addPlugin: false,
       skipPackageJson: false,
     });
     const nxJson = readNxJson(tree);
@@ -68,17 +70,11 @@ describe('@nx/playwright:init', () => {
   });
 
   it('should not add plugin if NX_ADD_PLUGINS variable is set', async () => {
-    await withEnvironmentVariables(
-      {
-        NX_ADD_PLUGINS: 'false',
-      },
-      async () => {
-        await initGenerator(tree, {
-          skipFormat: true,
-          skipPackageJson: false,
-        });
-      }
-    );
+    await initGenerator(tree, {
+      skipFormat: true,
+      addPlugin: false,
+      skipPackageJson: false,
+    });
     const nxJson = readNxJson(tree);
     expect(nxJson.plugins).toMatchInlineSnapshot(`undefined`);
   });

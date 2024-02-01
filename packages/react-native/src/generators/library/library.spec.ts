@@ -20,6 +20,7 @@ describe('lib', () => {
     unitTestRunner: 'jest',
     strict: true,
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: true,
   };
 
   beforeEach(() => {

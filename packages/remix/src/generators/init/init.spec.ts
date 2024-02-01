@@ -8,7 +8,9 @@ describe('Remix Init Generator', () => {
     const tree = createTreeWithEmptyWorkspace();
 
     // ACT
-    await initGenerator(tree, {});
+    await initGenerator(tree, {
+      addPlugin: true,
+    });
 
     // ASSERT
     const pkgJson = readJson(tree, 'package.json');

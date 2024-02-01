@@ -27,6 +27,7 @@ describe('app', () => {
         name: 'my-node-app',
         bundler: 'webpack',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
       expect(project).toMatchInlineSnapshot(`
@@ -66,6 +67,7 @@ describe('app', () => {
         name: 'my-node-app',
         tags: 'one,two',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
@@ -79,6 +81,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(tree.exists(`my-node-app/jest.config.ts`)).toBeTruthy();
       expect(tree.exists('my-node-app/src/main.ts')).toBeTruthy();
@@ -155,6 +158,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       const tsconfig = readJson(tree, 'my-node-app/tsconfig.json');
@@ -168,6 +172,7 @@ describe('app', () => {
         name: 'my-node-app',
         directory: 'my-dir/my-node-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       const project = readProjectConfiguration(tree, 'my-node-app');
 
@@ -247,6 +252,7 @@ describe('app', () => {
         name: 'my-node-app',
         directory: 'myDir',
         tags: 'one,two',
+        addPlugin: true,
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
@@ -265,6 +271,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         directory: 'myDir',
+        addPlugin: true,
       });
 
       // Make sure these exist
@@ -310,6 +317,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         unitTestRunner: 'none',
+        addPlugin: true,
       });
       expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(tree.exists('my-node-app/src/test-setup.ts')).toBeFalsy();
@@ -321,11 +329,15 @@ describe('app', () => {
 
   describe('--frontendProject', () => {
     it('should configure proxy', async () => {
-      await angularApplicationGenerator(tree, { name: 'my-frontend' });
+      await angularApplicationGenerator(tree, {
+        name: 'my-frontend',
+        addPlugin: true,
+      });
 
       await applicationGenerator(tree, {
         name: 'my-node-app',
         frontendProject: 'my-frontend',
+        addPlugin: true,
       });
 
       expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
@@ -335,16 +347,21 @@ describe('app', () => {
     });
 
     it('should configure proxies for multiple node projects with the same frontend app', async () => {
-      await angularApplicationGenerator(tree, { name: 'my-frontend' });
+      await angularApplicationGenerator(tree, {
+        name: 'my-frontend',
+        addPlugin: true,
+      });
 
       await applicationGenerator(tree, {
         name: 'cart',
         frontendProject: 'my-frontend',
+        addPlugin: true,
       });
 
       await applicationGenerator(tree, {
         name: 'billing',
         frontendProject: 'my-frontend',
+        addPlugin: true,
       });
 
       expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
@@ -356,11 +373,15 @@ describe('app', () => {
     });
 
     it('should work with unnormalized project names', async () => {
-      await angularApplicationGenerator(tree, { name: 'myFrontend' });
+      await angularApplicationGenerator(tree, {
+        name: 'myFrontend',
+        addPlugin: true,
+      });
 
       await applicationGenerator(tree, {
         name: 'my-node-app',
         frontendProject: 'myFrontend',
+        addPlugin: true,
       });
 
       expect(tree.exists('my-frontend/proxy.conf.json')).toBeTruthy();
@@ -376,6 +397,7 @@ describe('app', () => {
         name: 'my-node-app',
         tags: 'one,two',
         swcJest: true,
+        addPlugin: true,
       } as Schema);
 
       expect(tree.read(`my-node-app/jest.config.ts`, 'utf-8'))
@@ -402,6 +424,7 @@ describe('app', () => {
         name: 'my-node-app',
         tags: 'one,two',
         babelJest: true,
+        addPlugin: true,
       } as Schema);
 
       expect(tree.read(`my-node-app/jest.config.ts`, 'utf-8'))
@@ -427,6 +450,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         js: true,
+        addPlugin: true,
       } as Schema);
 
       expect(tree.exists(`my-node-app/jest.config.js`)).toBeTruthy();
@@ -453,6 +477,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         js: true,
+        addPlugin: true,
       } as Schema);
       const project = readProjectConfiguration(tree, 'my-node-app');
       const buildTarget = project.targets.build;
@@ -465,6 +490,7 @@ describe('app', () => {
         name: 'my-node-app',
         directory: 'myDir',
         js: true,
+        addPlugin: true,
       } as Schema);
       expect(tree.exists(`my-dir/my-node-app/jest.config.js`)).toBeTruthy();
       expect(tree.exists('my-dir/my-node-app/src/main.js')).toBeTruthy();
@@ -476,6 +502,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         pascalCaseFiles: true,
+        addPlugin: true,
       } as Schema);
 
       // @TODO how to spy on context ?
@@ -487,7 +514,10 @@ describe('app', () => {
     it('should format files by default', async () => {
       jest.spyOn(devkit, 'formatFiles');
 
-      await applicationGenerator(tree, { name: 'my-node-app' });
+      await applicationGenerator(tree, {
+        name: 'my-node-app',
+        addPlugin: true,
+      });
 
       expect(devkit.formatFiles).toHaveBeenCalled();
     });
@@ -498,6 +528,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-node-app',
         skipFormat: true,
+        addPlugin: true,
       });
 
       expect(devkit.formatFiles).not.toHaveBeenCalled();
@@ -514,6 +545,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'api',
         framework,
+        addPlugin: true,
       });
 
       expect(tree.exists(`api/jest.config.ts`)).toBeTruthy();

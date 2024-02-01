@@ -15,6 +15,7 @@ describe('Remix Application', () => {
       await applicationGenerator(tree, {
         name: 'test',
         rootProject: true,
+        addPlugin: true,
       });
 
       // ASSERT
@@ -40,6 +41,7 @@ describe('Remix Application', () => {
           name: 'test',
           js: true,
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -61,6 +63,7 @@ describe('Remix Application', () => {
           name: 'test',
           unitTestRunner: 'vitest',
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -83,6 +86,7 @@ describe('Remix Application', () => {
           name: 'test',
           unitTestRunner: 'jest',
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -108,6 +112,7 @@ describe('Remix Application', () => {
           name: 'test',
           e2eTestRunner: 'cypress',
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -132,6 +137,7 @@ describe('Remix Application', () => {
         await applicationGenerator(tree, {
           name: 'test',
           projectNameAndRootFormat,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -156,6 +162,7 @@ describe('Remix Application', () => {
             name: 'test',
             js: true,
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -184,6 +191,7 @@ describe('Remix Application', () => {
             name: 'test',
             directory: 'demo',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -213,6 +221,7 @@ describe('Remix Application', () => {
             name: 'test',
             directory: 'apps/demo',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -240,6 +249,7 @@ describe('Remix Application', () => {
             name: 'test',
             unitTestRunner: 'vitest',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -265,6 +275,7 @@ describe('Remix Application', () => {
             name: 'test',
             unitTestRunner: 'jest',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -292,6 +303,7 @@ describe('Remix Application', () => {
             name: 'test',
             e2eTestRunner: 'cypress',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT

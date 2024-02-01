@@ -13,7 +13,12 @@ import { CypressGeneratorSchema } from './schema';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { nxVersion } from '../../utils/versions';
 
-export default async function (
+// TODO(@columferry): Does anything use this?
+export function cypressGenerator(tree: Tree, options: CypressGeneratorSchema) {
+  return cypressGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function cypressGeneratorInternal(
   tree: Tree,
   options: CypressGeneratorSchema
 ): Promise<GeneratorCallback> {
@@ -25,6 +30,9 @@ export default async function (
       projectNameAndRootFormat: options.projectNameAndRootFormat,
       callingGenerator: '@nx/remix:cypress',
     });
+
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const rootProject = e2eProjectRoot === '.';
   let projectConfig = readProjectConfiguration(tree, options.project);
   options.baseUrl ??= `http://localhost:${projectConfig.targets['serve'].options.port}`;
@@ -47,7 +55,7 @@ export default async function (
     devServerTarget: `${options.project}:serve:development`,
     baseUrl: options.baseUrl,
     rootProject,
-    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
+    addPlugin: options.addPlugin,
   });
 
   projectConfig = readProjectConfiguration(tree, e2eProjectName);
@@ -112,3 +120,5 @@ function addFileServerTarget(
   };
   updateProjectConfiguration(tree, options.project, projectConfig);
 }
+
+export default cypressGenerator;

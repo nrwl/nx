@@ -62,6 +62,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       }`,
       webServerAddress: `http://localhost:${options.port ?? 4200}`,
       rootProject: options.rootProject,
+      addPlugin: options.addPlugin,
     });
   }
 }

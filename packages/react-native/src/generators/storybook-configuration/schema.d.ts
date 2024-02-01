@@ -8,4 +8,5 @@ export interface StorybookConfigureSchema {
   linter?: Linter;
   standaloneConfig?: boolean;
   ignorePaths?: string[];
+  addPlugin?: boolean;
 }

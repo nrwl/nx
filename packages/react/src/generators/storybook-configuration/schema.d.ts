@@ -12,4 +12,5 @@ export interface StorybookConfigureSchema {
   configureCypress?: boolean;
   generateCypressSpecs?: boolean;
   cypressDirectory?: string;
+  addPlugin?: boolean;
 }

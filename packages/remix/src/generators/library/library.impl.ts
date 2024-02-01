@@ -10,7 +10,17 @@ import {
 } from './lib';
 import type { NxRemixGeneratorSchema } from './schema';
 
-export default async function (tree: Tree, schema: NxRemixGeneratorSchema) {
+export async function remixLibraryGenerator(
+  tree: Tree,
+  schema: NxRemixGeneratorSchema
+) {
+  return remixLibraryGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function remixLibraryGeneratorInternal(
+  tree: Tree,
+  schema: NxRemixGeneratorSchema
+) {
   const tasks: GeneratorCallback[] = [];
   const options = await normalizeOptions(tree, schema);
 
@@ -27,6 +37,7 @@ export default async function (tree: Tree, schema: NxRemixGeneratorSchema) {
     linter: Linter.EsLint,
     component: true,
     buildable: options.buildable,
+    addPlugin: options.addPlugin,
   });
   tasks.push(libGenTask);
 
@@ -47,3 +58,5 @@ export default async function (tree: Tree, schema: NxRemixGeneratorSchema) {
 
   return runTasksInSerial(...tasks);
 }
+
+export default remixLibraryGenerator;

@@ -35,7 +35,7 @@
       "description": "Set up Tailwind configuration for a project."
     },
     "storybook-configuration": {
-      "factory": "./src/generators/storybook-configuration/configuration",
+      "factory": "./src/generators/storybook-configuration/configuration#storybookConfigurationGeneratorInternal",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Set up storybook for a Vue app or library.",
       "hidden": false

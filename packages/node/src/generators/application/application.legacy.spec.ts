@@ -11,15 +11,6 @@ import { applicationGenerator } from './application';
 
 describe('node app generator (legacy)', () => {
   let tree: Tree;
-  let originalEnv: string;
-  beforeEach(() => {
-    originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = 'false';
-  });
-
-  afterEach(() => {
-    process.env.NX_ADD_PLUGINS = originalEnv;
-  });
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -32,6 +23,7 @@ describe('node app generator (legacy)', () => {
       name: 'my-node-app',
       bundler: 'webpack',
       projectNameAndRootFormat: 'as-provided',
+      addPlugin: false,
     });
     const project = readProjectConfiguration(tree, 'my-node-app');
     expect(project.root).toEqual('my-node-app');

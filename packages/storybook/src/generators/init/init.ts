@@ -30,7 +30,7 @@ function checkDependenciesInstalled(
     '@nx/web': nxVersion,
   };
 
-  if (process.env.NX_ADD_PLUGINS !== 'false') {
+  if (schema.addPlugin) {
     let storybook7VersionToInstall = storybookVersion;
     if (
       storybookMajorVersion() >= 7 &&
@@ -90,8 +90,14 @@ function moveToDevDependencies(tree: Tree): GeneratorCallback {
   return updated ? () => installPackagesTask(tree) : () => {};
 }
 
-export async function initGenerator(tree: Tree, schema: Schema) {
-  if (process.env.NX_ADD_PLUGINS !== 'false') {
+export function initGenerator(tree: Tree, schema: Schema) {
+  return initGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function initGeneratorInternal(tree: Tree, schema: Schema) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  if (schema.addPlugin) {
     addPlugin(tree);
     updateGitignore(tree);
   } else {

@@ -10,8 +10,9 @@ describe('@nx/storybook:init', () => {
   });
 
   it('should add build-storybook to cacheable operations if NX_ADD_PLUGINS=false', async () => {
-    process.env.NX_ADD_PLUGINS = 'false';
-    await initGenerator(tree, {});
+    await initGenerator(tree, {
+      addPlugin: false,
+    });
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
     expect(nxJson.targetDefaults['build-storybook'].cache).toEqual(true);
     delete process.env.NX_ADD_PLUGINS;
@@ -19,7 +20,9 @@ describe('@nx/storybook:init', () => {
 
   it('should add storybook-static to .gitignore', async () => {
     tree.write('.gitignore', '');
-    await initGenerator(tree, {});
+    await initGenerator(tree, {
+      addPlugin: true,
+    });
     expect(tree.read('.gitignore', 'utf-8')).toContain('storybook-static');
   });
 
@@ -32,7 +35,9 @@ describe('@nx/storybook:init', () => {
     node_modules
   `
     );
-    await initGenerator(tree, {});
+    await initGenerator(tree, {
+      addPlugin: true,
+    });
     expect(tree.read('.gitignore', 'utf-8')).toMatchSnapshot();
   });
 });

@@ -894,7 +894,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the @nrwl/expo plugin",
+        "description": "Initialize the @nx/expo plugin",
         "file": "generated/packages/expo/generators/init.json",
         "hidden": true,
         "name": "init",

@@ -36,6 +36,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         bundler: 'none',
         projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
+        addPlugin: true,
       });
 
       jest.resetModules();
@@ -57,6 +58,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         project: 'test-ui-lib',
         standaloneConfig: false,
         uiFramework: '@storybook/angular',
+        addPlugin: true,
       });
 
       const packageJson = readJson(tree, 'package.json');
@@ -101,6 +103,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await configurationGenerator(tree, {
         project: 'test-ui-lib',
         uiFramework: '@storybook/react-webpack5',
+        addPlugin: true,
       });
 
       const packageJson = readJson(tree, 'package.json');
@@ -141,6 +144,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await configurationGenerator(tree, {
         project: 'test-ui-lib',
         uiFramework: '@storybook/html-webpack5',
+        addPlugin: true,
       });
 
       const packageJson = readJson(tree, 'package.json');
@@ -183,6 +187,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await configurationGenerator(tree, {
         project: 'test-ui-lib',
         uiFramework: '@storybook/web-components-webpack5',
+        addPlugin: true,
       });
 
       const packageJson = readJson(tree, 'package.json');
@@ -233,6 +238,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await configurationGenerator(tree, {
         project: 'test-ui-lib',
         uiFramework: '@storybook/vue-webpack5',
+        addPlugin: true,
       });
 
       const packageJson = readJson(tree, 'package.json');
@@ -283,6 +289,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await configurationGenerator(tree, {
         project: 'test-ui-lib',
         uiFramework: '@storybook/vue3-webpack5',
+        addPlugin: true,
       });
 
       const packageJson = readJson(tree, 'package.json');
@@ -337,6 +344,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
       await configurationGenerator(tree, {
         project: 'test-ui-lib',
         uiFramework: '@storybook/svelte-webpack5',
+        addPlugin: true,
       });
 
       const packageJson = readJson(tree, 'package.json');
@@ -395,6 +403,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         name: 'test-ui-lib',
         bundler: 'none',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       writeJson(tree, 'package.json', {
         devDependencies: {
@@ -415,6 +424,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         project: 'test-ui-lib',
         standaloneConfig: false,
         uiFramework: '@storybook/angular',
+        addPlugin: true,
       });
 
       expect(tree.exists('test-ui-lib/tsconfig.storybook.json')).toBeFalsy();
@@ -429,6 +439,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         project: 'test-ui-lib',
         standaloneConfig: false,
         uiFramework: '@storybook/react-webpack5',
+        addPlugin: true,
       });
       const tsconfigJson = readJson<TsConfig>(
         tree,
@@ -472,6 +483,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       updateJson(tree, 'test-ui-lib2/.eslintrc.json', (json) => {
@@ -485,6 +497,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         project: 'test-ui-lib2',
         standaloneConfig: false,
         uiFramework: '@storybook/react-webpack5',
+        addPlugin: true,
       });
 
       expect(readJson(tree, 'test-ui-lib2/.eslintrc.json').parserOptions)
@@ -502,12 +515,14 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         name: 'test-ui-lib2',
         linter: Linter.EsLint,
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       await configurationGenerator(tree, {
         project: 'test-ui-lib2',
         standaloneConfig: false,
         uiFramework: '@storybook/react-webpack5',
+        addPlugin: true,
       });
 
       expect(
@@ -524,6 +539,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         project: 'test-ui-lib',
         standaloneConfig: false,
         uiFramework: '@storybook/angular',
+        addPlugin: true,
       });
 
       expect(
@@ -539,6 +555,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         project: 'test-ui-lib',
         interactionTests: true,
         uiFramework: '@storybook/react-webpack5',
+        addPlugin: true,
       });
 
       expect(
@@ -577,6 +594,7 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         bundler: 'none',
         projectNameAndRootFormat: 'as-provided',
         skipFormat: true,
+        addPlugin: true,
       });
 
       jest.resetModules();
@@ -615,7 +633,10 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         })
       );
 
-      await configurationGenerator(tree, { project: 'test-ui-lib' });
+      await configurationGenerator(tree, {
+        project: 'test-ui-lib',
+        addPlugin: true,
+      });
 
       const tsconfig = readJson(tree, 'tsconfig.json');
       expect(tsconfig['ts-node'].compilerOptions.module).toEqual('commonjs');
@@ -650,7 +671,10 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         })
       );
 
-      await configurationGenerator(tree, { project: 'test-ui-lib' });
+      await configurationGenerator(tree, {
+        project: 'test-ui-lib',
+        addPlugin: true,
+      });
 
       const tsconfig = readJson(tree, 'tsconfig.json');
       expect(tsconfig['ts-node'].otherSetting).toEqual('value');
@@ -695,52 +719,63 @@ describe('@nx/storybook:configuration for Storybook v7', () => {
         project: 'reapp',
         tsConfiguration: false,
         uiFramework: '@storybook/react-vite',
+        addPlugin: true,
       });
       await configurationGenerator(tree, {
         project: 'main-vite',
         tsConfiguration: false,
         uiFramework: '@storybook/react-vite',
+        addPlugin: true,
       });
       await configurationGenerator(tree, {
         project: 'main-vite-ts',
         uiFramework: '@storybook/react-vite',
+        addPlugin: true,
       });
       await configurationGenerator(tree, {
         project: 'main-webpack',
         uiFramework: '@storybook/react-webpack5',
+        addPlugin: true,
       });
       await configurationGenerator(tree, {
         project: 'reappw',
         uiFramework: '@storybook/react-webpack5',
+        addPlugin: true,
       });
       await configurationGenerator(tree, {
         project: 'react-rollup',
         uiFramework: '@storybook/react-webpack5',
+        addPlugin: true,
       });
 
       await configurationGenerator(tree, {
         project: 'react-vite',
         uiFramework: '@storybook/react-vite',
+        addPlugin: true,
       });
 
       await configurationGenerator(tree, {
         project: 'nextapp',
         uiFramework: '@storybook/nextjs',
+        addPlugin: true,
       });
 
       await configurationGenerator(tree, {
         project: 'react-swc',
         uiFramework: '@storybook/react-webpack5',
+        addPlugin: true,
       });
 
       await configurationGenerator(tree, {
         project: 'wv1',
         uiFramework: '@storybook/web-components-vite',
+        addPlugin: true,
       });
 
       await configurationGenerator(tree, {
         project: 'ww1',
         uiFramework: '@storybook/web-components-webpack5',
+        addPlugin: true,
       });
     });
 

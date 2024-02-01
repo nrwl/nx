@@ -39,7 +39,11 @@ function addPlugin(tree) {
   updateNxJson(tree, nxJson);
 }
 
-export async function remixInitGenerator(tree: Tree, options: Schema) {
+export function remixInitGenerator(tree: Tree, options: Schema) {
+  return remixInitGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   if (!options.skipPackageJson) {
@@ -58,7 +62,7 @@ export async function remixInitGenerator(tree: Tree, options: Schema) {
     tasks.push(installTask);
   }
 
-  if (process.env.NX_ADD_PLUGINS !== 'false') {
+  if (options.addPlugin) {
     addPlugin(tree);
   }
 

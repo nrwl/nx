@@ -24,12 +24,14 @@ describe('CypressComponentConfiguration', () => {
       name: 'cypress-test',
       unitTestRunner: 'vitest',
       style: 'css',
+      addPlugin: true,
     });
 
     // ACT
     await cypressComponentConfigurationGenerator(tree, {
       project: 'cypress-test',
       generateTests: true,
+      addPlugin: true,
     });
 
     // ASSERT

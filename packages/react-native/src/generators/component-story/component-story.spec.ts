@@ -409,6 +409,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     skipTsConfig: false,
     unitTestRunner: 'jest',
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: true,
   });
 
   await componentGenerator(appTree, {

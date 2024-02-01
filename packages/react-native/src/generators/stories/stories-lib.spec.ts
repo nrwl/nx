@@ -90,6 +90,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     unitTestRunner: 'none',
     name: libName,
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: true,
   });
 
   await applicationGenerator(appTree, {
@@ -100,6 +101,7 @@ export async function createTestUILib(libName: string): Promise<Tree> {
     name: `${libName}-e2e`,
     install: false,
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: true,
   });
   return appTree;
 }

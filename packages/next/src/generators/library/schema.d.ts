@@ -24,4 +24,5 @@ export interface Schema {
   strict?: boolean;
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean;
+  addPlugin?: boolean;
 }
