@@ -13,7 +13,7 @@ export function updateDependencies(host: Tree, schema: InitSchema) {
     {},
     {
       '@nx/nuxt': nxVersion,
-      nuxi: nuxtVersion,
+      nuxt: nuxtVersion,
     },
     undefined,
     schema.keepExistingVersions

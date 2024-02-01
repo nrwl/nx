@@ -38,7 +38,7 @@ describe('Nx Plugin', () => {
       `generate @nx/plugin:plugin ${plugin} --linter=eslint --e2eTestRunner=jest --publishable`
     );
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     const buildResults = runCLI(`build ${plugin}`);
     expect(buildResults).toContain('Done compiling TypeScript files');
@@ -75,7 +75,7 @@ describe('Nx Plugin', () => {
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     expectTestsPass(await runCLIAsync(`test ${plugin}`));
 
@@ -105,7 +105,7 @@ describe('Nx Plugin', () => {
     runCLI(`generate @nx/plugin:generator ${generator} --project=${plugin}`);
 
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     expectTestsPass(await runCLIAsync(`test ${plugin}`));
 
@@ -142,7 +142,7 @@ describe('Nx Plugin', () => {
     );
 
     const lintResults = runCLI(`lint ${plugin}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     expectTestsPass(await runCLIAsync(`test ${plugin}`));
 

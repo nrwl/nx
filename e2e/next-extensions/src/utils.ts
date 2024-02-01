@@ -21,7 +21,7 @@ export async function checkApp(
 
   if (opts.checkLint) {
     const lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
   }
 
   if (opts.checkUnitTest) {
