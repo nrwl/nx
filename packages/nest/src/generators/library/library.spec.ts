@@ -17,6 +17,7 @@ describe('lib', () => {
       await libraryGenerator(tree, {
         name: 'my-lib',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       const config = readProjectConfiguration(tree, 'my-lib');

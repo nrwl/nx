@@ -4,17 +4,7 @@ import libraryGenerator from '../library/library.impl';
 import cypressComponentConfigurationGenerator from './cypress-component-configuration.impl';
 
 describe('CypressComponentConfiguration', () => {
-  // TODO(@colum): Turn this back to adding the plugin
-  let originalEnv: string;
-
-  beforeEach(() => {
-    originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = 'false';
-  });
-
-  afterEach(() => {
-    process.env.NX_ADD_PLUGINS = originalEnv;
-  });
+  // TODO(@colum): Update this to adding the plugin
 
   it('should create the cypress configuration correctly', async () => {
     // ARRANGE
@@ -24,14 +14,14 @@ describe('CypressComponentConfiguration', () => {
       name: 'cypress-test',
       unitTestRunner: 'vitest',
       style: 'css',
-      addPlugin: true,
+      addPlugin: false,
     });
 
     // ACT
     await cypressComponentConfigurationGenerator(tree, {
       project: 'cypress-test',
       generateTests: true,
-      addPlugin: true,
+      addPlugin: false,
     });
 
     // ASSERT

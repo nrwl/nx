@@ -158,6 +158,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       testEnvironment: 'jsdom',
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(

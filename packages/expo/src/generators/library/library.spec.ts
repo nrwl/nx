@@ -23,6 +23,7 @@ describe('lib', () => {
     strict: true,
     js: false,
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: true,
   };
 
   beforeEach(() => {

@@ -18,21 +18,11 @@ describe('react app generator (legacy)', () => {
     style: 'css',
     strict: true,
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: false,
   };
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
-
-  let originalEnv: string;
-
-  beforeEach(() => {
-    originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = 'false';
-  });
-
-  afterEach(() => {
-    process.env.NX_ADD_PLUGINS = originalEnv;
-  });
 
   beforeEach(() => {
     mockedInstalledCypressVersion.mockReturnValue(10);

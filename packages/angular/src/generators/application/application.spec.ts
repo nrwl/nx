@@ -1256,6 +1256,7 @@ async function generateApp(
     unitTestRunner: UnitTestRunner.Jest,
     linter: Linter.EsLint,
     standalone: false,
+    addPlugin: true,
     ...options,
   });
 }

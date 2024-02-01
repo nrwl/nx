@@ -30,6 +30,7 @@ describe('lib', () => {
     component: true,
     strict: true,
     simpleName: false,
+    addPlugin: true,
   };
 
   beforeEach(() => {

@@ -37,6 +37,8 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
 
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   let projectRoot: string;
   if (options.projectNameAndRootFormat === 'as-provided') {
     const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
@@ -121,6 +123,7 @@ async function addJest(host: Tree, options: NormalizedSchema) {
     supportTsx: false,
     skipSerializers: true,
     skipFormat: true,
+    addPlugin: options.addPlugin,
   });
 
   const { startLocalRegistryPath, stopLocalRegistryPath } =
@@ -169,6 +172,7 @@ async function addLintingToApplication(
     unitTestRunner: 'jest',
     skipFormat: true,
     setParserOptionsProject: false,
+    addPlugin: options.addPlugin,
   });
 
   return lintTask;
@@ -176,6 +180,7 @@ async function addLintingToApplication(
 
 export async function e2eProjectGenerator(host: Tree, schema: Schema) {
   return await e2eProjectGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });

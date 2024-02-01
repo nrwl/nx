@@ -16,14 +16,6 @@ import { ViteConfigurationGeneratorSchema } from './schema';
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
-  let defaultOptions: ViteConfigurationGeneratorSchema;
-
-  beforeEach(() => {
-    defaultOptions = {
-      addPlugin: true,
-      uiFramework: 'react',
-    };
-  });
 
   describe('transform React app to use Vite', () => {
     beforeAll(async () => {
@@ -37,7 +29,8 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
-        ...defaultOptions,
+        addPlugin: true,
+        uiFramework: 'react',
         project: 'my-test-react-app',
       });
     });
@@ -90,7 +83,8 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
-        ...defaultOptions,
+        addPlugin: true,
+        uiFramework: 'react',
         uiFramework: 'none',
         project: 'my-test-web-app',
       });
@@ -137,7 +131,8 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
-          ...defaultOptions,
+          addPlugin: true,
+          uiFramework: 'react',
           uiFramework: 'none',
           project: 'my-test-angular-app',
         });
@@ -164,7 +159,8 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
-          ...defaultOptions,
+          addPlugin: true,
+          uiFramework: 'react',
           uiFramework: 'none',
           project: 'my-test-random-app',
         });
@@ -185,7 +181,8 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
-          ...defaultOptions,
+          addPlugin: true,
+          uiFramework: 'react',
           uiFramework: 'none',
           project: 'my-test-random-app',
         });
@@ -211,7 +208,8 @@ describe('@nx/vite:configuration', () => {
           { [existing]: existingVersion }
         );
         await viteConfigurationGenerator(tree, {
-          ...defaultOptions,
+          addPlugin: true,
+          uiFramework: 'react',
           project: 'my-test-mixed-react-app',
           buildTarget: 'valid-build',
         });
@@ -255,7 +253,8 @@ describe('@nx/vite:configuration', () => {
 
         try {
           await viteConfigurationGenerator(tree, {
-            ...defaultOptions,
+            addPlugin: true,
+            uiFramework: 'react',
             uiFramework: 'none',
             project: 'my-test-mixed-react-app',
             buildTarget: 'invalid-build',
@@ -276,7 +275,8 @@ describe('@nx/vite:configuration', () => {
 
         try {
           await viteConfigurationGenerator(tree, {
-            ...defaultOptions,
+            addPlugin: true,
+            uiFramework: 'react',
             uiFramework: 'none',
             project: 'my-test-mixed-react-app',
             buildTarget: 'invalid-build',
@@ -303,7 +303,8 @@ describe('@nx/vite:configuration', () => {
         { [existing]: existingVersion }
       );
       await viteConfigurationGenerator(tree, {
-        ...defaultOptions,
+        addPlugin: true,
+        uiFramework: 'react',
         project: 'my-test-react-app',
         includeVitest: true,
       });
@@ -327,7 +328,8 @@ describe('@nx/vite:configuration', () => {
     it('should add config for building library', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
       await viteConfigurationGenerator(tree, {
-        ...defaultOptions,
+        addPlugin: true,
+        uiFramework: 'react',
         includeLib: true,
         project: 'react-lib-nonb-jest',
       });
@@ -341,7 +343,8 @@ describe('@nx/vite:configuration', () => {
     it('should set up non buildable library correctly', async () => {
       mockReactLibNonBuildableJestTestRunnerGenerator(tree);
       await viteConfigurationGenerator(tree, {
-        ...defaultOptions,
+        addPlugin: true,
+        uiFramework: 'react',
         project: 'react-lib-nonb-jest',
         includeVitest: true,
       });
@@ -361,7 +364,8 @@ describe('@nx/vite:configuration', () => {
 
       try {
         await viteConfigurationGenerator(tree, {
-          ...defaultOptions,
+          addPlugin: true,
+          uiFramework: 'react',
           project: 'react-lib-nonb-vitest',
           includeVitest: true,
         });

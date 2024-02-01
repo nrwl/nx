@@ -53,6 +53,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
       skipFormat: true,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
+      addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
 
@@ -206,6 +207,7 @@ export async function applicationGeneratorInternal(
       project: options.projectName,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(

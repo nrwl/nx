@@ -132,6 +132,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
         'webpack.config.js'
       ),
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     const project = readProjectConfiguration(tree, options.projectName);
     if (project.targets.build) {
@@ -387,6 +388,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         options.name
       }`,
       webServerAddress: 'http://localhost:4200',
+      addPlugin: options.addPlugin,
     });
     tasks.push(playwrightTask);
   }
@@ -401,6 +403,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       setupFile: 'web-components',
       compiler: options.compiler,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(jestTask);
   }

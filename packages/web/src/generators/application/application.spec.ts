@@ -30,6 +30,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(readProjectConfiguration(tree, 'my-app').root).toEqual('my-app');
       expect(readProjectConfiguration(tree, 'my-app-e2e').root).toEqual(
@@ -42,6 +43,7 @@ describe('app', () => {
         name: 'my-app',
         tags: 'one,two',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
@@ -59,6 +61,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(tree.exists('my-app/src/main.ts')).toBeTruthy();
       expect(tree.exists('my-app/src/app/app.element.ts')).toBeTruthy();
@@ -150,6 +153,7 @@ describe('app', () => {
         e2eTestRunner: 'playwright',
         unitTestRunner: 'none',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(tree.exists('cool-app-e2e/playwright.config.ts')).toBeTruthy();
     });
@@ -192,6 +196,7 @@ describe('app', () => {
       await applicationGenerator(tree, {
         name: 'my-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       const tsconfig = readJson(tree, 'my-app/tsconfig.json');
@@ -205,6 +210,7 @@ describe('app', () => {
         name: 'my-app',
         directory: 'my-dir/my-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(readProjectConfiguration(tree, 'my-app').root).toEqual(
         'my-dir/my-app'
@@ -220,6 +226,7 @@ describe('app', () => {
         directory: 'my-dir/my-app',
         tags: 'one,two',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       const projects = Object.fromEntries(getProjects(tree));
       expect(projects).toMatchObject({
@@ -243,6 +250,7 @@ describe('app', () => {
         name: 'my-app',
         directory: 'my-dir/my-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       // Make sure these exist
@@ -280,6 +288,7 @@ describe('app', () => {
         name: 'my-app',
         directory: 'my-dir/my-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       const tsconfig = readJson(tree, 'my-dir/my-app/tsconfig.json');
@@ -293,6 +302,7 @@ describe('app', () => {
         name: 'my-app',
         directory: 'my-dir/my-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       const tsconfig = readJson(tree, 'my-dir/my-app/tsconfig.json');
@@ -304,6 +314,7 @@ describe('app', () => {
         name: 'my-app',
         directory: 'my-dir/my-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(
         tree.read('my-dir/my-app/src/app/app.element.ts', 'utf-8')
@@ -320,6 +331,7 @@ describe('app', () => {
         name: 'my-app',
         style: 'scss',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(tree.exists('my-app/src/app/app.element.scss')).toEqual(true);
     });
@@ -329,6 +341,7 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
+      addPlugin: true,
     });
 
     expect(tree.read('my-app/jest.config.ts', 'utf-8')).not.toContain(
@@ -340,6 +353,7 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
+      addPlugin: true,
     });
     expect(tree.read('my-app/webpack.config.js', 'utf-8')).toMatchSnapshot();
   });
@@ -348,6 +362,7 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
+      addPlugin: true,
     });
 
     expect(tree.read('my-app/webpack.config.js', 'utf-8')).toMatchSnapshot();
@@ -357,6 +372,7 @@ describe('app', () => {
     await applicationGenerator(tree, {
       name: 'my-app',
       projectNameAndRootFormat: 'as-provided',
+      addPlugin: true,
     });
     expect(tree.read('my-app/.eslintrc.json', 'utf-8')).toMatchSnapshot();
   });
@@ -367,6 +383,7 @@ describe('app', () => {
         name: 'my-app',
         prefix: 'prefix',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       expect(tree.read('my-app/src/index.html', 'utf-8')).toContain(
@@ -381,6 +398,7 @@ describe('app', () => {
         name: 'my-app',
         unitTestRunner: 'none',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(tree.exists('jest.config.ts')).toBeFalsy();
       expect(tree.exists('my-app/src/app/app.element.spec.ts')).toBeFalsy();
@@ -393,6 +411,7 @@ describe('app', () => {
         name: 'my-cool-app',
         bundler: 'none',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(tree.exists('my-cool-app/jest.config.ts')).toBeTruthy();
       expect(
@@ -415,6 +434,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'jest',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
       expect(tree.read('my-vite-app/vite.config.ts', 'utf-8')).toContain(
@@ -429,6 +449,7 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'none',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(tree.exists('my-vite-app/vite.config.ts')).toBeTruthy();
       expect(tree.read('my-vite-app/vite.config.ts', 'utf-8')).not.toContain(
@@ -440,10 +461,10 @@ describe('app', () => {
     it('--bundler=webpack --unitTestRunner=vitest', async () => {
       await applicationGenerator(tree, {
         name: 'my-webpack-app',
-
         bundler: 'webpack',
         unitTestRunner: 'vitest',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(tree.exists('my-webpack-app/vite.config.ts')).toBeTruthy();
       expect(tree.exists('my-webpack-app/jest.config.ts')).toBeFalsy();
@@ -468,6 +489,7 @@ describe('app', () => {
         name: 'my-app',
         e2eTestRunner: 'none',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
       expect(tree.exists('my-app-e2e')).toBeFalsy();
     });
@@ -479,6 +501,7 @@ describe('app', () => {
         name: 'my-app',
         compiler: 'babel',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       } as Schema);
 
       expect(tree.read(`my-app/jest.config.ts`, 'utf-8'))
@@ -506,6 +529,7 @@ describe('app', () => {
         name: 'my-app',
         compiler: 'swc',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       } as Schema);
 
       expect(tree.read(`my-app/jest.config.ts`, 'utf-8'))
@@ -537,6 +561,7 @@ describe('app', () => {
         name: 'my-app',
         bundler: 'vite',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
     });
 
@@ -571,6 +596,7 @@ describe('app', () => {
         bundler: 'vite',
         inSourceTests: true,
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       expect(

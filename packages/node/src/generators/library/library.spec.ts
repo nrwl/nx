@@ -13,6 +13,7 @@ const baseLibraryConfig = {
   name: 'my-lib',
   compiler: 'tsc' as const,
   projectNameAndRootFormat: 'as-provided' as const,
+  addPlugin: true,
 };
 
 describe('lib', () => {
