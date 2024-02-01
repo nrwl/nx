@@ -11,7 +11,6 @@ import {
 import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { createNodes, ExpoPluginOptions } from '../../../plugins/plugin';
 import {
-  easCliVersion,
   expoCliVersion,
   expoVersion,
   nxVersion,
@@ -20,6 +19,7 @@ import {
   reactVersion,
 } from '../../utils/versions';
 import { hasExpoPlugin } from '../../utils/has-expo-plugin';
+
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
@@ -65,7 +65,6 @@ export function updateDependencies(host: Tree, schema: Schema) {
     {
       '@nx/expo': nxVersion,
       '@expo/cli': expoCliVersion,
-      'eas-cli': easCliVersion,
     },
     undefined,
     schema.keepExistingVersions

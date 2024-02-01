@@ -317,6 +317,15 @@ describe('Cypress e2e configuration', () => {
         addPlugin: true,
       });
       assertCypressFiles(tree, 'libs/my-lib/src/e2e', 'js');
+
+      expect(readProjectConfiguration(tree, 'my-lib').targets['e2e'].options)
+        .toMatchInlineSnapshot(`
+        {
+          "baseUrl": "http://localhost:4200",
+          "cypressConfig": "libs/my-lib/cypress.config.js",
+          "testingType": "e2e",
+        }
+      `);
     });
 
     it('should not override eslint settings if preset', async () => {

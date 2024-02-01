@@ -30,19 +30,16 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "peerDependencies": {
-    "eslint": "^8.0.0",
     "js-yaml": "4.1.0"
   },
   "dependencies": {
     "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
+    "eslint": "^8.0.0",
     "tslib": "^2.3.0",
     "typescript": "~5.3.2"
   },
   "peerDependenciesMeta": {
-    "eslint": {
-      "optional": true
-    },
     "js-yaml": {
       "optional": true
     }

@@ -7,7 +7,6 @@ import {
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
-import { runSymlink } from '../../utils/symlink-task';
 import { addLinting } from '../../utils/add-linting';
 import { addJest } from '../../utils/add-jest';
 
@@ -16,7 +15,7 @@ import initGenerator from '../init/init';
 import { addProject } from './lib/add-project';
 import { createApplicationFiles } from './lib/create-application-files';
 import { addEasScripts } from './lib/add-eas-scripts';
-import { addDetox } from './lib/add-detox';
+import { addE2e } from './lib/add-e2e';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
@@ -74,10 +73,8 @@ export async function expoApplicationGeneratorInternal(
     options.addPlugin
   );
   tasks.push(jestTask);
-  const detoxTask = await addDetox(host, options);
-  tasks.push(detoxTask);
-  const symlinkTask = runSymlink(host.root, options.appProjectRoot);
-  tasks.push(symlinkTask);
+  const e2eTask = await addE2e(host, options);
+  tasks.push(e2eTask);
   addEasScripts(host);
 
   if (!options.skipFormat) {

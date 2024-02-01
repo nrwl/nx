@@ -8,6 +8,8 @@ const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
 let ts: typeof import('typescript');
 
+let isTsEsmLoaderRegistered = false;
+
 /**
  * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
  * register hooks so that .ts files can be used for writing custom workspace projects.
@@ -42,6 +44,19 @@ export function registerTsProject(
     registerTsConfigPaths(tsConfigPath),
     registerTranspiler(compilerOptions),
   ];
+
+  // Add ESM support for `.ts` files.
+  // NOTE: There is no cleanup function for this, as it's not possible to unregister the loader.
+  //       Based on limited testing, it doesn't seem to matter if we register it multiple times, but just in
+  //       case let's keep a flag to prevent it.
+  if (!isTsEsmLoaderRegistered) {
+    const module = require('node:module');
+    if (module.register && packageIsInstalled('ts-node/esm')) {
+      const url = require('node:url');
+      module.register(url.pathToFileURL(require.resolve('ts-node/esm')));
+    }
+    isTsEsmLoaderRegistered = true;
+  }
 
   return () => {
     for (const fn of cleanupFunctions) {
