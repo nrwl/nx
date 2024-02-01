@@ -9,7 +9,6 @@ import {
   parseTargetString,
   ProjectConfiguration,
   ProjectGraph,
-  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -29,6 +28,17 @@ import { installedCypressVersion } from '../../utils/cypress-version';
 import { typesNodeVersion, viteVersion } from '../../utils/versions';
 import cypressInitGenerator from '../init/init';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
+import {
+  findWebpackConfig,
+  hasWebpackPlugin,
+  webpackServeName,
+} from '../../utils/has-webpack-plugin';
+import {
+  findViteConfig,
+  hasVitePlugin,
+  viteServeName,
+} from '../../utils/has-vite-plugin';
+import { hasCypressPlugin } from '../../utils/has-cypress-plugin';
 
 export interface CypressE2EConfigSchema {
   project: string;
@@ -78,12 +88,7 @@ export async function configurationGeneratorInternal(
     );
   }
   const projectGraph = await createProjectGraphAsync();
-  const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/cypress/plugin'
-      : p.plugin === '@nx/cypress/plugin'
-  );
+  const hasPlugin = hasCypressPlugin(tree);
 
   await addFiles(tree, opts, projectGraph, hasPlugin);
   if (!hasPlugin) {
@@ -127,9 +132,26 @@ Rename or remove the existing e2e target.`);
   }
 
   if (
+    options.bundler === 'vite' &&
+    hasVitePlugin(tree) &&
+    projectConfig?.root &&
+    findViteConfig(tree, projectConfig.root)
+  ) {
+    options.devServerTarget ??= `${options.project}:${viteServeName(tree)}`;
+  }
+  if (
+    options.bundler === 'webpack' &&
+    hasWebpackPlugin(tree) &&
+    projectConfig?.root &&
+    findWebpackConfig(tree, projectConfig.root)
+  ) {
+    options.devServerTarget ??= `${options.project}:${webpackServeName(tree)}`;
+  }
+
+  if (
     !options.baseUrl &&
     !options.devServerTarget &&
-    !projectConfig.targets.serve
+    !projectConfig?.targets?.serve
   ) {
     throw new Error(`The project ${options.project} does not have a 'serve' target.
 In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:<configName>]', or a baseUrl option`);
@@ -139,7 +161,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 
   const devServerTarget =
     options.devServerTarget ??
-    (projectConfig.targets.serve ? `${options.project}:serve` : undefined);
+    (projectConfig?.targets?.serve ? `${options.project}:serve` : undefined);
 
   if (!options.baseUrl && !devServerTarget) {
     throw new Error('Either baseUrl or devServerTarget must be provided');
@@ -149,7 +171,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
     ...options,
     addPlugin: options.addPlugin ?? process.env.NX_ADD_PLUGINS !== 'false',
     bundler: options.bundler ?? 'webpack',
-    rootProject: options.rootProject ?? projectConfig.root === '.',
+    rootProject: options.rootProject ?? projectConfig?.root === '.',
     linter: options.linter ?? Linter.EsLint,
     devServerTarget,
   };

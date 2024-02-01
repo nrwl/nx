@@ -22,6 +22,7 @@ import {
   cypressWebpackVersion,
   htmlWebpackPluginVersion,
 } from '../../utils/versions';
+import { hasCypressPlugin } from '../../utils/has-cypress-plugin';
 import { CypressComponentConfigurationSchema } from './schema';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
 import init from '../init/init';
@@ -52,12 +53,7 @@ export async function componentConfigurationGeneratorInternal(
     })
   );
 
-  const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/cypress/plugin'
-      : p.plugin === '@nx/cypress/plugin'
-  );
+  const hasPlugin = hasCypressPlugin(tree);
 
   const projectConfig = readProjectConfiguration(tree, opts.project);
 
