@@ -8,7 +8,7 @@ The recommended way to set up Nx Cloud is to connect using a source control inte
 
 {% cards cols="3"  %}
 
-{% link-card title="GitHub" url="ci/recipes/source-control-integration/github" icon="github" appearance="small" /%}
+{% link-card title="GitHub" url="/ci/recipes/source-control-integration/github" icon="github" appearance="small" /%}
 {% link-card title="GitLab" url="/ci/recipes/source-control-integration/gitlab" icon="gitlab" appearance="small" /%}
 {% link-card title="Bitbucket" url="/ci/recipes/source-control-integration/bitbucket-cloud" icon="bitbucket" appearance="small" /%}
 
