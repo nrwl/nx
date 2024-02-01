@@ -120,7 +120,9 @@ export async function cypressInitGeneratorInternal(
   }
 
   if (options.updatePackageScripts) {
+    global.NX_CYPRESS_INIT_GENERATOR_RUNNING = true;
     await updatePackageScripts(tree, createNodes);
+    global.NX_CYPRESS_INIT_GENERATOR_RUNNING = false;
   }
 
   if (!options.skipFormat) {
