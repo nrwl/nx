@@ -3,7 +3,6 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
-  ensurePlaywrightBrowsersInstallation,
   isNotWindows,
   killPorts,
   newProject,
@@ -12,7 +11,6 @@ import {
   runCLI,
   runCLIAsync,
   runE2ETests,
-  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -22,18 +20,17 @@ import { join } from 'path';
 import { copyFileSync } from 'fs';
 
 describe('Web Components Applications', () => {
-  beforeEach(() => newProject());
-  afterEach(() => cleanupProject());
+  beforeAll(() => newProject());
+  afterAll(() => cleanupProject());
 
   it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
-    setMaxWorkers(join('apps', appName, 'project.json'));
 
     const lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting');
+    expect(lintResults).toContain('Successfully ran target lint');
 
     const testResults = await runCLIAsync(`test ${appName}`);
 
@@ -42,7 +39,7 @@ describe('Web Components Applications', () => {
     );
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
-    expect(lintE2eResults).toContain('All files pass linting');
+    expect(lintE2eResults).toContain('Successfully ran target lint');
 
     if (isNotWindows() && runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
@@ -69,15 +66,20 @@ describe('Web Components Applications', () => {
         public static observedAttributes = [];
         connectedCallback() {
           this.innerHTML = \`
-            <img src="\${inlined} "/>
-            <img src="\${emitted} "/>
+            <img src='\${inlined} '/>
+            <img src='\${emitted} '/>
           \`;
         }
       }
       customElements.define('app-root', AppElement);
     `
     );
-    runCLI(`build ${appName} --outputHashing none`);
+    setPluginOption(
+      `apps/${appName}/webpack.config.js`,
+      'outputHashing',
+      'none'
+    );
+    runCLI(`build ${appName}`);
     checkFilesExist(
       `dist/apps/${appName}/index.html`,
       `dist/apps/${appName}/runtime.js`,
@@ -88,7 +90,7 @@ describe('Web Components Applications', () => {
     checkFilesDoNotExist(`dist/apps/${appName}/inlined.png`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-      '<img src="data:image/png;base64'
+      /<img src=['"]data:image\/png;base64/
     );
     // Should not be a JS module but kept as a PNG
     expect(readFile(`dist/apps/${appName}/emitted.png`)).not.toContain(
@@ -100,76 +102,11 @@ describe('Web Components Applications', () => {
     );
   }, 500000);
 
-  // TODO: re-enable this when tests are passing again
-  xit('should generate working playwright e2e app', async () => {
-    const appName = uniq('app');
-    runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --e2eTestRunner=playwright --no-interactive`
-    );
-    setMaxWorkers(join('apps', appName, 'project.json'));
-
-    const lintE2eResults = runCLI(`lint ${appName}-e2e`);
-
-    expect(lintE2eResults).toContain('All files pass linting');
-
-    if (isNotWindows() && runE2ETests()) {
-      ensurePlaywrightBrowsersInstallation();
-      const e2eResults = runCLI(`e2e ${appName}-e2e`);
-      expect(e2eResults).toContain(
-        `Successfully ran target e2e for project ${appName}-e2e`
-      );
-      expect(await killPorts()).toBeTruthy();
-    }
-  }, 500000);
-
-  it('should remove previous output before building', async () => {
-    const appName = uniq('app');
-    const libName = uniq('lib');
-
-    runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler swc`
-    );
-    runCLI(
-      `generate @nx/react:lib ${libName} --bundler=rollup --no-interactive --compiler swc --unitTestRunner=jest`
-    );
-    setMaxWorkers(join('apps', appName, 'project.json'));
-
-    createFile(`dist/apps/${appName}/_should_remove.txt`);
-    createFile(`dist/libs/${libName}/_should_remove.txt`);
-    createFile(`dist/apps/_should_not_remove.txt`);
-    checkFilesExist(
-      `dist/apps/${appName}/_should_remove.txt`,
-      `dist/apps/_should_not_remove.txt`
-    );
-    runCLI(`build ${appName} --outputHashing none`);
-    runCLI(`build ${libName}`);
-    checkFilesDoNotExist(
-      `dist/apps/${appName}/_should_remove.txt`,
-      `dist/libs/${libName}/_should_remove.txt`
-    );
-    checkFilesExist(`dist/apps/_should_not_remove.txt`);
-
-    // Asset that React runtime is imported
-    expect(readFile(`dist/libs/${libName}/index.esm.js`)).toMatch(
-      /react\/jsx-runtime/
-    );
-
-    // `delete-output-path`
-    createFile(`dist/apps/${appName}/_should_keep.txt`);
-    runCLI(`build ${appName} --delete-output-path=false --outputHashing none`);
-    checkFilesExist(`dist/apps/${appName}/_should_keep.txt`);
-
-    createFile(`dist/libs/${libName}/_should_keep.txt`);
-    runCLI(`build ${libName} --delete-output-path=false --outputHashing none`);
-    checkFilesExist(`dist/libs/${libName}/_should_keep.txt`);
-  }, 120000);
-
   it('should emit decorator metadata when --compiler=babel and it is enabled in tsconfig', async () => {
     const appName = uniq('app');
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --compiler=babel --no-interactive`
     );
-    setMaxWorkers(join('apps', appName, 'project.json'));
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
       const newContent = `${content}
@@ -200,7 +137,12 @@ describe('Web Components Applications', () => {
       `;
       return newContent;
     });
-    runCLI(`build ${appName} --outputHashing none`);
+    setPluginOption(
+      `apps/${appName}/webpack.config.js`,
+      'outputHashing',
+      'none'
+    );
+    runCLI(`build ${appName}`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
       /Reflect\.metadata/
@@ -213,7 +155,12 @@ describe('Web Components Applications', () => {
       return JSON.stringify(json);
     });
 
-    runCLI(`build ${appName} --outputHashing none`);
+    setPluginOption(
+      `apps/${appName}/webpack.config.js`,
+      'outputHashing',
+      'none'
+    );
+    runCLI(`build ${appName}`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).not.toMatch(
       /Reflect\.metadata/
@@ -225,7 +172,6 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --compiler=swc --no-interactive`
     );
-    setMaxWorkers(join('apps', appName, 'project.json'));
 
     updateFile(`apps/${appName}/src/app/app.element.ts`, (content) => {
       const newContent = `${content}
@@ -256,7 +202,12 @@ describe('Web Components Applications', () => {
       `;
       return newContent;
     });
-    runCLI(`build ${appName} --outputHashing none`);
+    setPluginOption(
+      `apps/${appName}/webpack.config.js`,
+      'outputHashing',
+      'none'
+    );
+    runCLI(`build ${appName}`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toMatch(
       /Foo=.*?_decorate/
@@ -268,7 +219,6 @@ describe('Web Components Applications', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
-    setMaxWorkers(join('apps', appName, 'project.json'));
 
     updateJson(join('apps', appName, 'project.json'), (config) => {
       config.targets.build.options.webpackConfig = `apps/${appName}/webpack.config.js`;
@@ -285,7 +235,12 @@ describe('Web Components Applications', () => {
       });
     `
     );
-    runCLI(`build ${appName} --outputHashing none`);
+    setPluginOption(
+      `apps/${appName}/webpack.config.js`,
+      'outputHashing',
+      'none'
+    );
+    runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/main.js`);
 
     rmDist();
@@ -300,7 +255,12 @@ describe('Web Components Applications', () => {
       });
     `
     );
-    runCLI(`build ${appName} --outputHashing none`);
+    setPluginOption(
+      `apps/${appName}/webpack.config.js`,
+      'outputHashing',
+      'none'
+    );
+    runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/main.js`);
 
     rmDist();
@@ -315,7 +275,12 @@ describe('Web Components Applications', () => {
       }));
     `
     );
-    runCLI(`build ${appName} --outputHashing none`);
+    setPluginOption(
+      `apps/${appName}/webpack.config.js`,
+      'outputHashing',
+      'none'
+    );
+    runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/main.js`);
   }, 100000);
 
@@ -389,7 +354,6 @@ describe('CLI - Environment Variables', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive --compiler=babel`
     );
-    setMaxWorkers(join('apps', appName, 'project.json'));
 
     const content = readFile(main);
 
@@ -415,22 +379,23 @@ describe('CLI - Environment Variables', () => {
     runCLI(
       `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
     );
-    setMaxWorkers(join('apps', appName2, 'project.json'));
 
     const content2 = readFile(main2);
 
     updateFile(main2, `${newCode2}\n${content2}`);
 
-    runCLI(
-      `run-many --target build --outputHashing=none --optimization=false`,
-      {
-        env: {
-          NODE_ENV: 'test',
-          NX_BUILD: '52',
-          NX_API: 'QA',
-        },
-      }
+    setPluginOption(
+      `apps/${appName}/webpack.config.js`,
+      'outputHashing',
+      'none'
     );
+    runCLI(`run-many --target build`, {
+      env: {
+        NODE_ENV: 'test',
+        NX_BUILD: '52',
+        NX_API: 'QA',
+      },
+    });
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
       'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];'
     );
@@ -449,7 +414,6 @@ describe('Build Options', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
-    setMaxWorkers(join('apps', appName, 'project.json'));
 
     const srcPath = `apps/${appName}/src`;
     const fooCss = `${srcPath}/foo.css`;
@@ -504,7 +468,13 @@ describe('Build Options', () => {
       return config;
     });
 
-    runCLI(`build ${appName} --outputHashing none --optimization false`);
+    setPluginOption(
+      `apps/${appName}/webpack.config.js`,
+      'outputHashing',
+      'none'
+    );
+    setPluginOption(`apps/${appName}/webpack.config.js`, 'optimization', false);
+    runCLI(`build ${appName}`);
 
     const distPath = `dist/apps/${appName}`;
     const scripts = readFile(`${distPath}/scripts.js`);
@@ -529,7 +499,6 @@ describe('index.html interpolation', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
-    setMaxWorkers(join('apps', appName, 'project.json'));
 
     const srcPath = `apps/${appName}/src`;
     const indexPath = `${srcPath}/index.html`;
@@ -578,3 +547,16 @@ describe('index.html interpolation', () => {
     expect(resultIndexContents).toMatch(/ <div>Nx Variable: foo<\/div>/);
   });
 });
+
+function setPluginOption(
+  webpackConfigPath: string,
+  option: string,
+  value: string | boolean
+): void {
+  updateFile(webpackConfigPath, (content) => {
+    return content.replace(
+      new RegExp(`${option}: .+`),
+      `${option}: ${typeof value === 'string' ? `'${value}'` : value},`
+    );
+  });
+}

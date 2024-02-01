@@ -80,6 +80,7 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         ),
         webpackPluginOptions: hasWebpackPlugin(tree)
           ? {
+              compiler: options.compiler,
               target: 'web',
               outputPath: joinPathFragments(
                 'dist',
