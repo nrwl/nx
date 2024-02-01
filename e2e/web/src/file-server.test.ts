@@ -5,7 +5,6 @@ import {
   promisifiedTreeKill,
   runCLI,
   runCommandUntil,
-  setMaxWorkers,
   uniq,
   updateFile,
   updateJson,
@@ -13,17 +12,27 @@ import {
 import { join } from 'path';
 
 describe('file-server', () => {
+  let originalEnv: string;
+
   beforeAll(() => {
-    newProject({ name: uniq('fileserver') });
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+    newProject({
+      name: uniq('fileserver'),
+      packages: ['@nx/web', '@nx/react', '@nx/angular'],
+    });
   });
-  afterAll(() => cleanupProject());
+
+  afterAll(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+    cleanupProject();
+  });
 
   it('should serve folder of files', async () => {
     const appName = uniq('app');
     const port = 4301;
 
     runCLI(`generate @nx/web:app ${appName} --no-interactive`);
-    setMaxWorkers(join('apps', appName, 'project.json'));
     updateJson(join('apps', appName, 'project.json'), (config) => {
       config.targets['serve'].executor = '@nx/web:file-server';
       // Check that buildTarget can exclude project name (e.g. build vs proj:build).
@@ -51,7 +60,6 @@ describe('file-server', () => {
     const port = 4301;
 
     runCLI(`generate @nx/web:app ${appName} --no-interactive`);
-    setMaxWorkers(join('apps', appName, 'project.json'));
     // Used to copy index.html rather than the normal webpack build.
     updateFile(
       `copy-index.js`,
@@ -111,7 +119,6 @@ describe('file-server', () => {
     runCLI(
       `generate @nx/web:static-config --buildTarget=${reactAppName}:build --targetName=custom-serve-static --no-interactive`
     );
-    setMaxWorkers(join('apps', reactAppName, 'project.json'));
 
     const port = 6200;
 

@@ -1,9 +1,7 @@
-import * as path from 'path';
 import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
-  createFile,
   getSelectedPackageManager,
   newProject,
   readFile,
@@ -11,12 +9,9 @@ import {
   renameFile,
   runCLI,
   runCreateWorkspace,
-  setMaxWorkers,
   uniq,
   updateFile,
-  updateJson,
 } from '@nx/e2e/utils';
-import * as ts from 'typescript';
 
 describe('Linter (legacy)', () => {
   describe('Integrated', () => {

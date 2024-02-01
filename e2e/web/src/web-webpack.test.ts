@@ -4,13 +4,25 @@ import {
   newProject,
   runCLI,
   runCommandUntil,
-  setMaxWorkers,
   uniq,
 } from '@nx/e2e/utils';
-import { join } from 'path';
 
 describe('Web Components Applications with bundler set as webpack', () => {
-  beforeEach(() => newProject());
+  let originalEnv: string;
+
+  beforeAll(async () => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterAll(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
+  beforeEach(() =>
+    newProject({
+      packages: ['@nx/web'],
+    })
+  );
   afterEach(() => cleanupProject());
 
   it('should support https for dev-server', async () => {
@@ -18,7 +30,6 @@ describe('Web Components Applications with bundler set as webpack', () => {
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
     );
-    setMaxWorkers(join('apps', appName, 'project.json'));
 
     const childProcess = await runCommandUntil(
       `serve ${appName} --port=5000 --ssl`,
