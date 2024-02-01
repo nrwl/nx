@@ -71,7 +71,13 @@ function setUpOutputWatching(captureStderr: boolean, streamOutput: boolean) {
   });
 }
 
-process.on(
+let statusCode: number;
+
+// Using once and not on because we want the process to exit gracefully
+// and process.on('message') keeps the process alive
+// Also, the reason why it's important to have the process exit gracefully as otherwise the process output can be lost whn it's not flushed yet
+
+process.once(
   'message',
   async (message: {
     targetDescription: Target;
@@ -80,7 +86,7 @@ process.on(
     isVerbose: boolean;
   }) => {
     try {
-      const statusCode = await run(
+      statusCode = await run(
         process.cwd(),
         process.env.NX_WORKSPACE_ROOT,
         message.targetDescription,
@@ -88,10 +94,14 @@ process.on(
         message.isVerbose,
         message.taskGraph
       );
-      process.exit(statusCode);
     } catch (e) {
       console.error(e);
-      process.exit(1);
+      statusCode = 1;
     }
   }
 );
+
+// Use the exit code of the target if exists
+process.on('exit', (code) => {
+  process.exit(statusCode === undefined ? code : statusCode);
+});
