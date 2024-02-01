@@ -177,6 +177,15 @@
         "path": "/nx-api/angular/generators/component-test",
         "type": "generator"
       },
+      "/nx-api/angular/generators/convert-to-application-executor": {
+        "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. _Note: this is only supported in Angular versions >= 17.0.0_.",
+        "file": "generated/packages/angular/generators/convert-to-application-executor.json",
+        "hidden": false,
+        "name": "convert-to-application-executor",
+        "originalFilePath": "/packages/angular/src/generators/convert-to-application-executor/schema.json",
+        "path": "/nx-api/angular/generators/convert-to-application-executor",
+        "type": "generator"
+      },
       "/nx-api/angular/generators/directive": {
         "description": "Generate an Angular directive.",
         "file": "generated/packages/angular/generators/directive.json",
@@ -894,6 +903,15 @@
         "name": "submit",
         "originalFilePath": "/packages/expo/src/executors/submit/schema.json",
         "path": "/nx-api/expo/executors/submit",
+        "type": "executor"
+      },
+      "/nx-api/expo/executors/serve": {
+        "description": "Serve up the Expo web app locally",
+        "file": "generated/packages/expo/executors/serve.json",
+        "hidden": false,
+        "name": "serve",
+        "originalFilePath": "/packages/expo/src/executors/serve/schema.json",
+        "path": "/nx-api/expo/executors/serve",
         "type": "executor"
       }
     },
@@ -2356,11 +2374,20 @@
         "originalFilePath": "/packages/react-native/src/executors/pod-install/schema.json",
         "path": "/nx-api/react-native/executors/pod-install",
         "type": "executor"
+      },
+      "/nx-api/react-native/executors/upgrade": {
+        "description": "upgrade executor",
+        "file": "generated/packages/react-native/executors/upgrade.json",
+        "hidden": false,
+        "name": "upgrade",
+        "originalFilePath": "/packages/react-native/src/executors/upgrade/schema.json",
+        "path": "/nx-api/react-native/executors/upgrade",
+        "type": "executor"
       }
     },
     "generators": {
       "/nx-api/react-native/generators/init": {
-        "description": "Initialize the `@nrwl/react-native` plugin.",
+        "description": "Initialize the `@nx/react-native` plugin.",
         "file": "generated/packages/react-native/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -2396,7 +2423,7 @@
         "type": "generator"
       },
       "/nx-api/react-native/generators/storybook-configuration": {
-        "description": "Set up Storybook for a React-native application or library.",
+        "description": "Set up Storybook for a React Native application or library.",
         "file": "generated/packages/react-native/generators/storybook-configuration.json",
         "hidden": false,
         "name": "storybook-configuration",
@@ -2405,7 +2432,7 @@
         "type": "generator"
       },
       "/nx-api/react-native/generators/component-story": {
-        "description": "Generate Storybook story for a React-native component.",
+        "description": "Generate Storybook story for a React Native component.",
         "file": "generated/packages/react-native/generators/component-story.json",
         "hidden": false,
         "name": "component-story",
@@ -2414,7 +2441,7 @@
         "type": "generator"
       },
       "/nx-api/react-native/generators/stories": {
-        "description": "Create stories/specs for all components declared in an application or library.",
+        "description": "Create stories for all components declared in an application or library.",
         "file": "generated/packages/react-native/generators/stories.json",
         "hidden": false,
         "name": "stories",
@@ -2429,6 +2456,15 @@
         "name": "upgrade-native",
         "originalFilePath": "/packages/react-native/src/generators/upgrade-native/schema.json",
         "path": "/nx-api/react-native/generators/upgrade-native",
+        "type": "generator"
+      },
+      "/nx-api/react-native/generators/web-configuration": {
+        "description": "Set up web configuration for a React Native app",
+        "file": "generated/packages/react-native/generators/web-configuration.json",
+        "hidden": false,
+        "name": "web-configuration",
+        "originalFilePath": "/packages/react-native/src/generators/web-configuration/schema.json",
+        "path": "/nx-api/react-native/generators/web-configuration",
         "type": "generator"
       }
     },

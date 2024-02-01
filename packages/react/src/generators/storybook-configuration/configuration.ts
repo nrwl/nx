@@ -10,7 +10,7 @@ import {
 import { nxVersion } from '../../utils/versions';
 
 async function generateStories(host: Tree, schema: StorybookConfigureSchema) {
-  // TODO(katerina): Nx 18 -> remove Cypress
+  // TODO(katerina): Nx 19 -> remove Cypress
   ensurePackage('@nx/cypress', nxVersion);
   const { getE2eProjectName } = await import(
     '@nx/cypress/src/utils/project-name'
@@ -47,7 +47,8 @@ export async function storybookConfigurationGenerator(
   if (
     findWebpackConfig(host, projectConfig.root) ||
     projectConfig.targets['build']?.executor === '@nx/rollup:rollup' ||
-    projectConfig.targets['build']?.executor === '@nrwl/rollup:rollup'
+    projectConfig.targets['build']?.executor === '@nrwl/rollup:rollup' ||
+    projectConfig.targets['build']?.executor === '@nx/expo:build'
   ) {
     uiFramework = '@storybook/react-webpack5';
   }

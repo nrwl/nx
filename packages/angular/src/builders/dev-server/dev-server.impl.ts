@@ -53,7 +53,7 @@ export function executeDevServerBuilder(
   rawOptions: Schema,
   context: import('@angular-devkit/architect').BuilderContext
 ) {
-  if (rawOptions.esbuildMiddleware) {
+  if (rawOptions.esbuildMiddleware?.length > 0) {
     const { major: angularMajorVersion, version: angularVersion } =
       getInstalledAngularVersionInfo();
     if (angularMajorVersion < 17) {

@@ -1,9 +1,9 @@
-import { ExecutorContext } from '@nx/devkit';
+import { ExecutorContext, GeneratorCallback, workspaceRoot } from '@nx/devkit';
 import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 import { platform } from 'os';
 
-import startExecutor from '../start/start.impl';
+import { runCliStart } from '../start/start.impl';
 import { getCliOptions } from '../../utils/get-cli-options';
 
 import { ReactNativeRunIosOptions } from './schema';
@@ -21,28 +21,19 @@ export default async function* runIosExecutor(
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 
+  const tasks = [runCliRunIOS(context.root, projectRoot, options)];
+
   if (options.mode !== 'Release') {
-    const startResults = startExecutor(
-      {
+    tasks.push(
+      runCliStart(context.root, projectRoot, {
         port: options.port,
         resetCache: options.resetCache,
         interactive: true,
-      },
-      context
+      })
     );
-    for await (const result of startResults) {
-      if (result.success) {
-        await runCliRunIOS(context.root, projectRoot, options);
-        yield {
-          success: true,
-        };
-      } else {
-        return result;
-      }
-    }
-  } else {
-    await runCliRunIOS(context.root, projectRoot, options);
   }
+
+  await Promise.all(tasks);
 
   yield { success: true };
 }

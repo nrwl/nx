@@ -27,7 +27,8 @@ export async function setupSsr(tree: Tree, schema: Schema) {
 
   const { targets } = readProjectConfiguration(tree, options.project);
   const isUsingApplicationBuilder =
-    targets.build.executor === '@angular-devkit/build-angular:application';
+    targets.build.executor === '@angular-devkit/build-angular:application' ||
+    targets.build.executor === '@nx/angular:application';
 
   addDependencies(tree, isUsingApplicationBuilder);
   generateSSRFiles(tree, options, isUsingApplicationBuilder);

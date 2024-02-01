@@ -2,7 +2,7 @@
   "name": "service",
   "factory": "./src/generators/service/service#serviceGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxNestServiceGenerator",
     "title": "Nest Service Options Schema",
     "description": "Nest Service Options Schema.",
@@ -25,7 +25,7 @@
         "type": "string",
         "$default": { "$source": "projectName" },
         "alias": "p",
-        "x-deprecated": "Provide The `directory` option instead and use the `as-provided` format. the project will be determined from the directory provided. it will be removed in nx v18."
+        "x-deprecated": "Provide The `directory` option instead and use the `as-provided` format. the project will be determined from the directory provided. it will be removed in nx v19."
       },
       "directory": {
         "description": "Directory where the generated files are placed. when `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. otherwise, it will be relative to the workspace root.",
@@ -46,7 +46,7 @@
       },
       "flat": {
         "description": "Flag to indicate if a directory is created.",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18.",
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19.",
         "type": "boolean",
         "default": false
       },

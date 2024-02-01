@@ -2,7 +2,7 @@
   "name": "workspace-rule",
   "factory": "./src/generators/workspace-rule/workspace-rule#lintWorkspaceRuleGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxWorkspaceRule",
     "cli": "nx",
     "title": "Create a new Workspace Lint Rule",

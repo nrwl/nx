@@ -40,7 +40,7 @@
         "$source": "projectName"
       },
       "x-dropdown": "projects",
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
+      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
     },
     "displayBlock": {
       "description": "Specifies if the style will contain `:host { display: block; }`.",
@@ -94,7 +94,7 @@
       "type": "boolean",
       "description": "Create the new files at the top level of the current project.",
       "default": false,
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18."
+      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19."
     },
     "selector": {
       "type": "string",

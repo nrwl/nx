@@ -20,6 +20,7 @@ import {
 import { setupSsrForHost } from './lib/setup-ssr-for-host';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
 import { NormalizedSchema, Schema } from './schema';
+import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 
 export async function hostGenerator(
   host: Tree,
@@ -113,6 +114,8 @@ export async function hostGeneratorInternal(
       joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
     );
   }
+
+  addMfEnvToTargetDefaultInputs(host);
 
   if (!options.skipFormat) {
     await formatFiles(host);

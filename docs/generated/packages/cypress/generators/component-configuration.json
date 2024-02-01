@@ -3,7 +3,7 @@
   "aliases": ["cypress-component-configuration"],
   "factory": "./src/generators/component-configuration/component-configuration",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxCypressComponentConfiguration",
     "cli": "nx",
     "title": "Set up Cypress component testing for a project",

@@ -4,14 +4,14 @@ import {
   expectTestsPass,
   getPackageManagerCommand,
   isOSX,
-  killPorts,
+  killProcessAndPorts,
   newProject,
-  promisifiedTreeKill,
   readJson,
   runCLI,
   runCLIAsync,
   runCommand,
   runCommandUntil,
+  runE2ETests,
   uniq,
   updateFile,
   updateJson,
@@ -37,13 +37,18 @@ describe('react native', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/react-native:application ${appName} --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --bunlder=webpack --e2eTestRunner=cypress --install=false --no-interactive`
     );
     runCLI(
       `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
     );
   });
   afterAll(() => cleanupProject());
+
+  it('should build for web', async () => {
+    const results = runCLI(`build ${appName}`);
+    expect(results).toContain('Successfully ran target build');
+  });
 
   it('should test and lint', async () => {
     const componentName = uniq('Component');
@@ -64,6 +69,16 @@ describe('react native', () => {
 
     const libLintResults = await runCLIAsync(`lint ${libName}`);
     expect(libLintResults.combinedOutput).toContain('All files pass linting.');
+  });
+
+  it('should run e2e for cypress', async () => {
+    if (runE2ETests()) {
+      let results = runCLI(`e2e ${appName}-e2e`);
+      expect(results).toContain('Successfully ran target e2e');
+
+      results = runCLI(`e2e ${appName}-e2e --configuration=ci`);
+      expect(results).toContain('Successfully ran target e2e');
+    }
   });
 
   it('should bundle-ios', async () => {
@@ -114,8 +129,32 @@ describe('react native', () => {
     // port and process cleanup
     try {
       if (process && process.pid) {
-        await promisifiedTreeKill(process.pid, 'SIGKILL');
-        await killPorts(port);
+        await killProcessAndPorts(process.pid, port);
+      }
+    } catch (err) {
+      expect(err).toBeFalsy();
+    }
+  });
+
+  it('should serve', async () => {
+    let process: ChildProcess;
+    const port = 8081;
+
+    try {
+      process = await runCommandUntil(
+        `serve ${appName} --interactive=false --port=${port}`,
+        (output) => {
+          return output.includes(`http://localhost:${port}`);
+        }
+      );
+    } catch (err) {
+      console.error(err);
+    }
+
+    // port and process cleanup
+    try {
+      if (process && process.pid) {
+        await killProcessAndPorts(process.pid, port);
       }
     } catch (err) {
       expect(err).toBeFalsy();
@@ -136,33 +175,14 @@ describe('react native', () => {
     runCLI(
       `generate @nx/react-native:storybook-configuration ${appName} --generateStories --no-interactive`
     );
-    expect(() =>
-      checkFilesExist(
-        `.storybook/story-loader.ts`,
-        `apps/${appName}/src/storybook/storybook.ts`,
-        `apps/${appName}/src/storybook/toggle-storybook.tsx`,
-        `apps/${appName}/src/app/App.stories.tsx`
-      )
-    ).not.toThrow();
-
-    await runCLIAsync(`storybook ${appName}`);
-    const result = readJson(join('apps', appName, 'package.json'));
-    expect(result).toMatchObject({
-      dependencies: {
-        '@storybook/addon-ondevice-actions': '*',
-        '@storybook/addon-ondevice-backgrounds': '*',
-        '@storybook/addon-ondevice-controls': '*',
-        '@storybook/addon-ondevice-notes': '*',
-      },
-    });
+    checkFilesExist(
+      `apps/${appName}/.storybook/main.ts`,
+      `apps/${appName}/src/app/App.stories.tsx`
+    );
   });
 
   it('should upgrade native for application', async () => {
-    expect(() =>
-      runCLI(
-        `generate @nx/react-native:upgrade-native ${appName} --install=false`
-      )
-    ).not.toThrow();
+    expect(() => runCLI(`upgrade ${appName}`)).not.toThrow();
   });
 
   it('should build publishable library', async () => {
@@ -180,13 +200,11 @@ describe('react native', () => {
 
   it('sync npm dependencies for autolink', async () => {
     // Add npm package with native modules
-    updateFile(join('package.json'), (content) => {
-      const json = JSON.parse(content);
-      json.dependencies['react-native-image-picker'] = '5.3.1';
-      json.dependencies['@react-native-async-storage/async-storage'] = '1.18.1';
-      return JSON.stringify(json, null, 2);
-    });
-    runCommand(`${getPackageManagerCommand().install}`);
+    runCommand(
+      `${
+        getPackageManagerCommand().addDev
+      } react-native-image-picker @react-native-async-storage/async-storage`
+    );
 
     // Add import for Nx to pick up
     updateFile(join('apps', appName, 'src/app/App.tsx'), (content) => {
@@ -202,6 +220,8 @@ describe('react native', () => {
       dependencies: {
         'react-native-image-picker': '*',
         'react-native': '*',
+      },
+      devDependencies: {
         '@react-native-async-storage/async-storage': '*',
       },
     });
@@ -259,6 +279,27 @@ describe('react native', () => {
     const libTestResult = runCLI(`test ${libName}`);
     expect(libTestResult).toContain(
       `Successfully ran target test for project ${libName}`
+    );
+  });
+
+  it('should run build with vite bundler and e2e with playwright', async () => {
+    const appName2 = uniq('my-app');
+    runCLI(
+      `generate @nx/react-native:application ${appName2} --bundler=vite --e2eTestRunner=playwright --install=false --no-interactive`
+    );
+    const buildResults = runCLI(`build ${appName2}`);
+    expect(buildResults).toContain('Successfully ran target build');
+    if (runE2ETests()) {
+      const e2eResults = runCLI(`e2e ${appName2}-e2e`);
+      expect(e2eResults).toContain('Successfully ran target e2e');
+    }
+
+    runCLI(
+      `generate @nx/react-native:storybook-configuration ${appName2} --generateStories --no-interactive`
+    );
+    checkFilesExist(
+      `apps/${appName2}/.storybook/main.ts`,
+      `apps/${appName2}/src/app/App.stories.tsx`
     );
   });
 });

@@ -3,32 +3,27 @@ import * as chalk from 'chalk';
 import {
   ExecutorContext,
   logger,
-  ProjectGraph,
   readJsonFile,
   writeJsonFile,
 } from '@nx/devkit';
 
-import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
-
 import { ExpoSyncDepsOptions } from './schema';
 
-export interface ExpoSyncDepsOutput {
+export interface ReactNativeSyncDepsOutput {
   success: boolean;
 }
 
 export default async function* syncDepsExecutor(
   options: ExpoSyncDepsOptions,
   context: ExecutorContext
-): AsyncGenerator<ExpoSyncDepsOutput> {
+): AsyncGenerator<ReactNativeSyncDepsOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   displayNewlyAddedDepsMessage(
     context.projectName,
     await syncDeps(
-      context.projectName,
       projectRoot,
       context.root,
-      context.projectGraph,
       typeof options.include === 'string'
         ? options.include.split(',')
         : options.include,
@@ -42,14 +37,16 @@ export default async function* syncDepsExecutor(
 }
 
 export async function syncDeps(
-  projectName: string,
   projectRoot: string,
   workspaceRoot: string,
-  projectGraph: ProjectGraph,
   include: string[] = [],
   exclude: string[] = []
 ): Promise<string[]> {
-  let npmDeps = findAllNpmDependencies(projectGraph, projectName);
+  const workspacePackageJsonPath = join(workspaceRoot, 'package.json');
+  const workspacePackageJson = readJsonFile(workspacePackageJsonPath);
+  let npmDeps = Object.keys(workspacePackageJson.dependencies || {});
+  let npmDevdeps = Object.keys(workspacePackageJson.devDependencies || {});
+
   const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
   const packageJson = readJsonFile(packageJsonPath);
   const newDeps = [];
@@ -67,9 +64,23 @@ export async function syncDeps(
     npmDeps = npmDeps.filter((dep) => !exclude.includes(dep));
   }
 
+  if (!packageJson.devDependencies) {
+    packageJson.devDependencies = {};
+  }
+  if (!packageJson.dependencies) {
+    packageJson.dependencies = {};
+  }
+
   npmDeps.forEach((dep) => {
-    if (!packageJson.dependencies[dep]) {
+    if (!packageJson.dependencies[dep] && !packageJson.devDependencies[dep]) {
       packageJson.dependencies[dep] = '*';
+      newDeps.push(dep);
+      updated = true;
+    }
+  });
+  npmDevdeps.forEach((dep) => {
+    if (!packageJson.dependencies[dep] && !packageJson.devDependencies[dep]) {
+      packageJson.devDependencies[dep] = '*';
       newDeps.push(dep);
       updated = true;
     }

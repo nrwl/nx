@@ -45,6 +45,11 @@ export function getResolveRequest(extensions: string[]) {
     if (resolvedPath) {
       return resolvedPath;
     }
+    if (debug) {
+      console.log(
+        chalk.red(`[Nx] Unable to resolve with any resolver: ${realModuleName}`)
+      );
+    }
     throw new Error(`Cannot resolve ${chalk.bold(realModuleName)}`);
   };
 }
@@ -53,7 +58,7 @@ function resolveRequestFromContext(
   resolveRequest: Function,
   context: any,
   realModuleName: string,
-  platform: string,
+  platform: string | null,
   debug: boolean
 ) {
   try {
@@ -75,7 +80,7 @@ function resolveRequestFromContext(
 function defaultMetroResolver(
   context: any,
   realModuleName: string,
-  platform: string,
+  platform: string | null,
   debug: boolean
 ) {
   try {
@@ -130,7 +135,7 @@ function tsconfigPathsResolver(
   context: any,
   extensions: string[],
   realModuleName: string,
-  platform: string,
+  platform: string | null,
   debug: boolean
 ) {
   try {
@@ -145,7 +150,7 @@ function tsconfigPathsResolver(
   } catch {
     if (debug) {
       console.log(
-        chalk.red(`[Nx] Failed to resolve ${chalk.bold(realModuleName)}`)
+        chalk.cyan(`[Nx] Failed to resolve ${chalk.bold(realModuleName)}`)
       );
       console.log(
         chalk.cyan(

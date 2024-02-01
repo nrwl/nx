@@ -7,7 +7,6 @@ import {
 } from '@nx/devkit';
 import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
-import { createNodes } from '../../plugins/plugin';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 import { nextVersion, nxVersion } from '../../utils/versions';
 import { addPlugin } from './lib/add-plugin';
@@ -50,6 +49,7 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   }
 
   if (schema.updatePackageScripts) {
+    const { createNodes } = await import('../../plugins/plugin');
     await updatePackageScripts(host, createNodes);
   }
 

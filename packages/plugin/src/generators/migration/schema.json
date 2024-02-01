@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxPluginMigration",
   "title": "Create a Migration for an Nx Plugin",
@@ -44,7 +44,7 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
+      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
     },
     "packageJsonUpdates": {
       "type": "boolean",

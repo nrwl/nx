@@ -4,7 +4,7 @@
   "schema": {
     "cli": "nx",
     "$id": "NxExpoInit",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "description": "Add Nx Expo Schematics.",
     "type": "object",
     "properties": {

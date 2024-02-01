@@ -384,7 +384,7 @@ function getNxEnvironmentVariables() {
 }
 
 /**
- * TODO(v18)
+ * TODO(v19)
  * @deprecated Use Next.js 9.4+ built-in support for environment variables. Reference https://nextjs.org/docs/pages/api-reference/next-config-js/env
  */
 function addNxEnvVariables(config: any) {
