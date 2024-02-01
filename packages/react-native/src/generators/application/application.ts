@@ -22,7 +22,6 @@ import { createApplicationFiles } from './lib/create-application-files';
 import { addE2e } from './lib/add-e2e';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -94,7 +93,6 @@ export async function reactNativeApplicationGeneratorInternal(
     joinPathFragments(host.root, options.iosProjectRoot)
   );
   if (options.install) {
-    await syncDeps(options.appProjectRoot, host.root);
     tasks.push(podInstallTask);
   } else {
     output.log({
