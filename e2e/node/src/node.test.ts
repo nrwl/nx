@@ -22,7 +22,6 @@ import {
   uniq,
   updateFile,
   updateJson,
-  setMaxWorkers,
 } from '@nx/e2e/utils';
 import { exec, execSync } from 'child_process';
 import * as http from 'http';
@@ -62,7 +61,6 @@ describe('Node Applications', () => {
     const nodeapp = uniq('nodeapp');
 
     runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
-    setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting');
@@ -80,7 +78,6 @@ describe('Node Applications', () => {
   it('should be able to generate the correct outputFileName in options', async () => {
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
-    setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
     updateJson(join('apps', nodeapp, 'project.json'), (config) => {
       config.targets.build.options.outputFileName = 'index.js';
@@ -97,7 +94,6 @@ describe('Node Applications', () => {
     runCLI(
       `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack`
     );
-    setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting');
@@ -157,7 +153,6 @@ describe('Node Applications', () => {
     runCLI(
       `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack --framework=none`
     );
-    setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
     updateFile('.env', `NX_FOOBAR="test foo bar"`);
 
@@ -192,7 +187,7 @@ describe('Node Applications', () => {
     process.env.PORT = `${port}`;
 
     runCLI(`generate @nx/express:app ${nodeapp} --linter=eslint`);
-    setMaxWorkers(join('apps', nodeapp, 'project.json'));
+
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('All files pass linting');
 
@@ -234,7 +229,6 @@ describe('Node Applications', () => {
     const nestapp = uniq('nestapp');
     const port = 3335;
     runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
-    setMaxWorkers(join('apps', nestapp, 'project.json'));
 
     const lintResults = runCLI(`lint ${nestapp}`);
     expect(lintResults).toContain('All files pass linting');
@@ -296,7 +290,6 @@ describe('Node Applications', () => {
     runCLI(
       `generate @nrwl/node:app ${esmapp} --linter=eslint --framework=none --bundler=webpack`
     );
-    setMaxWorkers(join('apps', esmapp, 'project.json'));
     updateJson(`apps/${esmapp}/tsconfig.app.json`, (config) => {
       config.module = 'esnext';
       config.target = 'es2020';
@@ -348,7 +341,6 @@ describe('Build Node apps', () => {
     const packageManager = detectPackageManager(tmpProjPath());
     const nestapp = uniq('nestapp');
     runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
-    setMaxWorkers(join('apps', nestapp, 'project.json'));
 
     await runCLIAsync(`build ${nestapp} --generatePackageJson`);
 
@@ -410,7 +402,6 @@ describe('Build Node apps', () => {
 
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nx/node:app ${nodeapp} --bundler=webpack`);
-    setMaxWorkers(join('apps', nodeapp, 'project.json'));
 
     const jslib = uniq('jslib');
     runCLI(`generate @nx/js:lib ${jslib} --bundler=tsc`);
@@ -451,7 +442,6 @@ ${jslib}();
     const appName = uniq('app');
 
     runCLI(`generate @nx/node:app ${appName} --no-interactive`);
-    setMaxWorkers(join('apps', appName, 'project.json'));
 
     // deleteOutputPath should default to true
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -533,7 +523,6 @@ ${jslib}();
     it('should have plugin output if specified in `tsPlugins`', async () => {
       const nestapp = uniq('nestapp');
       runCLI(`generate @nx/nest:app ${nestapp} --linter=eslint`);
-      setMaxWorkers(join('apps', nestapp, 'project.json'));
 
       packageInstall('@nestjs/swagger', undefined, '^7.0.0');
 

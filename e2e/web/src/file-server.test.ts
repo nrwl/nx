@@ -5,7 +5,6 @@ import {
   promisifiedTreeKill,
   runCLI,
   runCommandUntil,
-  setMaxWorkers,
   uniq,
   updateFile,
   updateJson,
@@ -54,7 +53,6 @@ describe('file-server', () => {
     const port = 4301;
 
     runCLI(`generate @nx/web:app ${appName} --no-interactive`);
-    setMaxWorkers(join('apps', appName, 'project.json'));
     // Used to copy index.html rather than the normal webpack build.
     updateFile(
       `apps/${appName}/copy-index.js`,

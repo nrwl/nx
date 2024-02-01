@@ -6,7 +6,6 @@ import {
   newProject,
   readJson,
   runCLI,
-  setMaxWorkers,
   uniq,
   updateFile,
   readFile,
@@ -22,7 +21,6 @@ describe('Extra Nx Misc Tests', () => {
     it('should stream output', async () => {
       const myapp = 'abcdefghijklmon';
       runCLI(`generate @nx/web:app ${myapp}`);
-      setMaxWorkers(join('apps', myapp, 'project.json'));
 
       updateJson(join('apps', myapp, 'project.json'), (c) => {
         c.targets['inner'] = {

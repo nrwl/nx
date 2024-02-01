@@ -10,7 +10,6 @@ import {
 } from '@nx/e2e/utils';
 import { writeFileSync } from 'fs';
 import { createFileSync } from 'fs-extra';
-import { join } from 'path';
 
 describe('Storybook generators and executors for monorepos', () => {
   const reactStorybookApp = uniq('react-app');

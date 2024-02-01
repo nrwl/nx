@@ -9,7 +9,6 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
-  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -17,7 +16,6 @@ import {
 } from '@nx/e2e/utils';
 import { PackageJson } from 'nx/src/utils/package-json';
 import * as path from 'path';
-import { join } from 'path';
 
 describe('Nx Running Tests', () => {
   let proj: string;
@@ -132,7 +130,6 @@ describe('Nx Running Tests', () => {
       beforeAll(async () => {
         app = uniq('myapp');
         runCLI(`generate @nx/web:app ${app}`);
-        setMaxWorkers(join('apps', app, 'project.json'));
       });
 
       it('should support using {projectRoot} in options blocks in project.json', async () => {

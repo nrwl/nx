@@ -2,7 +2,6 @@ import {
   cleanupProject,
   newProject,
   runCLI,
-  setMaxWorkers,
   uniq,
   updateFile,
   updateJson,
@@ -136,7 +135,6 @@ describe('js:node executor', () => {
     runCLI(
       `generate @nx/node:application ${webpackProject} --bundler=webpack --no-interactive`
     );
-    setMaxWorkers(join('apps', webpackProject, 'project.json'));
 
     updateFile(`apps/${webpackProject}/src/main.ts`, () => {
       return `

@@ -5,7 +5,6 @@ import {
   runCLI,
   uniq,
 } from '@nx/e2e/utils';
-import { join } from 'path';
 
 describe('Storybook generators and executors for Vue projects', () => {
   const vueStorybookApp = uniq('vue-app');

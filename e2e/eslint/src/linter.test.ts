@@ -1,17 +1,12 @@
 import * as path from 'path';
 import {
-  checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
   createFile,
-  getSelectedPackageManager,
   newProject,
   readFile,
   readJson,
-  renameFile,
   runCLI,
-  runCreateWorkspace,
-  setMaxWorkers,
   uniq,
   updateFile,
   updateJson,
@@ -640,7 +635,6 @@ describe('Linter', () => {
       runCLI(
         `generate @nx/node:app ${myapp} --rootProject=true --no-interactive`
       );
-      setMaxWorkers('project.json');
       verifySuccessfulStandaloneSetup(myapp);
 
       let appEslint = readJson('.eslintrc.json');
