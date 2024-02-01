@@ -403,6 +403,21 @@ describe('project-configuration-utils', () => {
         `);
       });
     });
+
+    describe('cache', () => {
+      it('should not be merged for incompatible targets', () => {
+        const result = mergeTargetConfigurations(
+          {
+            executor: 'foo',
+          },
+          {
+            executor: 'bar',
+            cache: true,
+          }
+        );
+        expect(result.cache).not.toBeDefined();
+      });
+    });
   });
 
   describe('mergeProjectConfigurationIntoRootMap', () => {
