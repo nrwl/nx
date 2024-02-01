@@ -154,7 +154,7 @@ jobs:
 
 This workflow will install node, install npm dependencies, then run `nx release publish` to publish the packages. It will run on every push to the repository that creates a tag that matches the pattern `v*.*.*`. A release process using this workflow is as follows:
 
-1. Run `nx release --skip-publish` locally. This will create a commit with the version and changelog updates, then create a tag for the new version version.
+1. Run `nx release --skip-publish` locally. This will create a commit with the version and changelog updates, then create a tag for the new version.
 2. Push the changes (including the new tag) to the remote repository with `git push && git push --tags`.
 3. The publish workflow will automatically trigger and publish the packages to the npm registry.
 

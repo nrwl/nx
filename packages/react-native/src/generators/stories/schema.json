@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxReactNativeStorybookStories",
   "title": "Generate React Native Storybook stories",
@@ -14,7 +14,20 @@
         "$source": "projectName",
         "index": 0
       },
-      "x-prompt": "For which project do you want to generate stories?"
+      "x-prompt": "For which project do you want to generate stories?",
+      "x-priority": "important"
+    },
+    "interactionTests": {
+      "type": "boolean",
+      "description": "Set up Storybook interaction tests.",
+      "x-prompt": "Do you want to set up Storybook interaction tests?",
+      "x-priority": "important",
+      "default": true
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate JavaScript files rather than TypeScript files.",
+      "default": false
     },
     "ignorePaths": {
       "type": "array",

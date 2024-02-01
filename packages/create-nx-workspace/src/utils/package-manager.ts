@@ -37,6 +37,7 @@ export function getPackageManagerCommand(
   install: string;
   exec: string;
   preInstall?: string;
+  globalAdd: string;
 } {
   const pmVersion = getPackageManagerVersion(packageManager);
   const [pmMajor, pmMinor] = pmVersion.split('.');
@@ -52,6 +53,7 @@ export function getPackageManagerCommand(
           : `${installCommand} --ignore-scripts`,
         // using npx is necessary to avoid yarn classic manipulating the version detection when using berry
         exec: useBerry ? 'npx' : 'yarn',
+        globalAdd: 'yarn global add',
       };
 
     case 'pnpm':
@@ -62,12 +64,14 @@ export function getPackageManagerCommand(
       return {
         install: 'pnpm install --no-frozen-lockfile --silent --ignore-scripts',
         exec: useExec ? 'pnpm exec' : 'pnpx',
+        globalAdd: 'pnpm add -g',
       };
 
     case 'npm':
       return {
         install: 'npm install --silent --ignore-scripts',
         exec: 'npx',
+        globalAdd: 'npm i -g',
       };
   }
 }

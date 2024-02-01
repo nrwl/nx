@@ -16,6 +16,12 @@ To start we'll add a remote repository url for where the standalone app is locat
 git remote add my-standalone-app <repository url>
 ```
 
+Now we must fetch the branches from the new remote
+
+```shell
+git fetch my-standalone-app
+```
+
 Assuming that our main branch on this repo is called 'master', then we'll run
 
 ```shell

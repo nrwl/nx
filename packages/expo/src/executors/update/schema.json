@@ -1,7 +1,7 @@
 {
   "version": 2,
   "outputCapture": "direct-nodejs",
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxExpoEasUpdate",
   "cli": "nx",
   "title": "Expo EAS Update executor",

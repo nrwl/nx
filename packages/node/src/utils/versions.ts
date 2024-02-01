@@ -15,4 +15,4 @@ export const fastifyAutoloadVersion = '~5.7.1';
 export const fastifySensibleVersion = '~5.2.0';
 export const fastifyPluginVersion = '~4.5.0';
 
-export const axiosVersion = '^1.0.0';
+export const axiosVersion = '^1.6.0';

@@ -163,9 +163,14 @@ There should at least be a tsconfig.base.json or tsconfig.json in the root of th
 
   function findFile(path: string): string {
     for (const ext of options.extensions) {
-      const r = resolve(path + ext);
-      if (existsSync(r)) {
-        return r;
+      const resolvedPath = resolve(path + ext);
+      if (existsSync(resolvedPath)) {
+        return resolvedPath;
+      }
+
+      const resolvedIndexPath = resolve(path, `index${ext}`);
+      if (existsSync(resolvedIndexPath)) {
+        return resolvedIndexPath;
       }
     }
   }

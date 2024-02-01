@@ -10,15 +10,16 @@ import {
   checkFilesExist,
   updateFile,
   runCLIAsync,
+  runE2ETests,
+  killPorts,
 } from 'e2e/utils';
 import { join } from 'path';
 
 describe('@nx/expo/plugin', () => {
-  let project: string;
   let appName: string;
 
   beforeAll(() => {
-    project = newProject();
+    newProject();
     appName = uniq('app');
     runCLI(
       `generate @nx/expo:app ${appName} --project-name-and-root-format=as-provided --no-interactive`,
@@ -107,6 +108,32 @@ describe('@nx/expo/plugin', () => {
     const prebuildResult = await runCLIAsync(
       `prebuild ${appName} --no-interactive --install=false`
     );
-    expect(prebuildResult.combinedOutput).toContain('Config synced');
+    expect(prebuildResult.combinedOutput).toContain(
+      'Successfully ran target prebuild for project'
+    );
+  });
+
+  it('should run e2e for cypress', async () => {
+    if (runE2ETests()) {
+      const results = runCLI(`e2e ${appName}-e2e`);
+      expect(results).toContain('Successfully ran target e2e');
+
+      // port and process cleanup
+      try {
+        await killPorts(4200);
+      } catch (err) {
+        expect(err).toBeFalsy();
+      }
+    }
+  });
+
+  it('should create storybook with application', async () => {
+    runCLI(
+      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
+    );
+    checkFilesExist(
+      `${appName}/.storybook/main.ts`,
+      `${appName}/src/app/App.stories.tsx`
+    );
   });
 });

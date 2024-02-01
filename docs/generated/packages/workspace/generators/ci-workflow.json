@@ -2,7 +2,7 @@
   "name": "ci-workflow",
   "factory": "./src/generators/ci-workflow/ci-workflow#ciWorkflowGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxWorkspaceCIWorkflow",
     "title": "Generate a CI workflow.",
     "description": "Generate a CI workflow.",

@@ -2,7 +2,7 @@
   "name": "library-secondary-entry-point",
   "factory": "./src/generators/library-secondary-entry-point/library-secondary-entry-point",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxAngularLibrarySecondaryEntryPoint",
     "title": "Creates a secondary entry point for a library",
     "description": "Creates a secondary entry point for an Angular publishable library.",

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxReactNativeUpgradeNativeConfigure",
   "title": "React native upgrade native configuration",
@@ -27,8 +27,8 @@
     "e2eTestRunner": {
       "description": "Adds the specified e2e test runner.",
       "type": "string",
-      "enum": ["detox", "none"],
-      "default": "detox"
+      "enum": ["cypress", "playwright", "detox", "none"],
+      "default": "cypress"
     },
     "install": {
       "type": "boolean",

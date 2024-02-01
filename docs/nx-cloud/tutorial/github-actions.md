@@ -315,15 +315,11 @@ Reducing the number of tasks to run via [affected commands](/ci/features/affecte
 
 ```{% command="pnpm nx connect" %}
 
-  NX   Remote caching via Nx Cloud has been enabled
+  NX   Your Nx Cloud workspace is public
 
-   In addition to the caching, Nx Cloud provides config-free distributed execution,
-   UI for viewing complex runs and GitHub integration. Learn more at https://nx.app
-
-   Your workspace is currently unclaimed. Run details from unclaimed workspaces can be viewed on cloud.nx.app by anyone
-   with the link. Claim your workspace at the following link to restrict access.
-
-   https://cloud.nx.app/orgs/workspace-setup?accessToken=[YourAccessTokenHere]
+    To restrict access, connect it to your Nx Cloud account:
+    - Push your changes
+    - Login at https://cloud.nx.app to connect your repository
 ```
 
 Click the link in the terminal to claim your workspace on [nx.app](https://nx.app). Once your workspace is successfully connected you should see an empty dashboard.

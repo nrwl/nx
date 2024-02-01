@@ -6,7 +6,7 @@
     "outputCapture": "direct-nodejs",
     "cli": "nx",
     "$id": "NxReactNativeBundle",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Offline JS Bundle for React Native",
     "description": "JS Bundle target options.",
     "type": "object",

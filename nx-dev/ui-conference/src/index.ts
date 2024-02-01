@@ -7,3 +7,4 @@ export * from './lib/conf-workshop';
 export * from './lib/launch-week/agenda';
 export * from './lib/launch-week/speakers';
 export * from './lib/launch-week/announcements';
+export * from './lib/launch-week/community-partners';

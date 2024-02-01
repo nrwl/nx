@@ -26,6 +26,7 @@ export interface RunOptions {
   cloud: boolean;
   dte: boolean;
   batch: boolean;
+  useAgents: boolean;
 }
 
 export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
@@ -90,6 +91,11 @@ export function withRunOptions<T>(yargs: Argv<T>): Argv<T & RunOptions> {
     .options('dte', {
       type: 'boolean',
       hidden: true,
+    })
+    .options('useAgents', {
+      type: 'boolean',
+      hidden: true,
+      alias: 'agents',
     }) as Argv<Omit<RunOptions, 'exclude' | 'batch'>> as any;
 }
 
