@@ -348,7 +348,7 @@ describe('Nx Running Tests', () => {
 
       // Should work within the project directory
       expect(runCommand(`cd apps/${myapp}/src && npx nx build`)).toContain(
-        `nx run ${myapp}:build:production`
+        `nx run ${myapp}:build`
       );
     }, 10000);
 
@@ -606,7 +606,7 @@ describe('Nx Running Tests', () => {
       expect(buildConfig).toContain(
         `Running target build for 2 projects and 1 task they depend on:`
       );
-      expect(buildConfig).toContain(`run ${appA}:build:production`);
+      expect(buildConfig).toContain(`run ${appA}:build`);
       expect(buildConfig).toContain(`run ${libA}:build`);
       expect(buildConfig).toContain(`run ${libC}:build`);
       expect(buildConfig).toContain('Successfully ran target build');
@@ -626,7 +626,7 @@ describe('Nx Running Tests', () => {
 
       let outputs = runCLI(
         // Options with lists can be specified using multiple args or with a delimiter (comma or space).
-        `run-many -t build -t test -p ${myapp1} ${myapp2} --ci`
+        `run-many -t build -t test -p ${myapp1} ${myapp2}`
       );
       expect(outputs).toContain('Running targets build, test for 2 projects:');
 
