@@ -23,10 +23,16 @@ import { hasExpoPlugin } from '../../utils/has-expo-plugin';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
-export async function expoInitGenerator(host: Tree, schema: Schema) {
+export function expoInitGenerator(tree: Tree, schema: Schema) {
+  return expoInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   addGitIgnoreEntry(host);
 
-  if (process.env.NX_ADD_PLUGINS !== 'false') {
+  if (schema.addPlugin) {
     addPlugin(host);
   }
 

@@ -22,6 +22,7 @@ describe('jestProject', () => {
     setupFile: 'none',
     skipFormat: false,
     compiler: 'tsc',
+    addPlugin: true,
   };
 
   beforeEach(async () => {

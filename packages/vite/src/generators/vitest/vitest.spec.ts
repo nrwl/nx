@@ -18,6 +18,7 @@ describe('vitest generator', () => {
     project: 'my-test-react-app',
     uiFramework: 'react',
     coverageProvider: 'v8',
+    addPlugin: true,
   };
 
   beforeEach(() => {

@@ -16,7 +16,17 @@ import { nxVersion } from '../../utils/versions';
 import { componentTestGenerator } from '@nx/react';
 import { relative } from 'path';
 
-export async function cypressComponentConfiguration(
+export function cypressComponentConfiguration(
+  tree: Tree,
+  options: CypressComponentConfigurationGeneratorSchema
+) {
+  return cypressComponentConfigurationInternal(tree, {
+    addPlugin: false,
+    ...options,
+  });
+}
+
+export async function cypressComponentConfigurationInternal(
   tree: Tree,
   options: CypressComponentConfigurationGeneratorSchema
 ) {
@@ -30,6 +40,7 @@ export async function cypressComponentConfiguration(
       project: options.project,
       skipFormat: true,
       jsx: true,
+      addPlugin: options.addPlugin,
     })
   );
 
@@ -37,7 +48,12 @@ export async function cypressComponentConfiguration(
     '@nx/webpack',
     nxVersion
   );
-  tasks.push(await webpackInitGenerator(tree, { skipFormat: true }));
+  tasks.push(
+    await webpackInitGenerator(tree, {
+      skipFormat: true,
+      addPlugin: options.addPlugin,
+    })
+  );
   const { ensureDependencies } = await import(
     '@nx/webpack/src/utils/ensure-dependencies'
   );

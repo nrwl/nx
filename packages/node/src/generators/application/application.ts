@@ -379,6 +379,7 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -426,6 +427,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     const webpackInitTask = await webpackInitGenerator(tree, {
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(webpackInitTask);
     if (!options.skipPackageJson) {

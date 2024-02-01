@@ -13,10 +13,19 @@ import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { hasPlugin } from '../../utils/has-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
-export async function configurationGenerator(
+export function configurationGenerator(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
+  return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function configurationGeneratorInternal(
+  tree: Tree,
+  options: ConfigurationGeneratorSchema
+) {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const task = await webpackInitGenerator(tree, {
     ...options,
     skipFormat: true,

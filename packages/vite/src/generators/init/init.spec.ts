@@ -27,7 +27,9 @@ describe('@nx/vite:init', () => {
         { '@nx/vite': nxVersion, [existing]: existingVersion },
         { [existing]: existingVersion }
       );
-      await initGenerator(tree, {});
+      await initGenerator(tree, {
+        addPlugin: true,
+      });
       const packageJson = readJson(tree, 'package.json');
 
       expect(packageJson).toMatchSnapshot();
@@ -42,7 +44,9 @@ describe('@nx/vite:init', () => {
         return json;
       });
 
-      await initGenerator(tree, {});
+      await initGenerator(tree, {
+        addPlugin: true,
+      });
 
       const nxJson = readNxJson(tree);
 

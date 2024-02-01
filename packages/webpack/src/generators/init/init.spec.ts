@@ -11,7 +11,9 @@ describe('webpackInitGenerator', () => {
   });
 
   it('should install plugin and webpack-cli', async () => {
-    await webpackInitGenerator(tree, {});
+    await webpackInitGenerator(tree, {
+      addPlugin: true,
+    });
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toEqual({

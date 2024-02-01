@@ -225,6 +225,7 @@ function setDefaults(tree: Tree, options: NormalizedSchema) {
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -274,6 +275,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -298,6 +300,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -322,7 +325,10 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
+    const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
+      '@nx/eslint',
+      nxVersion
+    );
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -332,6 +338,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       setParserOptionsProject: options.setParserOptionsProject,
+      addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
   }
@@ -456,6 +463,8 @@ async function normalizeOptions(
     callingGenerator: '@nx/web:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
 

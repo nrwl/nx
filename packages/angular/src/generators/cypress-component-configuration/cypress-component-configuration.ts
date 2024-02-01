@@ -25,18 +25,31 @@ import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import { CypressComponentConfigSchema } from './schema';
 
+export function cypressComponentConfiguration(
+  tree: Tree,
+  options: CypressComponentConfigSchema
+) {
+  return cypressComponentConfigurationInternal(tree, {
+    addPlugin: false,
+    ...options,
+  });
+}
+
 /**
  * This is for cypress built in component testing, if you want to test with
  * storybook + cypress then use the componentCypressGenerator instead.
  */
-export async function cypressComponentConfiguration(
+export async function cypressComponentConfigurationInternal(
   tree: Tree,
   options: CypressComponentConfigSchema
 ) {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const projectConfig = readProjectConfiguration(tree, options.project);
   const installTask = await baseCyCTConfig(tree, {
     project: options.project,
     skipFormat: true,
+    addPlugin: options.addPlugin,
   });
 
   await updateProjectConfig(tree, options);

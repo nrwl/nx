@@ -39,7 +39,7 @@
       "description": "Set up a custom server."
     },
     "cypress-component-configuration": {
-      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationInternal",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "cypress-component-configuration generator"
     }

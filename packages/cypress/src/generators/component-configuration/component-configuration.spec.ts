@@ -99,7 +99,9 @@ describe('Cypress Component Configuration', () => {
   });
 
   it('should not add the target when @nx/cypress/plugin is registered', async () => {
-    await cypressInitGenerator(tree, {});
+    await cypressInitGenerator(tree, {
+      addPlugin: true,
+    });
     const nxJson = readNxJson(tree);
     nxJson.namedInputs = {
       default: ['{projectRoot}/**/*'],
@@ -110,6 +112,7 @@ describe('Cypress Component Configuration', () => {
     await componentConfigurationGenerator(tree, {
       project: 'cool-lib',
       skipFormat: false,
+      addPlugin: true,
     });
 
     expect(

@@ -15,6 +15,7 @@ describe('@nx/eslint:lint-project', () => {
 
   const defaultOptions = {
     skipFormat: false,
+    addPlugin: true,
   };
 
   beforeEach(() => {

@@ -97,9 +97,18 @@ function updateProductionFileset(tree: Tree) {
 }
 
 export async function cypressInitGenerator(tree: Tree, options: Schema) {
+  return cypressInitGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function cypressInitGeneratorInternal(
+  tree: Tree,
+  options: Schema
+) {
   updateProductionFileset(tree);
 
-  if (process.env.NX_ADD_PLUGINS !== 'false') {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  if (options.addPlugin) {
     addPlugin(tree);
   } else {
     setupE2ETargetDefaults(tree);

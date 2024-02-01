@@ -1,17 +1,22 @@
 import {
-  readJson,
-  updateJson,
   type NxJsonConfiguration,
+  readJson,
   type Tree,
+  updateJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { jestInitGenerator } from './init';
+import { JestInitSchema } from './schema';
 
 describe('jest', () => {
   let tree: Tree;
+  let options: JestInitSchema;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    options = {
+      addPlugin: true,
+    };
   });
 
   it('should exclude jest files from production fileset', async () => {
@@ -21,7 +26,7 @@ describe('jest', () => {
       return json;
     });
 
-    await jestInitGenerator(tree, {});
+    await jestInitGenerator(tree, options);
 
     const productionFileSet = readJson<NxJsonConfiguration>(tree, 'nx.json')
       .namedInputs.production;
@@ -41,7 +46,7 @@ describe('jest', () => {
       json.namedInputs.production = ['default', '^production'];
       return json;
     });
-    await jestInitGenerator(tree, {});
+    await jestInitGenerator(tree, options);
     let nxJson: NxJsonConfiguration;
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.namedInputs ??= {};
@@ -64,13 +69,13 @@ describe('jest', () => {
     });
     tree.write('jest.preset.js', '');
 
-    await jestInitGenerator(tree, {});
+    await jestInitGenerator(tree, options);
 
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json')).toEqual(nxJson);
   });
 
   it('should add dependencies', async () => {
-    await jestInitGenerator(tree, {});
+    await jestInitGenerator(tree, options);
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies.jest).toBeDefined();

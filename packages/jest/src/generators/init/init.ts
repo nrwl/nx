@@ -101,13 +101,19 @@ function updateDependencies(tree: Tree, options: JestInitSchema) {
   );
 }
 
-export async function jestInitGenerator(
+export function jestInitGenerator(tree: Tree, options: JestInitSchema) {
+  return jestInitGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function jestInitGeneratorInternal(
   tree: Tree,
   options: JestInitSchema
 ): Promise<GeneratorCallback> {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   if (!tree.exists('jest.preset.js')) {
     updateProductionFileSet(tree);
-    if (process.env.NX_ADD_PLUGINS !== 'false') {
+    if (options.addPlugin) {
       addPlugin(tree);
     } else {
       addJestTargetDefaults(tree);

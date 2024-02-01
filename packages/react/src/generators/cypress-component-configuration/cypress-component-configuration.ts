@@ -9,23 +9,37 @@ import { addFiles } from './lib/add-files';
 import { addCTTargetWithBuildTarget } from '../../utils/ct-utils';
 import { CypressComponentConfigurationSchema } from './schema.d';
 
+export function cypressComponentConfigGenerator(
+  tree: Tree,
+  options: CypressComponentConfigurationSchema
+) {
+  return cypressComponentConfigGeneratorInternal(tree, {
+    addPlugin: false,
+    ...options,
+  });
+}
+
 /**
  * This is for using cypresses own Component testing, if you want to use test
  * storybook components then use componentCypressGenerator instead.
  *
  */
-export async function cypressComponentConfigGenerator(
+export async function cypressComponentConfigGeneratorInternal(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
   const { componentConfigurationGenerator: baseCyCtConfig } = ensurePackage<
     typeof import('@nx/cypress')
   >('@nx/cypress', nxVersion);
+
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const projectConfig = readProjectConfiguration(tree, options.project);
   const installTask = await baseCyCtConfig(tree, {
     project: options.project,
     skipFormat: true,
     jsx: true,
+    addPlugin: options.addPlugin,
   });
 
   const found = await addCTTargetWithBuildTarget(tree, {

@@ -32,6 +32,7 @@ describe('addLinting generator', () => {
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
+      addPlugin: true,
     });
 
     expect(linter.lintProjectGenerator).toHaveBeenCalled();
@@ -43,6 +44,7 @@ describe('addLinting generator', () => {
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
+      addPlugin: true,
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
@@ -59,6 +61,7 @@ describe('addLinting generator', () => {
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
+      addPlugin: true,
     });
 
     const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
@@ -71,6 +74,7 @@ describe('addLinting generator', () => {
       projectName: appProjectName,
       projectRoot: appProjectRoot,
       skipFormat: true,
+      addPlugin: true,
     });
 
     const nxJson = readNxJson(tree);

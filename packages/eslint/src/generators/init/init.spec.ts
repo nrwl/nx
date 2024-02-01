@@ -1,18 +1,22 @@
 import { NxJsonConfiguration, readJson, Tree, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { lintInitGenerator } from './init';
+import { LinterInitOptions, lintInitGenerator } from './init';
 
 describe('@nx/eslint:init', () => {
   let tree: Tree;
+  let options: LinterInitOptions;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    options = {
+      addPlugin: true,
+    };
   });
 
   it('should not generate the global eslint config if it already exist', async () => {
     tree.write('.eslintrc.js', '{}');
 
-    await lintInitGenerator(tree, {});
+    await lintInitGenerator(tree, options);
 
     expect(tree.exists('.eslintrc.json')).toBe(false);
   });
@@ -24,7 +28,7 @@ describe('@nx/eslint:init', () => {
       return json;
     });
 
-    await lintInitGenerator(tree, {});
+    await lintInitGenerator(tree, options);
 
     expect(
       readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[
@@ -51,7 +55,7 @@ describe('@nx/eslint:init', () => {
       return json;
     });
 
-    await lintInitGenerator(tree, {});
+    await lintInitGenerator(tree, options);
     expect(readJson<NxJsonConfiguration>(tree, 'nx.json').plugins)
       .toMatchInlineSnapshot(`
       [
@@ -66,18 +70,8 @@ describe('@nx/eslint:init', () => {
   });
 
   describe('(legacy)', () => {
-    let originalEnv: string;
-    beforeEach(() => {
-      originalEnv = process.env.NX_ADD_PLUGINS;
-      process.env.NX_ADD_PLUGINS = 'false';
-    });
-
-    afterEach(() => {
-      process.env.NX_ADD_PLUGINS = originalEnv;
-    });
-
     it('should add the root eslint config to the lint targetDefaults for lint', async () => {
-      await lintInitGenerator(tree, {});
+      await lintInitGenerator(tree, { ...options, addPlugin: false });
 
       expect(
         readJson(tree, 'nx.json').targetDefaults['@nx/eslint:lint']
@@ -99,7 +93,7 @@ describe('@nx/eslint:init', () => {
         return json;
       });
 
-      await lintInitGenerator(tree, {});
+      await lintInitGenerator(tree, { ...options, addPlugin: false });
 
       expect(
         readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults[

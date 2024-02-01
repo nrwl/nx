@@ -51,15 +51,22 @@ interface LintProjectOptions {
   unitTestRunner?: string;
   rootProject?: boolean;
   keepExistingVersions?: boolean;
+  addPlugin?: boolean;
 }
 
-export async function lintProjectGenerator(
+export function lintProjectGenerator(tree: Tree, options: LintProjectOptions) {
+  return lintProjectGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function lintProjectGeneratorInternal(
   tree: Tree,
   options: LintProjectOptions
 ) {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const tasks: GeneratorCallback[] = [];
   const initTask = await lintInitGenerator(tree, {
     skipPackageJson: options.skipPackageJson,
+    addPlugin: options.addPlugin,
   });
   tasks.push(initTask);
   const rootEsLintTask = setupRootEsLint(tree, {

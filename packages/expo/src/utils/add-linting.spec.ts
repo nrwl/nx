@@ -22,6 +22,7 @@ describe('Add Linting', () => {
       linter: Linter.EsLint,
       tsConfigPaths: ['my-lib/tsconfig.lib.json'],
       projectRoot: 'my-lib',
+      addPlugin: true,
     });
 
     expect(tree.exists('my-lib/.eslintrc.json')).toBeTruthy();
@@ -33,6 +34,7 @@ describe('Add Linting', () => {
       linter: Linter.None,
       tsConfigPaths: ['my-lib/tsconfig.lib.json'],
       projectRoot: 'my-lib',
+      addPlugin: true,
     });
 
     expect(tree.exists('my-lib/.eslintrc.json')).toBeFalsy();

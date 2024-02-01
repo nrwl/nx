@@ -8,17 +8,7 @@ import { Linter } from '@nx/eslint';
 
 describe('cypress-component-configuration generator', () => {
   let tree: Tree;
-  // TODO(@jaysoo): Turn this back to adding the plugin
-  let originalEnv: string;
-
-  beforeEach(() => {
-    originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = 'false';
-  });
-
-  afterEach(() => {
-    process.env.NX_ADD_PLUGINS = originalEnv;
-  });
+  // TODO(@leosvelperez): Turn this back to adding the plugin
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();

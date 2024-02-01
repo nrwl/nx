@@ -35,6 +35,8 @@ function normalizeOptions(
     options.testEnvironment = 'jsdom';
   }
 
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   options.targetName ??= 'test';
 
   if (!options.hasOwnProperty('supportTsx')) {
@@ -64,7 +66,11 @@ function normalizeOptions(
   };
 }
 
-export async function configurationGenerator(
+export function configurationGenerator(tree: Tree, schema: JestProjectSchema) {
+  return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function configurationGeneratorInternal(
   tree: Tree,
   schema: JestProjectSchema
 ): Promise<GeneratorCallback> {
@@ -73,7 +79,7 @@ export async function configurationGenerator(
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
-  tasks.push(await jestInitGenerator(tree, options));
+  tasks.push(await jestInitGenerator(tree, { ...options, skipFormat: true }));
   if (!schema.skipPackageJson) {
     tasks.push(ensureDependencies(tree, options));
   }

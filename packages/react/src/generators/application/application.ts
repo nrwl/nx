@@ -78,6 +78,7 @@ export async function applicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -112,6 +113,7 @@ export async function applicationGeneratorInternal(
     const webpackInitTask = await webpackInitGenerator(host, {
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(webpackInitTask);
     if (!options.skipPackageJson) {
@@ -150,6 +152,7 @@ export async function applicationGeneratorInternal(
       inSourceTests: options.inSourceTests,
       compiler: options.compiler,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(

@@ -47,6 +47,7 @@ export default async function (
     devServerTarget: `${options.project}:serve:development`,
     baseUrl: options.baseUrl,
     rootProject,
+    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
   });
 
   projectConfig = readProjectConfiguration(tree, e2eProjectName);

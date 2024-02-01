@@ -456,17 +456,6 @@ describe('Cypress Project', () => {
   });
 
   describe('< v7', () => {
-    let originalEnv: string;
-
-    beforeEach(() => {
-      originalEnv = process.env.NX_ADD_PLUGINS;
-      process.env.NX_ADD_PLUGINS = 'false';
-    });
-
-    afterEach(() => {
-      process.env.NX_ADD_PLUGINS = originalEnv;
-    });
-
     beforeEach(() => {
       mockedInstalledCypressVersion.mockReturnValue(6);
     });
@@ -477,6 +466,7 @@ describe('Cypress Project', () => {
         name: 'my-app-e2e',
         project: 'my-app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: false,
       });
 
       expect(tree.exists('my-app-e2e/src/plugins/index.js')).toBeTruthy();
@@ -488,6 +478,7 @@ describe('Cypress Project', () => {
         project: 'my-app',
         linter: Linter.EsLint,
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: false,
       });
 
       const project = readProjectConfiguration(tree, 'my-app-e2e');
@@ -502,6 +493,7 @@ describe('Cypress Project', () => {
         baseUrl: 'http://localhost:3000',
         linter: Linter.EsLint,
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: false,
       });
 
       const project = readProjectConfiguration(tree, 'my-app-e2e');
@@ -520,6 +512,7 @@ describe('Cypress Project', () => {
         project: 'my-app',
         linter: Linter.EsLint,
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: false,
       });
 
       const project = readProjectConfiguration(tree, 'my-app-e2e');
@@ -535,6 +528,7 @@ describe('Cypress Project', () => {
           directory: 'my-dir/my-app-e2e',
           linter: Linter.EsLint,
           projectNameAndRootFormat: 'as-provided',
+          addPlugin: false,
         });
 
         const projectConfig = readProjectConfiguration(
@@ -554,6 +548,7 @@ describe('Cypress Project', () => {
             project: 'my-app',
             linter: Linter.EsLint,
             projectNameAndRootFormat: 'as-provided',
+            addPlugin: false,
           });
 
           const packageJson = readJson(tree, 'package.json');
@@ -574,6 +569,7 @@ describe('Cypress Project', () => {
           directory: 'my-dir/my-app-e2e',
           linter: Linter.EsLint,
           projectNameAndRootFormat: 'as-provided',
+          addPlugin: false,
         });
       });
 

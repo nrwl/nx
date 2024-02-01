@@ -18,4 +18,5 @@ export interface Schema {
   e2eTestRunner: 'detox' | 'none'; // default is detox
   standaloneConfig?: boolean;
   skipPackageJson?: boolean; // default is false
+  addPlugin?: boolean;
 }
