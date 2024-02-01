@@ -21,13 +21,13 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # - script: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
       <% if(packageManager == 'pnpm'){ %>
       - script: npm install --prefix=$HOME/.local -g pnpm@8
         displayName: Install PNPM
       <% } %>- script: <%= packageManagerInstall %>
-
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - script: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
