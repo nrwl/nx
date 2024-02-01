@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#reactNativeInitGenerator",
+  "factory": "./src/generators/init/init#reactNativeInitGeneratorInternal",
   "schema": {
     "cli": "nx",
     "$id": "NxReactNativeInit",
@@ -39,7 +39,7 @@
   },
   "description": "Initialize the `@nrwl/react-native` plugin.",
   "hidden": true,
-  "implementation": "/packages/react-native/src/generators/init/init#reactNativeInitGenerator.ts",
+  "implementation": "/packages/react-native/src/generators/init/init#reactNativeInitGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/react-native/src/generators/init/schema.json",
   "type": "generator"
