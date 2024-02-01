@@ -336,6 +336,13 @@ To fix this you will either need to add a package.json file at that location, or
               affectedProjects
             );
 
+            // No changes detected.
+            // Pretty common for fresh repos created from a Web UI and where the first commits are usually something like "Initial commit".
+            // Make it a bit less confusing for such first releases by defaulting to patch.
+            if (!specifier && !latestMatchingGitTag && options.firstRelease) {
+              specifier = 'patch';
+            }
+
             if (!specifier) {
               log(
                 `🚫 No changes were detected using git history and the conventional commits standard.`
