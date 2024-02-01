@@ -5,7 +5,7 @@ src="https://youtu.be/XLOUFZeqRpM"
 title="Nx Agents in action splitting e2e tests at a file level"
  /%}
 
-**Nx Agents** lets you distribute your CI across many machines without adding any configuration to your workspace. It comes with features such as scaling of agents based on the PR, flaky task re-running, and intelligent task splitting and distribution. Keep reading to learn more.
+**Nx Agents** lets you distribute your CI across many machines with minimal configuration. It comes with features such as dynamically allocating agents based on the size of the PR, flaky task re-running, and intelligent task splitting and distribution. Keep reading to learn more.
 
 ![Distribute Task Execution with Nx Agents](/shared/images/dte/nx-agents-orchestration-diagram.svg)
 
@@ -13,7 +13,12 @@ For a more thorough explanation of how Nx Agents optimizes your CI pipeline, rea
 
 ## Enabling Nx Agents
 
-Enabling task distribution with Nx Agents can be done in a single line. Add the `start-ci-run` command after checking out the repository and before installing `node_modules`:
+To enable task distribution with Nx Agents, there are two requirements:
+
+1. Enable version control system integration. The integrations currently available are GitHub, GitLab and Bitbucket. These integrations can be enabled from your [Nx Cloud dashboard](https://nx.app).
+2. Add a single line to your CI pipeline configuration.
+
+Add the `start-ci-run` command to your CI pipeline configuration after checking out the repository and before installing `node_modules`:
 
 ```yaml {% fileName=".github/workflows/main.yaml" %}
 # After checkout repository
@@ -24,10 +29,6 @@ Enabling task distribution with Nx Agents can be done in a single line. Add the 
 ```
 
 The `--distribute-on` flag instructs Nx Cloud to distribute tasks across 8 agents of type `linux-medium-js`. `linux-medium-js` is the name of the launch template that will be used to provision the agent. The default launch templates [can be found here](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml)
-
-{% callout type="note" title="Enable VCS Integration" %}
-Nx Agents require a version control system integration with your repository in order to function. The integrations currently available are GitHub, GitLab and Bitbucket. These integrations can be enabled from your [Nx Cloud dashboard](https://nx.app).
-{% /callout %}
 
 ## Launch Templates
 
@@ -96,14 +97,10 @@ jobs:
 
 {% /cards %}
 
-## CI/CD Examples
+## CI/CD Guides
 
-The examples below show how to set up CI using Nx and Nx Cloud using Nx Agents and Nx Replay.
-
-Every organization manages their CI/CD pipelines differently, so the examples don't cover org-specific aspects of
-CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly.
-
-Read the guides for more information on how to configure them in CI.
+Every organization manages their CI/CD pipelines differently, so the guides don't cover org-specific aspects of
+CI/CD (e.g., deployment). They mainly focus on configuring Nx correctly using Nx Agents and [Nx Replay](/ci/features/remote-cache).
 
 - [Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure#distributed-ci-with-nx-cloud)
 - [Circle CI](/ci/recipes/set-up/monorepo-ci-circle-ci#distributed-ci-with-nx-cloud)
