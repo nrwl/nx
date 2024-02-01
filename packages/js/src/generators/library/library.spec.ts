@@ -1056,7 +1056,6 @@ describe('lib', () => {
 
         const config = readProjectConfiguration(tree, 'my-lib');
         expect(config.targets['nx-release-publish']).toEqual({
-          dependsOn: ['build', '^nx-release-publish'],
           options: {
             packageRoot: 'dist/{projectName}',
           },

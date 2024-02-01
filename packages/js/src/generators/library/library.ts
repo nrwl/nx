@@ -873,7 +873,12 @@ function projectsConfigMatchesProject(
 
 async function getDefaultProjectsConfig(): Promise<string[]> {
   const projectGraph = await createProjectGraphAsync();
-
+  /*
+   * This is the default logic nx release uses to determine which projects to release
+   * if no projects configuration is provided. In order to explicitly add the new project
+   * to the release configuration, we need to replicate this logic and append it to the end.
+   * Otherwise, projects that were previously included in the release will be excluded.
+   */
   return findMatchingProjects(['*'], projectGraph.nodes).filter(
     (project) => projectGraph.nodes[project].type === 'lib'
   );

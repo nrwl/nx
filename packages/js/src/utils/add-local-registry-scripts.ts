@@ -7,6 +7,7 @@ const startLocalRegistryScript = (localRegistryTarget: string) => `
  */
 import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
 import { execFileSync } from 'child_process';
+import { releasePublish, releaseVersion } from 'nx/release';
 
 export default async () => {
   // local registry target to run
@@ -19,12 +20,20 @@ export default async () => {
     storage,
     verbose: false,
   });
+
   const nx = require.resolve('nx');
   execFileSync(
     nx,
-    ['release', 'publish', '0.0.0-e2e', '--tag', 'e2e'],
+    ['run-many', '--targets', 'build'],
     { env: process.env, stdio: 'inherit' }
-  );
+  )
+
+  await releaseVersion({
+    specifier: '0.0.0-e2e',
+  });
+  await releasePublish({
+    tag: 'e2e',
+  });
 };
 `;
 
