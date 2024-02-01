@@ -42,6 +42,7 @@ import { type PackageJson } from 'nx/src/utils/package-json';
 import setupVerdaccio from '../setup-verdaccio/generator';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -197,8 +198,13 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     options.config !== 'npm-scripts'
   ) {
     const outputPath = getOutputPath(options);
+
+    const executor = getBuildExecutor(options.bundler);
+
+    addBuildTargetDefaults(tree, executor);
+
     projectConfiguration.targets.build = {
-      executor: getBuildExecutor(options.bundler),
+      executor,
       outputs: ['{options.outputPath}'],
       options: {
         outputPath,
