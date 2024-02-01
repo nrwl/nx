@@ -88,7 +88,9 @@ function convertProjectToFlatConfig(
   if (eslintFile && !eslintFile.endsWith('.js')) {
     if (projectConfig.targets) {
       const eslintTargets = Object.keys(projectConfig.targets || {}).filter(
-        (t) => projectConfig.targets[t].executor === '@nx/eslint:lint'
+        (t) =>
+          projectConfig.targets[t].executor === '@nx/eslint:lint' ||
+          projectConfig.targets[t].command.startsWith('eslint')
       );
       let ignorePath: string | undefined;
       for (const target of eslintTargets) {
@@ -102,13 +104,19 @@ function convertProjectToFlatConfig(
         }
         updateProjectConfiguration(tree, project, projectConfig);
       }
-      const nxHasLintTargets = Object.keys(nxJson.targetDefaults || {}).some(
+      const nxHasEsLintTargets = Object.keys(nxJson.targetDefaults || {}).some(
         (t) =>
           (t === '@nx/eslint:lint' ||
             nxJson.targetDefaults[t].executor === '@nx/eslint:lint') &&
           projectConfig.targets?.[t]
       );
-      if (nxHasLintTargets || eslintTargets.length > 0) {
+      const nxHasEsLintPlugin = (nxJson.plugins || []).some((p) =>
+        typeof p === 'string'
+          ? p === '@nx/eslint/plugin'
+          : p.plugin === '@nx/eslint/plugin'
+      );
+
+      if (nxHasEsLintTargets || nxHasEsLintPlugin || eslintTargets.length > 0) {
         convertConfigToFlatConfig(
           tree,
           projectConfig.root,
