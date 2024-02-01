@@ -2,17 +2,19 @@
 
 Create an account on [nx.app](https://nx.app). There are several ways to connect your repository to Nx Cloud.
 
-## Connect Directly Through GitHub
+## Connect Directly Through Source Control Integrations
 
-The easiest way is to create an Nx Cloud organization based on your GitHub organization.
+The recommended way to set up Nx Cloud is to connect using a source control integration. Choose your provider below and follow the recipe to enable source control integration for your repository.
 
-![Connect Your VCS Account](/nx-cloud/tutorial/connect-vcs-account.png)
+{% cards cols="3"  %}
 
-After that, connect you repository.
+{% link-card title="GitHub" url="ci/recipes/source-control-integration/github" icon="github" appearance="small" /%}
+{% link-card title="GitLab" url="/ci/recipes/source-control-integration/gitlab" icon="gitlab" appearance="small" /%}
+{% link-card title="Bitbucket" url="/ci/recipes/source-control-integration/bitbucket-cloud" icon="bitbucket" appearance="small" /%}
 
-![Connect Your Repository](/nx-cloud/tutorial/connect-repository.png)
+{% /cards %}
 
-This will send a pull request to your repository that will add the `nxCloudAccessToken` property to `nx.json`.
+Once the source control integration is connected, it will send a pull request to your repository that will add the `nxCloudAccessToken` property to `nx.json`.
 
 ![Nx Cloud Setup PR](/nx-cloud/tutorial/nx-cloud-setup-pr.png)
 
@@ -20,7 +22,9 @@ This wires up all the CI for you and configures access. Folks who can see your r
 
 ## Manually Connect Your Workspace
 
-To manually connect your workspace to Nx Cloud, run the following command in your repository:
+You can also manually connect your workspace to Nx Cloud. Without source control integration, [Nx Agents](/ci/features/distribute-task-execution) will not function, but [Nx Replay](/ci/features/remote-cache) will still work.
+
+Run the following command in your repository:
 
 ```shell
 pnpm nx connect
