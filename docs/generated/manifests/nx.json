@@ -570,6 +570,95 @@
         "isExternal": false,
         "path": "/features/manage-releases",
         "tags": ["manage-releases"]
+      },
+      {
+        "id": "ci-features",
+        "name": "CI Features",
+        "description": "Features of Nx and Nx Cloud that improve CI",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "affected",
+            "name": "Run Only Tasks Affected by a PR",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/affected",
+            "tags": []
+          },
+          {
+            "id": "remote-cache",
+            "name": "Use Remote Caching (Nx Replay)",
+            "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/remote-cache",
+            "tags": []
+          },
+          {
+            "id": "distribute-task-execution",
+            "name": "Distribute Task Execution (Nx Agents)",
+            "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/distribute-task-execution",
+            "tags": []
+          },
+          {
+            "id": "dynamic-agents",
+            "name": "Dynamically Allocate Agents",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/dynamic-agents",
+            "tags": []
+          },
+          {
+            "id": "split-e2e-tasks",
+            "name": "Automatically Split E2E Tasks",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/split-e2e-tasks",
+            "tags": []
+          },
+          {
+            "id": "flaky-tasks",
+            "name": "Identify and Re-run Flaky Tasks",
+            "description": "",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/flaky-tasks",
+            "tags": []
+          },
+          {
+            "id": "on-premise",
+            "name": "Set up Nx Cloud On-Premise",
+            "description": "Set up Nx Cloud on machines that you control",
+            "mediaImage": "",
+            "file": "",
+            "itemList": [],
+            "isExternal": true,
+            "path": "/ci/features/on-premise",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/features/ci-features",
+        "tags": []
       }
     ],
     "isExternal": false,
@@ -663,6 +752,172 @@
     "isExternal": false,
     "path": "/features/manage-releases",
     "tags": ["manage-releases"]
+  },
+  "/features/ci-features": {
+    "id": "ci-features",
+    "name": "CI Features",
+    "description": "Features of Nx and Nx Cloud that improve CI",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "affected",
+        "name": "Run Only Tasks Affected by a PR",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/affected",
+        "tags": []
+      },
+      {
+        "id": "remote-cache",
+        "name": "Use Remote Caching (Nx Replay)",
+        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/remote-cache",
+        "tags": []
+      },
+      {
+        "id": "distribute-task-execution",
+        "name": "Distribute Task Execution (Nx Agents)",
+        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/distribute-task-execution",
+        "tags": []
+      },
+      {
+        "id": "dynamic-agents",
+        "name": "Dynamically Allocate Agents",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/dynamic-agents",
+        "tags": []
+      },
+      {
+        "id": "split-e2e-tasks",
+        "name": "Automatically Split E2E Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/split-e2e-tasks",
+        "tags": []
+      },
+      {
+        "id": "flaky-tasks",
+        "name": "Identify and Re-run Flaky Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/flaky-tasks",
+        "tags": []
+      },
+      {
+        "id": "on-premise",
+        "name": "Set up Nx Cloud On-Premise",
+        "description": "Set up Nx Cloud on machines that you control",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [],
+        "isExternal": true,
+        "path": "/ci/features/on-premise",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/features/ci-features",
+    "tags": []
+  },
+  "/ci/features/affected": {
+    "id": "affected",
+    "name": "Run Only Tasks Affected by a PR",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/affected",
+    "tags": []
+  },
+  "/ci/features/remote-cache": {
+    "id": "remote-cache",
+    "name": "Use Remote Caching (Nx Replay)",
+    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/remote-cache",
+    "tags": []
+  },
+  "/ci/features/distribute-task-execution": {
+    "id": "distribute-task-execution",
+    "name": "Distribute Task Execution (Nx Agents)",
+    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/distribute-task-execution",
+    "tags": []
+  },
+  "/ci/features/dynamic-agents": {
+    "id": "dynamic-agents",
+    "name": "Dynamically Allocate Agents",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/dynamic-agents",
+    "tags": []
+  },
+  "/ci/features/split-e2e-tasks": {
+    "id": "split-e2e-tasks",
+    "name": "Automatically Split E2E Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/split-e2e-tasks",
+    "tags": []
+  },
+  "/ci/features/flaky-tasks": {
+    "id": "flaky-tasks",
+    "name": "Identify and Re-run Flaky Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/flaky-tasks",
+    "tags": []
+  },
+  "/ci/features/on-premise": {
+    "id": "on-premise",
+    "name": "Set up Nx Cloud On-Premise",
+    "description": "Set up Nx Cloud on machines that you control",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [],
+    "isExternal": true,
+    "path": "/ci/features/on-premise",
+    "tags": []
   },
   "/concepts": {
     "id": "concepts",

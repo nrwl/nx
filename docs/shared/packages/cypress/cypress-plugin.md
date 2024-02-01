@@ -73,7 +73,7 @@ The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
 
 ### Splitting E2E tasks by file
 
-The `@nx/cypress/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/concepts/split-e2e-tasks).
+The `@nx/cypress/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/features/split-e2e-tasks).
 
 {% /tab %}
 {% tab label="Nx < 18" %}

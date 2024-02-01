@@ -206,7 +206,7 @@ terminal outputs.
 After `nx affected --build` completes, the machine will have the build files and all the terminal outputs as if it ran
 it locally.
 
-![DTE](/shared/mental-model/dte.svg)
+![Distribution](/shared/mental-model/dte.svg)
 
 ## In summary
 

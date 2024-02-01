@@ -261,9 +261,9 @@ In Nx 17 and higher, caching is configured by specifying `"cache": true` in a ta
 }
 ```
 
-{% callout type="warning" title="Per Project Caching + DTE" %}
+{% callout type="warning" title="Per Project Caching + Distribution" %}
 
-If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with DTE enabled.
+If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with Nx Agents enabled.
 
 {% /callout %}
 
