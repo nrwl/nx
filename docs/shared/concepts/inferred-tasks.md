@@ -18,7 +18,7 @@ The plugin then configures tasks with a name that you specified in the plugin's 
 
 The `@nx/webpack` plugin creates tasks named `build`, `serve` and `preview` by default and it automatically sets the task caching settings based on the values in the webpack configuration files.
 
-### What Is Inferred
+## What Is Inferred
 
 Nx plugins infer the following properties by analyzing the tool configuration.
 
