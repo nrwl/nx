@@ -9,14 +9,19 @@ import {
 
 describe('Nuxt Plugin', () => {
   let proj: string;
+  let originalEnv: string;
   const app = uniq('app');
 
   beforeAll(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'true';
     proj = newProject({
       packages: ['@nx/nuxt', '@nx/storybook'],
       unsetProjectNameAndRootFormat: false,
     });
-    runCLI(`generate @nx/nuxt:app ${app} --unitTestRunner=vitest`);
+    runCLI(
+      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided`
+    );
     runCLI(
       `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`
     );
@@ -25,6 +30,7 @@ describe('Nuxt Plugin', () => {
   afterAll(() => {
     killPorts();
     cleanupProject();
+    process.env.NX_ADD_PLUGINS = originalEnv;
   });
 
   it('should build application', async () => {

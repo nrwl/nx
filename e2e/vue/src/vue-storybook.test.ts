@@ -11,7 +11,11 @@ import { join } from 'path';
 describe('Storybook generators and executors for Vue projects', () => {
   const vueStorybookApp = uniq('vue-app');
   let proj;
+  let originalEnv: string;
+
   beforeAll(async () => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'true';
     proj = newProject({
       packages: ['@nx/vue', '@nx/storybook'],
       unsetProjectNameAndRootFormat: false,
@@ -27,6 +31,7 @@ describe('Storybook generators and executors for Vue projects', () => {
 
   afterAll(() => {
     cleanupProject();
+    process.env.NX_ADD_PLUGINS = originalEnv;
   });
 
   describe('build storybook', () => {

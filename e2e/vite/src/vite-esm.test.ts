@@ -19,13 +19,12 @@ describe('Vite ESM tests', () => {
 
   it('should build with Vite when it is ESM-only', async () => {
     const appName = uniq('viteapp');
-    runCLI(`generate @nx/react:app ${appName} --bundler=vite`);
+    runCLI(
+      `generate @nx/react:app ${appName} --bundler=vite --project-name-and-root-format=as-provided`
+    );
 
     // .mts file is needed because Nx will transpile .ts files as CJS
-    renameFile(
-      `apps/${appName}/vite.config.ts`,
-      `apps/${appName}/vite.config.mts`
-    );
+    renameFile(`${appName}/vite.config.ts`, `${appName}/vite.config.mts`);
 
     // Remove CJS entry point for Vite
     updateJson('node_modules/vite/package.json', (json) => {
@@ -39,6 +38,6 @@ describe('Vite ESM tests', () => {
 
     runCLI(`build ${appName}`);
 
-    checkFilesExist(`dist/apps/${appName}/index.html`);
+    checkFilesExist(`dist/${appName}/index.html`);
   });
 });
