@@ -30,7 +30,12 @@ describe('Next.js Webpack', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`,
+      {
+        env: {
+          NX_ADD_PLUGINS: 'false',
+        },
+      }
     );
 
     updateFile(
