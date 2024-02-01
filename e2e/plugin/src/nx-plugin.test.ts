@@ -1,4 +1,4 @@
-import { ProjectConfiguration } from '@nx/devkit';
+import { NxJsonConfiguration, ProjectConfiguration } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -50,7 +50,19 @@ describe('Nx Plugin', () => {
     expect(project).toMatchObject({
       tags: [],
     });
-    // runCLI(`e2e ${plugin}-e2e`);
+
+    // Workaround for NXC-296
+    updateJson<NxJsonConfiguration>('nx.json', (json) => {
+      json.release = {
+        version: {
+          generatorOptions: {
+            skipLockFileUpdate: true,
+          },
+        },
+      };
+      return json;
+    });
+    runCLI(`e2e ${plugin}-e2e`);
   }, 90000);
 
   it('should be able to generate a migration', async () => {
@@ -440,7 +452,18 @@ describe('Nx Plugin', () => {
       `dist/libs/${createAppName}/bin/index.js`
     );
 
-    // runCLI(`e2e ${plugin}-e2e`);
+    // Workaround for NXC-296
+    updateJson<NxJsonConfiguration>('nx.json', (json) => {
+      json.release = {
+        version: {
+          generatorOptions: {
+            skipLockFileUpdate: true,
+          },
+        },
+      };
+      return json;
+    });
+    runCLI(`e2e ${plugin}-e2e`);
   });
 
   it('should throw an error when run create-package for an invalid plugin ', async () => {
