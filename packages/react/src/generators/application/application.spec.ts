@@ -25,6 +25,7 @@ describe('app', () => {
     style: 'css',
     strict: true,
     projectNameAndRootFormat: 'as-provided',
+    addPlugin: true,
   };
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
