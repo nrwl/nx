@@ -37,7 +37,7 @@ describe('react native', () => {
       return nxJson;
     });
     runCLI(
-      `generate @nx/react-native:application ${appName} --bunlder=webpack --e2eTestRunner=cypress --install=false --no-interactive`
+      `generate @nx/react-native:application ${appName} --bundler=webpack --e2eTestRunner=cypress --install=false --no-interactive`
     );
     runCLI(
       `generate @nx/react-native:library ${libName} --buildable --publishable --importPath=${proj}/${libName} --no-interactive`
