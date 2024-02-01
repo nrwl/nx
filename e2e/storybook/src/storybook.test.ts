@@ -5,7 +5,6 @@ import {
   newProject,
   runCLI,
   runCommandUntil,
-  setMaxWorkers,
   tmpProjPath,
   uniq,
 } from '@nx/e2e/utils';
@@ -24,7 +23,6 @@ describe('Storybook generators and executors for monorepos', () => {
     runCLI(
       `generate @nx/react:app ${reactStorybookApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
     );
-    setMaxWorkers(join(reactStorybookApp, 'project.json'));
     runCLI(
       `generate @nx/react:storybook-configuration ${reactStorybookApp} --generateStories --no-interactive --bundler=webpack`
     );
