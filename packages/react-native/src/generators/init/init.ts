@@ -99,6 +99,8 @@ function addPlugin(host: Tree) {
       runAndroidTargetName: 'run-android',
       buildIosTargetName: 'build-ios',
       buildAndroidTargetName: 'build-android',
+      syncDepsTargetName: 'sync-deps',
+      upgradeTargetname: 'upgrade',
     } as ReactNativePluginOptions,
   });
   updateNxJson(host, nxJson);
