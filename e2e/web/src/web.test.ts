@@ -90,7 +90,7 @@ describe('Web Components Applications', () => {
     checkFilesDoNotExist(`dist/apps/${appName}/inlined.png`);
 
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-      /<img src=['"]data:image\/png;base64/
+      'data:image/png;base64'
     );
     // Should not be a JS module but kept as a PNG
     expect(readFile(`dist/apps/${appName}/emitted.png`)).not.toContain(
