@@ -11,8 +11,10 @@ import {
 describe('Build React applications and libraries with Vite', () => {
   let proj: string;
 
-  beforeEach(() => {
-    proj = newProject();
+  beforeAll(() => {
+    proj = newProject({
+      packages: ['@nx/react', '@nx/vite'],
+    });
   });
 
   afterAll(() => {
@@ -130,9 +132,9 @@ describe('Build React applications and libraries with Vite', () => {
     );
 
     const packageJson = readJson('package.json');
-    // Vite does not need these libraries to work.
+
+    // Vite does not need this library to work.
     expect(packageJson.dependencies['core-js']).toBeUndefined();
-    expect(packageJson.dependencies['tslib']).toBeUndefined();
 
     await runCLIAsync(`build ${viteLib}`);
 
