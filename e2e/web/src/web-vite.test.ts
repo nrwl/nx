@@ -24,7 +24,7 @@ describe('Web Components Applications with bundler set as vite', () => {
     setMaxWorkers(join('apps', appName, 'project.json'));
 
     const lintResults = runCLI(`lint ${appName}`);
-    expect(lintResults).toContain('All files pass linting.');
+    expect(lintResults).toContain('All files pass linting');
 
     runCLI(`build ${appName}`);
     checkFilesExist(`dist/apps/${appName}/index.html`);
@@ -35,7 +35,7 @@ describe('Web Components Applications with bundler set as vite', () => {
 
     const lintE2eResults = runCLI(`lint ${appName}-e2e`);
 
-    expect(lintE2eResults).toContain('All files pass linting.');
+    expect(lintE2eResults).toContain('All files pass linting');
 
     if (isNotWindows() && runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
