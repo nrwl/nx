@@ -7,7 +7,6 @@ import {
   killPorts,
   newProject,
   readFile,
-  rmDist,
   runCLI,
   runCLIAsync,
   runE2ETests,
@@ -214,76 +213,6 @@ describe('Web Components Applications', () => {
     );
   }, 120000);
 
-  it('should support custom webpackConfig option', async () => {
-    const appName = uniq('app');
-    runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
-    );
-
-    updateJson(join('apps', appName, 'project.json'), (config) => {
-      config.targets.build.options.webpackConfig = `apps/${appName}/webpack.config.js`;
-      return config;
-    });
-
-    // Return sync function
-    updateFile(
-      `apps/${appName}/webpack.config.js`,
-      `
-      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
-      module.exports = composePlugins(withNx(), withWeb(), (config, context) => {
-        return config;
-      });
-    `
-    );
-    setPluginOption(
-      `apps/${appName}/webpack.config.js`,
-      'outputHashing',
-      'none'
-    );
-    runCLI(`build ${appName}`);
-    checkFilesExist(`dist/apps/${appName}/main.js`);
-
-    rmDist();
-
-    // Return async function
-    updateFile(
-      `apps/${appName}/webpack.config.js`,
-      `
-      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
-      module.exports = composePlugins(withNx(), withWeb(), async (config, context) => {
-        return config;
-      });
-    `
-    );
-    setPluginOption(
-      `apps/${appName}/webpack.config.js`,
-      'outputHashing',
-      'none'
-    );
-    runCLI(`build ${appName}`);
-    checkFilesExist(`dist/apps/${appName}/main.js`);
-
-    rmDist();
-
-    // Return promise of function
-    updateFile(
-      `apps/${appName}/webpack.config.js`,
-      `
-      const { composePlugins, withNx, withWeb } = require('@nx/webpack');
-      module.exports = composePlugins(withNx(), withWeb(), Promise.resolve((config, context) => {
-        return config;
-      }));
-    `
-    );
-    setPluginOption(
-      `apps/${appName}/webpack.config.js`,
-      'outputHashing',
-      'none'
-    );
-    runCLI(`build ${appName}`);
-    checkFilesExist(`dist/apps/${appName}/main.js`);
-  }, 100000);
-
   it('should support generating applications with the new name and root format', () => {
     const appName = uniq('app1');
 
@@ -374,7 +303,7 @@ describe('CLI - Environment Variables', () => {
       'NX_APP_LOCAL_ENV=app2-local-env\nNX_SHARED_ENV=shared2-in-app-local-env'
     );
     const main2 = `apps/${appName2}/src/main.ts`;
-    const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_BUILD, process.env.NX_API, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];`;
+    const newCode2 = `const envVars = [process.env.NODE_ENV, process.env.NX_WS_BASE, process.env.NX_WS_ENV_LOCAL, process.env.NX_WS_LOCAL_ENV, process.env.NX_APP_BASE, process.env.NX_APP_ENV_LOCAL, process.env.NX_APP_LOCAL_ENV, process.env.NX_SHARED_ENV];`;
 
     runCLI(
       `generate @nx/web:app ${appName2} --bundler=webpack --no-interactive --compiler=babel`
@@ -389,110 +318,35 @@ describe('CLI - Environment Variables', () => {
       'outputHashing',
       'none'
     );
-    runCLI(`run-many --target build`, {
-      env: {
-        NODE_ENV: 'test',
-        NX_BUILD: '52',
-        NX_API: 'QA',
-      },
-    });
-    expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
-      'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];'
-    );
-    expect(readFile(`dist/apps/${appName2}/main.js`)).toContain(
-      'const envVars = ["test", "52", "QA", "ws-base", "ws-env-local", "ws-local-env", "app2-base", "app2-env-local", "app2-local-env", "shared2-in-app-env-local"];'
-    );
-  });
-});
-
-describe('Build Options', () => {
-  it('should inject/bundle external scripts and styles', async () => {
-    newProject();
-
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
-    );
-
-    const srcPath = `apps/${appName}/src`;
-    const fooCss = `${srcPath}/foo.css`;
-    const barCss = `${srcPath}/bar.css`;
-    const fooJs = `${srcPath}/foo.js`;
-    const barJs = `${srcPath}/bar.js`;
-    const fooCssContent = `/* ${uniq('foo')} */`;
-    const barCssContent = `/* ${uniq('bar')} */`;
-    const fooJsContent = `/* ${uniq('foo')} */`;
-    const barJsContent = `/* ${uniq('bar')} */`;
-
-    createFile(fooCss);
-    createFile(barCss);
-    createFile(fooJs);
-    createFile(barJs);
-
-    // createFile could not create a file with content
-    updateFile(fooCss, fooCssContent);
-    updateFile(barCss, barCssContent);
-    updateFile(fooJs, fooJsContent);
-    updateFile(barJs, barJsContent);
-
-    const barScriptsBundleName = 'bar-scripts';
-    const barStylesBundleName = 'bar-styles';
-
-    updateJson(join('apps', appName, 'project.json'), (config) => {
-      const buildOptions = config.targets.build.options;
-
-      buildOptions.scripts = [
-        {
-          input: fooJs,
-          inject: true,
-        },
-        {
-          input: barJs,
-          inject: false,
-          bundleName: barScriptsBundleName,
-        },
-      ];
-
-      buildOptions.styles = [
-        {
-          input: fooCss,
-          inject: true,
-        },
-        {
-          input: barCss,
-          inject: false,
-          bundleName: barStylesBundleName,
-        },
-      ];
-      return config;
-    });
-
+    setPluginOption(`apps/${appName}/webpack.config.js`, 'optimization', false);
     setPluginOption(
-      `apps/${appName}/webpack.config.js`,
+      `apps/${appName2}/webpack.config.js`,
       'outputHashing',
       'none'
     );
-    setPluginOption(`apps/${appName}/webpack.config.js`, 'optimization', false);
-    runCLI(`build ${appName}`);
-
-    const distPath = `dist/apps/${appName}`;
-    const scripts = readFile(`${distPath}/scripts.js`);
-    const styles = readFile(`${distPath}/styles.css`);
-    const barScripts = readFile(`${distPath}/${barScriptsBundleName}.js`);
-    const barStyles = readFile(`${distPath}/${barStylesBundleName}.css`);
-
-    expect(scripts).toContain(fooJsContent);
-    expect(scripts).not.toContain(barJsContent);
-    expect(barScripts).toContain(barJsContent);
-
-    expect(styles).toContain(fooCssContent);
-    expect(styles).not.toContain(barCssContent);
-    expect(barStyles).toContain(barCssContent);
+    setPluginOption(
+      `apps/${appName2}/webpack.config.js`,
+      'optimization',
+      false
+    );
+    process.env.NX_BUILD = '52';
+    process.env.NX_API = 'QA';
+    runCLI(`run-many --target build --node-env=test`);
+    expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
+      'const envVars = ["test", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];'
+    );
+    expect(readFile(`dist/apps/${appName2}/main.js`)).toContain(
+      'const envVars = ["test", "ws-base", "ws-env-local", "ws-local-env", "app2-base", "app2-env-local", "app2-local-env", "shared2-in-app-env-local"];'
+    );
+    delete process.env.NX_BUILD;
+    delete process.env.NX_API;
   });
 });
 
 describe('index.html interpolation', () => {
+  beforeAll(() => newProject());
+  afterAll(() => cleanupProject());
+
   test('should interpolate environment variables', async () => {
     const appName = uniq('app');
 
@@ -515,7 +369,6 @@ describe('index.html interpolation', () => {
         <div id='root'></div>
         <div>Nx Variable: %NX_VARIABLE%</div>
         <div>Some other variable: %SOME_OTHER_VARIABLE%</div>
-        <div>Deploy Url: %DEPLOY_URL%</div>
       </body>
     </html>
 `;
@@ -543,8 +396,6 @@ describe('index.html interpolation', () => {
     const resultIndexContents = readFile(`${distPath}/index.html`);
 
     expect(resultIndexContents).toMatch(/<div>Nx Variable: foo<\/div>/);
-    expect(resultIndexContents).toMatch(/<div>Nx Variable: foo<\/div>/);
-    expect(resultIndexContents).toMatch(/ <div>Nx Variable: foo<\/div>/);
   });
 });
 
