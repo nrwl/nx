@@ -27,6 +27,10 @@ nx add @nx/playwright
 
 This command will register the appropriate plugin in the `plugins` array of `nx.json`.
 
+## Manual Configuration
+
+If you are already using the `@nx/cypress` or `@nx/playwright` plugin, you need to manually add the appropriate configuration to the `plugins` array of `nx.json`. The configuration settings can be found on the [Cypress](/nx-api/cypress#nxcypress-configuration) or [Playwright](/nx-api/playwright#nxplaywright-configuration) plugin docs.
+
 ## Usage
 
 You can view the available tasks in the graph:
