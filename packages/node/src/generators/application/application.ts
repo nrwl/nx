@@ -204,7 +204,7 @@ function addAppFiles(tree: Tree, options: NormalizedSchema) {
             ),
             main: './src/main' + (options.js ? '.js' : '.ts'),
             tsConfig: './tsconfig.app.json',
-            assets: ['./assets'],
+            assets: ['./src/assets'],
           }
         : null,
     }
