@@ -22,13 +22,13 @@ describe('NextJs Component Testing', () => {
     const appName = uniq('next-app');
     createAppWithCt(appName);
     if (runE2ETests()) {
-      expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
     }
     addTailwindToApp(appName);
     if (runE2ETests()) {
-      expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -40,7 +40,7 @@ describe('NextJs Component Testing', () => {
     //  add bable compiler to app
     addBabelSupport(`apps/${appName}`);
     if (runE2ETests()) {
-      expect(runCLI(`component-test ${appName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${appName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -52,7 +52,7 @@ describe('NextJs Component Testing', () => {
     //  add bable compiler to lib
     addBabelSupport(`libs/${libName}`);
     if (runE2ETests()) {
-      expect(runCLI(`component-test ${libName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${libName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -62,13 +62,13 @@ describe('NextJs Component Testing', () => {
     const libName = uniq('next-lib');
     createLibWithCt(libName, false);
     if (runE2ETests()) {
-      expect(runCLI(`component-test ${libName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${libName}`)).toContain(
         'All specs passed!'
       );
     }
     addTailwindToLib(libName);
     if (runE2ETests()) {
-      expect(runCLI(`component-test ${libName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${libName}`)).toContain(
         'All specs passed!'
       );
     }
@@ -78,14 +78,14 @@ describe('NextJs Component Testing', () => {
     const buildableLibName = uniq('next-buildable-lib');
     createLibWithCt(buildableLibName, true);
     if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
     }
 
     addTailwindToLib(buildableLibName);
     if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
+      expect(runCLI(`component-test ${buildableLibName}`)).toContain(
         'All specs passed!'
       );
     }

@@ -62,12 +62,16 @@ export async function cypressComponentConfigurationInternal(
   );
 
   const projectConfig = readProjectConfiguration(tree, options.project);
-
-  projectConfig.targets['component-test'].options = {
-    ...projectConfig.targets['component-test'].options,
-    skipServe: true,
-  };
-  updateProjectConfiguration(tree, options.project, projectConfig);
+  if (
+    projectConfig.targets?.['component-test']?.executor ===
+    '@nx/cypress:cypress'
+  ) {
+    projectConfig.targets['component-test'].options = {
+      ...projectConfig.targets['component-test'].options,
+      skipServe: true,
+    };
+    updateProjectConfiguration(tree, options.project, projectConfig);
+  }
 
   await addFiles(tree, projectConfig, options);
 
