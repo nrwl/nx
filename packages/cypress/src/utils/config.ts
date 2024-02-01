@@ -5,7 +5,13 @@ import type {
   PropertyAssignment,
   PropertySignature,
 } from 'typescript';
-import { NxCypressE2EPresetOptions } from '../../plugins/cypress-preset';
+import type {
+  NxComponentTestingOptions,
+  NxCypressE2EPresetOptions,
+} from '../../plugins/cypress-preset';
+
+export const CYPRESS_CONFIG_FILE_NAME_PATTERN =
+  'cypress.config.{js,ts,mjs,cjs}';
 
 const TS_QUERY_EXPORT_CONFIG_PREFIX =
   ':matches(ExportAssignment, BinaryExpression:has(Identifier[name="module"]):has(Identifier[name="exports"]))';
@@ -61,7 +67,7 @@ export async function addDefaultE2EConfig(
  **/
 export async function addDefaultCTConfig(
   cyConfigContents: string,
-  options: { bundler?: string } = {}
+  options: NxComponentTestingOptions = {}
 ) {
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
@@ -76,10 +82,19 @@ export async function addDefaultCTConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    const configValue =
-      options?.bundler === 'vite'
-        ? "nxComponentTestingPreset(__filename, { bundler: 'vite' })"
-        : 'nxComponentTestingPreset(__filename)';
+    let configValue = 'nxComponentTestingPreset(__filename)';
+    if (options) {
+      if (options.bundler !== 'vite') {
+        // vite is the default bundler, so we don't need to set it
+        delete options.bundler;
+      }
+
+      if (Object.keys(options).length) {
+        configValue = `nxComponentTestingPreset(__filename, ${JSON.stringify(
+          options
+        )})`;
+      }
+    }
 
     updatedConfigContents = tsquery.replace(
       cyConfigContents,
