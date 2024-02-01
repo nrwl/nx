@@ -90,10 +90,11 @@ function createWebpackConfig(
       hasPlugin(tree)
         ? `
 const { NxWebpackPlugin } = require('@nx/webpack');
+const { join } = require('path');
 
 module.exports = {
   output: {
-    path: '${buildOptions.outputPath}',
+    path: join(__dirname, '${buildOptions.outputPath}'),
   },
   plugins: [
     new NxWebpackPlugin({
@@ -122,10 +123,11 @@ module.exports = composePlugins(withNx(), withWeb(), (config) => {
       hasPlugin(tree)
         ? `
 const { NxWebpackPlugin } = require('@nx/webpack');
+const { join } = require('path');
 
 module.exports = {
   output: {
-    path: '${buildOptions.outputPath}',
+    path: join(__dirname, '${buildOptions.outputPath}'),
   },
   plugins: [
     new NxWebpackPlugin({
