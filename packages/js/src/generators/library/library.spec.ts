@@ -1135,7 +1135,7 @@ describe('lib', () => {
           });
         });
 
-        it('should be unchanged if it already exists as an array and matches the new project', async () => {
+        it('should be unchanged if it already exists as an array and matches the new project by name', async () => {
           updateJson(tree, 'nx.json', (json) => {
             json.release = {
               projects: ['something-else', 'my-lib'],
@@ -1155,6 +1155,54 @@ describe('lib', () => {
           const nxJson = readJson(tree, 'nx.json');
           expect(nxJson.release).toEqual({
             projects: ['something-else', 'my-lib'],
+          });
+        });
+
+        it('should be unchanged if it already exists and matches the new project by tag', async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = {
+              projects: ['tag:one'],
+            };
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+            tags: 'one,two',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            projects: ['tag:one'],
+          });
+        });
+
+        it('should be unchanged if it already exists and matches the new project by root directory', async () => {
+          updateJson(tree, 'nx.json', (json) => {
+            json.release = {
+              projects: ['packages/*'],
+            };
+            return json;
+          });
+
+          await libraryGenerator(tree, {
+            ...defaultOptions,
+            name: 'my-lib',
+            publishable: true,
+            importPath: '@proj/my-lib',
+            bundler: 'tsc',
+            projectNameAndRootFormat: 'as-provided',
+            directory: 'packages/my-lib',
+          });
+
+          const nxJson = readJson(tree, 'nx.json');
+          expect(nxJson.release).toEqual({
+            projects: ['packages/*'],
           });
         });
 
