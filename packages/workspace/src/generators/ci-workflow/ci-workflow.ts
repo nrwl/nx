@@ -11,7 +11,6 @@ import {
 } from '@nx/devkit';
 import { deduceDefaultBase } from '../../utilities/default-base';
 import { join } from 'path';
-import { all } from 'axios';
 
 export interface Schema {
   name: string;
