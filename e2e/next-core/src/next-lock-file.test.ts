@@ -17,7 +17,9 @@ describe('Next.js Lock File', () => {
   let packageManager;
 
   beforeEach(() => {
-    proj = newProject();
+    proj = newProject({
+      packages: ['@nx/next'],
+    });
     packageManager = detectPackageManager(tmpProjPath());
     originalEnv = process.env.NODE_ENV;
   });

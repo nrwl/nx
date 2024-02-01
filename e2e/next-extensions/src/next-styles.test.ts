@@ -5,7 +5,9 @@ describe('Next.js Styles', () => {
   let originalEnv: string;
 
   beforeAll(() => {
-    newProject();
+    newProject({
+      packages: ['@nx/next'],
+    });
   });
 
   afterAll(() => cleanupProject());

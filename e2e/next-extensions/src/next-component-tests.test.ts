@@ -12,6 +12,7 @@ describe('NextJs Component Testing', () => {
   beforeAll(() => {
     newProject({
       name: uniq('next-ct'),
+      packages: ['@nx/next'],
     });
   });
 

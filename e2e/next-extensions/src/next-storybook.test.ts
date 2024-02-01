@@ -15,7 +15,14 @@ const pmc = getPackageManagerCommand({
 describe('Next.js Storybook', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject({ name: 'proj', packageManager: 'npm' })));
+  beforeAll(
+    () =>
+      (proj = newProject({
+        name: 'proj',
+        packageManager: 'npm',
+        packages: ['@nx/next', '@nx/react'],
+      }))
+  );
 
   afterAll(() => cleanupProject());
 

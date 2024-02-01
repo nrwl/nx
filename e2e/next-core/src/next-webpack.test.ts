@@ -15,7 +15,9 @@ describe('Next.js Webpack', () => {
   let originalEnv: string;
 
   beforeEach(() => {
-    proj = newProject();
+    proj = newProject({
+      packages: ['@nx/next'],
+    });
     originalEnv = process.env.NODE_ENV;
   });
 

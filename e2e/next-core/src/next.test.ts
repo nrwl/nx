@@ -20,7 +20,9 @@ describe('Next.js Applications', () => {
   let originalEnv: string;
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({
+      packages: ['@nx/next', '@nx/cypress'],
+    });
   });
   beforeEach(() => {
     originalEnv = process.env.NODE_ENV;
