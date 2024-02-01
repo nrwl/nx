@@ -249,17 +249,40 @@ export async function gitTag({
   }
 }
 
-export async function gitPush(gitRemote?: string) {
+export async function gitPush({
+  gitRemote,
+  dryRun,
+  verbose,
+}: {
+  gitRemote?: string;
+  dryRun?: boolean;
+  verbose?: boolean;
+}) {
+  const commandArgs = [
+    'push',
+    // NOTE: It's important we use --follow-tags, and not --tags, so that we are precise about what we are pushing
+    '--follow-tags',
+    '--no-verify',
+    '--atomic',
+    // Set custom git remote if provided
+    ...(gitRemote ? [gitRemote] : []),
+  ];
+
+  if (verbose) {
+    console.log(
+      dryRun
+        ? `Would push the current branch to the remote with the following command, but --dry-run was set:`
+        : `Pushing the current branch to the remote with the following command:`
+    );
+    console.log(`git ${commandArgs.join(' ')}`);
+  }
+
+  if (dryRun) {
+    return;
+  }
+
   try {
-    await execCommand('git', [
-      'push',
-      // NOTE: It's important we use --follow-tags, and not --tags, so that we are precise about what we are pushing
-      '--follow-tags',
-      '--no-verify',
-      '--atomic',
-      // Set custom git remote if provided
-      ...(gitRemote ? [gitRemote] : []),
-    ]);
+    await execCommand('git', commandArgs);
   } catch (err) {
     throw new Error(`Unexpected git push error: ${err}`);
   }
