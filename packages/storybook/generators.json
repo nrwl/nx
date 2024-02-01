@@ -10,7 +10,7 @@
       "hidden": true
     },
     "configuration": {
-      "factory": "./src/generators/configuration/configuration",
+      "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add Storybook configuration to a UI library or an application.",
       "hidden": false

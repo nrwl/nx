@@ -8,14 +8,10 @@ import {
 } from '@nx/e2e/utils';
 
 describe('Nuxt Plugin', () => {
-  let proj: string;
-  let originalEnv: string;
   const app = uniq('app');
 
   beforeAll(() => {
-    originalEnv = process.env.NX_ADD_PLUGINS;
-    process.env.NX_ADD_PLUGINS = 'true';
-    proj = newProject({
+    newProject({
       packages: ['@nx/nuxt', '@nx/storybook'],
       unsetProjectNameAndRootFormat: false,
     });
@@ -30,7 +26,6 @@ describe('Nuxt Plugin', () => {
   afterAll(() => {
     killPorts();
     cleanupProject();
-    process.env.NX_ADD_PLUGINS = originalEnv;
   });
 
   it('should build application', async () => {
