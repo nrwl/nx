@@ -285,6 +285,7 @@
     - [Cache Security](/ci/concepts/cache-security)
   - [Recipes](/ci/recipes)
     - [Set Up CI](/ci/recipes/set-up)
+      - [Connect Nx Cloud](/ci/recipes/set-up/connect-to-cloud)
       - [Setting up Azure Pipelines](/ci/recipes/set-up/monorepo-ci-azure)
       - [Setting up CircleCI](/ci/recipes/set-up/monorepo-ci-circle-ci)
       - [Setting up GitHub Actions](/ci/recipes/set-up/monorepo-ci-github-actions)

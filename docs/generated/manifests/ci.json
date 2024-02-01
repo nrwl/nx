@@ -382,6 +382,17 @@
         "file": "",
         "itemList": [
           {
+            "id": "connect-to-cloud",
+            "name": "Connect Nx Cloud",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/recipes/connect-to-cloud",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/set-up/connect-to-cloud",
+            "tags": []
+          },
+          {
             "id": "monorepo-ci-azure",
             "name": "Setting up Azure Pipelines",
             "description": "",
@@ -689,6 +700,17 @@
     "file": "",
     "itemList": [
       {
+        "id": "connect-to-cloud",
+        "name": "Connect Nx Cloud",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/recipes/connect-to-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/set-up/connect-to-cloud",
+        "tags": []
+      },
+      {
         "id": "monorepo-ci-azure",
         "name": "Setting up Azure Pipelines",
         "description": "",
@@ -758,6 +780,17 @@
     "isExternal": false,
     "path": "/ci/recipes/set-up",
     "tags": ["distribute-task-execution"]
+  },
+  "/ci/recipes/set-up/connect-to-cloud": {
+    "id": "connect-to-cloud",
+    "name": "Connect Nx Cloud",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/recipes/connect-to-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/set-up/connect-to-cloud",
+    "tags": []
   },
   "/ci/recipes/set-up/monorepo-ci-azure": {
     "id": "monorepo-ci-azure",

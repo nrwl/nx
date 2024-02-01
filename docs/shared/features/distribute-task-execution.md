@@ -86,6 +86,16 @@ jobs:
       - ...
 ```
 
+## Related Features
+
+{% cards %}
+
+{% card title="Automatically Split E2E Tasks" description="Split large e2e tasks into separate tasks for each spec file" type="documentation" url="/ci/concepts/split-e2e-tasks" /%}
+
+{% card title="Identify and Re-run Flaky Tasks" description="Re-run flaky tasks in CI whenever they fail" url="/ci/concepts/flaky-tasks" /%}
+
+{% /cards %}
+
 ## CI/CD Examples
 
 The examples below show how to set up CI using Nx and Nx Cloud using Nx Agents and Nx Replay.

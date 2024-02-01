@@ -1739,6 +1739,11 @@
               "tags": ["distribute-task-execution"],
               "itemList": [
                 {
+                  "name": "Connect Nx Cloud",
+                  "id": "connect-to-cloud",
+                  "file": "nx-cloud/recipes/connect-to-cloud"
+                },
+                {
                   "name": "Setting up Azure Pipelines",
                   "id": "monorepo-ci-azure",
                   "file": "shared/monorepo-ci-azure"

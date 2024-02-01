@@ -10,9 +10,9 @@ In this diagram, Teika runs the build once on his machine, then CI, Kimiko and J
 
 ## Setting Up Nx Cloud
 
-To use **Nx Replay** you need to connect your workspace to Nx Cloud. See the [connect to Nx Cloud recipe]().
+To use **Nx Replay** you need to connect your workspace to Nx Cloud. See the [connect to Nx Cloud recipe](/ci/recipes/set-up/connect-to-cloud).
 
-## Seeing Remote Caching in Action
+## See Remote Caching in Action
 
 To see the remote cache in action, run:
 
