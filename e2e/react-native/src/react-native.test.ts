@@ -60,10 +60,10 @@ describe('react native', () => {
     expectTestsPass(await runCLIAsync(`test ${libName}`));
 
     const appLintResults = await runCLIAsync(`lint ${appName}`);
-    expect(appLintResults.combinedOutput).toContain('All files pass linting.');
+    expect(appLintResults.combinedOutput).toContain('All files pass linting');
 
     const libLintResults = await runCLIAsync(`lint ${libName}`);
-    expect(libLintResults.combinedOutput).toContain('All files pass linting.');
+    expect(libLintResults.combinedOutput).toContain('All files pass linting');
   });
 
   it('should bundle-ios', async () => {
