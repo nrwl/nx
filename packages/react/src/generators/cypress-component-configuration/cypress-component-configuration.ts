@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { nxVersion } from '../../utils/versions';
 import { addFiles } from './lib/add-files';
-import { addCTTargetWithBuildTarget } from '../../utils/ct-utils';
+import { configureCypressCT } from '../../utils/ct-utils';
 import { CypressComponentConfigurationSchema } from './schema.d';
 
 export function cypressComponentConfigGenerator(
@@ -42,9 +42,10 @@ export async function cypressComponentConfigGeneratorInternal(
     addPlugin: options.addPlugin,
   });
 
-  const found = await addCTTargetWithBuildTarget(tree, {
+  const found = await configureCypressCT(tree, {
     project: options.project,
     buildTarget: options.buildTarget,
+    bundler: options.bundler,
     validExecutorNames: new Set<string>([
       '@nx/webpack:webpack',
       '@nx/vite:build',

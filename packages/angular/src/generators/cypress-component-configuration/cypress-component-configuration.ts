@@ -1,9 +1,9 @@
 import { componentConfigurationGenerator as baseCyCTConfig } from '@nx/cypress';
 import { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
 import {
-  CYPRESS_CONFIG_FILE_NAME_PATTERN,
   addDefaultCTConfig,
   addMountDefinition,
+  getProjectCypressConfigPath,
 } from '@nx/cypress/src/utils/config';
 import {
   findBuildConfig,
@@ -55,7 +55,7 @@ export async function cypressComponentConfigurationInternal(
     addPlugin: options.addPlugin,
   });
 
-  await configureCypress(tree, options);
+  await configureCypressCT(tree, options);
   await addFiles(tree, projectConfig, options);
 
   if (!options.skipFormat) {
@@ -120,7 +120,7 @@ async function addFiles(
   }
 }
 
-async function configureCypress(
+async function configureCypressCT(
   tree: Tree,
   options: CypressComponentConfigSchema
 ) {
@@ -142,7 +142,10 @@ async function configureCypress(
 
   const ctConfigOptions: NxComponentTestingOptions = {};
   const projectConfig = readProjectConfiguration(tree, options.project);
-  if (projectConfig.targets?.['component-test']) {
+  if (
+    projectConfig.targets?.['component-test']?.executor ===
+    '@nx/cypress:cypress'
+  ) {
     projectConfig.targets['component-test'].options = {
       ...projectConfig.targets['component-test'].options,
       skipServe: true,
@@ -153,7 +156,10 @@ async function configureCypress(
     ctConfigOptions.buildTarget = found.target;
   }
 
-  const cypressConfigPath = getCypressConfigPath(tree, projectConfig.root);
+  const cypressConfigPath = getProjectCypressConfigPath(
+    tree,
+    projectConfig.root
+  );
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigPath, 'utf-8'),
     ctConfigOptions
@@ -162,17 +168,6 @@ async function configureCypress(
     cypressConfigPath,
     `import { nxComponentTestingPreset } from '@nx/angular/plugins/component-testing';\n${updatedCyConfig}`
   );
-}
-
-function getCypressConfigPath(tree: Tree, projectRoot: string): string {
-  const cypressConfigPaths = glob(tree, [
-    `${projectRoot}/${CYPRESS_CONFIG_FILE_NAME_PATTERN}`,
-  ]);
-  if (cypressConfigPaths.length === 0) {
-    throw new Error(`Could not find a cypress config file in ${projectRoot}.`);
-  }
-
-  return cypressConfigPaths[0];
 }
 
 function assertValidConfig(config: unknown) {

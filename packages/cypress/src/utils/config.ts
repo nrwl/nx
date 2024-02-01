@@ -1,3 +1,4 @@
+import { glob, type Tree } from '@nx/devkit';
 import type {
   InterfaceDeclaration,
   MethodSignature,
@@ -152,4 +153,18 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
     }
   );
   return `${updatedInterface}\n${mountCommand}`;
+}
+
+export function getProjectCypressConfigPath(
+  tree: Tree,
+  projectRoot: string
+): string {
+  const cypressConfigPaths = glob(tree, [
+    `${projectRoot}/${CYPRESS_CONFIG_FILE_NAME_PATTERN}`,
+  ]);
+  if (cypressConfigPaths.length === 0) {
+    throw new Error(`Could not find a cypress config file in ${projectRoot}.`);
+  }
+
+  return cypressConfigPaths[0];
 }
