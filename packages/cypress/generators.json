@@ -17,7 +17,7 @@
     },
     "configuration": {
       "aliases": ["cypress-e2e-configuration", "e2e", "e2e-config"],
-      "factory": "./src/generators/configuration/configuration#cypressInitGeneratorInternal",
+      "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add a Cypress E2E Configuration to an existing project."
     },
