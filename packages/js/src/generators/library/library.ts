@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
+  createProjectGraphAsync,
   ensurePackage,
   formatFiles,
   generateFiles,
@@ -9,6 +10,8 @@ import {
   names,
   offsetFromRoot,
   ProjectConfiguration,
+  ProjectGraphProjectNode,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   toJS,
@@ -21,15 +24,19 @@ import {
   type ProjectNameAndRootOptions,
 } from '@nx/devkit/src/generators/project-name-and-root-utils';
 
+import { requireNx } from '@nx/devkit/nx';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
+import { type PackageJson } from 'nx/src/utils/package-json';
+import { join } from 'path';
+import { Bundler, LibraryGeneratorSchema } from '../../utils/schema';
+import { addSwcConfig } from '../../utils/swc/add-swc-config';
+import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
+import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import {
   addTsConfigPath,
   getRelativePathToRootTsConfig,
 } from '../../utils/typescript/ts-config';
-import { join } from 'path';
-import { addMinimalPublishScript } from '../../utils/minimal-publish-script';
-import { Bundler, LibraryGeneratorSchema } from '../../utils/schema';
-import { addSwcConfig } from '../../utils/swc/add-swc-config';
-import { addSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import {
   esbuildVersion,
   nxVersion,
@@ -38,10 +45,7 @@ import {
   typesNodeVersion,
 } from '../../utils/versions';
 import jsInitGenerator from '../init/init';
-import { type PackageJson } from 'nx/src/utils/package-json';
 import setupVerdaccio from '../setup-verdaccio/generator';
-import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function libraryGenerator(
   tree: Tree,
@@ -73,7 +77,7 @@ export async function libraryGeneratorInternal(
 
   createFiles(tree, options, `${filesDir}/lib`);
 
-  addProject(tree, options);
+  await addProject(tree, options);
 
   if (!options.skipPackageJson) {
     tasks.push(addProjectDependencies(tree, options));
@@ -164,6 +168,12 @@ export async function libraryGeneratorInternal(
     await formatFiles(tree);
   }
 
+  if (options.publishable) {
+    tasks.push(() => {
+      logNxReleaseDocsInfo();
+    });
+  }
+
   tasks.push(() => {
     logShowProjectCommand(options.name);
   });
@@ -180,7 +190,7 @@ export interface NormalizedSchema extends LibraryGeneratorSchema {
   importPath?: string;
 }
 
-function addProject(tree: Tree, options: NormalizedSchema) {
+async function addProject(tree: Tree, options: NormalizedSchema) {
   const projectConfiguration: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
@@ -233,12 +243,17 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     }
 
     if (options.publishable) {
-      const publishScriptPath = addMinimalPublishScript(tree);
-
-      projectConfiguration.targets.publish = {
-        command: `node ${publishScriptPath} ${options.name} {args.ver} {args.tag}`,
-        dependsOn: ['build'],
+      projectConfiguration.targets['nx-release-publish'] = {
+        dependsOn: ['build', '^nx-release-publish'],
+        options: {
+          packageRoot: getOutputPath(options).replaceAll(
+            options.name,
+            '{projectName}'
+          ),
+        },
       };
+
+      await addProjectToNxReleaseConfig(tree, options, projectConfiguration);
     }
   }
 
@@ -467,6 +482,9 @@ function createFiles(tree: Tree, options: NormalizedSchema, filesDir: string) {
       if (json.private && (options.publishable || options.rootProject)) {
         delete json.private;
       }
+      if (!options.publishable && !options.rootProject) {
+        json.private = true;
+      }
       return {
         ...json,
         dependencies: {
@@ -599,7 +617,7 @@ async function normalizeOptions(
     }
   }
 
-  // This is to preserve old behaviour, buildable: false
+  // This is to preserve old behavior, buildable: false
   if (options.publishable === false && options.buildable === false) {
     options.bundler = 'none';
   }
@@ -830,6 +848,110 @@ function determineEntryFields(
       };
     }
   }
+}
+
+function projectsConfigMatchesProject(
+  projectsConfig: string | string[] | undefined,
+  project: ProjectGraphProjectNode
+): boolean {
+  if (!projectsConfig) {
+    return false;
+  }
+
+  if (typeof projectsConfig === 'string') {
+    projectsConfig = [projectsConfig];
+  }
+
+  const graph: Record<string, ProjectGraphProjectNode> = {
+    [project.name]: project,
+  };
+
+  const matchingProjects = findMatchingProjects(projectsConfig, graph);
+
+  return matchingProjects.includes(project.name);
+}
+
+async function getDefaultProjectsConfig(): Promise<string[]> {
+  const projectGraph = await createProjectGraphAsync();
+
+  return findMatchingProjects(['*'], projectGraph.nodes).filter(
+    (project) => projectGraph.nodes[project].type === 'lib'
+  );
+}
+
+async function addProjectToNxReleaseConfig(
+  tree: Tree,
+  options: NormalizedSchema,
+  projectConfiguration: ProjectConfiguration
+) {
+  const nxJson = readNxJson(tree);
+
+  if (!nxJson.release) {
+    const defaultMatchingProjects = await getDefaultProjectsConfig();
+    nxJson.release = {
+      projects: [...defaultMatchingProjects, options.name],
+    };
+    writeJson(tree, 'nx.json', nxJson);
+    return;
+  }
+
+  if (!nxJson.release.projects && !nxJson.release.groups) {
+    const defaultMatchingProjects = await getDefaultProjectsConfig();
+    nxJson.release.projects = [...defaultMatchingProjects, options.name];
+    writeJson(tree, 'nx.json', nxJson);
+    return;
+  }
+
+  const project: ProjectGraphProjectNode = {
+    name: options.name,
+    type: 'lib' as const,
+    data: {
+      root: projectConfiguration.root,
+      tags: projectConfiguration.tags,
+    },
+  };
+
+  if (projectsConfigMatchesProject(nxJson.release.projects, project)) {
+    return;
+  }
+
+  if (Array.isArray(nxJson.release.projects)) {
+    nxJson.release.projects.push(options.name);
+    writeJson(tree, 'nx.json', nxJson);
+    return;
+  }
+
+  if (nxJson.release.groups) {
+    const allGroups = Object.values(nxJson.release.groups);
+
+    for (const group of allGroups) {
+      if (projectsConfigMatchesProject(group.projects, project)) {
+        return;
+      }
+    }
+
+    const { output } = requireNx();
+    output.warn({
+      title: `Could not find a release group that includes ${options.name}`,
+      bodyLines: [
+        `Ensure that ${options.name} is included in a release group's "projects" list in nx.json so it can be published with "nx release"`,
+      ],
+    });
+    return;
+  }
+
+  if (typeof nxJson.release.projects === 'string') {
+    nxJson.release.projects = [nxJson.release.projects, options.name];
+    writeJson(tree, 'nx.json', nxJson);
+    return;
+  }
+}
+
+function logNxReleaseDocsInfo() {
+  const { output } = requireNx();
+  output.log({
+    title: `📦 To learn how to publish this library, see https://nx.dev/core-features/manage-releases.`,
+  });
 }
 
 export default libraryGenerator;
