@@ -508,6 +508,71 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "CI Features",
+            "path": "/features/ci-features",
+            "id": "ci-features",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Run Only Tasks Affected by a PR",
+                "path": "/ci/features/affected",
+                "id": "affected",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Use Remote Caching (Nx Replay)",
+                "path": "/ci/features/remote-cache",
+                "id": "remote-cache",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Distribute Task Execution (Nx Agents)",
+                "path": "/ci/features/distribute-task-execution",
+                "id": "distribute-task-execution",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Dynamically Allocate Agents",
+                "path": "/ci/features/dynamic-agents",
+                "id": "dynamic-agents",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Automatically Split E2E Tasks",
+                "path": "/ci/features/split-e2e-tasks",
+                "id": "split-e2e-tasks",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Identify and Re-run Flaky Tasks",
+                "path": "/ci/features/flaky-tasks",
+                "id": "flaky-tasks",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Set up Nx Cloud On-Premise",
+                "path": "/ci/features/on-premise",
+                "id": "on-premise",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -573,6 +638,127 @@
         "path": "/features/manage-releases",
         "id": "manage-releases",
         "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "CI Features",
+        "path": "/features/ci-features",
+        "id": "ci-features",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Run Only Tasks Affected by a PR",
+            "path": "/ci/features/affected",
+            "id": "affected",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Use Remote Caching (Nx Replay)",
+            "path": "/ci/features/remote-cache",
+            "id": "remote-cache",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Distribute Task Execution (Nx Agents)",
+            "path": "/ci/features/distribute-task-execution",
+            "id": "distribute-task-execution",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Dynamically Allocate Agents",
+            "path": "/ci/features/dynamic-agents",
+            "id": "dynamic-agents",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Automatically Split E2E Tasks",
+            "path": "/ci/features/split-e2e-tasks",
+            "id": "split-e2e-tasks",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Identify and Re-run Flaky Tasks",
+            "path": "/ci/features/flaky-tasks",
+            "id": "flaky-tasks",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Set up Nx Cloud On-Premise",
+            "path": "/ci/features/on-premise",
+            "id": "on-premise",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Run Only Tasks Affected by a PR",
+        "path": "/ci/features/affected",
+        "id": "affected",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Use Remote Caching (Nx Replay)",
+        "path": "/ci/features/remote-cache",
+        "id": "remote-cache",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Distribute Task Execution (Nx Agents)",
+        "path": "/ci/features/distribute-task-execution",
+        "id": "distribute-task-execution",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Dynamically Allocate Agents",
+        "path": "/ci/features/dynamic-agents",
+        "id": "dynamic-agents",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automatically Split E2E Tasks",
+        "path": "/ci/features/split-e2e-tasks",
+        "id": "split-e2e-tasks",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Identify and Re-run Flaky Tasks",
+        "path": "/ci/features/flaky-tasks",
+        "id": "flaky-tasks",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Nx Cloud On-Premise",
+        "path": "/ci/features/on-premise",
+        "id": "on-premise",
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
@@ -5674,6 +5860,30 @@
             "disableCollapsible": false
           },
           {
+            "name": "Dynamically Allocate Agents",
+            "path": "/ci/features/dynamic-agents",
+            "id": "dynamic-agents",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Automatically Split E2E Tasks",
+            "path": "/ci/features/split-e2e-tasks",
+            "id": "split-e2e-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Identify and Re-run Flaky Tasks",
+            "path": "/ci/features/flaky-tasks",
+            "id": "flaky-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Set up Nx Cloud On-Premise",
             "path": "/ci/features/on-premise",
             "id": "on-premise",
@@ -5704,6 +5914,30 @@
         "name": "Distribute Task Execution (Nx Agents)",
         "path": "/ci/features/distribute-task-execution",
         "id": "distribute-task-execution",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Dynamically Allocate Agents",
+        "path": "/ci/features/dynamic-agents",
+        "id": "dynamic-agents",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automatically Split E2E Tasks",
+        "path": "/ci/features/split-e2e-tasks",
+        "id": "split-e2e-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Identify and Re-run Flaky Tasks",
+        "path": "/ci/features/flaky-tasks",
+        "id": "flaky-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5747,22 +5981,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Automatically Split E2E Tasks by File",
-            "path": "/ci/concepts/split-e2e-tasks",
-            "id": "split-e2e-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Identify and Re-run Flaky Tasks",
-            "path": "/ci/concepts/flaky-tasks",
-            "id": "flaky-tasks",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Cache Security",
             "path": "/ci/concepts/cache-security",
             "id": "cache-security",
@@ -5793,22 +6011,6 @@
         "name": "Parallelization and Distribution",
         "path": "/ci/concepts/parallelization-distribution",
         "id": "parallelization-distribution",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Automatically Split E2E Tasks by File",
-        "path": "/ci/concepts/split-e2e-tasks",
-        "id": "split-e2e-tasks",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Identify and Re-run Flaky Tasks",
-        "path": "/ci/concepts/flaky-tasks",
-        "id": "flaky-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

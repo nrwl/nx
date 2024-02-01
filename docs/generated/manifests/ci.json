@@ -164,6 +164,39 @@
         "tags": []
       },
       {
+        "id": "dynamic-agents",
+        "name": "Dynamically Allocate Agents",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/features/dynamic-agents",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/dynamic-agents",
+        "tags": []
+      },
+      {
+        "id": "split-e2e-tasks",
+        "name": "Automatically Split E2E Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/features/split-e2e-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/split-e2e-tasks",
+        "tags": []
+      },
+      {
+        "id": "flaky-tasks",
+        "name": "Identify and Re-run Flaky Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/features/flaky-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/flaky-tasks",
+        "tags": []
+      },
+      {
         "id": "on-premise",
         "name": "Set up Nx Cloud On-Premise",
         "description": "Set up Nx Cloud on machines that you control",
@@ -210,6 +243,39 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/distribute-task-execution",
+    "tags": []
+  },
+  "/ci/features/dynamic-agents": {
+    "id": "dynamic-agents",
+    "name": "Dynamically Allocate Agents",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/features/dynamic-agents",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/dynamic-agents",
+    "tags": []
+  },
+  "/ci/features/split-e2e-tasks": {
+    "id": "split-e2e-tasks",
+    "name": "Automatically Split E2E Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/features/split-e2e-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/split-e2e-tasks",
+    "tags": []
+  },
+  "/ci/features/flaky-tasks": {
+    "id": "flaky-tasks",
+    "name": "Identify and Re-run Flaky Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/features/flaky-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/flaky-tasks",
     "tags": []
   },
   "/ci/features/on-premise": {
@@ -264,28 +330,6 @@
         "tags": ["distribute-task-execution"]
       },
       {
-        "id": "split-e2e-tasks",
-        "name": "Automatically Split E2E Tasks by File",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/concepts/split-e2e-tasks",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/concepts/split-e2e-tasks",
-        "tags": []
-      },
-      {
-        "id": "flaky-tasks",
-        "name": "Identify and Re-run Flaky Tasks",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/concepts/flaky-tasks",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/concepts/flaky-tasks",
-        "tags": []
-      },
-      {
         "id": "cache-security",
         "name": "Cache Security",
         "description": "",
@@ -333,28 +377,6 @@
     "isExternal": false,
     "path": "/ci/concepts/parallelization-distribution",
     "tags": ["distribute-task-execution"]
-  },
-  "/ci/concepts/split-e2e-tasks": {
-    "id": "split-e2e-tasks",
-    "name": "Automatically Split E2E Tasks by File",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/concepts/split-e2e-tasks",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/concepts/split-e2e-tasks",
-    "tags": []
-  },
-  "/ci/concepts/flaky-tasks": {
-    "id": "flaky-tasks",
-    "name": "Identify and Re-run Flaky Tasks",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/concepts/flaky-tasks",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/concepts/flaky-tasks",
-    "tags": []
   },
   "/ci/concepts/cache-security": {
     "id": "cache-security",

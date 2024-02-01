@@ -413,7 +413,7 @@ With this pipeline configuration in place, no matter how large the repository sc
 
 Sometimes you want to distribute most of your commands, but run some of them in Circle CI. You can do this with the `--no-agents` flag as follows:
 
-```yaml {% fileName=".circleci/config.yml" highlightLines=[24] %}
+```yaml {% fileName=".circleci/config.yml" highlightLines=[25] %}
 version: 2.1
 orbs:
   nx: nrwl/nx@1.5.1
@@ -449,7 +449,6 @@ workflows:
 
 You now have a highly optimized CI configuration that will scale as your repository scales. See what else you can do with Nx Cloud.
 
-- Choose the [security settings](/ci/concepts/cache-security) that make sense for your organization
-- [Record non-Nx commands](/ci/recipes/other/record-commands) and view the results in the Nx Cloud interface
-- [Define custom launch template](...)
-- [Configure dynamic agent selection](....)
+- Configure [dynamic agent allocation](/ci/features/dynamic-agents)
+- Learn about [automatically splitting e2e tasks](/ci/features/split-e2e-tasks)
+- Identify and re-run [flaky tasks](/ci/features/flaky-tasks)

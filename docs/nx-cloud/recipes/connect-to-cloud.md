@@ -2,19 +2,17 @@
 
 Create an account on [nx.app](https://nx.app). There are several ways to connect your repository to Nx Cloud.
 
-## Connect Directly Through Source Control Integrations
+#### Connect Directly Through GitHub
 
-The recommended way to set up Nx Cloud is to connect using a source control integration. Choose your provider below and follow the recipe to enable source control integration for your repository.
+If your repository is hosted on GitHub, we recommend you create an Nx Cloud organization based on your GitHub organization.
 
-{% cards cols="3"  %}
+![Connect Your VCS Account](/nx-cloud/tutorial/connect-vcs-account.png)
 
-{% link-card title="GitHub" url="/ci/recipes/source-control-integration/github" icon="github" appearance="small" /%}
-{% link-card title="GitLab" url="/ci/recipes/source-control-integration/gitlab" icon="gitlab" appearance="small" /%}
-{% link-card title="Bitbucket" url="/ci/recipes/source-control-integration/bitbucket-cloud" icon="bitbucket" appearance="small" /%}
+After that, connect you repository.
 
-{% /cards %}
+![Connect Your Repository](/nx-cloud/tutorial/connect-repository.png)
 
-Once the source control integration is connected, it will send a pull request to your repository that will add the `nxCloudAccessToken` property to `nx.json`.
+This will send a pull request to your repository that will add the `nxCloudAccessToken` property to `nx.json`.
 
 ![Nx Cloud Setup PR](/nx-cloud/tutorial/nx-cloud-setup-pr.png)
 
@@ -22,7 +20,7 @@ This wires up all the CI for you and configures access. Folks who can see your r
 
 ## Manually Connect Your Workspace
 
-You can also manually connect your workspace to Nx Cloud. Without source control integration, [Nx Agents](/ci/features/distribute-task-execution) will not function, but [Nx Replay](/ci/features/remote-cache) will still work.
+If your repository is hosted on a different source control provider, you can also connect to Nx Cloud manually. You'll need to add a source control integration later to enable [Nx Agents](/ci/features/distribute-task-execution).
 
 Run the following command in your repository:
 

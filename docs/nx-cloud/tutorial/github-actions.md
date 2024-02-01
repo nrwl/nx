@@ -315,11 +315,7 @@ Only running necessary tasks via [affected commands](/ci/features/affected) (as 
 
 ### Connect Your Workspace to Nx Cloud
 
-Create an account on [nx.app](https://nx.app). There are several ways to connect your repository to Nx Cloud.
-
-#### Connect Directly Through GitHub
-
-The easiest way is to create an Nx Cloud organization based on your GitHub organization.
+Create an account on [nx.app](https://nx.app). The easiest way to connect your repository to Nx Cloud is to create an Nx Cloud organization based on your GitHub organization.
 
 ![Connect Your VCS Account](/nx-cloud/tutorial/connect-vcs-account.png)
 
@@ -332,18 +328,6 @@ This will send a pull request to your repository that will add the `nxCloudAcces
 ![Nx Cloud Setup PR](/nx-cloud/tutorial/nx-cloud-setup-pr.png)
 
 This wires up all the CI for you and configures access. Folks who can see your repository can see your workspace on nx.app.
-
-#### Manually Connect Your Workspace
-
-To manually connect your workspace to Nx Cloud, run the following command in your repository:
-
-```shell
-pnpm nx connect
-```
-
-Click the link in the terminal to claim your workspace on [nx.app](https://nx.app).
-
-The command generates an `nxCloudAccessToken` property inside of `nx.json`. This is a read-only token that should be committed to the repository.
 
 ### Enable Remote Caching using Nx Replay
 
@@ -488,6 +472,6 @@ jobs:
 
 You now have a highly optimized CI configuration that will scale as your repository scales. See what else you can do with Nx Cloud.
 
-- Set up [GitHub PR integration](/ci/recipes/source-control-integration/github) to view Nx Cloud results directly in your PR
-- Choose the [security settings](/ci/concepts/cache-security) that make sense for your organization
-- [Record non-Nx commands](/ci/recipes/other/record-commands) and view the results in the Nx Cloud interface
+- Configure [dynamic agent allocation](/ci/features/dynamic-agents)
+- Learn about [automatically splitting e2e tasks](/ci/features/split-e2e-tasks)
+- Identify and re-run [flaky tasks](/ci/features/flaky-tasks)

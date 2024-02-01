@@ -52,48 +52,15 @@ launch-templates:
 
 Here are the [available resource classes](https://nx.app/pricing#resource-classes).
 
-## Intelligent Dynamic Scaling
-
-Instead of defining
-
-```
---distribute-on="8 linux-medium-js"
-```
-
-...which always runs tasks on the same amount of machines, you can also have Nx Cloud scale the number of agents based on the size of your PR.
-
-```yaml {% fileName=".nx/workflows/dynamic-changesets.yaml" %}
-distribute-on:
-  small-changeset: 1 linux-medium-js
-  medium-changeset: 6 linux-medium-js
-  large-changeset: 10 linux-medium-js
-```
-
-{% callout type="note" title="How is the size of the PR determined?" %}
-To determine the size of the PR, Nx Cloud calculates the relationship between the number of [affected projects](/ci/features/affected) and the total number of projects in the workspace. It then assigns it to one of the three categories: small, medium, or large.
-{% /callout %}
-
-You can then reference it in your CI pipeline configuration:
-
-```yaml {% fileName=".github/workflows/main.yaml" %}
-...
-jobs:
-  - job: main
-    displayName: Main Job
-    ...
-    steps:
-      - checkout
-      - run: npx nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e-ci"
-      - ...
-```
-
 ## Related Features
 
 {% cards %}
 
-{% card title="Automatically Split E2E Tasks" description="Split large e2e tasks into separate tasks for each spec file" type="documentation" url="/ci/concepts/split-e2e-tasks" /%}
+{% card title="Dynamically Allocate Agents" description="Assign a different number of agents to a pipeline based on the size of the PR" type="documentation" url="/ci/features/dynamic-agents" /%}
 
-{% card title="Identify and Re-run Flaky Tasks" description="Re-run flaky tasks in CI whenever they fail" url="/ci/concepts/flaky-tasks" /%}
+{% card title="Automatically Split E2E Tasks" description="Split large e2e tasks into separate tasks for each spec file" type="documentation" url="/ci/features/split-e2e-tasks" /%}
+
+{% card title="Identify and Re-run Flaky Tasks" description="Re-run flaky tasks in CI whenever they fail" url="/ci/features/flaky-tasks" /%}
 
 {% /cards %}
 
