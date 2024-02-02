@@ -4,6 +4,7 @@ import {
   readJson,
   readProjectConfiguration,
   Tree,
+  updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -493,6 +494,62 @@ export default defineConfig({
 
         export default defineConfig({
           e2e: { exists: true },
+        });
+        "
+      `);
+    });
+
+    it('should support --js option with CommonJS format', async () => {
+      addProject(tree, { name: 'my-lib', type: 'libs' });
+
+      await cypressE2EConfigurationGenerator(tree, {
+        project: 'my-lib',
+        baseUrl: 'http://localhost:4200',
+        js: true,
+      });
+
+      expect(tree.read('libs/my-lib/cypress.config.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+
+        const { defineConfig } = require('cypress');
+
+        module.exports = defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
+      `);
+    });
+
+    it('should support --js option with ESM format', async () => {
+      // When type is "module", Node will treat .js files as ESM format.
+      updateJson(tree, 'package.json', (json) => {
+        json.type = 'module';
+        return json;
+      });
+
+      addProject(tree, { name: 'my-lib', type: 'libs' });
+
+      await cypressE2EConfigurationGenerator(tree, {
+        project: 'my-lib',
+        baseUrl: 'http://localhost:4200',
+        js: true,
+      });
+
+      expect(tree.read('libs/my-lib/cypress.config.js', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+        import { defineConfig } from 'cypress';
+
+        export default defineConfig({
+          e2e: {
+            ...nxE2EPreset(__filename, { cypressDir: 'src' }),
+            baseUrl: 'http://localhost:4200',
+          },
         });
         "
       `);

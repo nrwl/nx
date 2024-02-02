@@ -63,8 +63,7 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
         commandsObject.parse(newArgs);
       }
     } else {
-      const newArgs = rewritePositionalArguments(process.argv);
-      commandsObject.parse(newArgs);
+      commandsObject.parse(process.argv.slice(2));
     }
   } catch (e) {
     console.error(e.message);
@@ -101,41 +100,6 @@ export function rewriteTargetsAndProjects(args: string[]) {
     }
   }
   return newArgs;
-}
-
-function rewritePositionalArguments(args: string[]) {
-  const relevantPositionalArgs = [];
-  const rest = [];
-  for (let i = 2; i < args.length; i++) {
-    if (args[i] === '--') {
-      rest.push(...args.slice(i + 1));
-      break;
-    } else if (!args[i].startsWith('-')) {
-      relevantPositionalArgs.push(args[i]);
-      if (relevantPositionalArgs.length === 2) {
-        rest.push(...args.slice(i + 1));
-        break;
-      }
-    } else {
-      rest.push(args[i]);
-    }
-  }
-
-  if (relevantPositionalArgs.length === 1) {
-    return [
-      'run',
-      `${wrapIntoQuotesIfNeeded(relevantPositionalArgs[0])}`,
-      ...rest,
-    ];
-  }
-
-  return [
-    'run',
-    `${relevantPositionalArgs[1]}:${wrapIntoQuotesIfNeeded(
-      relevantPositionalArgs[0]
-    )}`,
-    ...rest,
-  ];
 }
 
 function wrapIntoQuotesIfNeeded(arg: string) {

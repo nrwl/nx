@@ -3,6 +3,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
   output,
+  readJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
@@ -23,6 +24,7 @@ import { addE2e } from './lib/add-e2e';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
+import { PackageJson } from 'nx/src/utils/package-json';
 
 export async function reactNativeApplicationGenerator(
   host: Tree,
@@ -96,7 +98,26 @@ export async function reactNativeApplicationGeneratorInternal(
     joinPathFragments(host.root, options.iosProjectRoot)
   );
   if (options.install) {
-    await syncDeps(options.appProjectRoot, host.root);
+    const workspacePackageJsonPath = joinPathFragments('package.json');
+    const projectPackageJsonPath = joinPathFragments(
+      options.appProjectRoot,
+      'package.json'
+    );
+
+    const workspacePackageJson = readJson<PackageJson>(
+      host,
+      workspacePackageJsonPath
+    );
+    const projectPackageJson = readJson<PackageJson>(
+      host,
+      projectPackageJsonPath
+    );
+
+    await syncDeps(
+      projectPackageJson,
+      projectPackageJsonPath,
+      workspacePackageJson
+    );
     tasks.push(podInstallTask);
   } else {
     output.log({
