@@ -134,8 +134,7 @@ describe('React Module Federation', () => {
       }
     }, 500_000);
 
-    // TODO(crystal, @columferry): Fix this once we fix SSR
-    xit('should generate host and remote apps with ssr', async () => {
+    it('should generate host and remote apps with ssr', async () => {
       const shell = uniq('shell');
       const remote1 = uniq('remote1');
       const remote2 = uniq('remote2');

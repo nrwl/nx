@@ -19,7 +19,7 @@ export default async function (tree: Tree) {
 function isWebpackBrowserUsed(tree: Tree) {
   const projects = getProjects(tree);
   for (const project of projects.values()) {
-    const targets = project.targets;
+    const targets = project.targets || {};
     for (const [_, target] of Object.entries(targets)) {
       if (
         target.executor === '@nx/angular:webpack-browser' &&
