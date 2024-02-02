@@ -109,7 +109,7 @@ export function getTsNodeTranspiler(
 }
 
 export function getTranspiler(compilerOptions: CompilerOptions) {
-  const preferSwcNode = process.env.NX_PREFER_TS_NODE !== 'false';
+  const preferSwcNode = process.env.NX_PREFER_TS_NODE === 'false';
 
   if (!ts) {
     ts = require('typescript');
@@ -120,6 +120,9 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
+  delete compilerOptions.files;
+  delete compilerOptions.include;
+  delete compilerOptions.exclude;
 
   if (tsNodeInstalled && !preferSwcNode) {
     return () => getTsNodeTranspiler(compilerOptions);
