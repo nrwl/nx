@@ -24,7 +24,8 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: npm ci
@@ -49,7 +50,8 @@ pipelines:
               script:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
 
-                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+                # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+                # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
                 # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
                 - npm ci
@@ -72,7 +74,8 @@ jobs:
     steps:
       - checkout
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: npm ci
@@ -112,7 +115,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -149,7 +153,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -177,7 +182,8 @@ CI:
     - main
     - merge_requests
   script:
-    # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+    # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
     # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
     - npm ci
@@ -189,7 +195,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator with npm should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
+exports[`CI Workflow generator with npm should throw error is nx cloud is not set 1`] = `"nx-cloud runner not found in nx.json"`;
 
 exports[`CI Workflow generator with pnpm should generate azure CI config 1`] = `
 "name: CI
@@ -215,7 +221,8 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - script: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: npm install --prefix=$HOME/.local -g pnpm@8
@@ -242,7 +249,8 @@ pipelines:
               script:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
 
-                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+                # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+                # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
                 # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
                 - npm install --prefix=$HOME/.local -g pnpm@8
@@ -267,7 +275,8 @@ jobs:
     steps:
       - checkout
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run:
@@ -310,7 +319,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - uses: pnpm/action-setup@v2
@@ -350,7 +360,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - uses: pnpm/action-setup@v2
@@ -381,7 +392,8 @@ CI:
     - main
     - merge_requests
   script:
-    # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+    # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
     # - pnpm exec nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
     - npm install --prefix=$HOME/.local -g pnpm@8
@@ -395,7 +407,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator with pnpm should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
+exports[`CI Workflow generator with pnpm should throw error is nx cloud is not set 1`] = `"nx-cloud runner not found in nx.json"`;
 
 exports[`CI Workflow generator with yarn should generate azure CI config 1`] = `
 "name: CI
@@ -421,7 +433,8 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - script: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - script: yarn install --frozen-lockfile
@@ -446,7 +459,8 @@ pipelines:
               script:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
 
-                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+                # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+                # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
                 # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
                 - yarn install --frozen-lockfile
@@ -469,7 +483,8 @@ jobs:
     steps:
       - checkout
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       - run: yarn install --frozen-lockfile
@@ -509,7 +524,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -546,7 +562,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - run: yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
@@ -574,7 +591,8 @@ CI:
     - main
     - merge_requests
   script:
-    # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+    # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
+    # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
     # - yarn nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile
@@ -586,4 +604,4 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator with yarn should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
+exports[`CI Workflow generator with yarn should throw error is nx cloud is not set 1`] = `"nx-cloud runner not found in nx.json"`;

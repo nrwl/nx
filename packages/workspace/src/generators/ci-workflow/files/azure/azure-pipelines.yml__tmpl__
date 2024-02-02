@@ -21,7 +21,8 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+      # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "build" targets have been requested
       # - script: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
       <% if(packageManager == 'pnpm'){ %>
