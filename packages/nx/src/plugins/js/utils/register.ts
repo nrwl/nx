@@ -42,7 +42,7 @@ export function registerTsProject(
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
     registerTsConfigPaths(tsConfigPath),
-    registerTranspiler(compilerOptions),
+    registerTranspiler(compilerOptions, tsConfigPath),
   ];
 
   // Add ESM support for `.ts` files.
@@ -66,7 +66,8 @@ export function registerTsProject(
 }
 
 export function getSwcTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsConfigPath: string
 ): (...args: unknown[]) => unknown {
   type ISwcRegister = typeof import('@swc-node/register/register')['register'];
 
@@ -74,10 +75,7 @@ export function getSwcTranspiler(
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
 
-  let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
-  if (existsSync(rootTsConfig)) {
-    process.env.SWC_NODE_PROJECT = rootTsConfig;
-  }
+  process.env.SWC_NODE_PROJECT = tsConfigPath;
 
   const cleanupFn = register(compilerOptions);
 
@@ -108,7 +106,10 @@ export function getTsNodeTranspiler(
   };
 }
 
-export function getTranspiler(compilerOptions: CompilerOptions) {
+export function getTranspiler(
+  compilerOptions: CompilerOptions,
+  tsConfigPath: string
+) {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
@@ -122,7 +123,7 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
   compilerOptions.skipLibCheck = true;
 
   if (swcNodeInstalled && !preferTsNode) {
-    return () => getSwcTranspiler(compilerOptions);
+    return () => getSwcTranspiler(compilerOptions, tsConfigPath);
   }
 
   // We can fall back on ts-node if it's available
@@ -140,10 +141,11 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsConfigPath: string
 ): () => void {
   // Function to register transpiler that returns cleanup function
-  const transpiler = getTranspiler(compilerOptions);
+  const transpiler = getTranspiler(compilerOptions, tsConfigPath);
 
   if (!transpiler) {
     warnNoTranspiler();
