@@ -1,10 +1,12 @@
 import {
+  checkFilesExist,
   cleanupProject,
   killProcessAndPorts,
   newProject,
   runCLI,
   runCommandUntil,
   uniq,
+  updateFile,
 } from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 
@@ -64,5 +66,40 @@ describe('Webpack Plugin (legacy)', () => {
     if (process && process.pid) {
       await killProcessAndPorts(process.pid, port);
     }
+  });
+
+  // Issue: https://github.com/nrwl/nx/issues/20179
+  it('should allow main/styles entries to be spread within composePlugins() function (#20179)', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    updateFile(`apps/${appName}/src/main.ts`, `console.log('Hello');\n`);
+
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+        const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+        module.exports = composePlugins(withNx(), withWeb(), (config) => {
+          return {
+            ...config,
+            entry: {
+              main: [...config.entry.main],
+              styles: [...config.entry.styles],
+            }
+          };
+        });
+      `
+    );
+
+    expect(() => {
+      runCLI(`build ${appName} --outputHashing none`);
+    }).not.toThrow();
+    checkFilesExist(`dist/${appName}/styles.css`);
+
+    expect(() => {
+      runCLI(`build ${appName} --outputHashing none --extractCss false`);
+    }).not.toThrow();
+    expect(() => {
+      checkFilesExist(`dist/${appName}/styles.css`);
+    }).toThrow();
   });
 });

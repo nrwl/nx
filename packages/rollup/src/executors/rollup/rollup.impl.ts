@@ -15,6 +15,8 @@ import {
   DependentBuildableProjectNode,
 } from '@nx/js/src/utils/buildable-libs-utils';
 import nodeResolve from '@rollup/plugin-node-resolve';
+import type { PackageJson } from 'nx/src/utils/package-json';
+import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
 
 import { AssetGlobPattern, RollupExecutorOptions } from './schema';
 import { runRollup } from './lib/run-rollup';
@@ -26,7 +28,6 @@ import { analyze } from './lib/analyze-plugin';
 import { deleteOutputDir } from '../../utils/fs';
 import { swc } from './lib/swc-plugin';
 import { updatePackageJson } from './lib/update-package-json';
-import { typeDefinitions } from '@nx/js/src/plugins/rollup/type-definitions';
 
 export type RollupExecutorEvent = {
   success: boolean;
@@ -158,7 +159,7 @@ export function createRollupOptions(
   options: NormalizedRollupExecutorOptions,
   dependencies: DependentBuildableProjectNode[],
   context: ExecutorContext,
-  packageJson: any,
+  packageJson: PackageJson,
   sourceRoot: string,
   npmDeps: string[]
 ): rollup.InputOptions[] {
@@ -176,6 +177,22 @@ export function createRollupOptions(
 
   if (!options.format || !options.format.length) {
     options.format = readCompatibleFormats(config);
+  }
+
+  if (packageJson.type === 'module') {
+    if (options.format.includes('cjs')) {
+      logger.warn(
+        `Package type is set to "module" but "cjs" format is included. Going to use "esm" format instead. You can change the package type to "commonjs" or remove type in the package.json file.`
+      );
+    }
+    options.format = ['esm'];
+  } else if (packageJson.type === 'commonjs') {
+    if (options.format.includes('esm')) {
+      logger.warn(
+        `Package type is set to "commonjs" but "esm" format is included. Going to use "cjs" format instead. You can change the package type to "module" or remove type in the package.json file.`
+      );
+    }
+    options.format = ['cjs'];
   }
 
   return options.format.map((format, idx) => {

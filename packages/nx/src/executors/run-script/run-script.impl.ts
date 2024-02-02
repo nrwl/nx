@@ -21,7 +21,17 @@ export default async function (
       context.root,
       context.projectsConfigurations.projects[context.projectName].root
     );
+
     let env = process.env;
+    // when running nx through npx with node_modules installed with npm, the path gets modified to include the full workspace path with the node_modules folder
+    // This causes issues when running in a pty process, so we filter out the node_modules paths from the PATH
+    // Since the command here will be run with the package manager script command, the path will be modified again within the PTY process itself.
+    let filteredPath =
+      env.PATH?.split(path.delimiter)
+        .filter((p) => !p.startsWith(path.join(context.root, 'node_modules')))
+        .join(path.delimiter) ?? '';
+    env.PATH = filteredPath;
+
     if (process.stdout.isTTY) {
       await ptyProcess(command, cwd, env);
     } else {
