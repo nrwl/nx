@@ -1561,6 +1561,7 @@ dependencies = [
  "watchexec-events",
  "watchexec-filterer-ignore",
  "watchexec-signals",
+ "winapi",
  "xxhash-rust",
 ]
 
