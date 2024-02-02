@@ -2646,7 +2646,7 @@
         "itemList": [
           {
             "id": "webpack-config-setup",
-            "name": "How to configure webpack on your Nx workspace",
+            "name": "How to configure Webpack in your Nx workspace",
             "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
             "mediaImage": "",
             "file": "shared/packages/webpack/webpack-config-setup",
@@ -4741,7 +4741,7 @@
     "itemList": [
       {
         "id": "webpack-config-setup",
-        "name": "How to configure webpack on your Nx workspace",
+        "name": "How to configure Webpack in your Nx workspace",
         "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
         "mediaImage": "",
         "file": "shared/packages/webpack/webpack-config-setup",
@@ -4768,7 +4768,7 @@
   },
   "/recipes/webpack/webpack-config-setup": {
     "id": "webpack-config-setup",
-    "name": "How to configure webpack on your Nx workspace",
+    "name": "How to configure Webpack in your Nx workspace",
     "description": "A guide on how to configure webpack on your Nx workspace, and instructions on how to customize your webpack configuration",
     "mediaImage": "",
     "file": "shared/packages/webpack/webpack-config-setup",
