@@ -18,8 +18,7 @@ describe('cache', () => {
 
   afterEach(() => cleanupProject());
 
-  // TODO(crystal, @Cammisuli): Investigate why this is failing
-  xit('should cache command execution', async () => {
+  it('should cache command execution', async () => {
     const myapp1 = uniq('myapp1');
     const myapp2 = uniq('myapp2');
     runCLI(`generate @nx/web:app ${myapp1}`);
@@ -123,9 +122,11 @@ describe('cache', () => {
     const originalNxJson = readFile('nx.json');
     updateFile('nx.json', (c) => {
       const nxJson = JSON.parse(c);
-      for (const key in nxJson.targetDefaults ?? {}) {
-        delete nxJson.targetDefaults[key].cache;
-      }
+      nxJson.targetDefaults = {
+        build: {
+          cache: false,
+        },
+      };
       return JSON.stringify(nxJson, null, 2);
     });
 
