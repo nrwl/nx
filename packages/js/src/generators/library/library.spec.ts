@@ -1044,7 +1044,7 @@ describe('lib', () => {
         });
       });
 
-      it('should update the nx-release-publish target to depend on build', async () => {
+      it('should update the nx-release-publish target to specify dist/{projectName} as the package root', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'my-lib',
