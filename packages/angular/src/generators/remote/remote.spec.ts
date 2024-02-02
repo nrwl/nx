@@ -24,6 +24,7 @@ describe('MF Remote App Generator', () => {
       port: 4201,
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -44,6 +45,7 @@ describe('MF Remote App Generator', () => {
       port: 4201,
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -58,6 +60,7 @@ describe('MF Remote App Generator', () => {
       name: 'host',
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -66,6 +69,7 @@ describe('MF Remote App Generator', () => {
       host: 'host',
       typescriptConfiguration: false,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -81,6 +85,7 @@ describe('MF Remote App Generator', () => {
       name: 'host',
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
@@ -89,6 +94,7 @@ describe('MF Remote App Generator', () => {
       host: 'host',
       typescriptConfiguration: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -106,6 +112,7 @@ describe('MF Remote App Generator', () => {
         name: 'test',
         host: 'host',
         standalone: false,
+        skipFormat: true,
       });
     } catch (error) {
       // ASSERT
@@ -122,12 +129,14 @@ describe('MF Remote App Generator', () => {
       name: 'existing',
       port: 4201,
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -143,6 +152,7 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'test',
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -159,6 +169,7 @@ describe('MF Remote App Generator', () => {
       name: 'test',
       port: 4201,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -207,6 +218,7 @@ describe('MF Remote App Generator', () => {
     await generateTestRemoteApplication(tree, {
       name: 'test',
       typescriptConfiguration: true,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -237,6 +249,7 @@ describe('MF Remote App Generator', () => {
       name: 'remote1',
       e2eTestRunner: E2eTestRunner.None,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -253,6 +266,7 @@ describe('MF Remote App Generator', () => {
       name: 'test',
       inlineTemplate: true,
       standalone: false,
+      skipFormat: true,
     });
 
     // ASSERT
@@ -262,10 +276,10 @@ describe('MF Remote App Generator', () => {
 
       @Component({
         selector: 'proj-root',
-        template: '<router-outlet></router-outlet>',
+        template: '<router-outlet></router-outlet>'
+
       })
-      export class AppComponent {}
-      "
+      export class AppComponent {}"
     `);
   });
 
@@ -276,6 +290,7 @@ describe('MF Remote App Generator', () => {
     // ACT
     await generateTestRemoteApplication(tree, {
       name: 'test',
+      skipFormat: true,
     });
 
     // ASSERT
@@ -346,6 +361,7 @@ describe('MF Remote App Generator', () => {
         ssr: true,
         typescriptConfiguration: true,
         standalone: false,
+        skipFormat: true,
       });
 
       // ASSERT
@@ -394,7 +410,11 @@ describe('MF Remote App Generator', () => {
           },
         }));
 
-        await generateTestRemoteApplication(tree, { name: 'test', ssr: true });
+        await generateTestRemoteApplication(tree, {
+          name: 'test',
+          ssr: true,
+          skipFormat: true,
+        });
 
         expect(tree.read(`test/src/main.server.ts`, 'utf-8')).toMatchSnapshot();
       });
@@ -411,6 +431,7 @@ describe('MF Remote App Generator', () => {
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
         standalone: false,
+        skipFormat: true,
       });
 
       expect(tree.exists('apps/test/webpack.config.js')).toBe(true);
@@ -427,6 +448,7 @@ describe('MF Remote App Generator', () => {
         projectNameAndRootFormat: 'derived',
         typescriptConfiguration: false,
         standalone: false,
+        skipFormat: true,
       });
 
       expect(tree.exists('apps/shared/test/webpack.config.js')).toBe(true);

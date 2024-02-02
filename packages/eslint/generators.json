@@ -2,6 +2,12 @@
   "name": "nx/eslint",
   "version": "0.1",
   "generators": {
+    "init": {
+      "factory": "./src/generators/init/init#initEsLint",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Set up the ESLint plugin.",
+      "hidden": true
+    },
     "workspace-rules-project": {
       "factory": "./src/generators/workspace-rules-project/workspace-rules-project#lintWorkspaceRulesProjectGenerator",
       "schema": "./src/generators/workspace-rules-project/schema.json",

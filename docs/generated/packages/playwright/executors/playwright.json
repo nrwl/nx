@@ -1,8 +1,8 @@
 {
   "name": "playwright",
-  "implementation": "/packages/playwright/src/executors/playwright/playwright.ts",
+  "implementation": "/packages/playwright/src/executors/playwright/playwright.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "version": 2,
     "title": "Playwright executor",
     "description": "Run Playwright tests.",
@@ -45,6 +45,12 @@
         "alias": "gv",
         "type": "string",
         "description": "Only run tests that do not match this regular expression"
+      },
+      "testFiles": {
+        "alias": "t",
+        "type": "array",
+        "description": "Test files to run",
+        "items": { "type": "string" }
       },
       "headed": {
         "type": "boolean",

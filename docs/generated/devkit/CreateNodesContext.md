@@ -6,14 +6,14 @@ Context for [CreateNodesFunction](../../devkit/documents/CreateNodesFunction)
 
 ### Properties
 
-- [nxJsonConfiguration](../../devkit/documents/CreateNodesContext#nxjsonconfiguration): NxJsonConfiguration&lt;string[] | &quot;\*&quot;&gt;
+- [nxJsonConfiguration](../../devkit/documents/CreateNodesContext#nxjsonconfiguration): NxJsonConfiguration<string[] | "\*">
 - [workspaceRoot](../../devkit/documents/CreateNodesContext#workspaceroot): string
 
 ## Properties
 
 ### nxJsonConfiguration
 
-• `Readonly` **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
+• `Readonly` **nxJsonConfiguration**: [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
 
 ---
 

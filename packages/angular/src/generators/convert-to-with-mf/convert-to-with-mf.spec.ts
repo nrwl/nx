@@ -65,6 +65,7 @@ describe('convertToWithMF', () => {
     // ACT
     await convertToWithMF(tree, {
       project: 'remote1',
+      skipFormat: true,
     });
 
     // ASSERT
@@ -96,6 +97,7 @@ describe('convertToWithMF', () => {
     // ACT
     await convertToWithMF(tree, {
       project: 'remote1',
+      skipFormat: true,
     });
 
     // ASSERT

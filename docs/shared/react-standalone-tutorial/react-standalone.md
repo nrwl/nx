@@ -44,7 +44,7 @@ Create a new standalone React application with the following command:
 ✔ Which bundler would you like to use? · vite
 ✔ Test runner to use for end to end (E2E) tests · cypress
 ✔ Default stylesheet format · css
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 ```
 
 You can choose any bundler you like. In this tutorial we're going to use Vite. The above command generates the following structure:
@@ -496,9 +496,29 @@ export * from './lib/product-list/product-list';
 
 We're ready to import it into our main application now. First (if you haven't already), let's set up React Router.
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install react-router-dom
+npm add react-router-dom
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add react-router-dom
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add react-router-dom
+```
+
+{% /tab %}
+{% /tabs %}
 
 Configure it in the `main.tsx`.
 

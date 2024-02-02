@@ -1,10 +1,23 @@
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
+import { Tree } from '../../../generators/tree';
 import { createFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 import { interpolate } from '../../../tasks-runner/utils';
 import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
+
+export type ReleaseVersionGeneratorResult = {
+  data: VersionData;
+  callback: (
+    tree: Tree,
+    opts: {
+      dryRun?: boolean;
+      verbose?: boolean;
+      generatorOptions?: Record<string, unknown>;
+    }
+  ) => Promise<string[]>;
+};
 
 export type VersionData = Record<
   string,
@@ -76,12 +89,9 @@ export function createCommitMessageValues(
   releaseGroups: ReleaseGroupWithName[],
   releaseGroupToFilteredProjects: Map<ReleaseGroupWithName, Set<string>>,
   versionData: VersionData,
-  userCommitMessage?: string
+  commitMessage: string
 ): string[] {
-  const defaultCommitMessage = `chore(release): publish {version}`;
-  const commitMessageValues = userCommitMessage
-    ? [userCommitMessage]
-    : [defaultCommitMessage];
+  const commitMessageValues = [commitMessage];
 
   if (releaseGroups.length === 0) {
     return commitMessageValues;
@@ -115,7 +125,7 @@ export function createCommitMessageValues(
   if (
     releaseGroups.length === 1 &&
     releaseGroups[0].projectsRelationship === 'independent' &&
-    userCommitMessage?.includes('{projectName}')
+    commitMessage.includes('{projectName}')
   ) {
     const releaseGroup = releaseGroups[0];
     const releaseGroupProjectNames = Array.from(
@@ -158,14 +168,16 @@ export function createCommitMessageValues(
     if (releaseGroup.projectsRelationship === 'independent') {
       for (const project of releaseGroupProjectNames) {
         const projectVersionData = versionData[project];
-        const releaseVersion = new ReleaseVersion({
-          version: projectVersionData.newVersion,
-          releaseTagPattern: releaseGroup.releaseTagPattern,
-          projectName: project,
-        });
-        commitMessageValues.push(
-          `- project: ${project} ${releaseVersion.rawVersion}`
-        );
+        if (projectVersionData.newVersion !== null) {
+          const releaseVersion = new ReleaseVersion({
+            version: projectVersionData.newVersion,
+            releaseTagPattern: releaseGroup.releaseTagPattern,
+            projectName: project,
+          });
+          commitMessageValues.push(
+            `- project: ${project} ${releaseVersion.rawVersion}`
+          );
+        }
       }
       continue;
     }
@@ -212,12 +224,14 @@ export function createGitTagValues(
     if (releaseGroup.projectsRelationship === 'independent') {
       for (const project of releaseGroupProjectNames) {
         const projectVersionData = versionData[project];
-        tags.push(
-          interpolate(releaseGroup.releaseTagPattern, {
-            version: projectVersionData.newVersion,
-            projectName: project,
-          })
-        );
+        if (projectVersionData.newVersion !== null) {
+          tags.push(
+            interpolate(releaseGroup.releaseTagPattern, {
+              version: projectVersionData.newVersion,
+              projectName: project,
+            })
+          );
+        }
       }
       continue;
     }

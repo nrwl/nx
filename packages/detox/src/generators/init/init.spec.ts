@@ -10,10 +10,11 @@ describe('init', () => {
   });
 
   it('should add detox dependencies', async () => {
-    await detoxInitGenerator(tree, {});
+    await detoxInitGenerator(tree, {
+      addPlugin: true,
+    });
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.devDependencies['@nx/detox']).toBeDefined();
-    expect(packageJson.devDependencies['@types/node']).toBeDefined();
     expect(packageJson.devDependencies['detox']).toBeDefined();
   });
 });

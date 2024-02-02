@@ -1,16 +1,16 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxJestInit",
   "cli": "nx",
   "title": "Jest init",
   "description": "Add Jest Configuration to a workspace.",
   "type": "object",
   "properties": {
-    "babelJest": {
+    "skipFormat": {
+      "description": "Skip formatting files.",
       "type": "boolean",
-      "alias": "babel-jest",
-      "description": "Use `babel-jest` instead of `ts-jest`.",
-      "default": false
+      "default": false,
+      "x-priority": "internal"
     },
     "skipPackageJson": {
       "type": "boolean",
@@ -18,24 +18,17 @@
       "description": "Do not add dependencies to `package.json`.",
       "x-priority": "internal"
     },
-    "testEnvironment": {
-      "type": "string",
-      "enum": ["jsdom", "node", "none"],
-      "description": "The test environment for jest. This controls which jest-environment-* package is installed",
-      "default": "jsdom",
-      "x-priority": "important"
-    },
-    "js": {
+    "keepExistingVersions": {
       "type": "boolean",
-      "default": false,
-      "description": "Use JavaScript instead of TypeScript for config files"
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
+      "default": false
     },
-    "rootProject": {
-      "description": "initialize Jest for an application at the root of the workspace",
+    "updatePackageScripts": {
       "type": "boolean",
-      "default": false,
-      "hidden": true,
-      "x-priority": "internal"
+      "x-priority": "internal",
+      "description": "Update `package.json` scripts with inferred targets",
+      "default": false
     }
   },
   "required": []

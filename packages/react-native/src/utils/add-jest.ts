@@ -7,7 +7,8 @@ export async function addJest(
   projectName: string,
   appProjectRoot: string,
   js: boolean,
-  skipPackageJson: boolean
+  skipPackageJson: boolean,
+  addPlugin: boolean
 ) {
   if (unitTestRunner !== 'jest') {
     return () => {};
@@ -22,6 +23,7 @@ export async function addJest(
     compiler: 'babel',
     skipPackageJson,
     skipFormat: true,
+    addPlugin,
   });
 
   // overwrite the jest.config.ts file because react native needs to have special transform property
@@ -34,6 +36,17 @@ export async function addJest(
   setupFilesAfterEnv: ['<rootDir>/test-setup.${js ? 'js' : 'ts'}'],
   moduleNameMapper: {
     '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock'
+  },
+  transform: {
+    '^.+\\.(js|ts|tsx)$': [
+      'babel-jest',
+      {
+        configFile: __dirname + '/.babelrc.js',
+      },
+    ],
+    '^.+\\.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
+      'react-native/jest/assetFileTransformer.js'
+    ),
   },
   coverageDirectory: '${offsetFromRoot(
     appProjectRoot

@@ -2,7 +2,7 @@
   "name": "storybook-configuration",
   "factory": "./src/generators/storybook-configuration/configuration",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxNuxtStorybookConfigure",
     "title": "Nuxt Storybook Configure",

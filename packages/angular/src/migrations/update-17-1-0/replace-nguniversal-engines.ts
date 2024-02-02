@@ -5,7 +5,6 @@ import {
   readJson,
   removeDependenciesFromPackageJson,
   visitNotIgnoredFiles,
-  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { dirname, relative } from 'path';
@@ -13,6 +12,7 @@ import {
   getInstalledPackageVersionInfo,
   versions,
 } from '../../generators/utils/version-utils';
+import { allTargetOptions } from '../../utils/targets';
 import { getProjectsFilteredByDependencies } from '../utils/projects';
 
 const UNIVERSAL_PACKAGES = [
@@ -139,24 +139,6 @@ export default async function (tree: Tree) {
   );
 
   await formatFiles(tree);
-}
-
-function* allTargetOptions<T>(
-  target: TargetConfiguration<T>
-): Iterable<[string | undefined, T]> {
-  if (target.options) {
-    yield [undefined, target.options];
-  }
-
-  if (!target.configurations) {
-    return;
-  }
-
-  for (const [name, options] of Object.entries(target.configurations)) {
-    if (options !== undefined) {
-      yield [name, options];
-    }
-  }
 }
 
 const TOKENS_FILE_CONTENT = `

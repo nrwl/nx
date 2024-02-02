@@ -15,7 +15,7 @@
         "type": "string",
         "description": "A browser builder target to serve in the format of `project:target[:configuration]`.",
         "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-        "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v18."
+        "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v19."
       },
       "buildTarget": {
         "type": "string",
@@ -135,6 +135,11 @@
       "staticRemotesPort": {
         "type": "number",
         "description": "The port at which to serve the file-server for the static remotes."
+      },
+      "buildLibsFromSource": {
+        "type": "boolean",
+        "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `browserTarget` options, or it will default to `true` if it's also not set in the `browserTarget` options.",
+        "x-priority": "important"
       }
     },
     "additionalProperties": false,

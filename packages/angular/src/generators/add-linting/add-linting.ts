@@ -15,6 +15,10 @@ import {
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { camelize, dasherize } from '@nx/devkit/src/utils/string-utils';
+import {
+  javaScriptOverride,
+  typeScriptOverride,
+} from '@nx/eslint/src/generators/init/global-eslint-config';
 
 export async function addLintingGenerator(
   tree: Tree,
@@ -32,6 +36,7 @@ export async function addLintingGenerator(
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
     rootProject: rootProject,
+    addPlugin: options.addPlugin,
   });
   tasks.push(lintTask);
 
@@ -43,6 +48,7 @@ export async function addLintingGenerator(
       .includes(`${options.projectRoot}/tsconfig.*?.json`);
 
     replaceOverridesInLintConfig(tree, options.projectRoot, [
+      ...(rootProject ? [typeScriptOverride, javaScriptOverride] : []),
       {
         files: ['*.ts'],
         ...(hasParserOptions

@@ -1,13 +1,17 @@
 import { output } from '../../utils/output';
 import { readNxJson } from '../../config/configuration';
-import {
-  getNxCloudToken,
-  getNxCloudUrl,
-  isNxCloudUsed,
-} from '../../utils/nx-cloud-utils';
+import { getNxCloudUrl, isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { runNxSync } from '../../utils/child-process';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { NxArgs } from '../../utils/command-line-utils';
+import {
+  MessageKey,
+  MessageOptionKey,
+  recordStat,
+  messages,
+} from '../../utils/ab-testing';
+import { nxVersion } from '../../utils/versions';
+import chalk = require('chalk');
 
 export function onlyDefaultRunnerIsUsed(nxJson: NxJsonConfiguration) {
   const defaultRunner = nxJson.tasksRunnerOptions?.default?.runner;
@@ -42,60 +46,62 @@ export async function connectToNxCloudIfExplicitlyAsked(
   }
 }
 
-export interface ConnectToNxCloudOptions {
-  interactive: boolean;
-  promptOverride?: string;
-}
-
-export async function connectToNxCloudCommand({
-  promptOverride,
-  interactive,
-}: ConnectToNxCloudOptions): Promise<boolean> {
+export async function connectToNxCloudCommand(): Promise<boolean> {
   const nxJson = readNxJson();
   if (isNxCloudUsed(nxJson)) {
     output.log({
-      title: '✅ This workspace is already connected to Nx Cloud.',
+      title: '✔ This workspace already has Nx Cloud set up',
       bodyLines: [
-        'This means your workspace can use computation caching, distributed task execution, and show you run analytics.',
-        'Go to https://nx.app to learn more.',
-        ' ',
-        'If you have not done so already, please claim this workspace:',
-        `${getNxCloudUrl(
-          nxJson
-        )}/orgs/workspace-setup?accessToken=${getNxCloudToken(nxJson)}`,
+        'If you have not done so already, connect your workspace to your Nx Cloud account:',
+        `- Login at ${getNxCloudUrl(nxJson)} to connect your repository`,
       ],
     });
     return false;
   }
 
-  const res = interactive ? await connectToNxCloudPrompt(promptOverride) : true;
-  if (!res) return false;
   runNxSync(`g nx:connect-to-nx-cloud --quiet --no-interactive`, {
     stdio: [0, 1, 2],
   });
   return true;
 }
 
-async function connectToNxCloudPrompt(prompt?: string) {
-  return await (
-    await import('enquirer')
-  )
-    .prompt([
-      {
-        name: 'NxCloud',
-        message: prompt ?? `Enable distributed caching to make your CI faster`,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-            hint: 'I want faster builds',
-          },
-          {
-            name: 'No',
-          },
-        ],
-        initial: 'Yes' as any,
-      },
-    ])
-    .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
+export async function connectToNxCloudWithPrompt(command: string) {
+  const setNxCloud = await nxCloudPrompt('setupNxCloud');
+  const useCloud = setNxCloud ? await connectToNxCloudCommand() : false;
+  await recordStat({
+    command,
+    nxVersion,
+    useCloud,
+    meta: messages.codeOfSelectedPromptMessage('setupNxCloud'),
+  });
+}
+
+export async function connectExistingRepoToNxCloudPrompt(
+  key: MessageKey = 'setupNxCloud'
+): Promise<boolean> {
+  return nxCloudPrompt(key).then((value: MessageOptionKey) => value === 'yes');
+}
+
+async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
+  const { message, choices, initial, footer, hint } = messages.getPrompt(key);
+
+  const promptConfig = {
+    name: 'NxCloud',
+    message,
+    type: 'autocomplete',
+    choices,
+    initial,
+  } as any; // meeroslav: types in enquirer are not up to date
+  if (footer) {
+    promptConfig.footer = () => chalk.dim(footer);
+  }
+  if (hint) {
+    promptConfig.hint = () => chalk.dim(hint);
+  }
+
+  return await (await import('enquirer'))
+    .prompt<{ NxCloud: MessageOptionKey }>([promptConfig])
+    .then((a) => {
+      return a.NxCloud;
+    });
 }

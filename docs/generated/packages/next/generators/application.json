@@ -2,7 +2,7 @@
   "name": "application",
   "factory": "./src/generators/application/application#applicationGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxNextApp",
     "title": "Create a Next.js Application for Nx",
@@ -40,11 +40,11 @@
             { "value": "css", "label": "CSS" },
             {
               "value": "scss",
-              "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+              "label": "SASS(.scss)       [ https://sass-lang.com          ]"
             },
             {
               "value": "less",
-              "label": "LESS              [ http://lesscss.org            ]"
+              "label": "LESS              [ https://lesscss.org            ]"
             },
             {
               "value": "styled-components",
@@ -123,6 +123,12 @@
         "default": true,
         "description": "Enable the App Router for this project.",
         "x-prompt": "Would you like to use the App Router (recommended)?"
+      },
+      "src": {
+        "type": "boolean",
+        "default": true,
+        "description": "Generate a `src` directory for the project.",
+        "x-prompt": "Would you like to use `src/` directory?"
       },
       "rootProject": {
         "description": "Create an application at the root of the workspace.",

@@ -313,18 +313,8 @@ Merge your PR into the `main` branch when you're ready to move to the next secti
 
 Reducing the number of tasks to run via [affected commands](/ci/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/core-features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. The [Nx Cloud remote cache](/ci/features/remote-cache) can eliminate that waste for you.
 
-```{% command="pnpm nx connect" %}
-✔ Enable distributed caching to make your CI faster · Yes
-
- >  NX   Distributed caching via Nx Cloud has been enabled
-
-   In addition to the caching, Nx Cloud provides config-free distributed execution,
-   UI for viewing complex runs and GitHub integration. Learn more at https://nx.app
-
-   Your workspace is currently unclaimed. Run details from unclaimed workspaces can be viewed on cloud.nx.app by anyone
-   with the link. Claim your workspace at the following link to restrict access.
-
-   https://cloud.nx.app/orgs/workspace-setup?accessToken=[YourAccessTokenHere]
+```shell
+pnpm nx connect
 ```
 
 Click the link in the terminal to claim your workspace on [nx.app](https://nx.app). Once your workspace is successfully connected you should see an empty dashboard.

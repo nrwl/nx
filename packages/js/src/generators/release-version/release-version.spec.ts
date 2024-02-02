@@ -1,3 +1,15 @@
+let originalExit = process.exit;
+let stubProcessExit = false;
+
+const processExitSpy = jest
+  .spyOn(process, 'exit')
+  .mockImplementation((...args) => {
+    if (stubProcessExit) {
+      return undefined as never;
+    }
+    return originalExit(...args);
+  });
+
 import { ProjectGraph, Tree, output, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { ReleaseGroupWithName } from 'nx/src/command-line/release/config/filter-release-groups';
@@ -15,6 +27,9 @@ describe('release-version', () => {
   let projectGraph: ProjectGraph;
 
   beforeEach(() => {
+    // @ts-ignore
+    process.exit = processExitSpy;
+
     tree = createTreeWithEmptyWorkspace();
 
     projectGraph = createWorkspaceWithPackageDependencies(tree, {
@@ -56,6 +71,10 @@ describe('release-version', () => {
   });
   afterEach(() => {
     jest.clearAllMocks();
+    stubProcessExit = false;
+  });
+  afterAll(() => {
+    process.exit = originalExit;
   });
 
   it('should return a versionData object', async () => {
@@ -69,33 +88,36 @@ describe('release-version', () => {
       })
     ).toMatchInlineSnapshot(`
       {
-        "my-lib": {
-          "currentVersion": "0.0.1",
-          "dependentProjects": [
-            {
-              "dependencyCollection": "dependencies",
-              "source": "project-with-dependency-on-my-pkg",
-              "target": "my-lib",
-              "type": "static",
-            },
-            {
-              "dependencyCollection": "devDependencies",
-              "source": "project-with-devDependency-on-my-pkg",
-              "target": "my-lib",
-              "type": "static",
-            },
-          ],
-          "newVersion": "1.0.0",
-        },
-        "project-with-dependency-on-my-pkg": {
-          "currentVersion": "0.0.1",
-          "dependentProjects": [],
-          "newVersion": "1.0.0",
-        },
-        "project-with-devDependency-on-my-pkg": {
-          "currentVersion": "0.0.1",
-          "dependentProjects": [],
-          "newVersion": "1.0.0",
+        "callback": [Function],
+        "data": {
+          "my-lib": {
+            "currentVersion": "0.0.1",
+            "dependentProjects": [
+              {
+                "dependencyCollection": "dependencies",
+                "source": "project-with-dependency-on-my-pkg",
+                "target": "my-lib",
+                "type": "static",
+              },
+              {
+                "dependencyCollection": "devDependencies",
+                "source": "project-with-devDependency-on-my-pkg",
+                "target": "my-lib",
+                "type": "static",
+              },
+            ],
+            "newVersion": "1.0.0",
+          },
+          "project-with-dependency-on-my-pkg": {
+            "currentVersion": "0.0.1",
+            "dependentProjects": [],
+            "newVersion": "1.0.0",
+          },
+          "project-with-devDependency-on-my-pkg": {
+            "currentVersion": "0.0.1",
+            "dependentProjects": [],
+            "newVersion": "1.0.0",
+          },
         },
       }
     `);
@@ -107,12 +129,13 @@ describe('release-version', () => {
     });
 
     it(`should exit with code one and print guidance when not all of the given projects are appropriate for JS versioning`, async () => {
-      const processSpy = jest.spyOn(process, 'exit').mockImplementation(() => {
-        return undefined as never;
-      });
-      const outputSpy = jest.spyOn(output, 'error').mockImplementation(() => {
-        return undefined as never;
-      });
+      stubProcessExit = true;
+
+      const outputSpy = jest
+        .spyOn(output, 'error')
+        .mockImplementationOnce(() => {
+          return undefined as never;
+        });
 
       await releaseVersionGenerator(tree, {
         projects: Object.values(projectGraph.nodes), // version all projects
@@ -128,10 +151,10 @@ describe('release-version', () => {
 To fix this you will either need to add a package.json file at that location, or configure "release" within your nx.json to exclude "my-lib" from the current release group, or amend the packageRoot configuration to point to where the package.json should be.`,
       });
 
-      expect(processSpy).toHaveBeenCalledWith(1);
-
-      processSpy.mockRestore();
       outputSpy.mockRestore();
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+
+      stubProcessExit = false;
     });
   });
 
@@ -492,6 +515,424 @@ To fix this you will either need to add a package.json file at that location, or
           }
         `);
       });
+    });
+  });
+
+  describe('leading v in version', () => {
+    it(`should strip a leading v from the provided specifier`, async () => {
+      expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+        '0.0.1'
+      );
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: 'v8.8.8',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+      });
+      expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "my-lib",
+          "version": "8.8.8",
+        }
+      `);
+
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "8.8.8",
+          },
+          "name": "project-with-dependency-on-my-pkg",
+          "version": "8.8.8",
+        }
+      `);
+      expect(
+        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "8.8.8",
+          },
+          "name": "project-with-devDependency-on-my-pkg",
+          "version": "8.8.8",
+        }
+      `);
+    });
+  });
+
+  describe('dependent version prefix', () => {
+    beforeEach(() => {
+      projectGraph = createWorkspaceWithPackageDependencies(tree, {
+        'my-lib': {
+          projectRoot: 'libs/my-lib',
+          packageName: 'my-lib',
+          version: '0.0.1',
+          packageJsonPath: 'libs/my-lib/package.json',
+          localDependencies: [],
+        },
+        'project-with-dependency-on-my-pkg': {
+          projectRoot: 'libs/project-with-dependency-on-my-pkg',
+          packageName: 'project-with-dependency-on-my-pkg',
+          version: '0.0.1',
+          packageJsonPath:
+            'libs/project-with-dependency-on-my-pkg/package.json',
+          localDependencies: [
+            {
+              projectName: 'my-lib',
+              dependencyCollection: 'dependencies',
+              version: '~0.0.1', // already has ~
+            },
+          ],
+        },
+        'project-with-devDependency-on-my-pkg': {
+          projectRoot: 'libs/project-with-devDependency-on-my-pkg',
+          packageName: 'project-with-devDependency-on-my-pkg',
+          version: '0.0.1',
+          packageJsonPath:
+            'libs/project-with-devDependency-on-my-pkg/package.json',
+          localDependencies: [
+            {
+              projectName: 'my-lib',
+              dependencyCollection: 'devDependencies',
+              version: '^0.0.1', // already has ^
+            },
+          ],
+        },
+        'another-project-with-devDependency-on-my-pkg': {
+          projectRoot: 'libs/another-project-with-devDependency-on-my-pkg',
+          packageName: 'another-project-with-devDependency-on-my-pkg',
+          version: '0.0.1',
+          packageJsonPath:
+            'libs/another-project-with-devDependency-on-my-pkg/package.json',
+          localDependencies: [
+            {
+              projectName: 'my-lib',
+              dependencyCollection: 'devDependencies',
+              version: '0.0.1', // has no prefix
+            },
+          ],
+        },
+      });
+    });
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
+
+    it('should work with an empty prefix', async () => {
+      expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+        '0.0.1'
+      );
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: '9.9.9',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+        versionPrefix: '',
+      });
+      expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "my-lib",
+          "version": "9.9.9",
+        }
+      `);
+
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "9.9.9",
+          },
+          "name": "project-with-dependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "9.9.9",
+          },
+          "name": "project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(
+          tree,
+          'libs/another-project-with-devDependency-on-my-pkg/package.json'
+        )
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "9.9.9",
+          },
+          "name": "another-project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+    });
+
+    it('should work with a ^ prefix', async () => {
+      expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+        '0.0.1'
+      );
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: '9.9.9',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+        versionPrefix: '^',
+      });
+      expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "my-lib",
+          "version": "9.9.9",
+        }
+      `);
+
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "^9.9.9",
+          },
+          "name": "project-with-dependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "^9.9.9",
+          },
+          "name": "project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(
+          tree,
+          'libs/another-project-with-devDependency-on-my-pkg/package.json'
+        )
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "^9.9.9",
+          },
+          "name": "another-project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+    });
+
+    it('should work with a ~ prefix', async () => {
+      expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+        '0.0.1'
+      );
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: '9.9.9',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+        versionPrefix: '~',
+      });
+      expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "my-lib",
+          "version": "9.9.9",
+        }
+      `);
+
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "~9.9.9",
+          },
+          "name": "project-with-dependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "~9.9.9",
+          },
+          "name": "project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(
+          tree,
+          'libs/another-project-with-devDependency-on-my-pkg/package.json'
+        )
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "~9.9.9",
+          },
+          "name": "another-project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+    });
+
+    it('should respect any existing prefix when set to "auto"', async () => {
+      expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+        '0.0.1'
+      );
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: '9.9.9',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+        versionPrefix: 'auto',
+      });
+      expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "my-lib",
+          "version": "9.9.9",
+        }
+      `);
+
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "~9.9.9",
+          },
+          "name": "project-with-dependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "^9.9.9",
+          },
+          "name": "project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(
+          tree,
+          'libs/another-project-with-devDependency-on-my-pkg/package.json'
+        )
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "9.9.9",
+          },
+          "name": "another-project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+    });
+
+    it('should use the behavior of "auto" by default', async () => {
+      expect(readJson(tree, 'libs/my-lib/package.json').version).toEqual(
+        '0.0.1'
+      );
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: '9.9.9',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+        versionPrefix: undefined,
+      });
+      expect(readJson(tree, 'libs/my-lib/package.json')).toMatchInlineSnapshot(`
+        {
+          "name": "my-lib",
+          "version": "9.9.9",
+        }
+      `);
+
+      expect(
+        readJson(tree, 'libs/project-with-dependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "dependencies": {
+            "my-lib": "~9.9.9",
+          },
+          "name": "project-with-dependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(tree, 'libs/project-with-devDependency-on-my-pkg/package.json')
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "^9.9.9",
+          },
+          "name": "project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+      expect(
+        readJson(
+          tree,
+          'libs/another-project-with-devDependency-on-my-pkg/package.json'
+        )
+      ).toMatchInlineSnapshot(`
+        {
+          "devDependencies": {
+            "my-lib": "9.9.9",
+          },
+          "name": "another-project-with-devDependency-on-my-pkg",
+          "version": "9.9.9",
+        }
+      `);
+    });
+
+    it(`should exit with code one and print guidance for invalid prefix values`, async () => {
+      stubProcessExit = true;
+
+      const outputSpy = jest
+        .spyOn(output, 'error')
+        .mockImplementationOnce(() => {
+          return undefined as never;
+        });
+
+      await releaseVersionGenerator(tree, {
+        projects: Object.values(projectGraph.nodes), // version all projects
+        projectGraph,
+        specifier: 'major',
+        currentVersionResolver: 'disk',
+        releaseGroup: createReleaseGroup('fixed'),
+        versionPrefix: '$',
+      });
+
+      expect(outputSpy).toHaveBeenCalledWith({
+        title: `Invalid value for version.generatorOptions.versionPrefix: "$"
+
+Valid values are: "auto", "", "~", "^"`,
+      });
+
+      outputSpy.mockRestore();
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+
+      stubProcessExit = false;
     });
   });
 });

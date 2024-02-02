@@ -5,7 +5,7 @@ import { generateStorybookConfiguration } from './lib/generate-storybook-configu
 import { validateOptions } from './lib/validate-options';
 import type { StorybookConfigurationOptions } from './schema';
 
-// TODO(katerina): Nx 18 -> remove Cypress
+// TODO(katerina): Nx 19 -> remove Cypress
 export async function storybookConfigurationGenerator(
   tree: Tree,
   options: StorybookConfigurationOptions
@@ -34,9 +34,7 @@ export async function storybookConfigurationGenerator(
     await formatFiles(tree);
   }
 
-  return () => {
-    storybookGeneratorInstallTask();
-  };
+  return storybookGeneratorInstallTask;
 }
 
 export default storybookConfigurationGenerator;

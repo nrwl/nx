@@ -1,5 +1,4 @@
-import { NxJsonConfiguration } from '@nx/devkit';
-import { Tree, readJson, updateJson } from '@nx/devkit';
+import { Tree, readJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { reactNativeInitGenerator } from './init';
 
@@ -12,12 +11,12 @@ describe('init', () => {
   });
 
   it('should add react native dependencies', async () => {
-    await reactNativeInitGenerator(tree, { e2eTestRunner: 'none' });
+    await reactNativeInitGenerator(tree, {
+      addPlugin: true,
+    });
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson.dependencies['react']).toBeDefined();
     expect(packageJson.dependencies['react-native']).toBeDefined();
-    expect(packageJson.devDependencies['@types/node']).toBeDefined();
-    expect(packageJson.devDependencies['@types/react']).toBeDefined();
   });
 
   it('should add .gitignore entries for React native files and directories', async () => {
@@ -27,7 +26,9 @@ describe('init', () => {
 /node_modules
 `
     );
-    await reactNativeInitGenerator(tree, { e2eTestRunner: 'none' });
+    await reactNativeInitGenerator(tree, {
+      addPlugin: true,
+    });
 
     const content = tree.read('/.gitignore').toString();
 

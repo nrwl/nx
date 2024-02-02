@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxRollupProject",
   "cli": "nx",
   "title": "Add Rollup Configuration to a project",

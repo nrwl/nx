@@ -1,7 +1,7 @@
 {
   "cli": "nx",
   "$id": "NxReactNativeApplication",
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "title": "Create a React Native Component for Nx",
   "description": "Create a React native Component for Nx.",
   "type": "object",
@@ -23,7 +23,7 @@
       "$default": {
         "$source": "projectName"
       },
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
+      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
     },
     "name": {
       "type": "string",
@@ -58,7 +58,7 @@
       "type": "boolean",
       "description": "Create component at the source root rather than its own directory.",
       "default": false,
-      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v18."
+      "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v19."
     },
     "export": {
       "type": "boolean",
@@ -72,7 +72,7 @@
       "description": "Use pascal case component file name (e.g. `App.tsx`).",
       "alias": "P",
       "default": false,
-      "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v18."
+      "x-deprecated": "Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19."
     },
     "classComponent": {
       "type": "boolean",

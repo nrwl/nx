@@ -20,7 +20,7 @@ import { NxJsonConfiguration } from '../../config/nx-json';
 import { readNxJson } from '../../config/configuration';
 import { PromisedBasedQueue } from '../../utils/promised-based-queue';
 import { hasNxJson } from '../../config/nx-json';
-import { Message, SocketMessenger } from './socket-messenger';
+import { Message, DaemonSocketMessenger } from './daemon-socket-messenger';
 import { safelyCleanUpExistingProcess } from '../cache';
 import { Hash } from '../../hasher/task-hasher';
 import { Task, TaskGraph } from '../../config/task-graph';
@@ -50,7 +50,7 @@ export class DaemonClient {
   }
 
   private queue: PromisedBasedQueue;
-  private socketMessenger: SocketMessenger;
+  private socketMessenger: DaemonSocketMessenger;
 
   private currentMessage;
   private currentResolve;
@@ -65,7 +65,7 @@ export class DaemonClient {
 
   enabled() {
     if (this._enabled === undefined) {
-      // TODO(v18): Add migration to move it out of existing configs and remove the ?? here.
+      // TODO(v19): Add migration to move it out of existing configs and remove the ?? here.
       const useDaemonProcessOption =
         this.nxJson.useDaemonProcess ??
         this.nxJson.tasksRunnerOptions?.['default']?.options?.useDaemonProcess;
@@ -172,10 +172,12 @@ export class DaemonClient {
     ) => void
   ): Promise<UnregisterCallback> {
     await this.getProjectGraphAndSourceMaps();
-    let messenger: SocketMessenger | undefined;
+    let messenger: DaemonSocketMessenger | undefined;
 
     await this.queue.sendToQueue(() => {
-      messenger = new SocketMessenger(connect(FULL_OS_SOCKET_PATH)).listen(
+      messenger = new DaemonSocketMessenger(
+        connect(FULL_OS_SOCKET_PATH)
+      ).listen(
         (message) => {
           try {
             const parsedMessage = JSON.parse(message);
@@ -248,7 +250,7 @@ export class DaemonClient {
   }
 
   private setUpConnection() {
-    this.socketMessenger = new SocketMessenger(
+    this.socketMessenger = new DaemonSocketMessenger(
       connect(FULL_OS_SOCKET_PATH)
     ).listen(
       (message) => this.handleMessage(message),
@@ -265,6 +267,12 @@ export class DaemonClient {
               `If you get this error again, check for any errors in the daemon process logs found in: ${DAEMON_OUTPUT_LOG_FILE}`,
             ],
           });
+          this._daemonStatus = DaemonStatus.DISCONNECTED;
+          this.currentReject?.(
+            daemonProcessException(
+              'Daemon process terminated and closed the connection'
+            )
+          );
           process.exit(1);
         }
       },

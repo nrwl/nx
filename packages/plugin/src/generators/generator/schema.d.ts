@@ -10,7 +10,7 @@ export interface Schema {
   nameAndDirectoryFormat?: NameAndDirectoryFormat;
 
   /**
-   * @deprecated Provide the `directory` option instead. The project will be determined from the directory provided. It will be removed in Nx v18.
+   * @deprecated Provide the `directory` option instead. The project will be determined from the directory provided. It will be removed in Nx v19.
    */
   project?: string;
 }

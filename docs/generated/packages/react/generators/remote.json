@@ -2,7 +2,7 @@
   "name": "remote",
   "factory": "./src/generators/remote/remote#remoteGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorReactRemote",
     "cli": "nx",
     "title": "Generate Module Federation Setup for React Remote App",
@@ -46,11 +46,11 @@
             { "value": "css", "label": "CSS" },
             {
               "value": "scss",
-              "label": "SASS(.scss)       [ http://sass-lang.com                     ]"
+              "label": "SASS(.scss)       [ https://sass-lang.com                     ]"
             },
             {
               "value": "less",
-              "label": "LESS              [ http://lesscss.org                       ]"
+              "label": "LESS              [ https://lesscss.org                       ]"
             },
             {
               "value": "styled-components",
@@ -99,7 +99,7 @@
       },
       "e2eTestRunner": {
         "type": "string",
-        "enum": ["cypress", "none"],
+        "enum": ["cypress", "playwright", "none"],
         "description": "Test runner to use for end to end (e2e) tests.",
         "default": "cypress"
       },

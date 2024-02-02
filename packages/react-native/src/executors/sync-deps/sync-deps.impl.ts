@@ -3,14 +3,12 @@ import * as chalk from 'chalk';
 import {
   ExecutorContext,
   logger,
-  ProjectGraph,
   readJsonFile,
   writeJsonFile,
 } from '@nx/devkit';
 
-import { findAllNpmDependencies } from '../../utils/find-all-npm-dependencies';
-
 import { ReactNativeSyncDepsOptions } from './schema';
+import { PackageJson } from 'nx/src/utils/package-json';
 
 export interface ReactNativeSyncDepsOutput {
   success: boolean;
@@ -22,13 +20,22 @@ export default async function* syncDepsExecutor(
 ): AsyncGenerator<ReactNativeSyncDepsOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
+
+  const workspacePackageJsonPath = join(context.root, 'package.json');
+  const projectPackageJsonPath = join(
+    context.root,
+    projectRoot,
+    'package.json'
+  );
+
+  const workspacePackageJson = readJsonFile(workspacePackageJsonPath);
+  const projectPackageJson = readJsonFile(projectPackageJsonPath);
   displayNewlyAddedDepsMessage(
     context.projectName,
     await syncDeps(
-      context.projectName,
-      projectRoot,
-      context.root,
-      context.projectGraph,
+      projectPackageJson,
+      projectPackageJsonPath,
+      workspacePackageJson,
       typeof options.include === 'string'
         ? options.include.split(',')
         : options.include,
@@ -42,21 +49,20 @@ export default async function* syncDepsExecutor(
 }
 
 export async function syncDeps(
-  projectName: string,
-  projectRoot: string,
-  workspaceRoot: string,
-  projectGraph: ProjectGraph,
+  projectPackageJson: PackageJson,
+  projectPackageJsonPath: string,
+  workspacePackageJson: PackageJson,
   include: string[] = [],
   exclude: string[] = []
 ): Promise<string[]> {
-  let npmDeps = findAllNpmDependencies(projectGraph, projectName);
-  const packageJsonPath = join(workspaceRoot, projectRoot, 'package.json');
-  const packageJson = readJsonFile(packageJsonPath);
+  let npmDeps = Object.keys(workspacePackageJson.dependencies || {});
+  let npmDevdeps = Object.keys(workspacePackageJson.devDependencies || {});
+
   const newDeps = [];
   let updated = false;
 
-  if (!packageJson.dependencies) {
-    packageJson.dependencies = {};
+  if (!projectPackageJson.dependencies) {
+    projectPackageJson.dependencies = {};
     updated = true;
   }
 
@@ -67,16 +73,36 @@ export async function syncDeps(
     npmDeps = npmDeps.filter((dep) => !exclude.includes(dep));
   }
 
+  if (!projectPackageJson.devDependencies) {
+    projectPackageJson.devDependencies = {};
+  }
+  if (!projectPackageJson.dependencies) {
+    projectPackageJson.dependencies = {};
+  }
+
   npmDeps.forEach((dep) => {
-    if (!packageJson.dependencies[dep]) {
-      packageJson.dependencies[dep] = '*';
+    if (
+      !projectPackageJson.dependencies[dep] &&
+      !projectPackageJson.devDependencies[dep]
+    ) {
+      projectPackageJson.dependencies[dep] = '*';
+      newDeps.push(dep);
+      updated = true;
+    }
+  });
+  npmDevdeps.forEach((dep) => {
+    if (
+      !projectPackageJson.dependencies[dep] &&
+      !projectPackageJson.devDependencies[dep]
+    ) {
+      projectPackageJson.devDependencies[dep] = '*';
       newDeps.push(dep);
       updated = true;
     }
   });
 
   if (updated) {
-    writeJsonFile(packageJsonPath, packageJson);
+    writeJsonFile(projectPackageJsonPath, projectPackageJson);
   }
 
   return newDeps;

@@ -1,0 +1,43 @@
+{
+  "name": "style",
+  "implementation": "/packages/remix/src/generators/style/style.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxRemixRouteStyle",
+    "title": "Add style import to a route",
+    "description": "Generate a style import and file for a given route.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "g style --path='apps/demo/app/routes/path/to/page.tsx'",
+        "description": "Generate route at apps/demo/app/routes/path/to/page.tsx"
+      }
+    ],
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "Route path",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the path of the route? (e.g. 'apps/demo/app/routes/foo/bar.tsx')"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the styles in the path as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and directory relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "pattern": "^[a-zA-Z].*$",
+        "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v19."
+      }
+    },
+    "required": ["path"],
+    "presets": []
+  },
+  "description": "Generates a new stylesheet and adds it to an existing route",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/remix/src/generators/style/schema.json",
+  "type": "generator"
+}

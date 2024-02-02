@@ -37,6 +37,8 @@ import {
   addExtendsToLintConfig,
   isEslintConfigSupported,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import { initGenerator as jsInitGenerator } from '@nx/js';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 async function addLinting(host: Tree, options: NormalizedSchema) {
   const tasks: GeneratorCallback[] = [];
@@ -51,6 +53,7 @@ async function addLinting(host: Tree, options: NormalizedSchema) {
       skipFormat: true,
       rootProject: options.rootProject,
       skipPackageJson: options.skipPackageJson,
+      addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
 
@@ -76,6 +79,7 @@ export async function applicationGenerator(
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -90,10 +94,16 @@ export async function applicationGeneratorInternal(
   const options = await normalizeOptions(host, schema);
   showPossibleWarnings(host, options);
 
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
+
   const initTask = await reactInitGenerator(host, {
     ...options,
     skipFormat: true,
-    skipHelperLibs: options.bundler === 'vite',
   });
   tasks.push(initTask);
 
@@ -102,10 +112,17 @@ export async function applicationGeneratorInternal(
       typeof import('@nx/webpack')
     >('@nx/webpack', nxVersion);
     const webpackInitTask = await webpackInitGenerator(host, {
-      uiFramework: 'react',
+      skipPackageJson: options.skipPackageJson,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(webpackInitTask);
+    if (!options.skipPackageJson) {
+      const { ensureDependencies } = await import(
+        '@nx/webpack/src/utils/ensure-dependencies'
+      );
+      tasks.push(ensureDependencies(host, { uiFramework: 'react' }));
+    }
   }
 
   if (!options.rootProject) {
@@ -136,6 +153,7 @@ export async function applicationGeneratorInternal(
       inSourceTests: options.inSourceTests,
       compiler: options.compiler,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -189,6 +207,7 @@ export async function applicationGeneratorInternal(
       project: options.projectName,
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -290,6 +309,10 @@ export async function applicationGeneratorInternal(
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.projectName);
+  });
 
   return runTasksInSerial(...tasks);
 }

@@ -26,26 +26,22 @@
   "main": "./index",
   "types": "index.d.ts",
   "dependencies": {
+    "@nx/devkit": "file:../devkit",
     "chalk": "^4.1.0",
     "enhanced-resolve": "^5.8.3",
     "fs-extra": "^11.1.0",
-    "metro-config": "~0.76.8",
-    "metro-resolver": "~0.76.8",
+    "metro-config": "~0.80.4",
+    "metro-resolver": "~0.80.4",
+    "node-fetch": "^2.6.7",
     "tslib": "^2.3.0",
     "tsconfig-paths": "^4.1.2",
     "tsconfig-paths-webpack-plugin": "^4.0.0",
-    "@nx/detox": "file:../detox",
-    "@nx/devkit": "file:../devkit",
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/react": "file:../react",
+    "@nx/web": "file:../web",
     "@nx/webpack": "file:../webpack"
-  },
-  "peerDependencies": {
-    "expo": ">= 49.0.0",
-    "@expo/cli": ">= 0.10.0",
-    "eas-cli": ">= 3.15.0"
   },
   "executors": "./executors.json",
   "ng-update": {

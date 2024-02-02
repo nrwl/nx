@@ -45,7 +45,7 @@ This file describes the options being sent to the executor (very similar to the 
 
 ```json
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "type": "object",
   "properties": {
     "textToEcho": {

@@ -29,7 +29,7 @@ There are a number of ways to use Vue in your existing workspace.
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/vue
+npm add -D @nx/vue
 ```
 
 {% /tab %}
@@ -43,7 +43,7 @@ yarn add -D @nx/vue
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/vue
+pnpm add -D @nx/vue
 ```
 
 {% /tab %}

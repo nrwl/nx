@@ -39,10 +39,10 @@ export default async function updateBuildDir(tree: Tree) {
 
       configContents = updateTestConfig(configContents, projectConfig, config);
 
-      if (options.fileReplacements?.length > 0) {
+      if (options['fileReplacements']?.length > 0) {
         configContents = addFileReplacements(
           configContents,
-          options.fileReplacements,
+          options['fileReplacements'],
           config
         );
       }

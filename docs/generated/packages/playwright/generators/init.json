@@ -1,8 +1,8 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init",
+  "factory": "./src/generators/init/init#initGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxPlaywrightInit",
     "title": "Playwright Init Generator",
     "description": "Initializes a Playwright project in the current workspace.",
@@ -20,9 +20,16 @@
         "description": "Do not add dependencies to `package.json`.",
         "x-priority": "internal"
       },
-      "skipInstall": {
+      "keepExistingVersions": {
         "type": "boolean",
-        "description": "Skip running `playwright install`. This is to ensure that playwright browsers are installed.",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
+      },
+      "updatePackageScripts": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Update `package.json` scripts with inferred targets",
         "default": false
       }
     },
@@ -30,7 +37,7 @@
     "presets": []
   },
   "description": "Initializes a Playwright project in the current workspace",
-  "implementation": "/packages/playwright/src/generators/init/init.ts",
+  "implementation": "/packages/playwright/src/generators/init/init#initGeneratorInternal.ts",
   "aliases": [],
   "hidden": false,
   "path": "/packages/playwright/src/generators/init/schema.json",

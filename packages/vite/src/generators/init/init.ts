@@ -1,7 +1,14 @@
-import { readNxJson, runTasksInSerial, Tree, updateNxJson } from '@nx/devkit';
+import {
+  formatFiles,
+  GeneratorCallback,
+  readNxJson,
+  runTasksInSerial,
+  Tree,
+  updateNxJson,
+} from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 
-import { initGenerator as jsInitGenerator } from '@nx/js';
-
+import { createNodes } from '../../plugins/plugin';
 import { InitGeneratorSchema } from './schema';
 import {
   addPlugin,
@@ -41,23 +48,35 @@ export function updateNxJsonSettings(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-export async function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
-  moveToDevDependencies(tree);
-  updateNxJsonSettings(tree);
-  const tasks = [];
+export function initGenerator(tree: Tree, schema: InitGeneratorSchema) {
+  return initGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
 
-  tasks.push(
-    await jsInitGenerator(tree, {
-      ...schema,
-      skipFormat: true,
-      tsConfigName: schema.rootProject ? 'tsconfig.json' : 'tsconfig.base.json',
-    })
-  );
-  const addPlugins = process.env.NX_PCV3 === 'true';
-  if (addPlugins) {
+export async function initGeneratorInternal(
+  tree: Tree,
+  schema: InitGeneratorSchema
+) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  if (schema.addPlugin) {
     addPlugin(tree);
   }
-  tasks.push(checkDependenciesInstalled(tree, schema));
+
+  updateNxJsonSettings(tree);
+
+  const tasks: GeneratorCallback[] = [];
+  if (!schema.skipPackageJson) {
+    tasks.push(moveToDevDependencies(tree));
+    tasks.push(checkDependenciesInstalled(tree, schema));
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
+  }
+
+  if (!schema.skipFormat) {
+    await formatFiles(tree);
+  }
+
   return runTasksInSerial(...tasks);
 }
 

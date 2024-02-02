@@ -5,7 +5,6 @@ import {
   parseTargetString,
   runExecutor,
 } from '@nx/devkit';
-import type { InlineConfig, PreviewOptions, PreviewServer } from 'vite';
 import {
   getNxTargetOptions,
   getProxyConfig,
@@ -15,6 +14,7 @@ import { ViteBuildExecutorOptions } from '../build/schema';
 import { VitePreviewServerExecutorOptions } from './schema';
 import { relative } from 'path';
 import { getBuildExtraArgs } from '../build/build.impl';
+import { loadViteDynamicImport } from '../../utils/executor-utils';
 
 export async function* vitePreviewServerExecutor(
   options: VitePreviewServerExecutorOptions,
@@ -22,9 +22,8 @@ export async function* vitePreviewServerExecutor(
 ) {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, preview, loadConfigFromFile } = await (Function(
-    'return import("vite")'
-  )() as Promise<typeof import('vite')>);
+  const { mergeConfig, preview, loadConfigFromFile } =
+    await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   const target = parseTargetString(options.buildTarget, context);
@@ -46,6 +45,8 @@ export async function* vitePreviewServerExecutor(
     context
   );
 
+  const { configuration } = parseTargetString(options.buildTarget, context);
+
   const viteConfigPath = normalizeViteConfigFilePath(
     context.root,
     projectRoot,
@@ -55,10 +56,14 @@ export async function* vitePreviewServerExecutor(
   const { buildOptions, otherOptions: otherOptionsFromBuild } =
     await getBuildExtraArgs(buildTargetOptions);
 
-  const { previewOptions, otherOptions } = await getExtraArgs(options);
+  const { previewOptions, otherOptions } = await getExtraArgs(
+    options,
+    configuration,
+    otherOptionsFromBuild
+  );
   const resolved = await loadConfigFromFile(
     {
-      mode: otherOptions?.mode ?? 'production',
+      mode: otherOptions?.mode ?? otherOptionsFromBuild?.mode ?? 'production',
       command: 'build',
     },
     viteConfigPath
@@ -98,7 +103,8 @@ export async function* vitePreviewServerExecutor(
     },
   };
 
-  const serverConfig: InlineConfig = mergeConfig(
+  // vite InlineConfig
+  const serverConfig = mergeConfig(
     {
       // This should not be needed as it's going to be set in vite.config.ts
       // but leaving it here in case someone did not migrate correctly
@@ -114,7 +120,8 @@ export async function* vitePreviewServerExecutor(
     console.warn('WARNING: preview is not meant to be run in production!');
   }
 
-  let server: PreviewServer | undefined;
+  // vite PreviewServer
+  let server: Record<string, any> | undefined;
 
   const processOnExit = async () => {
     await closeServer(server);
@@ -168,7 +175,7 @@ export async function* vitePreviewServerExecutor(
   });
 }
 
-function closeServer(server?: PreviewServer): Promise<void> {
+function closeServer(server?: Record<string, any>): Promise<void> {
   return new Promise((resolve) => {
     if (!server) {
       resolve();
@@ -176,7 +183,7 @@ function closeServer(server?: PreviewServer): Promise<void> {
       const { httpServer } = server;
       if (httpServer['closeAllConnections']) {
         // https://github.com/vitejs/vite/pull/14834
-        // closeAllConnections was added in Node v18.2.0
+        // closeAllConnections was added in Node v19.2.0
         // typically is "as http.Server" but no reason
         // to import http just for this
         (httpServer as any).closeAllConnections();
@@ -189,9 +196,12 @@ function closeServer(server?: PreviewServer): Promise<void> {
 export default vitePreviewServerExecutor;
 
 async function getExtraArgs(
-  options: VitePreviewServerExecutorOptions
+  options: VitePreviewServerExecutorOptions,
+  configuration: string | undefined,
+  otherOptionsFromBuildTarget: Record<string, unknown> | undefined
 ): Promise<{
-  previewOptions: PreviewOptions;
+  // vite PreviewOptions
+  previewOptions: Record<string, any>;
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
@@ -203,7 +213,7 @@ async function getExtraArgs(
     }
   }
 
-  const previewOptions = {} as PreviewOptions;
+  const previewOptions = {};
   const previewSchemaKeys = [
     'port',
     'strictPort',
@@ -215,13 +225,20 @@ async function getExtraArgs(
     'headers',
   ];
 
-  const otherOptions = {};
+  let otherOptions = {};
   for (const key of Object.keys(extraArgs)) {
     if (previewSchemaKeys.includes(key)) {
       previewOptions[key] = extraArgs[key];
     } else {
       otherOptions[key] = extraArgs[key];
     }
+  }
+
+  if (configuration) {
+    otherOptions = {
+      ...otherOptions,
+      ...(otherOptionsFromBuildTarget ?? {}),
+    };
   }
 
   return {

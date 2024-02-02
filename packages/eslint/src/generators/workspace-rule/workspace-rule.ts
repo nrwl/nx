@@ -25,7 +25,7 @@ export async function lintWorkspaceRuleGenerator(
   // Ensure that the workspace rules project has been created
   const projectGeneratorCallback = await lintWorkspaceRulesProjectGenerator(
     tree,
-    { skipFormat: true }
+    { skipFormat: true, addPlugin: process.env.NX_ADD_PLUGINS !== 'false' }
   );
 
   const ruleDir = joinPathFragments(
@@ -108,7 +108,7 @@ export async function lintWorkspaceRuleGenerator(
   logger.info(`NX Reminder: Once you have finished writing your rule logic, you need to actually enable the rule within an appropriate ESLint config in your workspace, for example:
 
        "rules": {
-         "@nx/workspace/${options.name}": "error"
+         "@nx/workspace-${options.name}": "error"
        }
 `);
 

@@ -3,6 +3,7 @@ import {
   readJson,
   readProjectConfiguration,
   updateJson,
+  updateProjectConfiguration,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -24,6 +25,7 @@ describe('setupSSR', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         standalone: false,
+        skipFormat: true,
       });
 
       // ACT
@@ -97,7 +99,7 @@ describe('setupSSR', () => {
     it('should create the files correctly for ssr when app is standalone', async () => {
       // ARRANGE
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestApplication(tree, { name: 'app1' });
+      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
 
       // ACT
       await setupSsr(tree, { project: 'app1' });
@@ -140,6 +142,45 @@ describe('setupSSR', () => {
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.targetDefaults.server).toBeUndefined();
     });
+
+    it('should support object output option using a custom "outputPath.browser" and "outputPath.server" values', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.outputPath = {
+        base: project.targets.build.options.outputPath,
+        browser: 'public',
+        server: 'node-server',
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1' });
+
+      const serverFileContent = tree.read('app1/server.ts', 'utf-8');
+      expect(serverFileContent).toContain(
+        `resolve(serverDistFolder, '../public')`
+      );
+    });
+
+    it('should remove "outputPath.browser" when it is an empty string', async () => {
+      const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
+      const project = readProjectConfiguration(tree, 'app1');
+      project.targets.build.options.outputPath = {
+        base: project.targets.build.options.outputPath,
+        browser: '',
+        server: 'node-server',
+      };
+      updateProjectConfiguration(tree, 'app1', project);
+
+      await setupSsr(tree, { project: 'app1' });
+
+      const updatedProject = readProjectConfiguration(tree, 'app1');
+      expect(updatedProject.targets.build.options.outputPath).toStrictEqual({
+        base: 'dist/app1',
+        server: 'node-server',
+      });
+    });
   });
 
   describe('with browser builder', () => {
@@ -150,10 +191,11 @@ describe('setupSSR', () => {
         name: 'app1',
         standalone: false,
         bundler: 'webpack',
+        skipFormat: true,
       });
 
       // ACT
-      await setupSsr(tree, { project: 'app1' });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       // ASSERT
       expect(
@@ -182,11 +224,15 @@ describe('setupSSR', () => {
           "compilerOptions": {
             "outDir": "../../out-tsc/server",
             "target": "es2019",
-            "types": ["node"]
+            "types": [
+              "node"
+            ]
           },
-          "files": ["src/main.server.ts", "server.ts"]
-        }
-        "
+          "files": [
+            "src/main.server.ts",
+            "server.ts",
+          ]
+        }"
       `);
       expect(tree.read('app1/src/app/app.server.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -197,19 +243,18 @@ describe('setupSSR', () => {
         import { AppComponent } from './app.component';
 
         @NgModule({
-          imports: [AppModule, ServerModule],
+          imports: [
+            AppModule,
+            ServerModule,
+          ],
           bootstrap: [AppComponent],
         })
-        export class AppServerModule {}
-        "
+        export class AppServerModule {}"
       `);
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { NgModule } from '@angular/core';
-        import {
-          BrowserModule,
-          provideClientHydration,
-        } from '@angular/platform-browser';
+        import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
         import { RouterModule } from '@angular/router';
         import { AppComponent } from './app.component';
         import { appRoutes } from './app.routes';
@@ -217,7 +262,10 @@ describe('setupSSR', () => {
 
         @NgModule({
           declarations: [AppComponent, NxWelcomeComponent],
-          imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
+          imports: [
+            BrowserModule,
+            RouterModule.forRoot(appRoutes),
+          ],
           providers: [provideClientHydration()],
           bootstrap: [AppComponent],
         })
@@ -234,10 +282,11 @@ describe('setupSSR', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         bundler: 'webpack',
+        skipFormat: true,
       });
 
       // ACT
-      await setupSsr(tree, { project: 'app1' });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       // ASSERT
       expect(
@@ -263,11 +312,15 @@ describe('setupSSR', () => {
           "compilerOptions": {
             "outDir": "../../out-tsc/server",
             "target": "es2019",
-            "types": ["node"]
+            "types": [
+              "node"
+            ]
           },
-          "files": ["src/main.server.ts", "server.ts"]
-        }
-        "
+          "files": [
+            "src/main.server.ts",
+            "server.ts",
+          ]
+        }"
       `);
       expect(tree.read('app1/src/app/app.config.server.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -276,7 +329,9 @@ describe('setupSSR', () => {
         import { appConfig } from './app.config';
 
         const serverConfig: ApplicationConfig = {
-          providers: [provideServerRendering()],
+          providers: [
+            provideServerRendering()
+          ]
         };
 
         export const config = mergeApplicationConfig(appConfig, serverConfig);
@@ -292,13 +347,14 @@ describe('setupSSR', () => {
         name: 'app1',
         standalone: false,
         bundler: 'webpack',
+        skipFormat: true,
       });
       // verify default output path
       expect(
         readProjectConfiguration(tree, 'app1').targets.build.options.outputPath
       ).toBe('dist/app1');
 
-      await setupSsr(tree, { project: 'app1' });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       expect(
         readProjectConfiguration(tree, 'app1').targets.build.options.outputPath
@@ -308,9 +364,9 @@ describe('setupSSR', () => {
 
   it('should install the correct dependencies', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: 'app1' });
+    await generateTestApplication(tree, { name: 'app1', skipFormat: true });
 
-    await setupSsr(tree, { project: 'app1' });
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
 
     const { dependencies, devDependencies } = readJson<PackageJson>(
       tree,
@@ -331,19 +387,21 @@ describe('setupSSR', () => {
     await generateTestApplication(tree, {
       name: 'app1',
       standalone: false,
+      skipFormat: true,
     });
 
     // ACT
-    await setupSsr(tree, { project: 'app1', hydration: true });
+    await setupSsr(tree, {
+      project: 'app1',
+      hydration: true,
+      skipFormat: true,
+    });
 
     // ASSERT
     expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { NgModule } from '@angular/core';
-      import {
-        BrowserModule,
-        provideClientHydration,
-      } from '@angular/platform-browser';
+      import { BrowserModule, provideClientHydration } from '@angular/platform-browser';
       import { RouterModule } from '@angular/router';
       import { AppComponent } from './app.component';
       import { appRoutes } from './app.routes';
@@ -351,7 +409,10 @@ describe('setupSSR', () => {
 
       @NgModule({
         declarations: [AppComponent, NxWelcomeComponent],
-        imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
+        imports: [
+          BrowserModule,
+          RouterModule.forRoot(appRoutes),
+        ],
         providers: [provideClientHydration()],
         bootstrap: [AppComponent],
       })
@@ -366,10 +427,15 @@ describe('setupSSR', () => {
 
     await generateTestApplication(tree, {
       name: 'app1',
+      skipFormat: true,
     });
 
     // ACT
-    await setupSsr(tree, { project: 'app1', hydration: true });
+    await setupSsr(tree, {
+      project: 'app1',
+      hydration: true,
+      skipFormat: true,
+    });
 
     // ASSERT
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
@@ -380,7 +446,7 @@ describe('setupSSR', () => {
       import { provideClientHydration } from '@angular/platform-browser';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideClientHydration(), provideRouter(appRoutes)],
+        providers: [provideClientHydration(),provideRouter(appRoutes) ]
       };
       "
     `);
@@ -392,7 +458,9 @@ describe('setupSSR', () => {
       import { appConfig } from './app.config';
 
       const serverConfig: ApplicationConfig = {
-        providers: [provideServerRendering()],
+        providers: [
+          provideServerRendering()
+        ]
       };
 
       export const config = mergeApplicationConfig(appConfig, serverConfig);
@@ -406,9 +474,14 @@ describe('setupSSR', () => {
     await generateTestApplication(tree, {
       name: 'app1',
       standalone: false,
+      skipFormat: true,
     });
 
-    await setupSsr(tree, { project: 'app1', hydration: false });
+    await setupSsr(tree, {
+      project: 'app1',
+      hydration: false,
+      skipFormat: true,
+    });
 
     expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
@@ -435,21 +508,22 @@ describe('setupSSR', () => {
 
   it('should set "withEnabledBlockingInitialNavigation()" in "provideRouter" features when hydration=false', async () => {
     const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    await generateTestApplication(tree, { name: 'app1' });
+    await generateTestApplication(tree, { name: 'app1', skipFormat: true });
 
-    await setupSsr(tree, { project: 'app1', hydration: false });
+    await setupSsr(tree, {
+      project: 'app1',
+      hydration: false,
+      skipFormat: true,
+    });
 
     expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
       "import { ApplicationConfig } from '@angular/core';
-      import {
-        provideRouter,
-        withEnabledBlockingInitialNavigation,
-      } from '@angular/router';
+      import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
       import { appRoutes } from './app.routes';
 
       export const appConfig: ApplicationConfig = {
-        providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+        providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
       };
       "
     `);
@@ -463,6 +537,7 @@ describe('setupSSR', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         standalone: false,
+        skipFormat: true,
       });
 
       updateJson(tree, 'package.json', (json) => ({
@@ -473,7 +548,7 @@ describe('setupSSR', () => {
       }));
 
       // ACT
-      await setupSsr(tree, { project: 'app1' });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       // ASSERT
       const pkgJson = readJson(tree, 'package.json');
@@ -500,10 +575,11 @@ describe('setupSSR', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         standalone: false,
+        skipFormat: true,
       });
 
       // ACT
-      await setupSsr(tree, { project: 'app1' });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       // ASSERT
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
@@ -540,10 +616,11 @@ describe('setupSSR', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         standalone: false,
+        skipFormat: true,
       });
 
       // ACT
-      await setupSsr(tree, { project: 'app1' });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       // ASSERT
       expect(tree.read('app1/src/app/app.module.ts', 'utf-8'))
@@ -577,23 +654,20 @@ describe('setupSSR', () => {
         dependencies: { ...json.dependencies, '@angular/core': '^15.2.0' },
       }));
 
-      await generateTestApplication(tree, { name: 'app1' });
+      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
 
       // ACT
-      await setupSsr(tree, { project: 'app1' });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       // ASSERT
       expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { ApplicationConfig } from '@angular/platform-browser';
-        import {
-          provideRouter,
-          withEnabledBlockingInitialNavigation,
-        } from '@angular/router';
+        import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
         import { appRoutes } from './app.routes';
 
         export const appConfig: ApplicationConfig = {
-          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
         };
         "
       `);
@@ -605,6 +679,7 @@ describe('setupSSR', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         standalone: false,
+        skipFormat: true,
       });
       updateJson(tree, 'package.json', (json) => ({
         ...json,
@@ -612,7 +687,7 @@ describe('setupSSR', () => {
       }));
 
       // ACT
-      await setupSsr(tree, { project: 'app1' });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       // ASSERT
       expect(tree.read('app1/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
@@ -645,9 +720,10 @@ describe('setupSSR', () => {
       await generateTestApplication(tree, {
         name: 'app1',
         standalone: false,
+        skipFormat: true,
       });
 
-      await setupSsr(tree, { project: 'app1' });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       expect(tree.read('app1/server.ts', 'utf-8')).toMatchSnapshot();
     });
@@ -660,21 +736,18 @@ describe('setupSSR', () => {
           '@angular/core': '15.2.0',
         },
       }));
-      await generateTestApplication(tree, { name: 'app1' });
+      await generateTestApplication(tree, { name: 'app1', skipFormat: true });
 
-      await setupSsr(tree, { project: 'app1' });
+      await setupSsr(tree, { project: 'app1', skipFormat: true });
 
       expect(tree.read('app1/src/app/app.config.ts', 'utf-8'))
         .toMatchInlineSnapshot(`
         "import { ApplicationConfig } from '@angular/platform-browser';
-        import {
-          provideRouter,
-          withEnabledBlockingInitialNavigation,
-        } from '@angular/router';
+        import { provideRouter, withEnabledBlockingInitialNavigation } from '@angular/router';
         import { appRoutes } from './app.routes';
 
         export const appConfig: ApplicationConfig = {
-          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation())],
+          providers: [provideRouter(appRoutes, withEnabledBlockingInitialNavigation()) ]
         };
         "
       `);

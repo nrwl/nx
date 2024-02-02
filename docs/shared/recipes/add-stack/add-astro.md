@@ -39,7 +39,7 @@ We can leverage [`nx init`](/recipes/adopting-nx/adding-to-existing-project#inst
 ✔ Which of the following scripts are cacheable? (Produce the same output given the same input, e.g. build, test and lint usually are, serve and start are not). You can use spacebar to select one or more scripts. · build
 
 ✔ Does the "build" script create any outputs? If not, leave blank, otherwise provide a path (e.g. dist, lib, build, coverage) · dist
-✔ Enable distributed caching to make your CI faster · No
+✔ Would you like remote caching to make your build faster? · Yes
 
  >  NX   📦 Installing dependencies
 
@@ -83,9 +83,29 @@ Install `@nx/js` plugin.
 
 > Note: you should make sure any first party, `@nx/` scoped, plugins match the `nx` package version
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm i -DE @nx/js@<nx-version>
+npm add -DE @nx/js@<nx-version>
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -DE @nx/js@<nx-version>
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -DE @nx/js@<nx-version>
+```
+
+{% /tab %}
+{% /tabs %}
 
 Then generate a project
 
@@ -93,7 +113,7 @@ Then generate a project
 The command below uses the `as-provided` directory flag behavior, which is the default in Nx 16.8.0. If you're on an earlier version of Nx or using the `derived` option, omit the `--directory` flag. See the [as-provided vs. derived documentation](/deprecated/as-provided-vs-derived) for more details.
 {% /callout %}
 
-```{% command="nx g @nx/js:lib ui --directory=libs/ui --simpleName --minimal}
+```{% command="nx g @nx/js:lib ui --directory=libs/ui --simpleName --minimal"%}
 >  NX  Generating @nx/js:library
 
 ✔ Which unit test runner would you like to use? · none

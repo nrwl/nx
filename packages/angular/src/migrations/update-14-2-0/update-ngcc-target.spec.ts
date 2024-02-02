@@ -1,8 +1,15 @@
 import { readJson } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import updateNgccTarget from './update-ngcc-target';
 
 describe('update-ngcc-postinstall-target migration', () => {
+  beforeEach(() => {
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
+  });
+
   [
     {
       test: 'node ./decorate-angular-cli.js && ngcc --properties es2015 browser module main',

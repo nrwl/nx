@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   NxJsonConfiguration,
   readJson,
+  readNxJson,
   Tree,
   updateJson,
 } from '@nx/devkit';
@@ -18,7 +19,7 @@ describe('@nx/vite:init', () => {
   });
 
   describe('dependencies for package.json', () => {
-    it('should add vite packages and react-related dependencies for vite', async () => {
+    it('should add required packages', async () => {
       const existing = 'existing';
       const existingVersion = '1.0.0';
       addDependenciesToPackageJson(
@@ -27,41 +28,8 @@ describe('@nx/vite:init', () => {
         { [existing]: existingVersion }
       );
       await initGenerator(tree, {
-        uiFramework: 'react',
+        addPlugin: true,
       });
-      const packageJson = readJson(tree, 'package.json');
-
-      expect(packageJson).toMatchSnapshot();
-    });
-
-    it('should support --testEnvironment=jsdom', async () => {
-      await initGenerator(tree, {
-        testEnvironment: 'jsdom',
-        uiFramework: 'none',
-      });
-
-      const packageJson = readJson(tree, 'package.json');
-
-      expect(packageJson).toMatchSnapshot();
-    });
-
-    it('should support --testEnvironment=happy-dom', async () => {
-      await initGenerator(tree, {
-        testEnvironment: 'happy-dom',
-        uiFramework: 'none',
-      });
-
-      const packageJson = readJson(tree, 'package.json');
-
-      expect(packageJson).toMatchSnapshot();
-    });
-
-    it('should support --testEnvironment=edge-runtime', async () => {
-      await initGenerator(tree, {
-        testEnvironment: 'edge-runtime',
-        uiFramework: 'none',
-      });
-
       const packageJson = readJson(tree, 'package.json');
 
       expect(packageJson).toMatchSnapshot();
@@ -76,24 +44,46 @@ describe('@nx/vite:init', () => {
         return json;
       });
 
-      await initGenerator(tree, { uiFramework: 'react' });
-
-      const productionNamedInputs = readJson(tree, 'nx.json').namedInputs
-        .production;
-      const vitestDefaults = readJson(tree, 'nx.json').targetDefaults[
-        '@nx/vite:test'
-      ];
-
-      expect(productionNamedInputs).toContain(
-        '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)'
-      );
-      expect(productionNamedInputs).toContain(
-        '!{projectRoot}/tsconfig.spec.json'
-      );
-      expect(vitestDefaults).toEqual({
-        cache: true,
-        inputs: ['default', '^production'],
+      await initGenerator(tree, {
+        addPlugin: true,
       });
+
+      const nxJson = readNxJson(tree);
+
+      expect(nxJson).toMatchInlineSnapshot(`
+        {
+          "affected": {
+            "defaultBase": "main",
+          },
+          "namedInputs": {
+            "production": [
+              "default",
+              "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
+              "!{projectRoot}/tsconfig.spec.json",
+            ],
+          },
+          "plugins": [
+            {
+              "options": {
+                "buildTargetName": "build",
+                "previewTargetName": "preview",
+                "serveStaticTargetName": "serve-static",
+                "serveTargetName": "serve",
+                "testTargetName": "test",
+              },
+              "plugin": "@nx/vite/plugin",
+            },
+          ],
+          "targetDefaults": {
+            "build": {
+              "cache": true,
+            },
+            "lint": {
+              "cache": true,
+            },
+          },
+        }
+      `);
     });
   });
 });

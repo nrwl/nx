@@ -24,10 +24,23 @@ import {
   vitestCoverageV8Version,
 } from '../../utils/versions';
 
-import { addTsLibDependencies } from '@nx/js';
+import { addTsLibDependencies, initGenerator as jsInitGenerator } from '@nx/js';
 import { join } from 'path';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
-export async function vitestGenerator(
+export function vitestGenerator(
+  tree: Tree,
+  schema: VitestGeneratorSchema,
+  hasPlugin = false
+) {
+  return vitestGeneratorInternal(
+    tree,
+    { addPlugin: false, ...schema },
+    hasPlugin
+  );
+}
+
+export async function vitestGeneratorInternal(
   tree: Tree,
   schema: VitestGeneratorSchema,
   hasPlugin = false
@@ -38,6 +51,14 @@ export async function vitestGenerator(
     tree,
     schema.project
   );
+
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
+  const initTask = await initGenerator(tree, {
+    skipFormat: true,
+    addPlugin: schema.addPlugin,
+  });
+  tasks.push(initTask);
+  tasks.push(ensureDependencies(tree, schema));
 
   const nxJson = readNxJson(tree);
   const hasPluginCheck = nxJson.plugins?.some(
@@ -53,11 +74,6 @@ export async function vitestGenerator(
       'test';
     addOrChangeTestTarget(tree, schema, testTarget);
   }
-  const initTask = await initGenerator(tree, {
-    uiFramework: schema.uiFramework,
-    testEnvironment: schema.testEnvironment,
-  });
-  tasks.push(initTask);
 
   if (!schema.skipViteConfig) {
     if (schema.uiFramework === 'react') {

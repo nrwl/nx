@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createProjectGraphAsync, workspaceRoot } from '@nx/devkit';
+import * as chalk from 'chalk';
 import { execSync } from 'node:child_process';
 import { rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -57,6 +58,9 @@ const LARGE_BUFFER = 1024 * 1000000;
     if (options.dryRun) {
       versionCommand += ' --dry-run';
     }
+    if (isVerboseLogging) {
+      versionCommand += ' --verbose';
+    }
     console.log(`> ${versionCommand}`);
     execSync(versionCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
@@ -94,6 +98,9 @@ const LARGE_BUFFER = 1024 * 1000000;
     if (options.dryRun) {
       changelogCommand += ' --dry-run';
     }
+    if (isVerboseLogging) {
+      changelogCommand += ' --verbose';
+    }
     console.log(`> ${changelogCommand}`);
     execSync(changelogCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
@@ -113,13 +120,15 @@ const LARGE_BUFFER = 1024 * 1000000;
     maxBuffer: LARGE_BUFFER,
   });
 
+  const distTag = determineDistTag(options.version);
+
   if (options.dryRun) {
     console.warn('Not Publishing because --dryRun was passed');
   } else {
     // If publishing locally, force all projects to not be private first
     if (options.local) {
       console.log(
-        '\nPublishing locally, so setting all resolved packages to not be private'
+        chalk.dim`\n  Publishing locally, so setting all packages with existing nx-release-publish targets to not be private. If you have created a new private package and you want it to be published, you will need to manually configure the "nx-release-publish" target using executor "@nx/js:release-publish"`
       );
       const projectGraph = await createProjectGraphAsync();
       for (const proj of Object.values(projectGraph.nodes)) {
@@ -146,8 +155,6 @@ const LARGE_BUFFER = 1024 * 1000000;
       }
     }
 
-    const distTag = determineDistTag(options.version);
-
     // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
     let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
     if (options.dryRun) {
@@ -159,6 +166,16 @@ const LARGE_BUFFER = 1024 * 1000000;
       maxBuffer: LARGE_BUFFER,
     });
   }
+
+  let version;
+  if (['minor', 'major', 'patch'].includes(options.version)) {
+    version = execSync(`npm view nx@${distTag} version`).toString().trim();
+  } else {
+    version = options.version;
+  }
+
+  console.log(chalk.green` > Published version: ` + version);
+  console.log(chalk.dim`   Use: npx create-nx-workspace@${version}\n`);
 
   process.exit(0);
 })();

@@ -4,6 +4,7 @@ describe('Nx Cloud', () => {
   beforeAll(() =>
     newProject({
       unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/js'],
     })
   );
 

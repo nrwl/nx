@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { addProjectConfiguration, stripIndents } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Builders } from '@schematics/angular/utility/workspace-models';
 import updateKarmaMainFile from './update-karma-main-file';
@@ -8,6 +9,9 @@ describe(`Migration to karma builder main file (test.ts)`, () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
     addProjectConfiguration(tree, 'app', {
       root: '',
       sourceRoot: 'src',
@@ -90,16 +94,16 @@ describe(`Migration to karma builder main file (test.ts)`, () => {
     expect(tree.read('test.ts', 'utf-8')).toMatchInlineSnapshot(`
       "import { getTestBed } from '@angular/core/testing';
       import {
-        BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting,
+      BrowserDynamicTestingModule,
+      platformBrowserDynamicTesting
       } from '@angular/platform-browser-dynamic/testing';
       // First, initialize the Angular testing environment.
       getTestBed().initTestEnvironment(
-        BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting()
-      );
-      "
+      BrowserDynamicTestingModule,
+      platformBrowserDynamicTesting(),
+      );"
     `);
+    expect(devkit.formatFiles).toHaveBeenCalled();
   });
 
   it(`should remove multiple 'require.context' usages`, async () => {
@@ -109,15 +113,14 @@ describe(`Migration to karma builder main file (test.ts)`, () => {
       .toMatchInlineSnapshot(`
       "import { getTestBed } from '@angular/core/testing';
       import {
-        BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting,
+      BrowserDynamicTestingModule,
+      platformBrowserDynamicTesting
       } from '@angular/platform-browser-dynamic/testing';
       // First, initialize the Angular testing environment.
       getTestBed().initTestEnvironment(
-        BrowserDynamicTestingModule,
-        platformBrowserDynamicTesting()
-      );
-      "
+      BrowserDynamicTestingModule,
+      platformBrowserDynamicTesting(),
+      );"
     `);
   });
 });

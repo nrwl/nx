@@ -18,7 +18,7 @@ export function ImproveWorstCiCase(): JSX.Element {
         <div className="mt-8 flex lg:mt-0 lg:flex-shrink-0">
           <div className="inline-flex rounded-md">
             <ButtonLink
-              href="/concepts/dte"
+              href="/ci/concepts/parallelization-distribution"
               title="Improve your worst case CI times"
               variant="secondary"
               size="large"

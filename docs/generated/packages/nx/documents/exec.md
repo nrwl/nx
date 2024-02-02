@@ -5,15 +5,69 @@ description: 'Executes any command as if it was a target on the project'
 
 # exec
 
-Executes any command as if it was a target on the project
+- Executes any command as if it was a target on the project
+- Executes an arbitrary command in each package
 
 ## Usage
 
-```shell
-nx exec
+In package.json, adding a script with `nx exec` will run the command as if it is a target that project:
+
+```json
+{
+  "name": "myorg",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "nx exec -- <command> [..args]"
+  }
+}
+```
+
+It will run the command for `myorg`.
+
+When run from the terminal, `nx exec` will run the command for all projects in the workspace:
+
+```
+nx exec -- <command> [..args] # runs the command in all projects
+nx exec -- tsc
+nx exec -- echo \$NX_PROJECT_NAME
+nx exec -- echo \$NX_PROJECT_ROOT_PATH
 ```
 
 Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`, `yarn nx`, or `pnpm nx`.
+
+## Examples
+
+You can use `npm run <command>` for a project and leverage the caching by wrap your command with `nx exec`.
+
+For example, you can run `npm run docs` as a Nx target for `myorg`:
+
+```
+{
+  "name": "myorg",
+  "nx": {},
+  "scripts": {
+    "docs": "nx exec -- node ./scripts/some-script.js"
+  }
+}
+```
+
+You may also run a script located in the project directory for all projects:
+
+```
+nx exec -- node ./scripts/some-script.js
+```
+
+The name of the current project is available through the environment variable $NX_PROJECT_NAME:
+
+```
+nx exec -- echo \$NX_PROJECT_NAME
+```
+
+The location of current project is available through the environment variable $NX_PROJECT_ROOT_PATH:
+
+```
+nx exec -- echo \$NX_PROJECT_ROOT_PATH
+```
 
 ## Options
 

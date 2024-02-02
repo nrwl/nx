@@ -871,6 +871,17 @@
         "tags": ["integrate-with-editors"]
       },
       {
+        "id": "manage-releases",
+        "name": "Manage Releases",
+        "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+        "mediaImage": "",
+        "file": "shared/core-features/manage-releases",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/core-features/manage-releases",
+        "tags": ["manage-releases"]
+      },
+      {
         "id": "plugin-features",
         "name": "Plugin Features",
         "description": "Learn what is a plugin, the different type of plugins and how to create one.",
@@ -996,6 +1007,17 @@
     "isExternal": false,
     "path": "/core-features/integrate-with-editors",
     "tags": ["integrate-with-editors"]
+  },
+  "/core-features/manage-releases": {
+    "id": "manage-releases",
+    "name": "Manage Releases",
+    "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+    "mediaImage": "",
+    "file": "shared/core-features/manage-releases",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/core-features/manage-releases",
+    "tags": ["manage-releases"]
   },
   "/core-features/plugin-features": {
     "id": "plugin-features",
@@ -2654,6 +2676,29 @@
         "tags": []
       },
       {
+        "id": "nuxt",
+        "name": "Nuxt",
+        "description": "Nuxt related recipes",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "deploy-nuxt-to-vercel",
+            "name": "Deploying Nuxt applications to Vercel",
+            "description": "A detailed guide on how to deploy Nuxt applications from Nx workspaces to Vercel.",
+            "mediaImage": "",
+            "file": "shared/recipes/deployment/deploy-nuxt-to-vercel",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/nuxt",
+        "tags": []
+      },
+      {
         "id": "vite",
         "name": "Vite",
         "description": "Vite related recipes",
@@ -3209,6 +3254,62 @@
         ],
         "isExternal": false,
         "path": "/recipes/nx-console",
+        "tags": []
+      },
+      {
+        "id": "nx-release",
+        "name": "Nx Release",
+        "description": "Recipes for releasing with Nx release.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "get-started-with-nx-release",
+            "name": "Get Started with Nx Release",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/get-started-with-nx-release",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/get-started-with-nx-release",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "release-projects-independently",
+            "name": "Release Projects Independently",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/release-projects-independently",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/release-projects-independently",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "automatically-version-with-conventional-commits",
+            "name": "Automatically Version with Conventional Commits",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+            "tags": ["nx-release"]
+          },
+          {
+            "id": "publish-in-ci-cd",
+            "name": "Publish in CI/CD",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/nx-release/publish-in-ci-cd",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-release/publish-in-ci-cd",
+            "tags": ["nx-release"]
+          }
+        ],
+        "isExternal": false,
+        "path": "/recipes/nx-release",
         "tags": []
       },
       {
@@ -4625,6 +4726,40 @@
     "path": "/recipes/next/next-config-setup",
     "tags": []
   },
+  "/recipes/nuxt": {
+    "id": "nuxt",
+    "name": "Nuxt",
+    "description": "Nuxt related recipes",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "deploy-nuxt-to-vercel",
+        "name": "Deploying Nuxt applications to Vercel",
+        "description": "A detailed guide on how to deploy Nuxt applications from Nx workspaces to Vercel.",
+        "mediaImage": "",
+        "file": "shared/recipes/deployment/deploy-nuxt-to-vercel",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/nuxt",
+    "tags": []
+  },
+  "/recipes/nuxt/deploy-nuxt-to-vercel": {
+    "id": "deploy-nuxt-to-vercel",
+    "name": "Deploying Nuxt applications to Vercel",
+    "description": "A detailed guide on how to deploy Nuxt applications from Nx workspaces to Vercel.",
+    "mediaImage": "",
+    "file": "shared/recipes/deployment/deploy-nuxt-to-vercel",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+    "tags": []
+  },
   "/recipes/vite": {
     "id": "vite",
     "name": "Vite",
@@ -5645,6 +5780,106 @@
     "path": "/recipes/nx-console/console-troubleshooting",
     "tags": ["integrate-with-editors"]
   },
+  "/recipes/nx-release": {
+    "id": "nx-release",
+    "name": "Nx Release",
+    "description": "Recipes for releasing with Nx release.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "get-started-with-nx-release",
+        "name": "Get Started with Nx Release",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/get-started-with-nx-release",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/get-started-with-nx-release",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "release-projects-independently",
+        "name": "Release Projects Independently",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/release-projects-independently",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/release-projects-independently",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "automatically-version-with-conventional-commits",
+        "name": "Automatically Version with Conventional Commits",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+        "tags": ["nx-release"]
+      },
+      {
+        "id": "publish-in-ci-cd",
+        "name": "Publish in CI/CD",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/nx-release/publish-in-ci-cd",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-release/publish-in-ci-cd",
+        "tags": ["nx-release"]
+      }
+    ],
+    "isExternal": false,
+    "path": "/recipes/nx-release",
+    "tags": []
+  },
+  "/recipes/nx-release/get-started-with-nx-release": {
+    "id": "get-started-with-nx-release",
+    "name": "Get Started with Nx Release",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/get-started-with-nx-release",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/get-started-with-nx-release",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/release-projects-independently": {
+    "id": "release-projects-independently",
+    "name": "Release Projects Independently",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/release-projects-independently",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/release-projects-independently",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/automatically-version-with-conventional-commits": {
+    "id": "automatically-version-with-conventional-commits",
+    "name": "Automatically Version with Conventional Commits",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+    "tags": ["nx-release"]
+  },
+  "/recipes/nx-release/publish-in-ci-cd": {
+    "id": "publish-in-ci-cd",
+    "name": "Publish in CI/CD",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/nx-release/publish-in-ci-cd",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-release/publish-in-ci-cd",
+    "tags": ["nx-release"]
+  },
   "/recipes/other": {
     "id": "other",
     "name": "Other",
@@ -5760,17 +5995,6 @@
             "tags": []
           },
           {
-            "id": "add-nuxt",
-            "name": "Add a Nuxt Project",
-            "description": "Add a nuxt project to your repo",
-            "mediaImage": "",
-            "file": "shared/recipes/add-stack/add-nuxt",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/showcase/example-repos/add-nuxt",
-            "tags": []
-          },
-          {
             "id": "add-astro",
             "name": "Add an Astro Project",
             "description": "Add Nx to an Astro project",
@@ -5779,17 +6003,6 @@
             "itemList": [],
             "isExternal": false,
             "path": "/showcase/example-repos/add-astro",
-            "tags": []
-          },
-          {
-            "id": "add-vue",
-            "name": "Add a Vue Project",
-            "description": "Add a Vue project to your repo",
-            "mediaImage": "",
-            "file": "shared/recipes/add-stack/add-vue",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/showcase/example-repos/add-vue",
             "tags": []
           },
           {
@@ -6020,17 +6233,6 @@
         "tags": []
       },
       {
-        "id": "add-nuxt",
-        "name": "Add a Nuxt Project",
-        "description": "Add a nuxt project to your repo",
-        "mediaImage": "",
-        "file": "shared/recipes/add-stack/add-nuxt",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/showcase/example-repos/add-nuxt",
-        "tags": []
-      },
-      {
         "id": "add-astro",
         "name": "Add an Astro Project",
         "description": "Add Nx to an Astro project",
@@ -6039,17 +6241,6 @@
         "itemList": [],
         "isExternal": false,
         "path": "/showcase/example-repos/add-astro",
-        "tags": []
-      },
-      {
-        "id": "add-vue",
-        "name": "Add a Vue Project",
-        "description": "Add a Vue project to your repo",
-        "mediaImage": "",
-        "file": "shared/recipes/add-stack/add-vue",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/showcase/example-repos/add-vue",
         "tags": []
       },
       {
@@ -6222,17 +6413,6 @@
     "path": "/showcase/example-repos/add-dotnet",
     "tags": []
   },
-  "/showcase/example-repos/add-nuxt": {
-    "id": "add-nuxt",
-    "name": "Add a Nuxt Project",
-    "description": "Add a nuxt project to your repo",
-    "mediaImage": "",
-    "file": "shared/recipes/add-stack/add-nuxt",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/showcase/example-repos/add-nuxt",
-    "tags": []
-  },
   "/showcase/example-repos/add-astro": {
     "id": "add-astro",
     "name": "Add an Astro Project",
@@ -6242,17 +6422,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/showcase/example-repos/add-astro",
-    "tags": []
-  },
-  "/showcase/example-repos/add-vue": {
-    "id": "add-vue",
-    "name": "Add a Vue Project",
-    "description": "Add a Vue project to your repo",
-    "mediaImage": "",
-    "file": "shared/recipes/add-stack/add-vue",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/showcase/example-repos/add-vue",
     "tags": []
   },
   "/showcase/example-repos/add-svelte": {

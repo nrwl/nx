@@ -14,7 +14,7 @@ import { angularStoriesGenerator } from './stories';
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
-// TODO(katerina): Nx 18 -> remove Cypress
+// TODO(katerina): Nx 19 -> remove Cypress
 
 describe('angularStories generator: libraries', () => {
   const libName = 'test-ui-lib';
@@ -31,7 +31,7 @@ describe('angularStories generator: libraries', () => {
 
     beforeEach(async () => {
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-      await generateTestLibrary(tree, { name: libName });
+      await generateTestLibrary(tree, { name: libName, skipFormat: true });
     });
 
     it('should not fail on empty NgModule declarations', () => {
@@ -57,12 +57,14 @@ describe('angularStories generator: libraries', () => {
       await librarySecondaryEntryPointGenerator(tree, {
         library: libName,
         name: 'secondary-entry-point',
+        skipFormat: true,
       });
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-button',
         project: libName,
         path: `${libName}/secondary-entry-point/src/lib`,
+        skipFormat: true,
       });
 
       await angularStoriesGenerator(tree, { name: libName });
@@ -102,9 +104,13 @@ describe('angularStories generator: libraries', () => {
 
     it('should run twice without errors', async () => {
       try {
-        await angularStoriesGenerator(tree, { name: libName });
         await angularStoriesGenerator(tree, {
           name: libName,
+          skipFormat: true,
+        });
+        await angularStoriesGenerator(tree, {
+          name: libName,
+          skipFormat: true,
         });
       } catch {
         fail('Should not fail when running it twice.');
@@ -114,6 +120,7 @@ describe('angularStories generator: libraries', () => {
     it('should handle modules with variable declarations rather than literals', async () => {
       await angularStoriesGenerator(tree, {
         name: libName,
+        skipFormat: true,
       });
 
       expect(
@@ -131,6 +138,7 @@ describe('angularStories generator: libraries', () => {
     it('should handle modules with where components are spread into the declarations array', async () => {
       await angularStoriesGenerator(tree, {
         name: libName,
+        skipFormat: true,
       });
 
       expect(
@@ -153,6 +161,7 @@ describe('angularStories generator: libraries', () => {
     it('should handle modules using static members for declarations rather than literals', async () => {
       await angularStoriesGenerator(tree, {
         name: libName,
+        skipFormat: true,
       });
 
       expect(
@@ -168,9 +177,13 @@ describe('angularStories generator: libraries', () => {
     });
 
     it('should generate stories file for scam component', async () => {
-      await scamGenerator(tree, { name: 'my-scam', project: libName });
+      await scamGenerator(tree, {
+        name: 'my-scam',
+        project: libName,
+        skipFormat: true,
+      });
 
-      await angularStoriesGenerator(tree, { name: libName });
+      await angularStoriesGenerator(tree, { name: libName, skipFormat: true });
 
       expect(
         tree.exists(`${libName}/src/lib/my-scam/my-scam.component.stories.ts`)
@@ -182,9 +195,10 @@ describe('angularStories generator: libraries', () => {
         name: 'my-scam',
         project: libName,
         inlineScam: true,
+        skipFormat: true,
       });
 
-      await angularStoriesGenerator(tree, { name: libName });
+      await angularStoriesGenerator(tree, { name: libName, skipFormat: true });
 
       expect(
         tree.exists(`${libName}/src/lib/my-scam/my-scam.component.stories.ts`)
@@ -197,12 +211,14 @@ describe('angularStories generator: libraries', () => {
         name: 'standalone',
         project: libName,
         standalone: true,
+        skipFormat: true,
       });
       // add secondary entrypoint
       writeJson(tree, `${libName}/package.json`, { name: libName });
       await librarySecondaryEntryPointGenerator(tree, {
         library: libName,
         name: 'secondary-entry-point',
+        skipFormat: true,
       });
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
@@ -210,6 +226,7 @@ describe('angularStories generator: libraries', () => {
         project: libName,
         path: `${libName}/secondary-entry-point/src/lib`,
         standalone: true,
+        skipFormat: true,
       });
 
       await angularStoriesGenerator(tree, { name: libName });
@@ -244,12 +261,14 @@ describe('angularStories generator: libraries', () => {
       await librarySecondaryEntryPointGenerator(tree, {
         library: libName,
         name: 'secondary-entry-point',
+        skipFormat: true,
       });
       // add a standalone component to the secondary entrypoint
       await componentGenerator(tree, {
         name: 'secondary-button',
         project: libName,
         path: `${libName}/secondary-entry-point/src/lib`,
+        skipFormat: true,
       });
 
       await angularStoriesGenerator(tree, {
@@ -258,6 +277,7 @@ describe('angularStories generator: libraries', () => {
           `${libName}/src/lib/barrel/**`,
           `${libName}/secondary-entry-point/**`,
         ],
+        skipFormat: true,
       });
 
       expect(

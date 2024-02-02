@@ -61,17 +61,24 @@ Which tells yarn (or npm) and Nx to look in the `packages` folder for projects t
 To install Eleventy run:
 
 {% tabs %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D -W @11ty/eleventy@1.0.0
-```
-
-{% /tab %}
 {% tab label="npm" %}
 
 ```shell
-npm install -D @11ty/eleventy@1.0.0
+npm add -D @11ty/eleventy@1.0.0
+```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @11ty/eleventy@1.0.0
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @11ty/eleventy@1.0.0
 ```
 
 {% /tab %}

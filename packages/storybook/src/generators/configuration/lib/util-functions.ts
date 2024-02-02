@@ -33,15 +33,12 @@ import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
 
 const DEFAULT_PORT = 4400;
 
-export function addStorybookTask(
+export function addStorybookTarget(
   tree: Tree,
   projectName: string,
   uiFramework: UiFramework,
   interactionTests: boolean
 ) {
-  if (uiFramework === '@storybook/react-native') {
-    return;
-  }
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['storybook'] = {
     executor: '@nx/storybook:storybook',
@@ -82,7 +79,7 @@ export function addStorybookTask(
   updateProjectConfiguration(tree, projectName, projectConfig);
 }
 
-export function addAngularStorybookTask(
+export function addAngularStorybookTarget(
   tree: Tree,
   projectName: string,
   interactionTests: boolean
@@ -239,10 +236,6 @@ export function createStorybookTsconfigFile(
     '.storybook/*.ts',
   ];
 
-  if (uiFramework === '@storybook/react-native') {
-    include.push('*.ts', '*.tsx');
-  }
-
   const storybookTsConfig: TsConfig = {
     extends: './tsconfig.json',
     compilerOptions: {
@@ -309,8 +302,7 @@ export function configureTsProjectConfig(
       ...(tsConfigContent.exclude || []),
       '**/*.stories.ts',
       '**/*.stories.js',
-      ...(schema.uiFramework === '@storybook/react-native' ||
-      schema.uiFramework?.startsWith('@storybook/react')
+      ...(schema.uiFramework?.startsWith('@storybook/react')
         ? ['**/*.stories.jsx', '**/*.stories.tsx']
         : []),
     ];
@@ -481,45 +473,53 @@ export function addStorybookToNamedInputs(tree: Tree) {
       }
     }
 
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['build-storybook'] ??= {};
-    nxJson.targetDefaults['build-storybook'].inputs ??= [
-      'default',
-      hasProductionFileset ? '^production' : '^default',
-    ];
-
-    if (
-      !nxJson.targetDefaults['build-storybook'].inputs.includes(
-        '{projectRoot}/.storybook/**/*'
-      )
-    ) {
-      nxJson.targetDefaults['build-storybook'].inputs.push(
-        '{projectRoot}/.storybook/**/*'
-      );
-    }
-
-    // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
-    // because we want to rebuild Storybook if the .storybook folder changes
-    const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
-      '!{projectRoot}/.storybook/**/*'
-    );
-
-    if (index !== -1) {
-      nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
-    }
-
-    if (
-      !nxJson.targetDefaults['build-storybook'].inputs.includes(
-        '{projectRoot}/tsconfig.storybook.json'
-      )
-    ) {
-      nxJson.targetDefaults['build-storybook'].inputs.push(
-        '{projectRoot}/tsconfig.storybook.json'
-      );
-    }
-
     updateNxJson(tree, nxJson);
   }
+}
+
+export function addStorybookToTargetDefaults(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['build-storybook'] ??= {};
+  nxJson.targetDefaults['build-storybook'].inputs ??= [
+    'default',
+    nxJson.namedInputs && 'production' in nxJson.namedInputs
+      ? '^production'
+      : '^default',
+  ];
+
+  if (
+    !nxJson.targetDefaults['build-storybook'].inputs.includes(
+      '{projectRoot}/.storybook/**/*'
+    )
+  ) {
+    nxJson.targetDefaults['build-storybook'].inputs.push(
+      '{projectRoot}/.storybook/**/*'
+    );
+  }
+
+  // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
+  // because we want to rebuild Storybook if the .storybook folder changes
+  const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
+    '!{projectRoot}/.storybook/**/*'
+  );
+
+  if (index !== -1) {
+    nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
+  }
+
+  if (
+    !nxJson.targetDefaults['build-storybook'].inputs.includes(
+      '{projectRoot}/tsconfig.storybook.json'
+    )
+  ) {
+    nxJson.targetDefaults['build-storybook'].inputs.push(
+      '{projectRoot}/tsconfig.storybook.json'
+    );
+  }
+
+  updateNxJson(tree, nxJson);
 }
 
 export function createProjectStorybookDir(
@@ -536,7 +536,10 @@ export function createProjectStorybookDir(
   isNextJs?: boolean,
   usesSwc?: boolean,
   usesVite?: boolean,
-  viteConfigFilePath?: string
+  viteConfigFilePath?: string,
+  hasPlugin?: boolean,
+  viteConfigFileName?: string,
+  useReactNative?: boolean
 ) {
   let projectDirectory =
     projectType === 'application'
@@ -579,6 +582,9 @@ export function createProjectStorybookDir(
     usesVite,
     isRootProject: projectIsRootProjectInStandaloneWorkspace,
     viteConfigFilePath,
+    hasPlugin,
+    viteConfigFileName,
+    useReactNative,
   });
 
   if (js) {
@@ -696,18 +702,48 @@ export async function getE2EProjectName(
   return e2eProject;
 }
 
-export function getViteConfigFilePath(
+export function findViteConfig(
   tree: Tree,
-  projectRoot: string,
-  configFile?: string
+  projectRoot: string
+): {
+  fullConfigPath: string | undefined;
+  viteConfigFileName: string | undefined;
+} {
+  const allowsExt = ['js', 'mjs', 'ts', 'cjs', 'mts', 'cts'];
+
+  for (const ext of allowsExt) {
+    const viteConfigPath = joinPathFragments(projectRoot, `vite.config.${ext}`);
+    if (tree.exists(viteConfigPath)) {
+      return {
+        fullConfigPath: viteConfigPath,
+        viteConfigFileName: `vite.config.${ext}`,
+      };
+    }
+  }
+}
+
+export function findNextConfig(
+  tree: Tree,
+  projectRoot: string
 ): string | undefined {
-  return configFile && tree.exists(configFile)
-    ? configFile
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.ts`))
-    ? joinPathFragments(`${projectRoot}/vite.config.ts`)
-    : tree.exists(joinPathFragments(`${projectRoot}/vite.config.js`))
-    ? joinPathFragments(`${projectRoot}/vite.config.js`)
-    : undefined;
+  const allowsExt = ['js', 'mjs', 'cjs'];
+
+  for (const ext of allowsExt) {
+    const nextConfigPath = joinPathFragments(projectRoot, `next.config.${ext}`);
+    if (tree.exists(nextConfigPath)) {
+      return nextConfigPath;
+    }
+  }
+}
+
+export function findMetroConfig(
+  tree: Tree,
+  projectRoot: string
+): string | undefined {
+  const nextConfigPath = joinPathFragments(projectRoot, `metro.config.js`);
+  if (tree.exists(nextConfigPath)) {
+    return nextConfigPath;
+  }
 }
 
 export function renameAndMoveOldTsConfig(

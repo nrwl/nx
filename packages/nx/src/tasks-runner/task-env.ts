@@ -57,8 +57,7 @@ export function getEnvVariablesForTask(
     delete res.NX_STREAM_OUTPUT;
     delete res.NX_PREFIX_OUTPUT;
   }
-  delete res.NX_BASE;
-  delete res.NX_HEAD;
+  // we don't reset NX_BASE or NX_HEAD because those are set by the user and should be preserved
   delete res.NX_SET_CLI;
   return res;
 }

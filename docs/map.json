@@ -245,6 +245,13 @@
               "file": "shared/core-features/integrate-with-editors"
             },
             {
+              "name": "Manage Releases",
+              "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+              "id": "manage-releases",
+              "tags": ["manage-releases"],
+              "file": "shared/core-features/manage-releases"
+            },
+            {
               "name": "Plugin Features",
               "id": "plugin-features",
               "description": "Learn what is a plugin, the different type of plugins and how to create one.",
@@ -843,6 +850,19 @@
               ]
             },
             {
+              "name": "Nuxt",
+              "id": "nuxt",
+              "description": "Nuxt related recipes",
+              "itemList": [
+                {
+                  "id": "deploy-nuxt-to-vercel",
+                  "name": "Deploying Nuxt applications to Vercel",
+                  "description": "A detailed guide on how to deploy Nuxt applications from Nx workspaces to Vercel.",
+                  "file": "shared/recipes/deployment/deploy-nuxt-to-vercel"
+                }
+              ]
+            },
+            {
               "name": "Vite",
               "id": "vite",
               "description": "Vite related recipes",
@@ -1144,6 +1164,37 @@
               ]
             },
             {
+              "name": "Nx Release",
+              "id": "nx-release",
+              "description": "Recipes for releasing with Nx release.",
+              "itemList": [
+                {
+                  "name": "Get Started with Nx Release",
+                  "id": "get-started-with-nx-release",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/get-started-with-nx-release"
+                },
+                {
+                  "name": "Release Projects Independently",
+                  "id": "release-projects-independently",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/release-projects-independently"
+                },
+                {
+                  "name": "Automatically Version with Conventional Commits",
+                  "id": "automatically-version-with-conventional-commits",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
+                },
+                {
+                  "name": "Publish in CI/CD",
+                  "id": "publish-in-ci-cd",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-in-ci-cd"
+                }
+              ]
+            },
+            {
               "name": "Other",
               "id": "other",
               "description": "Other recipes you will find useful.",
@@ -1205,22 +1256,10 @@
                   "file": "shared/recipes/add-stack/add-dotnet"
                 },
                 {
-                  "name": "Add a Nuxt Project",
-                  "id": "add-nuxt",
-                  "description": "Add a nuxt project to your repo",
-                  "file": "shared/recipes/add-stack/add-nuxt"
-                },
-                {
                   "name": "Add an Astro Project",
                   "id": "add-astro",
                   "description": "Add Nx to an Astro project",
                   "file": "shared/recipes/add-stack/add-astro"
-                },
-                {
-                  "name": "Add a Vue Project",
-                  "id": "add-vue",
-                  "description": "Add a Vue project to your repo",
-                  "file": "shared/recipes/add-stack/add-vue"
                 },
                 {
                   "name": "Add a Svelte Project",
@@ -2057,6 +2096,11 @@
               "name": "release",
               "id": "release",
               "file": "generated/cli/release"
+            },
+            {
+              "name": "add",
+              "id": "add",
+              "file": "generated/cli/add"
             }
           ]
         },
@@ -2387,6 +2431,19 @@
               "name": "Overview",
               "path": "/nx-api/next",
               "file": "shared/packages/next/plugin-overview"
+            }
+          ]
+        },
+        {
+          "name": "remix",
+          "id": "remix",
+          "description": "Remix package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "name": "Overview",
+              "path": "/nx-api/remix",
+              "file": "shared/packages/remix/remix-plugin"
             }
           ]
         },

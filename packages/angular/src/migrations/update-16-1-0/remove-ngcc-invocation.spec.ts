@@ -1,5 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { readJson, updateJson } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import removeNgccInvocation from './remove-ngcc-invocation';
 
@@ -8,6 +9,9 @@ describe('remove-ngcc-invocation migration', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   it('should not throw when there is no scripts entry', async () => {

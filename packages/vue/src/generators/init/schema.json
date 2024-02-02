@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxVueInit",
   "title": "Init Vue Plugin",
   "description": "Initialize a Vue Plugin.",
@@ -11,26 +11,16 @@
       "type": "boolean",
       "default": false
     },
-    "js": {
-      "type": "boolean",
-      "description": "Use JavaScript instead of TypeScript",
-      "default": false
-    },
-    "rootProject": {
-      "description": "Create a project at the root of the workspace",
+    "skipPackageJson": {
+      "description": "Do not add dependencies to `package.json`.",
       "type": "boolean",
       "default": false
     },
-    "routing": {
+    "keepExistingVersions": {
       "type": "boolean",
-      "description": "Generate application with routes.",
-      "x-prompt": "Would you like to add Vue Router to this application?",
+      "x-priority": "internal",
+      "description": "Keep existing dependencies versions",
       "default": false
-    },
-    "style": {
-      "description": "The file extension to be used for style files.",
-      "type": "string",
-      "default": "css"
     }
   },
   "required": []

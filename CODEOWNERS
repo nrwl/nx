@@ -11,7 +11,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 # Docs Site + Graph
 /docs @nrwl/nx-docs-reviewers
 /docs/nx-cloud @StalkAltan @rarmatei @nrwl/nx-docs-reviewers
-/graph/** @philipjfulcher @FrozenPandaz @bcabanes
+/graph/** @philipjfulcher @FrozenPandaz @bcabanes @MaxKless
 /images @nrwl/nx-docs-reviewers
 /nx-dev/** @nrwl/nx-docs-reviewers
 /typedoc-theme @nrwl/nx-docs-reviewers
@@ -24,6 +24,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/angular/** @nrwl/nx-angular-reviewers
 /e2e/angular-core/** @nrwl/nx-angular-reviewers
 /e2e/angular-extensions/** @nrwl/nx-angular-reviewers
+/e2e/angular-module-federation/** @nrwl/nx-angular-reviewers
 /packages/angular/plugins/component-testing.ts @nrwl/nx-angular-reviewers @nrwl/nx-testing-tools-reviewers
 /packages/angular/src/generators/cypress-component-configuration/** @nrwl/nx-angular-reviewers @nrwl/nx-testing-tools-reviewers
 /packages/angular/src/generators/component-test/** @nrwl/nx-angular-reviewers @nrwl/nx-testing-tools-reviewers
@@ -35,6 +36,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 /docs/shared/packages/next/** @nrwl/nx-react-reviewers @nrwl/nx-docs-reviewers
 /packages/react/** @nrwl/nx-react-reviewers
 /e2e/react-core/** @nrwl/nx-react-reviewers
+/e2e/react-module-federation/** @nrwl/nx-react-reviewers @coly010
 /e2e/react-extensions/** @nrwl/nx-react-reviewers
 /packages/next/** @nrwl/nx-react-reviewers
 /e2e/next-core/** @nrwl/nx-react-reviewers
@@ -54,6 +56,11 @@ rust-toolchain @nrwl/nx-native-reviewers
 /e2e/expo/** @nrwl/nx-react-reviewers
 /packages/react-native/** @nrwl/nx-react-reviewers
 /e2e/react-native/** @nrwl/nx-react-reviewers
+
+## remix
+/docs/generated/packages/remix/** @nrwl/nx-react-reviewers @nrwl/nx-docs-reviewers @Coly010
+/packages/remix/** @nrwl/nx-react-reviewers @Coly010
+/e2e/remix/** @nrwl/nx-react-reviewers @Coly010
 
 # Vue
 /packages/vue/** @nrwl/nx-vue-reviewers
@@ -101,9 +108,11 @@ rust-toolchain @nrwl/nx-native-reviewers
 
 ## Tools
 /docs/generated/packages/cypress/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
+/docs/shared/packages/cypress/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
 /docs/generated/packages/jest/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
 /docs/shared/packages/jest/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
-/docs/shared/packages/cypress/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
+/docs/generated/packages/playwright/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
+/docs/shared/packages/playwright/** @nrwl/nx-testing-tools-reviewers @nrwl/nx-docs-reviewers
 /packages/cypress/** @nrwl/nx-testing-tools-reviewers
 /e2e/cypress/** @nrwl/nx-testing-tools-reviewers
 /packages/jest/** @nrwl/nx-testing-tools-reviewers
@@ -158,6 +167,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 /packages/workspace/** @nrwl/nx-core-reviewers
 /e2e/workspace-create/** @nrwl/nx-core-reviewers
 /e2e/workspace-create-npm/** @nrwl/nx-core-reviewers
+/e2e/release/** @nrwl/nx-core-reviewers
 
 # Misc
 /e2e/lerna-smoke-tests/** @vsavkin @JamesHenry
@@ -173,6 +183,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 
 # CI
 /.circleci/** @nrwl/nx-pipelines-reviewers
+/.nx/workflows/** @nrwl/nx-pipelines-reviewers
 /.github/** @nrwl/nx-pipelines-reviewers
 /.husky/** @nrwl/nx-pipelines-reviewers
 /packages/workspace/src/generators/ci-workflow/** @nrwl/nx-pipelines-reviewers

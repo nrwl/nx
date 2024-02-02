@@ -21,7 +21,7 @@ npx create-nx-workspace@latest
 
 ## Learn Nx
 
-{% cards cols="2" lgCols="6" mdCols="4" smCols="2" %}
+{% cards cols="2" lgCols="4" mdCols="4" smCols="2" %}
 
 {% link-card title="Nx in 10 minutes!" type="video" url="https://youtu.be/-_4WMl-Fn0w" icon="nx" /%}
 
@@ -33,7 +33,7 @@ npx create-nx-workspace@latest
 
 {% /cards %}
 
-{% cards cols="2" lgCols="6" mdCols="5" smCols="2" %}
+{% cards cols="2" lgCols="5" mdCols="5" smCols="2" %}
 
 {% link-card title="Package Based Monorepos" type="tutorial" url="/getting-started/tutorials/package-based-repo-tutorial" icon="jsMono" /%}
 
@@ -60,9 +60,9 @@ npx create-nx-workspace@latest
 {% link-card title="Express" appearance="small" url="/nx-api/express" icon="express" /%}
 {% link-card title="Vue" appearance="small" url="/nx-api/vue" icon="vue" /%}
 {% link-card title="Next" appearance="small" url="/nx-api/next" icon="nextjs" /%}
-{% link-card title="Nuxt" appearance="small" url="/showcase/example-repos/add-nuxt" icon="nuxt" /%}
+{% link-card title="Nuxt" appearance="small" url="/nx-api/nuxt" icon="nuxt" /%}
 {% link-card title="Nest" appearance="small" url="/nx-api/nest" icon="nestjs" /%}
-{% link-card title="Remix" appearance="small" url="/recipes/react/remix" icon="remix" /%}
+{% link-card title="Remix" appearance="small" url="/nx-api/remix" icon="remix" /%}
 {% link-card title="Expo" appearance="small" url="/nx-api/expo" icon="expo" /%}
 {% link-card title="React Native" appearance="small" url="/nx-api/react-native" icon="react" /%}
 {% link-card title="Fastify" appearance="small" url="/showcase/example-repos/mongo-fastify" icon="fastify" /%}

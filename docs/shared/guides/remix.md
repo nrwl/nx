@@ -7,7 +7,7 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 ```{% command="npx create-nx-workspace acme --preset=apps" path="~/" %}
  >  NX   Let's create a new workspace [https://nx.dev/getting-started/intro]
 
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 
  >  NX   Creating your v16.3.2 workspace.
 
@@ -28,12 +28,32 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 ## Install Nx Remix Plugin
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/remix` version that is on the same minor version as the `nx` version in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync). The `@nx/remix` package is still being developed under [nx-labs](https://github.com/nrwl/nx-labs), so the publishing cadence is not perfectly coordinated with the other Nx packages.
+Make sure to install the `@nx/remix` version that is on the same minor version as the `nx` version in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install --save-dev @nx/remix
+npm add -D @nx/remix
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @nx/remix
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @nx/remix
+```
+
+{% /tab %}
+{% /tabs %}
 
 ## Generate a Remix Application
 
@@ -50,7 +70,7 @@ CREATE apps/myapp/project.json
 UPDATE package.json
 CREATE apps/myapp/README.md
 CREATE apps/myapp/app/root.tsx
-CREATE apps/myapp/app/routes/index.tsx
+CREATE apps/myapp/app/routes/_index.tsx
 CREATE apps/myapp/public/favicon.ico
 CREATE apps/myapp/remix.config.js
 CREATE apps/myapp/remix.env.d.ts
@@ -175,7 +195,7 @@ You can also run test on your library:
 
 To generate a route for your application:
 
-```{% command="nx g @nx/remix:route admin --project=myapp" path="~/acme" %}
+```{% command="nx g @nx/remix:route admin --path=apps/myapp/app/routes" path="~/acme" %}
 >  NX  Generating @nx/remix:route
 
 CREATE apps/myapp/app/routes/admin.tsx
@@ -188,7 +208,7 @@ To use a Route Loader where the logic lives in your library, follow the steps be
 
 1. Generate a loader for your route:
 
-```{% command="nx g @nx/remix:loader admin --project=myapp" path="~/acme" %}
+```{% command="nx g @nx/remix:loader admin --path=apps/myapp/app/routes" path="~/acme" %}
 >  NX  Generating @nx/remix:loader
 
 UPDATE apps/myapp/app/routes/admin.tsx
@@ -199,9 +219,9 @@ UPDATE apps/myapp/app/routes/admin.tsx
 `libs/login/src/lib/admin/admin.loader.ts`
 
 ```ts
-import { json, LoaderArgs } from '@remix-run/node';
+import { json, LoaderFunctionArgs } from '@remix-run/node';
 
-export const adminLoader = async ({ request }: LoaderArgs) => {
+export const adminLoader = async ({ request }: LoaderFunctionArgs) => {
   return json({
     message: 'Hello, world!',
   });
@@ -219,7 +239,7 @@ export * from './lib/admin/admin.loader';
 Replace the default loader code:
 
 ```tsx
-export const loader = async ({ request }: LoaderArgs) => {
+export const loader = async ({ request }: LoaderFunctionArgs) => {
   return json({
     message: 'Hello, world!',
   });

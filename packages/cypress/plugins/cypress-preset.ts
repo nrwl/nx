@@ -3,9 +3,18 @@ import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
+import { NX_PLUGIN_OPTIONS } from '../src/utils/symbols';
+
 import { exec } from 'child_process';
 import { request as httpRequest } from 'http';
 import { request as httpsRequest } from 'https';
+
+// Importing the cypress type here causes the angular and next unit
+// tests to fail when transpiling, it seems like the cypress types are
+// clobbering jest's types. A bit weird. Leaving the commented out import
+// and usage, as its helpful when modifying this code.
+//
+// import type * as Cypress from 'cypress';
 
 interface BaseCypressPreset {
   videosFolder: string;
@@ -20,6 +29,7 @@ export interface NxComponentTestingOptions {
    * @example 'component-test'
    */
   ctTargetName?: string;
+  buildTarget?: string;
   bundler?: 'vite' | 'webpack';
   compiler?: 'swc' | 'babel';
 }
@@ -86,25 +96,35 @@ export function nxE2EPreset(
   options?: NxCypressE2EPresetOptions
 ) {
   const basePath = options?.cypressDir || 'src';
-  const baseConfig: any /** Cypress.EndToEndConfigOptions */ = {
+
+  const baseConfig: any /*Cypress.EndToEndConfigOptions & {
+    [NX_PLUGIN_OPTIONS]: unknown;
+  }*/ = {
     ...nxBaseCypressPreset(pathToConfig),
     fileServerFolder: '.',
-    supportFile: `${basePath}/support/e2e.ts`,
+    supportFile: `${basePath}/support/e2e.{js,ts}`,
     specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
     fixturesFolder: `${basePath}/fixtures`,
-    env: {
+
+    [NX_PLUGIN_OPTIONS]: {
       webServerCommand: options?.webServerCommands?.default,
       webServerCommands: options?.webServerCommands,
       ciWebServerCommand: options?.ciWebServerCommand,
     },
+
     async setupNodeEvents(on, config) {
+      const webServerCommands =
+        config.env?.webServerCommands ?? options?.webServerCommands;
+      const webServerCommand =
+        config.env?.webServerCommand ?? webServerCommands?.default;
+
       if (options?.bundler === 'vite') {
         on('file:preprocessor', vitePreprocessor());
       }
-      if (!config.env.webServerCommands) {
+
+      if (!options?.webServerCommands) {
         return;
       }
-      const webServerCommand = config.env.webServerCommand;
 
       if (!webServerCommand) {
         return;
@@ -216,7 +236,19 @@ export type NxCypressE2EPresetOptions = {
    **/
   cypressDir?: string;
 
+  /**
+   * A map of commandName -> command to start the web server for testing.
+   * Currently only default is read.
+   */
   webServerCommands?: Record<string, string>;
+
+  /**
+   * A command to start the web server - used for e2e tests distributed by Nx.
+   */
   ciWebServerCommand?: string;
+
+  /**
+   * Configures how the web server command is started and monitored.
+   */
   webServerConfig?: WebServerConfig;
 };

@@ -16,7 +16,11 @@
       "!{projectRoot}/tsconfig.storybook.json",
       "!{projectRoot}/src/test-setup.[jt]s"
     ],
-    "sharedGlobals": ["{workspaceRoot}/babel.config.json"],
+    "sharedGlobals": [
+      "{workspaceRoot}/babel.config.json",
+      "{workspaceRoot}/.nx/workflows/agents.yaml",
+      "{workspaceRoot}/.circleci/config.yml"
+    ],
     "native": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/**/Cargo.*",
@@ -26,26 +30,33 @@
     ]
   },
   "release": {
+    "projects": [
+      "packages/*",
+      "packages/nx/native-packages/*",
+      "packages-legacy/*"
+    ],
     "releaseTagPattern": "{version}",
     "changelog": {
       "workspaceChangelog": {
         "createRelease": "github",
         "file": false
+      },
+      "git": {
+        "commit": false,
+        "stageChanges": false,
+        "tag": false
       }
     },
-    "groups": {
-      "npm": {
-        "projects": [
-          "packages/*",
-          "packages/nx/native-packages/*",
-          "packages-legacy/*"
-        ],
-        "version": {
-          "generatorOptions": {
-            "packageRoot": "build/packages/{projectName}",
-            "currentVersionResolver": "registry"
-          }
-        }
+    "version": {
+      "generatorOptions": {
+        "packageRoot": "build/packages/{projectName}",
+        "currentVersionResolver": "registry",
+        "skipLockFileUpdate": true
+      },
+      "git": {
+        "commit": false,
+        "stageChanges": false,
+        "tag": false
       }
     }
   },
@@ -203,5 +214,6 @@
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "cacheDirectory": "/tmp/nx-cache"
+  "cacheDirectory": "/tmp/nx-cache",
+  "bust": 5
 }

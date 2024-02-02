@@ -4,6 +4,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import { testOnlyTransferFileMap } from '../native';
 
 describe('native task hasher', () => {
   let tempFs: TempFs;
@@ -653,4 +654,121 @@ describe('native task hasher', () => {
       }
     `);
   });
+
+  it('should include typescript hash in the TsConfig final hash', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+          },
+        },
+      },
+    });
+    builder.addExternalNode({
+      data: {
+        packageName: 'typescript',
+        version: '1.2.3',
+        hash: '1234',
+      },
+      name: 'npm:typescript',
+      type: 'npm',
+    });
+
+    builder.addStaticDependency(
+      'parent',
+      'npm:typescript',
+      'libs/parent/filea.ts'
+    );
+    let projectGraph = builder.getUpdatedProjectGraph();
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent', 'child'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    let hasher = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: true }
+    );
+
+    let typescriptHash = (
+      await hasher.hashTask(taskGraph.tasks['parent:build'], taskGraph, {})
+    ).details['parent:TsConfig'];
+
+    let noTypescriptHash = (
+      await hasher.hashTask(taskGraph.tasks['child:build'], taskGraph, {})
+    ).details['child:TsConfig'];
+
+    expect(typescriptHash).not.toEqual(noTypescriptHash);
+    expect(typescriptHash).toMatchInlineSnapshot(`"8661678577354855152"`);
+    expect(noTypescriptHash).toMatchInlineSnapshot(`"11547179436948425249"`);
+  });
+
+  /**
+   * commented out to show how to debug issues with hashing
+   *
+   *
+   *
+   * gather the project graph + task graph with `nx run project:target --graph=graph.json`
+   * gather the file-map.json from `.nx/cache/file-map.json`
+   * gather the nx.json file
+   */
+  // it('should test client workspaces', async () => {
+  //   let nxJson = require('nx.json');
+  //   let graphs = require('graph.json');
+  //   let projectGraph = graphs.graph;
+  //   let taskGraph = graphs.tasks;
+  //
+  //   let files = require('file-map.json');
+  //   let projectFiles = files.fileMap.projectFileMap;
+  //   let nonProjectFiles = files.fileMap.nonProjectFiles;
+  //
+  //   let transferred = testOnlyTransferFileMap(projectFiles, nonProjectFiles);
+  //
+  //   let hasher = new NativeTaskHasherImpl(
+  //     '',
+  //     nxJson,
+  //     projectGraph,
+  //     transferred,
+  //     { selectivelyHashTsConfig: false }
+  //   );
+  //
+  //   const hashes = await hasher.hashTasks(
+  //     Object.values(taskGraph.tasks),
+  //     taskGraph,
+  //     {}
+  //   );
+  //   console.dir(hashes, { depth: null });
+  // });
 });

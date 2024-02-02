@@ -1,47 +1,23 @@
 import {
   addDependenciesToPackageJson,
-  PluginConfiguration,
   readNxJson,
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import {
-  nxVersion,
-  nuxtDevtoolsVersion,
-  nuxtVersion,
-  h3Version,
-  nuxtUiTemplatesVersion,
-} from '../../../utils/versions';
-import {
-  lessVersion,
-  sassVersion,
-  vueRouterVersion,
-  vueVersion,
-  vueTscVersion,
-} from '@nx/vue';
+import { nuxtVersion, nxVersion } from '../../../utils/versions';
 import { InitSchema } from '../schema';
 
 export function updateDependencies(host: Tree, schema: InitSchema) {
-  let devDependencies: { [key: string]: string } = {
-    '@nx/nuxt': nxVersion,
-    '@nx/vite': nxVersion, // needed for the nxViteTsPaths plugin
-    '@nuxt/devtools': nuxtDevtoolsVersion,
-    '@nuxt/kit': nuxtVersion,
-    '@nuxt/ui-templates': nuxtUiTemplatesVersion,
-    nuxt: nuxtVersion,
-    h3: h3Version,
-    vue: vueVersion,
-    'vue-router': vueRouterVersion,
-    'vue-tsc': vueTscVersion,
-  };
-
-  if (schema.style === 'scss') {
-    devDependencies['sass'] = sassVersion;
-  } else if (schema.style === 'less') {
-    devDependencies['less'] = lessVersion;
-  }
-
-  return addDependenciesToPackageJson(host, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    host,
+    {},
+    {
+      '@nx/nuxt': nxVersion,
+      nuxt: nuxtVersion,
+    },
+    undefined,
+    schema.keepExistingVersions
+  );
 }
 
 export function addVitestTargetDefaults(tree: Tree) {
@@ -64,23 +40,48 @@ export function addPlugin(tree: Tree) {
   const nxJson = readNxJson(tree);
   nxJson.plugins ??= [];
 
+  let hasNxNuxtPlugin = false;
+  let hasNxVitePlugin = false;
+
   for (const plugin of nxJson.plugins) {
     if (
       typeof plugin === 'string'
         ? plugin === '@nx/nuxt/plugin'
         : plugin.plugin === '@nx/nuxt/plugin'
     ) {
-      return;
+      hasNxNuxtPlugin = true;
+    }
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/vite/plugin'
+        : plugin.plugin === '@nx/vite/plugin'
+    ) {
+      hasNxVitePlugin = true;
     }
   }
 
-  nxJson.plugins.push({
-    plugin: '@nx/nuxt/plugin',
-    options: {
-      buildTargetName: 'build',
-      testTargetName: 'test',
-      serveTargetName: 'serve',
-    },
-  });
+  if (!hasNxNuxtPlugin) {
+    nxJson.plugins.push({
+      plugin: '@nx/nuxt/plugin',
+      options: {
+        buildTargetName: 'build',
+        serveTargetName: 'serve',
+      },
+    });
+  }
+
+  if (!hasNxVitePlugin) {
+    nxJson.plugins.push({
+      plugin: '@nx/vite/plugin',
+      options: {
+        buildTargetName: 'build',
+        previewTargetName: 'preview',
+        testTargetName: 'test',
+        serveTargetName: 'serve',
+        serveStaticTargetName: 'serve-static',
+      },
+    });
+  }
+
   updateNxJson(tree, nxJson);
 }

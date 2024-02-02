@@ -396,6 +396,15 @@
       "path": "/recipes/nx-console/console-troubleshooting"
     }
   ],
+  "manage-releases": [
+    {
+      "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+      "file": "shared/core-features/manage-releases",
+      "id": "manage-releases",
+      "name": "Manage Releases",
+      "path": "/core-features/manage-releases"
+    }
+  ],
   "use-task-executors": [
     {
       "description": "",
@@ -1099,6 +1108,36 @@
       "id": "flat-config",
       "name": "Switching to ESLint's flat config format",
       "path": "/recipes/tips-n-tricks/flat-config"
+    }
+  ],
+  "nx-release": [
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/get-started-with-nx-release",
+      "id": "get-started-with-nx-release",
+      "name": "Get Started with Nx Release",
+      "path": "/recipes/nx-release/get-started-with-nx-release"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/release-projects-independently",
+      "id": "release-projects-independently",
+      "name": "Release Projects Independently",
+      "path": "/recipes/nx-release/release-projects-independently"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+      "id": "automatically-version-with-conventional-commits",
+      "name": "Automatically Version with Conventional Commits",
+      "path": "/recipes/nx-release/automatically-version-with-conventional-commits"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/publish-in-ci-cd",
+      "id": "publish-in-ci-cd",
+      "name": "Publish in CI/CD",
+      "path": "/recipes/nx-release/publish-in-ci-cd"
     }
   ],
   "database": [

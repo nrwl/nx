@@ -10,7 +10,7 @@ import { DaemonClient } from '../daemon/client/client';
 import { hashArray } from './file-hasher';
 import { NodeTaskHasherImpl } from './node-task-hasher-impl';
 import { InputDefinition } from '../config/workspace-json-project-json';
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { workspaceRoot } from '../utils/workspace-root';
 import { NxWorkspaceFilesExternals } from '../native';
@@ -40,13 +40,13 @@ export interface Hash {
 
 export interface TaskHasher {
   /**
-   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
+   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
    * @param task
    */
   hashTask(task: Task): Promise<Hash>;
 
   /**
-   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
+   * @deprecated use hashTask(task:Task, taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
    */
   hashTask(task: Task, taskGraph: TaskGraph): Promise<Hash>;
 
@@ -57,13 +57,13 @@ export interface TaskHasher {
   ): Promise<Hash>;
 
   /**
-   *  @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
+   *  @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
    * @param tasks
    */
   hashTasks(tasks: Task[]): Promise<Hash[]>;
 
   /**
-   * @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v18
+   * @deprecated use hashTasks(tasks:Task[], taskGraph: TaskGraph, env: NodeJS.ProcessEnv) instead. This will be removed in v19
    */
   hashTasks(tasks: Task[], taskGraph: TaskGraph): Promise<Hash[]>;
 

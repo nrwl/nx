@@ -11,7 +11,7 @@ import { stripIndents } from '@nx/devkit';
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
 
-// TODO(katerina): Nx 18 -> remove Cypress
+// TODO(katerina): Nx 19 -> remove Cypress
 
 describe('angularStories generator: applications', () => {
   let tree: Tree;
@@ -25,6 +25,7 @@ describe('angularStories generator: applications', () => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     await generateTestApplication(tree, {
       name: appName,
+      skipFormat: true,
     });
   });
 
@@ -37,7 +38,11 @@ describe('angularStories generator: applications', () => {
   });
 
   it('should generate stories file for scam component', async () => {
-    await scamGenerator(tree, { name: 'my-scam', project: appName });
+    await scamGenerator(tree, {
+      name: 'my-scam',
+      project: appName,
+      skipFormat: true,
+    });
 
     await angularStoriesGenerator(tree, { name: appName });
 
@@ -47,11 +52,16 @@ describe('angularStories generator: applications', () => {
   });
 
   it('should ignore paths', async () => {
-    await scamGenerator(tree, { name: 'my-scam', project: appName });
+    await scamGenerator(tree, {
+      name: 'my-scam',
+      project: appName,
+      skipFormat: true,
+    });
 
     await angularStoriesGenerator(tree, {
       name: appName,
       ignorePaths: [`${appName}/src/app/my-scam/**`],
+      skipFormat: true,
     });
 
     expect(
@@ -60,11 +70,16 @@ describe('angularStories generator: applications', () => {
   });
 
   it('should ignore paths when full path to component is provided', async () => {
-    await scamGenerator(tree, { name: 'my-scam', project: appName });
+    await scamGenerator(tree, {
+      name: 'my-scam',
+      project: appName,
+      skipFormat: true,
+    });
 
     await angularStoriesGenerator(tree, {
       name: appName,
       ignorePaths: [`${appName}/src/app/my-scam/my-scam.component.ts`],
+      skipFormat: true,
     });
 
     expect(
@@ -73,15 +88,21 @@ describe('angularStories generator: applications', () => {
   });
 
   it('should ignore a path that has a nested component, but still generate nested component stories', async () => {
-    await componentGenerator(tree, { name: 'component-a', project: appName });
+    await componentGenerator(tree, {
+      name: 'component-a',
+      project: appName,
+      skipFormat: true,
+    });
     await componentGenerator(tree, {
       name: 'component-a/component-b',
       project: appName,
+      skipFormat: true,
     });
 
     await angularStoriesGenerator(tree, {
       name: appName,
       ignorePaths: [`${appName}/src/app/component-a/component-a.component.ts`],
+      skipFormat: true,
     });
 
     expect(
@@ -126,11 +147,13 @@ describe('angularStories generator: applications', () => {
       name: 'component/component',
       project: appName,
       flat: true,
+      skipFormat: true,
     });
 
     await angularStoriesGenerator(tree, {
       name: appName,
       ignorePaths: [`${appName}/src/app/app.component.ts`],
+      skipFormat: true,
     });
 
     expect(
@@ -149,9 +172,10 @@ describe('angularStories generator: applications', () => {
       name: 'my-scam',
       project: appName,
       inlineScam: true,
+      skipFormat: true,
     });
 
-    await angularStoriesGenerator(tree, { name: appName });
+    await angularStoriesGenerator(tree, { name: appName, skipFormat: true });
 
     expect(
       tree.read(

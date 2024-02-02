@@ -2,7 +2,7 @@ use napi::bindgen_prelude::External;
 use std::collections::HashMap;
 
 use crate::native::hasher::hash;
-use crate::native::utils::Normalize;
+use crate::native::utils::{path::get_child_files, Normalize};
 use rayon::prelude::*;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
@@ -298,5 +298,10 @@ impl WorkspaceContext {
     #[napi]
     pub fn all_file_data(&self) -> Vec<FileData> {
         self.files_worker.get_files()
+    }
+
+    #[napi]
+    pub fn get_files_in_directory(&self, directory: String) -> Vec<String> {
+        get_child_files(&directory, self.files_worker.get_files())
     }
 }

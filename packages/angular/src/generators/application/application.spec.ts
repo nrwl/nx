@@ -12,8 +12,11 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { Linter } from '@nx/eslint';
 import * as enquirer from 'enquirer';
+import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
+  angularDevkitVersion,
+  angularVersion,
   autoprefixerVersion,
   postcssVersion,
   tailwindVersion,
@@ -46,6 +49,36 @@ describe('app', () => {
       .fn()
       .mockReturnValue(Promise.resolve({ 'standalone-components': true }));
     appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
+  it('should add angular dependencies', async () => {
+    // ACT
+    await generateApp(appTree);
+
+    // ASSERT
+    const { dependencies, devDependencies } = readJson(appTree, 'package.json');
+
+    expect(dependencies['@angular/animations']).toBe(angularVersion);
+    expect(dependencies['@angular/common']).toBe(angularVersion);
+    expect(dependencies['@angular/compiler']).toBe(angularVersion);
+    expect(dependencies['@angular/core']).toBe(angularVersion);
+    expect(dependencies['@angular/platform-browser']).toBe(angularVersion);
+    expect(dependencies['@angular/platform-browser-dynamic']).toBe(
+      angularVersion
+    );
+    expect(dependencies['@angular/router']).toBe(angularVersion);
+    expect(dependencies['rxjs']).toBeDefined();
+    expect(dependencies['tslib']).toBeDefined();
+    expect(dependencies['zone.js']).toBeDefined();
+    expect(devDependencies['@angular/cli']).toBe(angularDevkitVersion);
+    expect(devDependencies['@angular/compiler-cli']).toBe(angularVersion);
+    expect(devDependencies['@angular/language-service']).toBe(angularVersion);
+    expect(devDependencies['@angular-devkit/build-angular']).toBe(
+      angularDevkitVersion
+    );
+
+    // codelyzer should no longer be there by default
+    expect(devDependencies['codelyzer']).toBeUndefined();
   });
 
   describe('not nested', () => {
@@ -143,10 +176,6 @@ describe('app', () => {
       expect(
         appTree.exists('playwright-app-e2e/src/example.spec.ts')
       ).toBeTruthy();
-      expect(
-        readProjectConfiguration(appTree, 'playwright-app-e2e')?.targets?.e2e
-          ?.executor
-      ).toEqual('@nx/playwright:playwright');
     });
 
     it('should setup jest with serializers', async () => {
@@ -477,24 +506,25 @@ describe('app', () => {
     });
   });
 
-  describe('--skipFormat', () => {
-    it('should format files by default', async () => {
-      const spy = jest.spyOn(devkit, 'formatFiles');
+  describe('format files', () => {
+    it('should format files', async () => {
+      const formatFilesSpy = jest.spyOn(devkit, 'formatFiles');
 
-      await generateApp(appTree);
+      await generateApp(appTree, 'my-app', { skipFormat: false });
 
-      expect(spy).toHaveBeenCalled();
-    });
-
-    // Need a better way of determing if the formatFiles function
-    // was called directly from the application generator
-    // and not by a different generator that's used withing this
-    xit('should skip format when set to true', async () => {
-      const spy = jest.spyOn(devkit, 'formatFiles');
-
-      await generateApp(appTree, 'my-app', { skipFormat: true });
-
-      expect(spy).not.toHaveBeenCalled();
+      expect(formatFilesSpy).toHaveBeenCalled();
+      expect(
+        appTree.read('my-app/src/app/app.module.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('my-app/src/app/app.component.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8')
+      ).toMatchSnapshot();
+      expect(
+        appTree.read('my-app/src/app/app.routes.ts', 'utf-8')
+      ).toMatchSnapshot();
     });
   });
 
@@ -502,24 +532,12 @@ describe('app', () => {
     describe('eslint', () => {
       it('should add lint target', async () => {
         await generateApp(appTree, 'my-app', { linter: Linter.EsLint });
-        expect(readProjectConfiguration(appTree, 'my-app').targets.lint)
-          .toMatchInlineSnapshot(`
-          {
-            "executor": "@nx/eslint:lint",
-            "outputs": [
-              "{options.outputFile}",
-            ],
-          }
-        `);
-        expect(readProjectConfiguration(appTree, 'my-app-e2e').targets.lint)
-          .toMatchInlineSnapshot(`
-          {
-            "executor": "@nx/eslint:lint",
-            "outputs": [
-              "{options.outputFile}",
-            ],
-          }
-        `);
+        expect(
+          readProjectConfiguration(appTree, 'my-app').targets.lint
+        ).toMatchInlineSnapshot(`undefined`);
+        expect(
+          readProjectConfiguration(appTree, 'my-app-e2e').targets.lint
+        ).toMatchInlineSnapshot(`undefined`);
       });
 
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
@@ -854,9 +872,6 @@ describe('app', () => {
         e2eTestRunner: E2eTestRunner.Playwright,
         rootProject: true,
       });
-      expect(
-        readProjectConfiguration(appTree, 'e2e').targets.e2e.executor
-      ).toEqual('@nx/playwright:playwright');
       expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
     });
@@ -1125,6 +1140,60 @@ describe('app', () => {
       }));
     });
 
+    it('should add angular dependencies', async () => {
+      // ACT
+      await generateApp(appTree, 'my-app');
+
+      // ASSERT
+      const { dependencies, devDependencies } = readJson(
+        appTree,
+        'package.json'
+      );
+
+      expect(dependencies['@angular/animations']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/common']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/compiler']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/core']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/platform-browser']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/platform-browser-dynamic']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['@angular/router']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(dependencies['rxjs']).toEqual(
+        backwardCompatibleVersions.angularV15.rxjsVersion
+      );
+      expect(dependencies['zone.js']).toEqual(
+        backwardCompatibleVersions.angularV15.zoneJsVersion
+      );
+      expect(devDependencies['@angular/cli']).toEqual(
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
+      );
+      expect(devDependencies['@angular/compiler-cli']).toEqual(
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
+      );
+      expect(devDependencies['@angular/language-service']).toEqual(
+        backwardCompatibleVersions.angularV15.angularVersion
+      );
+      expect(devDependencies['@angular-devkit/build-angular']).toEqual(
+        backwardCompatibleVersions.angularV15.angularDevkitVersion
+      );
+
+      // codelyzer should no longer be there by default
+      expect(devDependencies['codelyzer']).toBeUndefined();
+    });
+
     it('should import "ApplicationConfig" from "@angular/platform-browser"', async () => {
       await generateApp(appTree, 'my-app', { standalone: true });
 
@@ -1182,11 +1251,12 @@ async function generateApp(
 ) {
   await generateTestApplication(appTree, {
     name,
-    skipFormat: false,
+    skipFormat: true,
     e2eTestRunner: E2eTestRunner.Cypress,
     unitTestRunner: UnitTestRunner.Jest,
     linter: Linter.EsLint,
     standalone: false,
+    addPlugin: true,
     ...options,
   });
 }

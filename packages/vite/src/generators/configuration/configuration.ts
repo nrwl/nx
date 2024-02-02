@@ -8,6 +8,7 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
   addOrChangeBuildTarget,
@@ -27,18 +28,34 @@ import {
 import initGenerator from '../init/init';
 import vitestGenerator from '../vitest/vitest-generator';
 import { ViteConfigurationGeneratorSchema } from './schema';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
-export async function viteConfigurationGenerator(
+export function viteConfigurationGenerator(
+  host: Tree,
+  schema: ViteConfigurationGeneratorSchema
+) {
+  return viteConfigurationGeneratorInternal(host, {
+    addPlugin: false,
+    ...schema,
+  });
+}
+
+export async function viteConfigurationGeneratorInternal(
   tree: Tree,
   schema: ViteConfigurationGeneratorSchema
 ) {
   const tasks: GeneratorCallback[] = [];
 
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  const projectConfig = readProjectConfiguration(tree, schema.project);
   const {
     targets,
-    projectType,
+
     root: projectRoot,
-  } = readProjectConfiguration(tree, schema.project);
+  } = projectConfig;
+
+  const projectType = projectConfig.projectType ?? 'library';
   let buildTargetName = 'build';
   let serveTargetName = 'serve';
   let testTargetName = 'test';
@@ -156,14 +173,15 @@ export async function viteConfigurationGenerator(
     editTsConfig(tree, schema);
   }
 
-  const initTask = await initGenerator(tree, {
-    uiFramework: schema.uiFramework,
-    includeLib: schema.includeLib,
-    compiler: schema.compiler,
-    testEnvironment: schema.testEnvironment,
-    rootProject: projectRoot === '.',
+  const jsInitTask = await jsInitGenerator(tree, {
+    ...schema,
+    skipFormat: true,
+    tsConfigName: projectRoot === '.' ? 'tsconfig.json' : 'tsconfig.base.json',
   });
+  tasks.push(jsInitTask);
+  const initTask = await initGenerator(tree, { ...schema, skipFormat: true });
   tasks.push(initTask);
+  tasks.push(ensureDependencies(tree, schema));
 
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
@@ -251,6 +269,7 @@ export async function viteConfigurationGenerator(
       skipViteConfig: true,
       testTarget: testTargetName,
       skipFormat: true,
+      addPlugin: schema.addPlugin,
     });
     tasks.push(vitestTask);
   }

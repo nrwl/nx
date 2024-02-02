@@ -19,15 +19,25 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
-import { getRelativePathToRootTsConfig } from '@nx/js';
+import {
+  getRelativePathToRootTsConfig,
+  initGenerator as jsInitGenerator,
+} from '@nx/js';
 import { swcCoreVersion } from '@nx/js/src/utils/versions';
 import type { Linter } from '@nx/eslint';
 import { join } from 'path';
-import { nxVersion, swcLoaderVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  swcLoaderVersion,
+  tsLibVersion,
+  typesNodeVersion,
+} from '../../utils/versions';
 import { webInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { getNpmScope } from '@nx/js/src/utils/package-json/get-npm-scope';
 import { hasWebpackPlugin } from '../../utils/has-webpack-plugin';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 interface NormalizedSchema extends Schema {
   projectName: string;
@@ -70,6 +80,7 @@ function createApplicationFiles(tree: Tree, options: NormalizedSchema) {
         ),
         webpackPluginOptions: hasWebpackPlugin(tree)
           ? {
+              compiler: options.compiler,
               target: 'web',
               outputPath: joinPathFragments(
                 'dist',
@@ -122,6 +133,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
         'webpack.config.js'
       ),
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     const project = readProjectConfiguration(tree, options.projectName);
     if (project.targets.build) {
@@ -167,6 +179,7 @@ async function setupBundler(tree: Tree, options: NormalizedSchema) {
     // TODO(jack): Flush this out... no bundler should be possible for web but the experience isn't holistic due to missing features (e.g. writing index.html).
   } else if (options.bundler === 'none') {
     const project = readProjectConfiguration(tree, options.projectName);
+    addBuildTargetDefaults(tree, `@nx/js:${options.compiler}`);
     project.targets.build = {
       executor: `@nx/js:${options.compiler}`,
       outputs: ['{options.outputPath}'],
@@ -214,6 +227,7 @@ function setDefaults(tree: Tree, options: NormalizedSchema) {
 
 export async function applicationGenerator(host: Tree, schema: Schema) {
   return await applicationGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -224,6 +238,11 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   const tasks: GeneratorCallback[] = [];
 
+  const jsInitTask = await jsInitGenerator(host, {
+    js: false,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
   const webTask = await webInitGenerator(host, {
     ...options,
     skipFormat: true,
@@ -258,6 +277,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       includeVitest: options.unitTestRunner === 'vitest',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -282,6 +302,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       coverageProvider: 'v8',
       inSourceTests: options.inSourceTests,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -306,7 +327,10 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (options.linter === 'eslint') {
-    const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
+    const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
+      '@nx/eslint',
+      nxVersion
+    );
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -316,6 +340,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       setParserOptionsProject: options.setParserOptionsProject,
+      addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
   }
@@ -364,6 +389,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
         options.name
       }`,
       webServerAddress: 'http://localhost:4200',
+      addPlugin: options.addPlugin,
     });
     tasks.push(playwrightTask);
   }
@@ -378,6 +404,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       setupFile: 'web-components',
       compiler: options.compiler,
       skipFormat: true,
+      addPlugin: options.addPlugin,
     });
     tasks.push(jestTask);
   }
@@ -405,9 +432,22 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   setDefaults(host, options);
 
+  tasks.push(
+    addDependenciesToPackageJson(
+      host,
+      { tslib: tsLibVersion },
+      { '@types/node': typesNodeVersion }
+    )
+  );
+
   if (!schema.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.projectName);
+  });
+
   return runTasksInSerial(...tasks);
 }
 
@@ -427,6 +467,8 @@ async function normalizeOptions(
     callingGenerator: '@nx/web:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const e2eProjectName = `${appProjectName}-e2e`;
   const e2eProjectRoot = `${appProjectRoot}-e2e`;
 

@@ -2,28 +2,28 @@
   "name": "init",
   "factory": "./src/generators/init/init",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxNodeInit",
     "title": "Init Node Plugin",
     "description": "Init Node Plugin.",
     "type": "object",
     "properties": {
-      "unitTestRunner": {
-        "description": "Adds the specified unit test runner.",
-        "type": "string",
-        "enum": ["jest", "none"],
-        "default": "jest"
-      },
       "skipFormat": {
         "description": "Skip formatting files.",
         "type": "boolean",
         "default": false
       },
-      "js": {
+      "skipPackageJson": {
+        "description": "Do not add dependencies to `package.json`.",
         "type": "boolean",
-        "default": false,
-        "description": "Use JavaScript instead of TypeScript"
+        "default": false
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
       }
     },
     "required": [],

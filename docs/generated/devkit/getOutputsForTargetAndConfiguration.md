@@ -15,7 +15,7 @@
 
 **`Deprecated`**
 
-Pass the target and overrides instead. This will be removed in v18.
+Pass the target and overrides instead. This will be removed in v19.
 
 ▸ **getOutputsForTargetAndConfiguration**(`target`, `overrides`, `node`): `string`[]
 
@@ -23,11 +23,11 @@ Returns the list of outputs that will be cached.
 
 #### Parameters
 
-| Name        | Type                                                                                                               |
-| :---------- | :----------------------------------------------------------------------------------------------------------------- |
-| `target`    | [`Task`](../../devkit/documents/Task) \| { `configuration?`: `string` ; `project`: `string` ; `target`: `string` } |
-| `overrides` | `any`                                                                                                              |
-| `node`      | [`ProjectGraphProjectNode`](../../devkit/documents/ProjectGraphProjectNode)                                        |
+| Name        | Type                                                                                                                |
+| :---------- | :------------------------------------------------------------------------------------------------------------------ |
+| `target`    | [`Task`](../../devkit/documents/Task) \| \{ `configuration?`: `string` ; `project`: `string` ; `target`: `string` } |
+| `overrides` | `any`                                                                                                               |
+| `node`      | [`ProjectGraphProjectNode`](../../devkit/documents/ProjectGraphProjectNode)                                         |
 
 #### Returns
 

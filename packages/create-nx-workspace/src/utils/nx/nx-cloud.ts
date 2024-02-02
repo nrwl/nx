@@ -1,29 +1,37 @@
 import * as ora from 'ora';
-import { join } from 'path';
 import { execAndWait } from '../child-process-utils';
 import { output } from '../output';
 import { getPackageManagerCommand, PackageManager } from '../package-manager';
 import { mapErrorToBodyLines } from '../error-utils';
 
+export type NxCloud = 'yes' | 'github' | 'circleci' | 'skip';
+
 export async function setupNxCloud(
   directory: string,
-  packageManager: PackageManager
+  packageManager: PackageManager,
+  nxCloud: NxCloud
 ) {
-  const nxCloudSpinner = ora(`Setting up NxCloud`).start();
+  const nxCloudSpinner = ora(`Setting up Nx Cloud`).start();
   try {
     const pmc = getPackageManagerCommand(packageManager);
     const res = await execAndWait(
       `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
       directory
     );
-    nxCloudSpinner.succeed('NxCloud has been set up successfully');
+    if (nxCloud !== 'yes') {
+      nxCloudSpinner.succeed(
+        'CI workflow with Nx Cloud has been generated successfully'
+      );
+    } else {
+      nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
+    }
     return res;
   } catch (e) {
     nxCloudSpinner.fail();
 
     if (e instanceof Error) {
       output.error({
-        title: `Failed to setup NxCloud`,
+        title: `Failed to setup Nx Cloud`,
         bodyLines: mapErrorToBodyLines(e),
       });
     } else {
@@ -37,11 +45,18 @@ export async function setupNxCloud(
 }
 
 export function printNxCloudSuccessMessage(nxCloudOut: string) {
-  const bodyLines = nxCloudOut
-    .split('Distributed caching via Nx Cloud has been enabled')[1]
-    .trim();
-  output.note({
-    title: `Distributed caching via Nx Cloud has been enabled`,
-    bodyLines: bodyLines.split('\n').map((r) => r.trim()),
+  // remove leading Nx carret and any new lines
+  const logContent = nxCloudOut.split('>  NX   ')[1];
+  const indexOfTitleEnd = logContent.indexOf('\n');
+  const title = logContent.slice(0, logContent.indexOf('\n')).trim();
+  const bodyLines = logContent
+    .slice(indexOfTitleEnd)
+    .replace(/^\n*/, '') // remove leading new lines
+    .replace(/\n*$/, '') // remove trailing new lines
+    .split('\n')
+    .map((r) => r.trim());
+  output.warn({
+    title,
+    bodyLines,
   });
 }

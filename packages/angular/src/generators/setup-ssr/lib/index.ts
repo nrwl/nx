@@ -1,4 +1,5 @@
 export * from './add-dependencies';
+export * from './add-server-file';
 export * from './generate-files';
 export * from './generate-server-ts-config';
 export * from './normalize-options';

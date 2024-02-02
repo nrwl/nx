@@ -14,7 +14,7 @@ export default async function* storybookExecutor(
   success: boolean;
   info?: { port: number; baseUrl?: string };
 }> {
-  const storybook7 = storybookMajorVersion() === 7;
+  const storybook7 = storybookMajorVersion() >= 7;
   if (!storybook7) {
     throw pleaseUpgrade();
   }

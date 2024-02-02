@@ -8,7 +8,7 @@ import { requireNx } from '@nx/devkit/nx';
 
 let { readModulePackageJson } = requireNx();
 
-// TODO: Remove this in Nx 18 when Nx 16.7.0 is no longer supported
+// TODO: Remove this in Nx 19 when Nx 16.7.0 is no longer supported
 readModulePackageJson =
   readModulePackageJson ??
   require('nx/src/utils/package-json').readModulePackageJson;

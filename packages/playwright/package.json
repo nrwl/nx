@@ -32,9 +32,12 @@
     "directory": "packages/playwright"
   },
   "dependencies": {
+    "@phenomnomnominal/tsquery": "~5.0.1",
     "@nx/devkit": "file:../devkit",
     "@nx/eslint": "file:../eslint",
-    "tslib": "^2.3.0"
+    "@nx/js": "file:../js",
+    "tslib": "^2.3.0",
+    "minimatch": "9.0.3"
   },
   "peerDependencies": {
     "@playwright/test": "^1.36.0"
@@ -54,6 +57,10 @@
     "./generators/*/schema.json": "./src/generators/*/schema.json",
     "./executors.json": "./executors.json",
     "./executors/*/schema.json": "./src/executors/*/schema.json",
+    "./plugin": "./plugin.js",
     "./preset": "./src/utils/preset.js"
+  },
+  "nx-migrations": {
+    "migrations": "./migrations.json"
   }
 }

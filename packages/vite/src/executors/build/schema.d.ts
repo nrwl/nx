@@ -1,11 +1,10 @@
-import type { FileReplacement } from '../../plugins/rollup-replace-files.plugin';
 export interface ViteBuildExecutorOptions {
   outputPath?: string;
+  buildLibsFromSource?: boolean;
   skipTypeCheck?: boolean;
   configFile?: string;
-  fileReplacements?: FileReplacement[];
   watch?: boolean;
   generatePackageJson?: boolean;
   includeDevDependenciesInPackageJson?: boolean;
-  buildLibsFromSource?: boolean;
+  tsConfig?: string;
 }
