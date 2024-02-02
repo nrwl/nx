@@ -1,19 +1,17 @@
-import { workspaceRoot } from '../../utils/workspace-root';
-import { dirname, relative } from 'path';
-import { FULL_OS_SOCKET_PATH } from '../socket-utils';
-import { handleServerProcessTermination } from './shutdown-utils';
 import { Server } from 'net';
+import { relative } from 'path';
 import { normalizePath } from '../../utils/path';
-import {
-  getAlwaysIgnore,
-  getIgnoredGlobs,
-  getIgnoreObject,
-} from '../../utils/ignore';
-import { platform } from 'os';
-import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
-import type { WatchEvent } from '../../native';
+import { workspaceRoot } from '../../utils/workspace-root';
+import { handleServerProcessTermination } from './shutdown-utils';
 
-const ALWAYS_IGNORE = [...getAlwaysIgnore(workspaceRoot), FULL_OS_SOCKET_PATH];
+import type { WatchEvent } from '../../native';
+import { getDaemonProcessIdSync, serverProcessJsonPath } from '../cache';
+
+// Always ignore these files when using the watcher
+const ALWAYS_IGNORE = [
+  'vitest.config.ts.timestamp*.mjs',
+  'vite.config.ts.timestamp*.mjs',
+];
 
 export type FileWatcherCallback = (
   err: Error | string | null,
@@ -27,7 +25,10 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
     relative(workspaceRoot, serverProcessJsonPath)
   );
 
-  let watcher = new Watcher(workspaceRoot, [`!${relativeServerProcess}`]);
+  let watcher = new Watcher(workspaceRoot, [
+    `!${relativeServerProcess}`,
+    ...ALWAYS_IGNORE,
+  ]);
   watcher.watch((err, events) => {
     if (err) {
       return cb(err, null);
@@ -63,7 +64,7 @@ export async function watchWorkspace(server: Server, cb: FileWatcherCallback) {
 export async function watchOutputFiles(cb: FileWatcherCallback) {
   const { Watcher } = await import('../../native');
 
-  let watcher = new Watcher(workspaceRoot, null, false);
+  let watcher = new Watcher(workspaceRoot, ALWAYS_IGNORE, false);
   watcher.watch((err, events) => {
     if (err) {
       return cb(err, null);
