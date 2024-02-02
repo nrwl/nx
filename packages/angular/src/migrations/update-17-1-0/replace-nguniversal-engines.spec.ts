@@ -14,6 +14,7 @@ let projectGraph: ProjectGraph;
 jest.mock('@nx/devkit', () => ({
   ...jest.requireActual('@nx/devkit'),
   createProjectGraphAsync: () => Promise.resolve(projectGraph),
+  formatFiles: jest.fn(),
 }));
 
 describe('replace-nguniversal-engines migration', () => {

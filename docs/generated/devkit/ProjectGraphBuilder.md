@@ -4,7 +4,7 @@ A class which builds up a project graph
 
 **`Deprecated`**
 
-The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/documents/CreateNodes) and/or a [CreateDependencies](../../devkit/documents/CreateDependencies) instead. This will be removed in Nx 18.
+The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/documents/CreateNodes) and/or a [CreateDependencies](../../devkit/documents/CreateDependencies) instead. This will be removed in Nx 19.
 
 ## Table of contents
 
@@ -36,7 +36,7 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 ### constructor
 
-• **new ProjectGraphBuilder**(`graph?`, `projectFileMap?`, `nonProjectFiles?`)
+• **new ProjectGraphBuilder**(`graph?`, `projectFileMap?`, `nonProjectFiles?`): [`ProjectGraphBuilder`](../../devkit/documents/ProjectGraphBuilder)
 
 #### Parameters
 
@@ -45,6 +45,10 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 | `graph?`           | [`ProjectGraph`](../../devkit/documents/ProjectGraph)     |
 | `projectFileMap?`  | [`ProjectFileMap`](../../devkit/documents/ProjectFileMap) |
 | `nonProjectFiles?` | [`FileData`](../../devkit/documents/FileData)[]           |
+
+#### Returns
+
+[`ProjectGraphBuilder`](../../devkit/documents/ProjectGraphBuilder)
 
 ## Properties
 
@@ -60,7 +64,7 @@ The ProjectGraphProcessor has been deprecated. Use a [CreateNodes](../../devkit/
 
 #### Index signature
 
-▪ [source: `string`]: `Set`<`string`\>
+▪ [source: `string`]: `Set`\<`string`\>
 
 ## Methods
 

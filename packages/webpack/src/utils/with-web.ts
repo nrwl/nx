@@ -1,6 +1,6 @@
 import { Configuration } from 'webpack';
 
-import { NxWebpackExecutionContext, NxWebpackPlugin } from './config';
+import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config';
 import {
   ExtraEntryPointClass,
   NormalizedWebpackExecutorOptions,
@@ -35,7 +35,9 @@ export type MergedOptions = Omit<
  * @param {WithWebOptions} pluginOptions
  * @returns {NxWebpackPlugin}
  */
-export function withWeb(pluginOptions: WithWebOptions = {}): NxWebpackPlugin {
+export function withWeb(
+  pluginOptions: WithWebOptions = {}
+): NxComposableWebpackPlugin {
   return function configure(
     config: Configuration,
     { options, context }: NxWebpackExecutionContext

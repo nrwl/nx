@@ -37,6 +37,8 @@ async function normalizeOptions(
 ): Promise<NormalizedSchema> {
   const projectName = options.rootProject ? 'e2e' : `${options.pluginName}-e2e`;
 
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   let projectRoot: string;
   if (options.projectNameAndRootFormat === 'as-provided') {
     const projectNameAndRootOptions = await determineProjectNameAndRootOptions(
@@ -116,10 +118,12 @@ async function addJest(host: Tree, options: NormalizedSchema) {
 
   const jestTask = await configurationGenerator(host, {
     project: options.projectName,
+    targetName: 'e2e',
     setupFile: 'none',
     supportTsx: false,
     skipSerializers: true,
     skipFormat: true,
+    addPlugin: options.addPlugin,
   });
 
   const { startLocalRegistryPath, stopLocalRegistryPath } =
@@ -139,19 +143,16 @@ async function addJest(host: Tree, options: NormalizedSchema) {
   );
 
   const project = readProjectConfiguration(host, options.projectName);
-  const testTarget = project.targets.test;
+  const e2eTarget = project.targets.e2e;
 
   project.targets.e2e = {
-    ...testTarget,
+    ...e2eTarget,
     dependsOn: [`^build`],
     options: {
-      ...testTarget.options,
+      ...e2eTarget.options,
       runInBand: true,
     },
   };
-
-  // remove the jest build target
-  delete project.targets.test;
 
   updateProjectConfiguration(host, options.projectName, project);
 
@@ -168,10 +169,10 @@ async function addLintingToApplication(
     tsConfigPaths: [
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
-    eslintFilePatterns: [`${options.projectRoot}/**/*.ts`],
     unitTestRunner: 'jest',
     skipFormat: true,
     setParserOptionsProject: false,
+    addPlugin: options.addPlugin,
   });
 
   return lintTask;
@@ -179,6 +180,7 @@ async function addLintingToApplication(
 
 export async function e2eProjectGenerator(host: Tree, schema: Schema) {
   return await e2eProjectGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });

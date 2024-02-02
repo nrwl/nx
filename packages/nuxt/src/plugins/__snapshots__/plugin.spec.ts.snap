@@ -1,0 +1,81 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
+{
+  "projects": {
+    "my-app": {
+      "root": "my-app",
+      "targets": {
+        "build-something": {
+          "cache": true,
+          "command": "nuxt build",
+          "dependsOn": [
+            "^build-something",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "nuxt",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+          "outputs": [
+            "{workspaceRoot}/dist/my-app/",
+          ],
+        },
+        "my-serve": {
+          "command": "nuxt dev",
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
+{
+  "projects": {
+    ".": {
+      "root": ".",
+      "targets": {
+        "build": {
+          "cache": true,
+          "command": "nuxt build",
+          "dependsOn": [
+            "^build",
+          ],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": [
+                "nuxt",
+              ],
+            },
+          ],
+          "options": {
+            "cwd": ".",
+          },
+          "outputs": [
+            "dist/my-app/",
+          ],
+        },
+        "serve": {
+          "command": "nuxt dev",
+          "options": {
+            "cwd": ".",
+          },
+        },
+      },
+    },
+  },
+}
+`;

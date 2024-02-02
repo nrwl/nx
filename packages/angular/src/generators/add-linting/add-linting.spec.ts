@@ -1,4 +1,4 @@
-import type { ProjectConfiguration, Tree } from '@nx/devkit';
+import { ProjectConfiguration, readNxJson, Tree } from '@nx/devkit';
 import {
   addProjectConfiguration,
   readJson,
@@ -31,6 +31,8 @@ describe('addLinting generator', () => {
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
+      skipFormat: true,
+      addPlugin: true,
     });
 
     expect(linter.lintProjectGenerator).toHaveBeenCalled();
@@ -41,6 +43,8 @@ describe('addLinting generator', () => {
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
+      skipFormat: true,
+      addPlugin: true,
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
@@ -56,29 +60,32 @@ describe('addLinting generator', () => {
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
+      skipFormat: true,
+      addPlugin: true,
     });
 
     const eslintConfig = readJson(tree, `${appProjectRoot}/.eslintrc.json`);
     expect(eslintConfig).toMatchSnapshot();
   });
 
-  it('should update the project with the right lint target configuration', async () => {
+  it('should add @nx/eslint/plugin', async () => {
     await addLintingGenerator(tree, {
       prefix: 'myOrg',
       projectName: appProjectName,
       projectRoot: appProjectRoot,
+      skipFormat: true,
+      addPlugin: true,
     });
 
-    const project = readProjectConfiguration(tree, appProjectName);
-    expect(project.targets.lint).toEqual({
-      executor: '@nx/eslint:lint',
-      options: {
-        lintFilePatterns: [
-          `${appProjectRoot}/**/*.ts`,
-          `${appProjectRoot}/**/*.html`,
-        ],
-      },
-      outputs: ['{options.outputFile}'],
-    });
+    const nxJson = readNxJson(tree);
+    expect(
+      nxJson.plugins.find((p) => {
+        if (typeof p === 'string') {
+          return p === '@nx/eslint/plugin';
+        } else {
+          return p.plugin === '@nx/eslint/plugin';
+        }
+      })
+    ).toBeTruthy();
   });
 });

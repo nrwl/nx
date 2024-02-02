@@ -19,12 +19,18 @@ jest.mock('@nx/devkit', () => ({
   createProjectGraphAsync: jest.fn().mockImplementation(async () => {
     return projectGraph;
   }),
+  formatFiles: jest.fn(),
 }));
 describe('Jest+Ng - 15.9.0 - tsconfig updates', () => {
   let tree: Tree;
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     tree.write('.gitignore', '');
+
+    projectGraph = {
+      dependencies: {},
+      nodes: {},
+    };
   });
 
   it('should update tsconfig.spec.json with target es2016', async () => {
@@ -75,6 +81,8 @@ async function setup(tree: Tree, name: string) {
     name,
     skipPackageJson: true,
     projectNameAndRootFormat: 'derived',
+    skipFormat: true,
+    addPlugin: false,
   });
 
   const projectConfig = readProjectConfiguration(tree, name);
@@ -97,6 +105,7 @@ async function setup(tree: Tree, name: string) {
 
   await generateTestLibrary(tree, {
     name: `${name}-lib`,
+    skipFormat: true,
   });
 
   const libConfig = readProjectConfiguration(tree, `${name}-lib`);

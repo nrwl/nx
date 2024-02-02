@@ -24,16 +24,10 @@ import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
-import {
-  DaemonBasedTaskHasher,
-  InProcessTaskHasher,
-  TaskHasher,
-} from '../hasher/task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { getFileMap } from '../project-graph/build-project-graph';
-import { performance } from 'perf_hooks';
+import { createTaskHasher } from '../hasher/create-task-hasher';
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -233,20 +227,7 @@ export async function invokeTasksRunner({
 
   const { tasksRunner, runnerOptions } = getRunner(nxArgs, nxJson);
 
-  let hasher: TaskHasher;
-  if (daemonClient.enabled()) {
-    hasher = new DaemonBasedTaskHasher(daemonClient, runnerOptions);
-  } else {
-    const { fileMap, allWorkspaceFiles, rustReferences } = getFileMap();
-    hasher = new InProcessTaskHasher(
-      fileMap?.projectFileMap,
-      allWorkspaceFiles,
-      projectGraph,
-      nxJson,
-      rustReferences,
-      runnerOptions
-    );
-  }
+  let hasher = createTaskHasher(projectGraph, nxJson, runnerOptions);
 
   // this is used for two reasons: to fetch all remote cache hits AND
   // to submit everything that is known in advance to Nx Cloud to run in
@@ -279,7 +260,7 @@ export async function invokeTasksRunner({
               title: `TaskGraph is now required as an argument to hashTask`,
               bodyLines: [
                 `The TaskGraph object can be retrieved from the context`,
-                'This will result in an error in Nx 18',
+                'This will result in an error in Nx 19',
               ],
             });
             taskGraph_ = taskGraph;
@@ -289,7 +270,7 @@ export async function invokeTasksRunner({
               title: `The environment variables are now required as an argument to hashTask`,
               bodyLines: [
                 `Please pass the environment variables used when running the task`,
-                'This will result in an error in Nx 18',
+                'This will result in an error in Nx 19',
               ],
             });
             env = process.env;
@@ -306,7 +287,7 @@ export async function invokeTasksRunner({
               title: `TaskGraph is now required as an argument to hashTasks`,
               bodyLines: [
                 `The TaskGraph object can be retrieved from the context`,
-                'This will result in an error in Nx 18',
+                'This will result in an error in Nx 19',
               ],
             });
             taskGraph_ = taskGraph;
@@ -316,7 +297,7 @@ export async function invokeTasksRunner({
               title: `The environment variables are now required as an argument to hashTasks`,
               bodyLines: [
                 `Please pass the environment variables used when running the tasks`,
-                'This will result in an error in Nx 18',
+                'This will result in an error in Nx 19',
               ],
             });
             env = process.env;

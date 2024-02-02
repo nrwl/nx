@@ -2,7 +2,7 @@
   "name": "init",
   "factory": "./src/generators/init/init#initGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxTypescriptInit",
     "cli": "nx",
     "title": "Init nx/js",
@@ -23,6 +23,12 @@
         "type": "boolean",
         "description": "Skip adding package.json dependencies",
         "x-priority": "internal"
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
       },
       "tsConfigName": {
         "type": "string",

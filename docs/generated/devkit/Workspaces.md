@@ -2,7 +2,7 @@
 
 **`Deprecated`**
 
-This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph) instead.
+This will be removed in v19. Use [readProjectsConfigurationFromProjectGraph](../../devkit/documents/readProjectsConfigurationFromProjectGraph) instead.
 
 ## Table of contents
 
@@ -18,7 +18,7 @@ This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../
 
 ### constructor
 
-• **new Workspaces**(`root`)
+• **new Workspaces**(`root`): [`Workspaces`](../../devkit/documents/Workspaces)
 
 #### Parameters
 
@@ -26,15 +26,19 @@ This will be removed in v18. Use [readProjectsConfigurationFromProjectGraph](../
 | :----- | :------- |
 | `root` | `string` |
 
+#### Returns
+
+[`Workspaces`](../../devkit/documents/Workspaces)
+
 ## Methods
 
 ### readWorkspaceConfiguration
 
-▸ **readWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
+▸ **readWorkspaceConfiguration**(): [`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
 
 #### Returns
 
-[`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)<`string`[] \| `"*"`\>
+[`ProjectsConfigurations`](../../devkit/documents/ProjectsConfigurations) & [`NxJsonConfiguration`](../../devkit/documents/NxJsonConfiguration)\<`string`[] \| `"*"`\>
 
 **`Deprecated`**
 

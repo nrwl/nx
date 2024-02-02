@@ -74,8 +74,11 @@ export async function createBuilderContext(
   },
   context: ExecutorContext
 ) {
-  require('nx/src/adapter/compat');
-  const fsHost = new NxScopedHost(context.root);
+  require('./compat');
+  const fsHost = new NxScopedHostForBuilders(context.root);
+  // the top level import is not patched because it is imported before the
+  // patching happens so we require it here to use the patched version below
+  const { workspaces } = require('@angular-devkit/core');
   const { workspace } = await workspaces.readWorkspace(
     'angular.json',
     workspaces.createWorkspaceHost(fsHost)
@@ -113,6 +116,35 @@ export async function createBuilderContext(
       architect['_scheduler'].schedule('..getProjectMetadata', target).output
     );
 
+  const getBuilderNameForTarget = (target: Target | string) => {
+    if (typeof target === 'string') {
+      return Promise.resolve(
+        context.projectGraph.nodes[context.projectName].data.targets[target]
+          .executor
+      );
+    }
+    return Promise.resolve(
+      context.projectGraph.nodes[target.project].data.targets[target.target]
+        .executor
+    );
+  };
+
+  const getTargetOptions = (target: Target | string) => {
+    if (typeof target === 'string') {
+      return Promise.resolve({
+        ...context.projectGraph.nodes[context.projectName].data.targets[target]
+          .options,
+      });
+    }
+
+    return Promise.resolve({
+      ...context.projectGraph.nodes[target.project].data.targets[target.target]
+        .options,
+      ...context.projectGraph.nodes[target.project].data.targets[target.target]
+        .configurations[target.configuration],
+    });
+  };
+
   const builderContext: import('@angular-devkit/architect').BuilderContext = {
     workspaceRoot: context.root,
     target: {
@@ -127,9 +159,7 @@ export async function createBuilderContext(
     id: 1,
     currentDirectory: process.cwd(),
     scheduleTarget: architect.scheduleTarget,
-    getBuilderNameForTarget: architectHost.getBuilderNameForTarget,
     scheduleBuilder: architect.scheduleBuilder,
-    getTargetOptions: architectHost.getOptionsForTarget,
     addTeardown(teardown: () => Promise<void> | void) {
       // No-op as Nx doesn't require an implementation of this function
       return;
@@ -146,8 +176,10 @@ export async function createBuilderContext(
       // No-op as Nx doesn't require an implementation of this function
       return;
     },
+    getBuilderNameForTarget,
     getProjectMetadata,
     validateOptions,
+    getTargetOptions,
   };
 
   return builderContext;
@@ -167,7 +199,7 @@ export async function scheduleTarget(
   const { Architect } = require('@angular-devkit/architect');
 
   const logger = getLogger(verbose);
-  const fsHost = new NxScopedHost(root);
+  const fsHost = new NxScopedHostForBuilders(root);
   const { workspace } = await workspaces.readWorkspace(
     'angular.json',
     workspaces.createWorkspaceHost(fsHost)
@@ -366,7 +398,7 @@ async function runSchematic(
       })
       .toPromise();
   } catch (e) {
-    console.log(e);
+    console.error(e);
     throw e;
   }
   if (!record.error) {
@@ -398,7 +430,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     }
   }
 
-  private readMergedWorkspaceConfiguration() {
+  protected readMergedWorkspaceConfiguration() {
     return zip(
       from(createProjectGraphAsync()),
       this.readExistingAngularJson(),
@@ -438,8 +470,8 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
         );
       }),
       catchError((err) => {
-        console.log('Unable to read angular.json');
-        console.log(err);
+        console.error('Unable to read angular.json');
+        console.error(err);
         process.exit(1);
       })
     );
@@ -566,7 +598,7 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
     return this.readJson('angular.json');
   }
 
-  private readJson<T = any>(path: string): Observable<T> {
+  protected readJson<T = any>(path: string): Observable<T> {
     return super
       .exists(path as any)
       .pipe(
@@ -578,6 +610,39 @@ export class NxScopedHost extends virtualFs.ScopedHost<any> {
             : of(null)
         )
       );
+  }
+}
+
+/**
+ * Host used by Angular CLI builders. It reads the project configurations from
+ * the project graph to access the expanded targets.
+ */
+export class NxScopedHostForBuilders extends NxScopedHost {
+  protected readMergedWorkspaceConfiguration() {
+    return zip(
+      from(createProjectGraphAsync()),
+      this.readExistingAngularJson(),
+      this.readJson<NxJsonConfiguration>('nx.json')
+    ).pipe(
+      map(([graph, angularJson, nxJson]) => {
+        const workspaceConfig = (angularJson || { projects: {} }) as any;
+        workspaceConfig.cli ??= nxJson.cli;
+        workspaceConfig.schematics ??= nxJson.generators;
+
+        for (const projectName of Object.keys(graph.nodes)) {
+          workspaceConfig.projects[projectName] ??= {
+            ...graph.nodes[projectName].data,
+          };
+        }
+
+        return workspaceConfig;
+      }),
+      catchError((err) => {
+        console.error('Unable to read angular.json');
+        console.error(err);
+        process.exit(1);
+      })
+    );
   }
 }
 
@@ -596,6 +661,10 @@ export function arrayBufferToString(buffer: any) {
   return result;
 }
 
+/**
+ * Host used by Angular CLI schematics. It reads the project configurations from
+ * the project configuration files.
+ */
 export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
   constructor(root: string, private readonly host: Tree) {
     super(root);

@@ -82,8 +82,8 @@ impl TaskHasher {
         hash_plans: External<HashMap<String, Vec<HashInstruction>>>,
         js_env: HashMap<String, String>,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
-        debug!("{:?}", hash_plans.as_ref());
-        trace!("hash_plans: {}", hash_plans.len());
+        debug!("hashing plans {:?}", hash_plans.as_ref());
+        trace!("plan length: {}", hash_plans.len());
         trace!("all workspace files: {}", self.all_workspace_files.len());
         trace!("project_file_map: {}", self.project_file_map.len());
 
@@ -103,7 +103,7 @@ impl TaskHasher {
 
         let hashes: NapiDashMap<String, HashDetails> = NapiDashMap::new();
 
-        let _ = hash_plans
+        hash_plans
             .iter()
             .flat_map(|(task_id, instructions)| {
                 instructions
@@ -133,7 +133,7 @@ impl TaskHasher {
 
                 entry.details.insert(hash_detail.0, hash_detail.1);
                 Ok::<(), anyhow::Error>(())
-            });
+            })?;
 
         hashes.iter_mut().for_each(|mut h| {
             let hash_details = h.value_mut();
@@ -190,7 +190,7 @@ impl TaskHasher {
                 trace!(parent: &span, "hash_env: {:?}", now.elapsed());
                 hashed_env
             }
-            HashInstruction::ProjectFileSet(project_name, file_set) => {
+            HashInstruction::ProjectFileSet(project_name, file_sets) => {
                 let project = self
                     .project_graph
                     .nodes
@@ -199,7 +199,7 @@ impl TaskHasher {
                 let hashed_project_files = hash_project_files(
                     project_name,
                     &project.root,
-                    file_set,
+                    file_sets,
                     &self.project_file_map,
                 )?;
                 trace!(parent: &span, "hash_project_files: {:?}", now.elapsed());
@@ -222,8 +222,20 @@ impl TaskHasher {
                         project_root_mappings,
                     )?
                 };
+
+                let ts_hash = self
+                    .project_graph
+                    .external_nodes
+                    .get("typescript")
+                    .and_then(|pkg| pkg.hash.as_deref())
+                    .map(|pkg_hash| {
+                        hash(&[pkg_hash.as_bytes(), ts_config_hash.as_bytes()].concat())
+                    })
+                    // the unwrap_or is for the case where typescript is not installed
+                    .unwrap_or(ts_config_hash);
+
                 trace!(parent: &span, "hash_tsconfig: {:?}", now.elapsed());
-                ts_config_hash
+                ts_hash
             }
             HashInstruction::TaskOutput(glob, outputs) => {
                 let hashed_task_output = hash_task_output(&self.workspace_root, glob, outputs)?;

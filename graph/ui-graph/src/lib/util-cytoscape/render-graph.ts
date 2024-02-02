@@ -223,12 +223,10 @@ export class RenderGraph {
       const node = event.target;
 
       let ref: VirtualElement = node.popperRef(); // used only for positioning
-
       this.broadcast({
         type: 'ProjectNodeClick',
         ref,
         id: node.id(),
-
         data: {
           id: node.id(),
           type: node.data('type'),
@@ -249,7 +247,6 @@ export class RenderGraph {
         type: 'TaskNodeClick',
         ref,
         id: node.id(),
-
         data: {
           id: node.id(),
           label: node.data('label'),
@@ -270,7 +267,6 @@ export class RenderGraph {
         type: 'EdgeClick',
         ref,
         id: edge.id(),
-
         data: {
           id: edge.id(),
           type: edge.data('type'),

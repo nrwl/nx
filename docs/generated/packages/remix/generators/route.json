@@ -1,0 +1,69 @@
+{
+  "name": "route",
+  "implementation": "/packages/remix/src/generators/route/route.impl.ts",
+  "schema": {
+    "$schema": "https://json-schema.org/schema",
+    "$id": "NxRemixRoute",
+    "title": "Create a Route",
+    "description": "Generate a route.",
+    "type": "object",
+    "examples": [
+      {
+        "command": "g route 'path/to/page'",
+        "description": "Generate route at /path/to/page"
+      }
+    ],
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "The route path or path to the filename of the route. When `--nameAndDirectoryFormat=as-provided`, it will be relative to the current working directory. Otherwise, it will be relative to the workspace root.",
+        "$default": { "$source": "argv", "index": 0 },
+        "x-prompt": "What is the path of the route? (e.g. 'apps/demo/app/routes/foo/bar')"
+      },
+      "nameAndDirectoryFormat": {
+        "description": "Whether to generate the route in the path as provided, relative to the current working directory and ignoring the project (`as-provided`) or generate it using the project and path relative to the workspace root (`derived`).",
+        "type": "string",
+        "enum": ["as-provided", "derived"]
+      },
+      "project": {
+        "type": "string",
+        "description": "The name of the project.",
+        "pattern": "^[a-zA-Z].*$",
+        "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v19."
+      },
+      "style": {
+        "type": "string",
+        "description": "Generate a stylesheet",
+        "enum": ["none", "css"],
+        "default": "css"
+      },
+      "meta": {
+        "type": "boolean",
+        "description": "Generate a meta function",
+        "default": false
+      },
+      "action": {
+        "type": "boolean",
+        "description": "Generate an action function",
+        "default": false
+      },
+      "loader": {
+        "type": "boolean",
+        "description": "Generate a loader function",
+        "default": false
+      },
+      "skipChecks": {
+        "type": "boolean",
+        "description": "Skip route error detection",
+        "default": false
+      }
+    },
+    "required": ["path"],
+    "presets": []
+  },
+  "description": "Generate a new route",
+  "aliases": [],
+  "hidden": false,
+  "path": "/packages/remix/src/generators/route/schema.json",
+  "type": "generator"
+}

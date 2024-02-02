@@ -487,21 +487,6 @@ describe('lib', () => {
     });
 
     describe('not nested', () => {
-      it('should update configuration', async () => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-lib',
-          projectNameAndRootFormat: 'as-provided',
-        });
-        expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
-          executor: '@nx/eslint:lint',
-          outputs: ['{options.outputFile}'],
-          options: {
-            lintFilePatterns: ['my-lib/**/*.ts', 'my-lib/package.json'],
-          },
-        });
-      });
-
       it('should create a local .eslintrc.json', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
@@ -558,26 +543,6 @@ describe('lib', () => {
     });
 
     describe('nested', () => {
-      it('should update configuration', async () => {
-        await libraryGenerator(tree, {
-          ...defaultOptions,
-          name: 'my-lib',
-          directory: 'my-dir/my-lib',
-          projectNameAndRootFormat: 'as-provided',
-        });
-
-        expect(readProjectConfiguration(tree, 'my-lib').targets.lint).toEqual({
-          executor: '@nx/eslint:lint',
-          outputs: ['{options.outputFile}'],
-          options: {
-            lintFilePatterns: [
-              'my-dir/my-lib/**/*.ts',
-              'my-dir/my-lib/package.json',
-            ],
-          },
-        });
-      });
-
       it('should create a local .eslintrc.json', async () => {
         await libraryGenerator(tree, {
           ...defaultOptions,
@@ -711,10 +676,6 @@ describe('lib', () => {
           js: true,
           projectNameAndRootFormat: 'as-provided',
         });
-        expect(
-          readProjectConfiguration(tree, 'my-lib').targets.lint.options
-            .lintFilePatterns
-        ).toEqual(['my-dir/my-lib/**/*.js', 'my-dir/my-lib/package.json']);
         expect(readJson(tree, 'my-dir/my-lib/.eslintrc.json'))
           .toMatchInlineSnapshot(`
           {
@@ -777,9 +738,6 @@ describe('lib', () => {
       expect(tree.exists('my-lib/jest.config.ts')).toBeTruthy();
       expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
 
-      const projectConfig = readProjectConfiguration(tree, 'my-lib');
-      expect(projectConfig.targets.test).toBeDefined();
-
       expect(tree.exists(`my-lib/jest.config.ts`)).toBeTruthy();
       expect(tree.read(`my-lib/jest.config.ts`, 'utf-8'))
         .toMatchInlineSnapshot(`
@@ -812,9 +770,6 @@ describe('lib', () => {
       expect(tree.exists('my-lib/tsconfig.spec.json')).toBeTruthy();
       expect(tree.exists('my-lib/jest.config.js')).toBeTruthy();
       expect(tree.exists('my-lib/src/lib/my-lib.spec.js')).toBeTruthy();
-
-      const projectConfig = readProjectConfiguration(tree, 'my-lib');
-      expect(projectConfig.targets.test).toBeDefined();
 
       expect(tree.exists(`my-lib/jest.config.js`)).toBeTruthy();
       expect(tree.read(`my-lib/jest.config.js`, 'utf-8')).toMatchSnapshot();
@@ -1186,14 +1141,10 @@ describe('lib', () => {
         projectNameAndRootFormat: 'as-provided',
       });
 
-      const project = readProjectConfiguration(tree, 'my-lib');
-      expect(project.targets.build).toMatchObject({
-        executor: '@nx/vite:build',
-      });
-      expect(project.targets.test).toMatchObject({
-        executor: '@nx/vite:test',
-      });
+      expect(tree.exists('my-lib/vite.config.ts')).toBeTruthy();
       expect(tree.read('my-lib/vite.config.ts', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',
@@ -1209,12 +1160,12 @@ describe('lib', () => {
     });
 
     it.each`
-      unitTestRunner | executor
+      unitTestRunner | configPath
       ${'none'}      | ${undefined}
-      ${'jest'}      | ${'@nx/jest:jest'}
+      ${'jest'}      | ${'my-lib/jest.config.ts'}
     `(
       'should respect unitTestRunner if passed',
-      async ({ unitTestRunner, executor }) => {
+      async ({ unitTestRunner, configPath }) => {
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'my-lib',
@@ -1223,8 +1174,13 @@ describe('lib', () => {
           projectNameAndRootFormat: 'as-provided',
         });
 
-        const project = readProjectConfiguration(tree, 'my-lib');
-        expect(project.targets.test?.executor).toEqual(executor);
+        expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
+        expect(
+          tree.read('my-lib/tsconfig.lib.json', 'utf-8')
+        ).toMatchSnapshot();
+        if (configPath) {
+          expect(tree.read(configPath, 'utf-8')).toMatchSnapshot();
+        }
       }
     );
   });

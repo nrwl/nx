@@ -15,7 +15,9 @@ describe('Next.js Webpack', () => {
   let originalEnv: string;
 
   beforeEach(() => {
-    proj = newProject();
+    proj = newProject({
+      packages: ['@nx/next'],
+    });
     originalEnv = process.env.NODE_ENV;
   });
 
@@ -28,7 +30,12 @@ describe('Next.js Webpack', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`
+      `generate @nx/next:app ${appName} --no-interactive --style=css --appDir=false`,
+      {
+        env: {
+          NX_ADD_PLUGINS: 'false',
+        },
+      }
     );
 
     updateFile(
@@ -41,11 +48,29 @@ describe('Next.js Webpack', () => {
           },
           webpack: (config, context) => {
             // Make sure SVGR plugin is disabled if nx.svgr === false (see above)
-            const found = config.module.rules.find(r => {
-              if (!r.test || !r.test.test('test.svg')) return false;
-              if (!r.oneOf || !r.oneOf.use) return false;
-              return r.oneOf.use.some(rr => /svgr/.test(rr.loader));
+            const found = config.module.rules.find((rule) => {
+              // Check if the rule is for SVG files
+              if (!/\.(svg)$/i.test('test.svg')) return false;
+        
+              // Check if the rule has a 'oneOf' structure
+              if (!rule.oneOf || !Array.isArray(rule.oneOf)) return false;
+        
+              // Check each item in 'oneOf' for SVGR loader
+              return rule.oneOf.some((oneOfRule) => {
+                if (!oneOfRule.use) return false;
+                // 'use' might be an object or an array, ensure it's an array for consistency
+                const uses = Array.isArray(oneOfRule.use)
+                  ? oneOfRule.use
+                  : [oneOfRule.use];
+                  return uses.some(use => {
+                    if (typeof use.loader !== 'string') return false;
+                    
+                    const svgrRegex = new RegExp('@svgr/webpack');
+                    return svgrRegex.test(use.loader);
+                  });
+              });
             });
+
             if (found) throw new Error('Found SVGR plugin');
 
             console.log('NODE_ENV is', process.env.NODE_ENV);
@@ -94,6 +119,6 @@ describe('Next.js Webpack', () => {
     expect(() => {
       runCLI(`build ${appName}`);
     }).not.toThrow();
-    checkFilesExist(`apps/${appName}/.next/build-manifest.json`);
+    checkFilesExist(`dist/apps/${appName}/.next/build-manifest.json`);
   }, 300_000);
 });

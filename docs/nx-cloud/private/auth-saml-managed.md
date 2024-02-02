@@ -31,9 +31,9 @@ You'll be entering it in the instructions below.
    ![Okta 5](/nx-cloud/private/images/saml/okta_5.png)
 
 5. Click “Next”, and select the first option on the next screen.
-6. Go to the assignments tab and assign the users that can login to the NxCloud WebApp:
+6. Go to the assignments tab and assign the users that can login to the Nx Cloud WebApp:
 
-   1. **Note:** This just gives them permission to use the NxCloud web app with their own workspace. Users will still need to be invited manually through the web app to your main workspace.
+   1. **Note:** This just gives them permission to use the Nx Cloud web app with their own workspace. Users will still need to be invited manually through the web app to your main workspace.
 
    ![Okta 6](/nx-cloud/private/images/saml/okta_6.png)
 

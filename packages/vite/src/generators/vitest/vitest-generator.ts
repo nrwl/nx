@@ -5,6 +5,7 @@ import {
   GeneratorCallback,
   joinPathFragments,
   offsetFromRoot,
+  readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
   Tree,
@@ -23,12 +24,26 @@ import {
   vitestCoverageV8Version,
 } from '../../utils/versions';
 
-import { addTsLibDependencies } from '@nx/js';
+import { addTsLibDependencies, initGenerator as jsInitGenerator } from '@nx/js';
 import { join } from 'path';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
-export async function vitestGenerator(
+export function vitestGenerator(
   tree: Tree,
-  schema: VitestGeneratorSchema
+  schema: VitestGeneratorSchema,
+  hasPlugin = false
+) {
+  return vitestGeneratorInternal(
+    tree,
+    { addPlugin: false, ...schema },
+    hasPlugin
+  );
+}
+
+export async function vitestGeneratorInternal(
+  tree: Tree,
+  schema: VitestGeneratorSchema,
+  hasPlugin = false
 ) {
   const tasks: GeneratorCallback[] = [];
 
@@ -36,18 +51,29 @@ export async function vitestGenerator(
     tree,
     schema.project
   );
-  let testTarget =
-    schema.testTarget ??
-    findExistingTargetsInProject(targets).validFoundTargetName.test ??
-    'test';
 
-  addOrChangeTestTarget(tree, schema, testTarget);
-
+  tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
   const initTask = await initGenerator(tree, {
-    uiFramework: schema.uiFramework,
-    testEnvironment: schema.testEnvironment,
+    skipFormat: true,
+    addPlugin: schema.addPlugin,
   });
   tasks.push(initTask);
+  tasks.push(ensureDependencies(tree, schema));
+
+  const nxJson = readNxJson(tree);
+  const hasPluginCheck = nxJson.plugins?.some(
+    (p) =>
+      (typeof p === 'string'
+        ? p === '@nx/vite/plugin'
+        : p.plugin === '@nx/vite/plugin') || hasPlugin
+  );
+  if (!hasPluginCheck) {
+    const testTarget =
+      schema.testTarget ??
+      findExistingTargetsInProject(targets).validFoundTargetName.test ??
+      'test';
+    addOrChangeTestTarget(tree, schema, testTarget);
+  }
 
   if (!schema.skipViteConfig) {
     if (schema.uiFramework === 'react') {
@@ -65,6 +91,7 @@ export async function vitestGenerator(
           ],
           imports: [`import react from '@vitejs/plugin-react'`],
           plugins: ['react()'],
+          coverageProvider: schema.coverageProvider,
         },
         true
       );

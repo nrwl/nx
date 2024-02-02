@@ -21,6 +21,7 @@ import setupSsrGenerator from '../setup-ssr/setup-ssr';
 import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
 import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
 import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
+import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -74,6 +75,8 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:remote')),
     typescriptConfiguration: schema.typescriptConfiguration ?? false,
     dynamic: schema.dynamic ?? false,
+    // TODO(colum): remove when MF works with Crystal
+    addPlugin: false,
   };
   const initAppTask = await applicationGenerator(host, {
     ...options,
@@ -140,6 +143,8 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
       pathToMFManifest
     );
   }
+
+  addMfEnvToTargetDefaultInputs(host);
 
   if (!options.skipFormat) {
     await formatFiles(host);

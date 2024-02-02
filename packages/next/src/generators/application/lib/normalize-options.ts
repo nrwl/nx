@@ -34,6 +34,7 @@ export async function normalizeOptions(
   });
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;
   const e2eProjectRoot = options.rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
@@ -53,6 +54,7 @@ export async function normalizeOptions(
   const fileName = 'index';
 
   const appDir = options.appDir ?? true;
+  const src = options.src ?? true;
 
   const styledModule = /^(css|scss|less)$/.test(options.style)
     ? null
@@ -63,6 +65,7 @@ export async function normalizeOptions(
   return {
     ...options,
     appDir,
+    src,
     appProjectRoot,
     e2eProjectName,
     e2eProjectRoot,

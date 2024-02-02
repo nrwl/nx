@@ -1,8 +1,39 @@
+<% if (webpackPluginOptions) { %>
+const { NxWebpackPlugin } = require('@nx/webpack');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '<%= offsetFromRoot %><%= webpackPluginOptions.outputPath %>'),
+  },
+  devServer: {
+    port: 4200
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: '<%= webpackPluginOptions.tsConfig %>',
+      compiler: '<%= webpackPluginOptions.compiler %>',
+      main: '<%= webpackPluginOptions.main %>',
+      index: '<%= webpackPluginOptions.index %>',
+      baseHref: '<%= webpackPluginOptions.baseHref %>',
+      assets: <%- JSON.stringify(webpackPluginOptions.assets) %>,
+      styles: <%- JSON.stringify(webpackPluginOptions.styles) %>,
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    })
+  ],
+};
+<% } else { %>
 const { composePlugins, withNx, withWeb } = require('@nx/webpack');
 
 // Nx plugins for webpack.
-module.exports = composePlugins(withNx(), withWeb(), (config) => {
-  // Update the webpack config as needed here.
-  // e.g. `config.plugins.push(new MyPlugin())`
-  return config;
-});
+module.exports = composePlugins(
+  withNx(),
+  withWeb(),
+  (config) => {
+    // Update the webpack config as needed here.
+    // e.g. `config.plugins.push(new MyPlugin())`
+    return config;
+  }
+);
+<% } %>

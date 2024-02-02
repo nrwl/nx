@@ -1,7 +1,10 @@
 import {
   joinPathFragments,
+  normalizePath,
+  parseTargetString,
   ProjectGraph,
   readCachedProjectGraph,
+  targetToTargetString,
 } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
 import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
@@ -9,7 +12,7 @@ import { existsSync } from 'fs';
 import { readNxJson } from 'nx/src/config/configuration';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
-import { join } from 'path';
+import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
@@ -52,9 +55,13 @@ export function executeWebpackBrowserBuilder(
   const {
     buildLibsFromSource,
     customWebpackConfig,
+    indexHtmlTransformer,
     indexFileTransformer,
     ...delegateBuilderOptions
   } = options;
+
+  process.env.NX_BUILD_LIBS_FROM_SOURCE = `${buildLibsFromSource}`;
+  process.env.NX_BUILD_TARGET = targetToTargetString({ ...context.target });
 
   const pathToWebpackConfig =
     customWebpackConfig?.path &&
@@ -65,9 +72,11 @@ export function executeWebpackBrowserBuilder(
     );
   }
 
+  const normalizedIndexHtmlTransformer =
+    indexHtmlTransformer ?? indexFileTransformer;
   const pathToIndexFileTransformer =
-    indexFileTransformer &&
-    joinPathFragments(context.workspaceRoot, indexFileTransformer);
+    normalizedIndexHtmlTransformer &&
+    joinPathFragments(context.workspaceRoot, normalizedIndexHtmlTransformer);
   if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
     throw new Error(
       `File containing Index File Transformer function Not Found!\n Please ensure the path to the file containing the function is correct: \n${pathToIndexFileTransformer}`
@@ -85,7 +94,9 @@ export function executeWebpackBrowserBuilder(
         { projectGraph }
       );
     dependencies = foundDependencies;
-    delegateBuilderOptions.tsConfig = tsConfigPath;
+    delegateBuilderOptions.tsConfig = normalizePath(
+      relative(context.workspaceRoot, tsConfigPath)
+    );
   }
 
   return from(import('@angular-devkit/build-angular')).pipe(

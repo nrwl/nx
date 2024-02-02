@@ -1,5 +1,5 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { Tree, readJson } from '@nx/devkit';
+import { Tree, readJson, readProjectConfiguration } from '@nx/devkit';
 import { applicationGenerator } from './application';
 
 describe('app', () => {
@@ -8,7 +8,7 @@ describe('app', () => {
 
   describe('generated files content - as-provided', () => {
     describe('general application', () => {
-      beforeAll(async () => {
+      beforeEach(async () => {
         tree = createTreeWithEmptyWorkspace();
         await applicationGenerator(tree, {
           name,
@@ -16,6 +16,14 @@ describe('app', () => {
           unitTestRunner: 'vitest',
         });
       });
+
+      it('should not add targets', async () => {
+        const projectConfig = readProjectConfiguration(tree, name);
+        expect(projectConfig.targets.build).toBeUndefined();
+        expect(projectConfig.targets.serve).toBeUndefined();
+        expect(projectConfig.targets.test).toBeUndefined();
+      });
+
       it('should create all new files in the correct location', async () => {
         const newFiles = tree.listChanges().map((change) => change.path);
         expect(newFiles).toMatchSnapshot();
@@ -40,8 +48,7 @@ describe('app', () => {
         ).toMatchSnapshot();
         expect(tree.read('my-app/tsconfig.json', 'utf-8')).toMatchSnapshot();
         const packageJson = readJson(tree, 'package.json');
-        expect(packageJson.devDependencies['vitest']).toEqual('0.31.4');
-        expect(packageJson.devDependencies['nuxt-vitest']).toEqual('^0.11.0');
+        expect(packageJson.devDependencies['vitest']).toEqual('^1.0.4');
       });
 
       it('should configure tsconfig and project.json correctly', () => {

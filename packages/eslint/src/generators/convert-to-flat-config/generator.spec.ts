@@ -1,6 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   NxJsonConfiguration,
+  ProjectConfiguration,
   Tree,
   addProjectConfiguration,
   readJson,
@@ -17,6 +18,8 @@ import { dump } from 'js-yaml';
 describe('convert-to-flat-config generator', () => {
   let tree: Tree;
   const options: ConvertToFlatConfigGeneratorSchema = { skipFormat: false };
+
+  // TODO(@meeroslav): add plugin in these tests
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -46,7 +49,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -132,7 +134,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -216,7 +217,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -233,12 +233,12 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
     tree.write('another-folder/.myeslintignore', 'ignore/me');
     updateJson(tree, 'libs/test-lib/project.json', (json) => {
+      json.targets.lint.options = json.targets.lint.options || {};
       json.targets.lint.options.ignorePath = 'another-folder/.myeslintignore';
       return json;
     });
@@ -262,7 +262,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -281,7 +280,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -301,7 +299,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -320,7 +317,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -342,7 +338,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -364,7 +359,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -381,7 +375,6 @@ describe('convert-to-flat-config generator', () => {
     await lintProjectGenerator(tree, {
       skipFormat: false,
       linter: Linter.EsLint,
-      eslintFilePatterns: ['**/*.ts'],
       project: 'test-lib',
       setParserOptionsProject: false,
     });
@@ -439,5 +432,68 @@ describe('convert-to-flat-config generator', () => {
       ];
       "
     `);
+  });
+
+  it('should convert project if target is defined via plugin as string', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      delete json.targetDefaults;
+      json.plugins = ['@nx/eslint/plugin'];
+      return json;
+    });
+    updateJson(
+      tree,
+      'libs/test-lib/project.json',
+      (json: ProjectConfiguration) => {
+        delete json.targets.lint;
+        return json;
+      }
+    );
+
+    expect(tree.exists('eslint.config.js')).toBeFalsy();
+    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeFalsy();
+    await convertToFlatConfigGenerator(tree, options);
+    expect(tree.exists('eslint.config.js')).toBeTruthy();
+    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
+  });
+
+  it('should convert project if target is defined via plugin as object', async () => {
+    await lintProjectGenerator(tree, {
+      skipFormat: false,
+      linter: Linter.EsLint,
+      project: 'test-lib',
+      setParserOptionsProject: false,
+    });
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      delete json.targetDefaults;
+      json.plugins = [
+        {
+          plugin: '@nx/eslint/plugin',
+          options: {
+            targetName: 'lint',
+          },
+        },
+      ];
+      return json;
+    });
+    updateJson(
+      tree,
+      'libs/test-lib/project.json',
+      (json: ProjectConfiguration) => {
+        delete json.targets.lint;
+        return json;
+      }
+    );
+
+    expect(tree.exists('eslint.config.js')).toBeFalsy();
+    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeFalsy();
+    await convertToFlatConfigGenerator(tree, options);
+    expect(tree.exists('eslint.config.js')).toBeTruthy();
+    expect(tree.exists('libs/test-lib/eslint.config.js')).toBeTruthy();
   });
 });

@@ -41,6 +41,42 @@
       "version": "16.9.0-beta.1",
       "description": "Remove @types/react-native from package.json",
       "implementation": "./src/migrations/update-16-9-0/remove-types-react-native"
+    },
+    "update-18-0-0-add-web-configuration": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Add web configuration to react native projects",
+      "implementation": "./src/migrations/update-18-0-0/add-web-configuration"
+    },
+    "update-18-0-0-change-storybook-targets": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Upgrade react native storybook target to use web",
+      "implementation": "./src/migrations/update-18-0-0/change-storybook-targets"
+    },
+    "update-18-0-0-remove-block-list": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Remove blockList in metro.config.js.",
+      "implementation": "./src/migrations/update-18-0-0/remove-block-list"
+    },
+    "update-18-0-0-remove-metro": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Remove metro-* and @react-native-community/cli-* from package.json devDependencies",
+      "implementation": "./src/migrations/update-18-0-0/remove-metro"
+    },
+    "update-18-0-0-remove-symlink-target": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Remove ensure-symlink target",
+      "implementation": "./src/migrations/update-18-0-0/remove-symlink-target"
+    },
+    "update-18-0-0-add-upgrade-target": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Add upgrade target to react native projects",
+      "implementation": "./src/migrations/update-18-0-0/add-upgrade-target"
     }
   },
   "packageJsonUpdates": {
@@ -543,6 +579,51 @@
         },
         "@react-native-community/cli-platform-ios": {
           "version": "11.3.7",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "17.3.0": {
+      "version": "17.3.0-beta.3",
+      "packages": {
+        "@types/node": {
+          "version": "18.16.9"
+        }
+      }
+    },
+    "18.0.0": {
+      "version": "18.0.0-beta.0",
+      "packages": {
+        "react-native": {
+          "version": "0.73.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native/babel-preset": {
+          "version": "^0.73.18",
+          "addToPackageJson": "devDependencies"
+        },
+        "@react-native/metro-config": {
+          "version": "^0.73.2",
+          "addToPackageJson": "devDependencies"
+        },
+        "@types/react": {
+          "version": "~18.2.45",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "~12.4.2",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg-transformer": {
+          "version": "1.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "14.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@react-native-community/cli-platform-android": {
+          "version": "12.3.0",
           "alwaysAddToPackageJson": false
         }
       }

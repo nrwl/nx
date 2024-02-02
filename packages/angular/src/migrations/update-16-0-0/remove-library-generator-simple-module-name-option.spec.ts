@@ -5,6 +5,7 @@ import {
   readProjectConfiguration,
   updateNxJson,
 } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import removeLibraryGeneratorSimpleModuleNameOption from './remove-library-generator-simple-module-name-option';
 
@@ -13,6 +14,9 @@ describe('removeLibraryGeneratorSimpleModuleNameOption', () => {
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    jest
+      .spyOn(devkit, 'formatFiles')
+      .mockImplementation(() => Promise.resolve());
   });
 
   describe('nx.json', () => {

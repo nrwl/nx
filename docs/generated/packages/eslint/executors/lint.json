@@ -4,7 +4,7 @@
   "schema": {
     "version": 2,
     "outputCapture": "direct-nodejs",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "ESLint Lint Target",
     "description": "ESLint Lint Target.",
     "cli": "nx",
@@ -20,7 +20,7 @@
       "lintFilePatterns": {
         "type": "array",
         "description": "One or more files/dirs/globs to pass directly to ESLint's `lintFiles()` method.",
-        "default": [],
+        "default": ["{projectRoot}"],
         "items": { "type": "string" }
       },
       "format": {
@@ -140,7 +140,6 @@
         "default": true
       }
     },
-    "required": ["lintFilePatterns"],
     "examplesFile": "Linter can be configured in multiple ways. The basic way is to provide only `lintFilePatterns`, which is a mandatory property. This tells us where to look for files to lint.\n\n`project.json`:\n\n```json\n\"lint\": {\n  \"executor\": \"@nx/eslint:lint\",\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"]\n  }\n}\n```\n\n## Examples\n\n{% tabs %}\n{% tab label=\"Fixing linter issues\" %}\n\nLinter provides an automated way of fixing known issues. To ensure that those changes are properly cached, we need to add an `outputs` property to the `lint` target. Omitting the `outputs` property would produce an invalid cache record. Both of these properties are set by default when scaffolding a new project.\n\n```json\n\"lint\": {\n  \"executor\": \"@nx/eslint:lint\",\n  \"outputs\": [\"{options.outputFile}\"],\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"]\n  }\n}\n```\n\nWith these settings, we can run the command with a `--fix` flag:\n\n```bash\nnx run frontend:lint --fix\n```\n\nWe can also set this flag via project configuration to always fix files when running lint:\n\n```json\n\"lint\": {\n  \"executor\": \"@nx/eslint:lint\",\n  \"outputs\": [\"{options.outputFile}\"],\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"],\n    \"fix\": true\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Custom output format\" %}\n\nESLint executor uses the `stylish` output format by default. You can change this by specifying the `format` property:\n\n```json\n\"lint\": {\n  \"executor\": \"@nx/eslint:lint\",\n  \"outputs\": [\"{options.outputFile}\"],\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"],\n    \"format\": \"compact\"\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Silence warnings\" %}\n\nMigrated or legacy projects tend to have an overwhelming amount of lint errors. We might want to change those temporarily to be warnings so they don't block the development. But they would still clutter the report. We can run the command with `--quiet` to hide warning (errors would still break the lint):\n\n```bash\nnx run frontend:lint --quiet\n```\n\nWe can also set this via project configuration as a default option.\n\n```json\n\"lint\": {\n  \"executor\": \"@nx/eslint:lint\",\n  \"outputs\": [\"{options.outputFile}\"],\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"],\n    \"quiet\": true\n  }\n}\n```\n\n{% /tab %}\n{% tab label=\"Flat Config file\" %}\n\n`ESLint` provides several ways of specifying the configuration. The default one is using `.eslintrc.json` but you can override it by setting the `eslintConfig` flag. The new `Flat Config` is now also supported:\n\n```json\n\"lint\": {\n  \"executor\": \"@nx/eslint:lint\",\n  \"outputs\": [\"{options.outputFile}\"],\n  \"options\": {\n    \"lintFilePatterns\": [\"apps/frontend/**/*.ts\"],\n    \"eslintConfig\": \"eslint.config.js\"\n  }\n}\n```\n\n**Note:** In contrast to other configuration formats, the `Flat Config` requires that all configuration files are converted to `eslint.config.js`. Built-in migrations and generators support only `.eslintrc.json` at the moment.\n\n{% /tab %}\n{% /tabs %}\n\n---\n",
     "presets": []
   },

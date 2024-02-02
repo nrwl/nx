@@ -1,7 +1,7 @@
 import { ProjectGraph } from '../../../config/project-graph';
 import { findMatchingProjects } from '../../../utils/find-matching-projects';
 import { output } from '../../../utils/output';
-import { CATCH_ALL_RELEASE_GROUP, NxReleaseConfig } from './config';
+import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
 
 export type ReleaseGroupWithName = NxReleaseConfig['groups'][string] & {
   name: string;
@@ -112,10 +112,11 @@ export function filterReleaseGroups(
         (rg) => rg.projectsRelationship !== 'independent'
       );
     if (releaseGroupsThatAreNotIndependent.length) {
-      // Special handling for CATCH_ALL_RELEASE_GROUP (which the user did not explicitly configure)
+      // Special handling for IMPLICIT_DEFAULT_RELEASE_GROUP
       if (
         releaseGroupsThatAreNotIndependent.length === 1 &&
-        releaseGroupsThatAreNotIndependent[0].name === CATCH_ALL_RELEASE_GROUP
+        releaseGroupsThatAreNotIndependent[0].name ===
+          IMPLICIT_DEFAULT_RELEASE_GROUP
       ) {
         return {
           error: {
@@ -143,7 +144,7 @@ export function filterReleaseGroups(
       title: `Your filter "${projectsFilter}" matched the following projects:`,
       bodyLines: matchingProjectsForFilter.map((p) => {
         const releaseGroupForProject = filteredProjectToReleaseGroup.get(p);
-        if (releaseGroupForProject.name === CATCH_ALL_RELEASE_GROUP) {
+        if (releaseGroupForProject.name === IMPLICIT_DEFAULT_RELEASE_GROUP) {
           return `- ${p}`;
         }
         return `- ${p} (release group "${releaseGroupForProject.name}")`;

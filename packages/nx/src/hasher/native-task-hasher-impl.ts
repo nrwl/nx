@@ -4,16 +4,15 @@ import { Task, TaskGraph } from '../config/task-graph';
 import {
   ExternalObject,
   FileData,
-  HashPlanner,
   HasherOptions,
-  ProjectGraph as NativeProjectGraph,
-  transferProjectGraph,
-  TaskHasher,
+  HashPlanner,
   NxWorkspaceFilesExternals,
+  ProjectGraph as NativeProjectGraph,
+  TaskHasher,
+  transferProjectGraph,
 } from '../native';
 import { transformProjectGraphForRust } from '../native/transform-objects';
 import { PartialHash, TaskHasherImpl } from './task-hasher';
-import { readJson } from '../generators/utils/json';
 import { readJsonFile } from '../utils/fileutils';
 import { getRootTsConfigPath } from '../plugins/js/utils/typescript';
 
@@ -46,7 +45,9 @@ export class NativeTaskHasherImpl implements TaskHasherImpl {
     if (rootTsConfigPath) {
       tsconfig = readJsonFile(getRootTsConfigPath());
       paths = tsconfig.compilerOptions?.paths ?? {};
-      delete tsconfig.compilerOptions.paths;
+      if (tsconfig.compilerOptions?.paths) {
+        delete tsconfig.compilerOptions.paths;
+      }
     }
 
     this.planner = new HashPlanner(nxJson, this.projectGraphRef);

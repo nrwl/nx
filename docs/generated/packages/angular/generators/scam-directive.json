@@ -39,7 +39,7 @@
         "description": "The name of the project.",
         "$default": { "$source": "projectName" },
         "x-dropdown": "projects",
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19."
       },
       "skipTests": {
         "type": "boolean",
@@ -56,7 +56,7 @@
         "type": "boolean",
         "description": "Create the new files at the top level of the current project.",
         "default": true,
-        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v18."
+        "x-deprecated": "Provide the `directory` option instead and use the `as-provided` format. It will be removed in Nx v19."
       },
       "selector": {
         "type": "string",
@@ -77,6 +77,12 @@
         "description": "Specifies if the SCAM should be exported from the project's entry point (normally `index.ts`). It only applies to libraries.",
         "default": true,
         "x-priority": "important"
+      },
+      "skipFormat": {
+        "description": "Skip formatting files.",
+        "type": "boolean",
+        "default": false,
+        "x-priority": "internal"
       }
     },
     "required": ["name"],

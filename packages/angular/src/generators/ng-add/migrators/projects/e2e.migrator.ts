@@ -322,7 +322,6 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       await lintProjectGenerator(this.tree, {
         project: this.project.name,
         linter: Linter.EsLint,
-        eslintFilePatterns: [`${this.project.newRoot}/**/*.{js,ts}`],
         unitTestRunner: this.options.unitTestRunner,
         tsConfigPaths: [
           joinPathFragments(this.project.newRoot, 'tsconfig.json'),
@@ -349,6 +348,8 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
       skipFormat: true,
       // any target would do, we replace it later with the target existing in the project being migrated
       devServerTarget: `${this.appName}:serve`,
+      baseUrl: 'http://localhost:4200',
+      addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
     });
 
     const cypressConfigFilePath = this.updateOrCreateCypressConfigFile(

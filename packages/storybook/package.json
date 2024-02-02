@@ -30,11 +30,11 @@
     "migrations": "./migrations.json"
   },
   "dependencies": {
+    "@nx/devkit": "file:../devkit",
     "@phenomnomnominal/tsquery": "~5.0.1",
-    "semver": "7.5.3",
+    "semver": "^7.5.3",
     "tslib": "^2.3.0",
     "@nx/cypress": "file:../cypress",
-    "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint"
   },

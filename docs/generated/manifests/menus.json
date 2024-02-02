@@ -592,7 +592,7 @@
           },
           {
             "name": "Use Remote Caching",
-            "path": "/nx-cloud/features/remote-cache",
+            "path": "/ci/features/remote-cache",
             "id": "remote-cache",
             "isExternal": true,
             "children": [],
@@ -600,7 +600,7 @@
           },
           {
             "name": "Distribute Task Execution",
-            "path": "/nx-cloud/features/distribute-task-execution",
+            "path": "/ci/features/distribute-task-execution",
             "id": "distribute-task-execution",
             "isExternal": true,
             "children": [],
@@ -634,6 +634,14 @@
             "name": "Integrate with Editors",
             "path": "/core-features/integrate-with-editors",
             "id": "integrate-with-editors",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Manage Releases",
+            "path": "/core-features/manage-releases",
+            "id": "manage-releases",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -684,7 +692,7 @@
       },
       {
         "name": "Use Remote Caching",
-        "path": "/nx-cloud/features/remote-cache",
+        "path": "/ci/features/remote-cache",
         "id": "remote-cache",
         "isExternal": true,
         "children": [],
@@ -692,7 +700,7 @@
       },
       {
         "name": "Distribute Task Execution",
-        "path": "/nx-cloud/features/distribute-task-execution",
+        "path": "/ci/features/distribute-task-execution",
         "id": "distribute-task-execution",
         "isExternal": true,
         "children": [],
@@ -726,6 +734,14 @@
         "name": "Integrate with Editors",
         "path": "/core-features/integrate-with-editors",
         "id": "integrate-with-editors",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Manage Releases",
+        "path": "/core-features/manage-releases",
+        "id": "manage-releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1937,15 +1953,32 @@
             "disableCollapsible": false
           },
           {
+            "name": "Nuxt",
+            "path": "/recipes/nuxt",
+            "id": "nuxt",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Deploying Nuxt applications to Vercel",
+                "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+                "id": "deploy-nuxt-to-vercel",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Vite",
             "path": "/recipes/vite",
             "id": "vite",
             "isExternal": false,
             "children": [
               {
-                "name": "Manually set up your project to use Vite.js",
-                "path": "/recipes/vite/set-up-vite-manually",
-                "id": "set-up-vite-manually",
+                "name": "Configure Vite on your Nx workspace",
+                "path": "/recipes/vite/configure-vite",
+                "id": "configure-vite",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -2337,6 +2370,47 @@
                 "name": "Troubleshooting",
                 "path": "/recipes/nx-console/console-troubleshooting",
                 "id": "console-troubleshooting",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Nx Release",
+            "path": "/recipes/nx-release",
+            "id": "nx-release",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "Get Started with Nx Release",
+                "path": "/recipes/nx-release/get-started-with-nx-release",
+                "id": "get-started-with-nx-release",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Release Projects Independently",
+                "path": "/recipes/nx-release/release-projects-independently",
+                "id": "release-projects-independently",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Automatically Version with Conventional Commits",
+                "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+                "id": "automatically-version-with-conventional-commits",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Publish in CI/CD",
+                "path": "/recipes/nx-release/publish-in-ci-cd",
+                "id": "publish-in-ci-cd",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -3376,15 +3450,15 @@
         "disableCollapsible": false
       },
       {
-        "name": "Vite",
-        "path": "/recipes/vite",
-        "id": "vite",
+        "name": "Nuxt",
+        "path": "/recipes/nuxt",
+        "id": "nuxt",
         "isExternal": false,
         "children": [
           {
-            "name": "Manually set up your project to use Vite.js",
-            "path": "/recipes/vite/set-up-vite-manually",
-            "id": "set-up-vite-manually",
+            "name": "Deploying Nuxt applications to Vercel",
+            "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+            "id": "deploy-nuxt-to-vercel",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -3393,9 +3467,34 @@
         "disableCollapsible": false
       },
       {
-        "name": "Manually set up your project to use Vite.js",
-        "path": "/recipes/vite/set-up-vite-manually",
-        "id": "set-up-vite-manually",
+        "name": "Deploying Nuxt applications to Vercel",
+        "path": "/recipes/nuxt/deploy-nuxt-to-vercel",
+        "id": "deploy-nuxt-to-vercel",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Vite",
+        "path": "/recipes/vite",
+        "id": "vite",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Configure Vite on your Nx workspace",
+            "path": "/recipes/vite/configure-vite",
+            "id": "configure-vite",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Configure Vite on your Nx workspace",
+        "path": "/recipes/vite/configure-vite",
+        "id": "configure-vite",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4120,6 +4219,79 @@
         "disableCollapsible": false
       },
       {
+        "name": "Nx Release",
+        "path": "/recipes/nx-release",
+        "id": "nx-release",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "Get Started with Nx Release",
+            "path": "/recipes/nx-release/get-started-with-nx-release",
+            "id": "get-started-with-nx-release",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Release Projects Independently",
+            "path": "/recipes/nx-release/release-projects-independently",
+            "id": "release-projects-independently",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Automatically Version with Conventional Commits",
+            "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+            "id": "automatically-version-with-conventional-commits",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Publish in CI/CD",
+            "path": "/recipes/nx-release/publish-in-ci-cd",
+            "id": "publish-in-ci-cd",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Get Started with Nx Release",
+        "path": "/recipes/nx-release/get-started-with-nx-release",
+        "id": "get-started-with-nx-release",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Release Projects Independently",
+        "path": "/recipes/nx-release/release-projects-independently",
+        "id": "release-projects-independently",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automatically Version with Conventional Commits",
+        "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
+        "id": "automatically-version-with-conventional-commits",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish in CI/CD",
+        "path": "/recipes/nx-release/publish-in-ci-cd",
+        "id": "publish-in-ci-cd",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Other",
         "path": "/recipes/other",
         "id": "other",
@@ -4205,25 +4377,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Add a Nuxt Project",
-                "path": "/showcase/example-repos/add-nuxt",
-                "id": "add-nuxt",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Add an Astro Project",
                 "path": "/showcase/example-repos/add-astro",
                 "id": "add-astro",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Add a Vue Project",
-                "path": "/showcase/example-repos/add-vue",
-                "id": "add-vue",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -4394,25 +4550,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Add a Nuxt Project",
-            "path": "/showcase/example-repos/add-nuxt",
-            "id": "add-nuxt",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Add an Astro Project",
             "path": "/showcase/example-repos/add-astro",
             "id": "add-astro",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Add a Vue Project",
-            "path": "/showcase/example-repos/add-vue",
-            "id": "add-vue",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -4541,25 +4681,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Add a Nuxt Project",
-        "path": "/showcase/example-repos/add-nuxt",
-        "id": "add-nuxt",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Add an Astro Project",
         "path": "/showcase/example-repos/add-astro",
         "id": "add-astro",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Add a Vue Project",
-        "path": "/showcase/example-repos/add-vue",
-        "id": "add-vue",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5136,9 +5260,9 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Nx Cloud Documentation",
-            "path": "/nx-cloud/intro/ci-with-nx",
-            "id": "nx-cloud-documentation",
+            "name": "CI Documentation",
+            "path": "/ci/intro/ci-with-nx",
+            "id": "ci",
             "isExternal": true,
             "children": [],
             "disableCollapsible": false
@@ -5203,9 +5327,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Nx Cloud Documentation",
-        "path": "/nx-cloud/intro/ci-with-nx",
-        "id": "nx-cloud-documentation",
+        "name": "CI Documentation",
+        "path": "/ci/intro/ci-with-nx",
+        "id": "ci",
         "isExternal": true,
         "children": [],
         "disableCollapsible": false
@@ -5517,17 +5641,17 @@
     ]
   },
   {
-    "id": "cloud",
+    "id": "ci",
     "menu": [
       {
         "name": "Intro",
-        "path": "/nx-cloud/intro",
+        "path": "/ci/intro",
         "id": "intro",
         "isExternal": false,
         "children": [
           {
             "name": "CI with Nx",
-            "path": "/nx-cloud/intro/ci-with-nx",
+            "path": "/ci/intro/ci-with-nx",
             "id": "ci-with-nx",
             "isExternal": false,
             "children": [],
@@ -5535,13 +5659,13 @@
           },
           {
             "name": "Tutorials",
-            "path": "/nx-cloud/intro/tutorials",
+            "path": "/ci/intro/tutorials",
             "id": "tutorials",
             "isExternal": false,
             "children": [
               {
                 "name": "Circle CI with Nx",
-                "path": "/nx-cloud/intro/tutorials/circle",
+                "path": "/ci/intro/tutorials/circle",
                 "id": "circle",
                 "isExternal": false,
                 "children": [],
@@ -5549,7 +5673,7 @@
               },
               {
                 "name": "GitHub Actions with Nx",
-                "path": "/nx-cloud/intro/tutorials/github-actions",
+                "path": "/ci/intro/tutorials/github-actions",
                 "id": "github-actions",
                 "isExternal": false,
                 "children": [],
@@ -5563,7 +5687,7 @@
       },
       {
         "name": "CI with Nx",
-        "path": "/nx-cloud/intro/ci-with-nx",
+        "path": "/ci/intro/ci-with-nx",
         "id": "ci-with-nx",
         "isExternal": false,
         "children": [],
@@ -5571,13 +5695,13 @@
       },
       {
         "name": "Tutorials",
-        "path": "/nx-cloud/intro/tutorials",
+        "path": "/ci/intro/tutorials",
         "id": "tutorials",
         "isExternal": false,
         "children": [
           {
             "name": "Circle CI with Nx",
-            "path": "/nx-cloud/intro/tutorials/circle",
+            "path": "/ci/intro/tutorials/circle",
             "id": "circle",
             "isExternal": false,
             "children": [],
@@ -5585,7 +5709,7 @@
           },
           {
             "name": "GitHub Actions with Nx",
-            "path": "/nx-cloud/intro/tutorials/github-actions",
+            "path": "/ci/intro/tutorials/github-actions",
             "id": "github-actions",
             "isExternal": false,
             "children": [],
@@ -5596,7 +5720,7 @@
       },
       {
         "name": "Circle CI with Nx",
-        "path": "/nx-cloud/intro/tutorials/circle",
+        "path": "/ci/intro/tutorials/circle",
         "id": "circle",
         "isExternal": false,
         "children": [],
@@ -5604,7 +5728,7 @@
       },
       {
         "name": "GitHub Actions with Nx",
-        "path": "/nx-cloud/intro/tutorials/github-actions",
+        "path": "/ci/intro/tutorials/github-actions",
         "id": "github-actions",
         "isExternal": false,
         "children": [],
@@ -5612,13 +5736,13 @@
       },
       {
         "name": "Features",
-        "path": "/nx-cloud/features",
+        "path": "/ci/features",
         "id": "features",
         "isExternal": false,
         "children": [
           {
             "name": "Use Remote Caching",
-            "path": "/nx-cloud/features/remote-cache",
+            "path": "/ci/features/remote-cache",
             "id": "remote-cache",
             "isExternal": false,
             "children": [],
@@ -5626,7 +5750,7 @@
           },
           {
             "name": "Run Only Tasks Affected by a PR",
-            "path": "/nx-cloud/features/affected",
+            "path": "/ci/features/affected",
             "id": "affected",
             "isExternal": false,
             "children": [],
@@ -5634,7 +5758,7 @@
           },
           {
             "name": "Distribute Task Execution",
-            "path": "/nx-cloud/features/distribute-task-execution",
+            "path": "/ci/features/distribute-task-execution",
             "id": "distribute-task-execution",
             "isExternal": false,
             "children": [],
@@ -5642,16 +5766,16 @@
           },
           {
             "name": "Set up Nx Cloud On-Premise",
-            "path": "/nx-cloud/features/on-premise",
+            "path": "/ci/features/on-premise",
             "id": "on-premise",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Nx Cloud Workflows",
-            "path": "/nx-cloud/features/nx-cloud-workflows",
-            "id": "nx-cloud-workflows",
+            "name": "Nx Agents",
+            "path": "/ci/features/nx-agents",
+            "id": "nx-agents",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5661,7 +5785,7 @@
       },
       {
         "name": "Use Remote Caching",
-        "path": "/nx-cloud/features/remote-cache",
+        "path": "/ci/features/remote-cache",
         "id": "remote-cache",
         "isExternal": false,
         "children": [],
@@ -5669,7 +5793,7 @@
       },
       {
         "name": "Run Only Tasks Affected by a PR",
-        "path": "/nx-cloud/features/affected",
+        "path": "/ci/features/affected",
         "id": "affected",
         "isExternal": false,
         "children": [],
@@ -5677,7 +5801,7 @@
       },
       {
         "name": "Distribute Task Execution",
-        "path": "/nx-cloud/features/distribute-task-execution",
+        "path": "/ci/features/distribute-task-execution",
         "id": "distribute-task-execution",
         "isExternal": false,
         "children": [],
@@ -5685,46 +5809,54 @@
       },
       {
         "name": "Set up Nx Cloud On-Premise",
-        "path": "/nx-cloud/features/on-premise",
+        "path": "/ci/features/on-premise",
         "id": "on-premise",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Nx Cloud Workflows",
-        "path": "/nx-cloud/features/nx-cloud-workflows",
-        "id": "nx-cloud-workflows",
+        "name": "Nx Agents",
+        "path": "/ci/features/nx-agents",
+        "id": "nx-agents",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
         "name": "Concepts",
-        "path": "/nx-cloud/concepts",
+        "path": "/ci/concepts",
         "id": "concepts",
         "isExternal": false,
         "children": [
           {
-            "name": "Improve Worst Case CI Times",
-            "path": "/nx-cloud/concepts/dte",
-            "id": "dte",
+            "name": "The Building Blocks of Fast CI",
+            "path": "/ci/concepts/building-blocks-fast-ci",
+            "id": "building-blocks-fast-ci",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Security Scenarios",
-            "path": "/nx-cloud/concepts/scenarios",
-            "id": "scenarios",
+            "name": "Reduce Wasted Time in CI",
+            "path": "/ci/concepts/reduce-waste",
+            "id": "reduce-waste",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "End to End Encryption",
-            "path": "/nx-cloud/concepts/encryption",
-            "id": "encryption",
+            "name": "Parallelization and Distribution",
+            "path": "/ci/concepts/parallelization-distribution",
+            "id": "parallelization-distribution",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Cache Security",
+            "path": "/ci/concepts/cache-security",
+            "id": "cache-security",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5733,52 +5865,52 @@
         "disableCollapsible": false
       },
       {
-        "name": "Improve Worst Case CI Times",
-        "path": "/nx-cloud/concepts/dte",
-        "id": "dte",
+        "name": "The Building Blocks of Fast CI",
+        "path": "/ci/concepts/building-blocks-fast-ci",
+        "id": "building-blocks-fast-ci",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Security Scenarios",
-        "path": "/nx-cloud/concepts/scenarios",
-        "id": "scenarios",
+        "name": "Reduce Wasted Time in CI",
+        "path": "/ci/concepts/reduce-waste",
+        "id": "reduce-waste",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "End to End Encryption",
-        "path": "/nx-cloud/concepts/encryption",
-        "id": "encryption",
+        "name": "Parallelization and Distribution",
+        "path": "/ci/concepts/parallelization-distribution",
+        "id": "parallelization-distribution",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Cache Security",
+        "path": "/ci/concepts/cache-security",
+        "id": "cache-security",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
         "name": "Recipes",
-        "path": "/nx-cloud/recipes",
+        "path": "/ci/recipes",
         "id": "recipes",
         "isExternal": false,
         "children": [
           {
             "name": "Set Up CI",
-            "path": "/nx-cloud/recipes/set-up",
+            "path": "/ci/recipes/set-up",
             "id": "set-up",
             "isExternal": false,
             "children": [
               {
-                "name": "CI Setup",
-                "path": "/nx-cloud/recipes/set-up/ci-setup",
-                "id": "ci-setup",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Setting up Azure Pipelines",
-                "path": "/nx-cloud/recipes/set-up/monorepo-ci-azure",
+                "path": "/ci/recipes/set-up/monorepo-ci-azure",
                 "id": "monorepo-ci-azure",
                 "isExternal": false,
                 "children": [],
@@ -5786,7 +5918,7 @@
               },
               {
                 "name": "Setting up CircleCI",
-                "path": "/nx-cloud/recipes/set-up/monorepo-ci-circle-ci",
+                "path": "/ci/recipes/set-up/monorepo-ci-circle-ci",
                 "id": "monorepo-ci-circle-ci",
                 "isExternal": false,
                 "children": [],
@@ -5794,7 +5926,7 @@
               },
               {
                 "name": "Setting up GitHub Actions",
-                "path": "/nx-cloud/recipes/set-up/monorepo-ci-github-actions",
+                "path": "/ci/recipes/set-up/monorepo-ci-github-actions",
                 "id": "monorepo-ci-github-actions",
                 "isExternal": false,
                 "children": [],
@@ -5802,7 +5934,7 @@
               },
               {
                 "name": "Setting up Jenkins",
-                "path": "/nx-cloud/recipes/set-up/monorepo-ci-jenkins",
+                "path": "/ci/recipes/set-up/monorepo-ci-jenkins",
                 "id": "monorepo-ci-jenkins",
                 "isExternal": false,
                 "children": [],
@@ -5810,7 +5942,7 @@
               },
               {
                 "name": "Setting up GitLab",
-                "path": "/nx-cloud/recipes/set-up/monorepo-ci-gitlab",
+                "path": "/ci/recipes/set-up/monorepo-ci-gitlab",
                 "id": "monorepo-ci-gitlab",
                 "isExternal": false,
                 "children": [],
@@ -5818,7 +5950,7 @@
               },
               {
                 "name": "Setting up Bitbucket",
-                "path": "/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines",
+                "path": "/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines",
                 "id": "monorepo-ci-bitbucket-pipelines",
                 "isExternal": false,
                 "children": [],
@@ -5829,13 +5961,13 @@
           },
           {
             "name": "Security",
-            "path": "/nx-cloud/recipes/security",
+            "path": "/ci/recipes/security",
             "id": "security",
             "isExternal": false,
             "children": [
               {
                 "name": "Authenticate with Google Identity",
-                "path": "/nx-cloud/recipes/security/google-auth",
+                "path": "/ci/recipes/security/google-auth",
                 "id": "google-auth",
                 "isExternal": false,
                 "children": [],
@@ -5843,8 +5975,16 @@
               },
               {
                 "name": "Access Tokens",
-                "path": "/nx-cloud/recipes/security/access-tokens",
+                "path": "/ci/recipes/security/access-tokens",
                 "id": "access-tokens",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Enable End to End Encryption",
+                "path": "/ci/recipes/security/encryption",
+                "id": "encryption",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5854,13 +5994,13 @@
           },
           {
             "name": "Source Control Integration",
-            "path": "/nx-cloud/recipes/source-control-integration",
+            "path": "/ci/recipes/source-control-integration",
             "id": "source-control-integration",
             "isExternal": false,
             "children": [
               {
                 "name": "Enable GitHub PR Integration",
-                "path": "/nx-cloud/recipes/source-control-integration/github",
+                "path": "/ci/recipes/source-control-integration/github",
                 "id": "github",
                 "isExternal": false,
                 "children": [],
@@ -5868,7 +6008,7 @@
               },
               {
                 "name": "Enable Bitbucket Cloud PR Integration",
-                "path": "/nx-cloud/recipes/source-control-integration/bitbucket-cloud",
+                "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
                 "id": "bitbucket-cloud",
                 "isExternal": false,
                 "children": [],
@@ -5876,7 +6016,7 @@
               },
               {
                 "name": "Enable GitLab MR Integration",
-                "path": "/nx-cloud/recipes/source-control-integration/gitlab",
+                "path": "/ci/recipes/source-control-integration/gitlab",
                 "id": "gitlab",
                 "isExternal": false,
                 "children": [],
@@ -5887,13 +6027,13 @@
           },
           {
             "name": "On-Premise",
-            "path": "/nx-cloud/recipes/on-premise",
+            "path": "/ci/recipes/on-premise",
             "id": "on-premise",
             "isExternal": false,
             "children": [
               {
                 "name": "Authenticate with a Single Admin",
-                "path": "/nx-cloud/recipes/on-premise/auth-single-admin",
+                "path": "/ci/recipes/on-premise/auth-single-admin",
                 "id": "auth-single-admin",
                 "isExternal": false,
                 "children": [],
@@ -5901,7 +6041,7 @@
               },
               {
                 "name": "Authenticate with GitHub",
-                "path": "/nx-cloud/recipes/on-premise/auth-github",
+                "path": "/ci/recipes/on-premise/auth-github",
                 "id": "auth-github",
                 "isExternal": false,
                 "children": [],
@@ -5909,7 +6049,7 @@
               },
               {
                 "name": "On-Prem VM Setup",
-                "path": "/nx-cloud/recipes/on-premise/ami-setup",
+                "path": "/ci/recipes/on-premise/ami-setup",
                 "id": "ami-setup",
                 "isExternal": false,
                 "children": [],
@@ -5917,7 +6057,7 @@
               },
               {
                 "name": "Authenticate with GitLab",
-                "path": "/nx-cloud/recipes/on-premise/auth-gitlab",
+                "path": "/ci/recipes/on-premise/auth-gitlab",
                 "id": "auth-gitlab",
                 "isExternal": false,
                 "children": [],
@@ -5925,7 +6065,7 @@
               },
               {
                 "name": "Authenticate with BitBucket",
-                "path": "/nx-cloud/recipes/on-premise/auth-bitbucket",
+                "path": "/ci/recipes/on-premise/auth-bitbucket",
                 "id": "auth-bitbucket",
                 "isExternal": false,
                 "children": [],
@@ -5933,7 +6073,7 @@
               },
               {
                 "name": "Authenticate via SAML",
-                "path": "/nx-cloud/recipes/on-premise/auth-saml",
+                "path": "/ci/recipes/on-premise/auth-saml",
                 "id": "auth-saml",
                 "isExternal": false,
                 "children": [],
@@ -5941,7 +6081,7 @@
               },
               {
                 "name": "Authenticate via SAML on Managed Version",
-                "path": "/nx-cloud/recipes/on-premise/auth-saml-managed",
+                "path": "/ci/recipes/on-premise/auth-saml-managed",
                 "id": "auth-saml-managed",
                 "isExternal": false,
                 "children": [],
@@ -5949,7 +6089,7 @@
               },
               {
                 "name": "Advanced Configuration",
-                "path": "/nx-cloud/recipes/on-premise/advanced-config",
+                "path": "/ci/recipes/on-premise/advanced-config",
                 "id": "advanced-config",
                 "isExternal": false,
                 "children": [],
@@ -5960,13 +6100,13 @@
           },
           {
             "name": "Other",
-            "path": "/nx-cloud/recipes/other",
+            "path": "/ci/recipes/other",
             "id": "other",
             "isExternal": false,
             "children": [
               {
                 "name": "Record Non-Nx Commands",
-                "path": "/nx-cloud/recipes/other/record-commands",
+                "path": "/ci/recipes/other/record-commands",
                 "id": "record-commands",
                 "isExternal": false,
                 "children": [],
@@ -5974,7 +6114,7 @@
               },
               {
                 "name": "Prepare applications for deployment via CI",
-                "path": "/nx-cloud/recipes/other/ci-deployment",
+                "path": "/ci/recipes/other/ci-deployment",
                 "id": "ci-deployment",
                 "isExternal": false,
                 "children": [],
@@ -5988,21 +6128,13 @@
       },
       {
         "name": "Set Up CI",
-        "path": "/nx-cloud/recipes/set-up",
+        "path": "/ci/recipes/set-up",
         "id": "set-up",
         "isExternal": false,
         "children": [
           {
-            "name": "CI Setup",
-            "path": "/nx-cloud/recipes/set-up/ci-setup",
-            "id": "ci-setup",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Setting up Azure Pipelines",
-            "path": "/nx-cloud/recipes/set-up/monorepo-ci-azure",
+            "path": "/ci/recipes/set-up/monorepo-ci-azure",
             "id": "monorepo-ci-azure",
             "isExternal": false,
             "children": [],
@@ -6010,7 +6142,7 @@
           },
           {
             "name": "Setting up CircleCI",
-            "path": "/nx-cloud/recipes/set-up/monorepo-ci-circle-ci",
+            "path": "/ci/recipes/set-up/monorepo-ci-circle-ci",
             "id": "monorepo-ci-circle-ci",
             "isExternal": false,
             "children": [],
@@ -6018,7 +6150,7 @@
           },
           {
             "name": "Setting up GitHub Actions",
-            "path": "/nx-cloud/recipes/set-up/monorepo-ci-github-actions",
+            "path": "/ci/recipes/set-up/monorepo-ci-github-actions",
             "id": "monorepo-ci-github-actions",
             "isExternal": false,
             "children": [],
@@ -6026,7 +6158,7 @@
           },
           {
             "name": "Setting up Jenkins",
-            "path": "/nx-cloud/recipes/set-up/monorepo-ci-jenkins",
+            "path": "/ci/recipes/set-up/monorepo-ci-jenkins",
             "id": "monorepo-ci-jenkins",
             "isExternal": false,
             "children": [],
@@ -6034,7 +6166,7 @@
           },
           {
             "name": "Setting up GitLab",
-            "path": "/nx-cloud/recipes/set-up/monorepo-ci-gitlab",
+            "path": "/ci/recipes/set-up/monorepo-ci-gitlab",
             "id": "monorepo-ci-gitlab",
             "isExternal": false,
             "children": [],
@@ -6042,7 +6174,7 @@
           },
           {
             "name": "Setting up Bitbucket",
-            "path": "/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines",
+            "path": "/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines",
             "id": "monorepo-ci-bitbucket-pipelines",
             "isExternal": false,
             "children": [],
@@ -6052,16 +6184,8 @@
         "disableCollapsible": false
       },
       {
-        "name": "CI Setup",
-        "path": "/nx-cloud/recipes/set-up/ci-setup",
-        "id": "ci-setup",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
         "name": "Setting up Azure Pipelines",
-        "path": "/nx-cloud/recipes/set-up/monorepo-ci-azure",
+        "path": "/ci/recipes/set-up/monorepo-ci-azure",
         "id": "monorepo-ci-azure",
         "isExternal": false,
         "children": [],
@@ -6069,7 +6193,7 @@
       },
       {
         "name": "Setting up CircleCI",
-        "path": "/nx-cloud/recipes/set-up/monorepo-ci-circle-ci",
+        "path": "/ci/recipes/set-up/monorepo-ci-circle-ci",
         "id": "monorepo-ci-circle-ci",
         "isExternal": false,
         "children": [],
@@ -6077,7 +6201,7 @@
       },
       {
         "name": "Setting up GitHub Actions",
-        "path": "/nx-cloud/recipes/set-up/monorepo-ci-github-actions",
+        "path": "/ci/recipes/set-up/monorepo-ci-github-actions",
         "id": "monorepo-ci-github-actions",
         "isExternal": false,
         "children": [],
@@ -6085,7 +6209,7 @@
       },
       {
         "name": "Setting up Jenkins",
-        "path": "/nx-cloud/recipes/set-up/monorepo-ci-jenkins",
+        "path": "/ci/recipes/set-up/monorepo-ci-jenkins",
         "id": "monorepo-ci-jenkins",
         "isExternal": false,
         "children": [],
@@ -6093,7 +6217,7 @@
       },
       {
         "name": "Setting up GitLab",
-        "path": "/nx-cloud/recipes/set-up/monorepo-ci-gitlab",
+        "path": "/ci/recipes/set-up/monorepo-ci-gitlab",
         "id": "monorepo-ci-gitlab",
         "isExternal": false,
         "children": [],
@@ -6101,7 +6225,7 @@
       },
       {
         "name": "Setting up Bitbucket",
-        "path": "/nx-cloud/recipes/set-up/monorepo-ci-bitbucket-pipelines",
+        "path": "/ci/recipes/set-up/monorepo-ci-bitbucket-pipelines",
         "id": "monorepo-ci-bitbucket-pipelines",
         "isExternal": false,
         "children": [],
@@ -6109,13 +6233,13 @@
       },
       {
         "name": "Security",
-        "path": "/nx-cloud/recipes/security",
+        "path": "/ci/recipes/security",
         "id": "security",
         "isExternal": false,
         "children": [
           {
             "name": "Authenticate with Google Identity",
-            "path": "/nx-cloud/recipes/security/google-auth",
+            "path": "/ci/recipes/security/google-auth",
             "id": "google-auth",
             "isExternal": false,
             "children": [],
@@ -6123,8 +6247,16 @@
           },
           {
             "name": "Access Tokens",
-            "path": "/nx-cloud/recipes/security/access-tokens",
+            "path": "/ci/recipes/security/access-tokens",
             "id": "access-tokens",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Enable End to End Encryption",
+            "path": "/ci/recipes/security/encryption",
+            "id": "encryption",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -6134,7 +6266,7 @@
       },
       {
         "name": "Authenticate with Google Identity",
-        "path": "/nx-cloud/recipes/security/google-auth",
+        "path": "/ci/recipes/security/google-auth",
         "id": "google-auth",
         "isExternal": false,
         "children": [],
@@ -6142,21 +6274,29 @@
       },
       {
         "name": "Access Tokens",
-        "path": "/nx-cloud/recipes/security/access-tokens",
+        "path": "/ci/recipes/security/access-tokens",
         "id": "access-tokens",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
+        "name": "Enable End to End Encryption",
+        "path": "/ci/recipes/security/encryption",
+        "id": "encryption",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Source Control Integration",
-        "path": "/nx-cloud/recipes/source-control-integration",
+        "path": "/ci/recipes/source-control-integration",
         "id": "source-control-integration",
         "isExternal": false,
         "children": [
           {
             "name": "Enable GitHub PR Integration",
-            "path": "/nx-cloud/recipes/source-control-integration/github",
+            "path": "/ci/recipes/source-control-integration/github",
             "id": "github",
             "isExternal": false,
             "children": [],
@@ -6164,7 +6304,7 @@
           },
           {
             "name": "Enable Bitbucket Cloud PR Integration",
-            "path": "/nx-cloud/recipes/source-control-integration/bitbucket-cloud",
+            "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
             "id": "bitbucket-cloud",
             "isExternal": false,
             "children": [],
@@ -6172,7 +6312,7 @@
           },
           {
             "name": "Enable GitLab MR Integration",
-            "path": "/nx-cloud/recipes/source-control-integration/gitlab",
+            "path": "/ci/recipes/source-control-integration/gitlab",
             "id": "gitlab",
             "isExternal": false,
             "children": [],
@@ -6183,7 +6323,7 @@
       },
       {
         "name": "Enable GitHub PR Integration",
-        "path": "/nx-cloud/recipes/source-control-integration/github",
+        "path": "/ci/recipes/source-control-integration/github",
         "id": "github",
         "isExternal": false,
         "children": [],
@@ -6191,7 +6331,7 @@
       },
       {
         "name": "Enable Bitbucket Cloud PR Integration",
-        "path": "/nx-cloud/recipes/source-control-integration/bitbucket-cloud",
+        "path": "/ci/recipes/source-control-integration/bitbucket-cloud",
         "id": "bitbucket-cloud",
         "isExternal": false,
         "children": [],
@@ -6199,7 +6339,7 @@
       },
       {
         "name": "Enable GitLab MR Integration",
-        "path": "/nx-cloud/recipes/source-control-integration/gitlab",
+        "path": "/ci/recipes/source-control-integration/gitlab",
         "id": "gitlab",
         "isExternal": false,
         "children": [],
@@ -6207,13 +6347,13 @@
       },
       {
         "name": "On-Premise",
-        "path": "/nx-cloud/recipes/on-premise",
+        "path": "/ci/recipes/on-premise",
         "id": "on-premise",
         "isExternal": false,
         "children": [
           {
             "name": "Authenticate with a Single Admin",
-            "path": "/nx-cloud/recipes/on-premise/auth-single-admin",
+            "path": "/ci/recipes/on-premise/auth-single-admin",
             "id": "auth-single-admin",
             "isExternal": false,
             "children": [],
@@ -6221,7 +6361,7 @@
           },
           {
             "name": "Authenticate with GitHub",
-            "path": "/nx-cloud/recipes/on-premise/auth-github",
+            "path": "/ci/recipes/on-premise/auth-github",
             "id": "auth-github",
             "isExternal": false,
             "children": [],
@@ -6229,7 +6369,7 @@
           },
           {
             "name": "On-Prem VM Setup",
-            "path": "/nx-cloud/recipes/on-premise/ami-setup",
+            "path": "/ci/recipes/on-premise/ami-setup",
             "id": "ami-setup",
             "isExternal": false,
             "children": [],
@@ -6237,7 +6377,7 @@
           },
           {
             "name": "Authenticate with GitLab",
-            "path": "/nx-cloud/recipes/on-premise/auth-gitlab",
+            "path": "/ci/recipes/on-premise/auth-gitlab",
             "id": "auth-gitlab",
             "isExternal": false,
             "children": [],
@@ -6245,7 +6385,7 @@
           },
           {
             "name": "Authenticate with BitBucket",
-            "path": "/nx-cloud/recipes/on-premise/auth-bitbucket",
+            "path": "/ci/recipes/on-premise/auth-bitbucket",
             "id": "auth-bitbucket",
             "isExternal": false,
             "children": [],
@@ -6253,7 +6393,7 @@
           },
           {
             "name": "Authenticate via SAML",
-            "path": "/nx-cloud/recipes/on-premise/auth-saml",
+            "path": "/ci/recipes/on-premise/auth-saml",
             "id": "auth-saml",
             "isExternal": false,
             "children": [],
@@ -6261,7 +6401,7 @@
           },
           {
             "name": "Authenticate via SAML on Managed Version",
-            "path": "/nx-cloud/recipes/on-premise/auth-saml-managed",
+            "path": "/ci/recipes/on-premise/auth-saml-managed",
             "id": "auth-saml-managed",
             "isExternal": false,
             "children": [],
@@ -6269,7 +6409,7 @@
           },
           {
             "name": "Advanced Configuration",
-            "path": "/nx-cloud/recipes/on-premise/advanced-config",
+            "path": "/ci/recipes/on-premise/advanced-config",
             "id": "advanced-config",
             "isExternal": false,
             "children": [],
@@ -6280,7 +6420,7 @@
       },
       {
         "name": "Authenticate with a Single Admin",
-        "path": "/nx-cloud/recipes/on-premise/auth-single-admin",
+        "path": "/ci/recipes/on-premise/auth-single-admin",
         "id": "auth-single-admin",
         "isExternal": false,
         "children": [],
@@ -6288,7 +6428,7 @@
       },
       {
         "name": "Authenticate with GitHub",
-        "path": "/nx-cloud/recipes/on-premise/auth-github",
+        "path": "/ci/recipes/on-premise/auth-github",
         "id": "auth-github",
         "isExternal": false,
         "children": [],
@@ -6296,7 +6436,7 @@
       },
       {
         "name": "On-Prem VM Setup",
-        "path": "/nx-cloud/recipes/on-premise/ami-setup",
+        "path": "/ci/recipes/on-premise/ami-setup",
         "id": "ami-setup",
         "isExternal": false,
         "children": [],
@@ -6304,7 +6444,7 @@
       },
       {
         "name": "Authenticate with GitLab",
-        "path": "/nx-cloud/recipes/on-premise/auth-gitlab",
+        "path": "/ci/recipes/on-premise/auth-gitlab",
         "id": "auth-gitlab",
         "isExternal": false,
         "children": [],
@@ -6312,7 +6452,7 @@
       },
       {
         "name": "Authenticate with BitBucket",
-        "path": "/nx-cloud/recipes/on-premise/auth-bitbucket",
+        "path": "/ci/recipes/on-premise/auth-bitbucket",
         "id": "auth-bitbucket",
         "isExternal": false,
         "children": [],
@@ -6320,7 +6460,7 @@
       },
       {
         "name": "Authenticate via SAML",
-        "path": "/nx-cloud/recipes/on-premise/auth-saml",
+        "path": "/ci/recipes/on-premise/auth-saml",
         "id": "auth-saml",
         "isExternal": false,
         "children": [],
@@ -6328,7 +6468,7 @@
       },
       {
         "name": "Authenticate via SAML on Managed Version",
-        "path": "/nx-cloud/recipes/on-premise/auth-saml-managed",
+        "path": "/ci/recipes/on-premise/auth-saml-managed",
         "id": "auth-saml-managed",
         "isExternal": false,
         "children": [],
@@ -6336,7 +6476,7 @@
       },
       {
         "name": "Advanced Configuration",
-        "path": "/nx-cloud/recipes/on-premise/advanced-config",
+        "path": "/ci/recipes/on-premise/advanced-config",
         "id": "advanced-config",
         "isExternal": false,
         "children": [],
@@ -6344,13 +6484,13 @@
       },
       {
         "name": "Other",
-        "path": "/nx-cloud/recipes/other",
+        "path": "/ci/recipes/other",
         "id": "other",
         "isExternal": false,
         "children": [
           {
             "name": "Record Non-Nx Commands",
-            "path": "/nx-cloud/recipes/other/record-commands",
+            "path": "/ci/recipes/other/record-commands",
             "id": "record-commands",
             "isExternal": false,
             "children": [],
@@ -6358,7 +6498,7 @@
           },
           {
             "name": "Prepare applications for deployment via CI",
-            "path": "/nx-cloud/recipes/other/ci-deployment",
+            "path": "/ci/recipes/other/ci-deployment",
             "id": "ci-deployment",
             "isExternal": false,
             "children": [],
@@ -6369,7 +6509,7 @@
       },
       {
         "name": "Record Non-Nx Commands",
-        "path": "/nx-cloud/recipes/other/record-commands",
+        "path": "/ci/recipes/other/record-commands",
         "id": "record-commands",
         "isExternal": false,
         "children": [],
@@ -6377,7 +6517,7 @@
       },
       {
         "name": "Prepare applications for deployment via CI",
-        "path": "/nx-cloud/recipes/other/ci-deployment",
+        "path": "/ci/recipes/other/ci-deployment",
         "id": "ci-deployment",
         "isExternal": false,
         "children": [],
@@ -6385,13 +6525,13 @@
       },
       {
         "name": "Reference",
-        "path": "/nx-cloud/reference",
+        "path": "/ci/reference",
         "id": "reference",
         "isExternal": false,
         "children": [
           {
             "name": "Configuration Options",
-            "path": "/nx-cloud/reference/config",
+            "path": "/ci/reference/config",
             "id": "config",
             "isExternal": false,
             "children": [],
@@ -6399,7 +6539,7 @@
           },
           {
             "name": "nx-cloud CLI",
-            "path": "/nx-cloud/reference/nx-cloud-cli",
+            "path": "/ci/reference/nx-cloud-cli",
             "id": "nx-cloud-cli",
             "isExternal": false,
             "children": [],
@@ -6407,7 +6547,7 @@
           },
           {
             "name": "Environment Variables",
-            "path": "/nx-cloud/reference/env-vars",
+            "path": "/ci/reference/env-vars",
             "id": "env-vars",
             "isExternal": false,
             "children": [],
@@ -6415,7 +6555,7 @@
           },
           {
             "name": "Server API Reference",
-            "path": "/nx-cloud/reference/server-api",
+            "path": "/ci/reference/server-api",
             "id": "server-api",
             "isExternal": false,
             "children": [],
@@ -6423,7 +6563,7 @@
           },
           {
             "name": "Release Notes",
-            "path": "/nx-cloud/reference/release-notes",
+            "path": "/ci/reference/release-notes",
             "id": "release-notes",
             "isExternal": false,
             "children": [],
@@ -6434,7 +6574,7 @@
       },
       {
         "name": "Configuration Options",
-        "path": "/nx-cloud/reference/config",
+        "path": "/ci/reference/config",
         "id": "config",
         "isExternal": false,
         "children": [],
@@ -6442,7 +6582,7 @@
       },
       {
         "name": "nx-cloud CLI",
-        "path": "/nx-cloud/reference/nx-cloud-cli",
+        "path": "/ci/reference/nx-cloud-cli",
         "id": "nx-cloud-cli",
         "isExternal": false,
         "children": [],
@@ -6450,7 +6590,7 @@
       },
       {
         "name": "Environment Variables",
-        "path": "/nx-cloud/reference/env-vars",
+        "path": "/ci/reference/env-vars",
         "id": "env-vars",
         "isExternal": false,
         "children": [],
@@ -6458,7 +6598,7 @@
       },
       {
         "name": "Server API Reference",
-        "path": "/nx-cloud/reference/server-api",
+        "path": "/ci/reference/server-api",
         "id": "server-api",
         "isExternal": false,
         "children": [],
@@ -6466,7 +6606,7 @@
       },
       {
         "name": "Release Notes",
-        "path": "/nx-cloud/reference/release-notes",
+        "path": "/ci/reference/release-notes",
         "id": "release-notes",
         "isExternal": false,
         "children": [],
@@ -6545,6 +6685,22 @@
                 "disableCollapsible": false
               },
               {
+                "id": "module-federation-dev-server",
+                "path": "/nx-api/angular/executors/module-federation-dev-server",
+                "name": "module-federation-dev-server",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/nx-api/angular/executors/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "webpack-browser",
                 "path": "/nx-api/angular/executors/webpack-browser",
                 "name": "webpack-browser",
@@ -6564,14 +6720,6 @@
                 "id": "webpack-server",
                 "path": "/nx-api/angular/executors/webpack-server",
                 "name": "webpack-server",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
-              },
-              {
-                "id": "module-federation-dev-server",
-                "path": "/nx-api/angular/executors/module-federation-dev-server",
-                "name": "module-federation-dev-server",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -6637,6 +6785,14 @@
                 "id": "component-test",
                 "path": "/nx-api/angular/generators/component-test",
                 "name": "component-test",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "convert-to-application-executor",
+                "path": "/nx-api/angular/generators/convert-to-application-executor",
+                "name": "convert-to-application-executor",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -7180,6 +7336,14 @@
             "name": "generators",
             "children": [
               {
+                "id": "init",
+                "path": "/nx-api/eslint/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "workspace-rules-project",
                 "path": "/nx-api/eslint/generators/workspace-rules-project",
                 "name": "workspace-rules-project",
@@ -7364,6 +7528,14 @@
                 "id": "submit",
                 "path": "/nx-api/expo/executors/submit",
                 "name": "submit",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "serve",
+                "path": "/nx-api/expo/executors/serve",
+                "name": "serve",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8039,6 +8211,65 @@
         "disableCollapsible": false
       },
       {
+        "id": "nuxt",
+        "path": "/nx-api/nuxt",
+        "name": "nuxt",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/nuxt/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview of the Nx Nuxt Plugin",
+                "path": "/nx-api/nuxt/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/nuxt/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "init",
+                "path": "/nx-api/nuxt/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/nx-api/nuxt/generators/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "storybook-configuration",
+                "path": "/nx-api/nuxt/generators/storybook-configuration",
+                "name": "storybook-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
         "id": "nx",
         "path": "/nx-api/nx",
         "name": "nx",
@@ -8228,6 +8459,14 @@
                 "name": "release",
                 "path": "/nx-api/nx/documents/release",
                 "id": "release",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "add",
+                "path": "/nx-api/nx/documents/add",
+                "id": "add",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -8776,6 +9015,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "upgrade",
+                "path": "/nx-api/react-native/executors/upgrade",
+                "name": "upgrade",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -8846,6 +9093,202 @@
                 "id": "upgrade-native",
                 "path": "/nx-api/react-native/generators/upgrade-native",
                 "name": "upgrade-native",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "web-configuration",
+                "path": "/nx-api/react-native/generators/web-configuration",
+                "name": "web-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          }
+        ],
+        "isExternal": false,
+        "disableCollapsible": false
+      },
+      {
+        "id": "remix",
+        "path": "/nx-api/remix",
+        "name": "remix",
+        "children": [
+          {
+            "id": "documents",
+            "path": "/nx-api/remix/documents",
+            "name": "documents",
+            "children": [
+              {
+                "name": "Overview",
+                "path": "/nx-api/remix/documents/overview",
+                "id": "overview",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "executors",
+            "path": "/nx-api/remix/executors",
+            "name": "executors",
+            "children": [
+              {
+                "id": "serve",
+                "path": "/nx-api/remix/executors/serve",
+                "name": "serve",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "build",
+                "path": "/nx-api/remix/executors/build",
+                "name": "build",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              }
+            ],
+            "isExternal": false,
+            "disableCollapsible": false
+          },
+          {
+            "id": "generators",
+            "path": "/nx-api/remix/generators",
+            "name": "generators",
+            "children": [
+              {
+                "id": "preset",
+                "path": "/nx-api/remix/generators/preset",
+                "name": "preset",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup",
+                "path": "/nx-api/remix/generators/setup",
+                "name": "setup",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "application",
+                "path": "/nx-api/remix/generators/application",
+                "name": "application",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "cypress-component-configuration",
+                "path": "/nx-api/remix/generators/cypress-component-configuration",
+                "name": "cypress-component-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "library",
+                "path": "/nx-api/remix/generators/library",
+                "name": "library",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "init",
+                "path": "/nx-api/remix/generators/init",
+                "name": "init",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "route",
+                "path": "/nx-api/remix/generators/route",
+                "name": "route",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "resource-route",
+                "path": "/nx-api/remix/generators/resource-route",
+                "name": "resource-route",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "action",
+                "path": "/nx-api/remix/generators/action",
+                "name": "action",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "loader",
+                "path": "/nx-api/remix/generators/loader",
+                "name": "loader",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "style",
+                "path": "/nx-api/remix/generators/style",
+                "name": "style",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "setup-tailwind",
+                "path": "/nx-api/remix/generators/setup-tailwind",
+                "name": "setup-tailwind",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "storybook-configuration",
+                "path": "/nx-api/remix/generators/storybook-configuration",
+                "name": "storybook-configuration",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "meta",
+                "path": "/nx-api/remix/generators/meta",
+                "name": "meta",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "error-boundary",
+                "path": "/nx-api/remix/generators/error-boundary",
+                "name": "error-boundary",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "cypress",
+                "path": "/nx-api/remix/generators/cypress",
+                "name": "cypress",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

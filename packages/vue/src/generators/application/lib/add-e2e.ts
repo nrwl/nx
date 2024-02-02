@@ -4,6 +4,7 @@ import {
   ensurePackage,
   getPackageManagerCommand,
   joinPathFragments,
+  readNxJson,
 } from '@nx/devkit';
 import { webStaticServeGenerator } from '@nx/web';
 
@@ -16,10 +17,18 @@ export async function addE2e(
 ): Promise<GeneratorCallback> {
   switch (options.e2eTestRunner) {
     case 'cypress': {
-      webStaticServeGenerator(tree, {
-        buildTarget: `${options.projectName}:build`,
-        targetName: 'serve-static',
-      });
+      const nxJson = readNxJson(tree);
+      const hasPlugin = nxJson.plugins?.some((p) =>
+        typeof p === 'string'
+          ? p === '@nx/vite/plugin'
+          : p.plugin === '@nx/vite/plugin'
+      );
+      if (!hasPlugin) {
+        webStaticServeGenerator(tree, {
+          buildTarget: `${options.projectName}:build`,
+          targetName: 'serve-static',
+        });
+      }
 
       const { configurationGenerator } = ensurePackage<
         typeof import('@nx/cypress')
@@ -39,6 +48,7 @@ export async function addE2e(
         bundler: 'vite',
         skipFormat: true,
         devServerTarget: `${options.projectName}:serve`,
+        baseUrl: 'http://localhost:4200',
         jsx: true,
       });
     }

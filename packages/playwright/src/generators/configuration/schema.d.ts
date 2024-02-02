@@ -9,6 +9,7 @@ export interface ConfigurationGeneratorSchema {
   js: boolean; // default is false
   skipFormat: boolean;
   skipPackageJson: boolean;
+  skipInstall?: boolean;
   linter: Linter;
   setParserOptionsProject: boolean; // default is false
   /**
@@ -22,4 +23,5 @@ export interface ConfigurationGeneratorSchema {
    **/
   webServerAddress?: string;
   rootProject?: boolean;
+  addPlugin?: boolean;
 }

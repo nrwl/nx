@@ -1,5 +1,6 @@
 import {
   generateFiles,
+  joinPathFragments,
   names,
   offsetFromRoot,
   toJS,
@@ -12,6 +13,10 @@ import { createTsConfig } from '../../../utils/create-ts-config';
 import { getInSourceVitestTestsTemplate } from '../../../utils/get-in-source-vitest-tests-template';
 import { NormalizedSchema } from '../schema';
 import { getAppTests } from './get-app-tests';
+import { maybeJs } from './add-project';
+import { WithReactOptions } from '../../../../plugins/with-react';
+import { WithNxOptions } from '@nx/webpack';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 
 export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
   let styleSolutionSpecificAppFiles: string;
@@ -53,7 +58,12 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
       host,
       join(__dirname, '../files/base-webpack'),
       options.appProjectRoot,
-      templateVariables
+      {
+        ...templateVariables,
+        webpackPluginOptions: hasWebpackPlugin(host)
+          ? createNxWebpackPluginOptions(options)
+          : null,
+      }
     );
     if (options.compiler === 'babel') {
       writeJson(host, `${options.appProjectRoot}/.babelrc`, {
@@ -153,4 +163,28 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     options,
     relativePathToRootTsConfig
   );
+}
+
+function createNxWebpackPluginOptions(
+  options: NormalizedSchema
+): WithNxOptions & WithReactOptions {
+  return {
+    target: 'web',
+    compiler: options.compiler ?? 'babel',
+    outputPath: joinPathFragments(
+      'dist',
+      options.appProjectRoot != '.'
+        ? options.appProjectRoot
+        : options.projectName
+    ),
+    index: './src/index.html',
+    baseHref: '/',
+    main: maybeJs(options, `./src/main.tsx`),
+    tsConfig: './tsconfig.app.json',
+    assets: ['./src/favicon.ico', './src/assets'],
+    styles:
+      options.styledModule || !options.hasStyles
+        ? []
+        : [`./src/styles.${options.style}`],
+  };
 }

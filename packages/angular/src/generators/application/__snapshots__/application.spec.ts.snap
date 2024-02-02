@@ -9,7 +9,10 @@ import { appRoutes } from './app.routes';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
+  imports: [
+    BrowserModule,
+    RouterModule.forRoot(appRoutes),
+  ],
   providers: [],
   bootstrap: [AppComponent],
 })
@@ -38,7 +41,7 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [RouterTestingModule],
-      declarations: [AppComponent],
+      declarations: [AppComponent]
     }).compileComponents();
   });
 
@@ -55,8 +58,7 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps with routing 4`] = `
-"<h1>Welcome plain</h1>
-<router-outlet></router-outlet>
+"<h1>Welcome plain</h1> <router-outlet></router-outlet>
 "
 `;
 
@@ -67,7 +69,9 @@ import { AppComponent } from './app.component';
 
 @NgModule({
   declarations: [AppComponent],
-  imports: [BrowserModule],
+  imports: [
+    BrowserModule,
+  ],
   providers: [],
   bootstrap: [AppComponent],
 })
@@ -95,7 +99,7 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [],
-      declarations: [AppComponent],
+      declarations: [AppComponent]
     }).compileComponents();
   });
 
@@ -112,7 +116,7 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for non-standalone apps without routing 4`] = `
-"<h1>Welcome plain</h1>
+"<h1>Welcome plain</h1> 
 "
 `;
 
@@ -156,8 +160,7 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps with routing 3`] = `
-"<h1>Welcome plain</h1>
-<router-outlet></router-outlet>
+"<h1>Welcome plain</h1> <router-outlet></router-outlet>
 "
 `;
 
@@ -199,7 +202,7 @@ describe('AppComponent', () => {
 `;
 
 exports[`app --minimal should skip "nx-welcome.component.ts" file and references for standalone apps without routing 3`] = `
-"<h1>Welcome plain</h1>
+"<h1>Welcome plain</h1> 
 "
 `;
 
@@ -265,18 +268,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "buildTarget": "my-dir-my-app:build",
       },
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "apps/my-dir/my-app/**/*.ts",
-          "apps/my-dir/my-app/**/*.html",
-        ],
-      },
-      "outputs": [
-        "{options.outputFile}",
-      ],
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -295,15 +286,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "buildTarget": "my-dir-my-app:build",
         "staticFilePath": "dist/apps/my-dir/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "apps/my-dir/my-app/jest.config.ts",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -336,17 +318,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "devServerTarget": "my-dir-my-app:serve:development",
         "testingType": "e2e",
       },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "apps/my-dir/my-app-e2e/**/*.{js,ts}",
-        ],
-      },
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
   },
 }
@@ -501,18 +472,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "buildTarget": "my-app:build",
       },
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "apps/my-app/**/*.ts",
-          "apps/my-app/**/*.html",
-        ],
-      },
-      "outputs": [
-        "{options.outputFile}",
-      ],
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -531,15 +490,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "buildTarget": "my-app:build",
         "staticFilePath": "dist/apps/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "apps/my-app/jest.config.ts",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -572,17 +522,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "devServerTarget": "my-app:serve:development",
         "testingType": "e2e",
       },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "apps/my-app-e2e/**/*.{js,ts}",
-        ],
-      },
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
   },
 }
@@ -692,7 +631,7 @@ import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes)],
+  providers: [provideRouter(appRoutes) ]
 };
 "
 `;
@@ -768,7 +707,7 @@ exports[`app --standalone should generate a standalone app correctly without rou
 "import { ApplicationConfig } from '@angular/core';
 
 export const appConfig: ApplicationConfig = {
-  providers: [],
+  providers: []
 };
 "
 `;
@@ -779,7 +718,7 @@ import { NxWelcomeComponent } from './nx-welcome.component';
 
 @Component({
   standalone: true,
-  imports: [NxWelcomeComponent],
+  imports: [NxWelcomeComponent, ],
   selector: 'proj-root',
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
@@ -892,12 +831,83 @@ import { provideRouter } from '@angular/router';
 import { appRoutes } from './app.routes';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideRouter(appRoutes)],
+  providers: [provideRouter(appRoutes) ]
 };
 "
 `;
 
 exports[`app at the root should accept numbers in the path 1`] = `"src/9-websites/my-app"`;
+
+exports[`app format files should format files 1`] = `
+"import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { RouterModule } from '@angular/router';
+import { AppComponent } from './app.component';
+import { appRoutes } from './app.routes';
+import { NxWelcomeComponent } from './nx-welcome.component';
+
+@NgModule({
+  declarations: [AppComponent, NxWelcomeComponent],
+  imports: [BrowserModule, RouterModule.forRoot(appRoutes)],
+  providers: [],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+"
+`;
+
+exports[`app format files should format files 2`] = `
+"import { Component } from '@angular/core';
+
+@Component({
+  selector: 'proj-root',
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.css',
+})
+export class AppComponent {
+  title = 'my-app';
+}
+"
+`;
+
+exports[`app format files should format files 3`] = `
+"import { TestBed } from '@angular/core/testing';
+import { AppComponent } from './app.component';
+import { NxWelcomeComponent } from './nx-welcome.component';
+import { RouterTestingModule } from '@angular/router/testing';
+
+describe('AppComponent', () => {
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [RouterTestingModule],
+      declarations: [AppComponent, NxWelcomeComponent],
+    }).compileComponents();
+  });
+
+  it('should render title', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('h1')?.textContent).toContain(
+      'Welcome my-app'
+    );
+  });
+
+  it(\`should have as title 'my-app'\`, () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    const app = fixture.componentInstance;
+    expect(app.title).toEqual('my-app');
+  });
+});
+"
+`;
+
+exports[`app format files should format files 4`] = `
+"import { Route } from '@angular/router';
+
+export const appRoutes: Route[] = [];
+"
+`;
 
 exports[`app nested should create project configs 1`] = `
 {
@@ -961,18 +971,6 @@ exports[`app nested should create project configs 1`] = `
         "buildTarget": "my-app:build",
       },
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "my-dir/my-app/**/*.ts",
-          "my-dir/my-app/**/*.html",
-        ],
-      },
-      "outputs": [
-        "{options.outputFile}",
-      ],
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -991,15 +989,6 @@ exports[`app nested should create project configs 1`] = `
         "buildTarget": "my-app:build",
         "staticFilePath": "dist/my-dir/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "my-dir/my-app/jest.config.ts",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -1032,17 +1021,6 @@ exports[`app nested should create project configs 2`] = `
         "devServerTarget": "my-app:serve:development",
         "testingType": "e2e",
       },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "my-dir/my-app-e2e/**/*.{js,ts}",
-        ],
-      },
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
   },
 }
@@ -1110,18 +1088,6 @@ exports[`app not nested should create project configs 1`] = `
         "buildTarget": "my-app:build",
       },
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "my-app/**/*.ts",
-          "my-app/**/*.html",
-        ],
-      },
-      "outputs": [
-        "{options.outputFile}",
-      ],
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -1140,15 +1106,6 @@ exports[`app not nested should create project configs 1`] = `
         "buildTarget": "my-app:build",
         "staticFilePath": "dist/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "my-app/jest.config.ts",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -1181,17 +1138,6 @@ exports[`app not nested should create project configs 2`] = `
         "devServerTarget": "my-app:serve:development",
         "testingType": "e2e",
       },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-      "options": {
-        "lintFilePatterns": [
-          "my-app-e2e/**/*.{js,ts}",
-        ],
-      },
-      "outputs": [
-        "{options.outputFile}",
-      ],
     },
   },
 }

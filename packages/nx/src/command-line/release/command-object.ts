@@ -15,9 +15,11 @@ export interface NxReleaseArgs {
   projects?: string[];
   dryRun?: boolean;
   verbose?: boolean;
+  firstRelease?: boolean;
 }
 
 interface GitCommitAndTagOptions {
+  stageChanges?: boolean;
   gitCommit?: boolean;
   gitCommitMessage?: string;
   gitCommitArgs?: string;
@@ -51,6 +53,11 @@ export type PublishOptions = NxReleaseArgs &
     otp?: number;
   };
 
+export type ReleaseOptions = NxReleaseArgs & {
+  yes?: boolean;
+  skipPublish?: boolean;
+};
+
 export const yargsReleaseCommand: CommandModule<
   Record<string, unknown>,
   NxReleaseArgs
@@ -60,6 +67,7 @@ export const yargsReleaseCommand: CommandModule<
     '**ALPHA**: Orchestrate versioning and publishing of applications and libraries',
   builder: (yargs) =>
     yargs
+      .command(releaseCommand)
       .command(versionCommand)
       .command(changelogCommand)
       .command(publishCommand)
@@ -80,7 +88,7 @@ export const yargsReleaseCommand: CommandModule<
         describe:
           'Projects to run. (comma/space delimited project names and/or patterns)',
       })
-      .option('dryRun', {
+      .option('dry-run', {
         describe:
           'Preview the changes without updating files/creating releases',
         alias: 'd',
@@ -91,6 +99,11 @@ export const yargsReleaseCommand: CommandModule<
         type: 'boolean',
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
+      })
+      .option('first-release', {
+        type: 'boolean',
+        description:
+          'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.',
       })
       .check((argv) => {
         if (argv.groups && argv.projects) {
@@ -116,6 +129,47 @@ export const yargsReleaseCommand: CommandModule<
   },
 };
 
+const releaseCommand: CommandModule<NxReleaseArgs, ReleaseOptions> = {
+  command: '$0 [specifier]',
+  describe:
+    'Create a version and release for the workspace, generate a changelog, and optionally publish the packages',
+  builder: (yargs) =>
+    yargs
+      .positional('specifier', {
+        type: 'string',
+        describe:
+          'Exact version or semver keyword to apply to the selected release group.',
+      })
+      .option('yes', {
+        type: 'boolean',
+        alias: 'y',
+        description:
+          'Automatically answer yes to the confirmation prompt for publishing',
+      })
+      .option('skip-publish', {
+        type: 'boolean',
+        description:
+          'Skip publishing by automatically answering no to the confirmation prompt for publishing',
+      })
+      .check((argv) => {
+        if (argv.yes !== undefined && argv.skipPublish !== undefined) {
+          throw new Error(
+            'The --yes and --skip-publish options are mutually exclusive, please use one or the other.'
+          );
+        }
+        return true;
+      }),
+  handler: (args) =>
+    import('./release')
+      .then((m) => m.releaseCLIHandler(args))
+      .then((versionDataOrExitCode) => {
+        if (typeof versionDataOrExitCode === 'number') {
+          return process.exit(versionDataOrExitCode);
+        }
+        process.exit(0);
+      }),
+};
+
 const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
   command: 'version [specifier]',
   aliases: ['v'],
@@ -135,16 +189,15 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
           default: '',
         })
-        .option('stageChanges', {
+        .option('stage-changes', {
           type: 'boolean',
           describe:
-            'Whether or not to stage the changes made by this command, irrespective of the git config in nx.json related to automated commits. Useful when combining this command with changelog generation.',
-          default: false,
+            'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
         })
     ),
   handler: (args) =>
     import('./version')
-      .then((m) => m.releaseVersion(args))
+      .then((m) => m.releaseVersionCLIHandler(args))
       .then((versionDataOrExitCode) => {
         if (typeof versionDataOrExitCode === 'number') {
           return process.exit(versionDataOrExitCode);
@@ -185,7 +238,7 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
             'Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level',
           choices: ['all', 'workspace', 'projects'],
         })
-        .option('gitRemote', {
+        .option('git-remote', {
           type: 'string',
           description:
             'Alternate git remote in the form {user}/{repo} on which to create the Github release (useful for testing)',
@@ -201,7 +254,9 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
         })
     ),
   handler: async (args) => {
-    const status = await (await import('./changelog')).releaseChangelog(args);
+    const status = await (
+      await import('./changelog')
+    ).releaseChangelogCLIHandler(args);
     process.exit(status);
   },
 };
@@ -225,10 +280,12 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
         description:
           'A one-time password for publishing to a registry that requires 2FA',
       }),
-  handler: (args) =>
-    import('./publish').then((m) =>
-      m.releasePublish(coerceParallelOption(withOverrides(args, 2)))
-    ),
+  handler: async (args) => {
+    const status = await (
+      await import('./publish')
+    ).releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)));
+    process.exit(status);
+  },
 };
 
 function coerceParallelOption(args: any) {
@@ -288,5 +345,10 @@ function withGitCommitAndGitTagOptions<T>(
       describe:
         'Additional arguments to pass to the `git tag` command invoked behind the scenes',
       type: 'string',
+    })
+    .option('stage-changes', {
+      describe:
+        'Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.',
+      type: 'boolean',
     });
 }

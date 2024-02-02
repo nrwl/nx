@@ -1,5 +1,5 @@
 import { type ProjectGraph } from '../../../devkit-exports';
-import { CATCH_ALL_RELEASE_GROUP, NxReleaseConfig } from './config';
+import { IMPLICIT_DEFAULT_RELEASE_GROUP, NxReleaseConfig } from './config';
 import { filterReleaseGroups } from './filter-release-groups';
 
 describe('filterReleaseGroups()', () => {
@@ -12,20 +12,24 @@ describe('filterReleaseGroups()', () => {
       groups: {},
       changelog: {
         git: {
-          commit: false,
+          commit: true,
           commitMessage: '',
           commitArgs: '',
-          tag: false,
+          tag: true,
           tagMessage: '',
           tagArgs: '',
+          stageChanges: false,
         },
         workspaceChangelog: false,
         projectChangelogs: false,
+        automaticFromRef: false,
       },
       version: {
+        conventionalCommits: false,
         generator: '',
         generatorOptions: {},
         git: {
+          stageChanges: true,
           commit: false,
           commitMessage: '',
           commitArgs: '',
@@ -42,6 +46,7 @@ describe('filterReleaseGroups()', () => {
         tag: false,
         tagMessage: '',
         tagArgs: '',
+        stageChanges: false,
       },
     };
     projectGraph = {
@@ -90,6 +95,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -116,6 +122,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -126,6 +133,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-b'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -146,6 +154,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -159,6 +168,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -176,6 +186,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -191,6 +202,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -201,13 +213,14 @@ describe('filterReleaseGroups()', () => {
       `);
     });
 
-    it('should produce an appropriately formatted error for the CATCH_ALL_RELEASE_GROUP', () => {
+    it('should produce an appropriately formatted error for the IMPLICIT_DEFAULT_RELEASE_GROUP', () => {
       nxReleaseConfig.groups = {
-        [CATCH_ALL_RELEASE_GROUP]: {
+        [IMPLICIT_DEFAULT_RELEASE_GROUP]: {
           projectsRelationship: 'fixed',
           projects: ['lib-a', 'lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -233,6 +246,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -243,6 +257,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-b'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -269,6 +284,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -279,6 +295,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-b'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -299,6 +316,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -316,6 +334,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -349,6 +368,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -359,6 +379,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-b'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -379,6 +400,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -396,6 +418,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },

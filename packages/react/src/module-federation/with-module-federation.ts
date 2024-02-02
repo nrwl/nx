@@ -1,23 +1,30 @@
 import { ModuleFederationConfig } from '@nx/webpack/src/utils/module-federation';
 import { getModuleFederationConfig } from './utils';
-import type { AsyncNxWebpackPlugin } from '@nx/webpack';
+import type { AsyncNxComposableWebpackPlugin } from '@nx/webpack';
 import ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPlugin');
+
+const isVarOrWindow = (libType?: string) =>
+  libType === 'var' || libType === 'window';
 
 /**
  * @param {ModuleFederationConfig} options
- * @return {Promise<AsyncNxWebpackPlugin>}
+ * @return {Promise<AsyncNxComposableWebpackPlugin>}
  */
 export async function withModuleFederation(
   options: ModuleFederationConfig
-): Promise<AsyncNxWebpackPlugin> {
+): Promise<AsyncNxComposableWebpackPlugin> {
+  if (global.NX_GRAPH_CREATION) {
+    return (config) => config;
+  }
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options);
+  const isGlobal = isVarOrWindow(options.library?.type);
 
   return (config, ctx) => {
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
 
-    if (options.library?.type === 'var') {
+    if (isGlobal) {
       config.output.scriptType = 'text/javascript';
     }
 
@@ -27,7 +34,7 @@ export async function withModuleFederation(
 
     config.experiments = {
       ...config.experiments,
-      outputModule: !(options.library?.type === 'var'),
+      outputModule: !isGlobal,
     };
 
     config.plugins.push(
@@ -46,7 +53,7 @@ export async function withModuleFederation(
          *  { appX: 'appX@http://localhost:3001/remoteEntry.js' }
          *  { appY: 'appY@http://localhost:3002/remoteEntry.js' }
          */
-        ...(options.library?.type === 'var' ? { remoteType: 'script' } : {}),
+        ...(isGlobal ? { remoteType: 'script' } : {}),
       }),
       sharedLibraries.getReplacementPlugin()
     );

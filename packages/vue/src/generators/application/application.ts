@@ -7,6 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { Linter } from '@nx/eslint';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { vueInitGenerator } from '../init/init';
@@ -15,8 +16,14 @@ import { addE2e } from './lib/add-e2e';
 import { createApplicationFiles } from './lib/create-application-files';
 import { addVite } from './lib/add-vite';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
-export async function applicationGenerator(
+export function applicationGenerator(tree: Tree, options: Schema) {
+  return applicationGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function applicationGeneratorInternal(
   tree: Tree,
   _options: Schema
 ): Promise<GeneratorCallback> {
@@ -31,11 +38,23 @@ export async function applicationGenerator(
   });
 
   tasks.push(
+    await jsInitGenerator(tree, {
+      ...options,
+      tsConfigName: options.rootProject
+        ? 'tsconfig.json'
+        : 'tsconfig.base.json',
+      skipFormat: true,
+    })
+  );
+  tasks.push(
     await vueInitGenerator(tree, {
       ...options,
       skipFormat: true,
     })
   );
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(tree, options));
+  }
 
   if (!options.rootProject) {
     extractTsConfigBase(tree);
@@ -54,6 +73,7 @@ export async function applicationGenerator(
         skipPackageJson: options.skipPackageJson,
         setParserOptionsProject: options.setParserOptionsProject,
         rootProject: options.rootProject,
+        addPlugin: options.addPlugin,
       },
       'app'
     )
@@ -66,6 +86,10 @@ export async function applicationGenerator(
   if (options.js) toJS(tree);
 
   if (!options.skipFormat) await formatFiles(tree);
+
+  tasks.push(() => {
+    logShowProjectCommand(options.projectName);
+  });
 
   return runTasksInSerial(...tasks);
 }

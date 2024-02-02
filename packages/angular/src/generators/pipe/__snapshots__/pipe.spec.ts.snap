@@ -54,7 +54,7 @@ exports[`pipe generator --no-standalone should import the pipe correctly when fl
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test',
+  name: 'test'
 })
 export class TestPipe implements PipeTransform {
   transform(value: unknown, ...args: unknown[]): unknown {
@@ -92,7 +92,7 @@ exports[`pipe generator --no-standalone should import the pipe correctly when fl
 "import { Pipe, PipeTransform } from '@angular/core';
 
 @Pipe({
-  name: 'test',
+  name: 'test'
 })
 export class TestPipe implements PipeTransform {
   transform(value: unknown, ...args: unknown[]): unknown {

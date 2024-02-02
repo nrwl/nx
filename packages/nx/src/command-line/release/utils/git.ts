@@ -3,7 +3,6 @@
  * https://github.com/unjs/changelogen
  */
 import { interpolate } from '../../../tasks-runner/utils';
-import { output } from '../../../utils/output';
 import { execCommand } from './exec-command';
 
 export interface GitCommitAuthor {
@@ -31,6 +30,7 @@ export interface GitCommit extends RawGitCommit {
   authors: GitCommitAuthor[];
   isBreaking: boolean;
   affectedFiles: string[];
+  revertedHashes: string[];
 }
 
 function escapeRegExp(string) {
@@ -187,7 +187,7 @@ export async function gitCommit({
   let hasStagedFiles = false;
   try {
     // This command will error if there are staged changes
-    await execCommand('git', ['diff-index', '--quiet', 'HEAD']);
+    await execCommand('git', ['diff-index', '--quiet', 'HEAD', '--cached']);
   } catch {
     hasStagedFiles = true;
   }
@@ -249,7 +249,7 @@ export async function gitTag({
   }
 }
 
-export async function gitPush() {
+export async function gitPush(gitRemote?: string) {
   try {
     await execCommand('git', [
       'push',
@@ -257,6 +257,8 @@ export async function gitPush() {
       '--follow-tags',
       '--no-verify',
       '--atomic',
+      // Set custom git remote if provided
+      ...(gitRemote ? [gitRemote] : []),
     ]);
   } catch (err) {
     throw new Error(`Unexpected git push error: ${err}`);
@@ -275,6 +277,7 @@ const CoAuthoredByRegex = /co-authored-by:\s*(?<name>.+)(<(?<email>.+)>)/gim;
 const PullRequestRE = /\([ a-z]*(#\d+)\s*\)/gm;
 const IssueRE = /(#\d+)/gm;
 const ChangedFileRegex = /(A|M|D|R\d*|C\d*)\t([^\t\n]*)\t?(.*)?/gm;
+const RevertHashRE = /This reverts commit (?<hash>[\da-f]{40})./gm;
 
 export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
   const match = commit.message.match(ConventionalCommitRegex);
@@ -282,11 +285,10 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     return null;
   }
 
-  const type = match.groups.type;
-
   const scope = match.groups.scope || '';
 
-  const isBreaking = Boolean(match.groups.breaking);
+  const isBreaking =
+    Boolean(match.groups.breaking) || commit.body.includes('BREAKING CHANGE:');
   let description = match.groups.description;
 
   // Extract references from message
@@ -303,6 +305,18 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
 
   // Remove references and normalize
   description = description.replace(PullRequestRE, '').trim();
+
+  let type = match.groups.type;
+  // Extract any reverted hashes, if applicable
+  const revertedHashes = [];
+  const matchedHashes = commit.body.matchAll(RevertHashRE);
+  for (const matchedHash of matchedHashes) {
+    revertedHashes.push(matchedHash.groups.hash);
+  }
+  if (revertedHashes.length) {
+    type = 'revert';
+    description = commit.message;
+  }
 
   // Find all authors
   const authors: GitCommitAuthor[] = [commit.author];
@@ -334,6 +348,7 @@ export function parseGitCommit(commit: RawGitCommit): GitCommit | null {
     scope,
     references,
     isBreaking,
+    revertedHashes,
     affectedFiles,
   };
 }
@@ -343,5 +358,15 @@ export async function getCommitHash(ref: string) {
     return (await execCommand('git', ['rev-parse', ref])).trim();
   } catch (e) {
     throw new Error(`Unknown revision: ${ref}`);
+  }
+}
+
+export async function getFirstGitCommit() {
+  try {
+    return (
+      await execCommand('git', ['rev-list', '--max-parents=0', 'HEAD'])
+    ).trim();
+  } catch (e) {
+    throw new Error(`Unable to find first commit in git history`);
   }
 }

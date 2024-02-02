@@ -193,7 +193,7 @@ function addLazyLoadedRouteToHostAppModule(
     const newAppComponent = `${appComponent.slice(
       0,
       indexOfClosingMenuTag
-    )}<li><a routerLink='${options.appName}'>${
+    )}<li><a routerLink="${options.appName}">${
       names(options.appName).className
     }</a></li>\n${appComponent.slice(indexOfClosingMenuTag)}`;
     tree.write(pathToAppComponentTemplate, newAppComponent);

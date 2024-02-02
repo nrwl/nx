@@ -12,7 +12,7 @@ export const typesReactVersion = '18.2.33';
 export const typesReactDomVersion = '18.2.14';
 export const typesReactIsVersion = '18.2.2';
 
-export const typesNodeVersion = '18.14.2';
+export const typesNodeVersion = '18.16.9';
 
 export const babelPresetReactVersion = '^7.14.5';
 export const babelCoreVersion = '^7.14.5';

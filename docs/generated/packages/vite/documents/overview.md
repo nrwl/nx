@@ -18,15 +18,7 @@ Read more about Vite and Vitest in the [Vite documentation](https://vitejs.dev/)
 
 ## Setting up a new Nx workspace with Vite
 
-You can create a new workspace that uses Vite with one of the following commands:
-
-- Generate a new monorepo with a Web Components app set up with Vite
-
-```shell
-npx create-nx-workspace@latest --preset=web-components
-```
-
-- Generate a new standalone React app set up with Vite
+Here's an example on how to create a new React app with Vite
 
 ```shell
 npx create-nx-workspace@latest --preset=react-standalone --bundler=vite
@@ -64,7 +56,7 @@ You can use the `@nx/vite:configuration` generator to change your React or Web p
 
 You can read more about this generator on the [`@nx/vite:configuration`](/nx-api/vite/generators/configuration) generator page.
 
-### Initialize Vite.js
+### Initialize Vite
 
 If you do not want to create any new projects or convert any existing projects yet, you can still use Nx to install all the necessary dependencies for Vite.js. This, for example, could be useful if you want to set up Vite.js manually for a project.
 
@@ -78,7 +70,7 @@ Make sure to install the `@nx/vite` version that matches the version of `nx` in 
 {% tab label="npm" %}
 
 ```shell
-npm install -D @nx/vite
+npm add -D @nx/vite
 ```
 
 {% /tab %}
@@ -92,7 +84,7 @@ yarn add -D @nx/vite
 {% tab label="pnpm" %}
 
 ```shell
-pnpm install -D @nx/vite
+pnpm add -D @nx/vite
 ```
 
 {% /tab %}
@@ -100,7 +92,7 @@ pnpm install -D @nx/vite
 
 #### Ask Nx to install the necessary dependencies
 
-After you install the plugin, you can initialize Vite.js. You can do this by running the `init` executor. This executor will make sure to install all the necessary dependencies.
+After you install the plugin, you can automatically initialize the project with Vite using an Nx generator:
 
 ```bash
 nx g @nx/vite:init

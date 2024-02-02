@@ -1,4 +1,4 @@
-use crate::native::project_graph::utils::ProjectRootMappings;
+use crate::native::project_graph::utils::{normalize_project_root, ProjectRootMappings};
 use std::path::Path;
 
 pub fn find_project_for_path<P: AsRef<Path>>(
@@ -19,7 +19,9 @@ pub fn find_project_for_path<P: AsRef<Path>>(
     }
 
     if let Some(current_path_str) = current_path.to_str() {
-        match project_root_map.get(current_path_str) {
+        let normalized_project_path = normalize_project_root(current_path_str);
+
+        match project_root_map.get(&normalized_project_path) {
             Some(s) => Some(s),
             None => None,
         }
@@ -67,6 +69,15 @@ mod test {
                     named_inputs: None,
                 },
             ),
+            (
+                "standalone".into(),
+                Project {
+                    tags: None,
+                    targets: Default::default(),
+                    root: ".".into(),
+                    named_inputs: None,
+                },
+            ),
         ]));
 
         assert_eq!(
@@ -81,5 +92,9 @@ mod test {
             find_project_for_path("apps/demo-app/src/subdir/blah", &project_root_mapping),
             Some("demo-app")
         );
+        assert_eq!(
+            find_project_for_path("src/standalone", &project_root_mapping),
+            Some("standalone")
+        )
     }
 }

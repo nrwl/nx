@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxRemixTailwind",
+  "title": "Add TailwindCSS to a Remix App",
+  "description": "Setup tailwindcss for a given project.",
+  "type": "object",
+  "examples": [
+    {
+      "command": "g setup-tailwind --project=myapp",
+      "description": "Generate a TailwindCSS config for your Remix app"
+    }
+  ],
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add tailwind to",
+      "$default": {
+        "$source": "projectName"
+      },
+      "x-prompt": "What project would you like to add Tailwind to?",
+      "pattern": "^[a-zA-Z].*$"
+    },
+    "js": {
+      "type": "boolean",
+      "description": "Generate a JavaScript config file instead of a TypeScript config file",
+      "default": false
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting files after generator runs",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "required": ["project"]
+}

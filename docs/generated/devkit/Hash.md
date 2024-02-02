@@ -17,12 +17,12 @@ A data structure returned by the default hasher.
 
 #### Type declaration
 
-| Name            | Type                                |
-| :-------------- | :---------------------------------- |
-| `command`       | `string`                            |
-| `implicitDeps?` | { `[fileName: string]`: `string`; } |
-| `nodes`         | { `[name: string]`: `string`; }     |
-| `runtime?`      | { `[input: string]`: `string`; }    |
+| Name            | Type                                 |
+| :-------------- | :----------------------------------- |
+| `command`       | `string`                             |
+| `implicitDeps?` | \{ `[fileName: string]`: `string`; } |
+| `nodes`         | \{ `[name: string]`: `string`; }     |
+| `runtime?`      | \{ `[input: string]`: `string`; }    |
 
 ---
 

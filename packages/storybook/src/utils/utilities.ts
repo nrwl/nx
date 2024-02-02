@@ -1,4 +1,9 @@
-import { TargetConfiguration, Tree } from '@nx/devkit';
+import {
+  TargetConfiguration,
+  Tree,
+  readNxJson,
+  updateNxJson,
+} from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
 import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
@@ -131,9 +136,6 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     '@nx/angular:webpack-browser',
     '@nx/esbuild:esbuild',
     '@nx/next:build',
-    '@nx/react-native:bundle',
-    '@nx/react-native:build-android',
-    '@nx/react-native:bundle',
     '@nrwl/js:babel',
     '@nrwl/js:swc',
     '@nrwl/js:tsc',
@@ -146,9 +148,6 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     '@nrwl/angular:webpack-browser',
     '@nrwl/esbuild:esbuild',
     '@nrwl/next:build',
-    '@nrwl/react-native:bundle',
-    '@nrwl/react-native:build-android',
-    '@nrwl/react-native:bundle',
     '@nxext/vite:build',
     '@angular-devkit/build-angular:browser',
   ];
@@ -270,4 +269,30 @@ export function pleaseUpgrade(): string {
     Here is a guide on how to upgrade:
     https://nx.dev/nx-api/storybook/generators/migrate-7
     `;
+}
+
+export function addPlugin(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.plugins ??= [];
+
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/storybook/plugin'
+        : plugin.plugin === '@nx/storybook/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/storybook/plugin',
+    options: {
+      buildStorybookTargetName: 'build-storybook',
+      serveStorybookTargetName: 'storybook',
+      testStorybookTargetName: 'test-storybook',
+      staticStorybookTargetName: 'static-storybook',
+    },
+  });
+  updateNxJson(tree, nxJson);
 }

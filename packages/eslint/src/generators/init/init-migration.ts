@@ -23,41 +23,84 @@ import {
   removeCompatExtends,
   removePlugin,
 } from '../utils/flat-config/ast-utils';
+import { hasEslintPlugin } from '../utils/plugin';
+import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
 
 export function migrateConfigToMonorepoStyle(
   projects: ProjectConfiguration[],
   tree: Tree,
-  unitTestRunner: string
+  unitTestRunner: string,
+  keepExistingVersions?: boolean
 ): void {
-  if (useFlatConfig(tree)) {
-    // we need this for the compat
-    addDependenciesToPackageJson(
-      tree,
-      {},
-      {
-        '@eslint/js': eslintVersion,
-      }
-    );
-    tree.write(
-      'eslint.base.config.js',
-      getGlobalFlatEslintConfiguration(unitTestRunner)
-    );
+  const rootEslintConfig = findEslintFile(tree);
+  let skipCleanup = false;
+  if (
+    rootEslintConfig?.match(/\.base\./) &&
+    !projects.some((p) => p.root === '.')
+  ) {
+    // if the migration has been run already, we need to rename the base config
+    // and only update the extends paths
+    tree.rename(rootEslintConfig, rootEslintConfig.replace('.base.', '.'));
+    skipCleanup = true;
   } else {
-    writeJson(
-      tree,
-      '.eslintrc.base.json',
-      getGlobalEsLintConfiguration(unitTestRunner)
-    );
+    if (useFlatConfig(tree)) {
+      // we need this for the compat
+      addDependenciesToPackageJson(
+        tree,
+        {},
+        {
+          '@eslint/js': eslintVersion,
+        },
+        undefined,
+        keepExistingVersions
+      );
+      tree.write(
+        tree.exists('eslint.config.js')
+          ? 'eslint.base.config.js'
+          : 'eslint.config.js',
+        getGlobalFlatEslintConfiguration(unitTestRunner)
+      );
+    } else {
+      const eslintFile = findEslintFile(tree, '.');
+      writeJson(
+        tree,
+        eslintFile ? '.eslintrc.base.json' : '.eslintrc.json',
+        getGlobalEsLintConfiguration(unitTestRunner)
+      );
+    }
   }
 
-  // update extens in all projects' eslint configs
+  // update extends in all projects' eslint configs
   projects.forEach((project) => {
+    let eslintFile: string;
+
     const lintTarget = findLintTarget(project);
     if (lintTarget) {
-      const eslintFile =
-        lintTarget.options.eslintConfig || findEslintFile(tree, project.root);
-      if (eslintFile) {
-        const projectEslintPath = joinPathFragments(project.root, eslintFile);
+      // If target is configured in project.json, read file from target options.
+      eslintFile =
+        lintTarget.options?.eslintConfig || findEslintFile(tree, project.root);
+    } else if (hasEslintPlugin(tree)) {
+      // Otherwise, if `@nx/eslint/plugin` is used, match any of the known config files.
+      for (const f of ESLINT_CONFIG_FILENAMES) {
+        if (tree.exists(joinPathFragments(project.root, f))) {
+          eslintFile = f;
+          break;
+        }
+      }
+    }
+
+    if (eslintFile) {
+      const projectEslintPath = joinPathFragments(project.root, eslintFile);
+      if (skipCleanup) {
+        const content = tree.read(projectEslintPath, 'utf-8');
+        tree.write(
+          projectEslintPath,
+          content.replace(
+            rootEslintConfig,
+            rootEslintConfig.replace('.base.', '.')
+          )
+        );
+      } else {
         migrateEslintFile(projectEslintPath, tree);
       }
     }
@@ -76,6 +119,7 @@ export function findLintTarget(
 }
 
 function migrateEslintFile(projectEslintPath: string, tree: Tree) {
+  const baseFile = findEslintFile(tree);
   if (isEslintConfigSupported(tree)) {
     if (useFlatConfig(tree)) {
       let config = tree.read(projectEslintPath, 'utf-8');
@@ -85,7 +129,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
       config = addImportToFlatConfig(
         config,
         'baseConfig',
-        `${offsetFromRoot(dirname(projectEslintPath))}eslint.base.config.js`
+        `${offsetFromRoot(dirname(projectEslintPath))}${baseFile}`
       );
       config = addBlockToFlatConfigExport(
         config,
@@ -117,7 +161,7 @@ function migrateEslintFile(projectEslintPath: string, tree: Tree) {
         json.extends = json.extends || [];
         const pathToRootConfig = `${offsetFromRoot(
           dirname(projectEslintPath)
-        )}.eslintrc.base.json`;
+        )}${baseFile}`;
         if (json.extends.indexOf(pathToRootConfig) === -1) {
           json.extends.push(pathToRootConfig);
         }

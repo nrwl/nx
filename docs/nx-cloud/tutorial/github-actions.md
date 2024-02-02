@@ -221,7 +221,7 @@ Clearly this is not a scalable solution as it requires us to manually add every 
 
 This change makes our CI pipeline configuration more maintainable. For a small repository, this might be good enough, but after a little bit of growth this approach will cause your CI times to become unmanageable.
 
-Nx comes with a dedicated ["affected" command](/nx-cloud/features/affected) to help with that by only running tasks for projects that were affected by the changes in a given PR.
+Nx comes with a dedicated ["affected" command](/ci/features/affected) to help with that by only running tasks for projects that were affected by the changes in a given PR.
 
 ```{% command="nx affected -t build" %}
     ✔  nx run shared-product-types:build (404ms)
@@ -311,20 +311,10 @@ Merge your PR into the `main` branch when you're ready to move to the next secti
 
 ## Enable Remote Caching on GitHub Actions
 
-Reducing the number of tasks to run via [affected commands](/nx-cloud/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/core-features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. The [Nx Cloud remote cache](/nx-cloud/features/remote-cache) can eliminate that waste for you.
+Reducing the number of tasks to run via [affected commands](/ci/features/affected) (as seen in the previous section) is helpful, but might not be enough. By default [Nx caches the results of tasks](/core-features/cache-task-results) on your local machine. But CI and local developer machines are still performing the same tasks on the same code - wasting time and money. The [Nx Cloud remote cache](/ci/features/remote-cache) can eliminate that waste for you.
 
-```{% command="pnpm nx connect" %}
-✔ Enable distributed caching to make your CI faster · Yes
-
- >  NX   Distributed caching via Nx Cloud has been enabled
-
-   In addition to the caching, Nx Cloud provides config-free distributed execution,
-   UI for viewing complex runs and GitHub integration. Learn more at https://nx.app
-
-   Your workspace is currently unclaimed. Run details from unclaimed workspaces can be viewed on cloud.nx.app by anyone
-   with the link. Claim your workspace at the following link to restrict access.
-
-   https://cloud.nx.app/orgs/workspace-setup?accessToken=[YourAccessTokenHere]
+```shell
+pnpm nx connect
 ```
 
 Click the link in the terminal to claim your workspace on [nx.app](https://nx.app). Once your workspace is successfully connected you should see an empty dashboard.
@@ -350,7 +340,7 @@ When GitHub Actions now processes our tasks they'll only take a fraction of the 
 
 ![GitHub Actions after enabling remote caching](/nx-cloud/tutorial/gh-ci-remote-cache.png)
 
-The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on various scenarios](/nx-cloud/concepts/scenarios) and how to configure them.
+The commands could be restored from the remote cache because we had run them locally before pushing the changes, thus priming the cache with the results. You can **configure** whether local runs should be read-only or read/write. [Our docs page has more details on security settings for your remote cache](/ci/concepts/cache-security).
 
 You might also want to learn more about [how to fine-tune caching](/recipes/running-tasks/customizing-inputs) to get even better results.
 
@@ -377,11 +367,11 @@ This will verify that Nx Cloud can connect to your repo. Upon a successful test,
 
 ![Use GitHub App for Authentication](/nx-cloud/set-up/use-github-app-auth.webp)
 
-Now any new PRs in your repo should have a comment automatically added that links directly to Nx Cloud. For other ways of setting up PR integration, read the [Enable GitHub PR Integration recipe](/nx-cloud/recipes/source-control-integration/github).
+Now any new PRs in your repo should have a comment automatically added that links directly to Nx Cloud. For other ways of setting up PR integration, read the [Enable GitHub PR Integration recipe](/ci/recipes/source-control-integration/github).
 
 ## Parallelize Tasks across Multiple Machines
 
-The affected command and remote caching help speed up the average CI time, but there will be some PRs that affect everything in the repository. The only way to speed up that worst case scenario is through efficient parallelization. The best way to parallelize CI with Nx is to use [distributed task execution (DTE)](/nx-cloud/features/distribute-task-execution).
+The affected command and remote caching help speed up the average CI time, but there will be some PRs that affect everything in the repository. The only way to speed up that worst case scenario is through efficient parallelization. The best way to parallelize CI with Nx is to use [distributed task execution (DTE)](/ci/features/distribute-task-execution).
 
 Nx Cloud's DTE feature
 
@@ -435,6 +425,6 @@ With this pipeline configuration in place, no matter how large the repository sc
 
 You now have a highly optimized CI configuration that will scale as your repository scales. See what else you can do with Nx Cloud.
 
-- Set up [GitHub PR integration](/nx-cloud/recipes/source-control-integration/github) to view Nx Cloud results directly in your PR
-- Choose the [security scenario](/nx-cloud/concepts/scenarios) that makes sense for your organization
-- [Record non-Nx commands](/nx-cloud/recipes/other/record-commands) and view the results in the Nx Cloud interface
+- Set up [GitHub PR integration](/ci/recipes/source-control-integration/github) to view Nx Cloud results directly in your PR
+- Choose the [security settings](/ci/concepts/cache-security) that make sense for your organization
+- [Record non-Nx commands](/ci/recipes/other/record-commands) and view the results in the Nx Cloud interface

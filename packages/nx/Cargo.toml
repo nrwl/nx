@@ -7,15 +7,17 @@ edition = '2021'
 anyhow = "1.0.71"
 colored = "2"
 crossbeam-channel = '0.5'
-dashmap = { version = "5.5.3", features= ["rayon"] }
+dashmap = { version = "5.5.3", features = ["rayon"] }
+dunce = "1"
 fs_extra = "1.3.0"
 globset = "0.4.10"
-hashbrown = { version = "0.14.0", features = ["rayon"] }
+hashbrown = { version = "0.14.3", features = ["rayon", "rkyv"] }
 ignore = '0.4'
-ignore-files = "1.3.0"
+ignore-files = "2.0.0"
 itertools = "0.10.5"
 once_cell = "1.18.0"
 parking_lot = { version = "0.12.1", features = ["send_guard"] }
+portable-pty = "0.8.1"
 napi = { version = '2.12.6', default-features = false, features = [
     'anyhow',
     'napi4',
@@ -25,23 +27,22 @@ napi-derive = '2.9.3'
 nom = '7.1.3'
 regex = "1.9.1"
 rayon = "1.7.0"
-serde = "1"
-serde_json = "1"
+rkyv = { version = "0.7", features = ["validation"] }
 thiserror = "1.0.40"
 tokio = { version = "1.28.2", features = ["fs"] }
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
-tsconfig = "0.2"
 walkdir = '2.3.3'
-watchexec = "2.3.0"
-watchexec-events = "1.0.0"
-watchexec-filterer-ignore = "1.2.1"
-watchexec-signals = "1.0.0"
+watchexec = "3.0.1"
+watchexec-events = "2.0.1"
+watchexec-filterer-ignore = "3.0.0"
+watchexec-signals = "2.1.0"
 xxhash-rust = { version = '0.8.5', features = ['xxh3', 'xxh64'] }
 swc_common = "0.31.16"
 swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"
 swc_ecma_ast = "0.107.0"
+crossterm = "0.27.0"
 
 [lib]
 crate-type = ['cdylib']

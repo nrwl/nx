@@ -21,6 +21,7 @@ export type ShowProjectsOptions = NxShowArgs & {
 
 export type ShowProjectOptions = NxShowArgs & {
   projectName: string;
+  web?: boolean;
 };
 
 export const yargsShowCommand: CommandModule<
@@ -121,6 +122,16 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
         description: 'Which project should be viewed?',
       })
       .default('json', true)
+      .option('web', {
+        type: 'boolean',
+        description: 'Show project details in the browser',
+      })
+      .check((argv) => {
+        if (argv.web) {
+          argv.json = false;
+        }
+        return true;
+      })
       .example(
         '$0 show project my-app',
         'View project information for my-app in JSON format'

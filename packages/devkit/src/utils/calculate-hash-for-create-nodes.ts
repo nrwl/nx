@@ -6,11 +6,13 @@ const { hashWithWorkspaceContext, hashArray, hashObject } = requireNx();
 export function calculateHashForCreateNodes(
   projectRoot: string,
   options: object,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  additionalGlobs: string[] = []
 ): string {
   return hashArray([
     hashWithWorkspaceContext(context.workspaceRoot, [
       join(projectRoot, '**/*'),
+      ...additionalGlobs,
     ]),
     hashObject(options),
   ]);

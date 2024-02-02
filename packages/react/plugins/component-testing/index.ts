@@ -8,7 +8,6 @@ import {
   joinPathFragments,
   logger,
   parseTargetString,
-  ProjectGraph,
   readCachedProjectGraph,
   readTargetOptions,
   stripIndents,
@@ -63,15 +62,21 @@ export function nxComponentTestingPreset(
   screenshotsFolder: string;
   chromeWebSecurity: boolean;
 } {
+  const basePresetSettings = nxBaseCypressPreset(pathToConfig, {
+    testingType: 'component',
+  });
+
+  if (global.NX_GRAPH_CREATION || global.NX_CYPRESS_INIT_GENERATOR_RUNNING) {
+    // this is only used by plugins, so we don't need the component testing
+    // options, cast to any to avoid type errors
+    return basePresetSettings as any;
+  }
+
   const normalizedProjectRootPath = ['.ts', '.js'].some((ext) =>
     pathToConfig.endsWith(ext)
   )
     ? pathToConfig
     : dirname(pathToConfig);
-
-  const basePresetSettings = nxBaseCypressPreset(pathToConfig, {
-    testingType: 'component',
-  });
 
   if (options?.bundler === 'vite') {
     return {
@@ -128,16 +133,19 @@ export function nxComponentTestingPreset(
       ctConfigurationName
     );
 
-    const ctExecutorOptions = readTargetOptions<CypressExecutorOptions>(
-      {
-        project: ctProjectName,
-        target: ctTargetName,
-        configuration: ctConfigurationName,
-      },
-      ctExecutorContext
-    );
+    let buildTarget: string = options?.buildTarget;
+    if (!buildTarget) {
+      const ctExecutorOptions = readTargetOptions<CypressExecutorOptions>(
+        {
+          project: ctProjectName,
+          target: ctTargetName,
+          configuration: ctConfigurationName,
+        },
+        ctExecutorContext
+      );
 
-    const buildTarget = ctExecutorOptions.devServerTarget;
+      buildTarget = ctExecutorOptions.devServerTarget;
+    }
 
     if (!buildTarget) {
       throw new Error(
@@ -151,6 +159,10 @@ export function nxComponentTestingPreset(
       ctProjectName
     );
   } catch (e) {
+    if (e instanceof InvalidExecutorError) {
+      throw e;
+    }
+
     logger.warn(
       stripIndents`Unable to build a webpack config with the project graph. 
       Falling back to default webpack config.`
@@ -201,7 +213,6 @@ function withSchemaDefaults(target: Target, context: ExecutorContext) {
   options.maxWorkers ??= 2;
   options.fileReplacements ??= [];
   options.buildLibsFromSource ??= true;
-  options.generateIndexHtml ??= true;
   return options;
 }
 
@@ -223,6 +234,17 @@ function buildTargetWebpack(
     Has component config? ${!!ctProjectConfig}
     `);
   }
+
+  if (
+    buildableProjectConfig.targets[parsed.target].executor !==
+    '@nx/webpack:webpack'
+  ) {
+    throw new InvalidExecutorError(
+      `The '${parsed.target}' target of the '${parsed.project}' project is not using the '@nx/webpack:webpack' executor. ` +
+        `Please make sure to use '@nx/webpack:webpack' executor in that target to use Cypress Component Testing.`
+    );
+  }
+
   const context = createExecutorContext(
     graph,
     buildableProjectConfig.targets,
@@ -235,11 +257,11 @@ function buildTargetWebpack(
     normalizeOptions,
   } = require('@nx/webpack/src/executors/webpack/lib/normalize-options');
   const {
-    resolveCustomWebpackConfig,
-  } = require('@nx/webpack/src/utils/webpack/custom-webpack');
-  const {
-    getWebpackConfig,
-  } = require('@nx/webpack/src/executors/webpack/lib/get-webpack-config');
+    resolveUserDefinedWebpackConfig,
+  } = require('@nx/webpack/src/utils/webpack/resolve-user-defined-webpack-config');
+  const { composePluginsSync } = require('@nx/webpack/src/utils/config');
+  const { withNx } = require('@nx/webpack/src/utils/with-nx');
+  const { withWeb } = require('@nx/webpack/src/utils/with-web');
 
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),
@@ -251,7 +273,7 @@ function buildTargetWebpack(
   let customWebpack: any;
 
   if (options.webpackConfig) {
-    customWebpack = resolveCustomWebpackConfig(
+    customWebpack = resolveUserDefinedWebpackConfig(
       options.webpackConfig,
       options.tsConfig.startsWith(context.root)
         ? options.tsConfig
@@ -261,17 +283,24 @@ function buildTargetWebpack(
 
   return async () => {
     customWebpack = await customWebpack;
-    // TODO(jack): Once webpackConfig is always set in @nx/webpack:webpack, we no longer need this default.
-    const defaultWebpack = getWebpackConfig(context, {
-      ...options,
-      // cypress will generate its own index.html from component-index.html
-      generateIndexHtml: false,
-      // causes issues with buildable libraries with ENOENT: no such file or directory, scandir error
-      extractLicenses: false,
-      root: workspaceRoot,
-      projectRoot: ctProjectConfig.root,
-      sourceRoot: ctProjectConfig.sourceRoot,
-    });
+    // TODO(v19): Once webpackConfig is always set in @nx/webpack:webpack and isolatedConfig is removed, we no longer need this default.
+    const configure = composePluginsSync(withNx(), withWeb());
+    const defaultWebpack = configure(
+      {},
+      {
+        options: {
+          ...options,
+          // cypress will generate its own index.html from component-index.html
+          generateIndexHtml: false,
+          // causes issues with buildable libraries with ENOENT: no such file or directory, scandir error
+          extractLicenses: false,
+          root: workspaceRoot,
+          projectRoot: ctProjectConfig.root,
+          sourceRoot: ctProjectConfig.sourceRoot,
+        },
+        context,
+      }
+    );
 
     if (customWebpack) {
       return await customWebpack(defaultWebpack, {
@@ -306,5 +335,12 @@ function findTsConfig(projectRoot: string) {
     if (existsSync(join(projectRoot, config))) {
       return config;
     }
+  }
+}
+
+class InvalidExecutorError extends Error {
+  constructor(public message: string) {
+    super(message);
+    this.name = 'InvalidExecutorError';
   }
 }

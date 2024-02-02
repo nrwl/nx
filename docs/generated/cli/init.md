@@ -1,11 +1,11 @@
 ---
 title: 'init - CLI command'
-description: 'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up distributed caching. For more info, check https://nx.dev/recipes/adopting-nx.'
+description: 'Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up remote caching. For more info, check https://nx.dev/recipes/adopting-nx.'
 ---
 
 # init
 
-Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up distributed caching. For more info, check https://nx.dev/recipes/adopting-nx.
+Adds Nx to any type of workspace. It installs nx, creates an nx.json configuration file and optionally sets up remote caching. For more info, check https://nx.dev/recipes/adopting-nx.
 
 ## Usage
 
@@ -17,35 +17,11 @@ Install `nx` globally to invoke the command directly using `nx`, or use `npx nx`
 
 ## Options
 
-### addE2e
-
-Type: `boolean`
-
-Default: `false`
-
-Set up Cypress E2E tests in integrated workspaces. Only for CRA projects.
-
-### force
-
-Type: `boolean`
-
-Default: `false`
-
-Force the migration to continue and ignore custom webpack setup or uncommitted changes. Only for CRA projects.
-
 ### help
 
 Type: `boolean`
 
 Show help
-
-### integrated
-
-Type: `boolean`
-
-Default: `false`
-
-Migrate to an Nx integrated layout workspace. Only for Angular CLI workspaces and CRA projects.
 
 ### interactive
 
@@ -74,11 +50,3 @@ Initialize an Nx workspace setup in the .nx directory of the current repository.
 Type: `boolean`
 
 Show version number
-
-### vite
-
-Type: `boolean`
-
-Default: `true`
-
-Use Vite as the bundler. Only for CRA projects.

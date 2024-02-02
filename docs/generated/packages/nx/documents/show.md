@@ -65,7 +65,13 @@ Show information about "my-app" in a human readable format.:
  nx show project my-app --json false
 ```
 
-## Options
+Opens a web browser to explore the configuration of "my-app":
+
+```shell
+ nx show project my-app --web
+```
+
+## Shared Options
 
 ### help
 
@@ -198,3 +204,9 @@ Which project should be viewed?
 Type: `boolean`
 
 Show version number
+
+##### web
+
+Type: `boolean`
+
+Show project details in the browser

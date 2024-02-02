@@ -4,6 +4,7 @@ import { NxJsonConfiguration } from '../config/nx-json';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { NativeTaskHasherImpl } from './native-task-hasher-impl';
 import { ProjectGraphBuilder } from '../project-graph/project-graph-builder';
+import { testOnlyTransferFileMap } from '../native';
 
 describe('native task hasher', () => {
   let tempFs: TempFs;
@@ -77,16 +78,21 @@ describe('native task hasher', () => {
   });
 
   it('should create a task hash', async () => {
-    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/unrelated': 'unrelated',
+      'libs/tagged': 'tagged',
+    });
     const builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
     );
+
     builder.addNode({
       name: 'parent',
       type: 'lib',
       data: {
-        root: 'parent',
+        root: 'libs/parent',
         targets: {
           build: {
             executor: 'nx:run-commands',
@@ -149,9 +155,9 @@ describe('native task hasher', () => {
             "AllExternalDependencies": "3244421341483603138",
             "env:NONEXISTENTENV": "3244421341483603138",
             "env:TESTENV": "11441948532827618368",
-            "parent:ProjectConfiguration": "15828052557461792163",
+            "parent:ProjectConfiguration": "4131510303084753861",
             "parent:TsConfig": "2264969541778889434",
-            "parent:{projectRoot}/**/*": "3244421341483603138",
+            "parent:{projectRoot}/**/*": "15295586939211629225",
             "runtime:echo runtime123": "29846575039086708",
             "tagged:ProjectConfiguration": "1604492097835699503",
             "tagged:TsConfig": "2264969541778889434",
@@ -163,17 +169,17 @@ describe('native task hasher', () => {
             "{workspaceRoot}/.nxignore": "3244421341483603138",
             "{workspaceRoot}/nx.json": "5219582320960288192",
           },
-          "value": "2902224107680327789",
+          "value": "6332317845632665670",
         },
       ]
     `);
   });
 
   it('should hash tasks where the project has dependencies', async () => {
-    console.log('read first', await tempFs.readFile('nx.json'));
-    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
-    console.dir(workspaceFiles.allWorkspaceFiles);
-    console.log('read second', await tempFs.readFile('nx.json'));
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
     const builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
@@ -243,10 +249,10 @@ describe('native task hasher', () => {
     } as any;
     tempFs.writeFile('nx.json', JSON.stringify(nxJsonModified));
 
-    const workspaceFiles = await retrieveWorkspaceFiles(
-      tempFs.tempDir,
-      nxJsonModified
-    );
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
 
     let builder = new ProjectGraphBuilder(
       undefined,
@@ -323,7 +329,9 @@ describe('native task hasher', () => {
       },
     };
     tempFs.writeFile('nx.json', JSON.stringify(nxJson));
-    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+    });
     let builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
@@ -403,7 +411,10 @@ describe('native task hasher', () => {
       },
     };
     tempFs.writeFile('nx.json', JSON.stringify(nxJson));
-    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
     const builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
@@ -486,7 +497,9 @@ describe('native task hasher', () => {
   });
 
   it('should be able to include only a part of the base tsconfig', async () => {
-    let workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+    let workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+    });
     const builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
@@ -539,7 +552,10 @@ describe('native task hasher', () => {
   });
 
   it('should hash tasks where the project graph has circular dependencies', async () => {
-    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, nxJson);
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
     const builder = new ProjectGraphBuilder(
       undefined,
       workspaceFiles.fileMap.projectFileMap
@@ -638,4 +654,121 @@ describe('native task hasher', () => {
       }
     `);
   });
+
+  it('should include typescript hash in the TsConfig final hash', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'child',
+      type: 'lib',
+      data: {
+        root: 'libs/child',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+          },
+        },
+      },
+    });
+    builder.addExternalNode({
+      data: {
+        packageName: 'typescript',
+        version: '1.2.3',
+        hash: '1234',
+      },
+      name: 'npm:typescript',
+      type: 'npm',
+    });
+
+    builder.addStaticDependency(
+      'parent',
+      'npm:typescript',
+      'libs/parent/filea.ts'
+    );
+    let projectGraph = builder.getUpdatedProjectGraph();
+
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      { build: ['^build'] },
+      ['parent', 'child'],
+      ['build'],
+      undefined,
+      {}
+    );
+
+    let hasher = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: true }
+    );
+
+    let typescriptHash = (
+      await hasher.hashTask(taskGraph.tasks['parent:build'], taskGraph, {})
+    ).details['parent:TsConfig'];
+
+    let noTypescriptHash = (
+      await hasher.hashTask(taskGraph.tasks['child:build'], taskGraph, {})
+    ).details['child:TsConfig'];
+
+    expect(typescriptHash).not.toEqual(noTypescriptHash);
+    expect(typescriptHash).toMatchInlineSnapshot(`"8661678577354855152"`);
+    expect(noTypescriptHash).toMatchInlineSnapshot(`"11547179436948425249"`);
+  });
+
+  /**
+   * commented out to show how to debug issues with hashing
+   *
+   *
+   *
+   * gather the project graph + task graph with `nx run project:target --graph=graph.json`
+   * gather the file-map.json from `.nx/cache/file-map.json`
+   * gather the nx.json file
+   */
+  // it('should test client workspaces', async () => {
+  //   let nxJson = require('nx.json');
+  //   let graphs = require('graph.json');
+  //   let projectGraph = graphs.graph;
+  //   let taskGraph = graphs.tasks;
+  //
+  //   let files = require('file-map.json');
+  //   let projectFiles = files.fileMap.projectFileMap;
+  //   let nonProjectFiles = files.fileMap.nonProjectFiles;
+  //
+  //   let transferred = testOnlyTransferFileMap(projectFiles, nonProjectFiles);
+  //
+  //   let hasher = new NativeTaskHasherImpl(
+  //     '',
+  //     nxJson,
+  //     projectGraph,
+  //     transferred,
+  //     { selectivelyHashTsConfig: false }
+  //   );
+  //
+  //   const hashes = await hasher.hashTasks(
+  //     Object.values(taskGraph.tasks),
+  //     taskGraph,
+  //     {}
+  //   );
+  //   console.dir(hashes, { depth: null });
+  // });
 });

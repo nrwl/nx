@@ -7,7 +7,6 @@ import {
   Tree,
 } from '@nx/devkit';
 import { Linter, lintProjectGenerator } from '@nx/eslint';
-import { mapLintPattern } from '@nx/eslint/src/generators/lint-project/lint-project';
 import { addAngularEsLintDependencies } from './lib/add-angular-eslint-dependencies';
 import type { AddLintingGeneratorSchema } from './schema';
 import {
@@ -16,6 +15,10 @@ import {
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
 import { camelize, dasherize } from '@nx/devkit/src/utils/string-utils';
+import {
+  javaScriptOverride,
+  typeScriptOverride,
+} from '@nx/eslint/src/generators/init/global-eslint-config';
 
 export async function addLintingGenerator(
   tree: Tree,
@@ -30,13 +33,10 @@ export async function addLintingGenerator(
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    eslintFilePatterns: [
-      mapLintPattern(options.projectRoot, 'ts', rootProject),
-      mapLintPattern(options.projectRoot, 'html', rootProject),
-    ],
     setParserOptionsProject: options.setParserOptionsProject,
     skipFormat: true,
     rootProject: rootProject,
+    addPlugin: options.addPlugin,
   });
   tasks.push(lintTask);
 
@@ -48,6 +48,7 @@ export async function addLintingGenerator(
       .includes(`${options.projectRoot}/tsconfig.*?.json`);
 
     replaceOverridesInLintConfig(tree, options.projectRoot, [
+      ...(rootProject ? [typeScriptOverride, javaScriptOverride] : []),
       {
         files: ['*.ts'],
         ...(hasParserOptions

@@ -4,9 +4,11 @@ import {
   joinPathFragments,
   ProjectConfiguration,
   TargetConfiguration,
+  Tree,
 } from '@nx/devkit';
+import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 
-export function addProject(host, options: NormalizedSchema) {
+export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,
     sourceRoot: `${options.appProjectRoot}/src`,
@@ -16,10 +18,12 @@ export function addProject(host, options: NormalizedSchema) {
   };
 
   if (options.bundler === 'webpack') {
-    project.targets = {
-      build: createBuildTarget(options),
-      serve: createServeTarget(options),
-    };
+    if (!hasWebpackPlugin(host) || !options.addPlugin) {
+      project.targets = {
+        build: createBuildTarget(options),
+        serve: createServeTarget(options),
+      };
+    }
   }
 
   addProjectConfiguration(host, options.projectName, {

@@ -61,7 +61,7 @@
       "file": "shared/using-nx/affected",
       "id": "affected",
       "name": "Run Only Tasks Affected by a PR",
-      "path": "/nx-cloud/features/affected"
+      "path": "/ci/features/affected"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -124,9 +124,9 @@
     {
       "description": "",
       "file": "",
-      "id": "nx-cloud-documentation",
-      "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/ci-with-nx"
+      "id": "ci",
+      "name": "CI Documentation",
+      "path": "/ci/intro/ci-with-nx"
     },
     {
       "description": "",
@@ -394,6 +394,15 @@
       "id": "console-troubleshooting",
       "name": "Troubleshooting",
       "path": "/recipes/nx-console/console-troubleshooting"
+    }
+  ],
+  "manage-releases": [
+    {
+      "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+      "file": "shared/core-features/manage-releases",
+      "id": "manage-releases",
+      "name": "Manage Releases",
+      "path": "/core-features/manage-releases"
     }
   ],
   "use-task-executors": [
@@ -715,30 +724,30 @@
     {
       "description": "",
       "file": "",
-      "id": "nx-cloud-documentation",
-      "name": "Nx Cloud Documentation",
-      "path": "/nx-cloud/intro/ci-with-nx"
+      "id": "ci",
+      "name": "CI Documentation",
+      "path": "/ci/intro/ci-with-nx"
     },
     {
       "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
       "file": "shared/core-features/distribute-task-execution",
       "id": "distribute-task-execution",
       "name": "Distribute Task Execution",
-      "path": "/nx-cloud/features/distribute-task-execution"
+      "path": "/ci/features/distribute-task-execution"
     },
     {
       "description": "",
-      "file": "shared/concepts/improve-worst-case-ci-times",
-      "id": "dte",
-      "name": "Improve Worst Case CI Times",
-      "path": "/nx-cloud/concepts/dte"
+      "file": "nx-cloud/concepts/parallelization-distribution",
+      "id": "parallelization-distribution",
+      "name": "Parallelization and Distribution",
+      "path": "/ci/concepts/parallelization-distribution"
     },
     {
-      "description": "",
-      "file": "shared/ci-overview",
-      "id": "ci-setup",
-      "name": "CI Setup",
-      "path": "/nx-cloud/recipes/set-up/ci-setup"
+      "description": "Learn how to set up Nx Cloud for your workspace.",
+      "file": "",
+      "id": "set-up",
+      "name": "Set Up CI",
+      "path": "/ci/recipes/set-up"
     },
     {
       "description": "The core Nx plugin contains the core functionality of Nx like the project graph, nx commands and task orchestration.",
@@ -1101,6 +1110,36 @@
       "path": "/recipes/tips-n-tricks/flat-config"
     }
   ],
+  "nx-release": [
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/get-started-with-nx-release",
+      "id": "get-started-with-nx-release",
+      "name": "Get Started with Nx Release",
+      "path": "/recipes/nx-release/get-started-with-nx-release"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/release-projects-independently",
+      "id": "release-projects-independently",
+      "name": "Release Projects Independently",
+      "path": "/recipes/nx-release/release-projects-independently"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits",
+      "id": "automatically-version-with-conventional-commits",
+      "name": "Automatically Version with Conventional Commits",
+      "path": "/recipes/nx-release/automatically-version-with-conventional-commits"
+    },
+    {
+      "description": "",
+      "file": "shared/recipes/nx-release/publish-in-ci-cd",
+      "id": "publish-in-ci-cd",
+      "name": "Publish in CI/CD",
+      "path": "/recipes/nx-release/publish-in-ci-cd"
+    }
+  ],
   "database": [
     {
       "description": "",
@@ -1153,16 +1192,16 @@
       "file": "shared/core-features/remote-cache",
       "id": "remote-cache",
       "name": "Use Remote Caching",
-      "path": "/nx-cloud/features/remote-cache"
+      "path": "/ci/features/remote-cache"
     }
   ],
   "on-premise": [
     {
       "description": "Set up Nx Cloud on machines that you control",
-      "file": "nx-cloud/private/get-started",
+      "file": "nx-cloud/private/nx-enterprise-on-prem",
       "id": "on-premise",
       "name": "Set up Nx Cloud On-Premise",
-      "path": "/nx-cloud/features/on-premise"
+      "path": "/ci/features/on-premise"
     }
   ],
   "docker": [
@@ -1171,7 +1210,7 @@
       "file": "shared/recipes/ci-deployment",
       "id": "ci-deployment",
       "name": "Prepare applications for deployment via CI",
-      "path": "/nx-cloud/recipes/other/ci-deployment"
+      "path": "/ci/recipes/other/ci-deployment"
     }
   ],
   "deploy": [
@@ -1180,7 +1219,7 @@
       "file": "shared/recipes/ci-deployment",
       "id": "ci-deployment",
       "name": "Prepare applications for deployment via CI",
-      "path": "/nx-cloud/recipes/other/ci-deployment"
+      "path": "/ci/recipes/other/ci-deployment"
     }
   ]
 }

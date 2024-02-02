@@ -22,7 +22,9 @@ export default async function addDroppedDependencies(tree: Tree) {
       projectConfiguration.targets ?? {}
     )) {
       for (const droppedDependency of droppedDependencies) {
-        if (targetConfiguration.executor?.startsWith(droppedDependency + ':')) {
+        if (
+          targetConfiguration?.['executor']?.startsWith(droppedDependency + ':')
+        ) {
           devDependencies[droppedDependency] = NX_VERSION;
         }
       }
@@ -35,7 +37,9 @@ export default async function addDroppedDependencies(tree: Tree) {
     nxJson?.targetDefaults ?? {}
   )) {
     for (const droppedDependency of droppedDependencies) {
-      if (targetConfiguration.executor?.startsWith(droppedDependency + ':')) {
+      if (
+        targetConfiguration?.['executor']?.startsWith(droppedDependency + ':')
+      ) {
         devDependencies[droppedDependency] = NX_VERSION;
       }
     }

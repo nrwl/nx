@@ -25,7 +25,7 @@ Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI
 Advantages of Nx over the Angular CLI:
 
 - [Cache any target](/core-features/cache-task-results)
-- [Run only tasks affected by a code change](/nx-cloud/features/affected)
+- [Run only tasks affected by a code change](/ci/features/affected)
 - [Split a large angular.json into multiple project.json files](/concepts/more-concepts/nx-and-angular#projectjson-vs-angularjson)
 - [Integrate with modern tools](/concepts/more-concepts/nx-and-angular#integrating-with-modern-tools)
 - [Controllable update process](/concepts/more-concepts/nx-and-angular#ng-update-vs-nx-migrate)
@@ -59,7 +59,7 @@ Create a new Angular monorepo with the following command:
 ✔ Default stylesheet format · css
 ✔ Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)? · No
 ✔ Test runner to use for end to end (E2E) tests · cypress
-✔ Enable distributed caching to make your CI faster · Yes
+✔ Do you want Nx Cloud to make your CI fast? · Yes
 ```
 
 Let's name the initial application `angular-store`. In this tutorial we're going to use `cypress` for e2e tests and `css` for styling. The above command generates the following structure:
@@ -385,7 +385,7 @@ All libraries that we generate automatically have aliases created in the root-le
 Hence we can easily import them into other libraries and our Angular application. As an example, let's create and expose a `ProductListComponent` component from our `libs/products` library. Either create it by hand or run
 
 ```shell
-nx g @nx/angular:component product-list --project=products --standalone --export
+nx g @nx/angular:component product-list --directory=libs/products/src/lib/product-list --nameAndDirectoryFormat=as-provided --standalone --export
 ```
 
 We don't need to implement anything fancy as we just want to learn how to import it into our main Angular application.
@@ -981,7 +981,7 @@ Learn more about how to [enforce module boundaries](/core-features/enforce-modul
 
 ## Setting Up CI
 
-Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps decrease the average CI time with the [`affected` command](/nx-cloud/features/affected) and Nx Cloud's [distributed caching](/nx-cloud/features/remote-cache). Nx also [decreases the worst case CI time](/nx-cloud/concepts/dte) with Nx Cloud's distributed task execution.
+Without adequate tooling, CI times tend to grow exponentially with the size of the codebase. Nx helps reduce wasted time in CI with the [`affected` command](/ci/features/affected) and Nx Cloud's [remote caching](/ci/features/remote-cache). Nx also [efficiently parallelizes tasks across machines](/ci/concepts/parallelization-distribution) with Nx Cloud's distributed task execution.
 
 To set up Nx Cloud run:
 
@@ -1001,7 +1001,7 @@ nx generate ci-workflow --ci=github
 You can choose `github`, `circleci`, `azure`, `bitbucket-pipelines`, or `gitlab` for the `ci` flag.
 {% /callout %}
 
-This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/nx-cloud/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
+This will create a default CI configuration that sets up Nx Cloud to [use distributed task execution](/ci/features/distribute-task-execution). This automatically runs all tasks on separate machines in parallel wherever possible, without requiring you to manually coordinate copying the output from one machine to another.
 
 ## Next Steps
 
@@ -1013,8 +1013,8 @@ Here's some more things you can dive into next:
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-angular)
 - [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
-- [Speed up CI: Share your cache](/nx-cloud/features/remote-cache)
-- [Speed up CI: Distribute your tasks across machines](/nx-cloud/features/distribute-task-execution)
+- [Speed up CI: Share your cache](/ci/features/remote-cache)
+- [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 
 Also, make sure you
 

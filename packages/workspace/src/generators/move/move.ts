@@ -21,7 +21,7 @@ import { updateProjectRootFiles } from './lib/update-project-root-files';
 import { updateReadme } from './lib/update-readme';
 import { updateStorybookConfig } from './lib/update-storybook-config';
 import {
-  maybeExtractEslintConfigIfRootProject,
+  maybeMigrateEslintConfigIfRootProject,
   maybeExtractJestConfigBase,
   maybeExtractTsConfigBase,
 } from './lib/extract-base-configs';
@@ -42,7 +42,6 @@ export async function moveGeneratorInternal(tree: Tree, rawSchema: Schema) {
   if (projectConfig.root === '.') {
     maybeExtractTsConfigBase(tree);
     await maybeExtractJestConfigBase(tree);
-    maybeExtractEslintConfigIfRootProject(tree, projectConfig);
     // Reload config since it has been updated after extracting base configs
     projectConfig = readProjectConfiguration(tree, rawSchema.projectName);
   }
@@ -61,6 +60,11 @@ export async function moveGeneratorInternal(tree: Tree, rawSchema: Schema) {
   updateBuildTargets(tree, schema);
   updateDefaultProject(tree, schema);
   updateImplicitDependencies(tree, schema);
+
+  if (projectConfig.root === '.') {
+    // we want to migrate eslint config once the root project files are moved
+    maybeMigrateEslintConfigIfRootProject(tree, projectConfig);
+  }
 
   await runAngularPlugin(tree, schema);
 

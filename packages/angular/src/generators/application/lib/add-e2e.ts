@@ -32,7 +32,9 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       skipPackageJson: options.skipPackageJson,
       skipFormat: true,
       devServerTarget: `${options.name}:serve:development`,
+      baseUrl: 'http://localhost:4200',
       rootProject: options.rootProject,
+      addPlugin: options.addPlugin,
     });
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator: playwrightConfigurationGenerator } =
@@ -60,6 +62,7 @@ export async function addE2e(tree: Tree, options: NormalizedSchema) {
       }`,
       webServerAddress: `http://localhost:${options.port ?? 4200}`,
       rootProject: options.rootProject,
+      addPlugin: options.addPlugin,
     });
   }
 }

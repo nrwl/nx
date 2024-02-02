@@ -31,20 +31,20 @@
     "migrations": "./migrations.json"
   },
   "peerDependencies": {
-    "next": ">=13.0.0"
+    "next": ">=14.0.0"
   },
   "dependencies": {
+    "@nx/devkit": "file:../devkit",
     "@babel/plugin-proposal-decorators": "^7.22.7",
     "@svgr/webpack": "^8.0.1",
     "chalk": "^4.1.0",
     "copy-webpack-plugin": "^10.2.4",
     "fs-extra": "^11.1.0",
     "ignore": "^5.0.4",
-    "semver": "7.5.3",
+    "semver": "^7.5.3",
     "url-loader": "^4.1.1",
     "tslib": "^2.3.0",
     "webpack-merge": "^5.8.0",
-    "@nx/devkit": "file:../devkit",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/react": "file:../react",

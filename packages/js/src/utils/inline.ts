@@ -278,10 +278,12 @@ function updateImports(
   destOutputPath: string,
   inlinedDepsDestOutputRecord: Record<string, string>
 ) {
+  const pathAliases = Object.keys(inlinedDepsDestOutputRecord);
+  if (pathAliases.length == 0) {
+    return;
+  }
   const importRegex = new RegExp(
-    Object.keys(inlinedDepsDestOutputRecord)
-      .map((pathAlias) => `["'](${pathAlias})["']`)
-      .join('|'),
+    pathAliases.map((pathAlias) => `["'](${pathAlias})["']`).join('|'),
     'g'
   );
   recursiveUpdateImport(
@@ -309,7 +311,8 @@ function recursiveUpdateImport(
       const updatedContent = fileContent.replace(importRegex, (matched) => {
         const result = matched.replace(/['"]/g, '');
         // If a match is the same as the rootParentDir, we're checking its own files so we return the matched as in no changes.
-        if (result === rootParentDir) return matched;
+        if (result === rootParentDir || !inlinedDepsDestOutputRecord[result])
+          return matched;
         const importPath = `"${relative(
           dirPath,
           inlinedDepsDestOutputRecord[result]

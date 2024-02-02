@@ -74,7 +74,6 @@ describe('monorepo generator', () => {
 
     // Extracted base config files
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
-    expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
   });
 
   it('should respect nested libraries', async () => {
@@ -105,45 +104,6 @@ describe('monorepo generator', () => {
     expect(tree.exists('libs/inner/my-lib/src/index.ts')).toBeTruthy();
   });
 
-  it('should convert root React app (Webpack, Jest)', async () => {
-    await reactAppGenerator(tree, {
-      name: 'demo',
-      style: 'css',
-      bundler: 'webpack',
-      unitTestRunner: 'jest',
-      e2eTestRunner: 'none',
-      linter: 'eslint',
-      rootProject: true,
-    });
-
-    await monorepoGenerator(tree, {});
-
-    expect(readProjectConfiguration(tree, 'demo')).toMatchObject({
-      sourceRoot: 'apps/demo/src',
-      targets: {
-        build: {
-          executor: '@nx/webpack:webpack',
-          options: {
-            main: 'apps/demo/src/main.tsx',
-            tsConfig: 'apps/demo/tsconfig.app.json',
-            webpackConfig: 'apps/demo/webpack.config.js',
-          },
-        },
-        test: {
-          executor: '@nx/jest:jest',
-          options: {
-            jestConfig: 'apps/demo/jest.config.app.ts',
-          },
-        },
-      },
-    });
-
-    // Extracted base config files
-    expect(tree.exists('tsconfig.base.json')).toBeTruthy();
-    expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
-    expect(tree.exists('jest.config.ts')).toBeTruthy();
-  });
-
   it('should convert root Next.js app with existing libraries', async () => {
     await nextAppGenerator(tree, {
       name: 'demo',
@@ -151,6 +111,7 @@ describe('monorepo generator', () => {
       unitTestRunner: 'jest',
       e2eTestRunner: 'none',
       appDir: true,
+      src: true,
       linter: 'eslint',
       rootProject: true,
     });
@@ -161,7 +122,7 @@ describe('monorepo generator', () => {
     expect(readProjectConfiguration(tree, 'demo')).toMatchObject({
       sourceRoot: 'apps/demo',
     });
-    expect(tree.read('apps/demo/app/page.tsx', 'utf-8')).toContain('demo');
+    expect(tree.read('apps/demo/src/app/page.tsx', 'utf-8')).toContain('demo');
     expect(readProjectConfiguration(tree, 'util')).toMatchObject({
       sourceRoot: 'libs/util/src',
     });
@@ -169,7 +130,6 @@ describe('monorepo generator', () => {
 
     // Extracted base config files
     expect(tree.exists('tsconfig.base.json')).toBeTruthy();
-    expect(tree.exists('.eslintrc.base.json')).toBeTruthy();
-    expect(tree.exists('jest.config.ts')).toBeTruthy();
+    expect(tree.exists('jest.preset.js')).toBeTruthy();
   });
 });

@@ -206,14 +206,14 @@
               "name": "Use Remote Caching",
               "id": "remote-cache",
               "file": "",
-              "path": "/nx-cloud/features/remote-cache",
+              "path": "/ci/features/remote-cache",
               "isExternal": true
             },
             {
               "name": "Distribute Task Execution",
               "id": "distribute-task-execution",
               "file": "",
-              "path": "/nx-cloud/features/distribute-task-execution",
+              "path": "/ci/features/distribute-task-execution",
               "isExternal": true
             },
             {
@@ -243,6 +243,13 @@
               "id": "integrate-with-editors",
               "tags": ["integrate-with-editors"],
               "file": "shared/core-features/integrate-with-editors"
+            },
+            {
+              "name": "Manage Releases",
+              "description": "Learn how Nx provides tools to help you manage releasing your projects.",
+              "id": "manage-releases",
+              "tags": ["manage-releases"],
+              "file": "shared/core-features/manage-releases"
             },
             {
               "name": "Plugin Features",
@@ -354,6 +361,7 @@
                 {
                   "name": "Nx and Turborepo",
                   "id": "turbo-and-nx",
+                  "mediaImage": "./shared/guides/nx-media-monorepo.jpg",
                   "file": "shared/guides/turbo-and-nx"
                 },
                 {
@@ -842,15 +850,28 @@
               ]
             },
             {
+              "name": "Nuxt",
+              "id": "nuxt",
+              "description": "Nuxt related recipes",
+              "itemList": [
+                {
+                  "id": "deploy-nuxt-to-vercel",
+                  "name": "Deploying Nuxt applications to Vercel",
+                  "description": "A detailed guide on how to deploy Nuxt applications from Nx workspaces to Vercel.",
+                  "file": "shared/recipes/deployment/deploy-nuxt-to-vercel"
+                }
+              ]
+            },
+            {
               "name": "Vite",
               "id": "vite",
               "description": "Vite related recipes",
               "itemList": [
                 {
-                  "id": "set-up-vite-manually",
-                  "name": "Manually set up your project to use Vite.js",
-                  "description": "Manually set up your project to use Vite.js",
-                  "file": "shared/packages/vite/set-up-vite-manually"
+                  "id": "configure-vite",
+                  "name": "Configure Vite on your Nx workspace",
+                  "description": "Configure Vite on your Nx workspace",
+                  "file": "shared/packages/vite/configure-vite"
                 }
               ]
             },
@@ -1143,6 +1164,37 @@
               ]
             },
             {
+              "name": "Nx Release",
+              "id": "nx-release",
+              "description": "Recipes for releasing with Nx release.",
+              "itemList": [
+                {
+                  "name": "Get Started with Nx Release",
+                  "id": "get-started-with-nx-release",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/get-started-with-nx-release"
+                },
+                {
+                  "name": "Release Projects Independently",
+                  "id": "release-projects-independently",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/release-projects-independently"
+                },
+                {
+                  "name": "Automatically Version with Conventional Commits",
+                  "id": "automatically-version-with-conventional-commits",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/automatically-version-with-conventional-commits"
+                },
+                {
+                  "name": "Publish in CI/CD",
+                  "id": "publish-in-ci-cd",
+                  "tags": ["nx-release"],
+                  "file": "shared/recipes/nx-release/publish-in-ci-cd"
+                }
+              ]
+            },
+            {
               "name": "Other",
               "id": "other",
               "description": "Other recipes you will find useful.",
@@ -1204,22 +1256,10 @@
                   "file": "shared/recipes/add-stack/add-dotnet"
                 },
                 {
-                  "name": "Add a Nuxt Project",
-                  "id": "add-nuxt",
-                  "description": "Add a nuxt project to your repo",
-                  "file": "shared/recipes/add-stack/add-nuxt"
-                },
-                {
                   "name": "Add an Astro Project",
                   "id": "add-astro",
                   "description": "Add Nx to an Astro project",
                   "file": "shared/recipes/add-stack/add-astro"
-                },
-                {
-                  "name": "Add a Vue Project",
-                  "id": "add-vue",
-                  "description": "Add a Vue project to your repo",
-                  "file": "shared/recipes/add-stack/add-vue"
                 },
                 {
                   "name": "Add a Svelte Project",
@@ -1448,11 +1488,11 @@
           "description": "Links to other pieces of documentation",
           "itemList": [
             {
-              "name": "Nx Cloud Documentation",
-              "id": "nx-cloud-documentation",
+              "name": "CI Documentation",
+              "id": "ci",
               "file": "",
               "tags": ["cache-task-results", "distribute-task-execution"],
-              "path": "/nx-cloud/intro/ci-with-nx",
+              "path": "/ci/intro/ci-with-nx",
               "isExternal": true
             },
             {
@@ -1624,8 +1664,8 @@
       ]
     },
     {
-      "name": "Nx Cloud",
-      "id": "nx-cloud-documentation",
+      "name": "CI",
+      "id": "ci",
       "description": "Learn how to enable Distributed Tasks Executions, remote caching and more.",
       "itemList": [
         {
@@ -1687,12 +1727,12 @@
               "description": "Set up Nx Cloud on machines that you control",
               "id": "on-premise",
               "tags": ["on-premise"],
-              "file": "nx-cloud/private/get-started"
+              "file": "nx-cloud/private/nx-enterprise-on-prem"
             },
             {
-              "name": "Nx Cloud Workflows",
-              "id": "nx-cloud-workflows",
-              "file": "nx-cloud/intro/nx-cloud-workflows"
+              "name": "Nx Agents",
+              "id": "nx-agents",
+              "file": "nx-cloud/intro/nx-agents"
             }
           ]
         },
@@ -1702,20 +1742,27 @@
           "description": "Learn how to manage Nx Cloud subscriptions and other options.",
           "itemList": [
             {
-              "name": "Improve Worst Case CI Times",
+              "name": "The Building Blocks of Fast CI",
+              "tags": [],
+              "id": "building-blocks-fast-ci",
+              "file": "nx-cloud/concepts/building-blocks-fast-ci"
+            },
+            {
+              "name": "Reduce Wasted Time in CI",
+              "tags": [],
+              "id": "reduce-waste",
+              "file": "nx-cloud/concepts/reduce-waste"
+            },
+            {
+              "name": "Parallelization and Distribution",
               "tags": ["distribute-task-execution"],
-              "id": "dte",
-              "file": "shared/concepts/improve-worst-case-ci-times"
+              "id": "parallelization-distribution",
+              "file": "nx-cloud/concepts/parallelization-distribution"
             },
             {
-              "name": "Security Scenarios",
-              "id": "scenarios",
-              "file": "nx-cloud/concepts/scenarios"
-            },
-            {
-              "name": "End to End Encryption",
-              "id": "encryption",
-              "file": "nx-cloud/concepts/encryption"
+              "name": "Cache Security",
+              "id": "cache-security",
+              "file": "nx-cloud/concepts/cache-security"
             }
           ]
         },
@@ -1728,13 +1775,8 @@
               "name": "Set Up CI",
               "id": "set-up",
               "description": "Learn how to set up Nx Cloud for your workspace.",
+              "tags": ["distribute-task-execution"],
               "itemList": [
-                {
-                  "name": "CI Setup",
-                  "id": "ci-setup",
-                  "tags": ["distribute-task-execution"],
-                  "file": "shared/ci-overview"
-                },
                 {
                   "name": "Setting up Azure Pipelines",
                   "id": "monorepo-ci-azure",
@@ -1781,6 +1823,11 @@
                   "name": "Access Tokens",
                   "id": "access-tokens",
                   "file": "nx-cloud/recipes/access-tokens"
+                },
+                {
+                  "name": "Enable End to End Encryption",
+                  "id": "encryption",
+                  "file": "nx-cloud/recipes/encryption"
                 }
               ]
             },
@@ -2049,6 +2096,11 @@
               "name": "release",
               "id": "release",
               "file": "generated/cli/release"
+            },
+            {
+              "name": "add",
+              "id": "add",
+              "file": "generated/cli/add"
             }
           ]
         },
@@ -2379,6 +2431,19 @@
               "name": "Overview",
               "path": "/nx-api/next",
               "file": "shared/packages/next/plugin-overview"
+            }
+          ]
+        },
+        {
+          "name": "remix",
+          "id": "remix",
+          "description": "Remix package.",
+          "itemList": [
+            {
+              "id": "overview",
+              "name": "Overview",
+              "path": "/nx-api/remix",
+              "file": "shared/packages/remix/remix-plugin"
             }
           ]
         },

@@ -13,7 +13,19 @@ describe('federate-module', () => {
     remote: 'my-remote',
     path: 'my-remote/src/my-federated-module.ts',
     style: 'css',
+    skipFormat: true,
   };
+  // TODO(@jaysoo): Turn this back to adding the plugin
+  let originalEnv: string;
+
+  beforeEach(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
+  afterEach(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+  });
 
   beforeAll(() => {
     tree = createTreeWithEmptyWorkspace();

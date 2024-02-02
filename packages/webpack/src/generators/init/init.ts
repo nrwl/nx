@@ -2,59 +2,80 @@ import {
   addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
-  runTasksInSerial,
+  readNxJson,
   Tree,
+  updateNxJson,
 } from '@nx/devkit';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
-
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes, WebpackPluginOptions } from '../../plugins/plugin';
+import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
-import {
-  nxVersion,
-  reactRefreshVersion,
-  reactRefreshWebpackPluginVersion,
-  svgrWebpackVersion,
-  swcLoaderVersion,
-  tsLibVersion,
-  urlLoaderVersion,
-} from '../../utils/versions';
-import { addBabelInputs } from '@nx/js/src/utils/add-babel-inputs';
 
-export async function webpackInitGenerator(tree: Tree, schema: Schema) {
-  const tasks: GeneratorCallback[] = [];
-  const devDependencies = {
-    '@nx/webpack': nxVersion,
-  };
+export function webpackInitGenerator(tree: Tree, schema: Schema) {
+  return webpackInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
 
-  if (schema.compiler === 'swc') {
-    devDependencies['swc-loader'] = swcLoaderVersion;
-    const addSwcTask = addSwcDependencies(tree);
-    tasks.push(addSwcTask);
+export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  if (schema.addPlugin) {
+    addPlugin(tree);
   }
 
-  if (schema.compiler === 'tsc') {
-    devDependencies['tslib'] = tsLibVersion;
+  let installTask: GeneratorCallback = () => {};
+  if (!schema.skipPackageJson) {
+    const devDependencies = {
+      '@nx/webpack': nxVersion,
+      '@nx/web': nxVersion,
+    };
+
+    if (schema.addPlugin) {
+      devDependencies['webpack-cli'] = webpackCliVersion;
+    }
+
+    installTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      devDependencies,
+      undefined,
+      schema.keepExistingVersions
+    );
   }
 
-  if (schema.uiFramework === 'react') {
-    devDependencies['@pmmmwh/react-refresh-webpack-plugin'] =
-      reactRefreshWebpackPluginVersion;
-    devDependencies['@svgr/webpack'] = svgrWebpackVersion;
-    devDependencies['react-refresh'] = reactRefreshVersion;
-    devDependencies['url-loader'] = urlLoaderVersion;
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!schema.skipFormat) {
     await formatFiles(tree);
   }
 
-  const baseInstalTask = addDependenciesToPackageJson(
-    tree,
-    {},
-    devDependencies
-  );
-  tasks.push(baseInstalTask);
+  return installTask;
+}
 
-  return runTasksInSerial(...tasks);
+function addPlugin(tree: Tree) {
+  const nxJson = readNxJson(tree);
+  nxJson.plugins ??= [];
+
+  for (const plugin of nxJson.plugins) {
+    if (
+      typeof plugin === 'string'
+        ? plugin === '@nx/webpack/plugin'
+        : plugin.plugin === '@nx/webpack/plugin'
+    ) {
+      return;
+    }
+  }
+
+  nxJson.plugins.push({
+    plugin: '@nx/webpack/plugin',
+    options: {
+      buildTargetName: 'build',
+      serveTargetName: 'serve',
+      previewTargetName: 'preview',
+    } as WebpackPluginOptions,
+  });
+  updateNxJson(tree, nxJson);
 }
 
 export default webpackInitGenerator;

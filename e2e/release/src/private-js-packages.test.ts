@@ -48,6 +48,7 @@ describe('nx release - private JS packages', () => {
   beforeAll(() => {
     newProject({
       unsetProjectNameAndRootFormat: false,
+      packages: ['@nx/js'],
     });
 
     publicPkg1 = uniq('public-pkg-1');
@@ -143,7 +144,7 @@ describe('nx release - private JS packages', () => {
 
     `);
 
-    // This will include the private package publish output as it is a dependency
+    // This will not include the private package dependency because we are filtering to specifically publicPkg2
     const publicPkg2PublishOutput = runCLI(`release publish -p ${publicPkg2}`);
     expect(publicPkg2PublishOutput).toMatchInlineSnapshot(`
 
@@ -152,15 +153,11 @@ describe('nx release - private JS packages', () => {
       - {public-project-name}
 
 
-      >  NX   Running target nx-release-publish for project {public-project-name} and 1 task it depends on:
+      >  NX   Running target nx-release-publish for project {public-project-name}:
 
       - {public-project-name}
 
 
-
-      > nx run {private-project-name}:nx-release-publish
-
-      Skipped package "@proj/{private-project-name}" from project "{private-project-name}", because it has \`"private": true\` in {private-project-name}/package.json
 
       > nx run {public-project-name}:nx-release-publish
 
@@ -185,8 +182,29 @@ describe('nx release - private JS packages', () => {
 
 
 
-      >  NX   Successfully ran target nx-release-publish for project {public-project-name} and 1 task it depends on
+      >  NX   Successfully ran target nx-release-publish for project {public-project-name}
 
+
+
+    `);
+
+    const privatePkgPublishOutput = runCLI(`release publish -p ${privatePkg}`, {
+      silenceError: true,
+    });
+    expect(privatePkgPublishOutput).toMatchInlineSnapshot(`
+
+      >  NX   Your filter "{private-project-name}" matched the following projects:
+
+      - {private-project-name}
+
+
+      >  NX   Based on your config, the following projects were matched for publishing but do not have the "nx-release-publish" target specified:
+
+      - {private-project-name}
+
+      This is usually caused by not having an appropriate plugin, such as "@nx/js" installed, which will add the appropriate "nx-release-publish" target for you automatically.
+
+      Pass --verbose to see the stacktrace.
 
 
     `);

@@ -1,4 +1,10 @@
-import { getProjects, logger, normalizePath, Tree } from '@nx/devkit';
+import {
+  getProjects,
+  joinPathFragments,
+  logger,
+  normalizePath,
+  Tree,
+} from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { assertValidStyle } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
@@ -20,6 +26,7 @@ export async function normalizeOptions(
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     callingGenerator: '@nx/react:library',
   });
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   const fileName = options.simpleName
     ? projectNames.projectSimpleName
@@ -74,10 +81,13 @@ export async function normalizeOptions(
       );
     }
 
-    try {
-      normalized.appMain = appProjectConfig.targets.build.options.main;
-      normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
-    } catch (e) {
+    normalized.appMain =
+      appProjectConfig.targets.build?.options?.main ??
+      findMainEntry(host, appProjectConfig.root);
+    normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
+
+    // TODO(jack): We should use appEntryFile instead of appProject so users can directly set it rather than us inferring it.
+    if (!normalized.appMain) {
       throw new Error(
         `Could not locate project main for ${options.appProject}`
       );
@@ -87,4 +97,31 @@ export async function normalizeOptions(
   assertValidStyle(normalized.style);
 
   return normalized;
+}
+
+function findMainEntry(tree: Tree, projectRoot: string): string | undefined {
+  const mainFiles = [
+    // These are the main files we generate with.
+    'src/main.ts',
+    'src/main.tsx',
+    'src/main.js',
+    'src/main.jsx',
+    // Other options just in case
+    'src/index.ts',
+    'src/index.tsx',
+    'src/index.js',
+    'src/index.jsx',
+    'main.ts',
+    'main.tsx',
+    'main.js',
+    'main.jsx',
+    'index.ts',
+    'index.tsx',
+    'index.js',
+    'index.jsx',
+  ];
+  const mainEntry = mainFiles.find((file) =>
+    tree.exists(joinPathFragments(projectRoot, file))
+  );
+  return mainEntry ? joinPathFragments(projectRoot, mainEntry) : undefined;
 }

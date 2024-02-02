@@ -15,28 +15,28 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generat
 interface Schema {
   name: string;
   /**
-   * @deprecated Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v18.
+   * @deprecated Provide the `directory` option instead and use the `as-provided` format. The project will be determined from the directory provided. It will be removed in Nx v19.
    */
   project?: string;
   style: SupportedStyles;
   directory?: string;
   /**
-   * @deprecated Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v18.
+   * @deprecated Provide the `directory` option instead and use the `as-provided` format. This option will be removed in Nx v19.
    */
   flat?: boolean;
   /**
-   * @deprecated Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v18.
+   * @deprecated Provide the `name` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19.
    */
   pascalCaseFiles?: boolean;
   /**
-   * @deprecated Provide the `directory` in pascal-case and use the `as-provided` format. This option will be removed in Nx v18.
+   * @deprecated Provide the `directory` in pascal-case and use the `as-provided` format. This option will be removed in Nx v19.
    */
   pascalCaseDirectory?: boolean;
   nameAndDirectoryFormat?: 'as-provided' | 'derived';
   skipFormat?: boolean;
 }
 
-// TODO(v18): Remove this logic once we no longer derive directory.
+// TODO(v19): Remove this logic once we no longer derive directory.
 function maybeGetDerivedDirectory(host: Tree, options: Schema): string {
   if (!options.project) return options.directory;
   const workspace = getProjects(host);
@@ -81,6 +81,7 @@ export async function componentGeneratorInternal(host: Tree, options: Schema) {
 
   const componentInstall = await reactComponentGenerator(host, {
     ...options,
+    name,
     nameAndDirectoryFormat: 'as-provided', // already determined the directory so use as is
     project: undefined,
     directory,

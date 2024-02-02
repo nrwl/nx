@@ -1,14 +1,15 @@
 import {
   detectPackageManager,
   ExecutorContext,
+  joinPathFragments,
   logger,
+  offsetFromRoot,
   stripIndents,
   writeJsonFile,
 } from '@nx/devkit';
 import {
   getProjectTsConfigPath,
-  getViteBuildOptions,
-  getViteSharedConfig,
+  normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from './schema';
 import {
@@ -18,33 +19,63 @@ import {
   getLockFileName,
 } from '@nx/js';
 import { existsSync, writeFileSync } from 'fs';
-import { resolve } from 'path';
+import { relative, resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   createBuildableTsConfig,
+  loadViteDynamicImport,
   validateTypes,
 } from '../../utils/executor-utils';
 
 export async function* viteBuildExecutor(
-  options: ViteBuildExecutorOptions,
+  options: Record<string, any> & ViteBuildExecutorOptions,
   context: ExecutorContext
 ) {
+  process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, build } = await (Function(
-    'return import("vite")'
-  )() as Promise<typeof import('vite')>);
-
+  const { mergeConfig, build, loadConfigFromFile } =
+    await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-
   createBuildableTsConfig(projectRoot, options, context);
 
-  const normalizedOptions = normalizeOptions(options);
+  const viteConfigPath = normalizeViteConfigFilePath(
+    context.root,
+    projectRoot,
+    options.configFile
+  );
+  const root =
+    projectRoot === '.'
+      ? process.cwd()
+      : relative(context.cwd, joinPathFragments(context.root, projectRoot));
+
+  const { buildOptions, otherOptions } = await getBuildExtraArgs(options);
+
+  const resolved = await loadConfigFromFile(
+    {
+      mode: otherOptions?.mode ?? 'production',
+      command: 'build',
+    },
+    viteConfigPath
+  );
+
+  const outDir =
+    joinPathFragments(offsetFromRoot(projectRoot), options.outputPath) ??
+    resolved?.config?.build?.outDir;
 
   const buildConfig = mergeConfig(
-    getViteSharedConfig(normalizedOptions, false, context),
     {
-      build: getViteBuildOptions(normalizedOptions, context),
+      // This should not be needed as it's going to be set in vite.config.ts
+      // but leaving it here in case someone did not migrate correctly
+      root: resolved.config.root ?? root,
+      configFile: viteConfigPath,
+    },
+    {
+      build: {
+        outDir,
+        ...buildOptions,
+      },
+      ...otherOptions,
     }
   );
 
@@ -52,7 +83,7 @@ export async function* viteBuildExecutor(
     await validateTypes({
       workspaceRoot: context.root,
       projectRoot: projectRoot,
-      tsconfig: getProjectTsConfigPath(projectRoot),
+      tsconfig: options.tsConfig ?? getProjectTsConfigPath(projectRoot),
     });
   }
 
@@ -60,7 +91,14 @@ export async function* viteBuildExecutor(
 
   const libraryPackageJson = resolve(projectRoot, 'package.json');
   const rootPackageJson = resolve(context.root, 'package.json');
-  const distPackageJson = resolve(normalizedOptions.outputPath, 'package.json');
+
+  // Here, we want the outdir relative to the workspace root.
+  // So, we calculate the relative path from the workspace root to the outdir.
+  const outDirRelativeToWorkspaceRoot = outDir.replaceAll('../', '');
+  const distPackageJson = resolve(
+    outDirRelativeToWorkspaceRoot,
+    'package.json'
+  );
 
   // Generate a package.json if option has been set.
   if (options.generatePackageJson) {
@@ -83,7 +121,10 @@ export async function* viteBuildExecutor(
 
     builtPackageJson.type = 'module';
 
-    writeJsonFile(`${options.outputPath}/package.json`, builtPackageJson);
+    writeJsonFile(
+      `${outDirRelativeToWorkspaceRoot}/package.json`,
+      builtPackageJson
+    );
     const packageManager = detectPackageManager(context.root);
 
     const lockFile = createLockFile(
@@ -92,7 +133,7 @@ export async function* viteBuildExecutor(
       packageManager
     );
     writeFileSync(
-      `${options.outputPath}/${getLockFileName(packageManager)}`,
+      `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
       lockFile,
       {
         encoding: 'utf-8',
@@ -101,13 +142,14 @@ export async function* viteBuildExecutor(
   }
   // For buildable libs, copy package.json if it exists.
   else if (
+    options.generatePackageJson !== false &&
     !existsSync(distPackageJson) &&
     existsSync(libraryPackageJson) &&
     rootPackageJson !== libraryPackageJson
   ) {
     await copyAssets(
       {
-        outputPath: normalizedOptions.outputPath,
+        outputPath: outDirRelativeToWorkspaceRoot,
         assets: [
           {
             input: projectRoot,
@@ -133,7 +175,7 @@ export async function* viteBuildExecutor(
         }
         // result must be closed when present.
         // see https://rollupjs.org/guide/en/#rollupwatch
-        if ('result' in event) {
+        if ('result' in event && event.result) {
           event.result.close();
         }
       });
@@ -142,22 +184,71 @@ export async function* viteBuildExecutor(
   } else {
     const output = watcherOrOutput?.['output'] || watcherOrOutput?.[0]?.output;
     const fileName = output?.[0]?.fileName || 'main.cjs';
-    const outfile = resolve(normalizedOptions.outputPath, fileName);
+    const outfile = resolve(outDirRelativeToWorkspaceRoot, fileName);
     yield { success: true, outfile };
   }
 }
 
-function normalizeOptions(options: ViteBuildExecutorOptions) {
-  const normalizedOptions = { ...options };
-
-  // coerce watch to null or {} to match with Vite's watch config
-  if (options.watch === false) {
-    normalizedOptions.watch = null;
-  } else if (options.watch === true) {
-    normalizedOptions.watch = {};
+export async function getBuildExtraArgs(
+  options: ViteBuildExecutorOptions
+): Promise<{
+  // vite BuildOptions
+  buildOptions: Record<string, unknown>;
+  otherOptions: Record<string, any>;
+}> {
+  // support passing extra args to vite cli
+  const schema = await import('./schema.json');
+  const extraArgs = {};
+  for (const key of Object.keys(options)) {
+    if (!schema.properties[key]) {
+      extraArgs[key] = options[key];
+    }
   }
 
-  return normalizedOptions;
+  const buildOptions = {};
+  const buildSchemaKeys = [
+    'target',
+    'polyfillModulePreload',
+    'modulePreload',
+    'outDir',
+    'assetsDir',
+    'assetsInlineLimit',
+    'cssCodeSplit',
+    'cssTarget',
+    'cssMinify',
+    'sourcemap',
+    'minify',
+    'terserOptions',
+    'rollupOptions',
+    'commonjsOptions',
+    'dynamicImportVarsOptions',
+    'write',
+    'emptyOutDir',
+    'copyPublicDir',
+    'manifest',
+    'lib',
+    'ssr',
+    'ssrManifest',
+    'ssrEmitAssets',
+    'reportCompressedSize',
+    'chunkSizeWarningLimit',
+    'watch',
+  ];
+  const otherOptions = {};
+  for (const key of Object.keys(extraArgs)) {
+    if (buildSchemaKeys.includes(key)) {
+      buildOptions[key] = extraArgs[key];
+    } else {
+      otherOptions[key] = extraArgs[key];
+    }
+  }
+
+  buildOptions['watch'] = options.watch ?? undefined;
+
+  return {
+    buildOptions,
+    otherOptions,
+  };
 }
 
 export default viteBuildExecutor;

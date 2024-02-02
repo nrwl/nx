@@ -6,9 +6,9 @@ Because we are using an Nx plugin for .NET, all the features of Nx are available
 
 {% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
 {% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
-{% pill url="/nx-cloud/features/remote-cache" %}✅ Share Your Cache{% /pill %}
+{% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
 {% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
-{% pill url="/nx-cloud/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
+{% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
 {% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
 {% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
 {% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
@@ -26,14 +26,21 @@ Make sure you have .NET installed on your machine. Consult the [.NET docs for mo
 {%tab label="npm"%}
 
 ```shell
-npm i --save-dev @nx-dotnet/core
+npm add -D @nx-dotnet/core
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nx-dotnet/core
+yarn add -D @nx-dotnet/core
+```
+
+{% /tab %}
+{%tab label="pnpm"%}
+
+```shell
+pnpm add -D @nx-dotnet/core
 ```
 
 {% /tab %}

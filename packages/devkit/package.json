@@ -33,7 +33,8 @@
     "ignore": "^5.0.4",
     "tmp": "~0.2.1",
     "tslib": "^2.3.0",
-    "semver": "7.5.3"
+    "semver": "^7.5.3",
+    "yargs-parser": "21.1.1"
   },
   "peerDependencies": {
     "nx": ">= 16 <= 18"

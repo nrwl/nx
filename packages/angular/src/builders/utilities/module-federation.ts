@@ -158,9 +158,8 @@ export function validateDevRemotes(
   options: { devRemotes?: string[] },
   workspaceProjects: Record<string, ProjectConfiguration>
 ): void {
-  const invalidDevRemotes = options.devRemotes?.filter(
-    (remote) => !workspaceProjects[remote]
-  );
+  const invalidDevRemotes =
+    options.devRemotes?.filter((remote) => !workspaceProjects[remote]) ?? [];
 
   if (invalidDevRemotes.length) {
     throw new Error(

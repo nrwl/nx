@@ -2,24 +2,25 @@ use std::sync::Arc;
 
 use anyhow::*;
 use dashmap::DashMap;
-use tracing::trace;
+use tracing::{trace, warn};
 
-use crate::native::glob::build_glob_set;
 use crate::native::types::FileData;
+use crate::native::{glob::build_glob_set, hasher::hash};
 
 pub fn hash_workspace_files(
     workspace_file_set: &str,
     all_workspace_files: &[FileData],
     cache: Arc<DashMap<String, String>>,
 ) -> Result<String> {
-    let file_set = workspace_file_set
-        .strip_prefix("{workspaceRoot}/")
-        .ok_or_else(|| {
-            anyhow!(
-                "{workspace_file_set} does not start with {}",
-                "{workspaceRoot}/"
-            )
-        })?;
+    let file_set = workspace_file_set.strip_prefix("{workspaceRoot}/");
+
+    let Some(file_set) = file_set else {
+        warn!(
+            "{workspace_file_set} does not start with {}. This will throw an error in Nx 19.",
+            "{workspaceRoot}/"
+        );
+        return Ok(hash(b""));
+    };
 
     if let Some(cache_results) = cache.get(file_set) {
         return Ok(cache_results.clone());
@@ -50,9 +51,10 @@ mod test {
     use std::sync::Arc;
 
     #[test]
-    fn test_hash_workspace_files_error() {
-        let result = hash_workspace_files("packages/{package}", &[], Arc::new(DashMap::new()));
-        assert!(result.is_err());
+    fn invalid_workspace_input_is_just_empty_hash() {
+        let result =
+            hash_workspace_files("packages/{package}", &[], Arc::new(DashMap::new())).unwrap();
+        assert_eq!(result, hash(b""));
     }
 
     #[test]

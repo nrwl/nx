@@ -10,7 +10,7 @@ import {
 } from '@nx/devkit';
 import { getRelativeCwd } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 
-import { addTsConfigPath } from '@nx/js';
+import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 
 import { nxVersion } from '../../utils/versions';
 import componentGenerator from '../component/component';
@@ -26,9 +26,11 @@ import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { setDefaults } from './lib/set-defaults';
 import { relative } from 'path';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -47,11 +49,15 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
     options.style = 'none';
   }
 
+  const jsInitTask = await jsInitGenerator(host, {
+    ...schema,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
+
   const initTask = await initGenerator(host, {
     ...options,
-    e2eTestRunner: 'none',
     skipFormat: true,
-    skipHelperLibs: options.bundler === 'vite',
   });
   tasks.push(initTask);
 
@@ -82,6 +88,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       compiler: options.compiler,
       skipFormat: true,
       testEnvironment: 'jsdom',
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -151,6 +158,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       testEnvironment: 'jsdom',
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(
@@ -207,7 +215,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   }
 
   if (!options.skipPackageJson) {
-    const installReactTask = await installCommonDependencies(host, options);
+    const installReactTask = installCommonDependencies(host, options);
     tasks.push(installReactTask);
   }
 
@@ -230,6 +238,10 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.name);
+  });
 
   return runTasksInSerial(...tasks);
 }

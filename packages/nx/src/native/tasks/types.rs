@@ -35,7 +35,7 @@ pub enum HashInstruction {
     WorkspaceFileSet(String),
     Runtime(String),
     Environment(String),
-    ProjectFileSet(String, String),
+    ProjectFileSet(String, Vec<String>),
     ProjectConfiguration(String),
     TsConfiguration(String),
     TaskOutput(String, Vec<String>),
@@ -71,7 +71,7 @@ impl fmt::Display for HashInstruction {
             match self {
                 HashInstruction::AllExternalDependencies => "AllExternalDependencies".to_string(),
                 HashInstruction::ProjectFileSet(project_name, file_set) => {
-                    format!("{project_name}:{file_set}")
+                    format!("{project_name}:{}", file_set.join(","))
                 }
                 HashInstruction::WorkspaceFileSet(file_set) => file_set.to_string(),
                 HashInstruction::Runtime(runtime) => format!("runtime:{}", runtime),

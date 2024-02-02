@@ -4,9 +4,11 @@
  */
 import type { AxiosRequestConfig } from 'axios';
 import * as chalk from 'chalk';
+import { prompt } from 'enquirer';
 import { execSync } from 'node:child_process';
 import { existsSync, promises as fsp } from 'node:fs';
 import { homedir } from 'node:os';
+import { output } from '../../../utils/output';
 import { joinPathFragments } from '../../../utils/path';
 import { Reference } from './git';
 
@@ -71,6 +73,77 @@ export async function createOrUpdateGithubRelease(
     release,
     existingGithubReleaseForVersion
   );
+
+  /**
+   * If something went wrong POSTing to Github we can still pre-populate the web form on github.com
+   * to allow the user to manually complete the release if they so choose.
+   */
+  if (result.status === 'manual') {
+    if (result.error) {
+      process.exitCode = 1;
+
+      if (result.error.response?.data) {
+        // There's a nicely formatted error from GitHub we can display to the user
+        output.error({
+          title: `A GitHub API Error occurred when creating/updating the release`,
+          bodyLines: [
+            `GitHub Error: ${JSON.stringify(result.error.response.data)}`,
+            `---`,
+            `Request Data:`,
+            `Repo: ${githubRequestConfig.repo}`,
+            `Token: ${githubRequestConfig.token}`,
+            `Body: ${JSON.stringify(result.requestData)}`,
+          ],
+        });
+      } else {
+        console.log(result.error);
+        console.error(
+          `An unknown error occurred while trying to create a release on GitHub, please report this on https://github.com/nrwl/nx (NOTE: make sure to redact your GitHub token from the error message!)`
+        );
+      }
+    }
+
+    const reply = await prompt<{ open: 'Yes' | 'No' }>([
+      {
+        name: 'open',
+        message:
+          'Do you want to finish creating the release manually in your browser?',
+        type: 'autocomplete',
+        choices: [
+          {
+            name: 'Yes',
+            hint: 'It will pre-populate the form for you',
+          },
+          {
+            name: 'No',
+          },
+        ],
+        initial: 0,
+      },
+    ]).catch(() => {
+      return { open: 'No' };
+    });
+
+    if (reply.open === 'Yes') {
+      const open = require('open');
+      await open(result.url)
+        .then(() => {
+          console.info(
+            `\nFollow up in the browser to manually create the release:\n\n` +
+              chalk.underline(chalk.cyan(result.url)) +
+              `\n`
+          );
+        })
+        .catch(() => {
+          console.info(
+            `Open this link to manually create a release: \n` +
+              chalk.underline(chalk.cyan(result.url)) +
+              '\n'
+          );
+        });
+    }
+  }
+
   /**
    * If something went wrong POSTing to Github we can still pre-populate the web form on github.com
    * to allow the user to manually complete the release.
@@ -130,6 +203,7 @@ async function syncGithubRelease(
       status: 'manual',
       error,
       url: githubNewReleaseURL(githubRequestConfig, release),
+      requestData: ghRelease,
     };
   }
 }
@@ -150,7 +224,22 @@ export async function resolveGithubToken(): Promise<string | null> {
     const yamlContents = await fsp.readFile(ghCLIPath, 'utf8');
     const { load } = require('@zkochan/js-yaml');
     const ghCLIConfig = load(yamlContents);
-    return ghCLIConfig['github.com'].oauth_token;
+    if (ghCLIConfig['github.com']) {
+      // Web based session (the token is already embedded in the config)
+      if (ghCLIConfig['github.com'].oauth_token) {
+        return ghCLIConfig['github.com'].oauth_token;
+      }
+      // SSH based session (we need to dynamically resolve a token using the CLI)
+      if (
+        ghCLIConfig['github.com'].user &&
+        ghCLIConfig['github.com'].git_protocol === 'ssh'
+      ) {
+        return execSync(`gh auth token`, {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }).trim();
+      }
+    }
   }
   return null;
 }
@@ -212,9 +301,9 @@ function githubNewReleaseURL(
   config: GithubRequestConfig,
   release: { version: string; body: string }
 ) {
-  return `https://github.com/${config.repo}/releases/new?tag=v${
+  return `https://github.com/${config.repo}/releases/new?tag=${
     release.version
-  }&title=v${release.version}&body=${encodeURIComponent(release.body)}`;
+  }&title=${release.version}&body=${encodeURIComponent(release.body)}`;
 }
 
 type RepoProvider = 'github';

@@ -21,9 +21,14 @@ export function expandOutputs(directory: string, entries: Array<string>): Array<
 export function getFilesForOutputs(directory: string, entries: Array<string>): Array<string>
 export function remove(src: string): void
 export function copy(src: string, dest: string): void
+export function runCommand(command: string, commandDir?: string | undefined | null, jsEnv?: Record<string, string> | undefined | null, quiet?: boolean | undefined | null): ChildProcess
+/**
+ * This allows us to run a pseudoterminal with a fake node ipc channel
+ * this makes it possible to be backwards compatible with the old implementation
+ */
+export function nxFork(id: string, forkScript: string, psuedoIpcPath: string, commandDir: string | undefined | null, jsEnv: Record<string, string> | undefined | null, quiet: boolean): ChildProcess
 export function hashArray(input: Array<string>): string
 export function hashFile(file: string): string | null
-export function hashFiles(workspaceRoot: string): Record<string, string>
 export function findImports(projectFileMap: Record<string, Array<string>>): Array<ImportResult>
 /**
  * Transfer the project graph from the JS world to the Rust world, so that we can pass the project graph via memory quicker
@@ -140,6 +145,12 @@ export interface FileMap {
   projectFileMap: ProjectFiles
   nonProjectFiles: Array<FileData>
 }
+export function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+export class ChildProcess {
+  kill(): void
+  onExit(callback: (message: string) => void): void
+  onOutput(callback: (message: string) => void): void
+}
 export class ImportResult {
   file: string
   sourceProject: string
@@ -170,12 +181,12 @@ export class Watcher {
 }
 export class WorkspaceContext {
   workspaceRoot: string
-  constructor(workspaceRoot: string)
-  getWorkspaceFiles(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Promise<Record<string, string>>): Promise<NxWorkspaceFiles>
+  constructor(workspaceRoot: string, cacheDir: string)
+  getWorkspaceFiles(projectRootMap: Record<string, string>): NxWorkspaceFiles
   glob(globs: Array<string>, exclude?: Array<string> | undefined | null): Array<string>
   hashFilesMatchingGlob(globs: Array<string>, exclude?: Array<string> | undefined | null): string
-  getProjectConfigurations(globs: Array<string>, parseConfigurations: (arg0: Array<string>) => Promise<Record<string, string>>): Promise<Record<string, string>>
   incrementalUpdate(updatedFiles: Array<string>, deletedFiles: Array<string>): Record<string, string>
   updateProjectFiles(projectRootMappings: ProjectRootMappings, projectFiles: ExternalObject<ProjectFiles>, globalFiles: ExternalObject<Array<FileData>>, updatedFiles: Record<string, string>, deletedFiles: Array<string>): UpdatedWorkspaceFiles
   allFileData(): Array<FileData>
+  getFilesInDirectory(directory: string): Array<string>
 }

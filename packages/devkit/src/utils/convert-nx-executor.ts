@@ -21,7 +21,7 @@ export function convertNxExecutor(executor: Executor) {
     const workspaces = new Workspaces(builderContext.workspaceRoot);
     const nxJsonConfiguration = readNxJsonFromDisk
       ? readNxJsonFromDisk(builderContext.workspaceRoot)
-      : // TODO(v18): remove readNxJson. This is to be backwards compatible with Nx 16.5 and below.
+      : // TODO(v19): remove readNxJson. This is to be backwards compatible with Nx 16.5 and below.
         (workspaces as any).readNxJson();
 
     const promise = async () => {
@@ -32,9 +32,9 @@ export function convertNxExecutor(executor: Executor) {
               projects: await retrieveProjectConfigurationsWithAngularProjects(
                 builderContext.workspaceRoot,
                 nxJsonConfiguration
-              ).then((p) => p.projectNodes),
+              ).then((p) => (p as any).projectNodes ?? p.projects),
             }
-          : // TODO(v18): remove retrieveProjectConfigurations. This is to be backwards compatible with Nx 16.5 and below.
+          : // TODO(v19): remove retrieveProjectConfigurations. This is to be backwards compatible with Nx 16.5 and below.
             (workspaces as any).readProjectsConfigurations({
               _includeProjectsFromAngularJson: true,
             });

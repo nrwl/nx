@@ -1,6 +1,6 @@
 # Function: parseJson
 
-▸ **parseJson**<`T`\>(`input`, `options?`): `T`
+▸ **parseJson**\<`T`\>(`input`, `options?`): `T`
 
 Parses the given JSON string and returns the object the JSON content represents.
 By default javascript-style comments and trailing commas are allowed.

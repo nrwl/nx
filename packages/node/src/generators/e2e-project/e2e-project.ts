@@ -25,9 +25,11 @@ import {
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
 } from '@nx/eslint/src/generators/utils/eslint-file';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {
   return await e2eProjectGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...options,
   });
@@ -41,6 +43,7 @@ export async function e2eProjectGeneratorInternal(
   const options = await normalizeOptions(host, _options);
   const appProject = readProjectConfiguration(host, options.project);
 
+  // TODO(@ndcunningham): This is broken.. the outputs are wrong.. and this isn't using the jest generator
   addProjectConfiguration(host, options.e2eProjectName, {
     root: options.e2eProjectRoot,
     implicitDependencies: [options.project],
@@ -115,10 +118,10 @@ export async function e2eProjectGeneratorInternal(
       tsConfigPaths: [
         joinPathFragments(options.e2eProjectRoot, 'tsconfig.json'),
       ],
-      eslintFilePatterns: [`${options.e2eProjectRoot}/**/*.{js,ts}`],
       setParserOptionsProject: false,
       skipPackageJson: false,
       rootProject: options.rootProject,
+      addPlugin: options.addPlugin,
     });
     tasks.push(linterTask);
 
@@ -134,6 +137,10 @@ export async function e2eProjectGeneratorInternal(
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.e2eProjectName);
+  });
 
   return runTasksInSerial(...tasks);
 }
@@ -157,6 +164,7 @@ async function normalizeOptions(
     });
 
   return {
+    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
     ...options,
     e2eProjectRoot,
     e2eProjectName,

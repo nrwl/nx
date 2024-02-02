@@ -1,5 +1,78 @@
 # Enterprise Release Notes
 
+### 2312.11.7.patch1
+
+- re-enable path style access for s3 buckets
+- fix an aggregator migration issue with old CIPE data
+
+### 2312.11.7
+
+##### Helm package compatibility
+
+When upgrading to this version and anything above it, you will need to use Helm version 0.12.0+:
+
+| Chart Version | Compatible Images                  |
+| ------------- | ---------------------------------- |
+| <= `0.10.11`  | `2306.01.2.patch4` **and earlier** |
+| >= `0.11.0`   | `2308.22.7` **and later**          |
+| >= `0.12.0`   | `2312.11.7` **and later**          |
+
+##### New UI features and improvements
+
+On the UI, we replaced the runs overview with the new CI Pipeline Executions (CIPE for short) screen:
+
+![cipe_screen](/nx-cloud/reference/images/cipe_screen.webp)
+
+This screen organises your runs more logically, according to each invocation of your CI pipeline.
+It provides more data around the committer name and commit message and a full analysis of your CIPE once it is completed.
+And if you need to run your tasks on multiple environments, you can now switch between them on this page and view the results separately.
+You can play around with an example on the [Nx Repo](https://staging.nx.app/orgs/62d013d4d26f260059f7765e/workspaces/62d013ea0852fe0a2df74438/overview)
+
+There is also a new Analytics screen for your workspaces, to which we'll keep adding new features to better help you optimise your CI pipelines:
+
+![analytics_screen](/nx-cloud/reference/images/analytics_screen.webp)
+
+Here you can see:
+
+- historical trends of CIPE Average duration
+- historical trends of CIPE average daily count
+- average daily time saved by DTE
+
+Other improvements:
+
+- better overall UI performance (navigating feel much snappier now)
+- improved terminal output rendering
+- members can now be invited as admins directly
+
+##### The light runner
+
+Nx Cloud works by using a local Node runner that wraps your Nx tasks and sends information about them to the Nx Cloud API. This is how it knows whether to pull something from the remote cache or run it.
+
+Because they work together, sometimes changes to the API required updates to this local runner. This led to workspaces that did not update their local
+runner version in `package.json` sometimes running into compatibility issues.
+
+We overhauled this mechanism, and the runner is now bundled as part of the API itself, ensuring you get sent the correct runner code when you first start running Nx commands in your workspace.
+This ensures you will always have the correct local runner version that is compatible with your on-prem Nx Cloud installation.
+
+We've been testing this out on our Public Nx Cloud instance and it is now available for on-prem installations as well.
+
+To enable the light runner feature, make sure you:
+
+1. remove `useLightClient: false` from your `nx.json` (if you had it)
+2. If you are on Nx version > 17, you can remove any `nx-cloud` or `@nrwl/nx-cloud` package in your `package.json` and it should just work
+3. If you are on Nx version < 17, upgrade to `nx-cloud@16.5.2` or `@nrwl/nx-cloud@16.5.2`.
+
+##### Nx Agents
+
+This release is also the first one to support ["Nx Agents"](https://nx.dev/ci/features/nx-agents#managed-agents-seamless-configuration).
+
+While currently experimental and disabled by default for on-prem users, we are looking for more on-prem workspaces to try it out with
+so please reach out to your DPE contact or to [cloud-suppport@nrwl.io](cloud-support@nrwl.io) if you are interested in helping us shape this according to your needs!
+
+##### Breaking changes - MongoDB migration
+
+As a reminder, we now only support MongoDB 6+. If you are running an older version please refer to the upgrade instructions [here](/ci/reference/release-notes#breaking-changes).
+
 ### 2308.22.7.patch7
 
 - Allows the frontend container to be ran with `runAsNonRoot: true`
@@ -10,7 +83,7 @@
 
 ### 2308.22.7.patch5
 
-- Fixes a UI issue when navigating to branches containg slashes
+- Fixes a UI issue when navigating to branches containing slashes
 
 ### 2308.22.7.patch4
 
@@ -48,7 +121,7 @@ When upgrading to this version and anything above it, you will need to use Helm 
 
 ##### VCS proxy support
 
-- For the GitHub/Bitbucket/Gitlab integrations to work, NxCloud needs to make HTTP calls to GitHub/GitLab to post comments
+- For the GitHub/Bitbucket/Gitlab integrations to work, Nx Cloud needs to make HTTP calls to GitHub/GitLab to post comments
 - If are behind a proxy however, these requests might fail
 - If you are using our [Helm chart](https://github.com/nrwl/nx-cloud-helm/), you can now configure this option to unblock the vcs integration and allow it to work with your proxy:
   ```yaml
@@ -70,8 +143,8 @@ When upgrading to this version and anything above it, you will need to use Helm 
 
 ##### Breaking changes - MongoDB migration
 
-In the last big release we announced [the deprecation of Mongo 4.2](/nx-cloud/reference/release-notes#breaking-changes)
-With this release, we have now stopped supporting Mongo 4.2 completely. Please upgrade Mongo to version 6 before installing this new image. You will find instructions [here](/nx-cloud/reference/release-notes#breaking-changes).
+In the last big release we announced [the deprecation of Mongo 4.2](/ci/reference/release-notes#breaking-changes)
+With this release, we have now stopped supporting Mongo 4.2 completely. Please upgrade Mongo to version 6 before installing this new image. You will find instructions [here](/ci/reference/release-notes#breaking-changes).
 
 ### 2306.01.2.patch4
 
@@ -92,11 +165,11 @@ With this release, we have now stopped supporting Mongo 4.2 completely. Please u
 
 ### 2306.01.2
 
-This is one of our biggest NxCloud On-Prem releases. It also marks a change in our release process which will be explained at the end.
+This is one of our biggest Nx Cloud On-Prem releases. It also marks a change in our release process which will be explained at the end.
 
 ##### Brand new UI
 
-A few months ago we announced a complete re-design of the NxCloud UI! It's faster, easier to use and pleasant to look at! We're now bringing this to On-Prem users as well:
+A few months ago we announced a complete re-design of the Nx Cloud UI! It's faster, easier to use and pleasant to look at! We're now bringing this to On-Prem users as well:
 
 You can read more about it in our [announcement blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
 
@@ -108,9 +181,9 @@ You will see some updates in the UI to reflect this, however, **you don't need t
 
 ##### Proxy updates
 
-One of the features of NxCloud is its integrations with your repository hosting solution. When you open up a Pull Request, you can configure NxCloud to post a comment to it once your CI has finished running, with a summary of all the tasks that succeeded and failed on that code change, and a link to your branch on NxCloud so you can further analyse your run. Your developers save time, and allows them to skip digging through long CI logs.
+One of the features of Nx Cloud is its integrations with your repository hosting solution. When you open up a Pull Request, you can configure Nx Cloud to post a comment to it once your CI has finished running, with a summary of all the tasks that succeeded and failed on that code change, and a link to your branch on Nx Cloud so you can further analyse your run. Your developers save time, and allows them to skip digging through long CI logs.
 
-Before, if you had a self-hosted instance of GitHub, Gitlab or Bitbucket, calls from NxCloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which NxCloud wouldn't recognise.
+Before, if you had a self-hosted instance of GitHub, Gitlab or Bitbucket, calls from Nx Cloud to your code-hosting provider would fail, because they'd be using a self-signed certificate, which Nx Cloud wouldn't recognise.
 
 [We now support self-signed SVN certificates, via a simple k8s configMap.](https://github.com/nrwl/nx-cloud-helm/blob/main/PROXY-GUIDE.md#supporting-self-signed-ssl-certificates)
 
@@ -122,7 +195,7 @@ We completely re-wrote our Task Distribution engine, which should result in much
 
 We've also added a new internal task queueing system, which should further improve the performance of DTE. While this is an implementation detail which will be automatically enabled in future releases, you can test it out today by setting [`enableMessageQueue: true`](https://github.com/nrwl/nx-cloud-helm/blob/main/charts/nx-cloud/values.yaml#L18) in your Helm config.
 
-You can read more about the recent DTE improvements in our [NxCloud 3.0 blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
+You can read more about the recent DTE improvements in our [Nx Cloud 3.0 blog post](https://blog.nrwl.io/nx-cloud-3-0-faster-more-efficient-modernized-36ac5ae33b86).
 
 ##### Misc updates
 
@@ -130,14 +203,14 @@ You can read more about the recent DTE improvements in our [NxCloud 3.0 blog pos
 
 ##### Breaking changes
 
-NxCloud uses MongoDB internally as its data store. While we've always used Mongo 4.2, in the latest release we started targetting Mongo 6.0. It's a much lighter process, with improved performance, and quicker reads and writes.
+Nx Cloud uses MongoDB internally as its data store. While we've always used Mongo 4.2, in the latest release we started targeting Mongo 6.0. It's a much lighter process, with improved performance, and quicker reads and writes.
 
 While you can still upgrade to this new image even if you are on Mongo 4.2 (nothing will break), **we strongly recommend you upgrade your Database to Mongo 6.0 to make sure nothing breaks in the future.** [We wrote a full guide on how you can approach the upgrade here](https://github.com/nrwl/nx-cloud-helm/blob/main/MONGO-OPERATOR-GUIDE.md#upgrading-to-mongo-6).
 If you need assistance, please get in touch at [cloud-support@nrwl.io](mailto:cloud-support@nrwl.io).
 
 ###### Migration from Community Edition to Enterprise
 
-On May 16th, 2023 we announced our plans to sunset the Community Edition of NxCloud On-Prem to align with our new pricing plans. If you are on the Community Edition, please follow these steps to migrate:
+On May 16th, 2023 we announced our plans to sunset the Community Edition of Nx Cloud On-Prem to align with our new pricing plans. If you are on the Community Edition, please follow these steps to migrate:
 
 1. Use this image: `2306.01.2.patch3`
 2. Switch to private Enterprise by setting `NX_CLOUD_MODE=private-enterprise` (or `mode: 'private-enterprise'` if using Helm).
@@ -174,7 +247,7 @@ Any questions at all or to report issues with the new release [please get in tou
 
 ### 13-10-2022T16-45-30
 
-- Misc: This release mostly contains improvements that apply to the Public SASS version of NxCloud. No significant changes for the On-Prem version.
+- Misc: This release mostly contains improvements that apply to the Public SASS version of Nx Cloud. No significant changes for the On-Prem version.
 
 ### 13-10-2022T16-45-30
 
@@ -205,7 +278,7 @@ Any questions at all or to report issues with the new release [please get in tou
 
 ### 2.4.9
 
-- Align all NxCloud images to this version. No new fixes or features included.
+- Align all Nx Cloud images to this version. No new fixes or features included.
 
 ### 2.4.8
 
@@ -232,7 +305,7 @@ The default container mode has changed from `COMMUNITY` to `ENTERPRISE`. If you 
 
 - Feat: filters to branch and run list pages
 - Fix: improved `MD5` cache artifact archiving
-- Misc: various UI and UX improvements to the NxCloud dashboards
+- Misc: various UI and UX improvements to the Nx Cloud dashboards
 
 ### 2.4.4
 
@@ -308,7 +381,7 @@ The default container mode has changed from `COMMUNITY` to `ENTERPRISE`. If you 
 
 ### 2.2.10
 
-- Feat: Various UI improvements to the NxCloud screens
+- Feat: Various UI improvements to the Nx Cloud screens
 - Feat: Hash detail diff tool
 - Feat: GitHub app comment revamp
 - Feat: DTE visualisation

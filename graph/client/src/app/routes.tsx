@@ -1,14 +1,16 @@
-import { Shell } from './shell';
 import { redirect, RouteObject } from 'react-router-dom';
 import { ProjectsSidebar } from './feature-projects/projects-sidebar';
 import { TasksSidebar } from './feature-tasks/tasks-sidebar';
-import { getEnvironmentConfig } from './hooks/use-environment-config';
+import { Shell } from './shell';
 /* eslint-disable @nx/enforce-module-boundaries */
 // nx-ignore-next-line
 import { ProjectGraphClientResponse } from 'nx/src/command-line/graph/graph';
-/* eslint-enable @nx/enforce-module-boundaries */
-import { getProjectGraphDataService } from './hooks/get-project-graph-data-service';
+import {
+  getEnvironmentConfig,
+  getProjectGraphDataService,
+} from '@nx/graph/shared';
 import { TasksSidebarErrorBoundary } from './feature-tasks/tasks-sidebar-error-boundary';
+import { ProjectDetailsPage } from '@nx/graph/project-details';
 
 const { appConfig } = getEnvironmentConfig();
 const projectGraphDataService = getProjectGraphDataService();
@@ -43,15 +45,44 @@ const workspaceDataLoader = async (selectedWorkspaceId: string) => {
 
   const targets = Array.from(targetsSet).sort((a, b) => a.localeCompare(b));
 
-  return { ...projectGraph, targets };
+  const sourceMaps = await sourceMapsLoader(selectedWorkspaceId);
+
+  return { ...projectGraph, targets, sourceMaps };
 };
 
 const taskDataLoader = async (selectedWorkspaceId: string) => {
-  const projectInfo = appConfig.workspaces.find(
+  const workspaceInfo = appConfig.workspaces.find(
     (graph) => graph.id === selectedWorkspaceId
   );
 
-  return await projectGraphDataService.getTaskGraph(projectInfo.taskGraphUrl);
+  return await projectGraphDataService.getTaskGraph(workspaceInfo.taskGraphUrl);
+};
+
+const sourceMapsLoader = async (selectedWorkspaceId: string) => {
+  const workspaceInfo = appConfig.workspaces.find(
+    (graph) => graph.id === selectedWorkspaceId
+  );
+
+  return await projectGraphDataService.getSourceMaps(
+    workspaceInfo.sourceMapsUrl
+  );
+};
+
+const projectDetailsLoader = async (
+  selectedWorkspaceId: string,
+  projectName: string
+) => {
+  const workspaceData = await workspaceDataLoader(selectedWorkspaceId);
+  const sourceMaps = await sourceMapsLoader(selectedWorkspaceId);
+
+  const project = workspaceData.projects.find(
+    (project) => project.name === projectName
+  );
+  return {
+    hash: workspaceData.hash,
+    project,
+    sourceMap: sourceMaps[project.data.root],
+  };
 };
 
 const childRoutes: RouteObject[] = [
@@ -146,6 +177,15 @@ export const devRoutes: RouteObject[] = [
         },
         children: childRoutes,
       },
+      {
+        path: ':selectedWorkspaceId/project-details/:projectName',
+        id: 'selectedProjectDetails',
+        element: <ProjectDetailsPage />,
+        loader: async ({ request, params }) => {
+          const projectName = params.projectName;
+          return projectDetailsLoader(params.selectedWorkspaceId, projectName);
+        },
+      },
     ],
   },
 ];
@@ -173,5 +213,14 @@ export const releaseRoutes: RouteObject[] = [
       },
       ...childRoutes,
     ],
+  },
+  {
+    path: 'project-details/:projectName',
+    id: 'selectedProjectDetails',
+    element: <ProjectDetailsPage />,
+    loader: async ({ request, params }) => {
+      const projectName = params.projectName;
+      return projectDetailsLoader(appConfig.defaultWorkspaceId, projectName);
+    },
   },
 ];

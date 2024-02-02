@@ -1,9 +1,11 @@
-import { Compiler, Configuration, WebpackOptionsNormalized } from 'webpack';
+import { Configuration, WebpackOptionsNormalized } from 'webpack';
 
 export function applyReactConfig(
   options: { svgr?: boolean },
   config: Partial<WebpackOptionsNormalized | Configuration> = {}
 ): void {
+  if (!process.env['NX_TASK_TARGET_PROJECT']) return;
+
   addHotReload(config);
 
   if (options.svgr !== false) {
@@ -19,12 +21,6 @@ export function applyReactConfig(
             svgo: false,
             titleProp: true,
             ref: true,
-          },
-        },
-        {
-          loader: require.resolve('file-loader'),
-          options: {
-            name: '[name].[hash].[ext]',
           },
         },
       ],

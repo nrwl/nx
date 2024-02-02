@@ -407,24 +407,18 @@ describe('convert Angular CLI workspace to an Nx workspace', () => {
     const projectConfig = readJson(`apps/${project}/project.json`);
     expect(projectConfig.targets.lint).toStrictEqual({
       executor: '@nx/eslint:lint',
-      options: {
-        lintFilePatterns: [
-          `apps/${project}/src/**/*.ts`,
-          `apps/${project}/src/**/*.html`,
-        ],
-      },
     });
 
     let output = runCLI(`lint ${project}`);
     expect(output).toContain(`> nx run ${project}:lint`);
-    expect(output).toContain('All files pass linting.');
+    expect(output).toContain('All files pass linting');
     expect(output).toContain(
       `Successfully ran target lint for project ${project}`
     );
 
     output = runCLI(`lint ${project}`);
     expect(output).toContain(`> nx run ${project}:lint  [local cache]`);
-    expect(output).toContain('All files pass linting.');
+    expect(output).toContain('All files pass linting');
     expect(output).toContain(
       `Successfully ran target lint for project ${project}`
     );

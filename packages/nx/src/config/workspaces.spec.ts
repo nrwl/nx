@@ -18,20 +18,6 @@ const libConfig = (root, name?: string) => ({
   },
 });
 
-const packageLibConfig = (root, name?: string) => ({
-  name: name ?? toProjectName(`${root}/some-file`),
-  root,
-  sourceRoot: root,
-  projectType: 'library',
-  targets: {
-    'nx-release-publish': {
-      dependsOn: ['^nx-release-publish'],
-      executor: '@nx/js:release-publish',
-      options: {},
-    },
-  },
-});
-
 describe('Workspaces', () => {
   let fs: TempFs;
   beforeEach(() => {
@@ -60,13 +46,13 @@ describe('Workspaces', () => {
         }),
       });
 
-      const { projectNodes } = await withEnvironmentVariables(
+      const { projects } = await withEnvironmentVariables(
         {
           NX_WORKSPACE_ROOT: fs.tempDir,
         },
         () => retrieveProjectConfigurations(fs.tempDir, readNxJson(fs.tempDir))
       );
-      expect(projectNodes['my-package']).toEqual({
+      expect(projects['my-package']).toEqual({
         name: 'my-package',
         root: 'packages/my-package',
         sourceRoot: 'packages/my-package',

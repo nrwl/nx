@@ -18,7 +18,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { basename, join } from 'path';
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
 import { nxVersion } from '../../utils/versions';
 
@@ -38,15 +38,10 @@ export async function projectRootPath(
   tree: Tree,
   config: ProjectConfiguration
 ): Promise<string> {
-  const { findStorybookAndBuildTargetsAndCompiler } = await import(
-    '@nx/storybook/src/utils/utilities'
-  );
   let projectDir: string;
   if (config.projectType === 'application') {
-    const { nextBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
-      config.targets
-    );
-    if (!!nextBuildTarget) {
+    const isNextJs = await isNextJsProject(tree, config);
+    if (isNextJs) {
       // Next.js apps
       projectDir = 'components';
     } else {
@@ -199,6 +194,27 @@ export async function storiesGenerator(
     await formatFiles(host);
   }
   return runTasksInSerial(...tasks);
+}
+
+async function isNextJsProject(tree: Tree, config: ProjectConfiguration) {
+  const { findStorybookAndBuildTargetsAndCompiler } = await import(
+    '@nx/storybook/src/utils/utilities'
+  );
+
+  const { nextBuildTarget } = findStorybookAndBuildTargetsAndCompiler(
+    config.targets
+  );
+  if (nextBuildTarget) {
+    return true;
+  }
+
+  for (const configFile of ['next.config.js', 'next.config.ts']) {
+    if (tree.exists(join(config.root, configFile))) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 export default storiesGenerator;

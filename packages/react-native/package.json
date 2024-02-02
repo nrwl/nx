@@ -30,22 +30,17 @@
     "fs-extra": "^11.1.0",
     "glob": "7.1.4",
     "ignore": "^5.0.4",
-    "metro-config": "~0.76.8",
-    "metro-resolver": "~0.76.8",
-    "minimatch": "3.0.5",
+    "metro-config": "~0.80.4",
+    "metro-resolver": "~0.80.4",
     "node-fetch": "^2.6.7",
     "tsconfig-paths": "^4.1.2",
     "tslib": "^2.3.0",
-    "@nx/detox": "file:../detox",
     "@nx/devkit": "file:../devkit",
     "@nx/jest": "file:../jest",
     "@nx/js": "file:../js",
     "@nx/eslint": "file:../eslint",
     "@nx/react": "file:../react",
     "@nx/workspace": "file:../workspace"
-  },
-  "peerDependencies": {
-    "react-native": ">= 0.72.0 < 0.73.0"
   },
   "executors": "./executors.json",
   "ng-update": {

@@ -15,6 +15,7 @@ import { VitePreviewServerExecutorOptions } from '../executors/preview-server/sc
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -170,17 +171,13 @@ export function addOrChangeTestTarget(
 ) {
   const project = readProjectConfiguration(tree, options.project);
 
-  const coveragePath = joinPathFragments(
+  const reportsDirectory = joinPathFragments(
+    offsetFromRoot(project.root),
     'coverage',
     project.root === '.' ? options.project : project.root
   );
   const testOptions: VitestExecutorOptions = {
-    passWithNoTests: true,
-    // vitest runs in the project root so we have to offset to the workspaceRoot
-    reportsDirectory: joinPathFragments(
-      offsetFromRoot(project.root),
-      coveragePath
-    ),
+    reportsDirectory,
   };
 
   project.targets ??= {};
@@ -204,7 +201,9 @@ export function addOrChangeBuildTarget(
   options: ViteConfigurationGeneratorSchema,
   target: string
 ) {
+  addBuildTargetDefaults(tree, '@nx/vite:build');
   const project = readProjectConfiguration(tree, options.project);
+
   const buildOptions: ViteBuildExecutorOptions = {
     outputPath: joinPathFragments(
       'dist',
@@ -215,12 +214,9 @@ export function addOrChangeBuildTarget(
   project.targets ??= {};
 
   if (project.targets[target]) {
-    buildOptions.fileReplacements =
-      project.targets[target].options?.fileReplacements;
-
     if (project.targets[target].executor === '@nxext/vite:build') {
-      buildOptions.base = project.targets[target].options?.baseHref;
-      buildOptions.sourcemap = project.targets[target].options?.sourcemaps;
+      buildOptions['base'] = project.targets[target].options?.baseHref;
+      buildOptions['sourcemap'] = project.targets[target].options?.sourcemaps;
     }
     project.targets[target].options = { ...buildOptions };
     project.targets[target].executor = '@nx/vite:build';
@@ -257,9 +253,6 @@ export function addOrChangeServeTarget(
     const serveTarget = project.targets[target];
     const serveOptions: ViteDevServerExecutorOptions = {
       buildTarget: `${options.project}:build`,
-      https: project.targets[target].options?.https,
-      hmr: project.targets[target].options?.hmr,
-      open: project.targets[target].options?.open,
     };
     if (serveTarget.executor === '@nxext/vite:dev') {
       serveOptions.proxyConfig = project.targets[target].options.proxyConfig;
@@ -316,8 +309,8 @@ export function addPreviewTarget(
     if (target.executor === '@nxext/vite:dev') {
       previewOptions.proxyConfig = target.options.proxyConfig;
     }
-    previewOptions.https = target.options?.https;
-    previewOptions.open = target.options?.open;
+    previewOptions['https'] = target.options?.https;
+    previewOptions['open'] = target.options?.open;
   }
 
   // Adds a preview target.
@@ -486,17 +479,26 @@ export interface ViteConfigFileOptions {
   rollupOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
+  coverageProvider?: 'v8' | 'istanbul' | 'custom';
 }
 
 export function createOrEditViteConfig(
   tree: Tree,
   options: ViteConfigFileOptions,
   onlyVitest: boolean,
-  projectAlreadyHasViteTargets?: TargetFlags
+  projectAlreadyHasViteTargets?: TargetFlags,
+  vitestFileName?: boolean
 ) {
-  const projectConfig = readProjectConfiguration(tree, options.project);
+  const { root: projectRoot } = readProjectConfiguration(tree, options.project);
 
-  const viteConfigPath = `${projectConfig.root}/vite.config.ts`;
+  const viteConfigPath = vitestFileName
+    ? `${projectRoot}/vitest.config.ts`
+    : `${projectRoot}/vite.config.ts`;
+
+  const buildOutDir =
+    projectRoot === '.'
+      ? `./dist/${options.project}`
+      : `${offsetFromRoot(projectRoot)}dist/${projectRoot}`;
 
   const buildOption = onlyVitest
     ? ''
@@ -505,6 +507,11 @@ export function createOrEditViteConfig(
       // Configuration for building your library.
       // See: https://vitejs.dev/guide/build.html#library-mode
       build: {
+        outDir: '${buildOutDir}',
+        reportCompressedSize: true,
+        commonjsOptions: {
+          transformMixedEsModules: true,
+        },
         lib: {
           // Could also be a dictionary or array of multiple entry points.
           entry: 'src/index.ts',
@@ -517,9 +524,17 @@ export function createOrEditViteConfig(
         rollupOptions: {
           // External packages that should not be bundled into your library.
           external: [${options.rollupOptionsExternal ?? ''}]
-        }
+        },
       },`
-    : ``;
+    : `
+    build: {
+      outDir: '${buildOutDir}',
+      reportCompressedSize: true,
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
+    },
+    `;
 
   const imports: string[] = options.imports ? options.imports : [];
 
@@ -542,18 +557,30 @@ export function createOrEditViteConfig(
     );
   }
 
+  const reportsDirectory =
+    projectRoot === '.'
+      ? `./coverage/${options.project}`
+      : `${offsetFromRoot(projectRoot)}coverage/${projectRoot}`;
+
   const testOption = options.includeVitest
     ? `test: {
     globals: true,
     cache: {
-      dir: '${offsetFromRoot(projectConfig.root)}node_modules/.vitest'
+      dir: '${offsetFromRoot(projectRoot)}node_modules/.vitest'
     },
     environment: '${options.testEnvironment ?? 'jsdom'}',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     ${
       options.inSourceTests
-        ? `includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}']`
+        ? `includeSource: ['src/**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],`
         : ''
+    }
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '${reportsDirectory}',
+      provider: ${
+        options.coverageProvider ? `'${options.coverageProvider}'` : `'v8'`
+      },
     }
   },`
     : '';
@@ -591,8 +618,8 @@ export function createOrEditViteConfig(
     // },`;
 
   const cacheDir = `cacheDir: '${offsetFromRoot(
-    projectConfig.root
-  )}node_modules/.vite/${options.project}',`;
+    projectRoot
+  )}node_modules/.vite/${projectRoot}',`;
 
   if (tree.exists(viteConfigPath)) {
     handleViteConfigFileExists(
@@ -600,11 +627,13 @@ export function createOrEditViteConfig(
       viteConfigPath,
       options,
       buildOption,
+      buildOutDir,
       imports,
       plugins,
       testOption,
+      reportsDirectory,
       cacheDir,
-      offsetFromRoot(projectConfig.root),
+      offsetFromRoot(projectRoot),
       projectAlreadyHasViteTargets
     );
     return;
@@ -617,6 +646,7 @@ export function createOrEditViteConfig(
       import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
       
       export default defineConfig({
+        root: __dirname,
         ${cacheDir}
         ${devServerOption}
         ${previewServerOption}
@@ -768,9 +798,11 @@ function handleViteConfigFileExists(
   viteConfigPath: string,
   options: ViteConfigFileOptions,
   buildOption: string,
+  buildOutDir: string,
   imports: string[],
   plugins: string[],
   testOption: string,
+  reportsDirectory: string,
   cacheDir: string,
   offsetFromRoot: string,
   projectAlreadyHasViteTargets?: TargetFlags
@@ -788,17 +820,30 @@ function handleViteConfigFileExists(
     );
   }
 
-  const buildOptionObject = {
-    lib: {
-      entry: 'src/index.ts',
-      name: options.project,
-      fileName: 'index',
-      formats: ['es', 'cjs'],
-    },
-    rollupOptions: {
-      external: options.rollupOptionsExternal ?? [],
-    },
-  };
+  const buildOptionObject = options.includeLib
+    ? {
+        lib: {
+          entry: 'src/index.ts',
+          name: options.project,
+          fileName: 'index',
+          formats: ['es', 'cjs'],
+        },
+        rollupOptions: {
+          external: options.rollupOptionsExternal ?? [],
+        },
+        outDir: buildOutDir,
+        reportCompressedSize: true,
+        commonjsOptions: {
+          transformMixedEsModules: true,
+        },
+      }
+    : {
+        outDir: buildOutDir,
+        reportCompressedSize: true,
+        commonjsOptions: {
+          transformMixedEsModules: true,
+        },
+      };
 
   const testOptionObject = {
     globals: true,
@@ -807,6 +852,11 @@ function handleViteConfigFileExists(
     },
     environment: options.testEnvironment ?? 'jsdom',
     include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: reportsDirectory,
+      provider: `${options.coverageProvider ?? 'v8'}`,
+    },
   };
 
   const changed = ensureViteConfigIsCorrect(

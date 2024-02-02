@@ -1,4 +1,5 @@
 import {
+  addDependenciesToPackageJson,
   formatFiles,
   GeneratorCallback,
   joinPathFragments,
@@ -7,14 +8,17 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { libraryGenerator as reactLibraryGenerator } from '@nx/react/src/generators/library/library';
-import { addTsConfigPath } from '@nx/js';
+import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
+import { testingLibraryReactVersion } from '@nx/react/src/utils/versions';
 
 import { nextInitGenerator } from '../init/init';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
+import { eslintConfigNextVersion, tsLibVersion } from '../../utils/versions';
 
 export async function libraryGenerator(host: Tree, rawOptions: Schema) {
   return await libraryGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...rawOptions,
   });
@@ -23,9 +27,16 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
 export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
   const options = await normalizeOptions(host, rawOptions);
   const tasks: GeneratorCallback[] = [];
+
+  const jsInitTask = await jsInitGenerator(host, {
+    js: options.js,
+    skipPackageJson: options.skipPackageJson,
+    skipFormat: true,
+  });
+  tasks.push(jsInitTask);
+
   const initTask = await nextInitGenerator(host, {
     ...options,
-    e2eTestRunner: 'none',
     skipFormat: true,
   });
   tasks.push(initTask);
@@ -36,6 +47,25 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
     skipFormat: true,
   });
   tasks.push(libTask);
+
+  if (!options.skipPackageJson) {
+    const devDependencies: Record<string, string> = {};
+    if (options.linter === 'eslint') {
+      devDependencies['eslint-config-next'] = eslintConfigNextVersion;
+    }
+
+    if (options.unitTestRunner && options.unitTestRunner !== 'none') {
+      devDependencies['@testing-library/react'] = testingLibraryReactVersion;
+    }
+
+    tasks.push(
+      addDependenciesToPackageJson(
+        host,
+        { tslib: tsLibVersion },
+        devDependencies
+      )
+    );
+  }
 
   const indexPath = joinPathFragments(
     options.projectRoot,

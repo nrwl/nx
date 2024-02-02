@@ -50,14 +50,6 @@ exports[`Cypress Project < v7 nested should update configuration 1`] = `
   },
   "lint": {
     "executor": "@nx/eslint:lint",
-    "options": {
-      "lintFilePatterns": [
-        "my-dir/my-app-e2e/**/*.{js,ts}",
-      ],
-    },
-    "outputs": [
-      "{options.outputFile}",
-    ],
   },
 }
 `;
@@ -96,14 +88,6 @@ exports[`Cypress Project < v7 project with directory in its name should update c
   },
   "lint": {
     "executor": "@nx/eslint:lint",
-    "options": {
-      "lintFilePatterns": [
-        "my-dir/my-app-e2e/**/*.{js,ts}",
-      ],
-    },
-    "outputs": [
-      "{options.outputFile}",
-    ],
   },
 }
 `;
@@ -121,14 +105,6 @@ exports[`Cypress Project < v7 should update project configuration (baseUrl) 1`] 
   },
   "lint": {
     "executor": "@nx/eslint:lint",
-    "options": {
-      "lintFilePatterns": [
-        "my-app-e2e/**/*.{js,ts}",
-      ],
-    },
-    "outputs": [
-      "{options.outputFile}",
-    ],
   },
 }
 `;
@@ -151,14 +127,6 @@ exports[`Cypress Project < v7 should update project configuration 1`] = `
   },
   "lint": {
     "executor": "@nx/eslint:lint",
-    "options": {
-      "lintFilePatterns": [
-        "my-app-e2e/**/*.{js,ts}",
-      ],
-    },
-    "outputs": [
-      "{options.outputFile}",
-    ],
   },
 }
 `;
@@ -181,14 +149,6 @@ exports[`Cypress Project < v7 should update target configurations 1`] = `
   },
   "lint": {
     "executor": "@nx/eslint:lint",
-    "options": {
-      "lintFilePatterns": [
-        "my-app-e2e/**/*.{js,ts}",
-      ],
-    },
-    "outputs": [
-      "{options.outputFile}",
-    ],
   },
 }
 `;
@@ -266,15 +226,15 @@ exports[`Cypress Project > v10 should set right path names in \`tsconfig.e2e.jso
 `;
 
 exports[`Cypress Project > v10 should update configuration when eslint is passed 1`] = `
-{
-  "executor": "@nx/eslint:lint",
-  "options": {
-    "lintFilePatterns": [
-      "my-app-e2e/**/*.{js,ts}",
-    ],
-  },
-  "outputs": [
-    "{options.outputFile}",
-  ],
+"{
+  "extends": ["plugin:cypress/recommended", "../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    }
+  ]
 }
+"
 `;

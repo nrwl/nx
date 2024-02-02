@@ -2,7 +2,7 @@
   "name": "run-commands",
   "factory": "./src/generators/run-commands/run-commands#runCommandsGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "SchematicsRunCommands",
     "title": "Create a custom target to run any command",
     "description": "Create a custom target to run any command.",
