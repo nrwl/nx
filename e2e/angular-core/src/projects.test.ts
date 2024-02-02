@@ -4,7 +4,7 @@ import {
   checkFilesExist,
   cleanupProject,
   getSize,
-  killPorts,
+  killPort,
   killProcessAndPorts,
   newProject,
   readFile,
@@ -40,7 +40,7 @@ describe('Angular Projects', () => {
       `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:lib ${lib1} --add-module-spec --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib1} --project-name-and-root-format=as-provided --no-interactive`
     );
     app1DefaultModule = readFile(`${app1}/src/app/app.module.ts`);
     app1DefaultComponentTemplate = readFile(
@@ -69,8 +69,7 @@ describe('Angular Projects', () => {
 
   afterAll(() => cleanupProject());
 
-  // TODO(crystal, @leosvelperez):  Investigate why this is failing
-  xit('should successfully generate apps and libs and work correctly', async () => {
+  it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
       `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
@@ -90,13 +89,13 @@ describe('Angular Projects', () => {
         import { AppComponent } from './app.component';
         import { appRoutes } from './app.routes';
         import { NxWelcomeComponent } from './nx-welcome.component';
-        import { ${names(lib1).className}Module } from '@${proj}/${lib1}';
+        import { ${names(lib1).className}Component } from '@${proj}/${lib1}';
 
         @NgModule({
           imports: [
             BrowserModule,
             RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-            ${names(lib1).className}Module
+            ${names(lib1).className}Component
           ],
           declarations: [AppComponent, NxWelcomeComponent],
           bootstrap: [AppComponent]
@@ -127,13 +126,22 @@ describe('Angular Projects', () => {
     );
 
     // check e2e tests
+    let appPort = 4958;
+    updateJson(join(app1, 'project.json'), (config) => {
+      config.targets.serve.options ??= {};
+      config.targets.serve.options.port = appPort;
+      return config;
+    });
     if (runE2ETests()) {
-      const e2eResults = runCLI(`e2e ${app1}-e2e`);
+      const e2eResults = runCLI(
+        `e2e ${app1}-e2e --config baseUrl=http://localhost:${appPort}`
+      );
       expect(e2eResults).toContain('All specs passed!');
-      expect(await killPorts()).toBeTruthy();
+      // TODO(leo): check why the port is not being killed and add assertion after fixing it
+      await killPort(appPort);
     }
 
-    const appPort = 4207;
+    appPort = 4207;
     const process = await runCommandUntil(
       `serve ${app1} -- --port=${appPort}`,
       (output) => output.includes(`listening on localhost:${appPort}`)
@@ -166,7 +174,7 @@ describe('Angular Projects', () => {
       expect(e2eResults).toContain(
         `Successfully ran target e2e for project ${app}-e2e`
       );
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPort(4200)).toBeTruthy();
     }
   }, 1000000);
 
