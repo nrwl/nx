@@ -26,6 +26,7 @@ import {
 
 import { requireNx } from '@nx/devkit/nx';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { createFileMapUsingProjectGraph } from 'nx/src/project-graph/file-map-utils';
 import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
@@ -872,6 +873,7 @@ function projectsConfigMatchesProject(
 
 async function getDefaultProjectsConfig(): Promise<string[]> {
   const projectGraph = await createProjectGraphAsync();
+  const fileMap = await createFileMapUsingProjectGraph(projectGraph);
   /*
    * This is the default logic nx release uses to determine which projects to release
    * if no projects configuration is provided. In order to explicitly add the new project
@@ -879,7 +881,11 @@ async function getDefaultProjectsConfig(): Promise<string[]> {
    * Otherwise, projects that were previously included in the release will be excluded.
    */
   return findMatchingProjects(['*'], projectGraph.nodes).filter(
-    (project) => projectGraph.nodes[project].type === 'lib'
+    (project) =>
+      projectGraph.nodes[project].type === 'lib' &&
+      fileMap.fileMap.projectFileMap[project]?.some(
+        (f) => f.file === 'package.json'
+      )
   );
 }
 

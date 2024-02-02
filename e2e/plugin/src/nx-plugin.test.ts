@@ -27,6 +27,18 @@ describe('Nx Plugin', () => {
 
   beforeAll(() => {
     workspaceName = newProject();
+    updateJson<NxJsonConfiguration>('nx.json', (json) => {
+      json.release = {
+        projects: ['!*-e2e'],
+        version: {
+          generatorOptions: {
+            // Workaround for NXC-296
+            skipLockFileUpdate: true,
+          },
+        },
+      };
+      return json;
+    });
   });
 
   afterAll(() => cleanupProject());
@@ -51,17 +63,6 @@ describe('Nx Plugin', () => {
       tags: [],
     });
 
-    // Workaround for NXC-296
-    updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      json.release = {
-        version: {
-          generatorOptions: {
-            skipLockFileUpdate: true,
-          },
-        },
-      };
-      return json;
-    });
     runCLI(`e2e ${plugin}-e2e`);
   }, 90000);
 
@@ -452,17 +453,6 @@ describe('Nx Plugin', () => {
       `dist/libs/${createAppName}/bin/index.js`
     );
 
-    // Workaround for NXC-296
-    updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      json.release = {
-        version: {
-          generatorOptions: {
-            skipLockFileUpdate: true,
-          },
-        },
-      };
-      return json;
-    });
     runCLI(`e2e ${plugin}-e2e`);
   });
 
