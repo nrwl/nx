@@ -554,9 +554,10 @@
         "x-priority": "important",
         "additionalProperties": false
       },
-      "indexFileTransformer": {
+      "indexHtmlTransformer": {
         "description": "Path to transformer function to transform the index.html",
-        "type": "string"
+        "type": "string",
+        "alias": "indexFileTransformer"
       },
       "buildLibsFromSource": {
         "type": "boolean",
