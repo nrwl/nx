@@ -195,7 +195,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator with npm should throw error is nx cloud is not set 1`] = `"nx-cloud runner not found in nx.json"`;
+exports[`CI Workflow generator with npm should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
 
 exports[`CI Workflow generator with pnpm should generate azure CI config 1`] = `
 "name: CI
@@ -407,7 +407,7 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator with pnpm should throw error is nx cloud is not set 1`] = `"nx-cloud runner not found in nx.json"`;
+exports[`CI Workflow generator with pnpm should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
 
 exports[`CI Workflow generator with yarn should generate azure CI config 1`] = `
 "name: CI
@@ -604,4 +604,4 @@ CI:
 "
 `;
 
-exports[`CI Workflow generator with yarn should throw error is nx cloud is not set 1`] = `"nx-cloud runner not found in nx.json"`;
+exports[`CI Workflow generator with yarn should throw error is nx cloud is not set 1`] = `"This workspace is not connected to Nx Cloud."`;
