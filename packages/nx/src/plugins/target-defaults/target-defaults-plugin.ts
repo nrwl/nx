@@ -85,9 +85,13 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
         targetNames.add(defaultSpecifier);
 
         for (const targetName of targetNames) {
-          modifiedTargets[targetName] = structuredClone(
-            targetDefaults[defaultSpecifier]
-          );
+          // Prevents `build` from overwriting `@nx/js:tsc` if both are present
+          // and build is specified later in the ordering.
+          if (!modifiedTargets[targetName] || targetName !== defaultSpecifier) {
+            modifiedTargets[targetName] = JSON.parse(
+              JSON.stringify(targetDefaults[defaultSpecifier])
+            );
+          }
           // TODO: Remove this after we figure out a way to define new targets
           // in target defaults
           if (!projectDefinedTargets.has(targetName)) {
