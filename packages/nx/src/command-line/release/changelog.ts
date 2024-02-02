@@ -340,13 +340,16 @@ export async function releaseChangelog(
           [project]
         );
 
-        if (
-          projectChangelogs &&
-          shouldCreateGitHubRelease(releaseGroup.changelog, args.createRelease)
-        ) {
-          for (const [projectName, projectChangelog] of Object.entries(
-            projectChangelogs
-          )) {
+        for (const [projectName, projectChangelog] of Object.entries(
+          projectChangelogs
+        )) {
+          if (
+            projectChangelogs &&
+            shouldCreateGitHubRelease(
+              releaseGroup.changelog,
+              args.createRelease
+            )
+          ) {
             postGitTasks.push(async (latestCommit) => {
               // Before we can create/update the release we need to ensure the commit exists on the remote
               await gitPush({
@@ -362,9 +365,8 @@ export async function releaseChangelog(
                 { dryRun: args.dryRun }
               );
             });
-
-            allProjectChangelogs[projectName] = projectChangelog;
           }
+          allProjectChangelogs[projectName] = projectChangelog;
         }
       }
     } else {
@@ -393,13 +395,13 @@ export async function releaseChangelog(
         projectNodes
       );
 
-      if (
-        projectChangelogs &&
-        shouldCreateGitHubRelease(releaseGroup.changelog, args.createRelease)
-      ) {
-        for (const [projectName, projectChangelog] of Object.entries(
-          projectChangelogs
-        )) {
+      for (const [projectName, projectChangelog] of Object.entries(
+        projectChangelogs
+      )) {
+        if (
+          projectChangelogs &&
+          shouldCreateGitHubRelease(releaseGroup.changelog, args.createRelease)
+        ) {
           postGitTasks.push(async (latestCommit) => {
             // Before we can create/update the release we need to ensure the commit exists on the remote
             await gitPush({
@@ -415,9 +417,8 @@ export async function releaseChangelog(
               { dryRun: args.dryRun }
             );
           });
-
-          allProjectChangelogs[projectName] = projectChangelog;
         }
+        allProjectChangelogs[projectName] = projectChangelog;
       }
     }
   }
