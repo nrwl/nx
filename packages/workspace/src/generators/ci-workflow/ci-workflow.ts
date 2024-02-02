@@ -20,7 +20,6 @@ export interface Schema {
 
 export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
   const ci = schema.ci;
-  const options = normalizeOptions(schema, tree);
 
   const nxJson: NxJsonConfiguration = readJson(tree, 'nx.json');
   const nxCloudUsed =
@@ -36,6 +35,7 @@ export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
     writeJson(tree, 'nx.json', appendOriginPrefix(nxJson));
   }
 
+  const options = normalizeOptions(schema, tree);
   generateFiles(tree, join(__dirname, 'files', ci), '', options);
   await formatFiles(tree);
 }
