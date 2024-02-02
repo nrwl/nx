@@ -137,16 +137,6 @@ xdescribe('Node Applications + webpack', () => {
     await runE2eTests(nestApp);
   }, 900_000);
 
-  it('should generate a Dockerfile', async () => {
-    const expressApp = uniq('expressapp');
-
-    runCLI(
-      `generate @nx/node:app  ${expressApp} --framework=express --docker --no-interactive`
-    );
-
-    checkFilesExist(`apps/${expressApp}/Dockerfile`);
-  }, 300_000);
-
   it('should support waitUntilTargets for serve target', async () => {
     const nodeApp1 = uniq('nodeapp1');
     const nodeApp2 = uniq('nodeapp2');
