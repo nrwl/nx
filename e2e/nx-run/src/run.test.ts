@@ -765,8 +765,7 @@ describe('Nx Running Tests', () => {
         expect(output).toContain('Nx read the output from the cache');
       });
 
-      // TODO(crystal, @Cammisuli): Investigate why this is failing
-      xit('should read outputs', () => {
+      it('should read outputs', () => {
         const nodeCommands = [
           "const fs = require('fs')",
           "fs.mkdirSync('../../tmp/exec-outputs-test', {recursive: true})",
@@ -783,6 +782,7 @@ describe('Nx Running Tests', () => {
             nx: {
               targets: {
                 build: {
+                  cache: true,
                   outputs: ['{workspaceRoot}/tmp/exec-outputs-test'],
                 },
               },
