@@ -8,10 +8,9 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, extname, join, relative } from 'path';
-import { registerTsProject } from '@nx/js/src/internal';
+import { dirname, join, relative } from 'path';
 
-import { getLockFileName, getRootTsConfigPath } from '@nx/js';
+import { getLockFileName } from '@nx/js';
 
 import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
@@ -20,7 +19,7 @@ import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { NX_PLUGIN_OPTIONS } from '../utils/symbols';
-import { getCypressConfig } from '../utils/load-config-file';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
@@ -152,7 +151,7 @@ async function buildCypressTargets(
   options: CypressPluginOptions,
   context: CreateNodesContext
 ) {
-  const cypressConfig = await getCypressConfig(
+  const cypressConfig = await loadConfigFile(
     join(context.workspaceRoot, configFilePath)
   );
 
