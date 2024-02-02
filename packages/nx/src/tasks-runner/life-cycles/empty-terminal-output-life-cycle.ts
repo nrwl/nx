@@ -15,8 +15,7 @@ export class EmptyTerminalOutputLifeCycle implements LifeCycle {
       cacheStatus === 'skipped'
     ) {
       const args = getPrintableCommandArgsForTask(task);
-      output.logCommand(args.join(' '), cacheStatus);
-      process.stdout.write(terminalOutput);
+      output.logCommandOutput(args.join(' '), cacheStatus, terminalOutput);
     }
   }
 }
