@@ -445,7 +445,9 @@ describe('Nx Running Tests', () => {
               command: 'echo PREP',
             },
           };
-          config.targets.build.dependsOn = ['prep', '^build'];
+          config.targets.build = {
+            dependsOn: ['prep', '^build'],
+          };
           return config;
         });
 
@@ -667,6 +669,13 @@ describe('Nx Running Tests', () => {
             build: 'nx exec -- echo HELLO',
             'build:option': 'nx exec -- echo HELLO WITH OPTION',
           },
+          nx: {
+            targets: {
+              build: {
+                cache: true,
+              },
+            },
+          },
         })
       );
 
@@ -746,7 +755,7 @@ describe('Nx Running Tests', () => {
     });
 
     describe('caching', () => {
-      it('shoud cache subsequent calls', () => {
+      it('should cache subsequent calls', () => {
         runCommand('npm run build', {
           cwd: pkgRoot,
         });

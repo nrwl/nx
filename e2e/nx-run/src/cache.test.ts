@@ -149,6 +149,7 @@ describe('cache', () => {
     runCLI(`generate @nx/js:library ${mylib}`);
     updateJson(join('libs', mylib, 'project.json'), (c) => {
       c.targets.build = {
+        cache: true,
         executor: 'nx:run-commands',
         outputs: ['{workspaceRoot}/dist/!(.next)/**/!(z|x).(txt|md)'],
         options: {
