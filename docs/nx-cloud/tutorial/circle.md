@@ -393,7 +393,7 @@ The Nx Agents feature
 Let's enable Nx Agents
 
 ```
-pnpm nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+pnpm exec nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 ```
 
 We recommend you add this line right after you check out the repo, before installing node modules.
@@ -423,7 +423,7 @@ jobs:
       - image: cimg/node:lts-browsers
     steps:
       - checkout
-      - run: pnpm nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
+      - run: pnpm exec nx-cloud start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
       - restore_cache:
           key: npm-dependencies-{{ checksum "pnpm-lock.yaml" }}
       - run:
