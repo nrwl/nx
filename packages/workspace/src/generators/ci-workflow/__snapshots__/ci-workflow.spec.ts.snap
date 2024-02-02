@@ -25,13 +25,13 @@ jobs:
       vmImage: 'ubuntu-latest'
     steps:
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e" targets have been requested
-      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e"
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+      # - script: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - script: npm ci
 
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint test build e2e
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build e2e-ci
 "
 `;
 
@@ -51,13 +51,13 @@ pipelines:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
 
                 # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
-                # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e" targets have been requested
-                # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e"
+                # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+                # - npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 
                 - npm ci
 
                 - npx nx-cloud record -- nx format:check
-                - npx nx affected -t=lint test build e2e
+                - npx nx affected -t lint test build e2e-ci
 "
 `;
 
@@ -75,15 +75,15 @@ jobs:
       - checkout
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e"
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 
       - run: npm ci
       - nx/set-shas:
           main-branch-name: 'main'
 
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build e2e
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build e2e-ci
 
 workflows:
   version: 2
@@ -116,8 +116,8 @@ jobs:
           fetch-depth: 0
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e"
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -128,7 +128,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t=lint test build e2e
+      - run: npx nx affected -t lint test build e2e-ci
 "
 `;
 
@@ -154,8 +154,8 @@ jobs:
           fetch-depth: 0
 
       # Connect your workspace on my.nx.app and uncomment this to enable task distribution.
-      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e" targets have been requested
-      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e"
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+      # - run: npx nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
       - uses: actions/setup-node@v3
@@ -166,7 +166,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t=lint test build e2e
+      - run: npx nx affected -t lint test build e2e-ci
 "
 `;
 
@@ -201,7 +201,7 @@ jobs:
       - script: npm ci
 
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint test build
+      - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -227,7 +227,7 @@ pipelines:
                 - npm ci
 
                 - npx nx-cloud record -- nx format:check
-                - npx nx affected -t=lint test build
+                - npx nx affected -t lint test build
 "
 `;
 
@@ -253,7 +253,7 @@ jobs:
           main-branch-name: 'main'
 
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
+      - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
 workflows:
   version: 2
@@ -298,7 +298,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t=lint test build
+      - run: npx nx affected -t lint test build
 "
 `;
 
@@ -336,7 +336,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       - run: npx nx-cloud record -- nx format:check
-      - run: npx nx affected -t=lint test build
+      - run: npx nx affected -t lint test build
 "
 `;
 
@@ -361,7 +361,7 @@ CI:
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
     - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
+    - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 "
 `;
 
@@ -400,7 +400,7 @@ jobs:
       - script: pnpm install --frozen-lockfile
 
       - script: pnpm exec nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint test build
+      - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -428,7 +428,7 @@ pipelines:
                 - pnpm install --frozen-lockfile
 
                 - pnpm exec nx-cloud record -- nx format:check
-                - pnpm exec nx affected -t=lint test build
+                - pnpm exec nx affected -t lint test build
 "
 `;
 
@@ -457,7 +457,7 @@ jobs:
           main-branch-name: 'main'
 
       - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
+      - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
 workflows:
   version: 2
@@ -505,7 +505,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -t=lint test build
+      - run: pnpm exec nx affected -t lint test build
 "
 `;
 
@@ -546,7 +546,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       - run: pnpm exec nx-cloud record -- nx format:check
-      - run: pnpm exec nx affected -t=lint test build
+      - run: pnpm exec nx affected -t lint test build
 "
 `;
 
@@ -573,7 +573,7 @@ CI:
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
     - pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
+    - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 "
 `;
 
@@ -610,7 +610,7 @@ jobs:
       - script: yarn install --frozen-lockfile
 
       - script: yarn nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint test build
+      - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build
 "
 `;
 
@@ -636,7 +636,7 @@ pipelines:
                 - yarn install --frozen-lockfile
 
                 - yarn nx-cloud record -- nx format:check
-                - yarn nx affected -t=lint test build
+                - yarn nx affected -t lint test build
 "
 `;
 
@@ -662,7 +662,7 @@ jobs:
           main-branch-name: 'main'
 
       - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
+      - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 
 workflows:
   version: 2
@@ -707,7 +707,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       - run: yarn nx-cloud record -- nx format:check
-      - run: yarn nx affected -t=lint test build
+      - run: yarn nx affected -t lint test build
 "
 `;
 
@@ -745,7 +745,7 @@ jobs:
       - uses: nrwl/nx-set-shas@v4
 
       - run: yarn nx-cloud record -- nx format:check
-      - run: yarn nx affected -t=lint test build
+      - run: yarn nx affected -t lint test build
 "
 `;
 
@@ -770,7 +770,7 @@ CI:
     - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
 
     - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
-    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build
+    - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t lint test build
 "
 `;
 
