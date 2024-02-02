@@ -32,6 +32,7 @@ describe('Cypress Component Testing Configuration', () => {
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
+  // TODO(@leosvelperez): Turn this to adding the plugin
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });

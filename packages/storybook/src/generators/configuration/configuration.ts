@@ -50,7 +50,14 @@ import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
 
-export async function configurationGenerator(
+export function configurationGenerator(
+  tree: Tree,
+  schema: StorybookConfigureSchema
+) {
+  return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function configurationGeneratorInternal(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
@@ -100,7 +107,10 @@ export async function configurationGenerator(
     skipFormat: true,
   });
   tasks.push(jsInitTask);
-  const initTask = await initGenerator(tree, { skipFormat: true });
+  const initTask = await initGenerator(tree, {
+    skipFormat: true,
+    addPlugin: schema.addPlugin,
+  });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, { uiFramework: schema.uiFramework }));
 
@@ -256,6 +266,7 @@ function normalizeSchema(
     linter: Linter.EsLint,
     js: false,
     tsConfiguration: true,
+    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
   };
   return {
     ...defaults,

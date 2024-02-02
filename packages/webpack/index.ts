@@ -8,7 +8,7 @@ export const webpackProjectGenerator = configurationGenerator;
 
 export * from './src/utils/create-copy-plugin';
 export * from './src/utils/config';
-export * from './src/generators/init/init';
+export { webpackInitGenerator } from './src/generators/init/init';
 export type { WebDevServerOptions } from './src/executors/dev-server/schema';
 export * from './src/executors/dev-server/dev-server.impl';
 export * from './src/executors/webpack/lib/normalize-options';

@@ -20,4 +20,5 @@ export interface Schema {
   appDir?: boolean;
   src?: boolean;
   rootProject?: boolean;
+  addPlugin?: boolean;
 }

@@ -226,7 +226,15 @@ exports[`Cypress Project > v10 should set right path names in \`tsconfig.e2e.jso
 `;
 
 exports[`Cypress Project > v10 should update configuration when eslint is passed 1`] = `
-{
-  "executor": "@nx/eslint:lint",
+"{
+  "extends": ["plugin:cypress/recommended", "../.eslintrc.json"],
+  "ignorePatterns": ["!**/*"],
+  "overrides": [
+    {
+      "files": ["*.ts", "*.tsx", "*.js", "*.jsx"],
+      "rules": {}
+    }
+  ]
 }
+"
 `;

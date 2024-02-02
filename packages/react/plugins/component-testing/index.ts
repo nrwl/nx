@@ -62,15 +62,21 @@ export function nxComponentTestingPreset(
   screenshotsFolder: string;
   chromeWebSecurity: boolean;
 } {
+  const basePresetSettings = nxBaseCypressPreset(pathToConfig, {
+    testingType: 'component',
+  });
+
+  if (global.NX_GRAPH_CREATION || global.NX_CYPRESS_INIT_GENERATOR_RUNNING) {
+    // this is only used by plugins, so we don't need the component testing
+    // options, cast to any to avoid type errors
+    return basePresetSettings as any;
+  }
+
   const normalizedProjectRootPath = ['.ts', '.js'].some((ext) =>
     pathToConfig.endsWith(ext)
   )
     ? pathToConfig
     : dirname(pathToConfig);
-
-  const basePresetSettings = nxBaseCypressPreset(pathToConfig, {
-    testingType: 'component',
-  });
 
   if (options?.bundler === 'vite') {
     return {
@@ -127,16 +133,19 @@ export function nxComponentTestingPreset(
       ctConfigurationName
     );
 
-    const ctExecutorOptions = readTargetOptions<CypressExecutorOptions>(
-      {
-        project: ctProjectName,
-        target: ctTargetName,
-        configuration: ctConfigurationName,
-      },
-      ctExecutorContext
-    );
+    let buildTarget: string = options?.buildTarget;
+    if (!buildTarget) {
+      const ctExecutorOptions = readTargetOptions<CypressExecutorOptions>(
+        {
+          project: ctProjectName,
+          target: ctTargetName,
+          configuration: ctConfigurationName,
+        },
+        ctExecutorContext
+      );
 
-    const buildTarget = ctExecutorOptions.devServerTarget;
+      buildTarget = ctExecutorOptions.devServerTarget;
+    }
 
     if (!buildTarget) {
       throw new Error(
@@ -150,6 +159,10 @@ export function nxComponentTestingPreset(
       ctProjectName
     );
   } catch (e) {
+    if (e instanceof InvalidExecutorError) {
+      throw e;
+    }
+
     logger.warn(
       stripIndents`Unable to build a webpack config with the project graph. 
       Falling back to default webpack config.`
@@ -221,6 +234,17 @@ function buildTargetWebpack(
     Has component config? ${!!ctProjectConfig}
     `);
   }
+
+  if (
+    buildableProjectConfig.targets[parsed.target].executor !==
+    '@nx/webpack:webpack'
+  ) {
+    throw new InvalidExecutorError(
+      `The '${parsed.target}' target of the '${parsed.project}' project is not using the '@nx/webpack:webpack' executor. ` +
+        `Please make sure to use '@nx/webpack:webpack' executor in that target to use Cypress Component Testing.`
+    );
+  }
+
   const context = createExecutorContext(
     graph,
     buildableProjectConfig.targets,
@@ -311,5 +335,12 @@ function findTsConfig(projectRoot: string) {
     if (existsSync(join(projectRoot, config))) {
       return config;
     }
+  }
+}
+
+class InvalidExecutorError extends Error {
+  constructor(public message: string) {
+    super(message);
+    this.name = 'InvalidExecutorError';
   }
 }

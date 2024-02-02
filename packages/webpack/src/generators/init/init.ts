@@ -11,9 +11,14 @@ import { createNodes, WebpackPluginOptions } from '../../plugins/plugin';
 import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
-export async function webpackInitGenerator(tree: Tree, schema: Schema) {
-  const shouldAddPlugin = process.env.NX_PCV3 === 'true';
-  if (shouldAddPlugin) {
+export function webpackInitGenerator(tree: Tree, schema: Schema) {
+  return webpackInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  if (schema.addPlugin) {
     addPlugin(tree);
   }
 
@@ -24,7 +29,7 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
       '@nx/web': nxVersion,
     };
 
-    if (shouldAddPlugin) {
+    if (schema.addPlugin) {
       devDependencies['webpack-cli'] = webpackCliVersion;
     }
 

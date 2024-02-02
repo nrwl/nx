@@ -54,6 +54,7 @@ describe('convertToCypressTen', () => {
         skipFormat: true,
         project: 'app',
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: false,
       });
     });
 

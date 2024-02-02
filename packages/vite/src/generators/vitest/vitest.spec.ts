@@ -18,50 +18,11 @@ describe('vitest generator', () => {
     project: 'my-test-react-app',
     uiFramework: 'react',
     coverageProvider: 'v8',
+    addPlugin: true,
   };
 
   beforeEach(() => {
     appTree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-  });
-
-  it('Should add the test target to existing test target', async () => {
-    mockReactAppGenerator(appTree);
-    await generator(appTree, options);
-    const config = readProjectConfiguration(appTree, 'my-test-react-app');
-    expect(config.targets['test']).toMatchInlineSnapshot(`
-      {
-        "executor": "@nx/vite:test",
-        "options": {
-          "passWithNoTests": true,
-        },
-        "outputs": [
-          "{workspaceRoot}/coverage/{projectRoot}",
-        ],
-      }
-    `);
-  });
-
-  it('should add the test target if its missing', async () => {
-    mockReactAppGenerator(appTree);
-    const projectConfig = readProjectConfiguration(
-      appTree,
-      'my-test-react-app'
-    );
-    delete projectConfig.targets.test;
-    updateProjectConfiguration(appTree, 'my-test-react-app', projectConfig);
-    await generator(appTree, options);
-    const config = readProjectConfiguration(appTree, 'my-test-react-app');
-    expect(config.targets['test']).toMatchInlineSnapshot(`
-      {
-        "executor": "@nx/vite:test",
-        "options": {
-          "reportsDirectory": "../../coverage/apps/my-test-react-app",
-        },
-        "outputs": [
-          "{options.reportsDirectory}",
-        ],
-      }
-    `);
   });
 
   describe('tsconfig', () => {

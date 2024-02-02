@@ -36,8 +36,16 @@ function updateDependencies(host: Tree, schema: InitSchema) {
   return runTasksInSerial(...tasks);
 }
 
-export async function nextInitGenerator(host: Tree, schema: InitSchema) {
-  if (process.env.NX_PCV3 === 'true') {
+export function nextInitGenerator(tree: Tree, schema: InitSchema) {
+  return nextInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function nextInitGeneratorInternal(
+  host: Tree,
+  schema: InitSchema
+) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  if (schema.addPlugin) {
     addPlugin(host);
   }
 

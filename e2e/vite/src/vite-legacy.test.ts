@@ -23,26 +23,34 @@ import {
 } from '@nx/e2e/utils';
 import { join } from 'path';
 
-const myApp = uniq('my-app');
-
 describe('Vite Plugin', () => {
   let proj: string;
+  let originalEnv: string;
+  beforeAll(() => {
+    originalEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
+    proj = newProject({
+      packages: ['@nx/react', '@nx/web'],
+    });
+  });
+
+  afterAll(() => {
+    process.env.NX_ADD_PLUGINS = originalEnv;
+    cleanupProject();
+  });
 
   describe('Vite on React apps', () => {
     describe('set up new React app with --bundler=vite option', () => {
-      beforeEach(async () => {
-        proj = newProject({
-          packages: ['@nx/react'],
-        });
-        runCLI(`generate @nx/react:app ${myApp} --bundler=vite`);
-        createFile(`apps/${myApp}/public/hello.md`, `# Hello World`);
-      });
-      afterEach(() => cleanupProject());
       it('should build application', async () => {
+        const myApp = uniq('my-app');
+        runCLI(
+          `generate @nx/react:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`
+        );
+        createFile(`${myApp}/public/hello.md`, `# Hello World`);
         runCLI(`build ${myApp}`);
-        expect(readFile(`dist/apps/${myApp}/favicon.ico`)).toBeDefined();
-        expect(readFile(`dist/apps/${myApp}/hello.md`)).toBeDefined();
-        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
+        expect(readFile(`dist/${myApp}/favicon.ico`)).toBeDefined();
+        expect(readFile(`dist/${myApp}/hello.md`)).toBeDefined();
+        expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
         rmDist();
       }, 200_000);
     });
@@ -50,35 +58,31 @@ describe('Vite Plugin', () => {
 
   describe('Vite on Web apps', () => {
     describe('set up new @nx/web app with --bundler=vite option', () => {
+      let myApp;
       beforeEach(() => {
-        proj = newProject({
-          packages: ['@nx/web'],
-        });
-        runCLI(`generate @nx/web:app ${myApp} --bundler=vite`);
+        myApp = uniq('my-app');
+        runCLI(
+          `generate @nx/web:app ${myApp} --bundler=vite --directory=${myApp} --projectNameAndRootFormat=as-provided`
+        );
       });
-      afterEach(() => cleanupProject());
       it('should build application', async () => {
         runCLI(`build ${myApp}`);
-        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+        expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
+        const fileArray = listFiles(`dist/${myApp}/assets`);
         const mainBundle = fileArray.find((file) => file.endsWith('.js'));
-        expect(
-          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
-        ).toBeDefined();
-        expect(fileExists(`dist/apps/${myApp}/package.json`)).toBeFalsy();
+        expect(readFile(`dist/${myApp}/assets/${mainBundle}`)).toBeDefined();
+        expect(fileExists(`dist/${myApp}/package.json`)).toBeFalsy();
         rmDist();
       }, 200_000);
 
       it('should build application with new package json generation', async () => {
         runCLI(`build ${myApp} --generatePackageJson`);
-        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+        expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
+        const fileArray = listFiles(`dist/${myApp}/assets`);
         const mainBundle = fileArray.find((file) => file.endsWith('.js'));
-        expect(
-          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
-        ).toBeDefined();
+        expect(readFile(`dist/${myApp}/assets/${mainBundle}`)).toBeDefined();
 
-        const packageJson = readJson(`dist/apps/${myApp}/package.json`);
+        const packageJson = readJson(`dist/${myApp}/package.json`);
         expect(packageJson).toEqual({
           name: myApp,
           version: '0.0.1',
@@ -89,7 +93,7 @@ describe('Vite Plugin', () => {
 
       it('should build application with existing package json generation', async () => {
         createFile(
-          `apps/${myApp}/package.json`,
+          `${myApp}/package.json`,
           JSON.stringify({
             name: 'my-existing-app',
             version: '1.0.1',
@@ -99,14 +103,12 @@ describe('Vite Plugin', () => {
           })
         );
         runCLI(`build ${myApp} --generatePackageJson`);
-        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+        expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
+        const fileArray = listFiles(`dist/${myApp}/assets`);
         const mainBundle = fileArray.find((file) => file.endsWith('.js'));
-        expect(
-          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
-        ).toBeDefined();
+        expect(readFile(`dist/${myApp}/assets/${mainBundle}`)).toBeDefined();
 
-        const packageJson = readJson(`dist/apps/${myApp}/package.json`);
+        const packageJson = readJson(`dist/${myApp}/package.json`);
         expect(packageJson).toEqual({
           name: 'my-existing-app',
           version: '1.0.1',
@@ -120,7 +122,7 @@ describe('Vite Plugin', () => {
 
       it('should build application without copying exisiting package json when generatePackageJson=false', async () => {
         createFile(
-          `apps/${myApp}/package.json`,
+          `${myApp}/package.json`,
           JSON.stringify({
             name: 'my-existing-app',
             version: '1.0.1',
@@ -130,14 +132,12 @@ describe('Vite Plugin', () => {
           })
         );
         runCLI(`build ${myApp} --generatePackageJson=false`);
-        expect(readFile(`dist/apps/${myApp}/index.html`)).toBeDefined();
-        const fileArray = listFiles(`dist/apps/${myApp}/assets`);
+        expect(readFile(`dist/${myApp}/index.html`)).toBeDefined();
+        const fileArray = listFiles(`dist/${myApp}/assets`);
         const mainBundle = fileArray.find((file) => file.endsWith('.js'));
-        expect(
-          readFile(`dist/apps/${myApp}/assets/${mainBundle}`)
-        ).toBeDefined();
+        expect(readFile(`dist/${myApp}/assets/${mainBundle}`)).toBeDefined();
 
-        expect(fileExists(`dist/apps/${myApp}/package.json`)).toBe(false);
+        expect(fileExists(`dist/${myApp}/package.json`)).toBe(false);
         rmDist();
       }, 200_000);
     });
@@ -153,27 +153,29 @@ describe('Vite Plugin', () => {
         name: uniq('vite-incr-build'),
         packages: ['@nx/react'],
       });
-      runCLI(`generate @nx/react:app ${app} --bundler=vite --no-interactive`);
+      runCLI(
+        `generate @nx/react:app ${app} --bundler=vite --no-interactive  --directory=${app} --projectNameAndRootFormat=as-provided`
+      );
 
       // only this project will be directly used from dist
       runCLI(
-        `generate @nx/react:lib ${lib}-buildable --unitTestRunner=none --bundler=vite --importPath="@acme/buildable" --no-interactive`
+        `generate @nx/react:lib ${lib}-buildable --unitTestRunner=none --bundler=vite --importPath="@acme/buildable" --no-interactive --directory=${lib}-buildable --projectNameAndRootFormat=as-provided`
       );
 
       runCLI(
-        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive`
+        `generate @nx/react:lib ${lib} --unitTestRunner=none --bundler=none --importPath="@acme/non-buildable" --no-interactive --directory=${lib} --projectNameAndRootFormat=as-provided`
       );
 
       // because the default js lib builds as cjs it cannot be loaded from dist
       // so the paths plugin should always resolve to the libs source
       runCLI(
-        `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive`
+        `generate @nx/js:lib ${lib}-js --bundler=tsc --importPath="@acme/js-lib" --no-interactive  --directory=${lib}-js --projectNameAndRootFormat=as-provided`
       );
       const buildableLibCmp = names(`${lib}-buildable`).className;
       const nonBuildableLibCmp = names(lib).className;
       const buildableJsLibFn = names(`${lib}-js`).propertyName;
 
-      updateFile(`apps/${app}/src/app/app.tsx`, () => {
+      updateFile(`${app}/src/app/app.tsx`, () => {
         return `
 import styles from './app.module.css';
 import NxWelcome from './nx-welcome';
@@ -215,7 +217,7 @@ export default App;
     });
 
     it('should build app from libs without package.json in lib', () => {
-      removeFile(`libs/${lib}-buildable/package.json`);
+      removeFile(`${lib}-buildable/package.json`);
 
       const buildFromSourceResults = runCLI(
         `build ${app} --buildLibsFromSource=true`

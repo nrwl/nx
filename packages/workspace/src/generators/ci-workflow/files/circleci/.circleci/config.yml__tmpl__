@@ -9,6 +9,10 @@ jobs:
       - image: cimg/node:lts-browsers
     steps:
       - checkout
+
+      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e<% } else { %>build<% } %>" targets have been requested
+      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e<% } else { %>build<% } %>"
+
       <% if(packageManager == 'pnpm'){ %>
       - run:
           name: Install PNPM
@@ -16,9 +20,6 @@ jobs:
       <% } %>- run: <%= packageManagerInstall %>
       - nx/set-shas:
           main-branch-name: '<%= mainBranch %>'
-
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e<% } else { %>build<% } %>" targets have been requested
-      # - run: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e<% } else { %>build<% } %>"
 
       - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: <%= packageManagerPrefix %> nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint test build<% if(hasE2E){ %> e2e<% } %>

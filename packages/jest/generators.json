@@ -3,14 +3,14 @@
   "version": "0.1",
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#jestInitGenerator",
+      "factory": "./src/generators/init/init#jestInitGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nrwl/jest` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {
-      "factory": "./src/generators/configuration/configuration",
+      "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add Jest configuration to a project.",
       "hidden": true

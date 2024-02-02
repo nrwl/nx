@@ -15,17 +15,15 @@ describe('Add Linting', () => {
     });
   });
 
-  it('should add update configuration when eslint is passed', async () => {
+  it('should add a .eslintrc.json when is passed', async () => {
     await addLinting(tree, {
       projectName: 'my-lib',
       linter: Linter.EsLint,
       tsConfigPaths: ['libs/my-lib/tsconfig.lib.json'],
       projectRoot: 'libs/my-lib',
     });
-    const project = readProjectConfiguration(tree, 'my-lib');
 
-    expect(project.targets.lint).toBeDefined();
-    expect(project.targets.lint.executor).toEqual('@nx/eslint:lint');
+    expect(tree.exists('libs/my-lib/.eslintrc.json')).toBeTruthy();
   });
 
   it('should not add lint target when "none" is passed', async () => {

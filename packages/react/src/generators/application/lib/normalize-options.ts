@@ -33,6 +33,8 @@ export async function normalizeOptions<T extends Schema = Schema>(
     rootProject: options.rootProject,
     callingGenerator,
   });
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   options.rootProject = appProjectRoot === '.';
   options.projectNameAndRootFormat = projectNameAndRootFormat;
   const e2eProjectName = options.rootProject ? 'e2e' : `${appProjectName}-e2e`;

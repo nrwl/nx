@@ -68,16 +68,6 @@ describe('NxPlugin Plugin Generator', () => {
         ],
       },
     });
-    expect(project.targets.lint).toEqual({
-      executor: '@nx/eslint:lint',
-    });
-    expect(project.targets.test).toEqual({
-      executor: '@nx/jest:jest',
-      outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
-      options: {
-        jestConfig: 'libs/my-plugin/jest.config.ts',
-      },
-    });
   });
 
   it('should place the plugin in a directory', async () => {
