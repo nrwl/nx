@@ -501,11 +501,6 @@
                   "file": "shared/migration/adding-to-existing-project"
                 },
                 {
-                  "name": "Nx and Lerna",
-                  "id": "lerna-and-nx",
-                  "file": "shared/migration/lerna-and-nx"
-                },
-                {
                   "name": "Preserving Git Histories",
                   "id": "preserving-git-histories",
                   "file": "shared/migration/preserving-git-histories"

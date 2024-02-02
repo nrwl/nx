@@ -1468,14 +1468,6 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Nx and Lerna",
-                "path": "/recipes/adopting-nx/lerna-and-nx",
-                "id": "lerna-and-nx",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
                 "name": "Preserving Git Histories",
                 "path": "/recipes/adopting-nx/preserving-git-histories",
                 "id": "preserving-git-histories",
@@ -2564,14 +2556,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx and Lerna",
-            "path": "/recipes/adopting-nx/lerna-and-nx",
-            "id": "lerna-and-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Preserving Git Histories",
             "path": "/recipes/adopting-nx/preserving-git-histories",
             "id": "preserving-git-histories",
@@ -2610,14 +2594,6 @@
         "name": "Add to any Project",
         "path": "/recipes/adopting-nx/adding-to-existing-project",
         "id": "adding-to-existing-project",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx and Lerna",
-        "path": "/recipes/adopting-nx/lerna-and-nx",
-        "id": "lerna-and-nx",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

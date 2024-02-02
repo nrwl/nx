@@ -2007,17 +2007,6 @@
             "tags": []
           },
           {
-            "id": "lerna-and-nx",
-            "name": "Nx and Lerna",
-            "description": "",
-            "mediaImage": "",
-            "file": "shared/migration/lerna-and-nx",
-            "itemList": [],
-            "isExternal": false,
-            "path": "/recipes/adopting-nx/lerna-and-nx",
-            "tags": []
-          },
-          {
             "id": "preserving-git-histories",
             "name": "Preserving Git Histories",
             "description": "",
@@ -3507,17 +3496,6 @@
         "tags": []
       },
       {
-        "id": "lerna-and-nx",
-        "name": "Nx and Lerna",
-        "description": "",
-        "mediaImage": "",
-        "file": "shared/migration/lerna-and-nx",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/recipes/adopting-nx/lerna-and-nx",
-        "tags": []
-      },
-      {
         "id": "preserving-git-histories",
         "name": "Preserving Git Histories",
         "description": "",
@@ -3575,17 +3553,6 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/adopting-nx/adding-to-existing-project",
-    "tags": []
-  },
-  "/recipes/adopting-nx/lerna-and-nx": {
-    "id": "lerna-and-nx",
-    "name": "Nx and Lerna",
-    "description": "",
-    "mediaImage": "",
-    "file": "shared/migration/lerna-and-nx",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/recipes/adopting-nx/lerna-and-nx",
     "tags": []
   },
   "/recipes/adopting-nx/preserving-git-histories": {
