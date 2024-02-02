@@ -1,5 +1,5 @@
-import { extname, join } from 'path';
-import { existsSync } from 'fs';
+import { dirname, extname, join } from 'path';
+import { existsSync, readdirSync } from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { workspaceRoot } from 'nx/src/devkit-exports';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
@@ -17,7 +17,10 @@ export async function loadConfigFile<T extends object = any>(
     let module: any;
 
     if (extname(configFilePath) === '.ts') {
-      const tsConfigPath = getRootTsConfigPath();
+      const siblingFiles = readdirSync(dirname(configFilePath));
+      const tsConfigPath = siblingFiles.includes('tsconfig.json')
+        ? join(dirname(configFilePath), 'tsconfig.json')
+        : getRootTsConfigPath();
       if (tsConfigPath) {
         const unregisterTsProject = registerTsProject(tsConfigPath);
         try {
