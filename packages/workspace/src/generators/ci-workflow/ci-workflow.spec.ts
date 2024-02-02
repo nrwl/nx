@@ -137,7 +137,7 @@ describe('CI Workflow generator', () => {
       updateJson(tree, 'package.json', (json) => {
         json.devDependencies = {
           ...json.devDependencies,
-          '@nrwl/cypress': 'latest',
+          '@nx/cypress': 'latest',
         };
         return json;
       });
