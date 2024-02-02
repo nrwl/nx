@@ -448,8 +448,7 @@ describe('Linter', () => {
         });
       });
 
-      // TODO(crystal, @meeroslav): Investigate why this is failing
-      xit('should report dependency check issues', () => {
+      it('should report dependency check issues', () => {
         const rootPackageJson = readJson('package.json');
         const nxVersion = rootPackageJson.devDependencies.nx;
         const tslibVersion = rootPackageJson.dependencies['tslib'];
