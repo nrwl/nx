@@ -174,10 +174,14 @@ export function getPackageManagerCommand({
   }[packageManager.trim() as PackageManager];
 }
 
-export function runE2ETests() {
+export function runE2ETests(runner?: 'cypress' | 'playwright') {
   if (process.env.NX_E2E_RUN_E2E === 'true') {
-    ensureCypressInstallation();
-    ensurePlaywrightBrowsersInstallation();
+    if (!runner || runner === 'cypress') {
+      ensureCypressInstallation();
+    }
+    if (!runner || runner === 'playwright') {
+      ensurePlaywrightBrowsersInstallation();
+    }
     return true;
   }
 
