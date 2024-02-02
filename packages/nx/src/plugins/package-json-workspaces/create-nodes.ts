@@ -1,3 +1,4 @@
+import { minimatch } from 'minimatch';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -17,13 +18,35 @@ import { joinPathFragments } from '../../utils/path';
 
 export function getNxPackageJsonWorkspacesPlugin(root: string): NxPluginV2 {
   const readJson = (f) => readJsonFile(join(root, f));
+  const patterns = getGlobPatternsFromPackageManagerWorkspaces(root, readJson);
+
+  // If the user only specified a negative pattern, we should find all package.json
+  // files and only return those that don't match a negative pattern.
+  const negativePatterns = patterns.filter((p) => p.startsWith('!'));
+  let positivePatterns = patterns.filter((p) => !p.startsWith('!'));
+
+  if (
+    // There are some negative patterns
+    negativePatterns.length > 0 &&
+    // No positive patterns
+    (positivePatterns.length === 0 ||
+      // Or only a single positive pattern that is the default coming from root package
+      (positivePatterns.length === 1 && positivePatterns[0] === 'package.json'))
+  ) {
+    positivePatterns.push('**/package.json');
+  }
+
   return {
     name: 'nx/core/package-json-workspaces',
     createNodes: [
-      combineGlobPatterns(
-        getGlobPatternsFromPackageManagerWorkspaces(root, readJson)
-      ),
-      (p) => createNodeFromPackageJson(p, root),
+      combineGlobPatterns(positivePatterns),
+      (p) => {
+        if (!negativePatterns.some((negative) => minimatch(p, negative))) {
+          return createNodeFromPackageJson(p, root);
+        }
+        // A negative pattern matched, so we should not create a node for this package.json
+        return {};
+      },
     ],
   };
 }
