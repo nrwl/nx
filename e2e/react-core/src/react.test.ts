@@ -152,7 +152,7 @@ describe('React Applications', () => {
       checkFilesExist(`dist/apps/${appName}/index.html`);
 
       if (runE2ETests()) {
-        const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
+        const e2eResults = runCLI(`e2e ${appName}-e2e`);
         expect(e2eResults).toContain('All specs passed!');
         expect(await killPorts()).toBeTruthy();
       }
@@ -297,7 +297,7 @@ describe('React Applications', () => {
        `
         );
         if (runE2ETests()) {
-          const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch --verbose`);
+          const e2eResults = runCLI(`e2e ${appName}-e2e --verbose`);
           expect(e2eResults).toContain('All specs passed!');
         }
       }, 250_000);
@@ -488,7 +488,7 @@ async function testGeneratedApp(
   );
 
   if (opts.checkE2E && runE2ETests()) {
-    const e2eResults = runCLI(`e2e ${appName}-e2e --no-watch`);
+    const e2eResults = runCLI(`e2e ${appName}-e2e`);
     expect(e2eResults).toContain('All specs passed!');
     expect(await killPorts()).toBeTruthy();
   }
