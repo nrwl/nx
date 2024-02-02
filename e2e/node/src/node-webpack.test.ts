@@ -27,7 +27,10 @@ describe('Node Applications + webpack', () => {
   it('should generate an app using webpack', async () => {
     const app = uniq('nodeapp');
 
-    runCLI(`generate @nx/node:app ${app} --bundler=webpack --no-interactive`);
+    // This fails with Crystal enabled because `--optimization` is not a correct flag to pass to `webpack`.
+    runCLI(`generate @nx/node:app ${app} --bundler=webpack --no-interactive`, {
+      env: { NX_ADD_PLUGINS: 'false' },
+    });
 
     checkFilesExist(`apps/${app}/webpack.config.js`);
 
