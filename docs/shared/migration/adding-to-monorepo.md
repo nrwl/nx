@@ -271,8 +271,6 @@ This allows for incrementally adopting Nx in your existing workspace.
 
 {% card title="Nx and Turbo" description="Read about how Nx compares to Turborepo" url="/concepts/more-concepts/turbo-and-nx" /%}
 
-{% card title="Nx and Lerna" description="Read about how Nx and Lerna can be used together" url="/recipes/adopting-nx/lerna-and-nx" /%}
-
 {% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="/concepts/integrated-vs-package-based" /%}
 
 {% /cards %}
