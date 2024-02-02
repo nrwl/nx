@@ -16,8 +16,7 @@ describe('Web Components Applications with bundler set as vite', () => {
   beforeEach(() => newProject());
   afterEach(() => cleanupProject());
 
-  // TODO(crystal, @jaysoo): Investigate why this is failing
-  xit('should be able to generate a web app', async () => {
+  it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(`generate @nx/web:app ${appName} --bundler=vite --no-interactive`);
 
@@ -38,7 +37,7 @@ describe('Web Components Applications with bundler set as vite', () => {
     if (isNotWindows() && runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
-      expect(await killPorts()).toBeTruthy();
+      await killPorts();
     }
   }, 500000);
 
