@@ -11,16 +11,15 @@ import {
   updateProjectConfiguration,
 } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 import { Linter } from '@nx/eslint';
 import * as path from 'path';
 import { e2eProjectGenerator } from '../e2e-project/e2e';
 import pluginLintCheckGenerator from '../lint-checks/generator';
 import { NormalizedSchema, normalizeOptions } from './utils/normalize-schema';
 import { addTsLibDependencies } from '@nx/js/src/utils/typescript/add-tslib-dependencies';
-import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
 
 import type { Schema } from './schema';
+import { tsNodeVersion } from '@nx/js/src/utils/versions';
 
 const nxVersion = require('../../../package.json').version;
 
@@ -109,14 +108,10 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         '@nx/jest': nxVersion,
         '@nx/js': nxVersion,
         '@nx/plugin': nxVersion,
+        'ts-node': tsNodeVersion,
       }
     )
   );
-
-  // Ensures Swc Deps are installed to handle running
-  // local plugin generators and executors
-  tasks.push(addSwcDependencies(host));
-  tasks.push(addSwcRegisterDependencies(host));
 
   await addFiles(host, options);
   updatePluginConfig(host, options);

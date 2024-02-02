@@ -14,7 +14,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { addSwcRegisterDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { tsNodeVersion } from '@nx/js/src/utils/versions';
 import { join } from 'path';
 import { nxVersion, typescriptESLintVersion } from '../../utils/versions';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
@@ -111,15 +111,13 @@ export async function lintWorkspaceRulesProjectGenerator(
     }
   );
 
-  // Add swc dependencies
-  tasks.push(addSwcRegisterDependencies(tree));
-
   tasks.push(
     addDependenciesToPackageJson(
       tree,
       {},
       {
         '@typescript-eslint/utils': typescriptESLintVersion,
+        'ts-node': tsNodeVersion,
       }
     )
   );
