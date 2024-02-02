@@ -246,7 +246,7 @@ async function buildCypressTargets(
   if ('component' in cypressConfig) {
     // This will not override the e2e target if it is the same
     targets[options.componentTestingTargetName] ??= {
-      command: `cypress open --component`,
+      command: `cypress run --component`,
       options: { cwd: projectRoot },
       cache: true,
       inputs: getInputs(namedInputs),

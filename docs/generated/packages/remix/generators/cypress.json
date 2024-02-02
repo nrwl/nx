@@ -1,6 +1,6 @@
 {
   "name": "cypress",
-  "implementation": "/packages/remix/src/generators/cypress/cypress.impl.ts",
+  "implementation": "/packages/remix/src/generators/cypress/cypress.impl#cypressGeneratorInternal.ts",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixCypress",

@@ -20,6 +20,7 @@ export async function libraryGenerator(
   rawOptions: LibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
   return await libraryGeneratorInternal(tree, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...rawOptions,
   });

@@ -41,6 +41,8 @@ export async function hostGeneratorInternal(
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
     typescriptConfiguration: schema.typescriptConfiguration ?? true,
     dynamic: schema.dynamic ?? false,
+    // TODO(colum): remove when MF works with Crystal
+    addPlugin: false,
   };
 
   const initTask = await applicationGenerator(host, {

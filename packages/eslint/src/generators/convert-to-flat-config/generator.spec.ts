@@ -19,6 +19,8 @@ describe('convert-to-flat-config generator', () => {
   let tree: Tree;
   const options: ConvertToFlatConfigGeneratorSchema = { skipFormat: false };
 
+  // TODO(@meeroslav): add plugin in these tests
+
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'test-lib', {

@@ -63,6 +63,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       webServerCommand: `${getPackageManagerCommand().exec} nx ${
         hasPlugin ? 'start' : 'serve'
       } ${options.projectName}`,
+      addPlugin: options.addPlugin,
     });
   }
   return () => {};

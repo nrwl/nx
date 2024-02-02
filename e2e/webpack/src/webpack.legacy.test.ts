@@ -8,14 +8,14 @@ import {
 } from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 
-describe('Webpack Plugin (PCv3)', () => {
-  let originalPcv3: string | undefined;
+describe('Webpack Plugin (legacy)', () => {
+  let originalAddPluginsEnv: string | undefined;
   const appName = uniq('app');
   const libName = uniq('lib');
 
   beforeAll(() => {
-    originalPcv3 = process.env.NX_PCV3;
-    process.env.NX_PCV3 = 'true';
+    originalAddPluginsEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
     newProject({
       packages: ['@nx/react'],
       unsetProjectNameAndRootFormat: false,
@@ -29,7 +29,7 @@ describe('Webpack Plugin (PCv3)', () => {
   });
 
   afterAll(() => {
-    process.env.NX_PCV3 = originalPcv3;
+    process.env.NX_ADD_PLUGINS = originalAddPluginsEnv;
     cleanupProject();
   });
 

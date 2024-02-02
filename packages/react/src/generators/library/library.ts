@@ -30,6 +30,7 @@ import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-com
 
 export async function libraryGenerator(host: Tree, schema: Schema) {
   return await libraryGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -87,6 +88,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       compiler: options.compiler,
       skipFormat: true,
       testEnvironment: 'jsdom',
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -156,6 +158,7 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       inSourceTests: options.inSourceTests,
       skipFormat: true,
       testEnvironment: 'jsdom',
+      addPlugin: options.addPlugin,
     });
     tasks.push(vitestTask);
     createOrEditViteConfig(

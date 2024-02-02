@@ -108,13 +108,11 @@ async function createWebpackTargets(
 > {
   const namedInputs = getNamedInputs(projectRoot, context);
 
-  global.NX_GRAPH_CREATION = true;
   const webpackConfig = resolveUserDefinedWebpackConfig(
     join(context.workspaceRoot, configFilePath),
     getRootTsConfigPath(),
     true
   );
-  delete global.NX_GRAPH_CREATION;
 
   const webpackOptions = await readWebpackOptions(webpackConfig);
 

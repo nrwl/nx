@@ -75,6 +75,8 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:remote')),
     typescriptConfiguration: schema.typescriptConfiguration ?? false,
     dynamic: schema.dynamic ?? false,
+    // TODO(colum): remove when MF works with Crystal
+    addPlugin: false,
   };
   const initAppTask = await applicationGenerator(host, {
     ...options,

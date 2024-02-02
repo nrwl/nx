@@ -23,6 +23,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       appProjectRoot: 'my-app',
       className: 'MyApp',
       displayName: 'MyApp',
@@ -54,6 +55,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       appProjectRoot: 'myApp',
       className: 'MyApp',
       displayName: 'MyApp',
@@ -86,6 +88,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       appProjectRoot: 'directory',
       className: 'MyApp',
       displayName: 'MyApp',
@@ -118,6 +121,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       appProjectRoot: 'directory/my-app',
       className: 'DirectoryMyApp',
       displayName: 'DirectoryMyApp',
@@ -150,6 +154,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       appProjectRoot: 'my-app',
       className: 'MyApp',
       displayName: 'My App',

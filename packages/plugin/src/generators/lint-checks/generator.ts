@@ -19,6 +19,7 @@ import { NX_PREFIX } from 'nx/src/utils/logger';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 import {
   addOverrideToLintConfig,
+  findEslintFile,
   isEslintConfigSupported,
   lintConfigHasOverride,
   updateOverrideInLintConfig,
@@ -36,7 +37,7 @@ export default async function pluginLintCheckGenerator(
   );
 
   // This rule is eslint **only**
-  if (projectIsEsLintEnabled(project)) {
+  if (projectIsEsLintEnabled(host, project)) {
     updateRootEslintConfig(host);
     updateProjectEslintConfig(host, project, packageJson);
     updateProjectTarget(host, options, packageJson);
@@ -44,15 +45,6 @@ export default async function pluginLintCheckGenerator(
     // Project is setup for vscode
     if (host.exists('.vscode')) {
       setupVsCodeLintingForJsonFiles(host);
-    }
-
-    // Project contains migrations.json
-    const migrationsPath = readNxMigrateConfig(packageJson).migrations;
-    if (
-      migrationsPath &&
-      host.exists(joinPathFragments(project.root, migrationsPath))
-    ) {
-      addMigrationJsonChecks(host, options, packageJson);
     }
   } else {
     logger.error(
@@ -75,12 +67,12 @@ export function addMigrationJsonChecks(
     options.projectName
   );
 
-  if (!projectIsEsLintEnabled(projectConfiguration)) {
+  if (!projectIsEsLintEnabled(host, projectConfiguration)) {
     return;
   }
 
   const [eslintTarget, eslintTargetConfiguration] =
-    getEsLintOptions(projectConfiguration);
+    getEsLintOptions(projectConfiguration) ?? [];
 
   const relativeMigrationsJsonPath =
     readNxMigrateConfig(packageJson).migrations;
@@ -196,6 +188,7 @@ function updateProjectEslintConfig(
       packageJson.executors,
       packageJson.schematics,
       packageJson.builders,
+      readNxMigrateConfig(packageJson).migrations,
     ].filter((f) => !!f);
 
     const parser = useFlatConfig(host)
@@ -288,8 +281,8 @@ function setupVsCodeLintingForJsonFiles(host: Tree) {
   writeJson(host, '.vscode/settings.json', existing);
 }
 
-function projectIsEsLintEnabled(project: ProjectConfiguration) {
-  return !!getEsLintOptions(project);
+function projectIsEsLintEnabled(tree: Tree, project: ProjectConfiguration) {
+  return !!findEslintFile(tree, project.root);
 }
 
 export function getEsLintOptions(

@@ -12,4 +12,5 @@ export interface NxRemixGeneratorSchema {
   unitTestRunner?: 'jest' | 'vitest' | 'none';
   js?: boolean;
   skipFormat?: boolean;
+  addPlugin?: boolean;
 }

@@ -3,6 +3,7 @@ import { joinPathFragments, readJson } from '@nx/devkit';
 import { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from './application.impl';
+import { join } from 'path';
 
 describe('Remix Application', () => {
   describe('Standalone Project Repo', () => {
@@ -14,6 +15,7 @@ describe('Remix Application', () => {
       await applicationGenerator(tree, {
         name: 'test',
         rootProject: true,
+        addPlugin: true,
       });
 
       // ASSERT
@@ -39,6 +41,7 @@ describe('Remix Application', () => {
           name: 'test',
           js: true,
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -60,6 +63,7 @@ describe('Remix Application', () => {
           name: 'test',
           unitTestRunner: 'vitest',
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -82,6 +86,7 @@ describe('Remix Application', () => {
           name: 'test',
           unitTestRunner: 'jest',
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -107,6 +112,7 @@ describe('Remix Application', () => {
           name: 'test',
           e2eTestRunner: 'cypress',
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -131,6 +137,7 @@ describe('Remix Application', () => {
         await applicationGenerator(tree, {
           name: 'test',
           projectNameAndRootFormat,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -155,6 +162,7 @@ describe('Remix Application', () => {
             name: 'test',
             js: true,
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -183,6 +191,7 @@ describe('Remix Application', () => {
             name: 'test',
             directory: 'demo',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -212,6 +221,7 @@ describe('Remix Application', () => {
             name: 'test',
             directory: 'apps/demo',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -239,6 +249,7 @@ describe('Remix Application', () => {
             name: 'test',
             unitTestRunner: 'vitest',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -264,6 +275,7 @@ describe('Remix Application', () => {
             name: 'test',
             unitTestRunner: 'jest',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -291,6 +303,7 @@ describe('Remix Application', () => {
             name: 'test',
             e2eTestRunner: 'cypress',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -310,19 +323,5 @@ function expectTargetsToBeCorrect(tree: Tree, projectRoot: string) {
     tree,
     joinPathFragments(projectRoot === '.' ? '/' : projectRoot, 'project.json')
   );
-  expect(targets.lint).toBeTruthy();
-  expect(targets.build).toBeTruthy();
-  expect(targets.build.executor).toEqual('@nx/remix:build');
-  expect(targets.build.options.outputPath).toEqual(
-    joinPathFragments('dist', projectRoot)
-  );
-  expect(targets.serve).toBeTruthy();
-  expect(targets.serve.executor).toEqual('@nx/remix:serve');
-  expect(targets.serve.options.port).toEqual(4200);
-  expect(targets.start).toBeTruthy();
-  expect(targets.start.command).toEqual('remix-serve build/index.js');
-  expect(targets.start.options.cwd).toEqual(projectRoot);
-  expect(targets.typecheck).toBeTruthy();
-  expect(targets.typecheck.command).toEqual('tsc --project tsconfig.app.json');
-  expect(targets.typecheck.options.cwd).toEqual(projectRoot);
+  expect(tree.exists(join(projectRoot, '.eslintrc.json'))).toBeTruthy();
 }

@@ -132,7 +132,7 @@ describe('@nx/cypress/plugin', () => {
             "targets": {
               "component-test": {
                 "cache": true,
-                "command": "cypress open --component",
+                "command": "cypress run --component",
                 "inputs": [
                   "default",
                   "^production",

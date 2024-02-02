@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`lib not nested should update configuration 1`] = `
+"/* eslint-disable */
+export default {
+  displayName: 'my-lib',
+  preset: '../jest.preset.js',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\\\.[tj]s$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'html'],
+  coverageDirectory: '../coverage/my-lib',
+};
+"
+`;

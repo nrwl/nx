@@ -1,3 +1,4 @@
+import { glob, type Tree } from '@nx/devkit';
 import type {
   InterfaceDeclaration,
   MethodSignature,
@@ -5,7 +6,13 @@ import type {
   PropertyAssignment,
   PropertySignature,
 } from 'typescript';
-import { NxCypressE2EPresetOptions } from '../../plugins/cypress-preset';
+import type {
+  NxComponentTestingOptions,
+  NxCypressE2EPresetOptions,
+} from '../../plugins/cypress-preset';
+
+export const CYPRESS_CONFIG_FILE_NAME_PATTERN =
+  'cypress.config.{js,ts,mjs,cjs}';
 
 const TS_QUERY_COMMON_JS_EXPORT_SELECTOR =
   'BinaryExpression:has(Identifier[name="module"]):has(Identifier[name="exports"])';
@@ -69,7 +76,7 @@ export async function addDefaultE2EConfig(
  **/
 export async function addDefaultCTConfig(
   cyConfigContents: string,
-  options: { bundler?: string } = {}
+  options: NxComponentTestingOptions = {}
 ) {
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
@@ -84,10 +91,19 @@ export async function addDefaultCTConfig(
   let updatedConfigContents = cyConfigContents;
 
   if (testingTypeConfig.length === 0) {
-    const configValue =
-      options?.bundler === 'vite'
-        ? "nxComponentTestingPreset(__filename, { bundler: 'vite' })"
-        : 'nxComponentTestingPreset(__filename)';
+    let configValue = 'nxComponentTestingPreset(__filename)';
+    if (options) {
+      if (options.bundler !== 'vite') {
+        // vite is the default bundler, so we don't need to set it
+        delete options.bundler;
+      }
+
+      if (Object.keys(options).length) {
+        configValue = `nxComponentTestingPreset(__filename, ${JSON.stringify(
+          options
+        )})`;
+      }
+    }
 
     updatedConfigContents = tsquery.replace(
       cyConfigContents,
@@ -145,4 +161,18 @@ export async function addMountDefinition(cmpCommandFileContents: string) {
     }
   );
   return `${updatedInterface}\n${mountCommand}`;
+}
+
+export function getProjectCypressConfigPath(
+  tree: Tree,
+  projectRoot: string
+): string {
+  const cypressConfigPaths = glob(tree, [
+    `${projectRoot}/${CYPRESS_CONFIG_FILE_NAME_PATTERN}`,
+  ]);
+  if (cypressConfigPaths.length === 0) {
+    throw new Error(`Could not find a cypress config file in ${projectRoot}.`);
+  }
+
+  return cypressConfigPaths[0];
 }

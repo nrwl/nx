@@ -7,7 +7,6 @@ import {
   readFile,
   runCLI,
   runCommandUntil,
-  setMaxWorkers,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -26,7 +25,6 @@ describe('Node Applications + esbuild', () => {
     const app = uniq('nodeapp');
 
     runCLI(`generate @nx/node:app ${app} --bundler=esbuild --no-interactive`);
-    setMaxWorkers(join('apps', app, 'project.json'));
 
     checkFilesDoNotExist(`apps/${app}/webpack.config.js`);
 

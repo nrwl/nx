@@ -26,7 +26,7 @@ describe('React Playwright e2e tests', () => {
 
   it('should execute e2e tests using playwright', () => {
     if (runE2ETests()) {
-      const result = runCLI(`e2e ${appName}-e2e --no-watch --verbose`);
+      const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`
       );
@@ -54,7 +54,7 @@ describe('React Playwright e2e tests', () => {
     );
 
     if (runE2ETests()) {
-      const result = runCLI(`e2e ${appName}-e2e --no-watch --verbose`);
+      const result = runCLI(`e2e ${appName}-e2e --verbose`);
       expect(result).toContain(
         `Successfully ran target e2e for project ${appName}-e2e`
       );
