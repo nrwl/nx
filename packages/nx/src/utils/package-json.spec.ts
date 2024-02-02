@@ -4,7 +4,6 @@ import { readJsonFile } from './fileutils';
 import {
   buildTargetFromScript,
   PackageJson,
-  PackageJsonTargetConfiguration,
   readModulePackageJson,
   readTargetsFromPackageJson,
 } from './package-json';
@@ -36,7 +35,7 @@ describe('buildTargetFromScript', () => {
             script: 'other',
           },
           executor: 'custom:execute',
-        } as PackageJsonTargetConfiguration,
+        },
       },
     });
 

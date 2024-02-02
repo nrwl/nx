@@ -7,16 +7,11 @@ import {
 import { readJsonFile } from './fileutils';
 import { getNxRequirePaths } from './installation-directory';
 
-export type PackageJsonTargetConfiguration = Omit<
-  TargetConfiguration,
-  'executor'
->;
-
 export interface NxProjectPackageJsonConfiguration {
   implicitDependencies?: string[];
   tags?: string[];
   namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
-  targets?: Record<string, PackageJsonTargetConfiguration>;
+  targets?: Record<string, TargetConfiguration>;
   includedScripts?: string[];
 }
 
