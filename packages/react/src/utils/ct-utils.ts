@@ -9,10 +9,6 @@ import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript'
 import { getComponentNode } from './ast-utils';
 import { type FoundTarget } from '@nx/cypress/src/utils/find-target-options';
 import type { NxComponentTestingOptions } from '@nx/cypress/plugins/cypress-preset';
-import {
-  addDefaultCTConfig,
-  getProjectCypressConfigPath,
-} from '@nx/cypress/src/utils/config';
 
 let tsModule: typeof import('typescript');
 
@@ -35,6 +31,7 @@ export async function configureCypressCT(
     const { findBuildConfig } = await import(
       '@nx/cypress/src/utils/find-target-options'
     );
+
     found = await findBuildConfig(tree, {
       project: options.project,
       buildTarget: options.buildTarget,
@@ -43,6 +40,10 @@ export async function configureCypressCT(
 
     assertValidConfig(found?.config);
   }
+
+  const { addDefaultCTConfig, getProjectCypressConfigPath } = await import(
+    '@nx/cypress/src/utils/config'
+  );
 
   const ctConfigOptions: NxComponentTestingOptions = {
     bundler: options.bundler ?? (await getActualBundler(tree, options, found)),
