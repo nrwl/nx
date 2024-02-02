@@ -26,6 +26,7 @@ export async function configureCypressCT(
 ): Promise<FoundTarget> {
   let found: FoundTarget = { target: options.buildTarget, config: undefined };
 
+  const projectConfig = readProjectConfiguration(tree, options.project);
   // Specifically undefined as a workaround for Remix to pass an empty string as the buildTarget
   if (options.buildTarget === undefined) {
     const { findBuildConfig } = await import(
@@ -39,6 +40,19 @@ export async function configureCypressCT(
     });
 
     assertValidConfig(found?.config);
+  } else if (options.buildTarget) {
+    const projectGraph = await createProjectGraphAsync();
+    const { project, target } = parseTargetString(
+      options.buildTarget,
+      projectGraph
+    );
+    const buildTargetProject = readProjectConfiguration(tree, project);
+    const executor = buildTargetProject.targets?.[target]?.executor;
+    if (!executor || !options.validExecutorNames.has(executor)) {
+      throw new Error(
+        `Cypress Component Testing is not currently supported for this project. Please check https://github.com/nrwl/nx/issues/21546 for more information.`
+      );
+    }
   }
 
   const { addDefaultCTConfig, getProjectCypressConfigPath } = await import(
@@ -48,7 +62,6 @@ export async function configureCypressCT(
   const ctConfigOptions: NxComponentTestingOptions = {
     bundler: options.bundler ?? (await getActualBundler(tree, options, found)),
   };
-  const projectConfig = readProjectConfiguration(tree, options.project);
   if (
     projectConfig.targets?.['component-test']?.executor ===
     '@nx/cypress:cypress'
