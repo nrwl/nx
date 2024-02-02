@@ -40,6 +40,11 @@
     "url": "https://github.com/berenddeboer/nx-plugins/tree/main/packages/nx-aws-cdk"
   },
   {
+    "name": "@nx-iac/aws-cdk",
+    "description": "Empowers your Nx workspace with AWS CDK capabilities ⚡",
+    "url": "https://github.com/joelklint/nx-aws-cdk"
+  },
+  {
     "name": "@routineless/nx-aws-cdk",
     "description": "Nx plugin to generate and manage aws cdk app and lambdas.",
     "url": "https://github.com/KozelAnatoliy/routineless/tree/main/packages/nx-aws-cdk"
