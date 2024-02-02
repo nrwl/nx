@@ -54,16 +54,22 @@ interface AppComponentInfo {
   filePath: string;
 }
 
-export async function setupSsrGenerator(tree: Tree, options: Schema) {
-  let projectGraph: ProjectGraph;
-
-  try {
-    projectGraph = readCachedProjectGraph();
-  } catch {
-    projectGraph = await createProjectGraphAsync();
+async function getProjectConfig(tree: Tree, projectName: string) {
+  let maybeProjectConfig = readProjectConfiguration(tree, projectName);
+  if (!maybeProjectConfig.targets?.build) {
+    let projectGraph;
+    try {
+      projectGraph = readCachedProjectGraph();
+    } catch {
+      projectGraph = await createProjectGraphAsync();
+    }
+    maybeProjectConfig = projectGraph.nodes[projectName].data;
   }
+  return maybeProjectConfig;
+}
 
-  const projectConfig = projectGraph.nodes[options.project].data;
+export async function setupSsrGenerator(tree: Tree, options: Schema) {
+  const projectConfig = await getProjectConfig(tree, options.project);
   const projectRoot = projectConfig.root;
   const appImportCandidates: AppComponentInfo[] = [
     options.appComponentImportPath ?? 'app/app',

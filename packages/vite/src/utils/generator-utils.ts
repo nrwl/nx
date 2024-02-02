@@ -764,6 +764,10 @@ async function handleUnsupportedUserProvidedTargetsErrors(
 }
 
 export async function handleUnknownExecutors(projectName: string) {
+  if (process.env.NX_INTERACTIVE === 'false') {
+    return;
+  }
+
   logger.warn(
     `
       We could not find any targets in project ${projectName} that use executors which 
