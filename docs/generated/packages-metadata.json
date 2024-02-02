@@ -90,7 +90,7 @@
         "type": "executor"
       },
       {
-        "description": "The `dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+        "description": "Serves an Angular application using [Webpack](https://webpack.js.org/) when the build target is using a Webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an esbuild-based executor.",
         "file": "generated/packages/angular/executors/dev-server.json",
         "hidden": false,
         "name": "dev-server",
@@ -903,7 +903,7 @@
     ],
     "generators": [
       {
-        "description": "Initialize the @nrwl/expo plugin",
+        "description": "Initialize the @nx/expo plugin",
         "file": "generated/packages/expo/generators/init.json",
         "hidden": true,
         "name": "init",

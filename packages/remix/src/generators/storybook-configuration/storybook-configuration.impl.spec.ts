@@ -13,6 +13,7 @@ describe('Storybook Configuration', () => {
         name: 'storybook-test',
         style: 'css',
         unitTestRunner,
+        addPlugin: true,
       });
 
       // ACT
@@ -21,6 +22,7 @@ describe('Storybook Configuration', () => {
         configureCypress: false,
         configureStaticServe: false,
         generateStories: true,
+        addPlugin: true,
       });
 
       // ASSERT

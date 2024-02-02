@@ -12,15 +12,22 @@ import {
 const pmc = getPackageManagerCommand({
   packageManager: getSelectedPackageManager(),
 });
-describe('Next.js Storybook', () => {
+// TODO(crystal, @mandarini): Investigate why this test is failing
+xdescribe('Next.js Storybook', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject({ name: 'proj', packageManager: 'npm' })));
+  beforeAll(
+    () =>
+      (proj = newProject({
+        name: 'proj',
+        packageManager: 'npm',
+        packages: ['@nx/next', '@nx/react'],
+      }))
+  );
 
   afterAll(() => cleanupProject());
 
-  // TODO(@ndcunningham): This test is failing, please re-enable when it is fixed.
-  xit('should run a Next.js based Storybook setup', async () => {
+  it('should run a Next.js based Storybook setup', async () => {
     const appName = uniq('app');
 
     runCLI(`generate @nx/next:app ${appName} --no-interactive`);
@@ -37,6 +44,6 @@ describe('Next.js Storybook', () => {
     runCommand(pmc.install);
 
     runCLI(`build-storybook ${appName}`);
-    checkFilesExist(`dist/storybook/${appName}/index.html`);
-  }, 1_000_000);
+    checkFilesExist(`${appName}/storybook-static/index.html`);
+  }, 600_000);
 });

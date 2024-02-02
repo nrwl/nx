@@ -291,7 +291,7 @@ devDependencies:
     version: 17.3.0-rc.1(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)
   '@nx/next':
     specifier: 17.3.0-rc.1
-    version: 17.3.0-rc.1(@babel/core@7.23.2)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(file-loader@6.2.0)(js-yaml@4.1.0)(next@14.0.4)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)(webpack@5.88.0)
+    version: 17.3.0-rc.1(@babel/core@7.23.2)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(js-yaml@4.1.0)(next@14.0.4)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)(webpack@5.88.0)
   '@nx/playwright':
     specifier: 17.3.0-rc.1
     version: 17.3.0-rc.1(@playwright/test@1.36.1)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(js-yaml@4.1.0)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)
@@ -610,9 +610,6 @@ devDependencies:
   figures:
     specifier: 3.2.0
     version: 3.2.0
-  file-loader:
-    specifier: ^6.2.0
-    version: 6.2.0(webpack@5.88.0)
   file-type:
     specifier: ^16.2.0
     version: 16.5.4
@@ -930,7 +927,7 @@ devDependencies:
     version: 0.10.11
   url-loader:
     specifier: ^4.1.1
-    version: 4.1.1(file-loader@6.2.0)(webpack@5.88.0)
+    version: 4.1.1(webpack@5.88.0)
   use-sync-external-store:
     specifier: ^1.2.0
     version: 1.2.0(react@18.2.0)
@@ -7211,10 +7208,10 @@ packages:
       - verdaccio
     dev: true
 
-  /@nrwl/next@17.3.0-rc.1(@babel/core@7.23.2)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(file-loader@6.2.0)(js-yaml@4.1.0)(next@14.0.4)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)(webpack@5.88.0):
+  /@nrwl/next@17.3.0-rc.1(@babel/core@7.23.2)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(js-yaml@4.1.0)(next@14.0.4)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)(webpack@5.88.0):
     resolution: {integrity: sha512-kS7kt3l7LU383xLY/9PNOUjDirhFKW0AzVApInaPHCsHypL2MBGHHXh7MMa1r5iwRbsKD6A5wOlrHK4n1fuNMw==}
     dependencies:
-      '@nx/next': 17.3.0-rc.1(@babel/core@7.23.2)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(file-loader@6.2.0)(js-yaml@4.1.0)(next@14.0.4)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)(webpack@5.88.0)
+      '@nx/next': 17.3.0-rc.1(@babel/core@7.23.2)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(js-yaml@4.1.0)(next@14.0.4)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)(webpack@5.88.0)
     transitivePeerDependencies:
       - '@babel/core'
       - '@babel/traverse'
@@ -8005,13 +8002,13 @@ packages:
       - verdaccio
     dev: true
 
-  /@nx/next@17.3.0-rc.1(@babel/core@7.23.2)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(file-loader@6.2.0)(js-yaml@4.1.0)(next@14.0.4)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)(webpack@5.88.0):
+  /@nx/next@17.3.0-rc.1(@babel/core@7.23.2)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(js-yaml@4.1.0)(next@14.0.4)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)(webpack@5.88.0):
     resolution: {integrity: sha512-kG3nE5MqyWLBHfz+smw8Ut1wIHGMjJ0s2WVZVLODEE+hgRVcjDMrImusXs5UHtoXMw88ZvHhzzdFTe+dI4vhUA==}
     peerDependencies:
       next: '>=13.0.0'
     dependencies:
       '@babel/plugin-proposal-decorators': 7.22.7(@babel/core@7.23.2)
-      '@nrwl/next': 17.3.0-rc.1(@babel/core@7.23.2)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(file-loader@6.2.0)(js-yaml@4.1.0)(next@14.0.4)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)(webpack@5.88.0)
+      '@nrwl/next': 17.3.0-rc.1(@babel/core@7.23.2)(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(js-yaml@4.1.0)(next@14.0.4)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)(webpack@5.88.0)
       '@nx/devkit': 17.3.0-rc.1(nx@17.3.0-rc.1)
       '@nx/eslint': 17.3.0-rc.1(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(eslint@8.48.0)(js-yaml@4.1.0)(nx@17.3.0-rc.1)(verdaccio@5.15.4)
       '@nx/js': 17.3.0-rc.1(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(nx@17.3.0-rc.1)(typescript@5.3.3)(verdaccio@5.15.4)
@@ -8026,7 +8023,7 @@ packages:
       next: 14.0.4(@babel/core@7.23.2)(react-dom@18.2.0)(react@18.2.0)(sass@1.55.0)
       semver: 7.5.3
       tslib: 2.6.2
-      url-loader: 4.1.1(file-loader@6.2.0)(webpack@5.88.0)
+      url-loader: 4.1.1(webpack@5.88.0)
       webpack-merge: 5.10.0
     transitivePeerDependencies:
       - '@babel/core'
@@ -31708,7 +31705,7 @@ packages:
     resolution: {integrity: sha512-jk1+QP6ZJqyOiuEI9AEWQfju/nB2Pw466kbA0LEZljHwKeMgd9WrAEgEGxjPDD2+TNbbb37rTyhEfrCXfuKXnA==}
     dev: true
 
-  /url-loader@4.1.1(file-loader@6.2.0)(webpack@5.88.0):
+  /url-loader@4.1.1(webpack@5.88.0):
     resolution: {integrity: sha512-3BTV812+AVHHOJQO8O5MkWgZ5aosP7GnROJwvzLS9hWDj00lZ6Z0wNak423Lp9PBZN05N+Jk/N5Si8jRAlGyWA==}
     engines: {node: '>= 10.13.0'}
     peerDependencies:
@@ -31718,7 +31715,6 @@ packages:
       file-loader:
         optional: true
     dependencies:
-      file-loader: 6.2.0(webpack@5.88.0)
       loader-utils: 2.0.4
       mime-types: 2.1.35
       schema-utils: 3.1.2

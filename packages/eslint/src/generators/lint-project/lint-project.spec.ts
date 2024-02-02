@@ -15,6 +15,7 @@ describe('@nx/eslint:lint-project', () => {
 
   const defaultOptions = {
     skipFormat: false,
+    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -69,13 +70,6 @@ describe('@nx/eslint:lint-project', () => {
       }
       "
     `);
-
-    const projectConfig = readProjectConfiguration(tree, 'test-lib');
-    expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
-      {
-        "executor": "@nx/eslint:lint",
-      }
-    `);
   });
 
   it('should generate a project config with lintFilePatterns if provided', async () => {
@@ -90,17 +84,12 @@ describe('@nx/eslint:lint-project', () => {
     const projectConfig = readProjectConfiguration(tree, 'test-lib');
     expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
       {
-        "executor": "@nx/eslint:lint",
-        "options": {
-          "lintFilePatterns": [
-            "libs/test-lib/src/**/*.ts",
-          ],
-        },
+        "command": "eslint libs/test-lib/src/**/*.ts",
       }
     `);
   });
 
-  it('should generate a eslint config and configure the target for buildable library', async () => {
+  it('should generate a eslint config for buildable library', async () => {
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: Linter.EsLint,
@@ -137,13 +126,6 @@ describe('@nx/eslint:lint-project', () => {
       }
       "
     `);
-
-    const projectConfig = readProjectConfiguration(tree, 'buildable-lib');
-    expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
-      {
-        "executor": "@nx/eslint:lint",
-      }
-    `);
   });
 
   it('should generate a project config for buildable lib with lintFilePatterns if provided', async () => {
@@ -158,13 +140,7 @@ describe('@nx/eslint:lint-project', () => {
     const projectConfig = readProjectConfiguration(tree, 'buildable-lib');
     expect(projectConfig.targets.lint).toMatchInlineSnapshot(`
       {
-        "executor": "@nx/eslint:lint",
-        "options": {
-          "lintFilePatterns": [
-            "libs/test-lib/src/**/*.ts",
-            "{projectRoot}/package.json",
-          ],
-        },
+        "command": "eslint libs/test-lib/src/**/*.ts libs/buildable-lib/package.json",
       }
     `);
   });

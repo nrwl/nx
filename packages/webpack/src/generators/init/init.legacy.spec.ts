@@ -3,22 +3,17 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import { webpackInitGenerator } from './init';
 
-describe('webpackInitGenerator (PCv3)', () => {
+describe('webpackInitGenerator (legacy)', () => {
   let tree: Tree;
-  let previousEnv: string | undefined;
 
   beforeEach(async () => {
-    previousEnv = process.env.NX_PCV3;
-    process.env.NX_PCV3 = 'true';
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 
-  afterEach(() => {
-    process.env.NX_PCV3 = previousEnv;
-  });
-
-  it('should install webpack-cli', async () => {
-    await webpackInitGenerator(tree, {});
+  it('should not install webpack dependencies', async () => {
+    await webpackInitGenerator(tree, {
+      addPlugin: false,
+    });
 
     const packageJson = readJson(tree, 'package.json');
     expect(packageJson).toEqual({
@@ -27,7 +22,6 @@ describe('webpackInitGenerator (PCv3)', () => {
       devDependencies: {
         '@nx/web': expect.any(String),
         '@nx/webpack': expect.any(String),
-        'webpack-cli': expect.any(String),
       },
     });
   });

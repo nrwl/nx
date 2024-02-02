@@ -11,13 +11,14 @@ pipelines:
               name: <%= workflowName %>
               script:
                 - export NX_BRANCH=$BITBUCKET_PR_ID
+
+                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
+                # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+
                 <% if(packageManager == 'pnpm'){ %>
                 - npm install --prefix=$HOME/.local -g pnpm@8
                 <% } %>
                 - <%= packageManagerInstall %>
-
-                # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-                # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
 
                 - <%= packageManagerPrefix %> nx-cloud record -- nx format:check
                 - <%= packageManagerPrefix %> nx affected -t=lint,test,build

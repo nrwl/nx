@@ -1,6 +1,6 @@
 {
   "name": "init",
-  "implementation": "/packages/remix/src/generators/init/init.ts",
+  "implementation": "/packages/remix/src/generators/init/init#remixInitGeneratorInternal.ts",
   "schema": {
     "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixInit",

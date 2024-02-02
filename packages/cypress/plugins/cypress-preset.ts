@@ -29,6 +29,7 @@ export interface NxComponentTestingOptions {
    * @example 'component-test'
    */
   ctTargetName?: string;
+  buildTarget?: string;
   bundler?: 'vite' | 'webpack';
   compiler?: 'swc' | 'babel';
 }

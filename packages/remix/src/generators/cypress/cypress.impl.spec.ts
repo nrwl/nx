@@ -11,8 +11,16 @@ describe('Cypress generator', () => {
   });
 
   it('should generate cypress project', async () => {
-    await applicationGenerator(tree, { name: 'demo', e2eTestRunner: 'none' });
-    await generator(tree, { project: 'demo', name: 'demo-e2e' });
+    await applicationGenerator(tree, {
+      name: 'demo',
+      e2eTestRunner: 'none',
+      addPlugin: true,
+    });
+    await generator(tree, {
+      project: 'demo',
+      name: 'demo-e2e',
+      addPlugin: true,
+    });
 
     const config = readProjectConfiguration(tree, 'demo-e2e');
     expect(config.targets).toEqual({
@@ -29,7 +37,6 @@ describe('Cypress generator', () => {
           },
         },
       },
-      lint: { executor: '@nx/eslint:lint' },
     });
   });
 });

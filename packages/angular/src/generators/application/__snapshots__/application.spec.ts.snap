@@ -268,9 +268,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "buildTarget": "my-dir-my-app:build",
       },
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -289,15 +286,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "buildTarget": "my-dir-my-app:build",
         "staticFilePath": "dist/apps/my-dir/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "apps/my-dir/my-app/jest.config.ts",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -330,9 +318,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "devServerTarget": "my-dir-my-app:serve:development",
         "testingType": "e2e",
       },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
     },
   },
 }
@@ -487,9 +472,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "buildTarget": "my-app:build",
       },
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -508,15 +490,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "buildTarget": "my-app:build",
         "staticFilePath": "dist/apps/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "apps/my-app/jest.config.ts",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -549,9 +522,6 @@ exports[`app --project-name-and-root-format=derived should generate correctly wh
         "devServerTarget": "my-app:serve:development",
         "testingType": "e2e",
       },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
     },
   },
 }
@@ -1001,9 +971,6 @@ exports[`app nested should create project configs 1`] = `
         "buildTarget": "my-app:build",
       },
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -1022,15 +989,6 @@ exports[`app nested should create project configs 1`] = `
         "buildTarget": "my-app:build",
         "staticFilePath": "dist/my-dir/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "my-dir/my-app/jest.config.ts",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -1063,9 +1021,6 @@ exports[`app nested should create project configs 2`] = `
         "devServerTarget": "my-app:serve:development",
         "testingType": "e2e",
       },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
     },
   },
 }
@@ -1133,9 +1088,6 @@ exports[`app not nested should create project configs 1`] = `
         "buildTarget": "my-app:build",
       },
     },
-    "lint": {
-      "executor": "@nx/eslint:lint",
-    },
     "serve": {
       "configurations": {
         "development": {
@@ -1154,15 +1106,6 @@ exports[`app not nested should create project configs 1`] = `
         "buildTarget": "my-app:build",
         "staticFilePath": "dist/my-app/browser",
       },
-    },
-    "test": {
-      "executor": "@nx/jest:jest",
-      "options": {
-        "jestConfig": "my-app/jest.config.ts",
-      },
-      "outputs": [
-        "{workspaceRoot}/coverage/{projectRoot}",
-      ],
     },
   },
 }
@@ -1195,9 +1138,6 @@ exports[`app not nested should create project configs 2`] = `
         "devServerTarget": "my-app:serve:development",
         "testingType": "e2e",
       },
-    },
-    "lint": {
-      "executor": "@nx/eslint:lint",
     },
   },
 }

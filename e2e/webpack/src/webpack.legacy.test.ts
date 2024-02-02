@@ -1,21 +1,23 @@
 import {
+  checkFilesExist,
   cleanupProject,
   killProcessAndPorts,
   newProject,
   runCLI,
   runCommandUntil,
   uniq,
+  updateFile,
 } from '@nx/e2e/utils';
 import { ChildProcess } from 'child_process';
 
-describe('Webpack Plugin (PCv3)', () => {
-  let originalPcv3: string | undefined;
+describe('Webpack Plugin (legacy)', () => {
+  let originalAddPluginsEnv: string | undefined;
   const appName = uniq('app');
   const libName = uniq('lib');
 
   beforeAll(() => {
-    originalPcv3 = process.env.NX_PCV3;
-    process.env.NX_PCV3 = 'true';
+    originalAddPluginsEnv = process.env.NX_ADD_PLUGINS;
+    process.env.NX_ADD_PLUGINS = 'false';
     newProject({
       packages: ['@nx/react'],
       unsetProjectNameAndRootFormat: false,
@@ -29,7 +31,7 @@ describe('Webpack Plugin (PCv3)', () => {
   });
 
   afterAll(() => {
-    process.env.NX_PCV3 = originalPcv3;
+    process.env.NX_ADD_PLUGINS = originalAddPluginsEnv;
     cleanupProject();
   });
 
@@ -64,5 +66,40 @@ describe('Webpack Plugin (PCv3)', () => {
     if (process && process.pid) {
       await killProcessAndPorts(process.pid, port);
     }
+  });
+
+  // Issue: https://github.com/nrwl/nx/issues/20179
+  it('should allow main/styles entries to be spread within composePlugins() function (#20179)', () => {
+    const appName = uniq('app');
+    runCLI(`generate @nx/web:app ${appName} --bundler webpack`);
+    updateFile(`apps/${appName}/src/main.ts`, `console.log('Hello');\n`);
+
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+        const { composePlugins, withNx, withWeb } = require('@nx/webpack');
+        module.exports = composePlugins(withNx(), withWeb(), (config) => {
+          return {
+            ...config,
+            entry: {
+              main: [...config.entry.main],
+              styles: [...config.entry.styles],
+            }
+          };
+        });
+      `
+    );
+
+    expect(() => {
+      runCLI(`build ${appName} --outputHashing none`);
+    }).not.toThrow();
+    checkFilesExist(`dist/${appName}/styles.css`);
+
+    expect(() => {
+      runCLI(`build ${appName} --outputHashing none --extractCss false`);
+    }).not.toThrow();
+    expect(() => {
+      checkFilesExist(`dist/${appName}/styles.css`);
+    }).toThrow();
   });
 });

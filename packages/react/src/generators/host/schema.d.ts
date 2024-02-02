@@ -26,10 +26,12 @@ export interface Schema {
   minimal?: boolean;
   typescriptConfiguration?: boolean;
   dynamic?: boolean;
+  addPlugin?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
   appProjectRoot: string;
   e2eProjectName: string;
   projectName: string;
+  addPlugin?: boolean;
 }
