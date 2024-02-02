@@ -505,13 +505,13 @@ describe('Angular Projects', () => {
     );
 
     runCLI(
-      `generate @nx/angular:lib ${libName} --no-standalone --buildable --project-name-and-root-format=derived`
+      `generate @nx/angular:lib ${libName} --standalone --buildable --project-name-and-root-format=derived`
     );
 
     // check files are generated with the layout directory ("libs/")
     checkFilesExist(
       `libs/${libName}/src/index.ts`,
-      `libs/${libName}/src/lib/${libName}.module.ts`
+      `libs/${libName}/src/lib/${libName}/${libName}.component.ts`
     );
     // check build works
     expect(runCLI(`build ${libName}`)).toContain(
@@ -535,14 +535,16 @@ describe('Angular Projects', () => {
     ).toThrow();
 
     runCLI(
-      `generate @nx/angular:lib ${libName} --buildable --no-standalone --project-name-and-root-format=as-provided`
+      `generate @nx/angular:lib ${libName} --buildable --standalone --project-name-and-root-format=as-provided`
     );
 
     // check files are generated without the layout directory ("libs/") and
     // using the project name as the directory when no directory is provided
     checkFilesExist(
       `${libName}/src/index.ts`,
-      `${libName}/src/lib/${libName.split('/')[1]}.module.ts`
+      `${libName}/src/lib/${libName.split('/')[1]}/${
+        libName.split('/')[1]
+      }.component.ts`
     );
     // check build works
     expect(runCLI(`build ${libName}`)).toContain(
