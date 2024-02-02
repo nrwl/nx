@@ -22,8 +22,7 @@ describe('Web Components Applications', () => {
   beforeAll(() => newProject());
   afterAll(() => cleanupProject());
 
-  // TODO(crystal, @jaysoo): Investigate why this is failing
-  xit('should be able to generate a web app', async () => {
+  it('should be able to generate a web app', async () => {
     const appName = uniq('app');
     runCLI(
       `generate @nx/web:app ${appName} --bundler=webpack --no-interactive`
@@ -44,7 +43,7 @@ describe('Web Components Applications', () => {
     if (isNotWindows() && runE2ETests()) {
       const e2eResults = runCLI(`e2e ${appName}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
-      expect(await killPorts()).toBeTruthy();
+      await killPorts();
     }
 
     copyFileSync(

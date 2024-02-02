@@ -193,6 +193,7 @@ function setNxCloud(tree: Tree) {
     return {
       ...json,
       nxCloudAccessToken: 'xxxx-xxx-xxxx',
+      nxCloudUrl: 'https://my.nx.app',
     };
   });
 }

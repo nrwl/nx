@@ -1,7 +1,10 @@
 import {
   formatFiles,
+  GeneratorCallback,
   joinPathFragments,
+  offsetFromRoot,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
   writeJson,
@@ -12,6 +15,7 @@ import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { hasPlugin } from '../../utils/has-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export function configurationGenerator(
   tree: Tree,
@@ -24,12 +28,20 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
+  const tasks: GeneratorCallback[] = [];
   options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
-  const task = await webpackInitGenerator(tree, {
+  const initTask = await webpackInitGenerator(tree, {
     ...options,
     skipFormat: true,
   });
+  tasks.push(initTask);
+
+  const depsTask = ensureDependencies(tree, {
+    compiler: options.compiler === 'babel' ? undefined : options.compiler,
+  });
+  tasks.push(depsTask);
+
   checkForTargetConflicts(tree, options);
 
   if (!hasPlugin(tree)) {
@@ -45,7 +57,7 @@ export async function configurationGeneratorInternal(
     await formatFiles(tree);
   }
 
-  return task;
+  return runTasksInSerial(...tasks);
 }
 
 function checkForTargetConflicts(
@@ -94,7 +106,9 @@ const { join } = require('path');
 
 module.exports = {
   output: {
-    path: join(__dirname, '${buildOptions.outputPath}'),
+    path: join(__dirname, '${offsetFromRoot(project.root)}${
+            buildOptions.outputPath
+          }'),
   },
   plugins: [
     new NxWebpackPlugin({
@@ -102,6 +116,7 @@ module.exports = {
       tsConfig: '${buildOptions.tsConfig}',
       compiler: '${buildOptions.compiler}',
       main: '${buildOptions.main}',
+      outputHashing: '${buildOptions.target !== 'web' ? 'none' : 'all'}',
     })
   ],
 }
@@ -127,7 +142,9 @@ const { join } = require('path');
 
 module.exports = {
   output: {
-    path: join(__dirname, '${buildOptions.outputPath}'),
+    path: join(__dirname, '${offsetFromRoot(project.root)}${
+            buildOptions.outputPath
+          }'),
   },
   plugins: [
     new NxWebpackPlugin({
@@ -135,6 +152,7 @@ module.exports = {
       tsConfig: '${buildOptions.tsConfig}',
       compiler: '${buildOptions.compiler}',
       main: '${buildOptions.main}',
+      outputHashing: '${buildOptions.target !== 'web' ? 'none' : 'all'}',
     })
   ],
 }

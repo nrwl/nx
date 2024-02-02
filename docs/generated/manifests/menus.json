@@ -9284,14 +9284,6 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
-              },
-              {
-                "id": "cypress",
-                "path": "/nx-api/remix/generators/cypress",
-                "name": "cypress",
-                "children": [],
-                "isExternal": false,
-                "disableCollapsible": false
               }
             ],
             "isExternal": false,

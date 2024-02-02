@@ -52,6 +52,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       implicitDependencies: [options.projectName],
     });
     return configurationGenerator(host, {
+      rootProject: options.rootProject,
       project: options.e2eProjectName,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,

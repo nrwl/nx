@@ -104,10 +104,10 @@ describe('app', () => {
 
       const tsConfig = readJson(tree, 'tsconfig.json');
       expect(tsConfig.include).toEqual([
-        '**/*.ts',
-        '**/*.tsx',
-        '**/*.js',
-        '**/*.jsx',
+        'src/**/*.ts',
+        'src/**/*.tsx',
+        'src/**/*.js',
+        'src/**/*.jsx',
         '.next/types/**/*.ts',
         `dist/${name}/.next/types/**/*.ts`,
         'next-env.d.ts',
@@ -674,6 +674,78 @@ describe('app', () => {
           ]
         `
         );
+      });
+
+      it('should scope tsconfig to the src/ project directory', async () => {
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          name,
+          style: 'css',
+          appDir: true,
+          rootProject: true,
+          projectNameAndRootFormat: 'as-provided',
+          src: true,
+        });
+
+        const tsconfigJSON = readJson(tree, `tsconfig.json`);
+
+        expect(tsconfigJSON.include).toEqual([
+          'src/**/*.ts',
+          'src/**/*.tsx',
+          'src/**/*.js',
+          'src/**/*.jsx',
+          '.next/types/**/*.ts',
+          `dist/${name}/.next/types/**/*.ts`,
+          'next-env.d.ts',
+        ]);
+      });
+
+      it('should scope tsconfig to the app/ project directory', async () => {
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          name,
+          style: 'css',
+          appDir: true,
+          rootProject: true,
+          projectNameAndRootFormat: 'as-provided',
+          src: false,
+        });
+
+        const tsconfigJSON = readJson(tree, `tsconfig.json`);
+
+        expect(tsconfigJSON.include).toEqual([
+          'app/**/*.ts',
+          'app/**/*.tsx',
+          'app/**/*.js',
+          'app/**/*.jsx',
+          '.next/types/**/*.ts',
+          `dist/${name}/.next/types/**/*.ts`,
+          'next-env.d.ts',
+        ]);
+      });
+
+      it('should scope tsconfig to the pages/ project directory', async () => {
+        const name = uniq();
+
+        await applicationGenerator(tree, {
+          name,
+          style: 'css',
+          appDir: false,
+          rootProject: true,
+          projectNameAndRootFormat: 'as-provided',
+          src: false,
+        });
+
+        const tsconfigJSON = readJson(tree, `tsconfig.json`);
+        expect(tsconfigJSON.include).toEqual([
+          'pages/**/*.ts',
+          'pages/**/*.tsx',
+          'pages/**/*.js',
+          'pages/**/*.jsx',
+          'next-env.d.ts',
+        ]);
       });
     });
   });
