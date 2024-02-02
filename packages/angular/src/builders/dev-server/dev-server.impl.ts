@@ -44,6 +44,7 @@ type BuildTargetOptions = {
   tsConfig: string;
   buildLibsFromSource?: boolean;
   customWebpackConfig?: { path?: string };
+  indexHtmlTransformer?: string;
   indexFileTransformer?: string;
   plugins?: string[] | PluginSpec[];
   esbuildMiddleware?: string[];
@@ -111,11 +112,14 @@ export function executeDevServerBuilder(
     }
   }
 
+  const normalizedIndexHtmlTransformer =
+    buildTargetOptions.indexHtmlTransformer ??
+    buildTargetOptions.indexFileTransformer;
   let pathToIndexFileTransformer: string;
-  if (buildTargetOptions.indexFileTransformer) {
+  if (normalizedIndexHtmlTransformer) {
     pathToIndexFileTransformer = joinPathFragments(
       context.workspaceRoot,
-      buildTargetOptions.indexFileTransformer
+      normalizedIndexHtmlTransformer
     );
 
     if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
@@ -313,6 +317,7 @@ function cleanBuildTargetOptions(
   | BrowserEsbuildBuilderOptions {
   delete options.buildLibsFromSource;
   delete options.customWebpackConfig;
+  delete options.indexHtmlTransformer;
   delete options.indexFileTransformer;
   delete options.plugins;
 
