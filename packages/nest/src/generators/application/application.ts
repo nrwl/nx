@@ -5,12 +5,12 @@ import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { initGenerator } from '../init/init';
 import {
   createFiles,
-  ensureDependencies,
   normalizeOptions,
   toNodeApplicationGeneratorOptions,
   updateTsConfig,
 } from './lib';
 import type { ApplicationGeneratorOptions } from './schema';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
 export async function applicationGenerator(
   tree: Tree,
