@@ -20,6 +20,7 @@ import { jestExecutor } from './jest.impl';
 import { JestExecutorOptions } from './schema';
 
 describe('Jest Executor', () => {
+  console.log('blah need to change something!!!!!');
   let mockContext: ExecutorContext;
   const defaultOptions: Omit<JestExecutorOptions, 'jestConfig'> = {
     testPathPattern: [],
