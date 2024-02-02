@@ -127,7 +127,7 @@ describe('Angular Projects', () => {
 
     // check e2e tests
     if (runE2ETests()) {
-      const e2eResults = runCLI(`e2e ${app1}-e2e --no-watch`);
+      const e2eResults = runCLI(`e2e ${app1}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
       expect(await killPorts()).toBeTruthy();
     }
