@@ -402,8 +402,7 @@ describe('Linter', () => {
         );
       });
 
-      // TODO(crystal, @meeroslav): Investigate why this is failing
-      xit('should fix noRelativeOrAbsoluteImportsAcrossLibraries', () => {
+      it('should fix noRelativeOrAbsoluteImportsAcrossLibraries', () => {
         const stdout = runCLI(`lint ${libB}`, {
           silenceError: true,
         });
