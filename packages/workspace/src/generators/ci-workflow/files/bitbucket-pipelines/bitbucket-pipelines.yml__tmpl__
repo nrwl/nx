@@ -23,3 +23,4 @@ pipelines:
 
                 - <%= packageManagerPrefix %> nx-cloud record -- nx format:check
                 - <%= packageManagerPrefix %> nx affected -t=lint,test,build
+                - <%= packageManagerPrefix %> nx-cloud complete-ci-run

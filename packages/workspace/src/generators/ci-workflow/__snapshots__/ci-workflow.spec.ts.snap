@@ -32,6 +32,7 @@ jobs:
 
       - script: npx nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: npx nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      - script: npx nx-cloud complete-ci-run
 "
 `;
 
@@ -58,6 +59,7 @@ pipelines:
 
                 - npx nx-cloud record -- nx format:check
                 - npx nx affected -t=lint,test,build
+                - npx nx-cloud complete-ci-run
 "
 `;
 
@@ -84,6 +86,7 @@ jobs:
 
       - run: npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+      - run: npx nx-cloud complete-ci-run
 
 workflows:
   version: 2
@@ -129,6 +132,7 @@ jobs:
 
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t=lint,test,build
+      - run: npx nx-cloud complete-ci-run
 "
 `;
 
@@ -167,6 +171,7 @@ jobs:
 
       - run: npx nx-cloud record -- nx format:check
       - run: npx nx affected -t=lint,test,build
+      - run: npx nx-cloud complete-ci-run
 "
 `;
 
@@ -192,6 +197,7 @@ CI:
 
     - npx nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - npx nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+    - npx nx-cloud complete-ci-run
 "
 `;
 
@@ -231,6 +237,7 @@ jobs:
 
       - script: pnpm exec nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: pnpm exec nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      - script: pnpm exec nx-cloud complete-ci-run
 "
 `;
 
@@ -259,6 +266,7 @@ pipelines:
 
                 - pnpm exec nx-cloud record -- nx format:check
                 - pnpm exec nx affected -t=lint,test,build
+                - pnpm exec nx-cloud complete-ci-run
 "
 `;
 
@@ -288,6 +296,7 @@ jobs:
 
       - run: pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+      - run: pnpm exec nx-cloud complete-ci-run
 
 workflows:
   version: 2
@@ -336,6 +345,7 @@ jobs:
 
       - run: pnpm exec nx-cloud record -- nx format:check
       - run: pnpm exec nx affected -t=lint,test,build
+      - run: pnpm exec nx-cloud complete-ci-run
 "
 `;
 
@@ -377,6 +387,7 @@ jobs:
 
       - run: pnpm exec nx-cloud record -- nx format:check
       - run: pnpm exec nx affected -t=lint,test,build
+      - run: pnpm exec nx-cloud complete-ci-run
 "
 `;
 
@@ -404,6 +415,7 @@ CI:
 
     - pnpm exec nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - pnpm exec nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+    - pnpm exec nx-cloud complete-ci-run
 "
 `;
 
@@ -441,6 +453,7 @@ jobs:
 
       - script: yarn nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: yarn nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      - script: yarn nx-cloud complete-ci-run
 "
 `;
 
@@ -467,6 +480,7 @@ pipelines:
 
                 - yarn nx-cloud record -- nx format:check
                 - yarn nx affected -t=lint,test,build
+                - yarn nx-cloud complete-ci-run
 "
 `;
 
@@ -493,6 +507,7 @@ jobs:
 
       - run: yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
       - run: yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+      - run: yarn nx-cloud complete-ci-run
 
 workflows:
   version: 2
@@ -538,6 +553,7 @@ jobs:
 
       - run: yarn nx-cloud record -- nx format:check
       - run: yarn nx affected -t=lint,test,build
+      - run: yarn nx-cloud complete-ci-run
 "
 `;
 
@@ -576,6 +592,7 @@ jobs:
 
       - run: yarn nx-cloud record -- nx format:check
       - run: yarn nx affected -t=lint,test,build
+      - run: yarn nx-cloud complete-ci-run
 "
 `;
 
@@ -601,6 +618,7 @@ CI:
 
     - yarn nx-cloud record -- nx format:check --base=$NX_BASE --head=$NX_HEAD
     - yarn nx affected --base=$NX_BASE --head=$NX_HEAD -t=lint,test,build
+    - yarn nx-cloud complete-ci-run
 "
 `;
 

@@ -36,3 +36,4 @@ jobs:
 
       - run: <%= packageManagerPrefix %> nx-cloud record -- nx format:check
       - run: <%= packageManagerPrefix %> nx affected -t=lint,test,build
+      - run: <%= packageManagerPrefix %> nx-cloud complete-ci-run

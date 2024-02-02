@@ -32,3 +32,4 @@ jobs:
 
       - script: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
       - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      - script: <%= packageManagerPrefix %> nx-cloud complete-ci-run
