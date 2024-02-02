@@ -906,6 +906,7 @@ async function addProjectToNxReleaseConfig(
   options: NormalizedSchema,
   projectConfiguration: ProjectConfiguration
 ) {
+  const { output } = requireNx();
   const nxJson = readNxJson(tree);
 
   if (!nxJson.release) {
@@ -914,6 +915,9 @@ async function addProjectToNxReleaseConfig(
       projects: [...defaultMatchingProjects, options.name],
     };
     writeJson(tree, 'nx.json', nxJson);
+    output.log({
+      title: `Added explicit release configuration to nx.json`,
+    });
     return;
   }
 
@@ -921,6 +925,9 @@ async function addProjectToNxReleaseConfig(
     const defaultMatchingProjects = await getDefaultProjectsConfig();
     nxJson.release.projects = [...defaultMatchingProjects, options.name];
     writeJson(tree, 'nx.json', nxJson);
+    output.log({
+      title: `Added explicit release configuration to nx.json`,
+    });
     return;
   }
 
@@ -934,25 +941,29 @@ async function addProjectToNxReleaseConfig(
   };
 
   if (projectsConfigMatchesProject(nxJson.release.projects, project)) {
+    output.log({
+      title: `Project already included in existing release configuration`,
+    });
     return;
   }
 
   if (Array.isArray(nxJson.release.projects)) {
     nxJson.release.projects.push(options.name);
     writeJson(tree, 'nx.json', nxJson);
-    return;
+    output.log({
+      title: `Added project to existing release configuration`,
+    });
   }
 
   if (nxJson.release.groups) {
-    const allGroups = Object.values(nxJson.release.groups);
+    const allGroups = Object.entries(nxJson.release.groups);
 
-    for (const group of allGroups) {
+    for (const [name, group] of allGroups) {
       if (projectsConfigMatchesProject(group.projects, project)) {
-        return;
+        return `Project already included in existing release configuration for group ${name}`;
       }
     }
 
-    const { output } = requireNx();
     output.warn({
       title: `Could not find a release group that includes ${options.name}`,
       bodyLines: [
@@ -965,6 +976,9 @@ async function addProjectToNxReleaseConfig(
   if (typeof nxJson.release.projects === 'string') {
     nxJson.release.projects = [nxJson.release.projects, options.name];
     writeJson(tree, 'nx.json', nxJson);
+    output.log({
+      title: `Added project to existing release configuration`,
+    });
     return;
   }
 }
