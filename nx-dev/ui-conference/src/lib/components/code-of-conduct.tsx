@@ -1,14 +1,14 @@
-export function ConfHealthAndSafety(): JSX.Element {
+export function CodeOfConduct(): JSX.Element {
   return (
     <div className="border-t border-b border-slate-200 dark:border-slate-700">
       <div className="mx-auto max-w-screen-lg xl:max-w-screen-xl">
         <article className="grid grid-cols-1 md:grid-cols-2 md:divide-x md:divide-slate-200 md:dark:divide-slate-700">
           <div className="px-5 py-12 md:pr-12">
             <p className="mb-4">
-              Nx Conf is also dedicated to providing a harassment-free
-              conference experience for everyone, regardless of gender, gender
-              identity and expression, age, sexual orientation, disability,
-              physical appearance, body size, race, ethnicity, religion (or lack
+              Nx is dedicated to providing a harassment-free conference
+              experience for everyone, regardless of gender, gender identity and
+              expression, age, sexual orientation, disability, physical
+              appearance, body size, race, ethnicity, religion (or lack
               thereof), or technology choices.
             </p>
             <p className="mb-4">
