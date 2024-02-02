@@ -85,11 +85,6 @@
       "implementation": "./src/generators/error-boundary/error-boundary.impl",
       "schema": "./src/generators/error-boundary/schema.json",
       "description": "Add an ErrorBoundary to an existing route"
-    },
-    "cypress": {
-      "implementation": "./src/generators/cypress/cypress.impl#cypressGeneratorInternal",
-      "schema": "./src/generators/cypress/schema.json",
-      "description": "Generate a project for testing Remix apps using Cypress"
     }
   }
 }

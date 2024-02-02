@@ -2618,15 +2618,6 @@
         "originalFilePath": "/packages/remix/src/generators/error-boundary/schema.json",
         "path": "remix/generators/error-boundary",
         "type": "generator"
-      },
-      {
-        "description": "Generate a project for testing Remix apps using Cypress",
-        "file": "generated/packages/remix/generators/cypress.json",
-        "hidden": false,
-        "name": "cypress",
-        "originalFilePath": "/packages/remix/src/generators/cypress/schema.json",
-        "path": "remix/generators/cypress",
-        "type": "generator"
       }
     ],
     "githubRoot": "https://github.com/nrwl/nx/blob/master",
