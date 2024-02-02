@@ -274,10 +274,10 @@ class CLIOutput {
         return '❌';
       case 'skipped':
       case 'local-cache-kept-existing':
-        return '⤵️';
+        return '⏩';
       case 'local-cache':
       case 'remote-cache':
-        return '▶️';
+        return '🔁';
     }
   }
 
