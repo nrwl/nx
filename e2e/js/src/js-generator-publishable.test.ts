@@ -40,7 +40,7 @@ describe('js:generators:publishable', () => {
 
     const releaseConfig = readJson('nx.json').release;
     expect(releaseConfig).toEqual({
-      projects: [otherLib, publishableLib1, publishableLib2],
+      projects: [publishableLib1, publishableLib2],
     });
   });
 });
