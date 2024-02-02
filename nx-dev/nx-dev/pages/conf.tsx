@@ -1,6 +1,6 @@
 import { Footer, Header } from '@nx/nx-dev/ui-common';
 import {
-  ConfHealthAndSafety,
+  CodeOfConduct,
   ConfLocation,
   ConfScheduleShort,
   ConfSpeakers,
@@ -333,7 +333,7 @@ export default function ConfPage(): JSX.Element {
               </h2>
             </div>
           </div>
-          <ConfHealthAndSafety />
+          <CodeOfConduct />
           {/*SPONSORS
         <div className="mx-auto max-w-screen-lg px-5 py-5 xl:max-w-screen-xl">
           <div className="mt-24">

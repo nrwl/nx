@@ -28,6 +28,7 @@ export async function normalizeOptions(
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     callingGenerator: '@nx/expo:library',
   });
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())

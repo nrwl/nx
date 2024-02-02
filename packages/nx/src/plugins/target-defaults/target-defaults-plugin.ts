@@ -58,39 +58,48 @@ export const TargetDefaultsPlugin: NxPluginV2 = {
       const packageJson = readJsonOrNull<PackageJson>(
         join(ctx.workspaceRoot, root, 'package.json')
       );
-      const projectDefinedTargets = new Set(
-        Object.keys({
-          ...packageJson?.scripts,
-          ...projectJson?.targets,
-        })
-      );
+      const includedScripts = packageJson?.nx?.includedScripts;
+      const projectDefinedTargets = new Set([
+        ...Object.keys(packageJson?.scripts ?? {}).filter((script) => {
+          if (includedScripts) {
+            return includedScripts.includes(script);
+          }
+          return true;
+        }),
+        ...Object.keys(projectJson?.targets ?? {}),
+        ...Object.keys(packageJson?.nx?.targets ?? {}),
+      ]);
 
       const executorToTargetMap = getExecutorToTargetMap(
         packageJson,
         projectJson
       );
 
-      const newTargets: Record<
+      const modifiedTargets: Record<
         string,
         TargetConfiguration & { [ONLY_MODIFIES_EXISTING_TARGET]?: boolean }
       > = {};
       for (const defaultSpecifier in targetDefaults) {
-        const targetName =
-          executorToTargetMap.get(defaultSpecifier) ?? defaultSpecifier;
-        newTargets[targetName] = structuredClone(
-          targetDefaults[defaultSpecifier]
-        );
-        // TODO: Remove this after we figure out a way to define new targets
-        // in target defaults
-        if (!projectDefinedTargets.has(targetName)) {
-          newTargets[targetName][ONLY_MODIFIES_EXISTING_TARGET] = true;
+        const targetNames =
+          executorToTargetMap.get(defaultSpecifier) ?? new Set();
+        targetNames.add(defaultSpecifier);
+
+        for (const targetName of targetNames) {
+          modifiedTargets[targetName] = structuredClone(
+            targetDefaults[defaultSpecifier]
+          );
+          // TODO: Remove this after we figure out a way to define new targets
+          // in target defaults
+          if (!projectDefinedTargets.has(targetName)) {
+            modifiedTargets[targetName][ONLY_MODIFIES_EXISTING_TARGET] = true;
+          }
         }
       }
 
       return {
         projects: {
           [root]: {
-            targets: newTargets,
+            targets: modifiedTargets,
           },
         },
       };
@@ -102,20 +111,20 @@ function getExecutorToTargetMap(
   packageJson: PackageJson,
   projectJson: ProjectConfiguration
 ) {
-  const executorToTargetMap = new Map<string, string>();
-  if (packageJson?.scripts) {
-    for (const script in packageJson.scripts) {
-      executorToTargetMap.set('nx:run-script', script);
-    }
-  }
-  if (projectJson?.targets) {
-    for (const target in projectJson.targets) {
-      if (projectJson.targets[target].executor) {
-        executorToTargetMap.set(projectJson.targets[target].executor, target);
-      } else if (projectJson.targets[target].command) {
-        executorToTargetMap.set('nx:run-commands', target);
-      }
-    }
+  const executorToTargetMap = new Map<string, Set<string>>();
+  const targets = Object.keys({
+    ...projectJson?.targets,
+    ...packageJson?.scripts,
+    ...packageJson?.nx?.targets,
+  });
+  for (const target of targets) {
+    const executor =
+      projectJson?.targets?.[target]?.executor ??
+      packageJson?.nx?.targets?.[target]?.executor ??
+      'nx:run-script';
+    const targetsForExecutor = executorToTargetMap.get(executor) ?? new Set();
+    targetsForExecutor.add(target);
+    executorToTargetMap.set(executor, targetsForExecutor);
   }
   return executorToTargetMap;
 }

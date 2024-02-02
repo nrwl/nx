@@ -16,6 +16,7 @@ import {
   runTasksInSerial,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { JestPluginOptions } from '../../plugins/plugin';
 
 const schemaDefaults = {
   setupFile: 'none',
@@ -33,6 +34,10 @@ function normalizeOptions(
   if (!options.testEnvironment) {
     options.testEnvironment = 'jsdom';
   }
+
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  options.targetName ??= 'test';
 
   if (!options.hasOwnProperty('supportTsx')) {
     options.supportTsx = false;
@@ -61,7 +66,11 @@ function normalizeOptions(
   };
 }
 
-export async function configurationGenerator(
+export function configurationGenerator(tree: Tree, schema: JestProjectSchema) {
+  return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function configurationGeneratorInternal(
   tree: Tree,
   schema: JestProjectSchema
 ): Promise<GeneratorCallback> {
@@ -70,7 +79,7 @@ export async function configurationGenerator(
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(await jsInitGenerator(tree, { ...schema, skipFormat: true }));
-  tasks.push(await jestInitGenerator(tree, options));
+  tasks.push(await jestInitGenerator(tree, { ...options, skipFormat: true }));
   if (!schema.skipPackageJson) {
     tasks.push(ensureDependencies(tree, options));
   }
@@ -82,11 +91,17 @@ export async function configurationGenerator(
   updateVsCodeRecommendedExtensions(tree);
 
   const nxJson = readNxJson(tree);
-  const hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/jest/plugin'
-      : p.plugin === '@nx/jest/plugin'
-  );
+  const hasPlugin = nxJson.plugins?.some((p) => {
+    if (typeof p === 'string') {
+      return p === '@nx/jest/plugin' && options.targetName === 'test';
+    } else {
+      return (
+        p.plugin === '@nx/jest/plugin' &&
+        ((p.options as JestPluginOptions)?.targetName ?? 'test') ===
+          options.targetName
+      );
+    }
+  });
   if (!hasPlugin) {
     updateWorkspace(tree, options);
   }

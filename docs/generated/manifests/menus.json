@@ -2406,6 +2406,14 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
+              },
+              {
+                "name": "Publish in CI/CD",
+                "path": "/recipes/nx-release/publish-in-ci-cd",
+                "id": "publish-in-ci-cd",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -4239,6 +4247,14 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
+          },
+          {
+            "name": "Publish in CI/CD",
+            "path": "/recipes/nx-release/publish-in-ci-cd",
+            "id": "publish-in-ci-cd",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -4263,6 +4279,14 @@
         "name": "Automatically Version with Conventional Commits",
         "path": "/recipes/nx-release/automatically-version-with-conventional-commits",
         "id": "automatically-version-with-conventional-commits",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Publish in CI/CD",
+        "path": "/recipes/nx-release/publish-in-ci-cd",
+        "id": "publish-in-ci-cd",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -6766,6 +6790,14 @@
                 "disableCollapsible": false
               },
               {
+                "id": "convert-to-application-executor",
+                "path": "/nx-api/angular/generators/convert-to-application-executor",
+                "name": "convert-to-application-executor",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
                 "id": "directive",
                 "path": "/nx-api/angular/generators/directive",
                 "name": "directive",
@@ -7496,6 +7528,14 @@
                 "id": "submit",
                 "path": "/nx-api/expo/executors/submit",
                 "name": "submit",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "serve",
+                "path": "/nx-api/expo/executors/serve",
+                "name": "serve",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
@@ -8975,6 +9015,14 @@
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false
+              },
+              {
+                "id": "upgrade",
+                "path": "/nx-api/react-native/executors/upgrade",
+                "name": "upgrade",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
               }
             ],
             "isExternal": false,
@@ -9045,6 +9093,14 @@
                 "id": "upgrade-native",
                 "path": "/nx-api/react-native/generators/upgrade-native",
                 "name": "upgrade-native",
+                "children": [],
+                "isExternal": false,
+                "disableCollapsible": false
+              },
+              {
+                "id": "web-configuration",
+                "path": "/nx-api/react-native/generators/web-configuration",
+                "name": "web-configuration",
                 "children": [],
                 "isExternal": false,
                 "disableCollapsible": false

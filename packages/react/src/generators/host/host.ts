@@ -20,6 +20,7 @@ import {
 import { setupSsrForHost } from './lib/setup-ssr-for-host';
 import { updateModuleFederationE2eProject } from './lib/update-module-federation-e2e-project';
 import { NormalizedSchema, Schema } from './schema';
+import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 
 export async function hostGenerator(
   host: Tree,
@@ -40,6 +41,8 @@ export async function hostGeneratorInternal(
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:host')),
     typescriptConfiguration: schema.typescriptConfiguration ?? true,
     dynamic: schema.dynamic ?? false,
+    // TODO(colum): remove when MF works with Crystal
+    addPlugin: false,
   };
 
   const initTask = await applicationGenerator(host, {
@@ -113,6 +116,8 @@ export async function hostGeneratorInternal(
       joinPathFragments(options.appProjectRoot, 'tsconfig.lint.json')
     );
   }
+
+  addMfEnvToTargetDefaultInputs(host);
 
   if (!options.skipFormat) {
     await formatFiles(host);

@@ -81,10 +81,10 @@ The setup includes..
 
 Let me explain a couple of things that might be new to you.
 
-| File           | Description                                                                                                                                                                                                                                           |
-| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nx.json`      | This is where we fine-tune how Nx works. We define what [cacheable operations](/core-features/cache-task-results) there are, and configure our [task pipeline](/concepts/task-pipeline-configuration). More on that soon.                             |
-| `project.json` | This file contains the targets that can be invoked for the `myreactapp` project. It is like a more evolved version of simple `package.json` scripts with more metadata attached. You can read more about it [here](/reference/project-configuration). |
+| File           | Description                                                                                                                                                                                                                                         |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nx.json`      | This is where we fine-tune how Nx works. We define what [cacheable operations](/core-features/cache-task-results) there are, and configure our [task pipeline](/concepts/task-pipeline-configuration). More on that soon.                           |
+| `project.json` | This file contains the targets that can be invoked for the `myvueapp` project. It is like a more evolved version of simple `package.json` scripts with more metadata attached. You can read more about it [here](/reference/project-configuration). |
 
 ## Serving the App
 
@@ -164,7 +164,7 @@ Each target contains a configuration object that tells Nx how to run that target
 
 The most critical parts are:
 
-- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the React app using Vite.
+- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the Vue app using Vite.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
 Learn more about how to [run tasks with Nx](/core-features/run-tasks).
@@ -235,7 +235,7 @@ So, what are Nx Plugins? Nx Plugins are optional packages that extend the capabi
 
 <!-- {% video-link link="https://youtu.be/ZAO0yXupIIE?t=500" /%} -->
 
-You can just create new React components as you normally would. However, Nx plugins usually also ship [generators](/core-features/plugin-features/use-code-generators). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/vue` plugin ships, run the following command and inspect the output:
+You can just create new Vue components as you normally would. However, Nx plugins usually also ship [generators](/core-features/plugin-features/use-code-generators). They allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/vue` plugin ships, run the following command and inspect the output:
 
 ```{% command="npx nx list @nx/vue" path="myvueapp" %}
 

@@ -355,7 +355,13 @@
         "@angular/core": ">=17.1.0"
       },
       "description": "Add 'autoprefixer' as dev dependency when '@nx/angular:ng-packagr-lite' or '@nx/angular:package` is used.",
-      "factory": "./src/migrations/update-17-3-0/add-browser-sync-dependency"
+      "factory": "./src/migrations/update-17-3-0/add-autoprefixer-dependency"
+    },
+    "add-module-federation-env-var-to-target-defaults": {
+      "cli": "nx",
+      "version": "18.0.0-beta.0",
+      "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/angular:webpack-browser' is used for Module Federation.",
+      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
     }
   },
   "packageJsonUpdates": {

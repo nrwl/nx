@@ -1,8 +1,8 @@
 {
   "name": "library",
-  "factory": "./src/generators/library/library",
+  "factory": "./src/generators/library/library#libraryGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxVueLibrary",
     "title": "Create a Vue Library",
@@ -141,7 +141,7 @@
   "aliases": ["lib"],
   "x-type": "library",
   "description": "Create a Vue library.",
-  "implementation": "/packages/vue/src/generators/library/library.ts",
+  "implementation": "/packages/vue/src/generators/library/library#libraryGeneratorInternal.ts",
   "hidden": false,
   "path": "/packages/vue/src/generators/library/schema.json",
   "type": "generator"

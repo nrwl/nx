@@ -49,7 +49,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
-  // TODO(jack): Remove this Angular logic once `@nx/plugin` is compatible with PCv3.
+  // TODO(jack): Remove this Angular logic once `@nx/angular` is compatible with inferred targets.
   if (existsSync('angular.json')) {
     await addNxToAngularCliRepo({
       ...options,
@@ -97,7 +97,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
   if (useNxCloud) {
     output.log({ title: '🛠️ Setting up Nx Cloud' });
     execSync(
-      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init-pcv3 --quiet --hideFormatLogs --no-interactive`,
+      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init --quiet --hideFormatLogs --no-interactive`,
       {
         stdio: [0, 1, 2],
         cwd: repoRoot,
@@ -106,10 +106,10 @@ export async function initHandler(options: InitArgs): Promise<void> {
   }
 
   output.log({
-    title: '👀 Explore the Graph of Your Workspace',
+    title: '👀 Explore Your Workspace',
     bodyLines: [
       `Run "nx graph" to show the graph of the workspace. It will show tasks that you can run with Nx.`,
-      `Read this guide on exploring the graph: https://nx.dev/core-features/explore-graph`,
+      `Read this guide on exploring your workspace: https://nx.dev/core-features/explore-graph`,
     ],
   });
 }

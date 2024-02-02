@@ -11,4 +11,5 @@ export interface CypressGeneratorSchema {
   js?: boolean;
   skipFormat?: boolean;
   setParserOptionsProject?: boolean;
+  addPlugin?: boolean;
 }

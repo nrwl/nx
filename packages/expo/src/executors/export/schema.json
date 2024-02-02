@@ -3,7 +3,7 @@
   "version": 2,
   "outputCapture": "direct-nodejs",
   "$id": "NxExpoExport",
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "title": "Expo Export",
   "description": "Export the JavaScript and assets for your app using Metro/webpack bundler.",
   "type": "object",
@@ -11,38 +11,39 @@
     "platform": {
       "description": "Choose the platform to compile for",
       "enum": ["ios", "android", "all", "web"],
+      "default": "all",
       "alias": "p",
       "x-priority": "important"
     },
     "dev": {
       "type": "boolean",
-      "description": "Bundle for development environments without minifying code or stripping the __DEV__ boolean. Configure static files for developing locally using a non-https server."
+      "description": "Configure static files for developing locally using a non-https server"
     },
     "clear": {
       "type": "boolean",
       "description": "Clear the bundler cache before exporting"
     },
+    "minify": {
+      "type": "boolean",
+      "description": "Minify source"
+    },
     "outputDir": {
       "type": "string",
-      "description": "The directory to export the static files to. Default: dist"
+      "description": "Relative to workspace root, the directory to export the static files to. Default: dist"
     },
     "maxWorkers": {
       "type": "number",
-      "description": "Maximum number of tasks to allow Metro to spawn"
+      "description": "When bundler is metro, the maximum number of tasks to allow the bundler to spawn"
     },
     "dumpAssetmap": {
       "type": "boolean",
-      "description": "Dump the asset map for further processing"
+      "description": "When bundler is metro, whether to dump the asset map for further processing"
     },
-    "dumpSourcemap": {
+    "sourceMaps": {
       "type": "boolean",
-      "description": "Dump the source map for debugging the JS bundle"
-    },
-    "bundler": {
-      "enum": ["metro", "webpack"],
-      "description": "Choose the bundler to compile for",
-      "default": "metro"
+      "description": "When bundler is metro, whether to emit JavaScript source maps"
     }
   },
-  "required": []
+  "required": ["platform"],
+  "examplesFile": "../../../docs/export-examples.md"
 }

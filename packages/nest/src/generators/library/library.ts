@@ -1,5 +1,5 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { formatFiles } from '@nx/devkit';
+import { formatFiles, runTasksInSerial } from '@nx/devkit';
 import { libraryGenerator as jsLibraryGenerator } from '@nx/js';
 import { addDependencies } from '../init/lib';
 import {
@@ -13,12 +13,14 @@ import {
 } from './lib';
 import type { LibraryGeneratorOptions } from './schema';
 import initGenerator from '../init/init';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function libraryGenerator(
   tree: Tree,
   rawOptions: LibraryGeneratorOptions
 ): Promise<GeneratorCallback> {
   return await libraryGeneratorInternal(tree, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...rawOptions,
   });
@@ -30,7 +32,7 @@ export async function libraryGeneratorInternal(
 ): Promise<GeneratorCallback> {
   const options = await normalizeOptions(tree, rawOptions);
   await jsLibraryGenerator(tree, toJsLibraryGeneratorOptions(options));
-  const initTask = initGenerator(tree, rawOptions);
+  const initTask = await initGenerator(tree, rawOptions);
   deleteFiles(tree, options);
   createFiles(tree, options);
   addExportsToBarrelFile(tree, options);
@@ -41,7 +43,14 @@ export async function libraryGeneratorInternal(
     await formatFiles(tree);
   }
 
-  return initTask;
+  return runTasksInSerial(
+    ...[
+      initTask,
+      () => {
+        logShowProjectCommand(options.projectName);
+      },
+    ]
+  );
 }
 
 export default libraryGenerator;

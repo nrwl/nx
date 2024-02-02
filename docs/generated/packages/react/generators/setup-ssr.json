@@ -2,7 +2,7 @@
   "name": "setup-ssr",
   "factory": "./src/generators/setup-ssr/setup-ssr#setupSsrGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorReactSSRSetup",
     "cli": "nx",
     "title": "Generate SSR setup for a React app",

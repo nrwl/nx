@@ -24,6 +24,8 @@ describe('app', () => {
       e2eTestRunner: 'none',
       install: false,
       projectNameAndRootFormat: 'as-provided',
+      unitTestRunner: 'none',
+      bundler: 'vite',
     });
     const projects = getProjects(appTree);
 
@@ -39,6 +41,8 @@ describe('app', () => {
       e2eTestRunner: 'none',
       install: false,
       projectNameAndRootFormat: 'as-provided',
+      unitTestRunner: 'none',
+      bundler: 'vite',
     });
 
     const projectConfiguration = readProjectConfiguration(appTree, 'my-app');
@@ -55,6 +59,8 @@ describe('app', () => {
       e2eTestRunner: 'none',
       install: false,
       projectNameAndRootFormat: 'as-provided',
+      unitTestRunner: 'jest',
+      bundler: 'vite',
     });
     expect(appTree.exists('my-app/src/app/App.tsx')).toBeTruthy();
     expect(appTree.exists('my-app/src/main.tsx')).toBeTruthy();
@@ -74,6 +80,17 @@ describe('app', () => {
         moduleNameMapper: {
           '\\\\.svg$': '@nx/react-native/plugins/jest/svg-mock',
         },
+        transform: {
+          '^.+.(js|ts|tsx)$': [
+            'babel-jest',
+            {
+              configFile: __dirname + '/.babelrc.js',
+            },
+          ],
+          '^.+.(bmp|gif|jpg|jpeg|mp4|png|psd|svg|webp)$': require.resolve(
+            'react-native/jest/assetFileTransformer.js'
+          ),
+        },
         coverageDirectory: '../coverage/my-app',
       };
       "
@@ -88,9 +105,11 @@ describe('app', () => {
       e2eTestRunner: 'none',
       install: false,
       projectNameAndRootFormat: 'as-provided',
+      unitTestRunner: 'jest',
+      bundler: 'vite',
     });
-    const targets = readProjectConfiguration(appTree, 'my-app').targets;
-    expect(targets.test).toBeDefined();
+
+    expect(appTree.exists('my-app/jest.config.ts')).toBeTruthy();
   });
 
   it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -103,6 +122,8 @@ describe('app', () => {
       e2eTestRunner: 'none',
       install: false,
       projectNameAndRootFormat: 'as-provided',
+      unitTestRunner: 'none',
+      bundler: 'vite',
     });
 
     const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
@@ -118,6 +139,8 @@ describe('app', () => {
         e2eTestRunner: 'detox',
         install: false,
         projectNameAndRootFormat: 'as-provided',
+        bundler: 'vite',
+        unitTestRunner: 'none',
       });
 
       const projects = getProjects(appTree);
@@ -168,6 +191,8 @@ describe('app', () => {
         e2eTestRunner: 'detox',
         install: false,
         projectNameAndRootFormat: 'as-provided',
+        bundler: 'vite',
+        unitTestRunner: 'none',
       });
 
       const projects = getProjects(appTree);
@@ -223,6 +248,8 @@ describe('app', () => {
         install: false,
         skipPackageJson: true,
         projectNameAndRootFormat: 'as-provided',
+        unitTestRunner: 'none',
+        bundler: 'webpack',
       });
 
       expect(readJson(appTree, 'package.json')).toEqual(packageJsonBefore);

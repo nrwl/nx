@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxRemixInit",
   "title": "Init Remix Plugin",
   "description": "Initialize the Remix Plugin.",

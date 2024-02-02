@@ -13,10 +13,32 @@ import * as Mod from 'module';
  */
 
 export function initLocal(workspace: WorkspaceTypeAndRoot) {
+  // If module.register is not available, we need to restart the process with the experimental ESM loader.
+  // Otherwise, usage of `registerTsProject` will not work for `.ts` files using ESM.
+  // TODO: Remove this once Node 18 is out of LTS (March 2024).
+  if (shouldRestartWithExperimentalTsEsmLoader()) {
+    const child = require('child_process').fork(
+      require.resolve('./nx'),
+      process.argv.slice(2),
+      {
+        env: {
+          ...process.env,
+          RESTARTED_WITH_EXPERIMENTAL_TS_ESM_LOADER: '1',
+        },
+        execArgv: execArgvWithExperimentalLoaderOptions(),
+      }
+    );
+    child.on('close', (code: number | null) => {
+      if (code !== 0 && code !== null) process.exit(code);
+    });
+    return;
+  }
+
   process.env.NX_CLI_SET = 'true';
 
   try {
     performance.mark('init-local');
+
     monkeyPatchRequire();
 
     if (workspace.type !== 'nx' && shouldDelegateToAngularCLI()) {
@@ -41,8 +63,7 @@ export function initLocal(workspace: WorkspaceTypeAndRoot) {
         commandsObject.parse(newArgs);
       }
     } else {
-      const newArgs = rewritePositionalArguments(process.argv);
-      commandsObject.parse(newArgs);
+      commandsObject.parse(process.argv.slice(2));
     }
   } catch (e) {
     console.error(e.message);
@@ -79,41 +100,6 @@ export function rewriteTargetsAndProjects(args: string[]) {
     }
   }
   return newArgs;
-}
-
-function rewritePositionalArguments(args: string[]) {
-  const relevantPositionalArgs = [];
-  const rest = [];
-  for (let i = 2; i < args.length; i++) {
-    if (args[i] === '--') {
-      rest.push(...args.slice(i + 1));
-      break;
-    } else if (!args[i].startsWith('-')) {
-      relevantPositionalArgs.push(args[i]);
-      if (relevantPositionalArgs.length === 2) {
-        rest.push(...args.slice(i + 1));
-        break;
-      }
-    } else {
-      rest.push(args[i]);
-    }
-  }
-
-  if (relevantPositionalArgs.length === 1) {
-    return [
-      'run',
-      `${wrapIntoQuotesIfNeeded(relevantPositionalArgs[0])}`,
-      ...rest,
-    ];
-  }
-
-  return [
-    'run',
-    `${relevantPositionalArgs[1]}:${wrapIntoQuotesIfNeeded(
-      relevantPositionalArgs[0]
-    )}`,
-    ...rest,
-  ];
 }
 
 function wrapIntoQuotesIfNeeded(arg: string) {
@@ -228,4 +214,37 @@ function monkeyPatchRequire() {
     }
     // do some side-effect of your own
   };
+}
+
+function shouldRestartWithExperimentalTsEsmLoader(): boolean {
+  // Already restarted with experimental loader
+  if (process.env.RESTARTED_WITH_EXPERIMENTAL_TS_ESM_LOADER === '1')
+    return false;
+  const nodeVersion = parseInt(process.versions.node.split('.')[0]);
+  // `--experimental-loader` is only supported in Nodejs >= 16 so there is no point restarting for older versions
+  if (nodeVersion < 16) return false;
+  // Node 20.6.0 adds `module.register`, otherwise we need to restart process with "--experimental-loader ts-node/esm".
+  return (
+    !require('node:module').register &&
+    moduleResolves('ts-node/esm') &&
+    moduleResolves('typescript')
+  );
+}
+
+function execArgvWithExperimentalLoaderOptions() {
+  return [
+    ...process.execArgv,
+    '--no-warnings',
+    '--experimental-loader',
+    'ts-node/esm',
+  ];
+}
+
+function moduleResolves(packageName: string) {
+  try {
+    require.resolve(packageName);
+    return true;
+  } catch {
+    return false;
+  }
 }

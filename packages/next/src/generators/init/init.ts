@@ -7,7 +7,6 @@ import {
 } from '@nx/devkit';
 import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
-import { createNodes } from '../../plugins/plugin';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 import { nextVersion, nxVersion } from '../../utils/versions';
 import { addPlugin } from './lib/add-plugin';
@@ -37,8 +36,16 @@ function updateDependencies(host: Tree, schema: InitSchema) {
   return runTasksInSerial(...tasks);
 }
 
-export async function nextInitGenerator(host: Tree, schema: InitSchema) {
-  if (process.env.NX_PCV3 === 'true') {
+export function nextInitGenerator(tree: Tree, schema: InitSchema) {
+  return nextInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function nextInitGeneratorInternal(
+  host: Tree,
+  schema: InitSchema
+) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  if (schema.addPlugin) {
     addPlugin(host);
   }
 
@@ -50,6 +57,7 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   }
 
   if (schema.updatePackageScripts) {
+    const { createNodes } = await import('../../plugins/plugin');
     await updatePackageScripts(host, createNodes);
   }
 

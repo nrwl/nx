@@ -22,6 +22,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
       setParserOptionsProject: options.setParserOptionsProject,
+      addPlugin: options.addPlugin,
     });
 
     if (isEslintConfigSupported(host)) {

@@ -76,7 +76,7 @@ describe('nx release first run', () => {
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
-  });
+  }, 60000);
   afterAll(() => cleanupProject());
 
   describe('without --first-release', () => {
@@ -88,7 +88,7 @@ describe('nx release first run', () => {
       expect(
         releaseOutput1.match(
           new RegExp(
-            `NX   Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`,
+            `NX   Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`,
             'g'
           )
         ).length
@@ -259,7 +259,7 @@ describe('nx release first run', () => {
       expect(
         releaseOutput1.match(
           new RegExp(
-            `NX   Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`,
+            `NX   Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`,
             'g'
           )
         ).length
@@ -322,7 +322,7 @@ describe('nx release first run', () => {
       expect(
         releaseOutput3.match(
           new RegExp(
-            `NX   Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`,
+            `NX   Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`,
             'g'
           )
         ).length

@@ -13,6 +13,9 @@ use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
 use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
 
+#[cfg(target_os = "windows")]
+static CURSOR_POSITION: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
+
 fn command_builder() -> CommandBuilder {
     if cfg!(target_os = "windows") {
         let comspec = std::env::var("COMSPEC");
@@ -39,14 +42,14 @@ pub enum ChildProcessMessage {
 pub struct ChildProcess {
     process_killer: Box<dyn ChildKiller + Sync + Send>,
     message_receiver: Receiver<String>,
-    wait_receiver: Receiver<u32>,
+    wait_receiver: Receiver<String>,
 }
 #[napi]
 impl ChildProcess {
     pub fn new(
         process_killer: Box<dyn ChildKiller + Sync + Send>,
         message_receiver: Receiver<String>,
-        exit_receiver: Receiver<u32>,
+        exit_receiver: Receiver<String>,
     ) -> Self {
         Self {
             process_killer,
@@ -57,17 +60,16 @@ impl ChildProcess {
 
     #[napi]
     pub fn kill(&mut self) -> anyhow::Result<()> {
-        self.process_killer.kill().map_err(anyhow::Error::from)?;
-        Ok(())
+        self.process_killer.kill().map_err(anyhow::Error::from)
     }
 
     #[napi]
     pub fn on_exit(
         &mut self,
-        #[napi(ts_arg_type = "(code: number) => void")] callback: JsFunction,
+        #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
     ) -> napi::Result<()> {
         let wait = self.wait_receiver.clone();
-        let callback_tsfn: ThreadsafeFunction<u32, Fatal> =
+        let callback_tsfn: ThreadsafeFunction<String, Fatal> =
             callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
 
         std::thread::spawn(move || {
@@ -171,6 +173,16 @@ pub fn run_command(
                 // remove cursor position 1,1
                 content = content.replacen("\x1B[H", "", 1);
             }
+
+            #[cfg(target_os = "windows")]
+            {
+                let regex = CURSOR_POSITION.get_or_init(|| {
+                    regex::Regex::new(r"\x1B\[\d+;\d+H")
+                        .expect("failed to compile CURSOR ansi regex")
+                });
+                content = regex.replace_all(&content, "").to_string();
+            }
+
             message_tx.send(content.to_string()).ok();
             if !quiet {
                 stdout.write_all(content.as_bytes()).ok();
@@ -205,7 +217,7 @@ pub fn run_command(
         // make sure that master is only dropped after we wait on the child. Otherwise windows does not like it
         drop(pair.master);
         disable_raw_mode().expect("Failed to restore non-raw terminal");
-        exit_tx.send(exit.exit_code()).ok();
+        exit_tx.send(exit.to_string()).ok();
     });
 
     Ok(ChildProcess::new(process_killer, message_rx, exit_rx))

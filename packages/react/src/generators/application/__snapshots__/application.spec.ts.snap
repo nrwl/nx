@@ -52,6 +52,188 @@ it('should have a greeting as the title', () => {
 "
 `;
 
+exports[`app --style @emotion/styled should exclude styles 1`] = `
+"
+const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxReactWebpackPlugin } = require('@nx/react');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/my-app'),
+  },
+  devServer: {
+    port: 4200
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.tsx',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ["./src/favicon.ico","./src/assets"],
+      styles: [],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactWebpackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+  ],
+};
+
+"
+`;
+
+exports[`app --style @emotion/styled should not break if bundler is vite 1`] = `
+"
+      /// <reference types='vitest' />
+      import { defineConfig } from 'vite';
+      import react from '@vitejs/plugin-react';
+      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+      
+      export default defineConfig({
+        root: __dirname,
+        cacheDir: '../node_modules/.vite/my-app',
+        
+    server:{
+      port: 4200,
+      host: 'localhost',
+    },
+        
+    preview:{
+      port: 4300,
+      host: 'localhost',
+    },
+        
+        plugins: [react(),
+nxViteTsPaths()],
+        
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  plugins: [ nxViteTsPaths() ],
+    // },
+        
+    build: {
+      outDir: '../dist/my-app',
+      reportCompressedSize: true,
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
+    },
+    
+        
+        test: {
+    globals: true,
+    cache: {
+      dir: '../node_modules/.vitest'
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/my-app',
+      provider: 'v8',
+    }
+  },
+      });"
+`;
+
+exports[`app --style none should exclude styles 1`] = `
+"
+const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxReactWebpackPlugin } = require('@nx/react');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/my-app'),
+  },
+  devServer: {
+    port: 4200
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.tsx',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ["./src/favicon.ico","./src/assets"],
+      styles: [],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactWebpackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+  ],
+};
+
+"
+`;
+
+exports[`app --style none should not break if bundler is vite 1`] = `
+"
+      /// <reference types='vitest' />
+      import { defineConfig } from 'vite';
+      import react from '@vitejs/plugin-react';
+      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+      
+      export default defineConfig({
+        root: __dirname,
+        cacheDir: '../node_modules/.vite/my-app',
+        
+    server:{
+      port: 4200,
+      host: 'localhost',
+    },
+        
+    preview:{
+      port: 4300,
+      host: 'localhost',
+    },
+        
+        plugins: [react(),
+nxViteTsPaths()],
+        
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  plugins: [ nxViteTsPaths() ],
+    // },
+        
+    build: {
+      outDir: '../dist/my-app',
+      reportCompressedSize: true,
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
+    },
+    
+        
+        test: {
+    globals: true,
+    cache: {
+      dir: '../node_modules/.vitest'
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/my-app',
+      provider: 'v8',
+    }
+  },
+      });"
+`;
+
 exports[`app not nested should generate files 1`] = `
 "// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import styles from './app.module.css';
@@ -67,6 +249,44 @@ export function App() {
 }
 
 export default App;
+"
+`;
+
+exports[`app setup React app with --bundler=vite should setup targets with vite configuration 1`] = `null`;
+
+exports[`app should add custom webpack config 1`] = `
+"
+const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxReactWebpackPlugin } = require('@nx/react');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/my-app'),
+  },
+  devServer: {
+    port: 4200
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.tsx',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ["./src/favicon.ico","./src/assets"],
+      styles: ["./src/styles.css"],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactWebpackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+  ],
+};
+
 "
 `;
 
@@ -93,6 +313,97 @@ export function App() {
 
 export default App;
 
+
+"
+`;
+
+exports[`app should setup vite if bundler is vite 1`] = `
+"
+      /// <reference types='vitest' />
+      import { defineConfig } from 'vite';
+      import react from '@vitejs/plugin-react';
+      import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+      
+      export default defineConfig({
+        root: __dirname,
+        cacheDir: '../node_modules/.vite/my-app',
+        
+    server:{
+      port: 4200,
+      host: 'localhost',
+    },
+        
+    preview:{
+      port: 4300,
+      host: 'localhost',
+    },
+        
+        plugins: [react(),
+nxViteTsPaths()],
+        
+    // Uncomment this if you are using workers. 
+    // worker: {
+    //  plugins: [ nxViteTsPaths() ],
+    // },
+        
+    build: {
+      outDir: '../dist/my-app',
+      reportCompressedSize: true,
+      commonjsOptions: {
+        transformMixedEsModules: true,
+      },
+    },
+    
+        
+        test: {
+    globals: true,
+    cache: {
+      dir: '../node_modules/.vitest'
+    },
+    environment: 'jsdom',
+    include: ['src/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    
+    reporters: ['default'],
+    coverage: {
+      reportsDirectory: '../coverage/my-app',
+      provider: 'v8',
+    }
+  },
+      });"
+`;
+
+exports[`app should setup webpack 1`] = `
+"
+const { NxWebpackPlugin } = require('@nx/webpack');
+const { NxReactWebpackPlugin } = require('@nx/react');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../dist/my-app'),
+  },
+  devServer: {
+    port: 4200
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      tsConfig: './tsconfig.app.json',
+      compiler: 'babel',
+      main: './src/main.tsx',
+      index: './src/index.html',
+      baseHref: '/',
+      assets: ["./src/favicon.ico","./src/assets"],
+      styles: ["./src/styles.css"],
+      outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
+      optimization: process.env['NODE_ENV'] === 'production',
+    }),
+    new NxReactWebpackPlugin({
+      // Uncomment this line if you don't want to use SVGR
+      // See: https://react-svgr.com/
+      // svgr: false
+    }),
+  ],
+};
 
 "
 `;

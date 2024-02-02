@@ -128,7 +128,7 @@ export async function releaseVersion(
       'git',
     ]);
     output.error({
-      title: `The 'release.git' property in nx.json may not be used with the 'nx release version' subcommand or programmatic API. Instead, configure git options for subcommands directly with 'release.version.git' and 'release.changelog.git'.`,
+      title: `The "release.git" property in nx.json may not be used with the "nx release version" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
       bodyLines: [nxJsonMessage],
     });
     process.exit(1);

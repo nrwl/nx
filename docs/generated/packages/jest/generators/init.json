@@ -1,8 +1,8 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#jestInitGenerator",
+  "factory": "./src/generators/init/init#jestInitGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxJestInit",
     "cli": "nx",
     "title": "Jest init",
@@ -40,7 +40,7 @@
   "description": "Initialize the `@nrwl/jest` plugin.",
   "aliases": ["ng-add"],
   "hidden": true,
-  "implementation": "/packages/jest/src/generators/init/init#jestInitGenerator.ts",
+  "implementation": "/packages/jest/src/generators/init/init#jestInitGeneratorInternal.ts",
   "path": "/packages/jest/src/generators/init/schema.json",
   "type": "generator"
 }

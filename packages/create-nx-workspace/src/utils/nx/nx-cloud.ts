@@ -8,7 +8,8 @@ export type NxCloud = 'yes' | 'github' | 'circleci' | 'skip';
 
 export async function setupNxCloud(
   directory: string,
-  packageManager: PackageManager
+  packageManager: PackageManager,
+  nxCloud: NxCloud
 ) {
   const nxCloudSpinner = ora(`Setting up Nx Cloud`).start();
   try {
@@ -17,7 +18,13 @@ export async function setupNxCloud(
       `${pmc.exec} nx g nx:connect-to-nx-cloud --no-interactive --quiet`,
       directory
     );
-    nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
+    if (nxCloud !== 'yes') {
+      nxCloudSpinner.succeed(
+        'CI workflow with Nx Cloud has been generated successfully'
+      );
+    } else {
+      nxCloudSpinner.succeed('Nx Cloud has been set up successfully');
+    }
     return res;
   } catch (e) {
     nxCloudSpinner.fail();
@@ -38,11 +45,18 @@ export async function setupNxCloud(
 }
 
 export function printNxCloudSuccessMessage(nxCloudOut: string) {
-  const bodyLines = nxCloudOut
-    .split('Remote caching via Nx Cloud has been enabled')[1]
-    .trim();
-  output.note({
-    title: `Remote caching via Nx Cloud has been enabled`,
-    bodyLines: bodyLines.split('\n').map((r) => r.trim()),
+  // remove leading Nx carret and any new lines
+  const logContent = nxCloudOut.split('>  NX   ')[1];
+  const indexOfTitleEnd = logContent.indexOf('\n');
+  const title = logContent.slice(0, logContent.indexOf('\n')).trim();
+  const bodyLines = logContent
+    .slice(indexOfTitleEnd)
+    .replace(/^\n*/, '') // remove leading new lines
+    .replace(/\n*$/, '') // remove trailing new lines
+    .split('\n')
+    .map((r) => r.trim());
+  output.warn({
+    title,
+    bodyLines,
   });
 }

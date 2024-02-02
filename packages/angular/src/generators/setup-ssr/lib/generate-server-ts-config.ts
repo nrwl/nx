@@ -16,15 +16,15 @@ export function setServerTsConfigOptionsForApplicationBuilder(
   const tsConfigPath = targets.build.options.tsConfig;
 
   updateJson(tree, tsConfigPath, (json) => {
-    json.files ??= [];
-    json.files.push(
-      joinPathFragments('src', options.main),
-      joinPathFragments(options.serverFileName)
-    );
+    const files = new Set(json.files ?? []);
+    files.add(joinPathFragments('src', options.main));
+    files.add(joinPathFragments(options.serverFileName));
+    json.files = Array.from(files);
 
     json.compilerOptions ??= {};
-    json.compilerOptions.types ??= [];
-    json.compilerOptions.types.push('node');
+    const types = new Set(json.compilerOptions.types ?? []);
+    types.add('node');
+    json.compilerOptions.types = Array.from(types);
 
     return json;
   });

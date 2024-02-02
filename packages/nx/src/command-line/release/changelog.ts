@@ -104,7 +104,7 @@ export async function releaseChangelog(
       'git',
     ]);
     output.error({
-      title: `The 'release.git' property in nx.json may not be used with the 'nx release changelog' subcommand or programmatic API. Instead, configure git options for subcommands directly with 'release.version.git' and 'release.changelog.git'.`,
+      title: `The "release.git" property in nx.json may not be used with the "nx release changelog" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
       bodyLines: [nxJsonMessage],
     });
     process.exit(1);
@@ -123,6 +123,19 @@ export async function releaseChangelog(
   if (filterError) {
     output.error(filterError);
     process.exit(1);
+  }
+
+  const changelogGenerationEnabled =
+    !!nxReleaseConfig.changelog.workspaceChangelog ||
+    Object.values(nxReleaseConfig.groups).some((g) => g.changelog);
+  if (!changelogGenerationEnabled) {
+    output.warn({
+      title: `Changelogs are disabled. No changelog entries will be generated`,
+      bodyLines: [
+        `To explicitly enable changelog generation, configure "release.changelog.workspaceChangelog" or "release.changelog.projectChangelogs" in nx.json.`,
+      ],
+    });
+    return 0;
   }
 
   const useAutomaticFromRef =
@@ -203,7 +216,7 @@ export async function releaseChangelog(
       }
     } else {
       throw new Error(
-        `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+        `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
       );
     }
   }
@@ -225,8 +238,7 @@ export async function releaseChangelog(
     nxReleaseConfig,
     workspaceChangelogVersion,
     workspaceChangelogCommits,
-    postGitTasks,
-    nxJson.release?.changelog?.workspaceChangelog
+    postGitTasks
   );
 
   for (const releaseGroup of releaseGroups) {
@@ -273,7 +285,7 @@ export async function releaseChangelog(
 
         if (!fromRef && !commits) {
           throw new Error(
-            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
+            `Unable to determine the previous git tag. If this is the first release of your workspace, use the --first-release option or set the "release.changelog.automaticFromRef" config property in nx.json to generate a changelog from the first commit. Otherwise, be sure to configure the "release.releaseTagPattern" property in nx.json to match the structure of your repository's git tags.`
           );
         }
 
@@ -500,13 +512,11 @@ async function generateChangelogForWorkspace(
   nxReleaseConfig: NxReleaseConfig,
   workspaceChangelogVersion: (string | null) | undefined,
   commits: GitCommit[],
-  postGitTasks: PostGitTask[],
-  explicitWorkspaceChangelogConfig: unknown
+  postGitTasks: PostGitTask[]
 ) {
   const config = nxReleaseConfig.changelog.workspaceChangelog;
-  const isEnabled = args.workspaceChangelog ?? config;
   // The entire feature is disabled at the workspace level, exit early
-  if (isEnabled === false) {
+  if (config === false) {
     return;
   }
 
@@ -522,33 +532,28 @@ async function generateChangelogForWorkspace(
     );
   }
 
-  if (!workspaceChangelogVersion && args.workspaceChangelog) {
-    throw new Error(
-      `Workspace changelog is enabled but no overall version was provided. Please provide an explicit version using --version`
-    );
+  if (Object.entries(nxReleaseConfig.groups).length > 1) {
+    output.warn({
+      title: `Workspace changelog is enabled, but you have multiple release groups configured. This is not supported, so workspace changelog will be disabled.`,
+      bodyLines: [
+        `A single workspace version cannot be determined when defining multiple release groups because versions differ between each group.`,
+        `Project level changelogs can be enabled with the "release.changelog.projectChangelogs" property.`,
+      ],
+    });
+    return;
   }
 
   if (
-    Object.entries(nxReleaseConfig.groups).length > 1 ||
     Object.values(nxReleaseConfig.groups)[0].projectsRelationship ===
-      'independent'
+    'independent'
   ) {
-    if (
-      explicitWorkspaceChangelogConfig !== undefined &&
-      explicitWorkspaceChangelogConfig !== false
-    ) {
-      // only warn the user if they explicitly enabled workspace changelog
-      // if they didn't, then just disable it quietly, since it was enabled by default
-      output.warn({
-        title: `Workspace changelog is enabled, but you have multiple release groups configured or have configured an independent projects relationship. This is not supported, so workspace changelog will be disabled.`,
-        bodyLines: [
-          `A single workspace version cannot be determined when defining multiple release groups because versions differ between each group.`,
-          `Also, a single workspace version also cannot be determined when using independent projects because versions differ between each project.`,
-          `If you want to generate a workspace changelog, please use a single release group.`,
-          `Alternatively, project level changelogs can be enabled with the "projectChangelogs" property.`,
-        ],
-      });
-    }
+    output.warn({
+      title: `Workspace changelog is enabled, but you have configured an independent projects relationship. This is not supported, so workspace changelog will be disabled.`,
+      bodyLines: [
+        `A single workspace version cannot be determined when using independent projects because versions differ between each project.`,
+        `Project level changelogs can be enabled with the "release.changelog.projectChangelogs" property.`,
+      ],
+    });
     return;
   }
 

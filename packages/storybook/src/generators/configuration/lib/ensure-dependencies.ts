@@ -12,7 +12,6 @@ import {
 import {
   litVersion,
   reactVersion,
-  storybookReactNativeVersion,
   storybookVersion,
   viteVersion,
 } from '../../../utils/versions';
@@ -61,20 +60,15 @@ export function ensureDependencies(
   }
 
   if (options.uiFramework) {
-    if (options.uiFramework === '@storybook/react-native') {
-      devDependencies['@storybook/react-native'] = storybookReactNativeVersion;
-    } else {
-      devDependencies[options.uiFramework] = storybook7VersionToInstall;
-      const isPnpm = detectPackageManager(tree.root) === 'pnpm';
-      if (isPnpm) {
-        // If it's pnpm, it needs the framework without the builder
-        // as a dependency too (eg. @storybook/react)
-        const matchResult = options.uiFramework?.match(/^@storybook\/(\w+)/);
-        const uiFrameworkWithoutBuilder = matchResult ? matchResult[0] : null;
-        if (uiFrameworkWithoutBuilder) {
-          devDependencies[uiFrameworkWithoutBuilder] =
-            storybook7VersionToInstall;
-        }
+    devDependencies[options.uiFramework] = storybook7VersionToInstall;
+    const isPnpm = detectPackageManager(tree.root) === 'pnpm';
+    if (isPnpm) {
+      // If it's pnpm, it needs the framework without the builder
+      // as a dependency too (eg. @storybook/react)
+      const matchResult = options.uiFramework?.match(/^@storybook\/(\w+)/);
+      const uiFrameworkWithoutBuilder = matchResult ? matchResult[0] : null;
+      if (uiFrameworkWithoutBuilder) {
+        devDependencies[uiFrameworkWithoutBuilder] = storybook7VersionToInstall;
       }
     }
 
@@ -101,17 +95,6 @@ export function ensureDependencies(
       options.uiFramework === '@storybook/web-components-webpack5'
     ) {
       devDependencies['lit'] = litVersion;
-    }
-
-    if (options.uiFramework === '@storybook/react-native') {
-      devDependencies['@storybook/addon-ondevice-actions'] =
-        storybookReactNativeVersion;
-      devDependencies['@storybook/addon-ondevice-backgrounds'] =
-        storybookReactNativeVersion;
-      devDependencies['@storybook/addon-ondevice-controls'] =
-        storybookReactNativeVersion;
-      devDependencies['@storybook/addon-ondevice-notes'] =
-        storybookReactNativeVersion;
     }
 
     if (options.uiFramework.endsWith('-vite')) {

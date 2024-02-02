@@ -11,7 +11,7 @@ import { stripIndents } from '@nx/devkit';
 //  which is v9 while we are testing for the new v10 version
 jest.mock('@nx/cypress/src/utils/cypress-version');
 
-// TODO(katerina): Nx 18 -> remove Cypress
+// TODO(katerina): Nx 19 -> remove Cypress
 
 describe('angularStories generator: applications', () => {
   let tree: Tree;
