@@ -3,18 +3,18 @@ import {
   type CreateDependencies,
   type CreateNodes,
   type CreateNodesContext,
-  type TargetConfiguration,
   detectPackageManager,
   readJsonFile,
+  type TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { getLockFileName, getRootTsConfigPath } from '@nx/js';
-import { registerTsProject } from '@nx/js/src/internal';
+import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
-import { join, dirname } from 'path';
+import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 const cachePath = join(projectGraphCacheDirectory, 'remix.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
@@ -181,24 +181,7 @@ async function getServerBuildPath(
   workspaceRoot: string
 ): Promise<string> {
   const configPath = join(workspaceRoot, configFilePath);
-  let appConfig: AppConfig = {};
-  try {
-    let appConfigModule: any;
-    try {
-      appConfigModule = await Function(
-        `return import("${configPath}?t=${Date.now()}")`
-      )();
-    } catch {
-      appConfigModule = require(configPath);
-    }
-
-    appConfig = appConfigModule?.default || appConfigModule;
-  } catch (error) {
-    throw new Error(
-      `Error loading Remix config at ${configFilePath}\n${String(error)}`
-    );
-  }
-
+  let appConfig = await loadConfigFile<AppConfig>(configPath);
   return appConfig.serverBuildPath ?? 'build/index.js';
 }
 
