@@ -29,6 +29,15 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     options.outputPath,
     '.next/types/**/*.ts'
   );
+
+  // scope tsconfig to the project directory so that it doesn't include other projects/libs
+  const rootPath = options.rootProject
+    ? options.src
+      ? 'src/'
+      : options.appDir
+      ? 'app/'
+      : 'pages/'
+    : '';
   const templateVariables = {
     ...names(options.name),
     ...options,
@@ -36,6 +45,7 @@ export function createApplicationFiles(host: Tree, options: NormalizedSchema) {
     tmpl: '',
     offsetFromRoot,
     layoutTypeSrcPath,
+    rootPath,
     layoutTypeDistPath,
     rootTsConfigPath: getRelativePathToRootTsConfig(
       host,
