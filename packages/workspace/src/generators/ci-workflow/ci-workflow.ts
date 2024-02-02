@@ -30,7 +30,6 @@ export async function ciWorkflowGenerator(tree: Tree, schema: Schema) {
   if (!nxCloudUsed) {
     throw new Error('This workspace is not connected to Nx Cloud.');
   }
-
   if (ci === 'bitbucket-pipelines' && defaultBranchNeedsOriginPrefix(nxJson)) {
     writeJson(tree, 'nx.json', appendOriginPrefix(nxJson));
   }
@@ -48,6 +47,7 @@ interface Substitutes {
   packageManagerInstall: string;
   packageManagerPrefix: string;
   nxCloudHost: string;
+  hasE2E: boolean;
   tmpl: '';
 }
 
@@ -62,6 +62,15 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
   const nxCloudUrl = getNxCloudUrl(readJson(tree, 'nx.json'));
   const nxCloudHost = new URL(nxCloudUrl).host;
 
+  const packageJson = readJson(tree, 'package.json');
+  const allDependencies = {
+    ...packageJson.dependencies,
+    ...packageJson.devDependencies,
+  };
+
+  const hasE2E =
+    allDependencies['@nx/cypress'] || allDependencies['@nx/playwright'];
+
   return {
     workflowName,
     workflowFileName,
@@ -69,6 +78,7 @@ function normalizeOptions(options: Schema, tree: Tree): Substitutes {
     packageManagerInstall,
     packageManagerPrefix,
     mainBranch: deduceDefaultBase(),
+    hasE2E,
     nxCloudHost,
     tmpl: '',
   };
