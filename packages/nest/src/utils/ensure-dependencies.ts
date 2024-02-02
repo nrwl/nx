@@ -5,7 +5,7 @@ import {
   reflectMetadataVersion,
   rxjsVersion,
   tsLibVersion,
-} from '../../../utils/versions';
+} from './versions';
 
 export function ensureDependencies(tree: Tree): GeneratorCallback {
   return addDependenciesToPackageJson(
