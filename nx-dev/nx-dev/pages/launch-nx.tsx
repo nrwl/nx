@@ -24,9 +24,9 @@ export default function ConfPage(): JSX.Element {
             'Join us for Launch Nx when we’ll be announcing exciting new features and plans for Nx and Nx Cloud, culminating in a free, half-day online conference on Thursday, Feb. 8th.',
           images: [
             {
-              url: 'https://nx.dev/images/launch-nx-media.jpg',
-              width: 1000,
-              height: 500,
+              url: 'https://nx.dev/socials/launch-nx-feb-2024.jpg',
+              width: 1600,
+              height: 900,
               alt: 'Launch Nx - February 5-9, 2024',
               type: 'image/jpeg',
             },
