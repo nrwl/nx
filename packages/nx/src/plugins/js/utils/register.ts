@@ -32,17 +32,31 @@ export function registerTsProject(tsConfigPath: string): () => void;
  * @returns cleanup function
  * @deprecated This signature will be removed in Nx v19. You should pass the full path to the tsconfig in the first argument.
  */
-export function registerTsProject(path: string, configFilename: string);
 export function registerTsProject(
   path: string,
-  configFilename?: string
+  configFilename: string,
+  /**
+   * @deprecated Do not use this.. it's a 1-off exception
+   */
+  useForSwcEnvironmentVariable?: boolean
+);
+export function registerTsProject(
+  path: string,
+  configFilename?: string,
+  /**
+   * @deprecated Do not use this.. it's a 1-off exception
+   */
+  useForSwcEnvironmentVariable?: boolean
 ): () => void {
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
   const compilerOptions: CompilerOptions = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
     registerTsConfigPaths(tsConfigPath),
-    registerTranspiler(compilerOptions),
+    registerTranspiler(
+      compilerOptions,
+      useForSwcEnvironmentVariable ? tsConfigPath : undefined
+    ),
   ];
 
   // Add ESM support for `.ts` files.
@@ -66,7 +80,8 @@ export function registerTsProject(
 }
 
 export function getSwcTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsConfigPath?: string
 ): (...args: unknown[]) => unknown {
   type ISwcRegister = typeof import('@swc-node/register/register')['register'];
 
@@ -74,9 +89,13 @@ export function getSwcTranspiler(
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
 
-  let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
-  if (existsSync(rootTsConfig)) {
-    process.env.SWC_NODE_PROJECT = rootTsConfig;
+  if (tsConfigPath) {
+    process.env.SWC_NODE_PROJECT = tsConfigPath;
+  } else {
+    let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
+    if (existsSync(rootTsConfig)) {
+      process.env.SWC_NODE_PROJECT = rootTsConfig;
+    }
   }
 
   const cleanupFn = register(compilerOptions);
@@ -108,7 +127,10 @@ export function getTsNodeTranspiler(
   };
 }
 
-export function getTranspiler(compilerOptions: CompilerOptions) {
+export function getTranspiler(
+  compilerOptions: CompilerOptions,
+  tsConfigPath?: string
+) {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
@@ -122,7 +144,7 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
   compilerOptions.skipLibCheck = true;
 
   if (swcNodeInstalled && !preferTsNode) {
-    return () => getSwcTranspiler(compilerOptions);
+    return () => getSwcTranspiler(compilerOptions, tsConfigPath);
   }
 
   // We can fall back on ts-node if it's available
@@ -140,10 +162,11 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsConfigPath?: string
 ): () => void {
   // Function to register transpiler that returns cleanup function
-  const transpiler = getTranspiler(compilerOptions);
+  const transpiler = getTranspiler(compilerOptions, tsConfigPath);
 
   if (!transpiler) {
     warnNoTranspiler();
