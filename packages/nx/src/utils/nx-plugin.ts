@@ -511,7 +511,6 @@ export async function getDefaultPlugins(
 ): Promise<LoadedNxPlugin[]> {
   const plugins: NxPluginV2[] = [
     await import('../plugins/js'),
-    TargetDefaultsPlugin,
     ...(shouldMergeAngularProjects(root, false)
       ? [
           await import('../adapter/angular-json').then(
@@ -521,6 +520,7 @@ export async function getDefaultPlugins(
       : []),
     getNxPackageJsonWorkspacesPlugin(root),
     ProjectJsonProjectsPlugin,
+    TargetDefaultsPlugin,
   ];
 
   return plugins.map((p) => ({
