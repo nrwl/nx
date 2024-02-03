@@ -1,9 +1,8 @@
-import { dirname, extname, join } from 'path';
+import { dirname, extname, join, relative } from 'path';
 import { existsSync, readdirSync } from 'fs';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { workspaceRoot } from 'nx/src/devkit-exports';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { registerTsProject } from 'nx/src/plugins/js/utils/register';
+import { requireNx } from '../../nx';
+
+const { workspaceRoot, registerTsProject } = requireNx();
 
 export let dynamicImport = new Function(
   'modulePath',
@@ -22,7 +21,12 @@ export async function loadConfigFile<T extends object = any>(
         ? join(dirname(configFilePath), 'tsconfig.json')
         : getRootTsConfigPath();
       if (tsConfigPath) {
-        const unregisterTsProject = registerTsProject(tsConfigPath);
+        const unregisterTsProject = registerTsProject(
+          tsConfigPath,
+          undefined,
+          // TODO(@AgentEnder): Remove this hack to make sure that e2e loads properly for next.js
+          relative(workspaceRoot, dirname(configFilePath)) === 'e2e'
+        );
         try {
           module = await load(configFilePath);
         } finally {
