@@ -73,13 +73,13 @@ export function Header(): JSX.Element {
     },
     {
       name: 'Community',
-      description: "Check how to reach out and be part of Nx' community.",
+      description: 'Check how to reach out and be part of the Nx community.',
       href: '/community',
     },
     {
-      name: 'Nx Conf',
-      description: 'Be part of the next Nx conference!',
-      href: '/conf',
+      name: 'Launch Nx',
+      description: 'A week of exciting announcements about Nx and Nx Cloud!',
+      href: '/launch-nx',
     },
     {
       name: 'Nx Enterprise',
