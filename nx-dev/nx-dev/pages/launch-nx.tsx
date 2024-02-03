@@ -46,7 +46,7 @@ export default function ConfPage(): JSX.Element {
         >
           {/*INTRO*/}
           <div className="mx-auto max-w-screen-lg px-5 py-5 xl:max-w-screen-xl">
-            <div className="mt-24 flex flex-col items-start py-48 lg:flex-row">
+            <div className="py-8 mt-8 lg:py-48 lg:mt-24 flex flex-col items-start  lg:flex-row">
               <div className="relative mt-8 flex w-full flex-col pb-10 lg:mt-0 lg:w-2/5 lg:pb-0">
                 <svg
                   id="launch-nx-logo"
