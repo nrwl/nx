@@ -646,7 +646,6 @@
       - [storybook-configuration](/nx-api/remix/generators/storybook-configuration)
       - [meta](/nx-api/remix/generators/meta)
       - [error-boundary](/nx-api/remix/generators/error-boundary)
-      - [cypress](/nx-api/remix/generators/cypress)
   - [rollup](/nx-api/rollup)
     - [executors](/nx-api/rollup/executors)
       - [rollup](/nx-api/rollup/executors/rollup)

@@ -10,6 +10,7 @@ import {
   readJson,
   readProjectConfiguration,
   runTasksInSerial,
+  stripIndents,
   toJS,
   Tree,
   updateJson,
@@ -49,7 +50,6 @@ export function remixApplicationGenerator(
   });
 }
 
-// TODO(@columferry): update this to use crystal?
 export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
@@ -70,38 +70,40 @@ export async function remixApplicationGeneratorInternal(
     sourceRoot: `${options.projectRoot}`,
     projectType: 'application',
     tags: options.parsedTags,
-    targets: {
-      build: {
-        executor: '@nx/remix:build',
-        outputs: ['{options.outputPath}'],
-        options: {
-          outputPath: joinPathFragments('dist', options.projectRoot),
-        },
-      },
-      serve: {
-        executor: `@nx/remix:serve`,
-        options: {
-          command: `${
-            getPackageManagerCommand().exec
-          } remix-serve build/index.js`,
-          manual: true,
-          port: 4200,
-        },
-      },
-      start: {
-        dependsOn: ['build'],
-        command: `remix-serve build/index.js`,
-        options: {
-          cwd: options.projectRoot,
-        },
-      },
-      typecheck: {
-        command: `tsc --project tsconfig.app.json`,
-        options: {
-          cwd: options.projectRoot,
-        },
-      },
-    },
+    targets: !options.addPlugin
+      ? {
+          build: {
+            executor: '@nx/remix:build',
+            outputs: ['{options.outputPath}'],
+            options: {
+              outputPath: joinPathFragments('dist', options.projectRoot),
+            },
+          },
+          serve: {
+            executor: `@nx/remix:serve`,
+            options: {
+              command: `${
+                getPackageManagerCommand().exec
+              } remix-serve build/index.js`,
+              manual: true,
+              port: 4200,
+            },
+          },
+          start: {
+            dependsOn: ['build'],
+            command: `remix-serve build/index.js`,
+            options: {
+              cwd: options.projectRoot,
+            },
+          },
+          typecheck: {
+            command: `tsc --project tsconfig.app.json`,
+            options: {
+              cwd: options.projectRoot,
+            },
+          },
+        }
+      : {},
   });
 
   const installTask = updateDependencies(tree);
@@ -226,6 +228,12 @@ export async function remixApplicationGeneratorInternal(
       addPlugin: options.addPlugin,
     });
     tasks.push(eslintTask);
+
+    tree.write(
+      joinPathFragments(options.projectRoot, '.eslintignore'),
+      stripIndents`build
+    public/build`
+    );
   }
 
   if (options.js) {
