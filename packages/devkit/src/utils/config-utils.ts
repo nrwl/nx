@@ -17,10 +17,7 @@ export async function loadConfigFile<T extends object = any>(
     let module: any;
 
     if (extname(configFilePath) === '.ts') {
-      const siblingFiles = readdirSync(dirname(configFilePath));
-      const tsConfigPath = siblingFiles.includes('tsconfig.json')
-        ? join(dirname(configFilePath), 'tsconfig.json')
-        : getRootTsConfigPath();
+      const tsConfigPath = getRootTsConfigPath();
       if (tsConfigPath) {
         const unregisterTsProject = registerTsProject(tsConfigPath);
         try {

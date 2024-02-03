@@ -75,8 +75,6 @@ export function getSwcTranspiler(
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
 
-  process.env.SWC_NODE_PROJECT = tsConfigPath;
-
   const cleanupFn = register(compilerOptions);
 
   return typeof cleanupFn === 'function' ? cleanupFn : () => {};
