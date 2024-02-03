@@ -1089,6 +1089,12 @@
                   "file": "shared/recipes/console-telemetry"
                 },
                 {
+                  "name": "Project Details View",
+                  "id": "console-project-details",
+                  "tags": ["integrate-with-editors"],
+                  "file": "shared/recipes/console-project-details"
+                },
+                {
                   "name": "Generate Command",
                   "id": "console-generate-command",
                   "tags": ["integrate-with-editors"],

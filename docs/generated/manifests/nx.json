@@ -3091,6 +3091,17 @@
             "tags": ["integrate-with-editors"]
           },
           {
+            "id": "console-project-details",
+            "name": "Project Details View",
+            "description": "",
+            "mediaImage": "",
+            "file": "shared/recipes/console-project-details",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/recipes/nx-console/console-project-details",
+            "tags": ["integrate-with-editors"]
+          },
+          {
             "id": "console-generate-command",
             "name": "Generate Command",
             "description": "",
@@ -5538,6 +5549,17 @@
         "tags": ["integrate-with-editors"]
       },
       {
+        "id": "console-project-details",
+        "name": "Project Details View",
+        "description": "",
+        "mediaImage": "",
+        "file": "shared/recipes/console-project-details",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/recipes/nx-console/console-project-details",
+        "tags": ["integrate-with-editors"]
+      },
+      {
         "id": "console-generate-command",
         "name": "Generate Command",
         "description": "",
@@ -5617,6 +5639,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/recipes/nx-console/console-telemetry",
+    "tags": ["integrate-with-editors"]
+  },
+  "/recipes/nx-console/console-project-details": {
+    "id": "console-project-details",
+    "name": "Project Details View",
+    "description": "",
+    "mediaImage": "",
+    "file": "shared/recipes/console-project-details",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/recipes/nx-console/console-project-details",
     "tags": ["integrate-with-editors"]
   },
   "/recipes/nx-console/console-generate-command": {

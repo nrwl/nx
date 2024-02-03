@@ -173,6 +173,7 @@
       - [Profiling Build Performance](/recipes/troubleshooting/performance-profiling)
     - [Nx Console](/recipes/nx-console)
       - [Telemetry](/recipes/nx-console/console-telemetry)
+      - [Project Details View](/recipes/nx-console/console-project-details)
       - [Generate Command](/recipes/nx-console/console-generate-command)
       - [Run Command](/recipes/nx-console/console-run-command)
       - [Add Dependency Command](/recipes/nx-console/console-add-dependency-command)

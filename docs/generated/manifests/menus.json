@@ -2261,6 +2261,14 @@
                 "disableCollapsible": false
               },
               {
+                "name": "Project Details View",
+                "path": "/recipes/nx-console/console-project-details",
+                "id": "console-project-details",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
                 "name": "Generate Command",
                 "path": "/recipes/nx-console/console-generate-command",
                 "id": "console-generate-command",
@@ -4046,6 +4054,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Project Details View",
+            "path": "/recipes/nx-console/console-project-details",
+            "id": "console-project-details",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Generate Command",
             "path": "/recipes/nx-console/console-generate-command",
             "id": "console-generate-command",
@@ -4100,6 +4116,14 @@
         "name": "Telemetry",
         "path": "/recipes/nx-console/console-telemetry",
         "id": "console-telemetry",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Project Details View",
+        "path": "/recipes/nx-console/console-project-details",
+        "id": "console-project-details",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
