@@ -30,10 +30,15 @@ export default async () => {
 
   await releaseVersion({
     specifier: '0.0.0-e2e',
+    stageChanges: false,
+    gitCommit: false,
+    gitTag: false,
+    generatorOptionsOverrides: {
+      skipLockFileUpdate: true
+    }
   });
   await releasePublish({
-    tag: 'e2e',
-    firstRelease: true
+    tag: 'e2e'
   });
 };
 `;

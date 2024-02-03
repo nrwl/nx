@@ -68,6 +68,9 @@ export interface ReleaseVersionGeneratorSchema {
   firstRelease?: boolean;
   // auto means the existing prefix will be preserved, and is the default behavior
   versionPrefix?: typeof validReleaseVersionPrefixes[number];
+  skipLockFileUpdate?: boolean;
+  installArgs?: string;
+  installIgnoreScripts?: boolean;
 }
 
 export interface NxReleaseVersionResult {
@@ -198,6 +201,7 @@ export async function releaseVersion(
           args,
           tree,
           generatorData,
+          args.generatorOptionsOverrides,
           projectNames,
           releaseGroup,
           versionData
@@ -207,7 +211,10 @@ export async function releaseVersion(
           const changedFiles = await generatorCallback(tree, {
             dryRun: !!args.dryRun,
             verbose: !!args.verbose,
-            generatorOptions,
+            generatorOptions: {
+              ...generatorOptions,
+              ...args.generatorOptionsOverrides,
+            },
           });
           changedFiles.forEach((f) => additionalChangedFiles.add(f));
         });
@@ -329,6 +336,7 @@ export async function releaseVersion(
         args,
         tree,
         generatorData,
+        args.generatorOptionsOverrides,
         projectNames,
         releaseGroup,
         versionData
@@ -338,7 +346,10 @@ export async function releaseVersion(
         const changedFiles = await generatorCallback(tree, {
           dryRun: !!args.dryRun,
           verbose: !!args.verbose,
-          generatorOptions,
+          generatorOptions: {
+            ...generatorOptions,
+            ...args.generatorOptionsOverrides,
+          },
         });
         changedFiles.forEach((f) => additionalChangedFiles.add(f));
       });
@@ -454,6 +465,7 @@ async function runVersionOnProjects(
   args: VersionOptions,
   tree: Tree,
   generatorData: GeneratorData,
+  generatorOverrides: Record<string, unknown> | undefined,
   projectNames: string[],
   releaseGroup: ReleaseGroupWithName,
   versionData: VersionData
@@ -463,6 +475,7 @@ async function runVersionOnProjects(
     specifier: args.specifier ?? '',
     preid: args.preid ?? '',
     ...generatorData.configGeneratorOptions,
+    ...(generatorOverrides ?? {}),
     // The following are not overridable by user config
     projects: projectNames.map((p) => projectGraph.nodes[p]),
     projectGraph,

@@ -252,12 +252,22 @@ async function addProject(tree: Tree, options: NormalizedSchema) {
     }
 
     if (options.publishable) {
+      const packageRoot = getOutputPath(options).replaceAll(
+        options.name,
+        '{projectName}'
+      );
+
       projectConfiguration.targets['nx-release-publish'] = {
         options: {
-          packageRoot: getOutputPath(options).replaceAll(
-            options.name,
-            '{projectName}'
-          ),
+          packageRoot,
+        },
+      };
+
+      projectConfiguration.release = {
+        version: {
+          generatorOptions: {
+            packageRoot,
+          },
         },
       };
 
