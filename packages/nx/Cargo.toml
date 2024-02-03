@@ -44,6 +44,9 @@ swc_ecma_visit = "0.93.0"
 swc_ecma_ast = "0.107.0"
 crossterm = "0.27.0"
 
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["fileapi"] }
+
 [lib]
 crate-type = ['cdylib']
 
