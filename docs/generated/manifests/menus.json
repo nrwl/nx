@@ -93,14 +93,6 @@
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
-              },
-              {
-                "name": "Node Standalone",
-                "path": "/getting-started/tutorials/node-server-tutorial",
-                "id": "node-server-tutorial",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
               }
             ],
             "disableCollapsible": false
@@ -193,14 +185,6 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Node Standalone",
-            "path": "/getting-started/tutorials/node-server-tutorial",
-            "id": "node-server-tutorial",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
         "disableCollapsible": false
@@ -257,14 +241,6 @@
         "name": "Vue Standalone",
         "path": "/getting-started/tutorials/vue-standalone-tutorial",
         "id": "vue-standalone-tutorial",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Node Standalone",
-        "path": "/getting-started/tutorials/node-server-tutorial",
-        "id": "node-server-tutorial",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -375,208 +351,14 @@
         "disableCollapsible": false
       },
       {
-        "name": "Angular Standalone Tutorial",
-        "path": "/angular-standalone-tutorial",
-        "id": "angular-standalone-tutorial",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "1 - Code Generation",
-            "path": "/angular-standalone-tutorial/1-code-generation",
-            "id": "1-code-generation",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "2 - Project Graph",
-            "path": "/angular-standalone-tutorial/2-project-graph",
-            "id": "2-project-graph",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "3 - Task Running",
-            "path": "/angular-standalone-tutorial/3-task-running",
-            "id": "3-task-running",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "4 - Task Pipelines",
-            "path": "/angular-standalone-tutorial/4-task-pipelines",
-            "id": "4-task-pipelines",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "5 - Summary",
-            "path": "/angular-standalone-tutorial/5-summary",
-            "id": "5-summary",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "1 - Code Generation",
-        "path": "/angular-standalone-tutorial/1-code-generation",
-        "id": "1-code-generation",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "2 - Project Graph",
-        "path": "/angular-standalone-tutorial/2-project-graph",
-        "id": "2-project-graph",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "3 - Task Running",
-        "path": "/angular-standalone-tutorial/3-task-running",
-        "id": "3-task-running",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "4 - Task Pipelines",
-        "path": "/angular-standalone-tutorial/4-task-pipelines",
-        "id": "4-task-pipelines",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "5 - Summary",
-        "path": "/angular-standalone-tutorial/5-summary",
-        "id": "5-summary",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Node Server Tutorial",
-        "path": "/node-server-tutorial",
-        "id": "node-server-tutorial",
-        "isExternal": false,
-        "children": [
-          {
-            "name": "1 - Code Generation",
-            "path": "/node-server-tutorial/1-code-generation",
-            "id": "1-code-generation",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "2 - Project Graph",
-            "path": "/node-server-tutorial/2-project-graph",
-            "id": "2-project-graph",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "3 - Task Running",
-            "path": "/node-server-tutorial/3-task-running",
-            "id": "3-task-running",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "4 - Task Pipelines",
-            "path": "/node-server-tutorial/4-task-pipelines",
-            "id": "4-task-pipelines",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "5 - Docker Target",
-            "path": "/node-server-tutorial/5-docker-target",
-            "id": "5-docker-target",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "6 - Summary",
-            "path": "/node-server-tutorial/6-summary",
-            "id": "6-summary",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          }
-        ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "1 - Code Generation",
-        "path": "/node-server-tutorial/1-code-generation",
-        "id": "1-code-generation",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "2 - Project Graph",
-        "path": "/node-server-tutorial/2-project-graph",
-        "id": "2-project-graph",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "3 - Task Running",
-        "path": "/node-server-tutorial/3-task-running",
-        "id": "3-task-running",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "4 - Task Pipelines",
-        "path": "/node-server-tutorial/4-task-pipelines",
-        "id": "4-task-pipelines",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "5 - Docker Target",
-        "path": "/node-server-tutorial/5-docker-target",
-        "id": "5-docker-target",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "6 - Summary",
-        "path": "/node-server-tutorial/6-summary",
-        "id": "6-summary",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Core Features",
-        "path": "/core-features",
-        "id": "core-features",
+        "name": "Features",
+        "path": "/features",
+        "id": "features",
         "isExternal": false,
         "children": [
           {
             "name": "Run Tasks",
-            "path": "/core-features/run-tasks",
+            "path": "/features/run-tasks",
             "id": "run-tasks",
             "isExternal": false,
             "children": [],
@@ -584,39 +366,31 @@
           },
           {
             "name": "Cache Task Results",
-            "path": "/core-features/cache-task-results",
+            "path": "/features/cache-task-results",
             "id": "cache-task-results",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Use Remote Caching",
-            "path": "/ci/features/remote-cache",
-            "id": "remote-cache",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Distribute Task Execution",
-            "path": "/ci/features/distribute-task-execution",
-            "id": "distribute-task-execution",
-            "isExternal": true,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
-            "name": "Explore the Graph",
-            "path": "/core-features/explore-graph",
+            "name": "Explore your Workspace",
+            "path": "/features/explore-graph",
             "id": "explore-graph",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
+            "name": "Generate Code",
+            "path": "/features/generate-code",
+            "id": "generate-code",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Automate Updating Dependencies",
-            "path": "/core-features/automate-updating-dependencies",
+            "path": "/features/automate-updating-dependencies",
             "id": "automate-updating-dependencies",
             "isExternal": false,
             "children": [],
@@ -624,7 +398,7 @@
           },
           {
             "name": "Enforce Module Boundaries",
-            "path": "/core-features/enforce-module-boundaries",
+            "path": "/features/enforce-module-boundaries",
             "id": "enforce-module-boundaries",
             "isExternal": false,
             "children": [],
@@ -632,7 +406,7 @@
           },
           {
             "name": "Integrate with Editors",
-            "path": "/core-features/integrate-with-editors",
+            "path": "/features/integrate-with-editors",
             "id": "integrate-with-editors",
             "isExternal": false,
             "children": [],
@@ -640,31 +414,71 @@
           },
           {
             "name": "Manage Releases",
-            "path": "/core-features/manage-releases",
+            "path": "/features/manage-releases",
             "id": "manage-releases",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Plugin Features",
-            "path": "/core-features/plugin-features",
-            "id": "plugin-features",
+            "name": "CI Features",
+            "path": "/features/ci-features",
+            "id": "ci-features",
             "isExternal": false,
             "children": [
               {
-                "name": "Use Task Executors",
-                "path": "/core-features/plugin-features/use-task-executors",
-                "id": "use-task-executors",
-                "isExternal": false,
+                "name": "Run Only Tasks Affected by a PR",
+                "path": "/ci/features/affected",
+                "id": "affected",
+                "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Use Code Generators",
-                "path": "/core-features/plugin-features/use-code-generators",
-                "id": "use-code-generators",
-                "isExternal": false,
+                "name": "Use Remote Caching (Nx Replay)",
+                "path": "/ci/features/remote-cache",
+                "id": "remote-cache",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Distribute Task Execution (Nx Agents)",
+                "path": "/ci/features/distribute-task-execution",
+                "id": "distribute-task-execution",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Dynamically Allocate Agents",
+                "path": "/ci/features/dynamic-agents",
+                "id": "dynamic-agents",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Automatically Split E2E Tasks",
+                "path": "/ci/features/split-e2e-tasks",
+                "id": "split-e2e-tasks",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Identify and Re-run Flaky Tasks",
+                "path": "/ci/features/flaky-tasks",
+                "id": "flaky-tasks",
+                "isExternal": true,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Set up Nx Cloud On-Premise",
+                "path": "/ci/features/on-premise",
+                "id": "on-premise",
+                "isExternal": true,
                 "children": [],
                 "disableCollapsible": false
               }
@@ -676,7 +490,7 @@
       },
       {
         "name": "Run Tasks",
-        "path": "/core-features/run-tasks",
+        "path": "/features/run-tasks",
         "id": "run-tasks",
         "isExternal": false,
         "children": [],
@@ -684,39 +498,31 @@
       },
       {
         "name": "Cache Task Results",
-        "path": "/core-features/cache-task-results",
+        "path": "/features/cache-task-results",
         "id": "cache-task-results",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Use Remote Caching",
-        "path": "/ci/features/remote-cache",
-        "id": "remote-cache",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Distribute Task Execution",
-        "path": "/ci/features/distribute-task-execution",
-        "id": "distribute-task-execution",
-        "isExternal": true,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Explore the Graph",
-        "path": "/core-features/explore-graph",
+        "name": "Explore your Workspace",
+        "path": "/features/explore-graph",
         "id": "explore-graph",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
+        "name": "Generate Code",
+        "path": "/features/generate-code",
+        "id": "generate-code",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Automate Updating Dependencies",
-        "path": "/core-features/automate-updating-dependencies",
+        "path": "/features/automate-updating-dependencies",
         "id": "automate-updating-dependencies",
         "isExternal": false,
         "children": [],
@@ -724,7 +530,7 @@
       },
       {
         "name": "Enforce Module Boundaries",
-        "path": "/core-features/enforce-module-boundaries",
+        "path": "/features/enforce-module-boundaries",
         "id": "enforce-module-boundaries",
         "isExternal": false,
         "children": [],
@@ -732,7 +538,7 @@
       },
       {
         "name": "Integrate with Editors",
-        "path": "/core-features/integrate-with-editors",
+        "path": "/features/integrate-with-editors",
         "id": "integrate-with-editors",
         "isExternal": false,
         "children": [],
@@ -740,31 +546,71 @@
       },
       {
         "name": "Manage Releases",
-        "path": "/core-features/manage-releases",
+        "path": "/features/manage-releases",
         "id": "manage-releases",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Plugin Features",
-        "path": "/core-features/plugin-features",
-        "id": "plugin-features",
+        "name": "CI Features",
+        "path": "/features/ci-features",
+        "id": "ci-features",
         "isExternal": false,
         "children": [
           {
-            "name": "Use Task Executors",
-            "path": "/core-features/plugin-features/use-task-executors",
-            "id": "use-task-executors",
-            "isExternal": false,
+            "name": "Run Only Tasks Affected by a PR",
+            "path": "/ci/features/affected",
+            "id": "affected",
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Use Code Generators",
-            "path": "/core-features/plugin-features/use-code-generators",
-            "id": "use-code-generators",
-            "isExternal": false,
+            "name": "Use Remote Caching (Nx Replay)",
+            "path": "/ci/features/remote-cache",
+            "id": "remote-cache",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Distribute Task Execution (Nx Agents)",
+            "path": "/ci/features/distribute-task-execution",
+            "id": "distribute-task-execution",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Dynamically Allocate Agents",
+            "path": "/ci/features/dynamic-agents",
+            "id": "dynamic-agents",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Automatically Split E2E Tasks",
+            "path": "/ci/features/split-e2e-tasks",
+            "id": "split-e2e-tasks",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Identify and Re-run Flaky Tasks",
+            "path": "/ci/features/flaky-tasks",
+            "id": "flaky-tasks",
+            "isExternal": true,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Set up Nx Cloud On-Premise",
+            "path": "/ci/features/on-premise",
+            "id": "on-premise",
+            "isExternal": true,
             "children": [],
             "disableCollapsible": false
           }
@@ -772,18 +618,58 @@
         "disableCollapsible": false
       },
       {
-        "name": "Use Task Executors",
-        "path": "/core-features/plugin-features/use-task-executors",
-        "id": "use-task-executors",
-        "isExternal": false,
+        "name": "Run Only Tasks Affected by a PR",
+        "path": "/ci/features/affected",
+        "id": "affected",
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Use Code Generators",
-        "path": "/core-features/plugin-features/use-code-generators",
-        "id": "use-code-generators",
-        "isExternal": false,
+        "name": "Use Remote Caching (Nx Replay)",
+        "path": "/ci/features/remote-cache",
+        "id": "remote-cache",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Distribute Task Execution (Nx Agents)",
+        "path": "/ci/features/distribute-task-execution",
+        "id": "distribute-task-execution",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Dynamically Allocate Agents",
+        "path": "/ci/features/dynamic-agents",
+        "id": "dynamic-agents",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automatically Split E2E Tasks",
+        "path": "/ci/features/split-e2e-tasks",
+        "id": "split-e2e-tasks",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Identify and Re-run Flaky Tasks",
+        "path": "/ci/features/flaky-tasks",
+        "id": "flaky-tasks",
+        "isExternal": true,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Set up Nx Cloud On-Premise",
+        "path": "/ci/features/on-premise",
+        "id": "on-premise",
+        "isExternal": true,
         "children": [],
         "disableCollapsible": false
       },
@@ -810,6 +696,30 @@
             "disableCollapsible": false
           },
           {
+            "name": "What is a Task Pipeline",
+            "path": "/concepts/task-pipeline-configuration",
+            "id": "task-pipeline-configuration",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "What Are Nx Plugins",
+            "path": "/concepts/nx-plugins",
+            "id": "nx-plugins",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Inferred Tasks",
+            "path": "/concepts/inferred-tasks",
+            "id": "inferred-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Types of Configuration",
             "path": "/concepts/types-of-configuration",
             "id": "types-of-configuration",
@@ -818,9 +728,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "What is a Task Pipeline",
-            "path": "/concepts/task-pipeline-configuration",
-            "id": "task-pipeline-configuration",
+            "name": "Executors and Configurations",
+            "path": "/concepts/executors-and-configurations",
+            "id": "executors-and-configurations",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -1039,6 +949,30 @@
         "disableCollapsible": false
       },
       {
+        "name": "What is a Task Pipeline",
+        "path": "/concepts/task-pipeline-configuration",
+        "id": "task-pipeline-configuration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "What Are Nx Plugins",
+        "path": "/concepts/nx-plugins",
+        "id": "nx-plugins",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Inferred Tasks",
+        "path": "/concepts/inferred-tasks",
+        "id": "inferred-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
         "name": "Types of Configuration",
         "path": "/concepts/types-of-configuration",
         "id": "types-of-configuration",
@@ -1047,9 +981,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "What is a Task Pipeline",
-        "path": "/concepts/task-pipeline-configuration",
-        "id": "task-pipeline-configuration",
+        "name": "Executors and Configurations",
+        "path": "/concepts/executors-and-configurations",
+        "id": "executors-and-configurations",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -1429,15 +1363,23 @@
             "isExternal": false,
             "children": [
               {
-                "name": "Fine-tuning Caching with Inputs",
-                "path": "/recipes/running-tasks/customizing-inputs",
-                "id": "customizing-inputs",
+                "name": "Configure Inputs for Task Caching",
+                "path": "/recipes/running-tasks/configure-inputs",
+                "id": "configure-inputs",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
               },
               {
-                "name": "Defining a Task Pipeline",
+                "name": "Configure Outputs for Task Caching",
+                "path": "/recipes/running-tasks/configure-outputs",
+                "id": "configure-outputs",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
+              {
+                "name": "Define a Task Pipeline",
                 "path": "/recipes/running-tasks/defining-task-pipeline",
                 "id": "defining-task-pipeline",
                 "isExternal": false,
@@ -1453,7 +1395,7 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Running Custom Commands",
+                "name": "Run Custom Commands",
                 "path": "/recipes/running-tasks/run-commands-executor",
                 "id": "run-commands-executor",
                 "isExternal": false,
@@ -1521,14 +1463,6 @@
                 "name": "Add to any Project",
                 "path": "/recipes/adopting-nx/adding-to-existing-project",
                 "id": "adding-to-existing-project",
-                "isExternal": false,
-                "children": [],
-                "disableCollapsible": false
-              },
-              {
-                "name": "Nx and Lerna",
-                "path": "/recipes/adopting-nx/lerna-and-nx",
-                "id": "lerna-and-nx",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -1993,7 +1927,7 @@
             "isExternal": false,
             "children": [
               {
-                "name": "How to configure webpack on your Nx workspace",
+                "name": "How to configure Webpack in your Nx workspace",
                 "path": "/recipes/webpack/webpack-config-setup",
                 "id": "webpack-config-setup",
                 "isExternal": false,
@@ -2445,15 +2379,23 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Fine-tuning Caching with Inputs",
-            "path": "/recipes/running-tasks/customizing-inputs",
-            "id": "customizing-inputs",
+            "name": "Configure Inputs for Task Caching",
+            "path": "/recipes/running-tasks/configure-inputs",
+            "id": "configure-inputs",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
           },
           {
-            "name": "Defining a Task Pipeline",
+            "name": "Configure Outputs for Task Caching",
+            "path": "/recipes/running-tasks/configure-outputs",
+            "id": "configure-outputs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Define a Task Pipeline",
             "path": "/recipes/running-tasks/defining-task-pipeline",
             "id": "defining-task-pipeline",
             "isExternal": false,
@@ -2469,7 +2411,7 @@
             "disableCollapsible": false
           },
           {
-            "name": "Running Custom Commands",
+            "name": "Run Custom Commands",
             "path": "/recipes/running-tasks/run-commands-executor",
             "id": "run-commands-executor",
             "isExternal": false,
@@ -2512,15 +2454,23 @@
         "disableCollapsible": false
       },
       {
-        "name": "Fine-tuning Caching with Inputs",
-        "path": "/recipes/running-tasks/customizing-inputs",
-        "id": "customizing-inputs",
+        "name": "Configure Inputs for Task Caching",
+        "path": "/recipes/running-tasks/configure-inputs",
+        "id": "configure-inputs",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
       },
       {
-        "name": "Defining a Task Pipeline",
+        "name": "Configure Outputs for Task Caching",
+        "path": "/recipes/running-tasks/configure-outputs",
+        "id": "configure-outputs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Define a Task Pipeline",
         "path": "/recipes/running-tasks/defining-task-pipeline",
         "id": "defining-task-pipeline",
         "isExternal": false,
@@ -2536,7 +2486,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "Running Custom Commands",
+        "name": "Run Custom Commands",
         "path": "/recipes/running-tasks/run-commands-executor",
         "id": "run-commands-executor",
         "isExternal": false,
@@ -2606,14 +2556,6 @@
             "disableCollapsible": false
           },
           {
-            "name": "Nx and Lerna",
-            "path": "/recipes/adopting-nx/lerna-and-nx",
-            "id": "lerna-and-nx",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Preserving Git Histories",
             "path": "/recipes/adopting-nx/preserving-git-histories",
             "id": "preserving-git-histories",
@@ -2652,14 +2594,6 @@
         "name": "Add to any Project",
         "path": "/recipes/adopting-nx/adding-to-existing-project",
         "id": "adding-to-existing-project",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx and Lerna",
-        "path": "/recipes/adopting-nx/lerna-and-nx",
-        "id": "lerna-and-nx",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -3506,7 +3440,7 @@
         "isExternal": false,
         "children": [
           {
-            "name": "How to configure webpack on your Nx workspace",
+            "name": "How to configure Webpack in your Nx workspace",
             "path": "/recipes/webpack/webpack-config-setup",
             "id": "webpack-config-setup",
             "isExternal": false,
@@ -3525,7 +3459,7 @@
         "disableCollapsible": false
       },
       {
-        "name": "How to configure webpack on your Nx workspace",
+        "name": "How to configure Webpack in your Nx workspace",
         "path": "/recipes/webpack/webpack-config-setup",
         "id": "webpack-config-setup",
         "isExternal": false,
@@ -4848,6 +4782,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Inputs and Named Inputs",
+            "path": "/reference/inputs",
+            "id": "inputs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": ".nxignore",
             "path": "/reference/nxignore",
             "id": "nxignore",
@@ -4894,6 +4836,14 @@
         "name": "Project Configuration",
         "path": "/reference/project-configuration",
         "id": "project-configuration",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Inputs and Named Inputs",
+        "path": "/reference/inputs",
+        "id": "inputs",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -4980,6 +4930,22 @@
             "name": "runtimeCacheInputs",
             "path": "/deprecated/runtime-cache-inputs",
             "id": "runtime-cache-inputs",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "cacheableOperations",
+            "path": "/deprecated/cacheable-operations",
+            "id": "cacheable-operations",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "npmScope",
+            "path": "/deprecated/npm-scope",
+            "id": "npm-scope",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5120,6 +5086,22 @@
         "name": "runtimeCacheInputs",
         "path": "/deprecated/runtime-cache-inputs",
         "id": "runtime-cache-inputs",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "cacheableOperations",
+        "path": "/deprecated/cacheable-operations",
+        "id": "cacheable-operations",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "npmScope",
+        "path": "/deprecated/npm-scope",
+        "id": "npm-scope",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5741,14 +5723,6 @@
         "isExternal": false,
         "children": [
           {
-            "name": "Use Remote Caching",
-            "path": "/ci/features/remote-cache",
-            "id": "remote-cache",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
-          },
-          {
             "name": "Run Only Tasks Affected by a PR",
             "path": "/ci/features/affected",
             "id": "affected",
@@ -5757,9 +5731,41 @@
             "disableCollapsible": false
           },
           {
-            "name": "Distribute Task Execution",
+            "name": "Use Remote Caching (Nx Replay)",
+            "path": "/ci/features/remote-cache",
+            "id": "remote-cache",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Distribute Task Execution (Nx Agents)",
             "path": "/ci/features/distribute-task-execution",
             "id": "distribute-task-execution",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Dynamically Allocate Agents",
+            "path": "/ci/features/dynamic-agents",
+            "id": "dynamic-agents",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Automatically Split E2E Tasks",
+            "path": "/ci/features/split-e2e-tasks",
+            "id": "split-e2e-tasks",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
+            "name": "Identify and Re-run Flaky Tasks",
+            "path": "/ci/features/flaky-tasks",
+            "id": "flaky-tasks",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5771,24 +5777,8 @@
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
-          },
-          {
-            "name": "Nx Agents",
-            "path": "/ci/features/nx-agents",
-            "id": "nx-agents",
-            "isExternal": false,
-            "children": [],
-            "disableCollapsible": false
           }
         ],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Use Remote Caching",
-        "path": "/ci/features/remote-cache",
-        "id": "remote-cache",
-        "isExternal": false,
-        "children": [],
         "disableCollapsible": false
       },
       {
@@ -5800,9 +5790,41 @@
         "disableCollapsible": false
       },
       {
-        "name": "Distribute Task Execution",
+        "name": "Use Remote Caching (Nx Replay)",
+        "path": "/ci/features/remote-cache",
+        "id": "remote-cache",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Distribute Task Execution (Nx Agents)",
         "path": "/ci/features/distribute-task-execution",
         "id": "distribute-task-execution",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Dynamically Allocate Agents",
+        "path": "/ci/features/dynamic-agents",
+        "id": "dynamic-agents",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Automatically Split E2E Tasks",
+        "path": "/ci/features/split-e2e-tasks",
+        "id": "split-e2e-tasks",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Identify and Re-run Flaky Tasks",
+        "path": "/ci/features/flaky-tasks",
+        "id": "flaky-tasks",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5811,14 +5833,6 @@
         "name": "Set up Nx Cloud On-Premise",
         "path": "/ci/features/on-premise",
         "id": "on-premise",
-        "isExternal": false,
-        "children": [],
-        "disableCollapsible": false
-      },
-      {
-        "name": "Nx Agents",
-        "path": "/ci/features/nx-agents",
-        "id": "nx-agents",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
@@ -5908,6 +5922,14 @@
             "id": "set-up",
             "isExternal": false,
             "children": [
+              {
+                "name": "Connect Nx Cloud",
+                "path": "/ci/recipes/set-up/connect-to-cloud",
+                "id": "connect-to-cloud",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              },
               {
                 "name": "Setting up Azure Pipelines",
                 "path": "/ci/recipes/set-up/monorepo-ci-azure",
@@ -6133,6 +6155,14 @@
         "isExternal": false,
         "children": [
           {
+            "name": "Connect Nx Cloud",
+            "path": "/ci/recipes/set-up/connect-to-cloud",
+            "id": "connect-to-cloud",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Setting up Azure Pipelines",
             "path": "/ci/recipes/set-up/monorepo-ci-azure",
             "id": "monorepo-ci-azure",
@@ -6181,6 +6211,14 @@
             "disableCollapsible": false
           }
         ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Connect Nx Cloud",
+        "path": "/ci/recipes/set-up/connect-to-cloud",
+        "id": "connect-to-cloud",
+        "isExternal": false,
+        "children": [],
         "disableCollapsible": false
       },
       {
@@ -6546,6 +6584,14 @@
             "disableCollapsible": false
           },
           {
+            "name": "Launch Templates",
+            "path": "/ci/reference/launch-templates",
+            "id": "launch-templates",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          },
+          {
             "name": "Environment Variables",
             "path": "/ci/reference/env-vars",
             "id": "env-vars",
@@ -6584,6 +6630,14 @@
         "name": "nx-cloud CLI",
         "path": "/ci/reference/nx-cloud-cli",
         "id": "nx-cloud-cli",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Launch Templates",
+        "path": "/ci/reference/launch-templates",
+        "id": "launch-templates",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false

@@ -134,29 +134,9 @@ When using React Native in Nx, you get the out-of-the-box support for TypeScript
 
 For existing Nx workspaces, install the `@nx/react-native` package to add React Native capabilities to it.
 
-{% tabs %}
-{% tab label="npm" %}
-
 ```shell
-npm add -D @nx/react-native
+nx add @nx/react-native
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/react-native
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/react-native
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Generating an Application
 

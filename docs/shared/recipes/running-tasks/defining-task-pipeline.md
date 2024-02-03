@@ -87,7 +87,7 @@ Or they can be [defined per-project](/reference/project-configuration#dependson)
 
 ## Visualize task dependencies
 
-You can also visualize the actual task graph (alongside the projects) using [Nx graph](/core-features/explore-graph). This can be useful for debugging purposes.
+You can also visualize the actual task graph (alongside the projects) using [Nx graph](/features/explore-graph). This can be useful for debugging purposes.
 
 To view the task graph in your browser, run:
 
@@ -99,7 +99,7 @@ And then select "Tasks" from the top-left dropdown, choose the target (e.g. `bui
 
 ![Task graph of the Playwright Nx plugin in the nx repo being rendered in the browser](/shared/recipes/running-tasks/task-graph-playwright-nx.webp)
 
-Alternatively you can use the [Nx Console](/core-features/integrate-with-editors) extension in VSCode or IntelliJ, right-click on the project and select:
+Alternatively you can use the [Nx Console](/features/integrate-with-editors) extension in VSCode or IntelliJ, right-click on the project and select:
 
 ![Selecting "Focus task in Nx Graph" from the context menu in VS Code](/shared/recipes/running-tasks/task-graph-context-menu.webp)
 

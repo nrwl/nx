@@ -64,6 +64,10 @@ Keep reading to learn how to fine-tune what gets cached.
 
 ## Fine-tune Caching with Inputs and Outputs
 
+{% callout type="note" title="Detect Inputs and Outputs" %}
+Nx can automatically set inputs and outputs for you based on your tooling configuration settings when you use [inferred tasks](/concepts/inferred-tasks)
+{% /callout %}
+
 Nx's caching feature starts with sensible defaults, but you can also fine-tune the defaults to control exactly what gets cached and when. There are two main options that control caching:
 
 - **Inputs -** define what gets included as part of the calculated hash (e.g. files, environment variables, etc.)
@@ -111,7 +115,7 @@ To achieve this, we can add an `inputs` and `outputs` definition globally for al
 
 Note, you only need to define output locations if they differ from the usual `dist` or `build` directory which Nx automatically recognizes.
 
-Learn more [about configuring inputs including `namedInputs`](/recipes/running-tasks/customizing-inputs).
+Learn more [about configuring inputs including `namedInputs`](/recipes/running-tasks/configure-inputs).
 
 ## Where is the Cache Stored?
 
@@ -135,7 +139,7 @@ If you want to ignore the cache (both reads and writes), use the `--skip-nx-cach
 nx build header --skip-nx-cache
 ```
 
-Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached targets](/core-features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/ci/features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
+Alternatively if you want to disable caching for a particular task, just make sure it is not part [of the cached tasks](/features/cache-task-results#define-cacheable-tasks). If [you're using Nx Cloud](/ci/features/remote-cache#skipping-cloud-cache), you might want to use `--no-cloud` to skip remote caching.
 
 ## Clear the Local Cache
 
