@@ -455,6 +455,13 @@
     },
     {
       "description": "",
+      "file": "shared/recipes/console-project-details",
+      "id": "console-project-details",
+      "name": "Project Details View",
+      "path": "/recipes/nx-console/console-project-details"
+    },
+    {
+      "description": "",
       "file": "shared/recipes/console-generate-command",
       "id": "console-generate-command",
       "name": "Generate Command",
