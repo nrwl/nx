@@ -154,4 +154,20 @@ describe('parseJson', () => {
       array: [1, 2, 3],
     });
   });
+
+  it('should not call JSON.parse when expectComments is true', () => {
+    jest.spyOn(JSON, 'parse');
+
+    expect(
+      parseJson(
+        `{
+      /* a comment */
+      "foo": "bar"
+    }`,
+        { expectComments: true }
+      )
+    ).toEqual({ foo: 'bar' });
+
+    expect(JSON.parse).not.toHaveBeenCalled();
+  });
 });
