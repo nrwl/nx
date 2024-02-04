@@ -3,7 +3,7 @@
 In this tutorial you create multiple projects in a monorepo and take advantage of the core Nx features with a minimum of configuration.
 
 {% callout type="check" title="Package-Based Repo" %}
-This tutorial sets up a [package-based repo](/concepts/integrated-vs-package-based). If you prefer an [integrated repo](/concepts/integrated-vs-package-based), check out the [React](/getting-started/tutorials/react-monorepo-tutorial), [Angular](/getting-started/tutorials/angular-monorepo-tutorial) or [Node](/getting-started/tutorials/node-server-tutorial) tutorials.
+This tutorial sets up a [package-based repo](/concepts/integrated-vs-package-based). If you prefer an [integrated repo](/concepts/integrated-vs-package-based), check out the [React](/getting-started/tutorials/react-monorepo-tutorial) or [Angular](/getting-started/tutorials/angular-monorepo-tutorial) tutorials.
 {% /callout %}
 
 ## Contents:
@@ -61,17 +61,24 @@ Which tells yarn (or npm) and Nx to look in the `packages` folder for projects t
 To install Eleventy run:
 
 {% tabs %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D -W @11ty/eleventy@1.0.0
-```
-
-{% /tab %}
 {% tab label="npm" %}
 
 ```shell
-npm install -D @11ty/eleventy@1.0.0
+npm add -D @11ty/eleventy@1.0.0
+```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D @11ty/eleventy@1.0.0
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D @11ty/eleventy@1.0.0
 ```
 
 {% /tab %}

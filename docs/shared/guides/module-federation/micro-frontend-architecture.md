@@ -51,15 +51,24 @@ Keeping the applications independent allows them to be deployed on different cad
 The generator for MFEs is the same as with basic Module Federation. You can use `nx g host` to create a new host
 application, and `nx g remote` for remote applications.
 
+{% tabs %}
+{% tab label="React" %}
+
 ```shell
-# React
 nx g @nx/react:host shell --remotes=shop,cart
 nx g @nx/react:remote about --host=shell
+```
 
-#a Angular
+{% /tab %}
+{% tab label="Angular" %}
+
+```shell
 nx g @nx/angular:host shell --remotes=shop,cart
 nx g @nx/angular:remote about --host=shell
 ```
+
+{% /tab %}
+{% /tabs %}
 
 That is! You can now run `nx serve shell` to develop on the `shell` application, while keeping all remotes static. To
 develop on one or more remote applications, pass the `--devRemotes` option.

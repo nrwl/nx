@@ -5,6 +5,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { reactDomVersion, reactVersion } from '@nx/react/src/utils/versions';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 import { nextVersion, nxVersion } from '../../utils/versions';
@@ -26,15 +27,25 @@ function updateDependencies(host: Tree, schema: InitSchema) {
       },
       {
         '@nx/next': nxVersion,
-      }
+      },
+      undefined,
+      schema.keepExistingVersions
     )
   );
 
   return runTasksInSerial(...tasks);
 }
 
-export async function nextInitGenerator(host: Tree, schema: InitSchema) {
-  if (process.env.NX_PCV3 === 'true') {
+export function nextInitGenerator(tree: Tree, schema: InitSchema) {
+  return nextInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function nextInitGeneratorInternal(
+  host: Tree,
+  schema: InitSchema
+) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+  if (schema.addPlugin) {
     addPlugin(host);
   }
 
@@ -43,6 +54,11 @@ export async function nextInitGenerator(host: Tree, schema: InitSchema) {
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
     installTask = updateDependencies(host, schema);
+  }
+
+  if (schema.updatePackageScripts) {
+    const { createNodes } = await import('../../plugins/plugin');
+    await updatePackageScripts(host, createNodes);
   }
 
   return installTask;

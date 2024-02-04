@@ -2,12 +2,14 @@ import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { resolve } from 'path';
 
 /**
- * @deprecated TODO(v17) use bundler: 'metro' instead, will be removed in 16.0.0
+ * @deprecated TODO(v19) use bundler: 'metro' instead, will be removed in v19
  * This function add additional rules to expo's webpack config to make expo web working
  */
 export async function withNxWebpack(config) {
   // add additional rule to load files under libs
-  const rules = config.module.rules[1]?.oneOf;
+  const rules = config.module.rules.find((rule) =>
+    Array.isArray(rule.oneOf)
+  )?.oneOf;
   if (rules) {
     rules.push({
       test: /\.(mjs|[jt]sx?)$/,
@@ -34,17 +36,19 @@ export async function withNxWebpack(config) {
   if (!config.resolve.plugins) {
     config.resolve.plugins = [];
   }
-
   const extensions = ['.ts', '.tsx', '.mjs', '.js', '.jsx'];
-  const tsConfigPath = resolve('tsconfig.json');
-
+  const tsConfigPath = resolve(__dirname, 'tsconfig.json');
   config.resolve.plugins.push(
     new TsconfigPathsPlugin({
       configFile: tsConfigPath,
       extensions,
     })
   );
+  config.resolve.fallback = {
+    ...config.resolve.fallback,
+    crypto: require.resolve('crypto-browserify'),
+    stream: require.resolve('stream-browserify'),
+  };
 
-  config.resolve.symlinks = true;
   return config;
 }

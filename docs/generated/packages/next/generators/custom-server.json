@@ -2,7 +2,7 @@
   "name": "custom-server",
   "factory": "./src/generators/custom-server/custom-server#customServerGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxNextCustomServer",
     "title": "Add custom server",

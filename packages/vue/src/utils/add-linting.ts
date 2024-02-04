@@ -22,6 +22,7 @@ export async function addLinting(
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
+    addPlugin?: boolean;
   },
   projectType: 'lib' | 'app'
 ) {
@@ -36,6 +37,7 @@ export async function addLinting(
       skipFormat: true,
       setParserOptionsProject: options.setParserOptionsProject,
       rootProject: options.rootProject,
+      addPlugin: options.addPlugin,
     });
 
     if (isEslintConfigSupported(host)) {

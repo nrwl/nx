@@ -33,6 +33,7 @@ export interface LibraryGeneratorSchema {
   minimal?: boolean;
   rootProject?: boolean;
   simpleName?: boolean;
+  addPlugin?: boolean;
 }
 
 export interface ExecutorOptions {

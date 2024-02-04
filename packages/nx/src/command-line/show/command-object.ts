@@ -125,7 +125,6 @@ const showProjectCommand: CommandModule<NxShowArgs, ShowProjectOptions> = {
       .option('web', {
         type: 'boolean',
         description: 'Show project details in the browser',
-        hidden: true,
       })
       .check((argv) => {
         if (argv.web) {

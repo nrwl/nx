@@ -4,7 +4,7 @@
   "extends": ["@nx/react"],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init#nextInitGenerator",
+      "factory": "./src/generators/init/init#nextInitGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize the `@nrwl/next` plugin.",
       "hidden": true
@@ -39,7 +39,7 @@
       "description": "Set up a custom server."
     },
     "cypress-component-configuration": {
-      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationInternal",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "cypress-component-configuration generator"
     }

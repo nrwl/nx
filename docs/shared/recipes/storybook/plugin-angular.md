@@ -146,7 +146,7 @@ Notice the interaction test on the second story, inside the `play` function. Thi
 ## More Documentation
 
 - [Set up Compodoc for Storybook on Nx](/recipes/storybook/angular-storybook-compodoc)
-- [Information about the `storybook` targets](/deprecated/storybook/angular-storybook-targets)
+- [Information about the `storybook` tasks](/deprecated/storybook/angular-storybook-targets)
 - [Configuring styles and preprocessor options](/recipes/storybook/angular-configuring-styles)
 - [The `browserTarget`](/deprecated/storybook/angular-browser-target)
 

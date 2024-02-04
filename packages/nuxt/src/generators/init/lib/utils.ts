@@ -13,8 +13,10 @@ export function updateDependencies(host: Tree, schema: InitSchema) {
     {},
     {
       '@nx/nuxt': nxVersion,
-      nuxi: nuxtVersion,
-    }
+      nuxt: nuxtVersion,
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 
@@ -72,7 +74,11 @@ export function addPlugin(tree: Tree) {
     nxJson.plugins.push({
       plugin: '@nx/vite/plugin',
       options: {
+        buildTargetName: 'build',
+        previewTargetName: 'preview',
         testTargetName: 'test',
+        serveTargetName: 'serve',
+        serveStaticTargetName: 'serve-static',
       },
     });
   }

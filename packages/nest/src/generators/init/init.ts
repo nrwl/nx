@@ -10,7 +10,7 @@ export async function initGenerator(
 ): Promise<GeneratorCallback> {
   let installPackagesTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {
-    installPackagesTask = addDependencies(tree);
+    installPackagesTask = addDependencies(tree, options);
   }
 
   if (!options.skipFormat) {

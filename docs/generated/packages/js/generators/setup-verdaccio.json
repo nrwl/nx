@@ -2,7 +2,7 @@
   "name": "setup-verdaccio",
   "factory": "./src/generators/setup-verdaccio/generator#setupVerdaccio",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "SetupVerdaccio",
     "title": "Setup Verdaccio",
     "description": "Setup Verdaccio local-registry.",

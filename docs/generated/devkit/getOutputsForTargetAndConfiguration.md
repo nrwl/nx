@@ -15,7 +15,7 @@
 
 **`Deprecated`**
 
-Pass the target and overrides instead. This will be removed in v18.
+Pass the target and overrides instead. This will be removed in v19.
 
 ▸ **getOutputsForTargetAndConfiguration**(`target`, `overrides`, `node`): `string`[]
 

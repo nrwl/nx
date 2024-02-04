@@ -46,11 +46,19 @@ export interface CypressE2EConfigSchema {
 
   webServerCommands?: Record<string, string>;
   ciWebServerCommand?: string;
+  addPlugin?: boolean;
 }
 
 type NormalizedSchema = ReturnType<typeof normalizeOptions>;
 
-export async function configurationGenerator(
+export function configurationGenerator(
+  tree: Tree,
+  options: CypressE2EConfigSchema
+) {
+  return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function configurationGeneratorInternal(
   tree: Tree,
   options: CypressE2EConfigSchema
 ) {
@@ -60,7 +68,13 @@ export async function configurationGenerator(
 
   if (!installedCypressVersion()) {
     tasks.push(await jsInitGenerator(tree, { ...options, skipFormat: true }));
-    tasks.push(await cypressInitGenerator(tree, { ...opts, skipFormat: true }));
+    tasks.push(
+      await cypressInitGenerator(tree, {
+        ...opts,
+        skipFormat: true,
+        addPlugin: options.addPlugin,
+      })
+    );
   }
   const projectGraph = await createProjectGraphAsync();
   const nxJson = readNxJson(tree);
@@ -132,6 +146,7 @@ In this case you need to provide a devServerTarget,'<projectName>:<targetName>[:
 
   return {
     ...options,
+    addPlugin: options.addPlugin ?? process.env.NX_ADD_PLUGINS !== 'false',
     bundler: options.bundler ?? 'webpack',
     rootProject: options.rootProject ?? projectConfig.root === '.',
     linter: options.linter ?? Linter.EsLint,
@@ -182,9 +197,13 @@ async function addFiles(
       project: options.project,
       directory: options.directory,
       jsx: options.jsx,
+      js: options.js,
     });
 
-    const cyFile = joinPathFragments(projectConfig.root, 'cypress.config.ts');
+    const cyFile = joinPathFragments(
+      projectConfig.root,
+      options.js ? 'cypress.config.js' : 'cypress.config.ts'
+    );
     let webServerCommands: Record<string, string>;
 
     let ciWebServerCommand: string;
@@ -264,7 +283,9 @@ function addTarget(tree: Tree, opts: NormalizedSchema) {
     options: {
       cypressConfig: joinPathFragments(
         projectConfig.root,
-        cyVersion && cyVersion < 10 ? 'cypress.json' : 'cypress.config.ts'
+        cyVersion && cyVersion < 10
+          ? 'cypress.json'
+          : `cypress.config.${opts.js ? 'js' : 'ts'}`
       ),
       testingType: 'e2e',
     },

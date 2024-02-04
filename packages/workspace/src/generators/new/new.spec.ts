@@ -1,4 +1,5 @@
 import { readJson, Tree, writeJson } from '@nx/devkit';
+import * as devkit from '@nx/devkit';
 import { createTree } from '@nx/devkit/testing';
 import { Linter } from '../../utils/lint';
 import {
@@ -8,14 +9,10 @@ import {
 } from '../../utils/versions';
 import { Preset } from '../utils/presets';
 import { newGenerator, NormalizedSchema } from './new';
+import * as getNpmPackageVersion from './../utils/get-npm-package-version';
+import * as generatePreset from './generate-preset';
 
 const DEFAULT_PACKAGE_VERSION = '1.0.0';
-jest.mock('./../utils/get-npm-package-version', () => ({
-  ...jest.requireActual<any>('./../utils/get-npm-package-version'),
-  getNpmPackageVersion: jest
-    .fn()
-    .mockImplementation((name, version) => version ?? DEFAULT_PACKAGE_VERSION),
-}));
 
 const defaultOptions: Omit<
   NormalizedSchema,
@@ -29,21 +26,61 @@ const defaultOptions: Omit<
 
 describe('new', () => {
   let tree: Tree;
+  let installPackagesTaskSpy: jest.SpyInstance;
+  let generatePresetSpy: jest.SpyInstance;
+  let getNpmPackageVersionSpy: jest.SpyInstance;
 
   beforeEach(() => {
     tree = createTree();
     // we need an actual path for the package manager version check
     tree.root = process.cwd();
+
+    installPackagesTaskSpy = jest
+      .spyOn(devkit, 'installPackagesTask')
+      .mockImplementation(() => undefined);
+
+    generatePresetSpy = jest
+      .spyOn(generatePreset, 'generatePreset')
+      .mockImplementation(async () => undefined);
+
+    getNpmPackageVersionSpy = jest
+      .spyOn(getNpmPackageVersion, 'getNpmPackageVersion')
+      .mockImplementation(
+        (name, version) => version ?? DEFAULT_PACKAGE_VERSION
+      );
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   it('should generate an empty nx.json', async () => {
-    await newGenerator(tree, {
-      ...defaultOptions,
-      name: 'my-workspace',
-      directory: 'my-workspace',
-      appName: 'app',
-    });
+    await (
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        appName: 'app',
+      })
+    )();
     expect(readJson(tree, 'my-workspace/nx.json')).toMatchSnapshot();
+    expect(installPackagesTaskSpy).toHaveBeenCalled();
+    expect(generatePresetSpy).toHaveBeenCalled();
+  });
+
+  it('should skip install', async () => {
+    await (
+      await newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        appName: 'app',
+        skipInstall: true,
+      })
+    )();
+    expect(readJson(tree, 'my-workspace/nx.json')).toMatchSnapshot();
+    expect(installPackagesTaskSpy).not.toHaveBeenCalled();
+    expect(generatePresetSpy).toHaveBeenCalled();
   });
 
   describe('--preset', () => {

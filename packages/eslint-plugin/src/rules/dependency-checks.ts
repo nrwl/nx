@@ -2,7 +2,7 @@ import { join } from 'path';
 import { satisfies } from 'semver';
 import { AST } from 'jsonc-eslint-parser';
 import { type JSONLiteral } from 'jsonc-eslint-parser/lib/parser/ast';
-import { normalizePath, workspaceRoot } from '@nx/devkit';
+import { normalizePath, workspaceRoot, NX_VERSION } from '@nx/devkit';
 import { findNpmDependencies } from '@nx/js/src/utils/find-npm-dependencies';
 import { readProjectGraph } from '../utils/project-graph-utils';
 import { findProject, getSourceFilePath } from '../utils/runtime-lint-utils';
@@ -22,6 +22,7 @@ export type Options = [
     ignoredDependencies?: string[];
     ignoredFiles?: string[];
     includeTransitiveDependencies?: boolean;
+    useLocalPathsForWorkspaceDependencies?: boolean;
   }
 ];
 
@@ -33,7 +34,10 @@ export type MessageIds =
 
 export const RULE_NAME = 'dependency-checks';
 
-export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
+export default ESLintUtils.RuleCreator(
+  () =>
+    `https://github.com/nrwl/nx/blob/${NX_VERSION}/docs/generated/packages/eslint-plugin/documents/dependency-checks.md`
+)<Options, MessageIds>({
   name: RULE_NAME,
   meta: {
     type: 'suggestion',
@@ -53,6 +57,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
           checkObsoleteDependencies: { type: 'boolean' },
           checkVersionMismatches: { type: 'boolean' },
           includeTransitiveDependencies: { type: 'boolean' },
+          useLocalPathsForWorkspaceDependencies: { type: 'boolean' },
         },
         additionalProperties: false,
       },
@@ -73,6 +78,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
       ignoredDependencies: [],
       ignoredFiles: [],
       includeTransitiveDependencies: false,
+      useLocalPathsForWorkspaceDependencies: false,
     },
   ],
   create(
@@ -86,6 +92,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
         checkObsoleteDependencies,
         checkVersionMismatches,
         includeTransitiveDependencies,
+        useLocalPathsForWorkspaceDependencies,
       },
     ]
   ) {
@@ -136,6 +143,7 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
       {
         includeTransitiveDependencies,
         ignoredFiles,
+        useLocalPathsForWorkspaceDependencies,
       }
     );
     const expectedDependencyNames = Object.keys(npmDependencies);
@@ -203,6 +211,8 @@ export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
         return;
       }
       if (
+        npmDependencies[packageName].startsWith('file:') ||
+        packageRange.startsWith('file:') ||
         npmDependencies[packageName] === '*' ||
         packageRange === '*' ||
         satisfies(npmDependencies[packageName], packageRange, {

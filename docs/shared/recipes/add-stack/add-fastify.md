@@ -9,17 +9,16 @@ width="100%" /%}
 
 Because we are using an Nx plugin for Fastify, all the features of Nx are available.
 
-{% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
-{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
+{% pill url="/features/run-tasks" %}✅ Run Tasks{% /pill %}
+{% pill url="/features/cache-task-results" %}✅ Cache Task Results{% /pill %}
 {% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
-{% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
+{% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
-{% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
-{% pill url="/core-features/plugin-features/use-task-executors" %}✅ Use Task Executors{% /pill %}
-{% pill url="/core-features/plugin-features/use-code-generators" %}✅ Use Code Generators{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Framework Dependencies{% /pill %}
+{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
+{% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
+{% pill url="/features/generate-code" %}✅ Use Code Generators{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Framework Dependencies{% /pill %}
 
 ## Create a New Workspace with a Fastify App
 
@@ -35,22 +34,9 @@ If you are adding Fastify to an existing repo, continue to the next section.
 
 ## Install the Node Plugin
 
-{% tabs %}
-{%tab label="npm"%}
-
 ```shell
-npm i --save-dev @nx/node
+nx add @nx/node
 ```
-
-{% /tab %}
-{%tab label="yarn"%}
-
-```shell
-yarn add --dev @nx/node
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Create an Application
 

@@ -197,6 +197,13 @@
                   "type": "boolean"
                 }
               ]
+            },
+            "automaticFromRef": {
+              "type": "boolean",
+              "description": "Whether or not to automatically look up the first commit for the workspace (or package, if versioning independently) and use that as the starting point for changelog generation. If this is not enabled, changelog generation will fail if there is no previous matching git tag to use as a starting point."
+            },
+            "git": {
+              "$ref": "#/definitions/NxReleaseGitConfiguration"
             }
           }
         },
@@ -525,6 +532,10 @@
           "type": "string",
           "description": "Additional arguments (added after the --message argument, which may or may not be customized with --git-commit-message) to pass to the `git commit` command invoked behind the scenes"
         },
+        "stageChanges": {
+          "type": "boolean",
+          "description": "Whether or not to stage the changes made by this command. Always treated as true if commit is true."
+        },
         "tag": {
           "type": "boolean",
           "description": "Whether or not to automatically tag the changes made by this command"
@@ -542,6 +553,11 @@
     "NxReleaseVersionConfiguration": {
       "type": "object",
       "properties": {
+        "conventionalCommits": {
+          "type": "boolean",
+          "description": "Shorthand for enabling the current version of projects to be resolved from git tags, and the next version to be determined by analyzing commit messages according to the Conventional Commits specification.",
+          "default": false
+        },
         "generator": {
           "type": "string"
         },

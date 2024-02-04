@@ -2,7 +2,7 @@
   "name": "init",
   "factory": "./src/generators/init/init#webInitGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxWebInit",
     "cli": "nx",
     "title": "Init Web Plugin",
@@ -19,6 +19,12 @@
         "type": "boolean",
         "default": false,
         "x-priority": "internal"
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
       }
     },
     "required": [],

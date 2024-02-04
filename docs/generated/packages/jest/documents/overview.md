@@ -1,10 +1,82 @@
+---
+title: Overview of the Nx Jest Plugin
+description: The Nx Plugin for Jest contains executors and generators that support testing projects using Jest. This page also explains how to configure Jest on your Nx workspace.
+---
+
 [Jest](https://jestjs.io/) is an open source test runner created by Facebook. It has a lot of great features:
 
 - Immersive watch mode for providing near instant feedback when developing tests.
 - Snapshot testing for validating features.
 - Great built-in reporter for printing out test results.
 
-## Setting up Jest
+## Setting Up @nx/jest
+
+### Installation
+
+{% callout type="note" title="Keep Nx Package Versions In Sync" %}
+Make sure to install the `@nx/jest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+{% /callout %}
+
+In any Nx workspace, you can install `@nx/jest` by running the following command:
+
+{% tabs %}
+{% tab label="Nx 18+" %}
+
+```shell
+nx add @nx/jest
+```
+
+This will install the correct version of `@nx/jest`.
+
+### How @nx/jest Infers Tasks
+
+The `@nx/jest` plugin will create a task for any project that has an Jest configuration file present. Any of the following files will be recognized as an Jest configuration file:
+
+- `jest.config.js`
+- `jest.config.ts`
+- `jest.config.mjs`
+- `jest.config.mts`
+- `jest.config.cjs`
+- `jest.config.cts`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/jest Configuration
+
+The `@nx/jest/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/jest/plugin",
+      "options": {
+        "targetName": "test"
+      }
+    }
+  ]
+}
+```
+
+- The `targetName` option controls the name of the inferred Jest tasks. The default name is `test`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/jest` package with your package manager.
+
+```shell
+npm add -D @nx/jest
+```
+
+{% /tab %}
+{% /tabs %}
+
+## Using Jest
+
+### Generate a new project set up with Jest
 
 By default, Nx will use Jest when creating applications and libraries.
 
@@ -12,25 +84,9 @@ By default, Nx will use Jest when creating applications and libraries.
 nx g @nx/web:app frontend
 ```
 
-### Adding Jest to an Existing Project
+### Add Jest to a project
 
-Add Jest to a project using the `configuration` generator from `@nx/jest`.
-
-First, install `@nx/jest`, if not already installed using your preferred package manager.
-
-{% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/jest` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
-{% /callout %}
-
-```shell
-npm install --save-dev @nx/jest
-```
-
-```shell
-yarn add --dev @nx/jest
-```
-
-Once installed, run the `configuration` generator
+Run the `configuration` generator
 
 ```shell
 nx g @nx/jest:configuration --project=<project-name>
@@ -39,8 +95,6 @@ nx g @nx/jest:configuration --project=<project-name>
 > Hint: You can use the `--dry-run` flag to see what will be generated.
 
 Replacing `<project-name>` with the name of the project you're wanting to add Jest too.
-
-## Using Jest
 
 ### Testing Applications
 

@@ -1,10 +1,23 @@
 import { prerelease } from 'semver';
 import { ProjectGraph } from '../../../config/project-graph';
+import { Tree } from '../../../generators/tree';
 import { createFileMapUsingProjectGraph } from '../../../project-graph/file-map-utils';
 import { interpolate } from '../../../tasks-runner/utils';
 import { output } from '../../../utils/output';
 import type { ReleaseGroupWithName } from '../config/filter-release-groups';
 import { GitCommit, gitAdd, gitCommit } from './git';
+
+export type ReleaseVersionGeneratorResult = {
+  data: VersionData;
+  callback: (
+    tree: Tree,
+    opts: {
+      dryRun?: boolean;
+      verbose?: boolean;
+      generatorOptions?: Record<string, unknown>;
+    }
+  ) => Promise<string[]>;
+};
 
 export type VersionData = Record<
   string,

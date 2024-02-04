@@ -8,6 +8,8 @@ const swcNodeInstalled = packageIsInstalled('@swc-node/register');
 const tsNodeInstalled = packageIsInstalled('ts-node/register');
 let ts: typeof import('typescript');
 
+let isTsEsmLoaderRegistered = false;
+
 /**
  * Optionally, if swc-node and tsconfig-paths are available in the current workspace, apply the require
  * register hooks so that .ts files can be used for writing custom workspace projects.
@@ -28,20 +30,47 @@ export function registerTsProject(tsConfigPath: string): () => void;
  * workspace path mapping will not, for example).
  *
  * @returns cleanup function
- * @deprecated This signature will be removed in Nx v18. You should pass the full path to the tsconfig in the first argument.
+ * @deprecated This signature will be removed in Nx v19. You should pass the full path to the tsconfig in the first argument.
  */
-export function registerTsProject(path: string, configFilename: string);
 export function registerTsProject(
   path: string,
-  configFilename?: string
+  configFilename: string,
+  /**
+   * @deprecated Do not use this.. it's a 1-off exception
+   */
+  useForSwcEnvironmentVariable?: boolean
+);
+export function registerTsProject(
+  path: string,
+  configFilename?: string,
+  /**
+   * @deprecated Do not use this.. it's a 1-off exception
+   */
+  useForSwcEnvironmentVariable?: boolean
 ): () => void {
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
   const compilerOptions: CompilerOptions = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
     registerTsConfigPaths(tsConfigPath),
-    registerTranspiler(compilerOptions),
+    registerTranspiler(
+      compilerOptions,
+      useForSwcEnvironmentVariable ? tsConfigPath : undefined
+    ),
   ];
+
+  // Add ESM support for `.ts` files.
+  // NOTE: There is no cleanup function for this, as it's not possible to unregister the loader.
+  //       Based on limited testing, it doesn't seem to matter if we register it multiple times, but just in
+  //       case let's keep a flag to prevent it.
+  if (!isTsEsmLoaderRegistered) {
+    const module = require('node:module');
+    if (module.register && packageIsInstalled('ts-node/esm')) {
+      const url = require('node:url');
+      module.register(url.pathToFileURL(require.resolve('ts-node/esm')));
+    }
+    isTsEsmLoaderRegistered = true;
+  }
 
   return () => {
     for (const fn of cleanupFunctions) {
@@ -51,7 +80,8 @@ export function registerTsProject(
 }
 
 export function getSwcTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsConfigPath?: string
 ): (...args: unknown[]) => unknown {
   type ISwcRegister = typeof import('@swc-node/register/register')['register'];
 
@@ -59,9 +89,13 @@ export function getSwcTranspiler(
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
 
-  let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
-  if (existsSync(rootTsConfig)) {
-    process.env.SWC_NODE_PROJECT = rootTsConfig;
+  if (tsConfigPath) {
+    process.env.SWC_NODE_PROJECT = tsConfigPath;
+  } else {
+    let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
+    if (existsSync(rootTsConfig)) {
+      process.env.SWC_NODE_PROJECT = rootTsConfig;
+    }
   }
 
   const cleanupFn = register(compilerOptions);
@@ -77,6 +111,8 @@ export function getTsNodeTranspiler(
   const service = register({
     transpileOnly: true,
     compilerOptions: getTsNodeCompilerOptions(compilerOptions),
+    // we already read and provide the compiler options, so prevent ts-node from reading them again
+    skipProject: true,
   });
 
   const { transpiler, swc } = service.options;
@@ -91,7 +127,10 @@ export function getTsNodeTranspiler(
   };
 }
 
-export function getTranspiler(compilerOptions: CompilerOptions) {
+export function getTranspiler(
+  compilerOptions: CompilerOptions,
+  tsConfigPath?: string
+) {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (!ts) {
@@ -105,7 +144,7 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
   compilerOptions.skipLibCheck = true;
 
   if (swcNodeInstalled && !preferTsNode) {
-    return () => getSwcTranspiler(compilerOptions);
+    return () => getSwcTranspiler(compilerOptions, tsConfigPath);
   }
 
   // We can fall back on ts-node if it's available
@@ -123,10 +162,11 @@ export function getTranspiler(compilerOptions: CompilerOptions) {
  * @returns cleanup method
  */
 export function registerTranspiler(
-  compilerOptions: CompilerOptions
+  compilerOptions: CompilerOptions,
+  tsConfigPath?: string
 ): () => void {
   // Function to register transpiler that returns cleanup function
-  const transpiler = getTranspiler(compilerOptions);
+  const transpiler = getTranspiler(compilerOptions, tsConfigPath);
 
   if (!transpiler) {
     warnNoTranspiler();

@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxCypressMigrateTo11",
   "cli": "nx",
   "title": "Migrate e2e project to Cypress 11",

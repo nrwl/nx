@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "$id": "NxAngularConvertToApplicationExecutorGenerator",
+  "cli": "nx",
+  "title": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. _Note: this is only supported in Angular versions >= 17.0.0_.",
+  "description": "Converts a project or all projects using one of the `@angular-devkit/build-angular:browser`, `@angular-devkit/build-angular:browser-esbuild`, `@nx/angular:browser` and `@nx/angular:browser-esbuild` executors to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. If the converted target is using one of the `@nx/angular` executors, the `@nx/angular:application` executor will be used. Otherwise, the `@angular-devkit/build-angular:application` builder will be used.",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Name of the Angular application project to convert. It has to contain a target using one of the `@angular-devkit/build-angular:browser`, `@angular-devkit/build-angular:browser-esbuild`, `@nx/angular:browser` and `@nx/angular:browser-esbuild` executors. If not specified, all projects with such targets will be converted.",
+      "$default": {
+        "$source": "argv",
+        "index": 0
+      },
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "description": "Skip formatting files.",
+      "type": "boolean",
+      "default": false,
+      "x-priority": "internal"
+    }
+  },
+  "additionalProperties": false
+}

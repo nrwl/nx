@@ -9,10 +9,18 @@ import {
 import { nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
-function updateDependencies(tree: Tree) {
+function updateDependencies(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/web'], []));
-  tasks.push(addDependenciesToPackageJson(tree, {}, { '@nx/web': nxVersion }));
+  tasks.push(
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@nx/web': nxVersion },
+      undefined,
+      schema.keepExistingVersions
+    )
+  );
 
   return runTasksInSerial(...tasks);
 }
@@ -20,7 +28,7 @@ function updateDependencies(tree: Tree) {
 export async function webInitGenerator(tree: Tree, schema: Schema) {
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
-    installTask = updateDependencies(tree);
+    installTask = updateDependencies(tree, schema);
   }
 
   if (!schema.skipFormat) {

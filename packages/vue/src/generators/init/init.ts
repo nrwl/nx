@@ -17,7 +17,9 @@ function updateDependencies(host: Tree, schema: InitSchema) {
     addDependenciesToPackageJson(
       host,
       { vue: vueVersion },
-      { '@nx/vue': nxVersion }
+      { '@nx/vue': nxVersion },
+      undefined,
+      schema.keepExistingVersions
     )
   );
 

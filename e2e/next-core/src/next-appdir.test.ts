@@ -11,7 +11,12 @@ import { checkApp } from './utils';
 describe('Next.js App Router', () => {
   let proj: string;
 
-  beforeAll(() => (proj = newProject()));
+  beforeAll(
+    () =>
+      (proj = newProject({
+        packages: ['@nx/next'],
+      }))
+  );
 
   afterAll(() => cleanupProject());
 

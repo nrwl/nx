@@ -20,7 +20,7 @@ import { getProjectEntryPoints } from '../utils/storybook-ast/entry-point';
 import { getE2EProject } from './lib/get-e2e-project';
 import { getModuleFilePaths } from '../utils/storybook-ast/module-info';
 import type { StoriesGeneratorOptions } from './schema';
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 import { nxVersion } from '../../utils/versions';
 
 export async function angularStoriesGenerator(

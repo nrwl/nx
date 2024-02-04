@@ -54,7 +54,7 @@ export function createLoaderFromCompiler(
         },
       };
     case 'babel':
-      const tsConfig = readTsConfig(options.tsConfig);
+      const tsConfig = readTsConfig(path.join(options.root, options.tsConfig));
 
       const babelConfig = {
         test: /\.([jt])sx?$/,

@@ -3,14 +3,14 @@
   "version": "0.1",
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init",
+      "factory": "./src/generators/init/init#initGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "description": "Add Storybook configuration to the workspace.",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {
-      "factory": "./src/generators/configuration/configuration",
+      "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add Storybook configuration to a UI library or an application.",
       "hidden": false

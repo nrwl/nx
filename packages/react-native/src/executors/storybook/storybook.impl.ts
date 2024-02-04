@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { ExecutorContext, logger } from '@nx/devkit';
+import { ExecutorContext, logger, readJsonFile } from '@nx/devkit';
 import { fileExists } from '@nx/workspace/src/utilities/fileutils';
 import * as chalk from 'chalk';
 import { sync as globSync } from 'glob';
@@ -10,7 +10,12 @@ import {
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
 import { writeFileSync } from 'fs-extra';
+import { PackageJson } from 'nx/src/utils/package-json';
 
+/**
+ * TODO (@xiongemi): remove this function in v19.
+ * @deprecated Going to use the default react storybook target. Use @nx/react:storybook executor instead.
+ */
 export default async function* reactNativeStorybookExecutor(
   options: ReactNativeStorybookOptions,
   context: ExecutorContext
@@ -25,14 +30,20 @@ export default async function* reactNativeStorybookExecutor(
 
   // add storybook addons to app's package.json
   const packageJsonPath = join(context.root, projectRoot, 'package.json');
+  const workspacePackageJsonPath = join(context.root, 'package.json');
+
+  const workspacePackageJson = readJsonFile<PackageJson>(
+    workspacePackageJsonPath
+  );
+  const projectPackageJson = readJsonFile<PackageJson>(packageJsonPath);
+
   if (fileExists(packageJsonPath))
     displayNewlyAddedDepsMessage(
       context.projectName,
       await syncDeps(
-        context.projectName,
-        projectRoot,
-        context.root,
-        context.projectGraph,
+        projectPackageJson,
+        packageJsonPath,
+        workspacePackageJson,
         [
           `@storybook/react-native`,
           '@storybook/addon-ondevice-actions',

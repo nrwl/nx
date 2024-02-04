@@ -28,7 +28,7 @@ async function* runCustomServer(
   options: NextServeBuilderOptions,
   context: ExecutorContext
 ) {
-  process.env.NX_NEXT_DIR = root;
+  process.env.NX_NEXT_DIR ??= root;
   process.env.NX_NEXT_PUBLIC_DIR = join(root, 'public');
 
   const baseUrl = `http://${options.hostname || 'localhost'}:${options.port}`;

@@ -43,8 +43,8 @@ export function PluginCard({
         </h3>
         <a
           href={url}
-          target="_blank"
-          rel="noreferrer"
+          target={isOfficial ? undefined : '_blank'}
+          rel={isOfficial ? undefined : 'noreferrer'}
           className="focus:outline-none flex flex-col grow"
         >
           <span className="absolute inset-0" aria-hidden="true" />

@@ -11,7 +11,13 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
   let task: GeneratorCallback = () => {};
 
   if (!schema.skipPackageJson) {
-    task = addDependenciesToPackageJson(tree, {}, { '@nx/rollup': nxVersion });
+    task = addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@nx/rollup': nxVersion },
+      undefined,
+      schema.keepExistingVersions
+    );
   }
 
   if (!schema.skipFormat) {

@@ -15,7 +15,7 @@ caption="Demoes how to use Nx generators in a PNPM workspace to automate the cre
 If you don't already have a local plugin, use Nx to generate one:
 
 ```shell
-npm install @nx/plugin@latest
+nx add @nx/plugin
 nx g @nx/plugin:plugin my-plugin
 ```
 

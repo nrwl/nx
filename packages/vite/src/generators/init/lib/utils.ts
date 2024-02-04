@@ -18,10 +18,13 @@ export function checkDependenciesInstalled(
     {},
     {
       '@nx/vite': nxVersion,
+      '@nx/web': nxVersion,
       vite: viteVersion,
       vitest: vitestVersion,
       '@vitest/ui': vitestVersion,
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 

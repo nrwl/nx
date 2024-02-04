@@ -9,6 +9,8 @@ export interface ProjectEdgeDataDefinition extends cy.NodeDataDefinition {
   source: string;
   target: string;
   type: 'static' | 'dynamic' | 'implicit';
+  sourceRoot?: string;
+  fileDependencies?: { fileName: string }[];
 }
 
 export class ProjectEdge {

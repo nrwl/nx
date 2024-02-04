@@ -11,7 +11,7 @@ import { JestExecutorOptions } from '@nx/jest/src/executors/jest/schema';
 import { jestExecutor } from '@nx/jest/src/executors/jest/jest.impl';
 import type { NxPluginE2EExecutorOptions } from './schema';
 
-// TODO(v18): remove this
+// TODO(v19): remove this
 export async function* nxPluginE2EExecutor(
   options: NxPluginE2EExecutorOptions,
   context: ExecutorContext
@@ -19,7 +19,7 @@ export async function* nxPluginE2EExecutor(
   const { target, ...jestOptions } = options;
 
   output.warn({
-    title: `"@nx/plugin:e2e" is deprecated and will be removed in Nx 18`,
+    title: `"@nx/plugin:e2e" is deprecated and will be removed in Nx 19`,
     bodyLines: [
       'Use the "@nx/jest:jest" executor instead and set the following:',
       `"dependsOn": ["${target}"]`,

@@ -185,7 +185,7 @@ async function workspaceGeneratorGenerator(
   host.write(
     joinPathFragments(outputDirectory, 'schema.json'),
     stripIndents`{
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "<%= name %>",
     "type": "object",

@@ -116,9 +116,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
       task.target.project === this.initiatingProject
     ) {
       const args = getPrintableCommandArgsForTask(task);
-      output.logCommand(args.join(' '), status);
-      output.addNewline();
-      process.stdout.write(terminalOutput);
+      output.logCommandOutput(args.join(' '), status, terminalOutput);
     }
   }
 }

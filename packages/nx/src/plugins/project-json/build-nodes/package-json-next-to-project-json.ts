@@ -10,8 +10,10 @@ import {
 
 // TODO: Remove this one day, this should not need to be done.
 
-export const CreatePackageJsonProjectsNextToProjectJson: NxPluginV2 = {
-  name: 'nx-core-build-package-json-nodes-next-to-project-json-nodes',
+export const PackageJsonProjectsNextToProjectJsonPlugin: NxPluginV2 = {
+  // Its not a problem if plugins happen to have same name, and this
+  // will look least confusing in the source map.
+  name: 'nx/core/package-json',
   createNodes: [
     '{project.json,**/project.json}',
     (file, _, { workspaceRoot }) => {

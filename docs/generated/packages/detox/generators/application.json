@@ -2,7 +2,7 @@
   "name": "application",
   "factory": "./src/generators/application/application#detoxApplicationGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Create Detox Configuration for the workspace",
     "description": "Create Detox Configuration for the workspace.",
     "type": "object",

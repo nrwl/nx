@@ -3,7 +3,7 @@
   "version": 2,
   "outputCapture": "direct-nodejs",
   "$id": "NxExpoPrebuild",
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "title": "Expo Prebuild",
   "description": "Create native iOS and Android project files for building natively.",
   "type": "object",
@@ -31,5 +31,6 @@
       "description": "Project template to clone from. File path pointing to a local tar file or a github repo"
     }
   },
+  "required": ["platform"],
   "examplesFile": "../../../docs/prebuild-examples.md"
 }

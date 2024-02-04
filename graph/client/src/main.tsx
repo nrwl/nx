@@ -1,3 +1,9 @@
+/* eslint-disable import/first */
+// debug must be first import
+if (process.env.NODE_ENV === 'development') {
+  require('preact/debug');
+}
+
 import { StrictMode } from 'react';
 import { inspect } from '@xstate/inspect';
 import { App } from './app/app';

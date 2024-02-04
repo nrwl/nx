@@ -8,9 +8,9 @@ import type { NxJsonConfiguration } from './nx-json';
 import { readNxJson } from './nx-json';
 import { ProjectsConfigurations } from './workspace-json-project-json';
 
-// TODO(v18): remove this class
+// TODO(v19): remove this class
 /**
- * @deprecated This will be removed in v18. Use {@link readProjectsConfigurationFromProjectGraph} instead.
+ * @deprecated This will be removed in v19. Use {@link readProjectsConfigurationFromProjectGraph} instead.
  */
 export class Workspaces {
   constructor(private root: string) {}

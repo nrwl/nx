@@ -40,7 +40,7 @@
     "dev-server": {
       "implementation": "./src/builders/dev-server/dev-server.impl",
       "schema": "./src/builders/dev-server/schema.json",
-      "description": "The `dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration."
+      "description": "Serves an Angular application using [Webpack](https://webpack.js.org/) when the build target is using a Webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an esbuild-based executor."
     },
     "webpack-server": {
       "implementation": "./src/builders/webpack-server/webpack-server.impl",

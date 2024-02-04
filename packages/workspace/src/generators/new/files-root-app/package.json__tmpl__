@@ -10,5 +10,8 @@
   "devDependencies": {
     "@nx/workspace": "<%= nxVersion %>",
     "nx": "<%= nxVersion %>"
+  },
+  "nx": {
+    "includedScripts": []
   }
 }

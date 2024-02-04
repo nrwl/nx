@@ -1,6 +1,6 @@
 export enum Preset {
   Apps = 'apps',
-  // TODO(v18): Remove Empty and Core presets
+  // TODO(v19): Remove Empty and Core presets
   /** @deprecated Use Apps instead
    */
   Empty = 'empty',

@@ -8,7 +8,7 @@ describe('app', () => {
 
   describe('generated files content - as-provided', () => {
     describe('general application', () => {
-      beforeAll(async () => {
+      beforeEach(async () => {
         tree = createTreeWithEmptyWorkspace();
         await applicationGenerator(tree, {
           name,
@@ -16,6 +16,14 @@ describe('app', () => {
           unitTestRunner: 'vitest',
         });
       });
+
+      it('should not add targets', async () => {
+        const projectConfig = readProjectConfiguration(tree, name);
+        expect(projectConfig.targets.build).toBeUndefined();
+        expect(projectConfig.targets.serve).toBeUndefined();
+        expect(projectConfig.targets.test).toBeUndefined();
+      });
+
       it('should create all new files in the correct location', async () => {
         const newFiles = tree.listChanges().map((change) => change.path);
         expect(newFiles).toMatchSnapshot();
@@ -95,36 +103,6 @@ describe('app', () => {
         });
         expect(tree.exists('myapp4/src/assets/css/styles.css')).toBeFalsy();
         expect(tree.read('myapp4/nuxt.config.ts', 'utf-8')).toMatchSnapshot();
-      });
-    });
-
-    describe('pcv3', () => {
-      let originalValue: string | undefined;
-      beforeEach(() => {
-        tree = createTreeWithEmptyWorkspace();
-        originalValue = process.env['NX_PCV3'];
-        process.env['NX_PCV3'] = 'true';
-      });
-
-      afterEach(() => {
-        if (originalValue) {
-          process.env['NX_PCV3'] = originalValue;
-        } else {
-          delete process.env['NX_PCV3'];
-        }
-      });
-
-      it('should not add targets', async () => {
-        await applicationGenerator(tree, {
-          name,
-          projectNameAndRootFormat: 'as-provided',
-          unitTestRunner: 'vitest',
-        });
-
-        const projectConfi = readProjectConfiguration(tree, name);
-        expect(projectConfi.targets.build).toBeUndefined();
-        expect(projectConfi.targets.serve).toBeUndefined();
-        expect(projectConfi.targets.test).toBeUndefined();
       });
     });
   });

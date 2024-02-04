@@ -20,6 +20,7 @@ export enum Preset {
   Nest = 'nest',
   Express = 'express',
   React = 'react',
+  Vue = 'vue',
   Angular = 'angular',
   NodeStandalone = 'node-standalone',
   NodeMonorepo = 'node-monorepo',

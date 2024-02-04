@@ -1,8 +1,4 @@
-import {
-  addProjectConfiguration,
-  readProjectConfiguration,
-  Tree,
-} from '@nx/devkit';
+import { addProjectConfiguration, Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 
 import configurationGenerator from './configuration';
@@ -22,82 +18,33 @@ describe('webpackProject', () => {
   it('should generate files', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
+      addPlugin: true,
     });
 
-    const project = readProjectConfiguration(tree, 'mypkg');
-
-    expect(project.targets).toMatchObject({
-      build: {
-        executor: '@nx/webpack:webpack',
-        outputs: ['{options.outputPath}'],
-        defaultConfiguration: 'production',
-        options: {
-          main: 'libs/mypkg/src/main.ts',
-        },
-      },
-    });
+    expect(tree.exists('libs/mypkg/webpack.config.js')).toBeTruthy();
   });
 
   it('should support --main option', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
+      addPlugin: true,
       main: 'libs/mypkg/index.ts',
     });
 
-    const project = readProjectConfiguration(tree, 'mypkg');
-
-    expect(project.targets).toMatchObject({
-      build: {
-        executor: '@nx/webpack:webpack',
-        outputs: ['{options.outputPath}'],
-        defaultConfiguration: 'production',
-        options: {
-          main: 'libs/mypkg/index.ts',
-        },
-      },
-    });
+    expect(tree.read('libs/mypkg/webpack.config.js', 'utf-8')).toContain(
+      `main: 'libs/mypkg/index.ts'`
+    );
   });
 
   it('should support --tsConfig option', async () => {
     await configurationGenerator(tree, {
       project: 'mypkg',
+      addPlugin: true,
       tsConfig: 'libs/mypkg/tsconfig.custom.json',
     });
 
-    const project = readProjectConfiguration(tree, 'mypkg');
-
-    expect(project.targets).toMatchObject({
-      build: {
-        executor: '@nx/webpack:webpack',
-        outputs: ['{options.outputPath}'],
-        defaultConfiguration: 'production',
-        options: {
-          tsConfig: 'libs/mypkg/tsconfig.custom.json',
-        },
-      },
-    });
-  });
-
-  it('should support --devServer option', async () => {
-    await configurationGenerator(tree, {
-      project: 'mypkg',
-      devServer: true,
-    });
-
-    const project = readProjectConfiguration(tree, 'mypkg');
-
-    expect(project.targets).toMatchObject({
-      serve: {
-        executor: '@nx/webpack:dev-server',
-        options: {
-          buildTarget: 'mypkg:build',
-        },
-        configurations: {
-          production: {
-            buildTarget: `mypkg:build:production`,
-          },
-        },
-      },
-    });
+    expect(tree.read('libs/mypkg/webpack.config.js', 'utf-8')).toContain(
+      `tsConfig: 'libs/mypkg/tsconfig.custom.json'`
+    );
   });
 });

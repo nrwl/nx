@@ -87,6 +87,7 @@ export async function addE2e(
         }`,
         webServerAddress: 'http://localhost:4200',
         rootProject: options.rootProject,
+        addPlugin: options.addPlugin,
       });
     }
     case 'none':

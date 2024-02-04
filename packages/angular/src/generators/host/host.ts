@@ -12,6 +12,7 @@ import remoteGenerator from '../remote/remote';
 import { setupMf } from '../setup-mf/setup-mf';
 import { updateSsrSetup } from './lib';
 import type { Schema } from './schema';
+import { addMfEnvToTargetDefaultInputs } from '../utils/add-mf-env-to-inputs';
 
 export async function host(tree: Tree, options: Schema) {
   return await hostInternal(tree, {
@@ -112,6 +113,8 @@ export async function hostInternal(tree: Tree, schema: Schema) {
       typescriptConfiguration,
     });
   }
+
+  addMfEnvToTargetDefaultInputs(tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

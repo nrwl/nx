@@ -8,17 +8,16 @@ The code for this example is available on GitHub:
 
 Because we are not using a Nx plugin for Svelte, there are a few items we'll have to configure manually. We'll have to configure our own build system. There are no pre-created Svelte-specific code generators. And we'll have to take care of updating any framework dependencies as needed.
 
-{% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
-{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
+{% pill url="/features/run-tasks" %}✅ Run Tasks{% /pill %}
+{% pill url="/features/cache-task-results" %}✅ Cache Task Results{% /pill %}
 {% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
-{% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
+{% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
-{% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
-{% pill url="/core-features/plugin-features/use-task-executors" %}🚫 Use Task Executors{% /pill %}
-{% pill url="/core-features/plugin-features/use-code-generators" %}🚫 Use Code Generators{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
+{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
+{% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
+{% pill url="/features/generate-code" %}🚫 Use Code Generators{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
 
 ## Setup workspace
 
@@ -28,21 +27,21 @@ Because we are not using a Nx plugin for Svelte, there are a few items we'll hav
 {%tab label="npm"%}
 
 ```shell
-npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=true
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=true --pm yarn
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes --pm yarn
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=true --pm pnpm
+npx create-nx-workspace@latest acme --preset=ts-standalone --nx-cloud=yes --pm pnpm
 ```
 
 {% /tab %}
@@ -58,21 +57,24 @@ Make sure to install the `@nx/vite` and `@nx/js` versions that matches the versi
 {%tab label="npm"%}
 
 ```shell
-npm install --save-dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+npm add -D vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+nx add @nx/vite @nx/js
 ```
 
 {% /tab %}
 {%tab label="yarn"%}
 
 ```shell
-yarn add --dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+yarn add -D vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+nx add @nx/vite @nx/js
 ```
 
 {% /tab %}
 {%tab label="pnpm"%}
 
 ```shell
-pnpm add --save-dev @nx/vite @nx/js vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+pnpm add -D vitest vite svelte svelte-check @sveltejs/vite-plugin-svelte
+nx add @nx/vite @nx/js
 ```
 
 {% /tab %}
@@ -181,45 +183,29 @@ Change your `tsconfig.lib.json` to `tsconfig.app.json`. It should look like this
 }
 ```
 
-Navigate to `project.json` and update it with the following content:
+Navigate to `nx.json` it should contain the following:
 
 ```json {% fileName="/project.json" %}
 {
-  "targets": {
-    "build": {
-      "executor": "@nx/vite:build",
-      "outputs": ["{options.outputPath}"],
-      "defaultConfiguration": "production",
+  // ... other config
+  "plugins": [
+    {
+      "plugin": "@nx/eslint/plugin",
       "options": {
-        "outputPath": "dist/acme"
-      },
-      "configurations": {
-        "development": {
-          "mode": "development"
-        },
-        "production": {
-          "mode": "production"
-        }
+        "targetName": "lint"
       }
     },
-    "serve": {
-      "executor": "@nx/vite:dev-server",
-      "defaultConfiguration": "development",
+    {
+      "plugin": "@nx/vite/plugin",
       "options": {
-        "buildTarget": "acme:build"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "acme:build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "acme:build:production",
-          "hmr": false
-        }
+        "buildTargetName": "build",
+        "previewTargetName": "preview",
+        "testTargetName": "test",
+        "serveTargetName": "serve",
+        "serveStaticTargetName": "serve-static"
       }
     }
-  }
+  ]
 }
 ```
 

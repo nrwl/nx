@@ -11,6 +11,8 @@ import {
   updateJson,
   updateProjectConfiguration,
   updateNxJson,
+  runTasksInSerial,
+  GeneratorCallback,
 } from '@nx/devkit';
 import { installedCypressVersion } from '../../utils/cypress-version';
 
@@ -22,14 +24,33 @@ import {
 } from '../../utils/versions';
 import { CypressComponentConfigurationSchema } from './schema';
 import { addBaseCypressSetup } from '../base-setup/base-setup';
+import init from '../init/init';
 
 type NormalizeCTOptions = ReturnType<typeof normalizeOptions>;
 
-export async function componentConfigurationGenerator(
+export function componentConfigurationGenerator(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
+  return componentConfigurationGeneratorInternal(tree, {
+    addPlugin: false,
+    ...options,
+  });
+}
+
+export async function componentConfigurationGeneratorInternal(
+  tree: Tree,
+  options: CypressComponentConfigurationSchema
+) {
+  const tasks: GeneratorCallback[] = [];
   const opts = normalizeOptions(options);
+
+  tasks.push(
+    await init(tree, {
+      ...opts,
+      skipFormat: true,
+    })
+  );
 
   const nxJson = readNxJson(tree);
   const hasPlugin = nxJson.plugins?.some((p) =>
@@ -40,7 +61,7 @@ export async function componentConfigurationGenerator(
 
   const projectConfig = readProjectConfiguration(tree, opts.project);
 
-  const installDepsTask = updateDeps(tree, opts);
+  tasks.push(updateDeps(tree, opts));
 
   addProjectFiles(tree, projectConfig, opts);
   if (!hasPlugin) {
@@ -54,7 +75,7 @@ export async function componentConfigurationGenerator(
     await formatFiles(tree);
   }
 
-  return installDepsTask;
+  return runTasksInSerial(...tasks);
 }
 
 function normalizeOptions(options: CypressComponentConfigurationSchema) {
@@ -66,6 +87,7 @@ function normalizeOptions(options: CypressComponentConfigurationSchema) {
   }
 
   return {
+    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
     ...options,
     directory: options.directory ?? 'cypress',
   };

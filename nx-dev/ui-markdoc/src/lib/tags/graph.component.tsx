@@ -91,7 +91,7 @@ export function Graph({
   }
 
   return (
-    <div className="my-6 w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-100 dark:ring-slate-700">
+    <div className="my-6 w-full place-content-center overflow-hidden rounded-md ring-1 ring-slate-200 dark:ring-slate-700">
       <div className="relative flex justify-center p-2 border-b border-slate-200 bg-slate-100/50 dark:border-slate-700 dark:bg-slate-700/50 font-bold">
         {title}
       </div>

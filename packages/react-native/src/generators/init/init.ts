@@ -8,30 +8,44 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { ReactNativePluginOptions } from '../../../plugins/plugin';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes, ReactNativePluginOptions } from '../../../plugins/plugin';
 import {
   nxVersion,
   reactDomVersion,
-  reactNativeCommunityCli,
-  reactNativeCommunityCliAndroid,
-  reactNativeCommunityCliIos,
   reactNativeVersion,
   reactVersion,
 } from '../../utils/versions';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
-export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
+export function reactNativeInitGenerator(host: Tree, schema: Schema) {
+  return reactNativeInitGeneratorInternal(host, {
+    addPlugin: false,
+    ...schema,
+  });
+}
+
+export async function reactNativeInitGeneratorInternal(
+  host: Tree,
+  schema: Schema
+) {
   addGitIgnoreEntry(host);
 
-  if (process.env.NX_PCV3 === 'true') {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  if (schema.addPlugin) {
     addPlugin(host);
   }
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host));
+    tasks.push(updateDependencies(host, schema));
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(host, createNodes);
   }
 
   if (!schema.skipFormat) {
@@ -41,7 +55,7 @@ export async function reactNativeInitGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree) {
+export function updateDependencies(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     host,
     {
@@ -51,11 +65,9 @@ export function updateDependencies(host: Tree) {
     },
     {
       '@nx/react-native': nxVersion,
-      '@react-native-community/cli': reactNativeCommunityCli,
-      '@react-native-community/cli-platform-android':
-        reactNativeCommunityCliAndroid,
-      '@react-native-community/cli-platform-ios': reactNativeCommunityCliIos,
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 
@@ -87,6 +99,8 @@ function addPlugin(host: Tree) {
       runAndroidTargetName: 'run-android',
       buildIosTargetName: 'build-ios',
       buildAndroidTargetName: 'build-android',
+      syncDepsTargetName: 'sync-deps',
+      upgradeTargetname: 'upgrade',
     } as ReactNativePluginOptions,
   });
   updateNxJson(host, nxJson);

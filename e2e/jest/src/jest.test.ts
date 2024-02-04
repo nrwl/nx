@@ -53,7 +53,8 @@ describe('Jest', () => {
       `libs/${mylib}/setup.ts`,
       stripIndents`
       const { registerTsProject } = require('@nx/js/src/internal');
-      const cleanup = registerTsProject('./tsconfig.base.json');
+      const { join } = require('path');
+      const cleanup = registerTsProject(join(__dirname, '../../tsconfig.base.json'));
 
       import {setup} from '@global-fun/globals';
       export default async function() {setup();}
@@ -66,7 +67,8 @@ describe('Jest', () => {
       `libs/${mylib}/teardown.ts`,
       stripIndents`
       const { registerTsProject } = require('@nx/js/src/internal');
-      const cleanup = registerTsProject('./tsconfig.base.json');
+      const { join } = require('path');
+      const cleanup = registerTsProject(join(__dirname, '../../tsconfig.base.json'));
 
       import {teardown} from '@global-fun/globals';
       export default async function() {teardown();}
@@ -116,28 +118,6 @@ describe('Jest', () => {
     expect(appResult.combinedOutput).toContain(
       'Test Suites: 1 passed, 1 total'
     );
-  }, 90000);
-
-  it('should support multiple `coverageReporters` through CLI', async () => {
-    const mylib = uniq('mylib');
-    runCLI(`generate @nx/js:lib ${mylib} --unitTestRunner=jest`);
-
-    updateFile(
-      `libs/${mylib}/src/lib/${mylib}.spec.ts`,
-      `
-        test('can access jest global', () => {
-          expect(true).toBe(true);
-        });
-        `
-    );
-
-    const result = await runCLIAsync(
-      `test ${mylib} --no-watch --code-coverage --coverageReporters=text --coverageReporters=text-summary`
-    );
-    expect(result.stdout).toContain(
-      'File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s'
-    ); // text
-    expect(result.stdout).toContain('Coverage summary'); // text-summary
   }, 90000);
 
   it('should be able to test node lib with babel-jest', async () => {

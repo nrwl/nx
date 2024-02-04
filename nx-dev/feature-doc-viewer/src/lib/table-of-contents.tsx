@@ -14,7 +14,16 @@ export function collectHeadings(
 ): Heading[] {
   if (node) {
     if (node.name && node.name === 'Heading') {
-      const title = node.children[0];
+      function childToString(child: any) {
+        if (typeof child === 'string') {
+          return child;
+        }
+        if (child.children) {
+          return child.children.map(childToString).join(' ');
+        }
+        return '';
+      }
+      const title = node.children.map(childToString).join(' ');
 
       if (typeof title === 'string') {
         sections.push({

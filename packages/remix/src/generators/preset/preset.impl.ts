@@ -21,6 +21,7 @@ export default async function (tree: Tree, _options: RemixGeneratorSchema) {
     unitTestRunner: options.unitTestRunner ?? 'vitest',
     e2eTestRunner: options.e2eTestRunner ?? 'cypress',
     js: options.js ?? false,
+    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
   });
   tasks.push(appGenTask);
 

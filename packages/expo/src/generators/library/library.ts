@@ -32,12 +32,15 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function expoLibraryGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await expoLibraryGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -90,7 +93,8 @@ export async function expoLibraryGeneratorInternal(
     options.name,
     options.projectRoot,
     options.js,
-    options.skipPackageJson
+    options.skipPackageJson,
+    options.addPlugin
   );
   tasks.push(jestTask);
 
@@ -111,6 +115,10 @@ export async function expoLibraryGeneratorInternal(
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.name);
+  });
 
   return runTasksInSerial(...tasks);
 }
@@ -143,6 +151,8 @@ async function addProject(
   });
 
   const external = ['react/jsx-runtime', 'react-native', 'react', 'react-dom'];
+
+  addBuildTargetDefaults(host, '@nx/rollup:rollup');
 
   project.targets.build = {
     executor: '@nx/rollup:rollup',

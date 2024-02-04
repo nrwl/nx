@@ -6,13 +6,19 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { WebpackPluginOptions } from '../../plugins/plugin';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes, WebpackPluginOptions } from '../../plugins/plugin';
 import { nxVersion, webpackCliVersion } from '../../utils/versions';
 import { Schema } from './schema';
 
-export async function webpackInitGenerator(tree: Tree, schema: Schema) {
-  const shouldAddPlugin = process.env.NX_PCV3 === 'true';
-  if (shouldAddPlugin) {
+export function webpackInitGenerator(tree: Tree, schema: Schema) {
+  return webpackInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function webpackInitGeneratorInternal(tree: Tree, schema: Schema) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  if (schema.addPlugin) {
     addPlugin(tree);
   }
 
@@ -20,13 +26,24 @@ export async function webpackInitGenerator(tree: Tree, schema: Schema) {
   if (!schema.skipPackageJson) {
     const devDependencies = {
       '@nx/webpack': nxVersion,
+      '@nx/web': nxVersion,
     };
 
-    if (shouldAddPlugin) {
+    if (schema.addPlugin) {
       devDependencies['webpack-cli'] = webpackCliVersion;
     }
 
-    installTask = addDependenciesToPackageJson(tree, {}, devDependencies);
+    installTask = addDependenciesToPackageJson(
+      tree,
+      {},
+      devDependencies,
+      undefined,
+      schema.keepExistingVersions
+    );
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!schema.skipFormat) {

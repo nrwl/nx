@@ -5,11 +5,17 @@ use std::{
 
 use anyhow::anyhow;
 use crossbeam_channel::{bounded, unbounded, Receiver};
+use crossterm::terminal::{self, disable_raw_mode, enable_raw_mode};
+use crossterm::tty::IsTty;
 use napi::threadsafe_function::ErrorStrategy::Fatal;
 use napi::threadsafe_function::ThreadsafeFunction;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
 use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
+use tracing::trace;
+
+#[cfg(target_os = "windows")]
+static CURSOR_POSITION: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
 
 fn command_builder() -> CommandBuilder {
     if cfg!(target_os = "windows") {
@@ -37,14 +43,14 @@ pub enum ChildProcessMessage {
 pub struct ChildProcess {
     process_killer: Box<dyn ChildKiller + Sync + Send>,
     message_receiver: Receiver<String>,
-    wait_receiver: Receiver<u32>,
+    wait_receiver: Receiver<String>,
 }
 #[napi]
 impl ChildProcess {
     pub fn new(
         process_killer: Box<dyn ChildKiller + Sync + Send>,
         message_receiver: Receiver<String>,
-        exit_receiver: Receiver<u32>,
+        exit_receiver: Receiver<String>,
     ) -> Self {
         Self {
             process_killer,
@@ -55,17 +61,16 @@ impl ChildProcess {
 
     #[napi]
     pub fn kill(&mut self) -> anyhow::Result<()> {
-        self.process_killer.kill().map_err(anyhow::Error::from)?;
-        Ok(())
+        self.process_killer.kill().map_err(anyhow::Error::from)
     }
 
     #[napi]
     pub fn on_exit(
         &mut self,
-        #[napi(ts_arg_type = "(code: number) => void")] callback: JsFunction,
+        #[napi(ts_arg_type = "(message: string) => void")] callback: JsFunction,
     ) -> napi::Result<()> {
         let wait = self.wait_receiver.clone();
-        let callback_tsfn: ThreadsafeFunction<u32, Fatal> =
+        let callback_tsfn: ThreadsafeFunction<String, Fatal> =
             callback.create_threadsafe_function(0, |ctx| Ok(vec![ctx.value]))?;
 
         std::thread::spawn(move || {
@@ -126,10 +131,10 @@ pub fn run_command(
 
     let pty_system = NativePtySystem::default();
 
-    let (w, h) = term_size::dimensions().unwrap_or((80, 24));
+    let (w, h) = terminal::size().unwrap_or((80, 24));
     let pair = pty_system.openpty(PtySize {
-        rows: h as u16,
-        cols: w as u16,
+        rows: h,
+        cols: w,
         pixel_width: 0,
         pixel_height: 0,
     })?;
@@ -148,6 +153,8 @@ pub fn run_command(
 
     let reader = pair.master.try_clone_reader()?;
     let mut stdout = std::io::stdout();
+
+    // Output -> stdout handling
     std::thread::spawn(move || {
         let mut reader = BufReader::new(reader);
         let mut buffer = [0; 8 * 1024];
@@ -167,6 +174,16 @@ pub fn run_command(
                 // remove cursor position 1,1
                 content = content.replacen("\x1B[H", "", 1);
             }
+
+            #[cfg(target_os = "windows")]
+            {
+                let regex = CURSOR_POSITION.get_or_init(|| {
+                    regex::Regex::new(r"\x1B\[\d+;\d+H")
+                        .expect("failed to compile CURSOR ansi regex")
+                });
+                content = regex.replace_all(&content, "").to_string();
+            }
+
             message_tx.send(content.to_string()).ok();
             if !quiet {
                 stdout.write_all(content.as_bytes()).ok();
@@ -182,11 +199,26 @@ pub fn run_command(
 
     let process_killer = child.clone_killer();
     let (exit_tx, exit_rx) = bounded(1);
+
+    let mut writer = pair.master.take_writer()?;
+
+    // Stdin -> pty stdin
+    if std::io::stdout().is_tty() {
+        std::thread::spawn(move || {
+            enable_raw_mode().expect("Failed to enter raw terminal mode");
+            let mut stdin = std::io::stdin();
+            #[allow(clippy::redundant_pattern_matching)]
+            // ignore errors that come from copying the stream
+            if let Ok(_) = std::io::copy(&mut stdin, &mut writer) {}
+        });
+    }
+
     std::thread::spawn(move || {
         let exit = child.wait().unwrap();
         // make sure that master is only dropped after we wait on the child. Otherwise windows does not like it
         drop(pair.master);
-        exit_tx.send(exit.exit_code()).ok();
+        disable_raw_mode().expect("Failed to restore non-raw terminal");
+        exit_tx.send(exit.to_string()).ok();
     });
 
     Ok(ChildProcess::new(process_killer, message_rx, exit_rx))
@@ -203,10 +235,47 @@ pub fn nx_fork(
     js_env: Option<HashMap<String, String>>,
     quiet: bool,
 ) -> napi::Result<ChildProcess> {
-    run_command(
-        format!("node {} {} {}", fork_script, psuedo_ipc_path, id),
-        command_dir,
-        js_env,
-        Some(quiet),
-    )
+    let command = format!(
+        "node {} {} {}",
+        handle_path_space(fork_script),
+        psuedo_ipc_path,
+        id
+    );
+
+    trace!("nx_fork command: {}", &command);
+    run_command(command, command_dir, js_env, Some(quiet))
+}
+
+#[cfg(target_os = "windows")]
+pub fn handle_path_space(path: String) -> String {
+    use std::os::windows::ffi::OsStrExt;
+    use std::{ffi::OsString, os::windows::ffi::OsStringExt};
+
+    use winapi::um::fileapi::GetShortPathNameW;
+    let wide: Vec<u16> = std::path::PathBuf::from(&path)
+        .as_os_str()
+        .encode_wide()
+        .chain(Some(0))
+        .collect();
+    let mut buffer: Vec<u16> = vec![0; wide.len() * 2];
+    let result =
+        unsafe { GetShortPathNameW(wide.as_ptr(), buffer.as_mut_ptr(), buffer.len() as u32) };
+    if result == 0 {
+        path
+    } else {
+        let len = buffer.iter().position(|&x| x == 0).unwrap();
+        let short_path: String = OsString::from_wide(&buffer[..len])
+            .to_string_lossy()
+            .into_owned();
+        short_path
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn handle_path_space(path: String) -> String {
+    if path.contains(' ') {
+        format!("'{}'", path)
+    } else {
+        path
+    }
 }

@@ -4,4 +4,5 @@ export interface PublishExecutorSchema {
   tag?: string;
   otp?: number;
   dryRun?: boolean;
+  firstRelease?: boolean;
 }

@@ -22,6 +22,7 @@ export async function normalizeOptions(
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     callingGenerator: '@nx/nest:library',
   });
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   const fileName = options.simpleName
     ? projectNames.projectSimpleName
@@ -63,6 +64,7 @@ export function toJsLibraryGeneratorOptions(
     publishable: options.publishable,
     skipFormat: true,
     skipTsConfig: options.skipTsConfig,
+    skipPackageJson: options.skipPackageJson,
     strict: options.strict,
     tags: options.tags,
     testEnvironment: options.testEnvironment,
@@ -70,5 +72,6 @@ export function toJsLibraryGeneratorOptions(
     config: options.standaloneConfig ? 'project' : 'workspace',
     setParserOptionsProject: options.setParserOptionsProject,
     projectNameAndRootFormat: options.projectNameAndRootFormat,
+    addPlugin: options.addPlugin,
   };
 }

@@ -1,5 +1,4 @@
 import * as ora from 'ora';
-import { join } from 'path';
 
 import { execAndWait } from '../child-process-utils';
 import { mapErrorToBodyLines } from '../error-utils';

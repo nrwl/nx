@@ -10,6 +10,7 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
       projectRoot: options.appProjectRoot,
       skipPackageJson: options.skipPackageJson,
       strict: options.strict,
+      addPlugin: options.addPlugin,
     });
   }
 }

@@ -9,7 +9,6 @@ import { readJsonFile } from '../../utils/fileutils';
 import { nxVersion } from '../../utils/versions';
 import {
   addDepsToPackageJson,
-  askAboutNxCloud,
   createNxJsonFile,
   runInstall,
   updateGitIgnore,
@@ -18,6 +17,8 @@ import { prompt } from 'enquirer';
 import { execSync } from 'child_process';
 import { addNxToAngularCliRepo } from './implementation/angular';
 import { globWithWorkspaceContext } from '../../utils/workspace-context';
+import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
+import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 
 export interface InitArgs {
   interactive: boolean;
@@ -49,7 +50,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
-  // TODO(jack): Remove this Angular logic once `@nx/plugin` is compatible with PCv3.
+  // TODO(jack): Remove this Angular logic once `@nx/angular` is compatible with inferred targets.
   if (existsSync('angular.json')) {
     await addNxToAngularCliRepo({
       ...options,
@@ -67,26 +68,47 @@ export async function initHandler(options: InitArgs): Promise<void> {
   updateGitIgnore(repoRoot);
 
   const detectPluginsResponse = await detectPlugins();
-  const useNxCloud =
-    options.nxCloud ?? (options.interactive ? await askAboutNxCloud() : false);
 
-  if (detectPluginsResponse) {
-    addDepsToPackageJson(repoRoot, detectPluginsResponse.plugins);
-  }
+  if (!detectPluginsResponse?.plugins.length) {
+    // If no plugins are detected/chosen, guide users to setup
+    // their targetDefaults correctly so their package scripts will work.
+    await addNxToNpmRepo({
+      interactive: options.interactive,
+    });
+  } else {
+    const useNxCloud =
+      options.nxCloud ??
+      (options.interactive
+        ? await connectExistingRepoToNxCloudPrompt()
+        : false);
 
-  output.log({ title: '📦 Installing Nx' });
+    addDepsToPackageJson(repoRoot, detectPluginsResponse?.plugins ?? []);
 
-  runInstall(repoRoot, pmc);
+    output.log({ title: '📦 Installing Nx' });
 
-  if (detectPluginsResponse) {
-    output.log({ title: '🔨 Configuring plugins' });
-    for (const plugin of detectPluginsResponse.plugins) {
+    runInstall(repoRoot, pmc);
+
+    if (detectPluginsResponse) {
+      output.log({ title: '🔨 Configuring plugins' });
+      for (const plugin of detectPluginsResponse.plugins) {
+        execSync(
+          `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
+            detectPluginsResponse.updatePackageScripts
+              ? '--updatePackageScripts'
+              : ''
+          } --no-interactive`,
+          {
+            stdio: [0, 1, 2],
+            cwd: repoRoot,
+          }
+        );
+      }
+    }
+
+    if (useNxCloud) {
+      output.log({ title: '🛠️ Setting up Nx Cloud' });
       execSync(
-        `${pmc.exec} nx g ${plugin}:init --skipPackageJson ${
-          detectPluginsResponse.updatePackageScripts
-            ? '--updatePackageScripts'
-            : ''
-        } --no-interactive`,
+        `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init --quiet --hideFormatLogs --no-interactive`,
         {
           stdio: [0, 1, 2],
           cwd: repoRoot,
@@ -95,16 +117,13 @@ export async function initHandler(options: InitArgs): Promise<void> {
     }
   }
 
-  if (useNxCloud) {
-    output.log({ title: '🛠️ Setting up Nx Cloud' });
-    execSync(
-      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init-pcv3 --quiet --no-interactive`,
-      {
-        stdio: [0, 1, 2],
-        cwd: repoRoot,
-      }
-    );
-  }
+  output.log({
+    title: '👀 Explore Your Workspace',
+    bodyLines: [
+      `Run "nx graph" to show the graph of the workspace. It will show tasks that you can run with Nx.`,
+      `Read this guide on exploring your workspace: https://nx.dev/core-features/explore-graph`,
+    ],
+  });
 }
 
 const npmPackageToPluginMap: Record<string, string> = {
@@ -118,9 +137,14 @@ const npmPackageToPluginMap: Record<string, string> = {
   // Testing tools
   jest: '@nx/jest',
   cypress: '@nx/cypress',
-  playwright: '@nx/playwright',
+  '@playwright/test': '@nx/playwright',
+  // Frameworks
+  detox: '@nx/detox',
+  expo: '@nx/expo',
   next: '@nx/next',
   nuxt: '@nx/nuxt',
+  'react-native': '@nx/react-native',
+  '@remix-run/dev': '@nx/remix',
 };
 
 async function detectPlugins(): Promise<
@@ -190,7 +214,7 @@ async function detectPlugins(): Promise<
           name: 'No',
         },
       ],
-      initial: 'Yes' as any,
+      initial: 0,
     },
   ]).then((r) => r.updatePackageScripts === 'Yes');
 

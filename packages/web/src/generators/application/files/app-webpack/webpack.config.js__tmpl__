@@ -12,6 +12,7 @@ module.exports = {
   plugins: [
     new NxWebpackPlugin({
       tsConfig: '<%= webpackPluginOptions.tsConfig %>',
+      compiler: '<%= webpackPluginOptions.compiler %>',
       main: '<%= webpackPluginOptions.main %>',
       index: '<%= webpackPluginOptions.index %>',
       baseHref: '<%= webpackPluginOptions.baseHref %>',

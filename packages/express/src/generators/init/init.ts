@@ -9,7 +9,7 @@ import {
 import { expressVersion, nxVersion } from '../../utils/versions';
 import type { Schema } from './schema';
 
-function updateDependencies(tree: Tree) {
+function updateDependencies(tree: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/express'], []));
@@ -18,7 +18,9 @@ function updateDependencies(tree: Tree) {
     addDependenciesToPackageJson(
       tree,
       { express: expressVersion },
-      { '@nx/express': nxVersion }
+      { '@nx/express': nxVersion },
+      undefined,
+      schema.keepExistingVersions
     )
   );
 
@@ -28,7 +30,7 @@ function updateDependencies(tree: Tree) {
 export async function initGenerator(tree: Tree, schema: Schema) {
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
-    installTask = updateDependencies(tree);
+    installTask = updateDependencies(tree, schema);
   }
 
   if (!schema.skipFormat) {

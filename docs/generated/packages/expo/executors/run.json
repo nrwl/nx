@@ -6,7 +6,7 @@
     "outputCapture": "direct-nodejs",
     "cli": "nx",
     "$id": "NxExpoRun",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Run iOS or Android application",
     "description": "Run Expo target options.",
     "type": "object",

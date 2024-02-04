@@ -6,6 +6,8 @@ import type {
 } from 'nx/src/command-line/graph/graph';
 
 export abstract class ExternalApi {
+  abstract openProjectDetails(projectName: string, targetName?: string): void;
+
   abstract focusProject(projectName: string): void;
 
   abstract toggleSelectProject(projectName: string): void;

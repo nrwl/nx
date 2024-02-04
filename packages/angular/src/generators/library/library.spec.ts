@@ -131,8 +131,7 @@ describe('lib', () => {
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeUndefined();
       expect(packageJson.devDependencies['postcss']).toBeUndefined();
-      expect(packageJson.devDependencies['postcss-import']).toBeUndefined();
-      expect(packageJson.devDependencies['postcss-preset-env']).toBeUndefined();
+      expect(packageJson.devDependencies['autoprefixer']).toBeUndefined();
       expect(packageJson.devDependencies['postcss-url']).toBeUndefined();
     });
 
@@ -147,8 +146,7 @@ describe('lib', () => {
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-import']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-preset-env']).toBeDefined();
+      expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
       expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
@@ -160,8 +158,7 @@ describe('lib', () => {
       const packageJson = readJson(tree, '/package.json');
       expect(packageJson.devDependencies['ng-packagr']).toBeDefined();
       expect(packageJson.devDependencies['postcss']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-import']).toBeDefined();
-      expect(packageJson.devDependencies['postcss-preset-env']).toBeDefined();
+      expect(packageJson.devDependencies['autoprefixer']).toBeDefined();
       expect(packageJson.devDependencies['postcss-url']).toBeDefined();
     });
 
@@ -1175,19 +1172,6 @@ describe('lib', () => {
 
   describe('--linter', () => {
     describe('eslint', () => {
-      it('should add a lint target', async () => {
-        // ACT
-        await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });
-
-        // ASSERT
-        expect(readProjectConfiguration(tree, 'my-lib').targets['lint'])
-          .toMatchInlineSnapshot(`
-          {
-            "executor": "@nx/eslint:lint",
-          }
-        `);
-      });
-
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
         // ACT
         await runLibraryGeneratorWithOpts({ linter: Linter.EsLint });

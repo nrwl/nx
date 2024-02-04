@@ -90,7 +90,7 @@ process.on(
       );
       process.exit(statusCode);
     } catch (e) {
-      console.error(`Could not find 'nx' module in this workspace.`, e);
+      console.error(e);
       process.exit(1);
     }
   }

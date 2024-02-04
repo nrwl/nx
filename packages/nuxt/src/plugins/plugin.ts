@@ -124,7 +124,7 @@ function buildTarget(
   projectRoot: string
 ) {
   return {
-    command: `nuxi build`,
+    command: `nuxt build`,
     options: { cwd: projectRoot },
     cache: true,
     dependsOn: [`^${buildTargetName}`],
@@ -134,7 +134,7 @@ function buildTarget(
         : ['default', '^default']),
 
       {
-        externalDependencies: ['nuxi'],
+        externalDependencies: ['nuxt'],
       },
     ],
     outputs: buildOutputs,
@@ -143,7 +143,7 @@ function buildTarget(
 
 function serveTarget(projectRoot: string) {
   const targetConfig: TargetConfiguration = {
-    command: `nuxi dev`,
+    command: `nuxt dev`,
     options: {
       cwd: projectRoot,
     },

@@ -19,7 +19,10 @@ export const App = () => {
   return (
     <>
       <StatusBar barStyle="dark-content" />
-      <SafeAreaView>
+      <SafeAreaView
+       style={{
+          flex: 1,
+        }}>
         <ScrollView
           ref={(ref) => {
             scrollViewRef.current = ref;
@@ -29,7 +32,7 @@ export const App = () => {
         >
           <View style={styles.section}>
             <Text style={styles.textLg}>Hello there,</Text>
-            <Text style={[styles.textXL, styles.appTitleText]} testID="heading">
+            <Text style={[styles.textXL, styles.appTitleText]} testID="heading" role="heading">
               Welcome <%= displayName %> 👋
             </Text>
           </View>
@@ -474,6 +477,30 @@ export const App = () => {
                 <Text style={[styles.textXS, styles.monospace]}>
                   ui/src/lib/button
                 </Text>
+              </View>
+              <View style={styles.listItem}>
+                <Svg
+                  width={24}
+                  height={24}
+                  stroke="#000000"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <Path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </Svg>
+                <View style={styles.listItemTextContainer}>
+                  <Text style={styles.textSm}>
+                    View project details
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.codeBlock, styles.marginBottomLg]}>
+                <Text style={[styles.textXS, styles.monospace]}>nx show project <%= displayName %> --web</Text>
               </View>
               <View style={styles.listItem}>
                 <Svg

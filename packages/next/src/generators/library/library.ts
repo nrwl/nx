@@ -18,6 +18,7 @@ import { eslintConfigNextVersion, tsLibVersion } from '../../utils/versions';
 
 export async function libraryGenerator(host: Tree, rawOptions: Schema) {
   return await libraryGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...rawOptions,
   });

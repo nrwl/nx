@@ -24,6 +24,7 @@ export async function normalizeOptions(
   options.projectNameAndRootFormat = projectNameAndRootFormat;
 
   return {
+    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
     ...options,
     strict: options.strict ?? false,
     appProjectName,
@@ -53,5 +54,6 @@ export function toNodeApplicationGeneratorOptions(
     rootProject: options.rootProject,
     bundler: 'webpack', // Some features require webpack plugins such as TS transformers
     isNest: true,
+    addPlugin: options.addPlugin,
   };
 }

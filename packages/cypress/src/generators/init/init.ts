@@ -8,6 +8,8 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes } from '../../plugins/plugin';
 import { cypressVersion, nxVersion } from '../../utils/versions';
 import { Schema } from './schema';
 import { CypressPluginOptions } from '../../plugins/plugin';
@@ -33,7 +35,7 @@ function setupE2ETargetDefaults(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function updateDependencies(tree: Tree) {
+function updateDependencies(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
   tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/cypress'], []));
 
@@ -44,7 +46,9 @@ function updateDependencies(tree: Tree) {
       {
         ['@nx/cypress']: nxVersion,
         cypress: cypressVersion,
-      }
+      },
+      undefined,
+      options.keepExistingVersions
     )
   );
 
@@ -93,9 +97,18 @@ function updateProductionFileset(tree: Tree) {
 }
 
 export async function cypressInitGenerator(tree: Tree, options: Schema) {
+  return cypressInitGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function cypressInitGeneratorInternal(
+  tree: Tree,
+  options: Schema
+) {
   updateProductionFileset(tree);
 
-  if (process.env.NX_PCV3 === 'true') {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  if (options.addPlugin) {
     addPlugin(tree);
   } else {
     setupE2ETargetDefaults(tree);
@@ -103,7 +116,13 @@ export async function cypressInitGenerator(tree: Tree, options: Schema) {
 
   let installTask: GeneratorCallback = () => {};
   if (!options.skipPackageJson) {
-    installTask = updateDependencies(tree);
+    installTask = updateDependencies(tree, options);
+  }
+
+  if (options.updatePackageScripts) {
+    global.NX_CYPRESS_INIT_GENERATOR_RUNNING = true;
+    await updatePackageScripts(tree, createNodes);
+    global.NX_CYPRESS_INIT_GENERATOR_RUNNING = false;
   }
 
   if (!options.skipFormat) {

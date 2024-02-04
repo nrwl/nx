@@ -49,7 +49,9 @@ function installAngularDevkitCoreIfMissing(
       return addDependenciesToPackageJson(
         tree,
         {},
-        { ['@angular-devkit/core']: devkitVersion }
+        { ['@angular-devkit/core']: devkitVersion },
+        undefined,
+        options.keepExistingVersions
       );
     }
   }

@@ -64,6 +64,7 @@ server.on('error', console.error);
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -76,7 +77,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const initTask = await initGenerator(tree, { ...options, skipFormat: true });
   tasks.push(initTask);
   const applicationTask = await nodeApplicationGenerator(tree, {
-    ...schema,
+    ...options,
     bundler: 'webpack',
     skipFormat: true,
   });
@@ -113,6 +114,7 @@ async function normalizeOptions(
     callingGenerator: '@nx/express:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   return {
     ...options,

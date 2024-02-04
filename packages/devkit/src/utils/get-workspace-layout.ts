@@ -34,9 +34,9 @@ export function getWorkspaceLayout(tree: Tree): {
 /**
  * Experimental
  */
-export function extractLayoutDirectory(directory: string): {
-  layoutDirectory: string;
-  projectDirectory: string;
+export function extractLayoutDirectory(directory?: string): {
+  layoutDirectory: string | null;
+  projectDirectory?: string;
 } {
   if (directory) {
     directory = directory.startsWith('/') ? directory.substring(1) : directory;

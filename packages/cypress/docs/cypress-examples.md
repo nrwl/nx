@@ -63,7 +63,7 @@ The same can be done for backend node apps with [`@nx/js:node` executor](/packag
 {% /callout %}
 
 ```bash
-nx e2e my-app-e2e --configuration=ci
+nx e2e my-app-e2e
 ```
 
 {% /tab %}

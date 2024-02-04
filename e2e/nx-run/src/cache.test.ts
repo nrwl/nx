@@ -6,7 +6,6 @@ import {
   readFile,
   rmDist,
   runCLI,
-  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -23,9 +22,7 @@ describe('cache', () => {
     const myapp1 = uniq('myapp1');
     const myapp2 = uniq('myapp2');
     runCLI(`generate @nx/web:app ${myapp1}`);
-    setMaxWorkers(join('apps', myapp1, 'project.json'));
     runCLI(`generate @nx/web:app ${myapp2}`);
-    setMaxWorkers(join('apps', myapp2, 'project.json'));
 
     // run build with caching
     // --------------------------------------------
@@ -125,9 +122,11 @@ describe('cache', () => {
     const originalNxJson = readFile('nx.json');
     updateFile('nx.json', (c) => {
       const nxJson = JSON.parse(c);
-      for (const key in nxJson.targetDefaults ?? {}) {
-        delete nxJson.targetDefaults[key].cache;
-      }
+      nxJson.targetDefaults = {
+        build: {
+          cache: false,
+        },
+      };
       return JSON.stringify(nxJson, null, 2);
     });
 
@@ -152,6 +151,7 @@ describe('cache', () => {
     runCLI(`generate @nx/js:library ${mylib}`);
     updateJson(join('libs', mylib, 'project.json'), (c) => {
       c.targets.build = {
+        cache: true,
         executor: 'nx:run-commands',
         outputs: ['{workspaceRoot}/dist/!(.next)/**/!(z|x).(txt|md)'],
         options: {

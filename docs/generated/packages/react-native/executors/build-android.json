@@ -6,7 +6,7 @@
     "outputCapture": "direct-nodejs",
     "cli": "nx",
     "$id": "NxReactNativeBuildAndroid",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Release Build for Android",
     "description": "Build target options for Android.",
     "type": "object",

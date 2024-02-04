@@ -99,16 +99,15 @@ exports[`workspace move to nx layout should create nx.json 1`] = `
     ],
     "sharedGlobals": [],
   },
-  "targetDefaults": {
-    "@nx/eslint:lint": {
-      "cache": true,
-      "inputs": [
-        "default",
-        "{workspaceRoot}/.eslintrc.json",
-        "{workspaceRoot}/.eslintignore",
-        "{workspaceRoot}/eslint.config.js",
-      ],
+  "plugins": [
+    {
+      "options": {
+        "targetName": "lint",
+      },
+      "plugin": "@nx/eslint/plugin",
     },
+  ],
+  "targetDefaults": {
     "build": {
       "cache": true,
       "dependsOn": [

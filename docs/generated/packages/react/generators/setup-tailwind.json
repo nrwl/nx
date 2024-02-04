@@ -2,7 +2,7 @@
   "name": "setup-tailwind",
   "factory": "./src/generators/setup-tailwind/setup-tailwind#setupTailwindGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxReactTailwindSetupGenerator",
     "title": "Configures Tailwind CSS for an application or a buildable/publishable library.",

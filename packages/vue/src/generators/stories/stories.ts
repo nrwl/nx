@@ -13,7 +13,7 @@ import {
 import { basename, join } from 'path';
 import { nxVersion } from '../../utils/versions';
 import { createComponentStories } from './lib/component-story';
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 
 export interface StorybookStoriesSchema {
   project: string;

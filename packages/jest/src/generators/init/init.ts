@@ -8,6 +8,8 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes } from '../../plugins/plugin';
 import { jestVersion, nxVersion } from '../../utils/versions';
 import type { JestInitSchema } from './schema';
 
@@ -86,24 +88,32 @@ function addJestTargetDefaults(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-function updateDependencies(tree: Tree) {
+function updateDependencies(tree: Tree, options: JestInitSchema) {
   return addDependenciesToPackageJson(
     tree,
     {},
     {
       '@nx/jest': nxVersion,
       jest: jestVersion,
-    }
+    },
+    undefined,
+    options.keepExistingVersions
   );
 }
 
-export async function jestInitGenerator(
+export function jestInitGenerator(tree: Tree, options: JestInitSchema) {
+  return jestInitGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function jestInitGeneratorInternal(
   tree: Tree,
   options: JestInitSchema
 ): Promise<GeneratorCallback> {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   if (!tree.exists('jest.preset.js')) {
     updateProductionFileSet(tree);
-    if (process.env.NX_PCV3 === 'true') {
+    if (options.addPlugin) {
       addPlugin(tree);
     } else {
       addJestTargetDefaults(tree);
@@ -113,7 +123,11 @@ export async function jestInitGenerator(
   const tasks: GeneratorCallback[] = [];
   if (!options.skipPackageJson) {
     tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/jest'], []));
-    tasks.push(updateDependencies(tree));
+    tasks.push(updateDependencies(tree, options));
+  }
+
+  if (options.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!options.skipFormat) {

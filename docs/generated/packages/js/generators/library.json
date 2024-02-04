@@ -2,7 +2,7 @@
   "name": "library",
   "factory": "./src/generators/library/library#libraryGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxTypescriptLibrary",
     "cli": "nx",
     "title": "Create a TypeScript Library",

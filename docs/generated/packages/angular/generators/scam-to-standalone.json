@@ -2,7 +2,7 @@
   "name": "scam-to-standalone",
   "factory": "./src/generators/scam-to-standalone/scam-to-standalone",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "GeneratorAngularScamToStandalone",
     "cli": "nx",
     "title": "Convert an Inline SCAM to Standalone Component",

@@ -161,6 +161,101 @@ describe('calculateProjectDependencies', () => {
       ],
     });
   });
+
+  it('should include all top-level dependencies, even ones that are also transitive', async () => {
+    const graph: ProjectGraph = {
+      nodes: {
+        example: {
+          type: 'lib',
+          name: 'example',
+          data: {
+            root: '/root/example',
+            targets: {
+              build: {
+                executor: 'x',
+              },
+            },
+          },
+        },
+        example2: {
+          type: 'lib',
+          name: 'example2',
+          data: {
+            root: '/root/example2',
+            targets: {
+              build: {
+                executor: 'x',
+              },
+            },
+          },
+        },
+      },
+      externalNodes: {
+        'npm:formik': {
+          type: 'npm',
+          name: 'npm:formik',
+          data: {
+            packageName: 'formik',
+            version: '0.0.0',
+          },
+        },
+        'npm:foo': {
+          type: 'npm',
+          name: 'npm:foo',
+          data: {
+            packageName: 'foo',
+            version: '0.0.0',
+          },
+        },
+      },
+      dependencies: {
+        example: [
+          // when example2 dependency is listed first
+          {
+            source: 'example',
+            target: 'example2',
+            type: DependencyType.static,
+          },
+          {
+            source: 'example',
+            target: 'npm:formik',
+            type: DependencyType.static,
+          },
+        ],
+        example2: [
+          // and example2 also depends on npm:formik
+          {
+            source: 'example2',
+            target: 'npm:formik',
+            type: DependencyType.static,
+          },
+          {
+            source: 'example2',
+            target: 'npm:foo',
+            type: DependencyType.static,
+          },
+        ],
+      },
+    };
+
+    const results = calculateProjectDependencies(
+      graph,
+      'root',
+      'example',
+      'build',
+      undefined
+    );
+    expect(results).toMatchObject({
+      target: {
+        name: 'example',
+      },
+      topLevelDependencies: [
+        // expect example2 and formik as top-level deps, but not foo
+        expect.objectContaining({ name: 'example2' }),
+        expect.objectContaining({ name: 'formik' }),
+      ],
+    });
+  });
 });
 
 describe('calculateDependenciesFromTaskGraph', () => {

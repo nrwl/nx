@@ -1,9 +1,9 @@
 {
   "name": "configuration",
   "aliases": ["webpack-project"],
-  "factory": "./src/generators/configuration/configuration",
+  "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxWebpackProject",
     "cli": "nx",
     "title": "Add Webpack Configuration to a project",
@@ -79,7 +79,7 @@
   },
   "description": "Add webpack configuration to a project.",
   "hidden": true,
-  "implementation": "/packages/webpack/src/generators/configuration/configuration.ts",
+  "implementation": "/packages/webpack/src/generators/configuration/configuration#configurationGeneratorInternal.ts",
   "path": "/packages/webpack/src/generators/configuration/schema.json",
   "type": "generator"
 }

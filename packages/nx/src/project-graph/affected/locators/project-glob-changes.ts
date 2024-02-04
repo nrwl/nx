@@ -1,5 +1,5 @@
 import { TouchedProjectLocator } from '../affected-project-graph-models';
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { join } from 'path';

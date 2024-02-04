@@ -1,5 +1,6 @@
 export interface JestProjectSchema {
   project: string;
+  targetName?: string;
   supportTsx?: boolean;
   /**
    * @deprecated use setupFile instead
@@ -13,6 +14,8 @@ export interface JestProjectSchema {
    */
   babelJest?: boolean;
   skipFormat?: boolean;
+
+  addPlugin?: boolean;
   compiler?: 'tsc' | 'babel' | 'swc';
   skipPackageJson?: boolean;
   js?: boolean;

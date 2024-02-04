@@ -3,7 +3,8 @@ import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/pr
 import { Schema } from '../schema';
 
 export interface NormalizedSchema extends Schema {
-  className: string; // app name in class name
+  className: string; // app name in class case
+  fileName: string; // app name in file class
   projectName: string; // directory + app name in kebab case
   appProjectRoot: string; // app directory path
   lowerCaseName: string; // app name in lower case
@@ -11,6 +12,9 @@ export interface NormalizedSchema extends Schema {
   androidProjectRoot: string;
   parsedTags: string[];
   entryFile: string;
+  rootProject: boolean;
+  e2eProjectName: string;
+  e2eProjectRoot: string;
 }
 
 export async function normalizeOptions(
@@ -30,10 +34,14 @@ export async function normalizeOptions(
     callingGenerator: '@nx/react-native:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
-  const { className } = names(options.name);
+  const { className, fileName } = names(options.name);
   const iosProjectRoot = joinPathFragments(appProjectRoot, 'ios');
   const androidProjectRoot = joinPathFragments(appProjectRoot, 'android');
+  const rootProject = appProjectRoot === '.';
+  const e2eProjectName = rootProject ? 'e2e' : `${fileName}-e2e`;
+  const e2eProjectRoot = rootProject ? 'e2e' : `${appProjectRoot}-e2e`;
 
   const parsedTags = options.tags
     ? options.tags.split(',').map((s) => s.trim())
@@ -43,10 +51,9 @@ export async function normalizeOptions(
 
   return {
     ...options,
-    unitTestRunner: options.unitTestRunner || 'jest',
-    e2eTestRunner: options.e2eTestRunner || 'detox',
     name: projectNames.projectSimpleName,
     className,
+    fileName,
     lowerCaseName: className.toLowerCase(),
     displayName: options.displayName || className,
     projectName: appProjectName,
@@ -55,5 +62,8 @@ export async function normalizeOptions(
     androidProjectRoot,
     parsedTags,
     entryFile,
+    rootProject,
+    e2eProjectName,
+    e2eProjectRoot,
   };
 }

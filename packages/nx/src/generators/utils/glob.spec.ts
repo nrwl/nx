@@ -38,7 +38,7 @@ describe('glob', () => {
     tree.write('3.txt', '3');
     fs.writeFile('4.md', '4');
 
-    const withTree = glob(tree, ['*.txt']).sort();
+    const withTree = glob(tree, ['**/*.txt']).sort();
 
     expect(withTree).toMatchInlineSnapshot(`
       [

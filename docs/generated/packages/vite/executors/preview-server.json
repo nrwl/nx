@@ -2,7 +2,7 @@
   "name": "preview-server",
   "implementation": "/packages/vite/src/executors/preview-server/preview-server.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "version": 2,
     "cli": "nx",
     "title": "Vite Preview Server",

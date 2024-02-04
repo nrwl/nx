@@ -118,7 +118,7 @@ export async function createOrUpdateGithubRelease(
             name: 'No',
           },
         ],
-        initial: 'Yes' as any,
+        initial: 0,
       },
     ]).catch(() => {
       return { open: 'No' };

@@ -51,12 +51,6 @@ exports[`lib --unit-test-runner none should not generate test configuration 1`] 
 }
 `;
 
-exports[`lib --unit-test-runner none should not generate test configuration 2`] = `
-{
-  "executor": "@nx/eslint:lint",
-}
-`;
-
 exports[`lib nested should create a local tsconfig.json 1`] = `
 {
   "compilerOptions": {

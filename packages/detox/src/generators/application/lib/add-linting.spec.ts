@@ -24,8 +24,8 @@ describe('Add Linting', () => {
     });
   });
 
-  it('should update configuration when eslint is passed', () => {
-    addLinting(tree, {
+  it('should update configuration when eslint is passed', async () => {
+    await addLinting(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',
@@ -38,14 +38,12 @@ describe('Add Linting', () => {
       linter: Linter.EsLint,
       framework: 'react-native',
     });
-    const project = readProjectConfiguration(tree, 'my-app-e2e');
 
-    expect(project.targets.lint).toBeDefined();
-    expect(project.targets.lint.executor).toEqual('@nx/eslint:lint');
+    expect(tree.exists('apps/my-app-e2e/.eslintrc.json')).toBeTruthy();
   });
 
   it('should not add lint target when "none" is passed', async () => {
-    addLinting(tree, {
+    await addLinting(tree, {
       e2eName: 'my-app-e2e',
       e2eProjectName: 'my-app-e2e',
       e2eProjectRoot: 'apps/my-app-e2e',

@@ -7,11 +7,22 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes } from '../../plugins/plugin';
 import { nxVersion, playwrightVersion } from '../../utils/versions';
 import { InitGeneratorSchema } from './schema';
 
-export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
+export function initGenerator(tree: Tree, options: InitGeneratorSchema) {
+  return initGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function initGeneratorInternal(
+  tree: Tree,
+  options: InitGeneratorSchema
+) {
   const tasks: GeneratorCallback[] = [];
+
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   if (!options.skipPackageJson) {
     tasks.push(
@@ -21,13 +32,19 @@ export async function initGenerator(tree: Tree, options: InitGeneratorSchema) {
         {
           '@nx/playwright': nxVersion,
           '@playwright/test': playwrightVersion,
-        }
+        },
+        undefined,
+        options.keepExistingVersions
       )
     );
   }
 
-  if (process.env.NX_PCV3 === 'true') {
+  if (options.addPlugin) {
     addPlugin(tree);
+  }
+
+  if (options.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!options.skipFormat) {

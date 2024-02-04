@@ -440,11 +440,15 @@ describe('React Module Federation', () => {
     let tree: Tree;
 
     beforeAll(() => {
+      process.env.NX_ADD_PLUGINS = 'false';
       tree = createTreeWithEmptyWorkspace();
       proj = newProject();
     });
 
-    afterAll(() => cleanupProject());
+    afterAll(() => {
+      cleanupProject();
+      delete process.env.NX_ADD_PLUGINS;
+    });
 
     it('should support promised based remotes', async () => {
       const remote = uniq('remote');

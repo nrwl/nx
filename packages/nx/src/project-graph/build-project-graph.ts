@@ -176,7 +176,7 @@ async function buildProjectGraphUsingContext(
     builder.addExternalNode(knownExternalNodes[node]);
   }
 
-  await normalizeProjectNodes(ctx, builder, nxJson);
+  await normalizeProjectNodes(ctx, builder);
   const initProjectGraph = builder.getUpdatedProjectGraph();
 
   const r = await updateProjectGraphWithPlugins(ctx, initProjectGraph);
@@ -302,6 +302,10 @@ async function updateProjectGraphWithPlugins(
   await Promise.all(
     createDependencyPlugins.map(async ({ plugin, options }) => {
       performance.mark(`${plugin.name}:createDependencies - start`);
+
+      // Set this globally to allow plugins to know if they are being called from the project graph creation
+      global.NX_GRAPH_CREATION = true;
+
       try {
         const dependencies = await plugin.createDependencies(options, {
           ...context,
@@ -323,6 +327,9 @@ async function updateProjectGraphWithPlugins(
         }
         throw new Error(message);
       }
+
+      delete global.NX_GRAPH_CREATION;
+
       performance.mark(`${plugin.name}:createDependencies - end`);
       performance.measure(
         `${plugin.name}:createDependencies`,

@@ -3,7 +3,7 @@
   "outputCapture": "direct-nodejs",
   "$schema": "http://json-schema.org/draft-07/schema",
   "title": "Schema for Webpack Dev Server",
-  "description": "The dev-server executor is very similar to the standard dev server builder provided by the Angular Devkit. It is usually used in tandem with `@nx/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+  "description": "Serves an Angular application using [Webpack](https://webpack.js.org/) when the build target is using a Webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an esbuild-based executor.",
   "examplesFile": "../../../docs/dev-server-examples.md",
   "type": "object",
   "presets": [
@@ -17,7 +17,7 @@
       "type": "string",
       "description": "A browser builder target to serve in the format of `project:target[:configuration]`. Ignored if `buildTarget` is set.",
       "pattern": "^[^:\\s]+:[^:\\s]+(:[^\\s]+)?$",
-      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v18."
+      "x-deprecated": "Use 'buildTarget' instead. It will be removed in Nx v19."
     },
     "buildTarget": {
       "type": "string",
@@ -115,6 +115,14 @@
       "type": "boolean",
       "description": "Read buildable libraries from source instead of building them separately. If not set, it will take the value specified in the `browserTarget` options, or it will default to `true` if it's also not set in the `browserTarget` options.",
       "x-priority": "important"
+    },
+    "esbuildMiddleware": {
+      "description": "A list of HTTP request middleware functions. _Note: this is only supported in Angular versions >= 17.0.0_.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "description": "The path to the middleware function. Relative to the workspace root."
+      }
     }
   },
   "additionalProperties": false,

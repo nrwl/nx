@@ -10,8 +10,8 @@ import {
   normalizePath,
   parseTargetString,
   readCachedProjectGraph,
+  stripIndents,
   type Target,
-  targetToTargetString,
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/src/utils/buildable-libs-utils';
@@ -24,6 +24,7 @@ import { combineLatest, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import {
+  loadMiddleware,
   loadPlugins,
   type PluginSpec,
 } from '../../executors/utilities/esbuild-extensions';
@@ -43,14 +44,25 @@ type BuildTargetOptions = {
   tsConfig: string;
   buildLibsFromSource?: boolean;
   customWebpackConfig?: { path?: string };
+  indexHtmlTransformer?: string;
   indexFileTransformer?: string;
   plugins?: string[] | PluginSpec[];
+  esbuildMiddleware?: string[];
 };
 
 export function executeDevServerBuilder(
   rawOptions: Schema,
   context: import('@angular-devkit/architect').BuilderContext
 ) {
+  if (rawOptions.esbuildMiddleware?.length > 0) {
+    const { major: angularMajorVersion, version: angularVersion } =
+      getInstalledAngularVersionInfo();
+    if (angularMajorVersion < 17) {
+      throw new Error(stripIndents`The "esbuildMiddleware" option is only supported in Angular >= 17.0.0. You are currently using "${angularVersion}".
+        You can resolve this error by removing the "esbuildMiddleware" option or by migrating to Angular 17.0.0.`);
+    }
+  }
+
   process.env.NX_TSCONFIG_PATH = getRootTsConfigPath();
 
   const options = normalizeOptions(rawOptions);
@@ -100,11 +112,14 @@ export function executeDevServerBuilder(
     }
   }
 
+  const normalizedIndexHtmlTransformer =
+    buildTargetOptions.indexHtmlTransformer ??
+    buildTargetOptions.indexFileTransformer;
   let pathToIndexFileTransformer: string;
-  if (buildTargetOptions.indexFileTransformer) {
+  if (normalizedIndexHtmlTransformer) {
     pathToIndexFileTransformer = joinPathFragments(
       context.workspaceRoot,
-      buildTargetOptions.indexFileTransformer
+      normalizedIndexHtmlTransformer
     );
 
     if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
@@ -164,8 +179,11 @@ export function executeDevServerBuilder(
   return combineLatest([
     from(import('@angular-devkit/build-angular')),
     from(loadPlugins(buildTargetOptions.plugins, buildTargetOptions.tsConfig)),
+    from(
+      loadMiddleware(options.esbuildMiddleware, buildTargetOptions.tsConfig)
+    ),
   ]).pipe(
-    switchMap(([{ executeDevServerBuilder }, plugins]) =>
+    switchMap(([{ executeDevServerBuilder }, plugins, middleware]) =>
       executeDevServerBuilder(
         delegateBuilderOptions,
         context,
@@ -217,6 +235,7 @@ export function executeDevServerBuilder(
         },
         {
           buildPlugins: plugins,
+          middleware,
         }
       )
     )
@@ -298,6 +317,7 @@ function cleanBuildTargetOptions(
   | BrowserEsbuildBuilderOptions {
   delete options.buildLibsFromSource;
   delete options.customWebpackConfig;
+  delete options.indexHtmlTransformer;
   delete options.indexFileTransformer;
   delete options.plugins;
 

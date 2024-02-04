@@ -1,4 +1,4 @@
-import minimatch = require('minimatch');
+import { minimatch } from 'minimatch';
 import type { ProjectGraphProjectNode } from '../config/project-graph';
 
 const validPatternTypes = [

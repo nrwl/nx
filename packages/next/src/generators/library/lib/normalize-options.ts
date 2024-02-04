@@ -21,6 +21,7 @@ export async function normalizeOptions(
       callingGenerator: '@nx/next:library',
     });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   return {
     ...options,

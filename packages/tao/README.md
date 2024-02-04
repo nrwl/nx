@@ -4,7 +4,7 @@
 
 [Read more here](https://nx.dev/recipes/other/rescope)
 
-@nrwl/tao will no longer be published in Nx v18.
+@nrwl/tao will no longer be published in Nx v19.
 
 <p style="text-align: center;">
   <picture>

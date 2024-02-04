@@ -2,7 +2,7 @@
   "name": "init",
   "factory": "./src/generators/init/init#initGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxExpressInit",
     "title": "Init Express Plugin",
@@ -18,6 +18,12 @@
         "type": "boolean",
         "default": false,
         "description": "Do not add dependencies to `package.json`."
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
       }
     },
     "required": [],

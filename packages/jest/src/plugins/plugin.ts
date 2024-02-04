@@ -16,9 +16,9 @@ import { existsSync, readdirSync } from 'fs';
 import { readConfig } from 'jest-config';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/plugins/package-json-workspaces';
+import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json-workspaces';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 
 export interface JestPluginOptions {
   targetName?: string;
@@ -113,11 +113,7 @@ async function buildJestTargets(
       _: [],
       $0: undefined,
     },
-    resolve(context.workspaceRoot, configFilePath),
-    true,
-    null,
-    undefined,
-    true
+    resolve(context.workspaceRoot, configFilePath)
   );
 
   const targetDefaults = readTargetDefaultsForTarget(

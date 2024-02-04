@@ -229,7 +229,7 @@ npx nx affected -t build
 
 {% cards %}
 
-{% card title="Core Features" description="Read about the core features of Nx." url="/core-features" /%}
+{% card title="Core Features" description="Read about the core features of Nx." url="/features" /%}
 
 {% card title="Mental Model" description="Get a deeper understanding of the mental model." url="/concepts/mental-model" /%}
 
@@ -238,7 +238,5 @@ npx nx affected -t build
 {% card title="Integrated Repos vs Package-Based Repos" description="Learn about two styles of monorepos." url="/concepts/integrated-vs-package-based" /%}
 
 {% card title="React Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with React applications sharing code." url="/getting-started/tutorials/react-monorepo-tutorial" /%}
-
-{% card title="Node.js Tutorial" description="A step-by-step tutorial showing how to build an integrated monorepo with Node.js applications sharing code." url="/getting-started/tutorials/node-server-tutorial" /%}
 
 {% /cards %}

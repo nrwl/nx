@@ -39,6 +39,11 @@
       "schema": "./src/generators/component-test/schema.json",
       "description": "Creates a cypress component test file for a component."
     },
+    "convert-to-application-executor": {
+      "factory": "./src/generators/convert-to-application-executor/convert-to-application-executor",
+      "schema": "./src/generators/convert-to-application-executor/schema.json",
+      "description": "Converts projects to use the `@nx/angular:application` executor or the `@angular-devkit/build-angular:application` builder. _Note: this is only supported in Angular versions >= 17.0.0_."
+    },
     "directive": {
       "factory": "./src/generators/directive/directive",
       "schema": "./src/generators/directive/schema.json",
@@ -81,7 +86,7 @@
       "schema": "./src/generators/move/schema.json",
       "aliases": ["mv"],
       "description": "Moves an Angular application or library to another folder within the workspace and updates the project configuration.",
-      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v18."
+      "x-deprecated": "Use the `@nx/workspace:move` generator instead. This generator will be removed in Nx v19."
     },
     "convert-to-with-mf": {
       "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
@@ -168,7 +173,7 @@
       "description": "Adds Storybook configuration to a project."
     },
     "cypress-component-configuration": {
-      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration",
+      "factory": "./src/generators/cypress-component-configuration/cypress-component-configuration#cypressComponentConfigurationInternal",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Setup Cypress component testing for a project."
     },

@@ -24,6 +24,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       joinPathFragments(options.e2eProjectRoot, 'tsconfig.app.json'),
     ],
     skipFormat: true,
+    addPlugin: options.addPlugin,
   });
 
   if (isEslintConfigSupported(host)) {

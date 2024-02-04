@@ -1,7 +1,7 @@
 {
   "cli": "nx",
   "$id": "NxReactNativeApplication",
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "title": "Create a React Application for Nx",
   "description": "Create a React Application for Nx.",
   "examples": [
@@ -48,7 +48,7 @@
     "linter": {
       "description": "The tool to use for running lint checks.",
       "type": "string",
-      "enum": ["eslint"],
+      "enum": ["eslint", "none"],
       "default": "eslint"
     },
     "unitTestRunner": {
@@ -75,20 +75,28 @@
     "e2eTestRunner": {
       "description": "Adds the specified e2e test runner.",
       "type": "string",
-      "enum": ["detox", "none"],
-      "default": "detox"
+      "enum": ["cypress", "playwright", "detox", "none"],
+      "default": "cypress"
     },
     "install": {
       "type": "boolean",
       "description": "Runs `pod install` for native modules before building iOS app.",
-      "default": true,
-      "x-priority": "internal"
+      "x-prompt": "Run 'pod install' for native modules?",
+      "default": true
     },
     "skipPackageJson": {
       "description": "Do not add dependencies to `package.json`.",
       "type": "boolean",
       "default": false,
       "x-priority": "internal"
+    },
+    "bundler": {
+      "description": "The bundler to use.",
+      "type": "string",
+      "enum": ["vite", "webpack"],
+      "x-prompt": "Which bundler do you want to use to build the application?",
+      "default": "webpack",
+      "x-priority": "important"
     }
   },
   "required": []

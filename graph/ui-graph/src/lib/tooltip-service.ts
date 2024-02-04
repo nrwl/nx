@@ -7,11 +7,9 @@ import {
 } from '@nx/graph/ui-tooltips';
 import { TooltipEvent } from './interfaces';
 import { GraphInteractionEvents } from './graph-interaction-events';
-import { getExternalApiService } from '@nx/graph/shared';
 
 export class GraphTooltipService {
   private subscribers: Set<Function> = new Set();
-  private externalApiService = getExternalApiService();
 
   constructor(graph: GraphService) {
     graph.listen((event: GraphInteractionEvents) => {
@@ -23,38 +21,18 @@ export class GraphTooltipService {
           this.hideAll();
           break;
         case 'ProjectNodeClick':
-          const openConfigCallback =
-            graph.renderMode === 'nx-console'
-              ? () =>
-                  this.externalApiService.postEvent({
-                    type: 'open-project-config',
-                    payload: {
-                      projectName: event.data.id,
-                    },
-                  })
-              : undefined;
           this.openProjectNodeToolTip(event.ref, {
             id: event.data.id,
             tags: event.data.tags,
             type: event.data.type,
             description: event.data.description,
-            openConfigCallback,
+            renderMode: graph.renderMode,
           });
           break;
         case 'TaskNodeClick':
-          const runTaskCallback =
-            graph.renderMode === 'nx-console'
-              ? () =>
-                  this.externalApiService.postEvent({
-                    type: 'run-task',
-                    payload: {
-                      taskId: event.data.id,
-                    },
-                  })
-              : undefined;
           this.openTaskNodeTooltip(event.ref, {
             ...event.data,
-            runTaskCallback,
+            renderMode: graph.renderMode,
           });
           if (graph.getTaskInputs) {
             graph.getTaskInputs(event.data.id).then((inputs) => {
@@ -64,7 +42,7 @@ export class GraphTooltipService {
               ) {
                 this.openTaskNodeTooltip(event.ref, {
                   ...event.data,
-                  runTaskCallback,
+                  renderMode: graph.renderMode,
                   inputs,
                 });
               }
@@ -72,23 +50,13 @@ export class GraphTooltipService {
           }
           break;
         case 'EdgeClick':
-          const callback =
-            graph.renderMode === 'nx-console'
-              ? (url) =>
-                  this.externalApiService.postEvent({
-                    type: 'file-click',
-                    payload: {
-                      sourceRoot: event.data.sourceRoot,
-                      file: url,
-                    },
-                  })
-              : undefined;
           this.openEdgeToolTip(event.ref, {
             type: event.data.type,
             target: event.data.target,
             source: event.data.source,
             fileDependencies: event.data.fileDependencies,
-            fileClickCallback: callback,
+            renderMode: graph.renderMode,
+            sourceRoot: event.data.sourceRoot,
           });
           break;
       }

@@ -25604,35 +25604,35 @@
             "hash": "7ddbbe458aa28ac3d300aa3290a008e3b3ce7aa6"
           },
           {
-            "file": "docs/shared/core-features/automate-updating-dependencies.md",
+            "file": "docs/shared/features/automate-updating-dependencies.md",
             "hash": "32f1e2e43f7cf7ef9c2f162e5ad63ccf15f9c658"
           },
           {
-            "file": "docs/shared/core-features/cache-task-results.md",
+            "file": "docs/shared/features/cache-task-results.md",
             "hash": "7e692804ac1e438bf36f214f1284eb5e6c49d660"
           },
           {
-            "file": "docs/shared/core-features/distribute-task-execution.md",
+            "file": "docs/shared/features/distribute-task-execution.md",
             "hash": "2a7d639f85a227a7b4d06f987076a3524b57ddc6"
           },
           {
-            "file": "docs/shared/core-features/enforce-project-boundaries.md",
+            "file": "docs/shared/features/enforce-project-boundaries.md",
             "hash": "abe5cb6c8134b9f86b448ae09dc6626c395caf95"
           },
           {
-            "file": "docs/shared/core-features/explore-graph.md",
+            "file": "docs/shared/features/explore-graph.md",
             "hash": "57082bdf506236cbaea7f156d1ea12645934ece4"
           },
           {
-            "file": "docs/shared/core-features/integrate-with-editors.md",
+            "file": "docs/shared/features/integrate-with-editors.md",
             "hash": "eb249de959b95a89756a17dd6619fcb35a732755"
           },
           {
-            "file": "docs/shared/core-features/run-tasks.md",
+            "file": "docs/shared/features/run-tasks.md",
             "hash": "5bd43a870de93b1f61b70cbb1205e0ed91acc373"
           },
           {
-            "file": "docs/shared/core-features/share-your-cache.md",
+            "file": "docs/shared/features/share-your-cache.md",
             "hash": "ad3cfb6248f290bd318e49e8e1adc5d9642d9fbe"
           },
           {
@@ -26304,11 +26304,11 @@
             "hash": "a4e80b452e842221db731af4c12a60126b7944a0"
           },
           {
-            "file": "docs/shared/plugin-features/use-code-generators.md",
+            "file": "docs/shared/plugin-features/generate-code.md",
             "hash": "3b17ca24ace1ab26e45bf26274a67142c7c3ddfa"
           },
           {
-            "file": "docs/shared/plugin-features/use-task-executors.md",
+            "file": "docs/shared/plugin-features/enhance-tooling.md",
             "hash": "fd1b51d3ff445b16f65599e7c160e221a1eb7c9a"
           },
           {

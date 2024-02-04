@@ -1,8 +1,8 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#nextInitGenerator",
+  "factory": "./src/generators/init/init#nextInitGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxNextNgInit",
     "title": "Init Next Plugin",
@@ -19,6 +19,18 @@
         "default": false,
         "description": "Do not add dependencies to `package.json`.",
         "x-priority": "internal"
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
+      },
+      "updatePackageScripts": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Update `package.json` scripts with inferred targets",
+        "default": false
       }
     },
     "required": [],
@@ -26,7 +38,7 @@
   },
   "description": "Initialize the `@nrwl/next` plugin.",
   "hidden": true,
-  "implementation": "/packages/next/src/generators/init/init#nextInitGenerator.ts",
+  "implementation": "/packages/next/src/generators/init/init#nextInitGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/next/src/generators/init/schema.json",
   "type": "generator"

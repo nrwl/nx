@@ -26,6 +26,7 @@ import {
   updateEditorTsConfig,
 } from './lib';
 import type { Schema } from './schema';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function applicationGenerator(
   tree: Tree,
@@ -33,6 +34,7 @@ export async function applicationGenerator(
 ): Promise<GeneratorCallback> {
   return await applicationGeneratorInternal(tree, {
     projectNameAndRootFormat: 'derived',
+    addPlugin: false,
     ...schema,
   });
 }
@@ -103,6 +105,7 @@ export async function applicationGeneratorInternal(
 
   return () => {
     installPackagesTask(tree);
+    logShowProjectCommand(options.name);
   };
 }
 

@@ -33,6 +33,8 @@ import { InstallNxConsole } from './lib/tags/install-nx-console.component';
 import { installNxConsole } from './lib/tags/install-nx-console.schema';
 import { Persona, Personas } from './lib/tags/personas.component';
 import { persona, personas } from './lib/tags/personas.schema';
+import { ProjectDetails } from './lib/tags/project-details.component';
+import { projectDetails } from './lib/tags/project-details.schema';
 import {
   ShortEmbeds,
   shortEmbeds,
@@ -83,6 +85,7 @@ export const getMarkdocCustomConfig = (
       'install-nx-console': installNxConsole,
       persona,
       personas,
+      'project-details': projectDetails,
       pill,
       'short-embeds': shortEmbeds,
       'short-video': shortVideo,
@@ -112,6 +115,7 @@ export const getMarkdocCustomConfig = (
     InstallNxConsole,
     Persona,
     Personas,
+    ProjectDetails,
     Pill,
     ShortEmbeds,
     ShortVideo,

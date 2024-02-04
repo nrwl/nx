@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxNestApplicationGenerator",
   "title": "Nx Application Options Schema",
   "description": "Nx Application Options Schema.",

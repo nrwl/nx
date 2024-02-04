@@ -9,7 +9,9 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
 import { gte } from 'semver';
+import { createNodes } from '../../plugins/plugin';
 import {
   addPlugin,
   getInstalledStorybookVersion,
@@ -17,13 +19,18 @@ import {
 } from '../../utils/utilities';
 import { nxVersion, storybookVersion } from '../../utils/versions';
 import { Schema } from './schema';
+import { updateGitignore } from './lib/update-gitignore';
 
-function checkDependenciesInstalled(host: Tree): GeneratorCallback {
+function checkDependenciesInstalled(
+  host: Tree,
+  schema: Schema
+): GeneratorCallback {
   const devDependencies: Record<string, string> = {
     '@nx/storybook': nxVersion,
+    '@nx/web': nxVersion,
   };
 
-  if (process.env.NX_PCV3 === 'true') {
+  if (schema.addPlugin) {
     let storybook7VersionToInstall = storybookVersion;
     if (
       storybookMajorVersion() >= 7 &&
@@ -36,7 +43,13 @@ function checkDependenciesInstalled(host: Tree): GeneratorCallback {
     devDependencies['storybook'] = storybook7VersionToInstall;
   }
 
-  return addDependenciesToPackageJson(host, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    host,
+    {},
+    devDependencies,
+    undefined,
+    schema.keepExistingVersions
+  );
 }
 
 function addCacheableOperation(tree: Tree) {
@@ -77,17 +90,28 @@ function moveToDevDependencies(tree: Tree): GeneratorCallback {
   return updated ? () => installPackagesTask(tree) : () => {};
 }
 
-export async function initGenerator(tree: Tree, schema: Schema) {
-  addCacheableOperation(tree);
+export function initGenerator(tree: Tree, schema: Schema) {
+  return initGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
 
-  if (process.env.NX_PCV3 === 'true') {
+export async function initGeneratorInternal(tree: Tree, schema: Schema) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  if (schema.addPlugin) {
     addPlugin(tree);
+    updateGitignore(tree);
+  } else {
+    addCacheableOperation(tree);
   }
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveToDevDependencies(tree));
-    tasks.push(checkDependenciesInstalled(tree));
+    tasks.push(checkDependenciesInstalled(tree, schema));
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!schema.skipFormat) {

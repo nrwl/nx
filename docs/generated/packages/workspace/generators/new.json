@@ -2,7 +2,7 @@
   "name": "new",
   "factory": "./src/generators/new/new#newGenerator",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxWorkspaceNew",
     "title": "Create an empty workspace",
     "description": "Create an empty workspace.",
@@ -62,6 +62,11 @@
       },
       "nextAppDir": {
         "description": "Enable the App Router for this project.",
+        "type": "boolean",
+        "default": true
+      },
+      "nextSrcDir": {
+        "description": "Generate a `src` directory for this project.",
         "type": "boolean",
         "default": true
       },

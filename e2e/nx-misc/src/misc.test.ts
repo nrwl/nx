@@ -13,7 +13,6 @@ import {
   runCLI,
   runCLIAsync,
   runCommand,
-  setMaxWorkers,
   tmpProjPath,
   uniq,
   updateFile,
@@ -44,7 +43,6 @@ describe('Nx Commands', () => {
 
       runCLI(`generate @nx/web:app ${app1} --tags e2etag`);
       runCLI(`generate @nx/web:app ${app2}`);
-      setMaxWorkers(join('apps', app1, 'project.json'));
 
       const s = runCLI('show projects').split('\n');
 
@@ -154,7 +152,6 @@ describe('Nx Commands', () => {
 
     beforeAll(async () => {
       runCLI(`generate @nx/web:app ${myapp}`);
-      setMaxWorkers(join('apps', myapp, 'project.json'));
       runCLI(`generate @nx/js:lib ${mylib}`);
     });
 

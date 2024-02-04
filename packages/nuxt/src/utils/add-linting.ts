@@ -29,6 +29,7 @@ export async function addLinting(
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       rootProject: options.rootProject,
+      addPlugin: true,
     });
     tasks.push(lintTask);
 

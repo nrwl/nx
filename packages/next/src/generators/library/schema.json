@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "cli": "nx",
   "$id": "NxReactLibrary",
   "title": "Create a React Library for Nx",
@@ -40,11 +40,11 @@
           { "value": "css", "label": "CSS" },
           {
             "value": "scss",
-            "label": "SASS(.scss)       [ http://sass-lang.com          ]"
+            "label": "SASS(.scss)       [ https://sass-lang.com          ]"
           },
           {
             "value": "less",
-            "label": "LESS              [ http://lesscss.org            ]"
+            "label": "LESS              [ https://lesscss.org            ]"
           },
           {
             "value": "styled-components",

@@ -8,15 +8,16 @@ import {
 } from '@nx/e2e/utils';
 
 describe('Nuxt Plugin', () => {
-  let proj: string;
   const app = uniq('app');
 
   beforeAll(() => {
-    proj = newProject({
+    newProject({
       packages: ['@nx/nuxt', '@nx/storybook'],
       unsetProjectNameAndRootFormat: false,
     });
-    runCLI(`generate @nx/nuxt:app ${app} --unitTestRunner=vitest`);
+    runCLI(
+      `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --projectNameAndRootFormat=as-provided`
+    );
     runCLI(
       `generate @nx/nuxt:component --directory=${app}/src/components/one --name=one --nameAndDirectoryFormat=as-provided --unitTestRunner=vitest`
     );
@@ -51,6 +52,6 @@ describe('Nuxt Plugin', () => {
       `generate @nx/nuxt:storybook-configuration ${app} --generateStories --no-interactive`
     );
     runCLI(`run ${app}:build-storybook --verbose`);
-    checkFilesExist(`dist/storybook/${app}/index.html`);
+    checkFilesExist(`${app}/storybook-static/index.html`);
   }, 300_000);
 });

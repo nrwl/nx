@@ -8,7 +8,7 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
       "targets": {
         "build-something": {
           "cache": true,
-          "command": "webpack-cli -c webpack.config.js --node-env=production",
+          "command": "webpack-cli build",
           "dependsOn": [
             "^build-something",
           ],
@@ -22,21 +22,30 @@ exports[`@nx/webpack/plugin should create nodes 1`] = `
             },
           ],
           "options": {
+            "args": [
+              "--node-env=production",
+            ],
             "cwd": "my-app",
           },
           "outputs": [
-            "dist/foo",
+            "{projectRoot}/dist/foo",
           ],
         },
         "my-serve": {
-          "command": "webpack-cli serve -c webpack.config.js --node-env=development",
+          "command": "webpack-cli serve",
           "options": {
+            "args": [
+              "--node-env=development",
+            ],
             "cwd": "my-app",
           },
         },
         "preview-site": {
-          "command": "webpack-cli serve -c webpack.config.js --node-env=production",
+          "command": "webpack-cli serve",
           "options": {
+            "args": [
+              "--node-env=production",
+            ],
             "cwd": "my-app",
           },
         },

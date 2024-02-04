@@ -1,11 +1,4 @@
-import {
-  Tree,
-  formatFiles,
-  getProjects,
-  updateProjectConfiguration,
-  updateJson,
-} from '@nx/devkit';
-import { easCliVersion } from '../../utils/versions';
+import { Tree, getProjects, updateJson } from '@nx/devkit';
 
 export default async function update(tree: Tree) {
   const projects = getProjects(tree);
@@ -14,7 +7,7 @@ export default async function update(tree: Tree) {
     if (config.targets?.['start']?.executor === '@nx/expo:start') {
       updateJson(tree, `${config.root}/eas.json`, (easJson) => {
         if (easJson?.cli?.version) {
-          easJson.cli.version = `>= ${easCliVersion.replace('~', '')}`;
+          easJson.cli.version = `>= 5`;
         }
         return easJson;
       });

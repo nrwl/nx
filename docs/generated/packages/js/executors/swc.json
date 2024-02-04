@@ -4,7 +4,7 @@
   "schema": {
     "version": 2,
     "outputCapture": "direct-nodejs",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "title": "Typescript Build Target",
     "description": "Builds using SWC.",

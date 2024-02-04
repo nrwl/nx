@@ -164,5 +164,5 @@ For manual update, go to [React Native Upgrade Helper](https://react-native-comm
 Nevertheless, you can use Nx's command `nx g @nx/react-native:upgrade-native <your project name>` to replace your iOS and Android folder with the latest code.
 
 {% callout type="caution" title="Be careful" %}
-Nx's command `nx g @nx/react-native:upgrade-native <your project name>` is destructive, do **NOT** use it if you got customized native code.)
+Nx's command `nx g @nx/react-native:upgrade-native <your project name>` is destructive, do **NOT** use it if you have added customized native code.
 {% /callout %}

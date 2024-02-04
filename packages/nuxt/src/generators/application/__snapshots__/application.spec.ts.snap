@@ -68,11 +68,7 @@ exports[`app generated files content - as-provided general application should co
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "my-app/src",
-  "targets": {
-    "lint": {
-      "executor": "@nx/eslint:lint"
-    }
-  }
+  "targets": {}
 }
 "
 `;

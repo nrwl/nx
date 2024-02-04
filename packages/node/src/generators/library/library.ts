@@ -21,6 +21,7 @@ import { join } from 'path';
 import { tslibVersion, typesNodeVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import { Schema } from './schema';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export interface NormalizedSchema extends Schema {
   fileName: string;
@@ -32,6 +33,7 @@ export interface NormalizedSchema extends Schema {
 
 export async function libraryGenerator(tree: Tree, schema: Schema) {
   return await libraryGeneratorInternal(tree, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -53,7 +55,7 @@ export async function libraryGeneratorInternal(tree: Tree, schema: Schema) {
   }
 
   const libraryInstall = await jsLibraryGenerator(tree, {
-    ...schema,
+    ...options,
     bundler: schema.buildable ? 'tsc' : 'none',
     includeBabelRc: schema.babelJest,
     importPath: options.importPath,
@@ -99,6 +101,7 @@ async function normalizeOptions(
     callingGenerator: '@nx/node:library',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   const fileName = getCaseAwareFileName({
     fileName: options.simpleModuleName
@@ -164,6 +167,7 @@ function updateProject(tree: Tree, options: NormalizedSchema) {
   const rootProject = options.projectRoot === '.' || options.projectRoot === '';
 
   project.targets = project.targets || {};
+  addBuildTargetDefaults(tree, `@nx/js:${options.compiler}`);
   project.targets.build = {
     executor: `@nx/js:${options.compiler}`,
     outputs: ['{options.outputPath}'],

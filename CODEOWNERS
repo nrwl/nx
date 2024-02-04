@@ -183,6 +183,7 @@ rust-toolchain @nrwl/nx-native-reviewers
 
 # CI
 /.circleci/** @nrwl/nx-pipelines-reviewers
+/.nx/workflows/** @nrwl/nx-pipelines-reviewers
 /.github/** @nrwl/nx-pipelines-reviewers
 /.husky/** @nrwl/nx-pipelines-reviewers
 /packages/workspace/src/generators/ci-workflow/** @nrwl/nx-pipelines-reviewers

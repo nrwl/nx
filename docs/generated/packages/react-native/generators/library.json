@@ -4,7 +4,7 @@
   "schema": {
     "cli": "nx",
     "$id": "NxReactNativeLibrary",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Create a React Native Library for Nx",
     "description": "Create a React Native Library for Nx.",
     "type": "object",
@@ -36,7 +36,7 @@
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
-        "enum": ["eslint"],
+        "enum": ["eslint", "none"],
         "default": "eslint"
       },
       "unitTestRunner": {

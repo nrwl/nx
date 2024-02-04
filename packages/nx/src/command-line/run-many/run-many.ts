@@ -75,8 +75,6 @@ export async function runMany(
       extraTargetDependencies,
       extraOptions
     );
-    // fix for https://github.com/nrwl/nx/issues/1666
-    if (process.stdin['unref']) (process.stdin as any).unref();
     process.exit(status);
   }
 }

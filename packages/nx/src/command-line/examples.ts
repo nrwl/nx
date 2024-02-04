@@ -369,6 +369,12 @@ export const examples: Record<string, Example[]> = {
       description:
         'Show information about "my-app" in a human readable format.',
     },
+
+    {
+      command: 'show project my-app --web',
+      description:
+        'Opens a web browser to explore the configuration of "my-app"',
+    },
   ],
   watch: [
     {
@@ -387,6 +393,23 @@ export const examples: Record<string, Example[]> = {
       command: 'watch --all -- echo \\$NX_PROJECT_NAME',
       description:
         'Watch all projects (including newly created projects) in the workspace',
+    },
+  ],
+  add: [
+    {
+      command: 'add @nx/react',
+      description:
+        'Install the `@nx/react` package matching the installed version of the `nx` package and run its `@nx/react:init` generator',
+    },
+    {
+      command: 'add non-core-nx-plugin',
+      description:
+        'Install the latest version of the `non-core-nx-plugin` package and run its `non-core-nx-plugin:init` generator if available',
+    },
+    {
+      command: 'add @nx/react@17.0.0',
+      description:
+        'Install version `17.0.0` of the `@nx/react` package and run its `@nx/react:init` generator',
     },
   ],
 };

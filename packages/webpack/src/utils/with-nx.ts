@@ -25,6 +25,7 @@ export function withNx(
       {
         ...options,
         ...pluginOptions,
+        target: options.target ?? 'web',
         assets: options.assets
           ? options.assets
           : pluginOptions.assets

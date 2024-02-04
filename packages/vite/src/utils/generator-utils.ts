@@ -15,6 +15,7 @@ import { VitePreviewServerExecutorOptions } from '../executors/preview-server/sc
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -200,6 +201,7 @@ export function addOrChangeBuildTarget(
   options: ViteConfigurationGeneratorSchema,
   target: string
 ) {
+  addBuildTargetDefaults(tree, '@nx/vite:build');
   const project = readProjectConfiguration(tree, options.project);
 
   const buildOptions: ViteBuildExecutorOptions = {
@@ -762,6 +764,10 @@ async function handleUnsupportedUserProvidedTargetsErrors(
 }
 
 export async function handleUnknownExecutors(projectName: string) {
+  if (process.env.NX_INTERACTIVE === 'false') {
+    return;
+  }
+
   logger.warn(
     `
       We could not find any targets in project ${projectName} that use executors which 

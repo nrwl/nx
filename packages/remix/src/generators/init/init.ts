@@ -7,8 +7,10 @@ import {
   addDependenciesToPackageJson,
   runTasksInSerial,
 } from '@nx/devkit';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes } from '../../plugins/plugin';
+import { nxVersion, remixVersion } from '../../utils/versions';
 import { type Schema } from './schema';
-import { remixVersion } from '../../utils/versions';
 
 function addPlugin(tree) {
   const nxJson = readNxJson(tree);
@@ -37,7 +39,11 @@ function addPlugin(tree) {
   updateNxJson(tree, nxJson);
 }
 
-export async function remixInitGenerator(tree: Tree, options: Schema) {
+export function remixInitGenerator(tree: Tree, options: Schema) {
+  return remixInitGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
 
   if (!options.skipPackageJson) {
@@ -47,14 +53,21 @@ export async function remixInitGenerator(tree: Tree, options: Schema) {
         '@remix-run/serve': remixVersion,
       },
       {
+        '@nx/web': nxVersion,
         '@remix-run/dev': remixVersion,
-      }
+      },
+      undefined,
+      options.keepExistingVersions
     );
     tasks.push(installTask);
   }
 
-  if (process.env.NX_PCV3 === 'true') {
+  if (options.addPlugin) {
     addPlugin(tree);
+  }
+
+  if (options.updatePackageScripts) {
+    await updatePackageScripts(tree, createNodes);
   }
 
   if (!options.skipFormat) {

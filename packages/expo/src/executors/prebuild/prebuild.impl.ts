@@ -1,8 +1,7 @@
-import { ExecutorContext, names } from '@nx/devkit';
+import { ExecutorContext, names, workspaceRoot } from '@nx/devkit';
 import { ChildProcess, fork } from 'child_process';
 import { join } from 'path';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
 import { podInstall } from '../../utils/pod-install-task';
 import { installAsync } from '../install/install.impl';
 import { ExpoPrebuildOptions } from './schema';
@@ -19,13 +18,12 @@ export default async function* prebuildExecutor(
 ): AsyncGenerator<ExpoPrebuildOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
     await prebuildAsync(context.root, projectRoot, options);
 
     if (options.install) {
-      await installAsync(context.root, {});
+      await installAsync(workspaceRoot, {});
       if (options.platform === 'ios') {
         podInstall(join(context.root, projectRoot, 'ios'));
       }
@@ -70,13 +68,20 @@ export function prebuildAsync(
   });
 }
 
-const nxOptions = ['install', 'interactive'];
+const nxOptions = ['install', 'interactive']; // interactive is passed in by e2e tests
 // options from https://github.com/expo/expo/blob/main/packages/%40expo/cli/src/prebuild/index.ts
 function createPrebuildOptions(options: ExpoPrebuildOptions) {
   return Object.keys(options).reduce((acc, k) => {
     if (!nxOptions.includes(k)) {
       const v = options[k];
-      acc.push(`--${names(k).fileName}=${v}`);
+      if (typeof v === 'boolean') {
+        if (v === true) {
+          // when true, does not need to pass the value true, just need to pass the flag in kebob case
+          acc.push(`--${names(k).fileName}`);
+        }
+      } else {
+        acc.push(`--${names(k).fileName}`, v);
+      }
     }
     return acc;
   }, []);

@@ -1,8 +1,8 @@
 {
   "name": "configuration",
-  "factory": "./src/generators/configuration/configuration",
+  "factory": "./src/generators/configuration/configuration#configurationGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxJestProject",
     "cli": "nx",
     "title": "Add Jest Configuration to a project",
@@ -82,7 +82,7 @@
   },
   "description": "Add Jest configuration to a project.",
   "hidden": true,
-  "implementation": "/packages/jest/src/generators/configuration/configuration.ts",
+  "implementation": "/packages/jest/src/generators/configuration/configuration#configurationGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/jest/src/generators/configuration/schema.json",
   "type": "generator"

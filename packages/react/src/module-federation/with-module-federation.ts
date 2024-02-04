@@ -13,6 +13,9 @@ const isVarOrWindow = (libType?: string) =>
 export async function withModuleFederation(
   options: ModuleFederationConfig
 ): Promise<AsyncNxComposableWebpackPlugin> {
+  if (global.NX_GRAPH_CREATION) {
+    return (config) => config;
+  }
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     await getModuleFederationConfig(options);
   const isGlobal = isVarOrWindow(options.library?.type);

@@ -1,4 +1,4 @@
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import * as path from 'path';
 import * as fse from 'fs-extra';
 import ignore from 'ignore';

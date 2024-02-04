@@ -39,9 +39,6 @@ export function addStorybookTarget(
   uiFramework: UiFramework,
   interactionTests: boolean
 ) {
-  if (uiFramework === '@storybook/react-native') {
-    return;
-  }
   const projectConfig = readProjectConfiguration(tree, projectName);
   projectConfig.targets['storybook'] = {
     executor: '@nx/storybook:storybook',
@@ -239,10 +236,6 @@ export function createStorybookTsconfigFile(
     '.storybook/*.ts',
   ];
 
-  if (uiFramework === '@storybook/react-native') {
-    include.push('*.ts', '*.tsx');
-  }
-
   const storybookTsConfig: TsConfig = {
     extends: './tsconfig.json',
     compilerOptions: {
@@ -309,8 +302,7 @@ export function configureTsProjectConfig(
       ...(tsConfigContent.exclude || []),
       '**/*.stories.ts',
       '**/*.stories.js',
-      ...(schema.uiFramework === '@storybook/react-native' ||
-      schema.uiFramework?.startsWith('@storybook/react')
+      ...(schema.uiFramework?.startsWith('@storybook/react')
         ? ['**/*.stories.jsx', '**/*.stories.tsx']
         : []),
     ];
@@ -481,45 +473,53 @@ export function addStorybookToNamedInputs(tree: Tree) {
       }
     }
 
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults['build-storybook'] ??= {};
-    nxJson.targetDefaults['build-storybook'].inputs ??= [
-      'default',
-      hasProductionFileset ? '^production' : '^default',
-    ];
-
-    if (
-      !nxJson.targetDefaults['build-storybook'].inputs.includes(
-        '{projectRoot}/.storybook/**/*'
-      )
-    ) {
-      nxJson.targetDefaults['build-storybook'].inputs.push(
-        '{projectRoot}/.storybook/**/*'
-      );
-    }
-
-    // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
-    // because we want to rebuild Storybook if the .storybook folder changes
-    const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
-      '!{projectRoot}/.storybook/**/*'
-    );
-
-    if (index !== -1) {
-      nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
-    }
-
-    if (
-      !nxJson.targetDefaults['build-storybook'].inputs.includes(
-        '{projectRoot}/tsconfig.storybook.json'
-      )
-    ) {
-      nxJson.targetDefaults['build-storybook'].inputs.push(
-        '{projectRoot}/tsconfig.storybook.json'
-      );
-    }
-
     updateNxJson(tree, nxJson);
   }
+}
+
+export function addStorybookToTargetDefaults(tree: Tree) {
+  const nxJson = readNxJson(tree);
+
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['build-storybook'] ??= {};
+  nxJson.targetDefaults['build-storybook'].inputs ??= [
+    'default',
+    nxJson.namedInputs && 'production' in nxJson.namedInputs
+      ? '^production'
+      : '^default',
+  ];
+
+  if (
+    !nxJson.targetDefaults['build-storybook'].inputs.includes(
+      '{projectRoot}/.storybook/**/*'
+    )
+  ) {
+    nxJson.targetDefaults['build-storybook'].inputs.push(
+      '{projectRoot}/.storybook/**/*'
+    );
+  }
+
+  // Delete the !{projectRoot}/.storybook/**/* glob from build-storybook
+  // because we want to rebuild Storybook if the .storybook folder changes
+  const index = nxJson.targetDefaults['build-storybook'].inputs.indexOf(
+    '!{projectRoot}/.storybook/**/*'
+  );
+
+  if (index !== -1) {
+    nxJson.targetDefaults['build-storybook'].inputs.splice(index, 1);
+  }
+
+  if (
+    !nxJson.targetDefaults['build-storybook'].inputs.includes(
+      '{projectRoot}/tsconfig.storybook.json'
+    )
+  ) {
+    nxJson.targetDefaults['build-storybook'].inputs.push(
+      '{projectRoot}/tsconfig.storybook.json'
+    );
+  }
+
+  updateNxJson(tree, nxJson);
 }
 
 export function createProjectStorybookDir(
@@ -538,7 +538,8 @@ export function createProjectStorybookDir(
   usesVite?: boolean,
   viteConfigFilePath?: string,
   hasPlugin?: boolean,
-  viteConfigFileName?: string
+  viteConfigFileName?: string,
+  useReactNative?: boolean
 ) {
   let projectDirectory =
     projectType === 'application'
@@ -583,6 +584,7 @@ export function createProjectStorybookDir(
     viteConfigFilePath,
     hasPlugin,
     viteConfigFileName,
+    useReactNative,
   });
 
   if (js) {
@@ -731,6 +733,16 @@ export function findNextConfig(
     if (tree.exists(nextConfigPath)) {
       return nextConfigPath;
     }
+  }
+}
+
+export function findMetroConfig(
+  tree: Tree,
+  projectRoot: string
+): string | undefined {
+  const nextConfigPath = joinPathFragments(projectRoot, `metro.config.js`);
+  if (tree.exists(nextConfigPath)) {
+    return nextConfigPath;
   }
 }
 

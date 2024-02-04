@@ -12,4 +12,5 @@ export interface NxRemixGeneratorSchema {
   e2eTestRunner?: 'cypress' | 'none';
   skipFormat?: boolean;
   rootProject?: boolean;
+  addPlugin?: boolean;
 }

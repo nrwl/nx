@@ -67,7 +67,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
   describe('build storybook', () => {
     it('should build a React based storybook that uses Vite', () => {
       runCLI(`run ${appName}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${appName}/index.html`);
+      checkFilesExist(`storybook-static/index.html`);
     }, 100_000);
 
     it('should build a React based storybook that references another lib and uses Vite', () => {
@@ -116,7 +116,7 @@ describe('Storybook generators and executors for standalone workspaces - using R
 
       // build React lib
       runCLI(`run ${appName}:build-storybook --verbose`);
-      checkFilesExist(`dist/storybook/${appName}/index.html`);
+      checkFilesExist(`storybook-static/index.html`);
     }, 150_000);
   });
 });

@@ -13,22 +13,9 @@ Make sure to install the `@nx/eslint-plugin` version that matches the version of
 
 In any Nx workspace, you can install `@nx/eslint-plugin` by running the following commands if the package is not already installed:
 
-{% tabs %}
-{%tab label="npm"%}
-
 ```shell
-npm i --save-dev @nx/eslint-plugin
+nx add @nx/eslint-plugin
 ```
-
-{% /tab %}
-{%tab label="yarn"%}
-
-```shell
-yarn add --dev @nx/eslint-plugin
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Included plugins
 
@@ -40,7 +27,7 @@ The `@nx/javascript` ESLint plugin contains best practices when using JavaScript
 
 ### TypeScript
 
-The `@nx/typescript` ESLint plugin contains best practices when using TypeSript.
+The `@nx/typescript` ESLint plugin contains best practices when using TypeScript.
 
 ### Angular
 

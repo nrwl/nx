@@ -22,7 +22,6 @@ export interface ExpoPluginOptions {
   runIosTargetName?: string;
   runAndroidTargetName?: string;
   exportTargetName?: string;
-  exportWebTargetName?: string;
   prebuildTargetName?: string;
   installTargetName?: string;
   buildTargetName?: string;
@@ -107,17 +106,20 @@ function buildExpoTargets(
 
   const targets: Record<string, TargetConfiguration> = {
     [options.startTargetName]: {
-      executor: `@nx/expo:start`,
+      command: `expo start`,
+      options: { cwd: projectRoot },
     },
     [options.serveTargetName]: {
       command: `expo start --web`,
       options: { cwd: projectRoot },
     },
     [options.runIosTargetName]: {
-      executor: `@nx/expo:run-ios`,
+      command: `expo run:ios`,
+      options: { cwd: projectRoot },
     },
     [options.runAndroidTargetName]: {
-      executor: `@nx/expo:run-android`,
+      command: `expo run:android`,
+      options: { cwd: projectRoot },
     },
     [options.exportTargetName]: {
       command: `expo export`,
@@ -127,14 +129,6 @@ function buildExpoTargets(
       inputs: getInputs(namedInputs),
       outputs: [getOutputs(projectRoot, 'dist')],
     },
-    [options.exportWebTargetName]: {
-      command: `expo export:web`,
-      options: { cwd: projectRoot },
-      cache: true,
-      dependsOn: [`^${options.exportWebTargetName}`],
-      inputs: getInputs(namedInputs),
-      outputs: [getOutputs(projectRoot, 'web-build')],
-    },
     [options.installTargetName]: {
       command: `expo install`,
       options: { cwd: workspaceRoot }, // install at workspace root
@@ -143,14 +137,12 @@ function buildExpoTargets(
       executor: `@nx/expo:prebuild`,
     },
     [options.buildTargetName]: {
-      executor: `@nx/expo:build`,
-      dependsOn: [`^${options.buildTargetName}`],
-      inputs: getInputs(namedInputs),
+      command: `eas build`,
+      options: { cwd: projectRoot },
     },
     [options.submitTargetName]: {
-      executor: `@nx/expo:submit`,
-      dependsOn: [`^${options.submitTargetName}`],
-      inputs: getInputs(namedInputs),
+      command: `eas submit`,
+      options: { cwd: projectRoot },
     },
   };
 
@@ -175,7 +167,7 @@ function getInputs(
       ? ['default', '^production']
       : ['default', '^default']),
     {
-      externalDependencies: ['react-native'],
+      externalDependencies: ['expo'],
     },
   ];
 }
@@ -210,7 +202,6 @@ function normalizeOptions(options: ExpoPluginOptions): ExpoPluginOptions {
   options.runIosTargetName ??= 'run-ios';
   options.runAndroidTargetName ??= 'run-android';
   options.exportTargetName ??= 'export';
-  options.exportWebTargetName ??= 'export-web';
   options.prebuildTargetName ??= 'prebuild';
   options.installTargetName ??= 'install';
   options.buildTargetName ??= 'build';

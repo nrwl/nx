@@ -1,8 +1,8 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#detoxInitGenerator",
+  "factory": "./src/generators/init/init#detoxInitGeneratorInternal",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Add Detox Schematics",
     "description": "Add Detox Schematics.",
     "type": "object",
@@ -18,6 +18,18 @@
         "default": false,
         "description": "Do not add dependencies to `package.json`.",
         "x-priority": "internal"
+      },
+      "keepExistingVersions": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Keep existing dependencies versions",
+        "default": false
+      },
+      "updatePackageScripts": {
+        "type": "boolean",
+        "x-priority": "internal",
+        "description": "Update `package.json` scripts with inferred targets",
+        "default": false
       }
     },
     "required": [],
@@ -25,7 +37,7 @@
   },
   "description": "Initialize the `@nrwl/detox` plugin.",
   "hidden": true,
-  "implementation": "/packages/detox/src/generators/init/init#detoxInitGenerator.ts",
+  "implementation": "/packages/detox/src/generators/init/init#detoxInitGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/detox/src/generators/init/schema.json",
   "type": "generator"

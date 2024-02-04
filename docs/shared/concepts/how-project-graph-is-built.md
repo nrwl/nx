@@ -1,6 +1,6 @@
 # How the Project Graph is Built
 
-Nx creates a graph of all the dependencies between projects in your workspace using two sources of information:
+Nx creates a graph of all the dependencies between projects in your workspace using three sources of information:
 
 1. Package dependencies defined in the `package.json` file for each project.
 

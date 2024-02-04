@@ -17,7 +17,7 @@ exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
             "^production",
           ],
           "options": {
-            "outputPath": "{workspaceRoot}/dist",
+            "outputPath": "{workspaceRoot}/dist/my-app",
           },
           "outputs": [
             "{options.outputPath}",

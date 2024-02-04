@@ -2,7 +2,7 @@
   "name": "verdaccio",
   "implementation": "/packages/js/src/executors/verdaccio/verdaccio.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "version": 2,
     "title": "Verdaccio Local Registry",
     "description": "Start a local registry with Verdaccio.",

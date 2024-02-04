@@ -60,24 +60,24 @@ This guide assumes that you have an Angular project with Storybook configured in
 First we need to install the necessary packages:
 
 {% tabs %}
-{% tab label="yarn" %}
+{%tab label="npm"%}
+
+```shell
+npm add -D @compodoc/compodoc
+```
+
+{% /tab %}
+{%tab label="yarn"%}
 
 ```shell
 yarn add -D @compodoc/compodoc
 ```
 
 {% /tab %}
-{% tab label="npm" %}
+{%tab label="pnpm"%}
 
 ```shell
-npm install --save-dev @compodoc/compodoc
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm install --save-dev @compodoc/compodoc
+pnpm add -D @compodoc/compodoc
 ```
 
 {% /tab %}

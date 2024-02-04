@@ -8,9 +8,9 @@ import {
   Tree,
   updateNxJson,
 } from '@nx/devkit';
-import { ExpoPluginOptions } from '../../../plugins/plugin';
+import { updatePackageScripts } from '@nx/devkit/src/utils/update-package-scripts';
+import { createNodes, ExpoPluginOptions } from '../../../plugins/plugin';
 import {
-  easCliVersion,
   expoCliVersion,
   expoVersion,
   nxVersion,
@@ -19,20 +19,31 @@ import {
   reactVersion,
 } from '../../utils/versions';
 import { hasExpoPlugin } from '../../utils/has-expo-plugin';
+
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
-export async function expoInitGenerator(host: Tree, schema: Schema) {
+export function expoInitGenerator(tree: Tree, schema: Schema) {
+  return expoInitGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   addGitIgnoreEntry(host);
 
-  if (process.env.NX_PCV3 === 'true') {
+  if (schema.addPlugin) {
     addPlugin(host);
   }
 
   const tasks: GeneratorCallback[] = [];
   if (!schema.skipPackageJson) {
     tasks.push(moveDependency(host));
-    tasks.push(updateDependencies(host));
+    tasks.push(updateDependencies(host, schema));
+  }
+
+  if (schema.updatePackageScripts) {
+    await updatePackageScripts(host, createNodes);
   }
 
   if (!schema.skipFormat) {
@@ -42,7 +53,7 @@ export async function expoInitGenerator(host: Tree, schema: Schema) {
   return runTasksInSerial(...tasks);
 }
 
-export function updateDependencies(host: Tree) {
+export function updateDependencies(host: Tree, schema: Schema) {
   return addDependenciesToPackageJson(
     host,
     {
@@ -54,8 +65,9 @@ export function updateDependencies(host: Tree) {
     {
       '@nx/expo': nxVersion,
       '@expo/cli': expoCliVersion,
-      'eas-cli': easCliVersion,
-    }
+    },
+    undefined,
+    schema.keepExistingVersions
   );
 }
 
@@ -75,10 +87,10 @@ function addPlugin(host: Tree) {
     plugin: '@nx/expo/plugin',
     options: {
       startTargetName: 'start',
+      serveTargetName: 'serve',
       runIosTargetName: 'run-ios',
       runAndroidTargetName: 'run-android',
       exportTargetName: 'export',
-      exportWebTargetName: 'export-web',
       prebuildTargetName: 'prebuild',
       installTargetName: 'install',
       buildTargetName: 'build',

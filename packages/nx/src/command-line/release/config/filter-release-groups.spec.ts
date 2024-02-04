@@ -18,11 +18,14 @@ describe('filterReleaseGroups()', () => {
           tag: true,
           tagMessage: '',
           tagArgs: '',
+          stageChanges: false,
         },
         workspaceChangelog: false,
         projectChangelogs: false,
+        automaticFromRef: false,
       },
       version: {
+        conventionalCommits: false,
         generator: '',
         generatorOptions: {},
         git: {
@@ -43,6 +46,7 @@ describe('filterReleaseGroups()', () => {
         tag: false,
         tagMessage: '',
         tagArgs: '',
+        stageChanges: false,
       },
     };
     projectGraph = {
@@ -91,6 +95,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -117,6 +122,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -127,6 +133,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-b'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -147,6 +154,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -160,6 +168,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -177,6 +186,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -192,6 +202,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -209,6 +220,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a', 'lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -234,6 +246,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -244,6 +257,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-b'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -270,6 +284,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -280,6 +295,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-b'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -300,6 +316,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -317,6 +334,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "independent",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -350,6 +368,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-a'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -360,6 +379,7 @@ describe('filterReleaseGroups()', () => {
           projects: ['lib-b'],
           changelog: false,
           version: {
+            conventionalCommits: false,
             generator: '',
             generatorOptions: {},
           },
@@ -380,6 +400,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
@@ -397,6 +418,7 @@ describe('filterReleaseGroups()', () => {
             "projectsRelationship": "fixed",
             "releaseTagPattern": "",
             "version": {
+              "conventionalCommits": false,
               "generator": "",
               "generatorOptions": {},
             },
