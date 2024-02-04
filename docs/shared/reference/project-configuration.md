@@ -1,7 +1,59 @@
 # Project Configuration
 
-Projects can be configured in `package.json` (if you use npm scripts and not Nx executors) and `project.json` (if you
-[use task executors](/core-features/plugin-features/use-task-executors)). Both `package.json` and `project.json` files are located in each project's folder. Nx merges the two
+A project's configuration is constructed by Nx from three sources:
+
+1. [Tasks inferred by Nx plugins](/concepts/inferred-tasks) from tooling configuration
+2. [Workspace `targetDefaults`](/reference/nx-json#target-defaults) defined in the `nx.json` file
+3. Individual project level configuration files (`package.json` and `project.json`)
+
+Each source will overwrite the previous source. That means `targetDefaults` will overwrite inferred tasks and project level configuration will overwrite both `targetDefaults` and inferred tasks. The combined project configuration can be viewed in the project details view by using [Nx Console](/features/integrate-with-editors) in your IDE or by running:
+
+```shell
+nx show project myproject --web
+```
+
+{% project-details title="Project Details View" height="100px" %}
+
+```json
+{
+  "project": {
+    "name": "demo",
+    "data": {
+      "root": " packages/demo",
+      "projectType": "application",
+      "targets": {
+        "dev": {
+          "executor": "nx:run-commands",
+          "options": {
+            "command": "vite dev"
+          }
+        },
+        "build": {
+          "executor": "nx:run-commands",
+          "inputs": ["production", "^production"],
+          "outputs": ["{projectRoot}/dist"],
+          "options": {
+            "command": "vite build"
+          }
+        }
+      }
+    }
+  },
+  "sourceMap": {
+    "targets": ["packages/demo/vite.config.ts", "@nx/vite"],
+    "targets.dev": ["packages/demo/vite.config.ts", "@nx/vite"],
+    "targets.build": ["packages/demo/vite.config.ts", "@nx/vite"]
+  }
+}
+```
+
+{% /project-details %}
+
+The project details view also shows where each setting is defined so that you know where to change it.
+
+## Project Level Configuration Files
+
+If you need to edit your project settings or modify an inferred task, you can do so in either `package.json` or `project.json` files. The examples on this page show both styles, and the only functional difference is that tasks that use executors must be defined in a `project.json`. Nx merges the two
 files to get each project's configuration. The full [machine readable schema](https://github.com/nrwl/nx/blob/master/packages/nx/schemas/project-schema.json) is available on GitHub.
 
 The following configuration creates `build` and `test` targets for Nx.
@@ -47,7 +99,7 @@ The following configuration creates `build` and `test` targets for Nx.
 
 You can invoke `nx build mylib` or `nx test mylib` without any extra configuration.
 
-Below are some more complete examples of project configuration files. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories.
+Below are some more complete examples of project configuration files. For a more intuitive understanding of the roles of each option, you can highlight the options in the excerpt below that relate to different categories. Orchestration settings control the way [Nx runs tasks](/features/run-tasks). Execution settings control the actual task that is run. Caching settings control when [Nx caches a task](/features/cache-task-results) and what is actually cached.
 
 {% tabs %}
 {% tab label="package.json" %}
@@ -118,174 +170,56 @@ Below are some more complete examples of project configuration files. For a more
 {% /tab %}
 {% /tabs %}
 
-### inputs & namedInputs
+## Task Definitions (Targets)
 
-The `inputs` array tells Nx what to consider to determine whether a particular invocation of a script should be a cache
-hit or not. There are three types of inputs:
+A large portion of project configuration is related to defining the tasks for the project. In addition, to defining what the task actually does, a task definition also has properties that define the way that Nx should run that task. Those properties are described in detail below.
 
-#### Filesets
+### Cache
 
-Examples:
+In Nx 17 and higher, caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
 
-- `{projectRoot}/**.*.ts`
-- same as `{fileset: "{projectRoot}/**/*.ts"}`
-- `{workspaceRoot}/jest.config.ts`
-- same as `{fileset: "{workspaceRoot}/jest.config.ts}`
-
-{% callout type="note" title="inputs syntax" %}
-
-The `inputs` and `namedInputs` are parsed with the following rules:
-
-1. `{projectRoot}` and `{workspaceRoot}` are replaced with the appropriate path
-2. A `^` character at the beginning of the string means this entry applies to the project dependencies of the project, not the project itself.
-3. Everything else is processed with the [minimatch](https://github.com/isaacs/minimatch) library
-
-{% /callout %}
-
-#### Runtime Inputs
-
-Nx will execute the command specified by `runtime` inputs and use the result when calculating hashes.
-
-Example:
-
-```
-{
-  "targets": {
-    "build": {
-      "executor" : "@nx/js:tsc",
-      "inputs" : [{"runtime": "node -v"}]
-    }
-  }
-}
-```
-
-Note: the result is hashed, so it is never displayed.
-
-#### Env Variables
-
-Nx will read the environment variable specified by `env` inputs and use it when calculating hashes.
-
-Example:
-
-```
-{
-  "targets": {
-    "build": {
-      "executor" : "@nx/js:tsc",
-      "inputs" : [{"env": "DEMO_VAR"}]
-    }
-  }
-}
-```
-
-Note: the value is hashed, so it is never displayed.
-
-#### External Dependencies
-
-For official plugins, Nx intelligently finds a set of external dependencies which it hashes for the target. `nx:run-commands` is an exception to this.
-Because you may specify any command to be run, it is not possible to determine which, if any, external dependencies are used by the target.
-To be safe, Nx assumes that updating any external dependency invalidates the cache for the target.
-
-> Note: Community plugins are also treated like `nx:run-commands`
-
-This input type allows you to override this cautious behavior by specifying a set of external dependencies to hash for the target.
-
-Examples:
-
-Targets that only use commands natively available in the terminal will not depend on any external dependencies. Specify an empty array to not hash any external dependencies.
-
-```json
-{
-  "targets": {
-    "copyFiles": {
-      "inputs": [
-        {
-          "externalDependencies": []
-        }
-      ],
-      "command": "cp src/assets dist"
-    }
-  }
-}
-```
-
-If a target uses a command from an npm package, that package should be listed.
-
-```json
-{
-  "targets": {
-    "copyFiles": {
-      "inputs": [
-        {
-          "externalDependencies": ["lerna"]
-        }
-      ],
-      "command": "npx lerna publish"
-    }
-  }
-}
-```
-
-#### Dependent tasks output
-
-This input allows us to depend on the output, rather than the input of the dependent tasks. We can specify the glob pattern to match only the subset of the output files.
-The `transitive` parameter defines whether the check and the pattern should be recursively applied to the dependent tasks of the child tasks.
-
-Examples:
-
-```json
-{
-  "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
-    "production": ["default", "!{projectRoot}/**/*.spec.ts"],
-    "deps": [{ "dependentTasksOutputFiles": "**/*.d.ts", "transitive": true }]
-  },
-  "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["production", "deps"]
-    }
-  }
-}
-```
-
-#### Named Inputs
-
-Examples:
-
-- `inputs: ["production"]`
-- same as `"inputs": [{"input": "production", "projects": "self"}]` in versions prior to Nx 16, or `"inputs": [{"input": "production"}]` after version 16.
-
-Often the same glob will appear in many places (e.g., prod fileset will exclude spec files for all projects). Because
-keeping them in sync is error-prone, we recommend defining `namedInputs`, which you can then reference in all of those
-places.
-
-#### Using ^
-
-Examples:
-
-- `inputs: ["^production"]`
-- same as `inputs: [{"input": "production", "projects": "dependencies"}]` prior to Nx 16, or `"inputs": [{"input": "production", "dependencies": true }]` after version 16.
-
-Similar to `dependsOn`, the "^" symbols means "dependencies". This is a very important idea, so let's illustrate it with
-an example.
-
-```json
+```json {% fileName="project.json" %}
 {
   "targets": {
     "test": {
-      "inputs": ["default", "^production"]
+      "cache": true
     }
   }
 }
 ```
 
-The configuration above means that the test target depends on all source files of a given project and only prod
-sources (non-test sources) of its dependencies. In other words, it treats test sources as private.
+{% callout type="warning" title="Per Project Caching + Distribution" %}
+
+If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with Nx Agents enabled.
+
+{% /callout %}
+
+### Inputs and Named Inputs
+
+Each cacheable task needs to define `inputs` which determine whether the task outputs can be retrieved from the cache or the task needs to be re-run. The `namedInputs` defined in `nx.json` or project level configuration are sets of reusable input definitions.
+
+A typical set of inputs may look like this:
+
+```jsonc {% fileName="" %}
+{
+  "namedInputs": {
+    "default": ["{projectRoot}/**/*"], // every file in the project
+    "production": ["default", "!{projectRoot}/**/*.spec.tsx"] // except test files
+  },
+  "targets": {
+    "build": {
+      "inputs": [
+        "production", // this project's production files
+        { "externalDependencies": ["vite"] } // the version of the vite package
+      ]
+    }
+  }
+}
+```
 
 {% cards %}
-{% card title="nx.json reference" type="documentation" description="inputs and namedInputs are also described in the nx.json reference" url="/reference/nx-json#inputs-&-namedinputs" /%}
-{% card title="Customizing inputs and namedInputs" type="documentation" description="This guide walks through a few examples of how to customize inputs and namedInputs" url="/recipes/running-tasks/customizing-inputs" /%}
+{% card title="Inputs and Named Inputs Reference" type="documentation" description="Learn about all the possible settings for `inputs` and `namedInputs`" url="/reference/inputs" /%}
+{% card title="Configure Inputs for Task Caching" type="documentation" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" url="/recipes/running-tasks/configure-inputs" /%}
 {% /cards %}
 
 ### Outputs
@@ -300,6 +234,12 @@ Specifically, by default, the following locations are cached for builds:
 - `{projectRoot}/build`,
 - `{projectRoot}/dist`,
 - `{projectRoot}/public`
+
+{% cards %}
+{% card title="Configure Outputs for Task Caching" type="documentation" description="This recipes walks gives helpful tips to configure `outputs` for tasks" url="/recipes/running-tasks/configure-outputs" /%}
+{% /cards %}
+
+Read the [configure outputs for task caching](/recipes/running-tasks/configure-outputs) recipe for helpful tips for setting outputs.
 
 #### Basic Example
 
@@ -365,26 +305,6 @@ More advanced patterns can be used to exclude files and folders in a single line
 }
 ```
 
-#### Cache
-
-In Nx 17 and higher, caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
-
-```json {% fileName="project.json" %}
-{
-  "targets": {
-    "test": {
-      "cache": true
-    }
-  }
-}
-```
-
-{% callout type="warning" title="Per Project Caching + DTE" %}
-
-If you are using distributed task execution and disable caching for a given target, you will not be able to use distributed task execution for that target. This is because distributed task execution requires caching to be enabled. This means that the target you have disabled caching for, and any targets which depend on that target will fail the pipeline if you try to run them with DTE enabled.
-
-{% /callout %}
-
 ### dependsOn
 
 Targets can depend on other targets. This is the relevant portion of the configuration file:
@@ -417,25 +337,6 @@ result in `mylib`'s dependencies being built as well.
 You can also express task dependencies with an object syntax:
 
 {% tabs %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      "dependsOn": [
-        {
-          "projects": "dependencies", // "dependencies" or "self"
-          "target": "build", // target name
-          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
-        }
-      ]
-    }
-  }
-}
-```
-
-{% /tab %}
 {% tab label="Version 16+ (self)" %}
 
 ```json
@@ -492,6 +393,25 @@ You can also express task dependencies with an object syntax:
 ```
 
 {% /tab %}
+{% tab label="Version < 16" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      "dependsOn": [
+        {
+          "projects": "dependencies", // "dependencies" or "self"
+          "target": "build", // target name
+          "params": "ignore" // "forward" or "ignore", defaults to "ignore"
+        }
+      ]
+    }
+  }
+}
+```
+
+{% /tab %}
 {% /tabs %}
 
 #### Examples
@@ -499,22 +419,6 @@ You can also express task dependencies with an object syntax:
 You can write the shorthand configuration above in the object syntax like this:
 
 {% tabs %}
-{% tab label="Version < 16" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
-    },
-    "test": {
-      "dependsOn": [{ "projects": "self", "target": "build" }]
-    }
-  }
-}
-```
-
-{% /tab %}
 {% tab label="Version 16+" %}
 
 ```json
@@ -531,37 +435,27 @@ You can write the shorthand configuration above in the object syntax like this:
 ```
 
 {% /tab %}
-{% /tabs %}
-
-With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target. You can either forward them or you can ignore them (default).
-
-{% tabs %}
 {% tab label="Version < 16" %}
 
 ```json
 {
   "targets": {
     "build": {
-      // forward params passed to this target to the dependency targets
-      "dependsOn": [
-        { "projects": "dependencies", "target": "build", "params": "forward" }
-      ]
+      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
     },
     "test": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [
-        { "projects": "dependencies", "target": "build", "params": "ignore" }
-      ]
-    },
-    "lint": {
-      // ignore params passed to this target, won't be forwarded to the dependency targets
-      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+      "dependsOn": [{ "projects": "self", "target": "build" }]
     }
   }
 }
 ```
 
 {% /tab %}
+{% /tabs %}
+
+With the expanded syntax, you also have a third option available to configure how to handle the params passed to the target. You can either forward them or you can ignore them (default).
+
+{% tabs %}
 {% tab label="Version 16+" %}
 
 ```json
@@ -588,11 +482,51 @@ With the expanded syntax, you also have a third option available to configure ho
 ```
 
 {% /tab %}
+{% tab label="Version < 16" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the dependency targets
+      "dependsOn": [
+        { "projects": "dependencies", "target": "build", "params": "forward" }
+      ]
+    },
+    "test": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [
+        { "projects": "dependencies", "target": "build", "params": "ignore" }
+      ]
+    },
+    "lint": {
+      // ignore params passed to this target, won't be forwarded to the dependency targets
+      "dependsOn": [{ "projects": "dependencies", "target": "build" }]
+    }
+  }
+}
+```
+
+{% /tab %}
 {% /tabs %}
 
 This also works when defining a relation for the target of the project itself using `"projects": "self"`:
 
 {% tabs %}
+{% tab label="Version 16+" %}
+
+```json
+{
+  "targets": {
+    "build": {
+      // forward params passed to this target to the project target
+      "dependsOn": [{ "target": "pre-build", "params": "forward" }]
+    }
+  }
+}
+```
+
+{% /tab %}
 {% tab label="Version < 16" %}
 
 ```json
@@ -603,20 +537,6 @@ This also works when defining a relation for the target of the project itself us
       "dependsOn": [
         { "projects": "self", "target": "pre-build", "params": "forward" }
       ]
-    }
-  }
-}
-```
-
-{% /tab %}
-{% tab label="Version 16+" %}
-
-```json
-{
-  "targets": {
-    "build": {
-      // forward params passed to this target to the project target
-      "dependsOn": [{ "target": "pre-build", "params": "forward" }]
     }
   }
 }
@@ -649,6 +569,10 @@ Additionally, when using the expanded object syntax, you can specify individual 
 This configuration is usually not needed. Nx comes with reasonable defaults (imported in `nx.json`) which implement the
 configuration above.
 
+## Project Metadata
+
+The following properties describe the project as a whole.
+
 ### tags
 
 You can annotate your projects with `tags` as follows:
@@ -670,7 +594,7 @@ You can annotate your projects with `tags` as follows:
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "/libs/mylib",
+  "root": "libs/mylib",
   "tags": ["scope:myteam"]
 }
 ```
@@ -678,7 +602,7 @@ You can annotate your projects with `tags` as follows:
 {% /tab %}
 {% /tabs %}
 
-You can [configure lint rules using these tags](/core-features/enforce-module-boundaries) to, for instance, ensure that libraries
+You can [configure lint rules using these tags](/features/enforce-module-boundaries) to, for instance, ensure that libraries
 belonging to `myteam` are not depended on by libraries belong to `theirteam`.
 
 ### implicitDependencies
@@ -702,7 +626,7 @@ Nx uses powerful source-code analysis to figure out your workspace's project gra
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "/libs/mylib",
+  "root": "libs/mylib",
   "implicitDependencies": ["anotherlib"]
 }
 ```
@@ -729,7 +653,7 @@ You can also remove a dependency as follows:
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "/libs/mylib",
+  "root": "libs/mylib",
   "implicitDependencies": ["!anotherlib"] # regardless of what Nx thinks, "mylib" doesn't depend on "anotherlib"
 }
 ```
@@ -756,7 +680,7 @@ An implicit dependency could also be a glob pattern:
 
 ```jsonc {% fileName="project.json" %}
 {
-  "root": "/libs/mylib",
+  "root": "libs/mylib",
   "implicitDependencies": ["shop-*"] # "mylib" depends on all projects beginning with "shop-"
 }
 ```
@@ -772,8 +696,8 @@ If you want to ignore a particular `package.json` file, exclude it from those to
 
 ### Ignoring package.json scripts
 
-Nx merges package.json scripts with your targets that are defined in project.json.
-If you only wish for some scripts to be used as Nx targets, you can specify them in the `includedScripts` property of the project's package.json.
+Nx merges `package.json` scripts with any targets defined in `project.json`.
+If you only wish for some scripts to be used as Nx targets, you can specify them in the `includedScripts` property of the project's `package.json`.
 
 ```json {% filename="packages/my-library/package.json" }
 {
@@ -789,7 +713,7 @@ If you only wish for some scripts to be used as Nx targets, you can specify them
 }
 ```
 
-{% short-embeds %}
+<!-- {% short-embeds %}
 {% short-video
 title="Two Places To Define Tasks"
 embedUrl="https://www.youtube.com/embed/_oFHSXxa77E" /%}
@@ -799,4 +723,4 @@ embedUrl="https://www.youtube.com/embed/VnIDJYqipdY" /%}
 {% short-video
 title="Running Many Tasks at Once"
 embedUrl="https://www.youtube.com/embed/-lyN72D13uc" /%}
-{% /short-embeds %}
+{% /short-embeds %} -->
