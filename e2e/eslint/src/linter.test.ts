@@ -248,6 +248,7 @@ describe('Linter', () => {
       const libC = uniq('tslib-c');
 
       beforeAll(() => {
+        // make these libs non-buildable to avoid dep-checks triggering lint errors
         runCLI(`generate @nx/js:lib ${libA} --bundler=none`);
         runCLI(`generate @nx/js:lib ${libB} --bundler=none`);
         runCLI(`generate @nx/js:lib ${libC} --bundler=none`);
@@ -434,29 +435,31 @@ describe('Linter', () => {
     describe('dependency checks', () => {
       beforeAll(() => {
         updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
-          json.overrides = [
-            ...json.overrides,
-            {
-              files: ['*.json'],
-              parser: 'jsonc-eslint-parser',
-              rules: {
-                '@nx/dependency-checks': 'error',
+          if (!json.overrides.some((o) => o.rules?.['@nx/dependency-checks'])) {
+            json.overrides = [
+              ...json.overrides,
+              {
+                files: ['*.json'],
+                parser: 'jsonc-eslint-parser',
+                rules: {
+                  '@nx/dependency-checks': 'error',
+                },
               },
-            },
-          ];
+            ];
+          }
           return json;
         });
-        process.env.NX_E2E_EDITOR = 'code';
       });
 
       afterAll(() => {
+        // ensure the rule for dependency checks is removed
+        // so that it does not affect other tests
         updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
           json.overrides = json.overrides.filter(
-            (o) => o.parser !== 'jsonc-eslint-parser'
+            (o) => !o.rules?.['@nx/dependency-checks']
           );
           return json;
         });
-        delete process.env.NX_E2E_EDITOR;
       });
 
       // TODO(crystal, @meeroslav): Investigate why this is failing
