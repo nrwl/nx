@@ -125,7 +125,7 @@ describe('React Applications', () => {
     }, 500000);
 
     // TODO(crystal, @jaysoo): Investigate why this is failing.
-    xit('should be able to use Vite to build and test apps', async () => {
+    it('should be able to use Vite to build and test apps', async () => {
       const appName = uniq('app');
       const libName = uniq('lib');
 
@@ -153,7 +153,11 @@ describe('React Applications', () => {
       checkFilesExist(`dist/apps/${appName}/index.html`);
 
       if (runE2ETests()) {
-        const e2eResults = runCLI(`e2e ${appName}-e2e`);
+        const e2eResults = runCLI(`e2e ${appName}-e2e`, {
+          env: {
+            DEBUG: 'cypress:server:*',
+          },
+        });
         expect(e2eResults).toContain('All specs passed!');
         expect(await killPorts()).toBeTruthy();
       }
