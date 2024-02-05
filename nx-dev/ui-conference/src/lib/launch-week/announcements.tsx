@@ -17,7 +17,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
         {/* MONDAY */}
         <div>
           <article className="relative overflow-hidden pt-4 mx-auto max-w-screen-lg xl:max-w-screen-xl">
-            <div className="px-5 pt-12  sm:grid sm:grid-cols-2 sm:gap-8 lg:py-16">
+            <div className="px-5 py-12 grid sm:grid-cols-2 sm:gap-8 lg:py-16">
               <div>
                 <header>
                   <SectionHeading as="h2" variant="title" id="monday">
@@ -41,7 +41,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     This is what Nx Project Crystal is all about.
                   </p>
                 </div>
-                <div className="action mt-6 flex space-x-2">
+                <div className="action my-6 flex space-x-2">
                   <ButtonLink
                     variant="primary"
                     size="default"
@@ -62,7 +62,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
               </div>
               <div
                 aria-hidden="true"
-                className="relative flex flex-col items-center"
+                className="order-first sm:order-last pb-8 relative flex flex-col items-center"
               >
                 <img
                   className="rounded-lg"
