@@ -248,9 +248,9 @@ describe('Linter', () => {
       const libC = uniq('tslib-c');
 
       beforeAll(() => {
-        runCLI(`generate @nx/js:lib ${libA}`);
-        runCLI(`generate @nx/js:lib ${libB}`);
-        runCLI(`generate @nx/js:lib ${libC}`);
+        runCLI(`generate @nx/js:lib ${libA} --bundler=none`);
+        runCLI(`generate @nx/js:lib ${libB} --bundler=none`);
+        runCLI(`generate @nx/js:lib ${libC} --bundler=none`);
 
         /**
          * create tslib-a structure
@@ -402,8 +402,7 @@ describe('Linter', () => {
         );
       });
 
-      // TODO(crystal, @meeroslav): Investigate why this is failing
-      xit('should fix noRelativeOrAbsoluteImportsAcrossLibraries', () => {
+      it('should fix noRelativeOrAbsoluteImportsAcrossLibraries', () => {
         const stdout = runCLI(`lint ${libB}`, {
           silenceError: true,
         });
@@ -447,6 +446,17 @@ describe('Linter', () => {
           ];
           return json;
         });
+        process.env.NX_E2E_EDITOR = 'code';
+      });
+
+      afterAll(() => {
+        updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
+          json.overrides = json.overrides.filter(
+            (o) => o.parser !== 'jsonc-eslint-parser'
+          );
+          return json;
+        });
+        delete process.env.NX_E2E_EDITOR;
       });
 
       // TODO(crystal, @meeroslav): Investigate why this is failing
