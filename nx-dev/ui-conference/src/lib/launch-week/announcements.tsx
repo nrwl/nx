@@ -24,32 +24,39 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     Monday
                   </SectionHeading>
                   <SectionHeading as="p" variant="display" className="mt-4">
-                    Monday Headline
+                    Announcing Project Crystal
                   </SectionHeading>
                 </header>
                 <div className="mt-8 flex gap-16 font-normal">
                   <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit.
-                    Asperiores explicabo fugiat maxime mollitia non officiis
-                    omnis possimus repellat? Ab architecto ducimus ex
-                    laboriosam, libero numquam optio porro quae quasi,
-                    quibusdam, rem tenetur velit veniam. Accusamus, cum dolores
-                    eveniet nihil odio placeat quaerat recusandae rerum tempora
-                    totam! Amet animi deleniti ea est hic maiores modi quidem
-                    reiciendis unde, veritatis? Accusantium consequuntur,
-                    dolorem error explicabo facere iste molestias mollitia
-                    nostrum perferendis, praesentium quos reprehenderit sunt
-                    velit vitae.
+                    When working on the next iteration of Nx, one idea
+                    consistently emerged: Nx Plugins are powerful and have
+                    proven to help large enterprises adopt monorepos,
+                    successfully maintaining and scaling them. However, there's
+                    definitely a barrier to entry. So, what if Nx Plugins
+                    functioned more like VSCode extensions? You simply add them,
+                    and they instantly enhance the experience of working with a
+                    given tool or technology.
+                    <br />
+                    This is what Nx Project Crystal is all about.
                   </p>
                 </div>
-                <div className="action mt-6 flex">
+                <div className="action mt-6 flex space-x-2">
                   <ButtonLink
                     variant="primary"
                     size="default"
-                    href="UPDATE-ME"
-                    title="UPDATE ME"
+                    href="https://blog.nrwl.io/what-if-nx-plugins-were-more-like-vscode-extensions-dcdad140ae09?source=friends_link&sk=ade76fe8d50d44aafb4d4d89ab882e24"
+                    title="Unveiling Project Crystal"
                   >
-                    UPDATE ME
+                    Read the blog post
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://youtu.be/wADNsVItnsM"
+                    title="Nx - Project Crystal - Youtube Video"
+                  >
+                    Watch the video
                   </ButtonLink>
                 </div>
               </div>
@@ -59,7 +66,8 @@ export function LaunchWeekAnnouncements(): JSX.Element {
               >
                 <img
                   className="rounded-lg"
-                  src="https://placehold.co/600x400"
+                  src="/images/launch-nx/proj-crystal-launch.jpg"
+                  alt="Nx Project Crystal"
                 />
               </div>
             </div>
