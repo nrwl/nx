@@ -113,11 +113,7 @@ async function buildJestTargets(
       _: [],
       $0: undefined,
     },
-    resolve(context.workspaceRoot, configFilePath),
-    true,
-    null,
-    undefined,
-    true
+    resolve(context.workspaceRoot, configFilePath)
   );
 
   const targetDefaults = readTargetDefaultsForTarget(

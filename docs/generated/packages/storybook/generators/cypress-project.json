@@ -2,7 +2,7 @@
   "name": "cypress-project",
   "factory": "./src/generators/cypress-project/cypress-project",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "cypress-configure",
     "title": "Cypress Configuration",

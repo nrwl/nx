@@ -112,7 +112,8 @@ async function initializePlugin(
       updatePackageScripts = options.updatePackageScripts;
     } else {
       updatePackageScripts =
-        process.env.NX_PCV3 === 'true' && coreNxPlugins.includes(pkgName);
+        process.env.NX_ADD_PLUGINS !== 'false' &&
+        coreNxPlugins.includes(pkgName);
     }
     await runNxAsync(
       `g ${pkgName}:${initGenerator} --keepExistingVersions${

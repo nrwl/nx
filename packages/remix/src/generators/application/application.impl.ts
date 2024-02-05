@@ -10,6 +10,7 @@ import {
   readJson,
   readProjectConfiguration,
   runTasksInSerial,
+  stripIndents,
   toJS,
   Tree,
   updateJson,
@@ -37,11 +38,28 @@ import { updateDependencies } from '../utils/update-dependencies';
 import initGenerator from '../init/init';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
-export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
+export function remixApplicationGenerator(
+  tree: Tree,
+  options: NxRemixGeneratorSchema
+) {
+  return remixApplicationGeneratorInternal(tree, {
+    addPlugin: false,
+    ...options,
+  });
+}
+
+export async function remixApplicationGeneratorInternal(
+  tree: Tree,
+  _options: NxRemixGeneratorSchema
+) {
   const options = await normalizeOptions(tree, _options);
   const tasks: GeneratorCallback[] = [
-    await initGenerator(tree, { skipFormat: true }),
+    await initGenerator(tree, {
+      skipFormat: true,
+      addPlugin: options.addPlugin,
+    }),
     await jsInitGenerator(tree, { skipFormat: true }),
   ];
 
@@ -52,38 +70,40 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
     sourceRoot: `${options.projectRoot}`,
     projectType: 'application',
     tags: options.parsedTags,
-    targets: {
-      build: {
-        executor: '@nx/remix:build',
-        outputs: ['{options.outputPath}'],
-        options: {
-          outputPath: joinPathFragments('dist', options.projectRoot),
-        },
-      },
-      serve: {
-        executor: `@nx/remix:serve`,
-        options: {
-          command: `${
-            getPackageManagerCommand().exec
-          } remix-serve build/index.js`,
-          manual: true,
-          port: 4200,
-        },
-      },
-      start: {
-        dependsOn: ['build'],
-        command: `remix-serve build/index.js`,
-        options: {
-          cwd: options.projectRoot,
-        },
-      },
-      typecheck: {
-        command: `tsc`,
-        options: {
-          cwd: options.projectRoot,
-        },
-      },
-    },
+    targets: !options.addPlugin
+      ? {
+          build: {
+            executor: '@nx/remix:build',
+            outputs: ['{options.outputPath}'],
+            options: {
+              outputPath: joinPathFragments('dist', options.projectRoot),
+            },
+          },
+          serve: {
+            executor: `@nx/remix:serve`,
+            options: {
+              command: `${
+                getPackageManagerCommand().exec
+              } remix-serve build/index.js`,
+              manual: true,
+              port: 4200,
+            },
+          },
+          start: {
+            dependsOn: ['build'],
+            command: `remix-serve build/index.js`,
+            options: {
+              cwd: options.projectRoot,
+            },
+          },
+          typecheck: {
+            command: `tsc --project tsconfig.app.json`,
+            options: {
+              cwd: options.projectRoot,
+            },
+          },
+        }
+      : {},
   });
 
   const installTask = updateDependencies(tree);
@@ -138,6 +158,7 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
         skipFormat: true,
         testEnvironment: 'jsdom',
         skipViteConfig: true,
+        addPlugin: options.addPlugin,
       });
       createOrEditViteConfig(
         tree,
@@ -167,10 +188,13 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
         skipSerializers: false,
         skipPackageJson: false,
         skipFormat: true,
+        addPlugin: options.addPlugin,
       });
       const projectConfig = readProjectConfiguration(tree, options.projectName);
-      projectConfig.targets['test'].options.passWithNoTests = true;
-      updateProjectConfiguration(tree, options.projectName, projectConfig);
+      if (projectConfig.targets['test']?.options) {
+        projectConfig.targets['test'].options.passWithNoTests = true;
+        updateProjectConfiguration(tree, options.projectName, projectConfig);
+      }
 
       tasks.push(jestTask);
     }
@@ -201,8 +225,15 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       rootProject: options.rootProject,
+      addPlugin: options.addPlugin,
     });
     tasks.push(eslintTask);
+
+    tree.write(
+      joinPathFragments(options.projectRoot, '.eslintignore'),
+      stripIndents`build
+    public/build`
+    );
   }
 
   if (options.js) {
@@ -239,6 +270,7 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
     extractTsConfigBase(tree);
   }
 
+  // TODO(@columferry): add support for playwright?
   if (options.e2eTestRunner === 'cypress') {
     const { configurationGenerator } = ensurePackage<
       typeof import('@nx/cypress')
@@ -259,6 +291,7 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
         skipFormat: true,
         devServerTarget: `${options.projectName}:serve:development`,
         baseUrl: 'http://localhost:4200',
+        addPlugin: options.addPlugin,
       })
     );
   }
@@ -266,6 +299,10 @@ export default async function (tree: Tree, _options: NxRemixGeneratorSchema) {
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.projectName);
+  });
 
   return runTasksInSerial(...tasks);
 }
@@ -285,3 +322,5 @@ function addFileServerTarget(
   };
   updateProjectConfiguration(tree, options.projectName, projectConfig);
 }
+
+export default remixApplicationGenerator;

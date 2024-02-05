@@ -152,7 +152,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
       return Promise.all(
         urlDeclarations.map(async (decl) => {
           const value = decl.value;
-          const urlRegex = /url\(\s*(?:"([^"]+)"|'([^']+)'|(.+?))\s*\)/g;
+          const urlRegex = /url(?:\(\s*['"]?)(.*?)(?:['"]?\s*\))/g;
           const segments: string[] = [];
           let match;
           let lastIndex = 0;
@@ -162,7 +162,7 @@ export function PostcssCliResources(options: PostcssCliResourcesOptions) {
           const context =
             (inputFile && path.dirname(inputFile)) || loader.context;
           while ((match = urlRegex.exec(value))) {
-            const originalUrl = match[1] || match[2] || match[3];
+            const originalUrl = match[1];
             let processedUrl;
             try {
               processedUrl = await process(originalUrl, context, resourceCache);

@@ -8,6 +8,7 @@ import { Linter } from '@nx/eslint';
 
 describe('cypress-component-configuration generator', () => {
   let tree: Tree;
+  // TODO(@leosvelperez): Turn this back to adding the plugin
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
@@ -172,15 +173,5 @@ describe('cypress-component-configuration generator', () => {
       "
     `);
     expect(tree.exists('demo/pages/index.cy.ts')).toBeFalsy();
-    expect(
-      readProjectConfiguration(tree, 'demo').targets['component-test']
-    ).toEqual({
-      executor: '@nx/cypress:cypress',
-      options: {
-        cypressConfig: 'demo/cypress.config.ts',
-        skipServe: true,
-        testingType: 'component',
-      },
-    });
   });
 });

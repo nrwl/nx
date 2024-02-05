@@ -26,6 +26,7 @@ import {
   createProjectStorybookDir,
   createStorybookTsconfigFile,
   editTsconfigBaseJson,
+  findMetroConfig,
   findNextConfig,
   findViteConfig,
   getE2EProjectName,
@@ -49,7 +50,14 @@ import { interactionTestsDependencies } from './lib/interaction-testing.utils';
 import { ensureDependencies } from './lib/ensure-dependencies';
 import { editRootTsConfig } from './lib/edit-root-tsconfig';
 
-export async function configurationGenerator(
+export function configurationGenerator(
+  tree: Tree,
+  schema: StorybookConfigureSchema
+) {
+  return configurationGeneratorInternal(tree, { addPlugin: false, ...schema });
+}
+
+export async function configurationGeneratorInternal(
   tree: Tree,
   rawSchema: StorybookConfigureSchema
 ) {
@@ -71,6 +79,7 @@ export async function configurationGenerator(
   const viteConfigFilePath = viteConfig?.fullConfigPath;
   const viteConfigFileName = viteConfig?.viteConfigFileName;
   const nextConfigFilePath = findNextConfig(tree, root);
+  const metroConfigFilePath = findMetroConfig(tree, root);
 
   if (viteConfigFilePath) {
     if (schema.uiFramework === '@storybook/react-webpack5') {
@@ -98,7 +107,10 @@ export async function configurationGenerator(
     skipFormat: true,
   });
   tasks.push(jsInitTask);
-  const initTask = await initGenerator(tree, { skipFormat: true });
+  const initTask = await initGenerator(tree, {
+    skipFormat: true,
+    addPlugin: schema.addPlugin,
+  });
   tasks.push(initTask);
   tasks.push(ensureDependencies(tree, { uiFramework: schema.uiFramework }));
 
@@ -118,6 +130,7 @@ export async function configurationGenerator(
 
   const usesVite =
     !!viteConfigFilePath || schema.uiFramework?.endsWith('-vite');
+  const useReactNative = !!metroConfigFilePath;
 
   createProjectStorybookDir(
     tree,
@@ -135,7 +148,8 @@ export async function configurationGenerator(
     usesVite,
     viteConfigFilePath,
     hasPlugin,
-    viteConfigFileName
+    viteConfigFileName,
+    useReactNative
   );
 
   if (schema.uiFramework !== '@storybook/angular') {
@@ -178,7 +192,7 @@ export async function configurationGenerator(
     devDeps['storybook'] = storybookVersion;
   }
 
-  // TODO(katerina): Nx 18 -> remove Cypress
+  // TODO(katerina): Nx 19 -> remove Cypress
   if (schema.configureCypress) {
     const e2eProject = await getE2EProjectName(tree, schema.project);
     if (!e2eProject) {
@@ -252,6 +266,7 @@ function normalizeSchema(
     linter: Linter.EsLint,
     js: false,
     tsConfiguration: true,
+    addPlugin: process.env.NX_ADD_PLUGINS !== 'false',
   };
   return {
     ...defaults,

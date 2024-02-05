@@ -8,6 +8,7 @@ import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import {
   addDependencies,
   addHydration,
+  addServerFile,
   generateSSRFiles,
   generateTsConfigServerJsonForBrowserBuilder,
   normalizeOptions,
@@ -26,7 +27,8 @@ export async function setupSsr(tree: Tree, schema: Schema) {
 
   const { targets } = readProjectConfiguration(tree, options.project);
   const isUsingApplicationBuilder =
-    targets.build.executor === '@angular-devkit/build-angular:application';
+    targets.build.executor === '@angular-devkit/build-angular:application' ||
+    targets.build.executor === '@nx/angular:application';
 
   addDependencies(tree, isUsingApplicationBuilder);
   generateSSRFiles(tree, options, isUsingApplicationBuilder);
@@ -50,6 +52,8 @@ export async function setupSsr(tree: Tree, schema: Schema) {
     updateProjectConfigForBrowserBuilder(tree, options);
     generateTsConfigServerJsonForBrowserBuilder(tree, options);
   }
+
+  addServerFile(tree, options, isUsingApplicationBuilder);
 
   if (!options.skipFormat) {
     await formatFiles(tree);

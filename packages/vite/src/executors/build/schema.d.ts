@@ -6,4 +6,5 @@ export interface ViteBuildExecutorOptions {
   watch?: boolean;
   generatePackageJson?: boolean;
   includeDevDependenciesInPackageJson?: boolean;
+  tsConfig?: string;
 }

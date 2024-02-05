@@ -194,7 +194,7 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
     [
       normalizeArgsMiddleware,
       normalizeAndWarnOnDeprecatedPreset({
-        // TODO(v18): Remove Empty and Core presets
+        // TODO(v19): Remove Empty and Core presets
         [Preset.Core]: Preset.NPM,
         [Preset.Empty]: Preset.Apps,
       }),
@@ -211,10 +211,6 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
 async function main(parsedArgs: yargs.Arguments<Arguments>) {
   output.log({
     title: `Creating your v${nxVersion} workspace.`,
-    bodyLines: [
-      'To make sure the command works reliably in all environments, and that the preset is applied correctly,',
-      `Nx will run "${parsedArgs.packageManager} install" several times. Please wait.`,
-    ],
   });
 
   const workspaceInfo = await createWorkspace<Arguments>(
@@ -285,9 +281,6 @@ async function normalizeArgsMiddleware(
 
   try {
     let thirdPartyPreset: string | null;
-
-    // Node options
-    let docker: boolean;
 
     try {
       thirdPartyPreset = await getThirdPartyPreset(argv.preset);
@@ -593,11 +586,11 @@ async function determineReactOptions(
           },
           {
             name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
             name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
+            message: 'LESS              [ https://lesscss.org     ]',
           },
           {
             name: 'styled-components',
@@ -689,11 +682,11 @@ async function determineVueOptions(
           },
           {
             name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
             name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
+            message: 'LESS              [ https://lesscss.org     ]',
           },
           {
             name: 'none',
@@ -781,11 +774,11 @@ async function determineAngularOptions(
           },
           {
             name: 'scss',
-            message: 'SASS(.scss)       [ http://sass-lang.com   ]',
+            message: 'SASS(.scss)       [ https://sass-lang.com   ]',
           },
           {
             name: 'less',
-            message: 'LESS              [ http://lesscss.org     ]',
+            message: 'LESS              [ https://lesscss.org     ]',
           },
         ],
       },

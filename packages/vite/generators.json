@@ -3,21 +3,21 @@
   "version": "0.1",
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init",
+      "factory": "./src/generators/init/init#initGeneratorInternal",
       "schema": "./src/generators/init/schema.json",
       "description": "Initialize Vite in the workspace.",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "configuration": {
-      "factory": "./src/generators/configuration/configuration",
+      "factory": "./src/generators/configuration/configuration#viteConfigurationGeneratorInternal",
       "schema": "./src/generators/configuration/schema.json",
       "description": "Add Vite configuration to an application.",
       "aliases": ["config"],
       "hidden": false
     },
     "vitest": {
-      "factory": "./src/generators/vitest/vitest-generator",
+      "factory": "./src/generators/vitest/vitest-generator#vitestGeneratorInternal",
       "schema": "./src/generators/vitest/schema.json",
       "description": "Generate a vitest configuration"
     }

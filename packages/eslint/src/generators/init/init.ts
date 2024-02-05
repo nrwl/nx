@@ -16,6 +16,7 @@ export interface LinterInitOptions {
   skipPackageJson?: boolean;
   keepExistingVersions?: boolean;
   updatePackageScripts?: boolean;
+  addPlugin?: boolean;
 }
 
 function updateProductionFileset(tree: Tree) {
@@ -69,15 +70,15 @@ function addPlugin(tree: Tree) {
   updateNxJson(tree, nxJson);
 }
 
-async function initEsLint(
+export async function initEsLint(
   tree: Tree,
   options: LinterInitOptions
 ): Promise<GeneratorCallback> {
-  const addPlugins = process.env.NX_PCV3 === 'true';
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const hasPlugin = hasEslintPlugin(tree);
   const rootEslintFile = findEslintFile(tree);
 
-  if (rootEslintFile && addPlugins && !hasPlugin) {
+  if (rootEslintFile && options.addPlugin && !hasPlugin) {
     addPlugin(tree);
 
     if (options.updatePackageScripts) {
@@ -93,7 +94,7 @@ async function initEsLint(
 
   updateProductionFileset(tree);
 
-  if (addPlugins) {
+  if (options.addPlugin) {
     addPlugin(tree);
   } else {
     addTargetDefaults(tree);
@@ -127,5 +128,5 @@ export async function lintInitGenerator(
   tree: Tree,
   options: LinterInitOptions
 ) {
-  return await initEsLint(tree, options);
+  return await initEsLint(tree, { addPlugin: false, ...options });
 }

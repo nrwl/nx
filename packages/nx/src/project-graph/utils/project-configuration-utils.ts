@@ -28,7 +28,10 @@ export function mergeProjectConfigurationIntoRootMap(
     >;
   },
   configurationSourceMaps?: ConfigurationSourceMaps,
-  sourceInformation?: SourceInformation
+  sourceInformation?: SourceInformation,
+  // This function is used when reading project configuration
+  // in generators, where we don't want to do this.
+  skipCommandNormalization?: boolean
 ): void {
   if (configurationSourceMaps && !configurationSourceMaps[project.root]) {
     configurationSourceMaps[project.root] = {};
@@ -133,36 +136,39 @@ export function mergeProjectConfigurationIntoRootMap(
     updatedProjectConfiguration.targets = matchingProject?.targets ?? {};
 
     // For each target defined in the new config
-    for (const target in project.targets) {
+    for (const targetName in project.targets) {
       // Always set source map info for the target, but don't overwrite info already there
       // if augmenting an existing target.
-      if (
-        sourceMap &&
-        !project.targets[target]?.[ONLY_MODIFIES_EXISTING_TARGET]
-      ) {
-        sourceMap[`targets.${target}`] = sourceInformation;
+
+      const target = project.targets?.[targetName];
+
+      if (sourceMap && !target?.[ONLY_MODIFIES_EXISTING_TARGET]) {
+        sourceMap[`targets.${targetName}`] = sourceInformation;
       }
 
       // If ONLY_MODIFIES_EXISTING_TARGET is true, and its not on the matching project
       // we shouldn't merge its info into the graph
       if (
-        project.targets[target]?.[ONLY_MODIFIES_EXISTING_TARGET] &&
-        !matchingProject.targets?.[target]
+        target?.[ONLY_MODIFIES_EXISTING_TARGET] &&
+        !matchingProject.targets?.[targetName]
       ) {
         continue;
       }
 
       // We don't want the symbol to live on past the merge process
-      if (project.targets[target]?.[ONLY_MODIFIES_EXISTING_TARGET])
-        delete project.targets[target]?.[ONLY_MODIFIES_EXISTING_TARGET];
+      if (target?.[ONLY_MODIFIES_EXISTING_TARGET])
+        delete target?.[ONLY_MODIFIES_EXISTING_TARGET];
 
-      updatedProjectConfiguration.targets[target] = mergeTargetConfigurations(
-        project.targets[target],
-        matchingProject.targets?.[target],
-        sourceMap,
-        sourceInformation,
-        `targets.${target}`
-      );
+      updatedProjectConfiguration.targets[targetName] =
+        mergeTargetConfigurations(
+          skipCommandNormalization
+            ? target
+            : resolveCommandSyntacticSugar(target, project.root),
+          matchingProject.targets?.[targetName],
+          sourceMap,
+          sourceInformation,
+          `targets.${targetName}`
+        );
     }
   }
 
@@ -211,6 +217,10 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     if (!pattern) {
       continue;
     }
+
+    // Set this globally to allow plugins to know if they are being called from the project graph creation
+    global.NX_GRAPH_CREATION = true;
+
     for (const file of projectFiles) {
       performance.mark(`${plugin.name}:createNodes:${file} - start`);
       if (minimatch(file, pattern, { dot: true })) {
@@ -264,6 +274,7 @@ export function buildProjectsConfigurationsFromProjectPathsAndPlugins(
     // If there are no promises (counter undefined) or all promises have resolved (counter === 0)
     results.push(
       Promise.all(pluginResults).then((results) => {
+        delete global.NX_GRAPH_CREATION;
         performance.mark(`${plugin.name}:createNodes - end`);
         performance.measure(
           `${plugin.name}:createNodes`,
@@ -487,25 +498,35 @@ export function isCompatibleTarget(
   a: TargetConfiguration,
   b: TargetConfiguration
 ) {
-  if (a.command || b.command) {
-    const aCommand =
-      a.command ??
-      (a.executor === 'nx:run-commands' ? a.options?.command : null);
-    const bCommand =
-      b.command ??
-      (b.executor === 'nx:run-commands' ? b.options?.command : null);
-
-    const sameCommand = aCommand === bCommand;
-    const aHasNoExecutor = !a.command && !a.executor;
-    const bHasNoExecutor = !b.command && !b.executor;
-
-    return sameCommand || aHasNoExecutor || bHasNoExecutor;
-  }
-
   const oneHasNoExecutor = !a.executor || !b.executor;
   const bothHaveSameExecutor = a.executor === b.executor;
 
-  return oneHasNoExecutor || bothHaveSameExecutor;
+  if (oneHasNoExecutor) return true;
+  if (!bothHaveSameExecutor) return false;
+
+  const isRunCommands = a.executor === 'nx:run-commands';
+  if (isRunCommands) {
+    const aCommand = a.options?.command ?? a.options?.commands.join(' && ');
+    const bCommand = b.options?.command ?? b.options?.commands.join(' && ');
+
+    const oneHasNoCommand = !aCommand || !bCommand;
+    const hasSameCommand = aCommand === bCommand;
+
+    return oneHasNoCommand || hasSameCommand;
+  }
+
+  const isRunScript = a.executor === 'nx:run-script';
+  if (isRunScript) {
+    const aScript = a.options?.script;
+    const bScript = b.options?.script;
+
+    const oneHasNoScript = !aScript || !bScript;
+    const hasSameScript = aScript === bScript;
+
+    return oneHasNoScript || hasSameScript;
+  }
+
+  return true;
 }
 
 function mergeConfigurations<T extends Object>(
@@ -616,10 +637,37 @@ export function readTargetDefaultsForTarget(
     return targetDefaults?.[targetName];
   }
 }
+
 function createRootMap(projectRootMap: Map<string, ProjectConfiguration>) {
   const map: Record<string, string> = {};
   for (const [projectRoot, { name: projectName }] of projectRootMap) {
     map[projectRoot] = projectName;
   }
   return map;
+}
+
+function resolveCommandSyntacticSugar(
+  target: TargetConfiguration,
+  key: string
+): TargetConfiguration {
+  const { command, ...config } = target ?? {};
+
+  if (!command) {
+    return target;
+  }
+
+  if (config.executor) {
+    throw new Error(
+      `${NX_PREFIX} Project at ${key} should not have executor and command both configured.`
+    );
+  } else {
+    return {
+      ...config,
+      executor: 'nx:run-commands',
+      options: {
+        ...config.options,
+        command: command,
+      },
+    };
+  }
 }

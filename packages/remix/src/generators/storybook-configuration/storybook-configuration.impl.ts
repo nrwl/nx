@@ -8,10 +8,21 @@ import { join } from 'path';
 import type { StorybookConfigurationSchema } from './schema';
 import { storybookConfigurationGenerator } from '@nx/react';
 
-export default async function remixStorybookConfiguration(
+export function remixStorybookConfiguration(
   tree: Tree,
   schema: StorybookConfigurationSchema
 ) {
+  return remixStorybookConfigurationInternal(tree, {
+    addPlugin: false,
+    ...schema,
+  });
+}
+
+export default async function remixStorybookConfigurationInternal(
+  tree: Tree,
+  schema: StorybookConfigurationSchema
+) {
+  schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
   const { root } = readProjectConfiguration(tree, schema.project);
 
   if (!tree.exists(joinPathFragments(root, 'vite.config.ts'))) {

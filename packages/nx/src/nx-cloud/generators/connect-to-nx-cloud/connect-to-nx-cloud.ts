@@ -73,21 +73,17 @@ async function createNxCloudWorkspace(
 }
 
 function printSuccessMessage(url: string) {
-  let host = 'nx.app';
+  let origin = 'https://nx.app';
   try {
-    host = new URL(url).host;
+    origin = new URL(url).origin;
   } catch (e) {}
 
   output.note({
-    title: `Remote caching via Nx Cloud has been enabled`,
+    title: `Your Nx Cloud workspace is public`,
     bodyLines: [
-      `In addition to the caching, Nx Cloud provides config-free distributed execution,`,
-      `UI for viewing complex runs and GitHub integration. Learn more at https://nx.app`,
-      ``,
-      `Your workspace is currently unclaimed. Run details from unclaimed workspaces can be viewed on ${host} by anyone`,
-      `with the link. Claim your workspace at the following link to restrict access.`,
-      ``,
-      `${url}`,
+      `To restrict access, connect it to your Nx Cloud account:`,
+      `- Push your changes`,
+      `- Login at ${origin} to connect your repository`,
     ],
   });
 }

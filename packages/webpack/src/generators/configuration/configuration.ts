@@ -1,7 +1,10 @@
 import {
   formatFiles,
+  GeneratorCallback,
   joinPathFragments,
+  offsetFromRoot,
   readProjectConfiguration,
+  runTasksInSerial,
   Tree,
   updateProjectConfiguration,
   writeJson,
@@ -12,15 +15,33 @@ import { ConfigurationGeneratorSchema } from './schema';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { hasPlugin } from '../../utils/has-plugin';
 import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
+import { ensureDependencies } from '../../utils/ensure-dependencies';
 
-export async function configurationGenerator(
+export function configurationGenerator(
   tree: Tree,
   options: ConfigurationGeneratorSchema
 ) {
-  const task = await webpackInitGenerator(tree, {
+  return configurationGeneratorInternal(tree, { addPlugin: false, ...options });
+}
+
+export async function configurationGeneratorInternal(
+  tree: Tree,
+  options: ConfigurationGeneratorSchema
+) {
+  const tasks: GeneratorCallback[] = [];
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
+  const initTask = await webpackInitGenerator(tree, {
     ...options,
     skipFormat: true,
   });
+  tasks.push(initTask);
+
+  const depsTask = ensureDependencies(tree, {
+    compiler: options.compiler === 'babel' ? undefined : options.compiler,
+  });
+  tasks.push(depsTask);
+
   checkForTargetConflicts(tree, options);
 
   if (!hasPlugin(tree)) {
@@ -36,7 +57,7 @@ export async function configurationGenerator(
     await formatFiles(tree);
   }
 
-  return task;
+  return runTasksInSerial(...tasks);
 }
 
 function checkForTargetConflicts(
@@ -81,10 +102,13 @@ function createWebpackConfig(
       hasPlugin(tree)
         ? `
 const { NxWebpackPlugin } = require('@nx/webpack');
+const { join } = require('path');
 
 module.exports = {
   output: {
-    path: '${buildOptions.outputPath}',
+    path: join(__dirname, '${offsetFromRoot(project.root)}${
+            buildOptions.outputPath
+          }'),
   },
   plugins: [
     new NxWebpackPlugin({
@@ -92,6 +116,7 @@ module.exports = {
       tsConfig: '${buildOptions.tsConfig}',
       compiler: '${buildOptions.compiler}',
       main: '${buildOptions.main}',
+      outputHashing: '${buildOptions.target !== 'web' ? 'none' : 'all'}',
     })
   ],
 }
@@ -113,10 +138,13 @@ module.exports = composePlugins(withNx(), withWeb(), (config) => {
       hasPlugin(tree)
         ? `
 const { NxWebpackPlugin } = require('@nx/webpack');
+const { join } = require('path');
 
 module.exports = {
   output: {
-    path: '${buildOptions.outputPath}',
+    path: join(__dirname, '${offsetFromRoot(project.root)}${
+            buildOptions.outputPath
+          }'),
   },
   plugins: [
     new NxWebpackPlugin({
@@ -124,6 +152,7 @@ module.exports = {
       tsConfig: '${buildOptions.tsConfig}',
       compiler: '${buildOptions.compiler}',
       main: '${buildOptions.main}',
+      outputHashing: '${buildOptions.target !== 'web' ? 'none' : 'all'}',
     })
   ],
 }

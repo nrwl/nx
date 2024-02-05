@@ -51,6 +51,7 @@ export async function runOne(
     { printWarnings: args.graph !== 'stdout' },
     nxJson
   );
+
   if (nxArgs.verbose) {
     process.env.NX_VERBOSE_LOGGING = 'true';
   }
@@ -133,7 +134,7 @@ function parseRunOneOptions(
   let target;
   let configuration;
 
-  if (parsedArgs['project:target:configuration'].indexOf(':') > -1) {
+  if (parsedArgs['project:target:configuration']?.indexOf(':') > -1) {
     // run case
     [project, target, configuration] = splitTarget(
       parsedArgs['project:target:configuration'],
@@ -145,7 +146,7 @@ function parseRunOneOptions(
       project = defaultProjectName;
     }
   } else {
-    target = parsedArgs['project:target:configuration'];
+    target = parsedArgs.target ?? parsedArgs['project:target:configuration'];
   }
   if (parsedArgs.project) {
     project = parsedArgs.project;

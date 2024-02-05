@@ -80,28 +80,6 @@ describe('workspace-projects', () => {
   });
 
   describe('normalizeTargets', () => {
-    it('should convert command property to run-commands executor', () => {
-      expect(
-        normalizeProjectTargets(
-          {
-            root: 'my/project',
-            targets: {
-              build: {
-                command: 'echo',
-              },
-            },
-          },
-          'build'
-        ).build
-      ).toEqual({
-        executor: 'nx:run-commands',
-        configurations: {},
-        options: {
-          command: 'echo',
-        },
-      });
-    });
-
     it('should support {projectRoot}, {workspaceRoot}, and {projectName} tokens', () => {
       expect(
         normalizeProjectTargets(

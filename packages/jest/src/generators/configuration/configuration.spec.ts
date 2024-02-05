@@ -22,6 +22,7 @@ describe('jestProject', () => {
     setupFile: 'none',
     skipFormat: false,
     compiler: 'tsc',
+    addPlugin: true,
   };
 
   beforeEach(async () => {
@@ -70,22 +71,6 @@ describe('jestProject', () => {
         setupFile: 'angular',
       });
     }).not.toThrow();
-  });
-
-  it('should alter project configuration', async () => {
-    await configurationGenerator(tree, {
-      ...defaultOptions,
-      project: 'lib1',
-      setupFile: 'angular',
-    } as JestProjectSchema);
-    const lib1 = readProjectConfiguration(tree, 'lib1');
-    expect(lib1.targets.test).toEqual({
-      executor: '@nx/jest:jest',
-      outputs: ['{workspaceRoot}/coverage/{projectRoot}'],
-      options: {
-        jestConfig: 'libs/lib1/jest.config.ts',
-      },
-    });
   });
 
   it('should create a jest.config.ts', async () => {
@@ -169,16 +154,6 @@ describe('jestProject', () => {
       expect(jestConfig).toMatchSnapshot();
     });
 
-    it('should not list the setup file in project configuration', async () => {
-      await configurationGenerator(tree, {
-        ...defaultOptions,
-        project: 'lib1',
-        setupFile: 'none',
-      } as JestProjectSchema);
-      const lib1 = readProjectConfiguration(tree, 'lib1');
-      expect(lib1.targets.test.options.setupFile).toBeUndefined();
-    });
-
     it('should not list the setup file in tsconfig.spec.json', async () => {
       await configurationGenerator(tree, {
         ...defaultOptions,
@@ -198,16 +173,6 @@ describe('jestProject', () => {
         skipSetupFile: true,
       } as JestProjectSchema);
       expect(tree.exists('src/test-setup.ts')).toBeFalsy();
-    });
-
-    it('should not list the setup file in project configuration', async () => {
-      await configurationGenerator(tree, {
-        ...defaultOptions,
-        project: 'lib1',
-        skipSetupFile: true,
-      } as JestProjectSchema);
-      const lib1 = readProjectConfiguration(tree, 'lib1');
-      expect(lib1.targets.test.options.setupFile).toBeUndefined();
     });
 
     it('should not list the setup file in tsconfig.spec.json', async () => {
@@ -292,9 +257,6 @@ describe('jestProject', () => {
       js: true,
     } as JestProjectSchema);
     expect(tree.exists('libs/lib1/jest.config.js')).toBeTruthy();
-    expect(
-      readProjectConfiguration(tree, 'lib1').targets['test']
-    ).toMatchSnapshot();
   });
 
   it('should always use jest.preset.js with --js', async () => {

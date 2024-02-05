@@ -40,18 +40,24 @@
       "workspaceChangelog": {
         "createRelease": "github",
         "file": false
+      },
+      "git": {
+        "commit": false,
+        "stageChanges": false,
+        "tag": false
       }
     },
     "version": {
       "generatorOptions": {
         "packageRoot": "build/packages/{projectName}",
-        "currentVersionResolver": "registry"
+        "currentVersionResolver": "registry",
+        "skipLockFileUpdate": true
+      },
+      "git": {
+        "commit": false,
+        "stageChanges": false,
+        "tag": false
       }
-    },
-    "git": {
-      "commit": false,
-      "stageChanges": false,
-      "tag": false
     }
   },
   "targetDefaults": {

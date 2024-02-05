@@ -2,7 +2,7 @@
   "name": "setup-tailwind",
   "implementation": "/packages/remix/src/generators/setup-tailwind/setup-tailwind.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "NxRemixTailwind",
     "title": "Add TailwindCSS to a Remix App",
     "description": "Setup tailwindcss for a given project.",

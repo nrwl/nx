@@ -29,6 +29,7 @@ export interface NxComponentTestingOptions {
    * @example 'component-test'
    */
   ctTargetName?: string;
+  buildTarget?: string;
   bundler?: 'vite' | 'webpack';
   compiler?: 'swc' | 'babel';
 }
@@ -101,7 +102,7 @@ export function nxE2EPreset(
   }*/ = {
     ...nxBaseCypressPreset(pathToConfig),
     fileServerFolder: '.',
-    supportFile: `${basePath}/support/e2e.ts`,
+    supportFile: `${basePath}/support/e2e.{js,ts}`,
     specPattern: `${basePath}/**/*.cy.{js,jsx,ts,tsx}`,
     fixturesFolder: `${basePath}/fixtures`,
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { createProjectGraphAsync, workspaceRoot } from '@nx/devkit';
+import * as chalk from 'chalk';
 import { execSync } from 'node:child_process';
 import { rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -7,7 +8,6 @@ import { URL } from 'node:url';
 import { isRelativeVersionKeyword } from 'nx/src/command-line/release/utils/semver';
 import { ReleaseType, inc, major, parse } from 'semver';
 import * as yargs from 'yargs';
-import * as chalk from 'chalk';
 
 const LARGE_BUFFER = 1024 * 1000000;
 
@@ -58,6 +58,9 @@ const LARGE_BUFFER = 1024 * 1000000;
     if (options.dryRun) {
       versionCommand += ' --dry-run';
     }
+    if (isVerboseLogging) {
+      versionCommand += ' --verbose';
+    }
     console.log(`> ${versionCommand}`);
     execSync(versionCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
@@ -95,6 +98,9 @@ const LARGE_BUFFER = 1024 * 1000000;
     if (options.dryRun) {
       changelogCommand += ' --dry-run';
     }
+    if (isVerboseLogging) {
+      changelogCommand += ' --verbose';
+    }
     console.log(`> ${changelogCommand}`);
     execSync(changelogCommand, {
       stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
@@ -113,6 +119,8 @@ const LARGE_BUFFER = 1024 * 1000000;
     stdio: isVerboseLogging ? [0, 1, 2] : 'ignore',
     maxBuffer: LARGE_BUFFER,
   });
+
+  const distTag = determineDistTag(options.version);
 
   if (options.dryRun) {
     console.warn('Not Publishing because --dryRun was passed');
@@ -147,8 +155,6 @@ const LARGE_BUFFER = 1024 * 1000000;
       }
     }
 
-    const distTag = determineDistTag(options.version);
-
     // Run with dynamic output-style so that we have more minimal logs by default but still always see errors
     let publishCommand = `pnpm nx release publish --registry=${getRegistry()} --tag=${distTag} --output-style=dynamic --parallel=8`;
     if (options.dryRun) {
@@ -163,11 +169,7 @@ const LARGE_BUFFER = 1024 * 1000000;
 
   let version;
   if (['minor', 'major', 'patch'].includes(options.version)) {
-    const currentLatestVersion = execSync('npm view nx@latest version')
-      .toString()
-      .trim();
-
-    version = inc(currentLatestVersion, options.version, undefined);
+    version = execSync(`npm view nx@${distTag} version`).toString().trim();
   } else {
     version = options.version;
   }

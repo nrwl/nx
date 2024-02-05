@@ -1,10 +1,6 @@
 import { output } from '../../utils/output';
 import { readNxJson } from '../../config/configuration';
-import {
-  getNxCloudToken,
-  getNxCloudUrl,
-  isNxCloudUsed,
-} from '../../utils/nx-cloud-utils';
+import { getNxCloudUrl, isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { runNxSync } from '../../utils/child-process';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { NxArgs } from '../../utils/command-line-utils';
@@ -54,15 +50,10 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
   const nxJson = readNxJson();
   if (isNxCloudUsed(nxJson)) {
     output.log({
-      title: '✅ This workspace is already connected to Nx Cloud.',
+      title: '✔ This workspace already has Nx Cloud set up',
       bodyLines: [
-        'This means your workspace can use computation caching, distributed task execution, and show you run analytics.',
-        'Go to https://nx.app to learn more.',
-        ' ',
-        'If you have not done so already, please claim this workspace:',
-        `${getNxCloudUrl(
-          nxJson
-        )}/orgs/workspace-setup?accessToken=${getNxCloudToken(nxJson)}`,
+        'If you have not done so already, connect your workspace to your Nx Cloud account:',
+        `- Login at ${getNxCloudUrl(nxJson)} to connect your repository`,
       ],
     });
     return false;
@@ -76,7 +67,8 @@ export async function connectToNxCloudCommand(): Promise<boolean> {
 
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt('setupNxCloud');
-  const useCloud = setNxCloud ? await connectToNxCloudCommand() : false;
+  const useCloud =
+    setNxCloud === 'yes' ? await connectToNxCloudCommand() : false;
   await recordStat({
     command,
     nxVersion,

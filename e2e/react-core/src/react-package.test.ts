@@ -37,6 +37,7 @@ describe('Build React libraries and apps', () => {
   let proj: string;
 
   beforeEach(async () => {
+    process.env.NX_ADD_PLUGINS = 'false';
     app = uniq('app');
     parentLib = uniq('parentlib');
     childLib = uniq('childlib');
@@ -109,6 +110,7 @@ describe('Build React libraries and apps', () => {
   afterEach(() => {
     killPorts();
     cleanupProject();
+    delete process.env.NX_ADD_PLUGINS;
   });
 
   describe('Buildable libraries', () => {

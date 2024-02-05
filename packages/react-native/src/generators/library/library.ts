@@ -31,12 +31,14 @@ import {
 import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 
 export async function reactNativeLibraryGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
   return await reactNativeLibraryGeneratorInternal(host, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -89,7 +91,8 @@ export async function reactNativeLibraryGeneratorInternal(
     options.name,
     options.projectRoot,
     options.js,
-    options.skipPackageJson
+    options.skipPackageJson,
+    options.addPlugin
   );
   tasks.push(jestTask);
 
@@ -110,6 +113,10 @@ export async function reactNativeLibraryGeneratorInternal(
   if (!options.skipFormat) {
     await formatFiles(host);
   }
+
+  tasks.push(() => {
+    logShowProjectCommand(options.name);
+  });
 
   return runTasksInSerial(...tasks);
 }

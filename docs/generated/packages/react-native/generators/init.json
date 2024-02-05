@@ -1,10 +1,10 @@
 {
   "name": "init",
-  "factory": "./src/generators/init/init#reactNativeInitGenerator",
+  "factory": "./src/generators/init/init#reactNativeInitGeneratorInternal",
   "schema": {
     "cli": "nx",
     "$id": "NxReactNativeInit",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "title": "Add Nx React Native Schematics",
     "description": "Add Nx React native schematics.",
     "type": "object",
@@ -37,9 +37,9 @@
     "required": [],
     "presets": []
   },
-  "description": "Initialize the `@nrwl/react-native` plugin.",
+  "description": "Initialize the `@nx/react-native` plugin.",
   "hidden": true,
-  "implementation": "/packages/react-native/src/generators/init/init#reactNativeInitGenerator.ts",
+  "implementation": "/packages/react-native/src/generators/init/init#reactNativeInitGeneratorInternal.ts",
   "aliases": [],
   "path": "/packages/react-native/src/generators/init/schema.json",
   "type": "generator"

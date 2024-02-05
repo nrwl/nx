@@ -4,12 +4,6 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodes } from './plugin';
 import { PlaywrightTestConfig } from '@playwright/test';
 
-// Jest can't handle the dynamic import, and mocking it doesn't work either.
-// we overwrite the dynamic import function to use the regular syntax, which
-// jest does handle.
-import * as lcf from '../utils/load-config-file';
-(lcf as any).dynamicImport = (m) => import(m);
-
 describe('@nx/playwright/plugin', () => {
   let createNodesFunction = createNodes[1];
   let context: CreateNodesContext;
@@ -34,7 +28,7 @@ describe('@nx/playwright/plugin', () => {
   });
 
   afterEach(() => {
-    tempFs.cleanup();
+    // tempFs.cleanup();
     jest.resetModules();
   });
 

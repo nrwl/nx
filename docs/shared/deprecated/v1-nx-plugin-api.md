@@ -1,7 +1,7 @@
 # Extending the Project Graph of Nx (v1 API)
 
 {% callout type="caution" title="Experimental" %}
-This API has been superceded by the [v2 API](/extending-nx/recipes/project-graph-plugins) and will be removed in Nx 18. If targeting Nx version 16.7 or higher, please use the v2 API instead.
+This API has been superceded by the [v2 API](/extending-nx/recipes/project-graph-plugins) and will be removed in Nx 19. If targeting Nx version 16.7 or higher, please use the v2 API instead.
 {% /callout %}
 
 The v1 plugin API for modifying the project graph was split into two parts:
@@ -234,7 +234,7 @@ builder.addDynamicDependency(
 
 ### Visualizing the Project Graph
 
-You can then visualize the project graph as described [here](/core-features/explore-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
+You can then visualize the project graph as described [here](/features/explore-graph). However, there is a cache that Nx uses to avoid recalculating the project graph as much as possible. As you develop your project graph plugin, it might be a good idea to set the following environment variable to disable the project graph cache: `NX_CACHE_PROJECT_GRAPH=false`.
 
 It might also be a good idea to ensure that the dep graph is not running on the nx daemon by setting `NX_DAEMON=false`, as this will ensure you will be able to see any `console.log` statements you add as you're developing.
 

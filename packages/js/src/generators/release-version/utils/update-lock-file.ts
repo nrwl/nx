@@ -5,11 +5,12 @@ import {
   output,
 } from '@nx/devkit';
 import { execSync } from 'child_process';
+import { daemonClient } from 'nx/src/daemon/client/client';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getLockFileName } from 'nx/src/plugins/js/lock-file/lock-file';
 import { gte } from 'semver';
 
-export function updateLockFile(
+export async function updateLockFile(
   cwd: string,
   {
     dryRun,
@@ -31,6 +32,26 @@ export function updateLockFile(
   }
 
   const packageManager = detectPackageManager(cwd);
+
+  if (
+    packageManager === 'yarn' &&
+    !gte(getPackageManagerVersion(packageManager), '2.0.0')
+  ) {
+    // yarn classic does not store workspace data in the lock file, so we don't need to update it
+    if (verbose) {
+      console.log(
+        '\nSkipped lock file update because it is not necessary for Yarn Classic.'
+      );
+    }
+    return [];
+  }
+
+  const isDaemonEnabled = daemonClient.enabled();
+  if (isDaemonEnabled) {
+    // temporarily stop the daemon, as it will error if the lock file is updated
+    await daemonClient.stop();
+  }
+
   const packageManagerCommands = getPackageManagerCommand(packageManager);
 
   let installArgs = generatorOptions?.installArgs || '';
@@ -40,13 +61,10 @@ export function updateLockFile(
   let env: object = {};
 
   if (generatorOptions?.installIgnoreScripts) {
-    if (
-      packageManager === 'yarn' &&
-      gte(getPackageManagerVersion(packageManager), '2.0.0')
-    ) {
+    if (packageManager === 'yarn') {
       env = { YARN_ENABLE_SCRIPTS: 'false' };
     } else {
-      // npm, pnpm, and yarn classic all use the same --ignore-scripts option
+      // npm and pnpm use the same --ignore-scripts option
       installArgs = `${installArgs} --ignore-scripts`.trim();
     }
   }
@@ -71,6 +89,21 @@ export function updateLockFile(
   }
 
   execLockFileUpdate(command, cwd, env);
+
+  if (isDaemonEnabled) {
+    try {
+      await daemonClient.startInBackground();
+    } catch (e) {
+      // If the daemon fails to start, we don't want to prevent the user from continuing, so we just log the error and move on
+      if (verbose) {
+        output.warn({
+          title:
+            'Unable to restart the Nx Daemon. It will be disabled until you run "nx reset"',
+          bodyLines: [e.message],
+        });
+      }
+    }
+  }
 
   return [lockFile];
 }

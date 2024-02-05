@@ -1,12 +1,12 @@
-import { join } from 'path';
+import { join, relative } from 'path';
 import { readNxJson } from 'nx/src/config/configuration';
 import {
+  joinPathFragments,
+  normalizePath,
+  type ProjectFileMap,
   type ProjectGraph,
   type ProjectGraphProjectNode,
-  type ProjectFileMap,
   readJsonFile,
-  FileData,
-  joinPathFragments,
 } from '@nx/devkit';
 import { fileExists } from 'nx/src/utils/fileutils';
 import { fileDataDepTarget } from 'nx/src/config/project-graph';
@@ -28,6 +28,7 @@ export function findNpmDependencies(
   options: {
     includeTransitiveDependencies?: boolean;
     ignoredFiles?: string[];
+    useLocalPathsForWorkspaceDependencies?: boolean;
   } = {}
 ): Record<string, string> {
   let seen: null | Set<string> = null;
@@ -51,6 +52,7 @@ export function findNpmDependencies(
       projectFileMap,
       buildTarget,
       options.ignoredFiles,
+      options.useLocalPathsForWorkspaceDependencies,
       collectedDeps
     );
 
@@ -86,6 +88,7 @@ function collectDependenciesFromFileMap(
   projectFileMap: ProjectFileMap,
   buildTarget: string,
   ignoredFiles: string[],
+  useLocalPathsForWorkspaceDependencies: boolean,
   npmDeps: Record<string, string>
 ): void {
   const rawFiles = projectFileMap[sourceProject.name];
@@ -140,12 +143,26 @@ function collectDependenciesFromFileMap(
           // Make sure package.json exists and has a valid name.
           packageJson?.name
         ) {
-          // This is a workspace lib so we can't reliably read in a specific version since it depends on how the workspace is set up.
-          // ASSUMPTION: Most users will use '*' for workspace lib versions. Otherwise, they can manually update it.
-          npmDeps[packageJson.name] = '*';
+          let version: string;
+          if (useLocalPathsForWorkspaceDependencies) {
+            // Find the relative `file:...` path and use that as the version value.
+            // This is useful for monorepos like Nx where the release will handle setting the correct version in dist.
+            const depRoot = join(workspaceRoot, workspaceDep.data.root);
+            const ownRoot = join(workspaceRoot, sourceProject.data.root);
+            const relativePath = relative(ownRoot, depRoot);
+            const filePath = normalizePath(relativePath); // normalize slashes for windows
+            version = `file:${filePath}`;
+          } else {
+            // Otherwise, read the version from the dependencies `package.json` file.
+            // This is useful for monorepos that commit release versions.
+            // Users can also set version as "*" in source `package.json` files, which will be the value set here.
+            // This is useful if they use custom scripts to update them in dist.
+            version = packageJson.version ?? '*'; // fallback in case version is missing
+          }
+          npmDeps[packageJson.name] = version;
           seenWorkspaceDeps[workspaceDep.name] = {
             name: packageJson.name,
-            version: '*',
+            version,
           };
         }
       }
@@ -158,6 +175,7 @@ function readPackageJson(
   workspaceRoot: string
 ): null | {
   name: string;
+  version?: string;
   dependencies?: Record<string, string>;
   optionalDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;

@@ -15,6 +15,7 @@ describe('setupDockerGenerator', () => {
         e2eTestRunner: 'none',
         docker: true,
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       const project = readProjectConfiguration(tree, 'api');
@@ -39,6 +40,7 @@ describe('setupDockerGenerator', () => {
         rootProject: true,
         docker: true,
         projectNameAndRootFormat: 'as-provided',
+        addPlugin: true,
       });
 
       const project = readProjectConfiguration(tree, 'api');

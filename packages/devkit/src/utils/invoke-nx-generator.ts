@@ -13,7 +13,7 @@ import { requireNx } from '../../nx';
 
 let { logger, stripIndent } = requireNx();
 
-// TODO: Remove this in Nx 18 when Nx 16.7.0 is no longer supported
+// TODO: Remove this in Nx 19 when Nx 16.7.0 is no longer supported
 stripIndent = stripIndent ?? require('nx/src/utils/logger').stripIndent;
 
 class RunCallbackTask {

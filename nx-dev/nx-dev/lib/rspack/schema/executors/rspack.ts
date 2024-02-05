@@ -2,7 +2,7 @@ export const schema = {
   name: 'rspack',
   implementation: '/packages/rspack/src/executors/rspack/rspack.impl.ts',
   schema: {
-    $schema: 'http://json-schema.org/schema',
+    $schema: 'https://json-schema.org/schema',
     version: 2,
     cli: 'nx',
     title: 'Rspack build executor',

@@ -3,18 +3,18 @@ import {
   type CreateDependencies,
   type CreateNodes,
   type CreateNodesContext,
-  type TargetConfiguration,
   detectPackageManager,
   readJsonFile,
+  type TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { getLockFileName, getRootTsConfigPath } from '@nx/js';
-import { registerTsProject } from '@nx/js/src/internal';
+import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
-import { join, dirname } from 'path';
+import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 const cachePath = join(projectGraphCacheDirectory, 'remix.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
@@ -69,7 +69,13 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
     ]);
     const targets = targetsCache[hash]
       ? targetsCache[hash]
-      : await buildRemixTargets(configFilePath, projectRoot, options, context);
+      : await buildRemixTargets(
+          configFilePath,
+          projectRoot,
+          options,
+          context,
+          siblingFiles
+        );
 
     calculatedTargets[hash] = targets;
 
@@ -88,7 +94,8 @@ async function buildRemixTargets(
   configFilePath: string,
   projectRoot: string,
   options: RemixPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  siblingFiles: string[]
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
   const serverBuildPath = await getServerBuildPath(
@@ -99,6 +106,7 @@ async function buildRemixTargets(
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = buildTarget(
     options.buildTargetName,
+    projectRoot,
     namedInputs
   );
   targets[options.serveTargetName] = serveTarget(serverBuildPath);
@@ -109,7 +117,8 @@ async function buildRemixTargets(
   );
   targets[options.typecheckTargetName] = typecheckTarget(
     projectRoot,
-    namedInputs
+    namedInputs,
+    siblingFiles
   );
 
   return targets;
@@ -117,8 +126,10 @@ async function buildRemixTargets(
 
 function buildTarget(
   buildTargetName: string,
+  projectRoot: string,
   namedInputs: { [inputName: string]: any[] }
 ): TargetConfiguration {
+  const pathToOutput = projectRoot === '.' ? '' : `/${projectRoot}`;
   return {
     cache: true,
     dependsOn: [`^${buildTargetName}`],
@@ -130,7 +141,7 @@ function buildTarget(
     outputs: ['{options.outputPath}'],
     executor: '@nx/remix:build',
     options: {
-      outputPath: '{workspaceRoot}/dist',
+      outputPath: `{workspaceRoot}/dist${pathToOutput}`,
     },
   };
 }
@@ -160,16 +171,21 @@ function startTarget(
 
 function typecheckTarget(
   projectRoot: string,
-  namedInputs: { [inputName: string]: any[] }
+  namedInputs: { [inputName: string]: any[] },
+  siblingFiles: string[]
 ): TargetConfiguration {
+  const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
+  const command = `tsc${
+    hasTsConfigAppJson ? ` --project tsconfig.app.json` : ``
+  }`;
   return {
+    command,
     cache: true,
     inputs: [
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
     ],
-    command: 'tsc',
     options: {
       cwd: projectRoot,
     },
@@ -181,24 +197,7 @@ async function getServerBuildPath(
   workspaceRoot: string
 ): Promise<string> {
   const configPath = join(workspaceRoot, configFilePath);
-  let appConfig: AppConfig = {};
-  try {
-    let appConfigModule: any;
-    try {
-      appConfigModule = await Function(
-        `return import("${configPath}?t=${Date.now()}")`
-      )();
-    } catch {
-      appConfigModule = require(configPath);
-    }
-
-    appConfig = appConfigModule?.default || appConfigModule;
-  } catch (error) {
-    throw new Error(
-      `Error loading Remix config at ${configFilePath}\n${String(error)}`
-    );
-  }
-
+  let appConfig = await loadConfigFile<AppConfig>(configPath);
   return appConfig.serverBuildPath ?? 'build/index.js';
 }
 

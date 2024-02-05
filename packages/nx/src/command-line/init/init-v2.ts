@@ -18,6 +18,7 @@ import { execSync } from 'child_process';
 import { addNxToAngularCliRepo } from './implementation/angular';
 import { globWithWorkspaceContext } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
+import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
 
 export interface InitArgs {
   interactive: boolean;
@@ -49,7 +50,7 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
-  // TODO(jack): Remove this Angular logic once `@nx/plugin` is compatible with PCv3.
+  // TODO(jack): Remove this Angular logic once `@nx/angular` is compatible with inferred targets.
   if (existsSync('angular.json')) {
     await addNxToAngularCliRepo({
       ...options,
@@ -67,42 +68,53 @@ export async function initHandler(options: InitArgs): Promise<void> {
   updateGitIgnore(repoRoot);
 
   const detectPluginsResponse = await detectPlugins();
-  const useNxCloud =
-    options.nxCloud ??
-    (options.interactive ? await connectExistingRepoToNxCloudPrompt() : false);
 
-  addDepsToPackageJson(repoRoot, detectPluginsResponse?.plugins ?? []);
+  if (!detectPluginsResponse?.plugins.length) {
+    // If no plugins are detected/chosen, guide users to setup
+    // their targetDefaults correctly so their package scripts will work.
+    await addNxToNpmRepo({
+      interactive: options.interactive,
+    });
+  } else {
+    const useNxCloud =
+      options.nxCloud ??
+      (options.interactive
+        ? await connectExistingRepoToNxCloudPrompt()
+        : false);
 
-  output.log({ title: '📦 Installing Nx' });
+    addDepsToPackageJson(repoRoot, detectPluginsResponse?.plugins ?? []);
 
-  runInstall(repoRoot, pmc);
+    output.log({ title: '📦 Installing Nx' });
 
-  if (detectPluginsResponse) {
-    output.log({ title: '🔨 Configuring plugins' });
-    for (const plugin of detectPluginsResponse.plugins) {
+    runInstall(repoRoot, pmc);
+
+    if (detectPluginsResponse) {
+      output.log({ title: '🔨 Configuring plugins' });
+      for (const plugin of detectPluginsResponse.plugins) {
+        execSync(
+          `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
+            detectPluginsResponse.updatePackageScripts
+              ? '--updatePackageScripts'
+              : ''
+          } --no-interactive`,
+          {
+            stdio: [0, 1, 2],
+            cwd: repoRoot,
+          }
+        );
+      }
+    }
+
+    if (useNxCloud) {
+      output.log({ title: '🛠️ Setting up Nx Cloud' });
       execSync(
-        `${pmc.exec} nx g ${plugin}:init --keepExistingVersions ${
-          detectPluginsResponse.updatePackageScripts
-            ? '--updatePackageScripts'
-            : ''
-        } --no-interactive`,
+        `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init --quiet --hideFormatLogs --no-interactive`,
         {
           stdio: [0, 1, 2],
           cwd: repoRoot,
         }
       );
     }
-  }
-
-  if (useNxCloud) {
-    output.log({ title: '🛠️ Setting up Nx Cloud' });
-    execSync(
-      `${pmc.exec} nx g nx:connect-to-nx-cloud --installationSource=nx-init-pcv3 --quiet --hideFormatLogs --no-interactive`,
-      {
-        stdio: [0, 1, 2],
-        cwd: repoRoot,
-      }
-    );
   }
 
   output.log({
