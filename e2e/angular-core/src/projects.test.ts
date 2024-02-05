@@ -126,22 +126,13 @@ describe('Angular Projects', () => {
     );
 
     // check e2e tests
-    let appPort = 4958;
-    updateJson(join(app1, 'project.json'), (config) => {
-      config.targets.serve.options ??= {};
-      config.targets.serve.options.port = appPort;
-      return config;
-    });
     if (runE2ETests()) {
-      const e2eResults = runCLI(
-        `e2e ${app1}-e2e --config baseUrl=http://localhost:${appPort}`
-      );
+      const e2eResults = runCLI(`e2e ${app1}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
-      // TODO(leo): check why the port is not being killed and add assertion after fixing it
-      await killPort(appPort);
+      expect(await killPort(4200)).toBeTruthy();
     }
 
-    appPort = 4207;
+    const appPort = 4207;
     const process = await runCommandUntil(
       `serve ${app1} -- --port=${appPort}`,
       (output) => output.includes(`listening on localhost:${appPort}`)
