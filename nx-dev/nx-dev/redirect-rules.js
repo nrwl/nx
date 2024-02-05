@@ -359,9 +359,6 @@ const recipesUrls = {
   '/recipes/other/dte': '/showcase/example-repos/dte',
   '/recipes/other/deploy-nextjs-to-vercel':
     '/recipes/deployment/deploy-nextjs-to-vercel',
-  '/recipes/other/deno-deploy': '/recipes/deno/deno-deploy',
-  '/recipes/other/deno-netlify-functions':
-    '/recipes/deno/deno-netlify-functions',
   '/recipes/other/root-level-scripts':
     '/recipes/managing-repository/root-level-scripts',
   '/recipes/other/analyze-source-files':
@@ -942,11 +939,6 @@ const latestRecipesRefactoring = {
     '/recipes/tips-n-tricks/run-commands-executor',
   // ci
   '/recipes/ci/azure-last-successful-commit': '/recipes/ci/monorepo-ci-azure',
-  // other
-  '/recipes/deployment/deno-deploy': '/recipes/other/deno-deploy',
-  '/recipes/deployment/deno-netlify-functions':
-    '/recipes/other/deno-netlify-functions',
-
   // nx concepts
   '/recipes/module-federation/faster-builds':
     '/concepts/more-concepts/faster-builds-with-module-federation',

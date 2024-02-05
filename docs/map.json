@@ -775,31 +775,6 @@
               ]
             },
             {
-              "name": "Deno",
-              "id": "deno",
-              "description": "Deno related recipes",
-              "itemList": [
-                {
-                  "name": "Add a Deno Project",
-                  "id": "add-deno",
-                  "tags": ["deno"],
-                  "file": "shared/recipes/add-stack/add-deno"
-                },
-                {
-                  "name": "Serverless deployment with Deno Deploy",
-                  "id": "deno-deploy",
-                  "tags": ["deployment", "deno"],
-                  "file": "shared/recipes/deployment/deno-deploy"
-                },
-                {
-                  "name": "Add and Deploy Netlify Edge Functions with Deno",
-                  "id": "deno-netlify-functions",
-                  "tags": ["deployment", "deno"],
-                  "file": "shared/recipes/deployment/deno-netlify-edge-functions"
-                }
-              ]
-            },
-            {
               "name": "Next",
               "id": "next",
               "description": "Next related recipes",
