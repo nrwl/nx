@@ -30,6 +30,9 @@
         "parallel": false
       }
     },
+    "sleep": {
+      "command": "sleep 100000"
+    },
     "build-client": {
       "executor": "@nx/webpack:webpack",
       "options": {
@@ -61,20 +64,7 @@
       },
       "configurations": {
         "dev": {
-          "assets": [
-            "graph/client/src/favicon.ico",
-            "graph/client/src/assets/project-graphs/",
-            "graph/client/src/assets/task-graphs/",
-            "graph/client/src/assets/generated-project-graphs/",
-            "graph/client/src/assets/generated-task-graphs/",
-            "graph/client/src/assets/generated-task-inputs/",
-            "graph/client/src/assets/generated-source-maps/",
-            {
-              "input": "graph/client/src/assets/dev",
-              "output": "/",
-              "glob": "environment.js"
-            }
-          ]
+          "assets": []
         },
         "dev-e2e": {
           "assets": [

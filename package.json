@@ -292,6 +292,7 @@
     "vite": "5.0.8",
     "vitest": "^1.0.4",
     "webpack": "5.88.0",
+    "webpack-cli": "^5.1.4",
     "webpack-dev-server": "^4.9.3",
     "webpack-merge": "^5.8.0",
     "webpack-node-externals": "^3.0.0",
@@ -373,4 +374,3 @@
     ]
   }
 }
-

@@ -210,7 +210,16 @@
       }
     }
   },
-  "plugins": ["@monodon/rust"],
+  "plugins": [
+    "@monodon/rust",
+    {
+      "plugin": "@nx/webpack/plugin",
+      "options": {
+        "buildTargetName": "build-webpack",
+        "serveTargetName": "serve-webpack"
+      }
+    }
+  ],
   "nxCloudAccessToken": "YmZiOWQyNzctOThiZC00MjYwLWI3YTAtZDA3MDg4YWY1YTExfHJlYWQ=",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
