@@ -676,6 +676,29 @@
         "tags": []
       },
       {
+        "id": "troubleshooting",
+        "name": "Troubleshooting",
+        "description": "Learn how to solve common issues in Nx Cloud.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "ci-execution-failed",
+            "name": "CI Execution Failed",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/troubleshooting/ci-execution-failed",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/troubleshooting/ci-execution-failed",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/troubleshooting",
+        "tags": []
+      },
+      {
         "id": "other",
         "name": "Other",
         "description": "Learn how to set up Nx Cloud for your workspace.",
@@ -1222,6 +1245,40 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/recipes/on-premise/advanced-config",
+    "tags": []
+  },
+  "/ci/recipes/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to solve common issues in Nx Cloud.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ci-execution-failed",
+        "name": "CI Execution Failed",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/troubleshooting/ci-execution-failed",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/troubleshooting/ci-execution-failed",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/troubleshooting",
+    "tags": []
+  },
+  "/ci/recipes/troubleshooting/ci-execution-failed": {
+    "id": "ci-execution-failed",
+    "name": "CI Execution Failed",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/troubleshooting/ci-execution-failed",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/troubleshooting/ci-execution-failed",
     "tags": []
   },
   "/ci/recipes/other": {
