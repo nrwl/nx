@@ -236,7 +236,7 @@ function execArgvWithExperimentalLoaderOptions() {
     ...process.execArgv,
     '--no-warnings',
     '--experimental-loader',
-    'ts-node/esm',
+    require.resolve('ts-node/esm'),
   ];
 }
 
