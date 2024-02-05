@@ -12,6 +12,7 @@ import { runNxSync } from '../../utils/child-process';
 import { directoryExists, readJsonFile } from '../../utils/fileutils';
 import { PackageJson } from '../../utils/package-json';
 import { nxVersion } from '../../utils/versions';
+import { isMonorepo } from './implementation/utils';
 
 export interface InitArgs {
   addE2e: boolean;
@@ -104,17 +105,6 @@ function isNestCLI(packageJson: PackageJson) {
     combinedDependencies['@nestjs/core'] &&
     combinedDependencies['@nestjs/cli']
   );
-}
-
-function isMonorepo(packageJson: PackageJson) {
-  if (!!packageJson.workspaces) return true;
-
-  if (existsSync('pnpm-workspace.yaml') || existsSync('pnpm-workspace.yml'))
-    return true;
-
-  if (existsSync('lerna.json')) return true;
-
-  return false;
 }
 
 function setupDotNxInstallation(version: string) {

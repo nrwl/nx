@@ -10,6 +10,7 @@ import { nxVersion } from '../../utils/versions';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
+  isMonorepo,
   runInstall,
   updateGitIgnore,
 } from './implementation/utils';
@@ -19,6 +20,7 @@ import { addNxToAngularCliRepo } from './implementation/angular';
 import { globWithWorkspaceContext } from '../../utils/workspace-context';
 import { connectExistingRepoToNxCloudPrompt } from '../connect/connect-to-nx-cloud';
 import { addNxToNpmRepo } from './implementation/add-nx-to-npm-repo';
+import { addNxToMonorepo } from './implementation/add-nx-to-monorepo';
 
 export interface InitArgs {
   interactive: boolean;
@@ -59,28 +61,29 @@ export async function initHandler(options: InitArgs): Promise<void> {
     return;
   }
 
-  const repoRoot = process.cwd();
-  const cacheableOperations: string[] = [];
-  createNxJsonFile(repoRoot, [], cacheableOperations, {});
-
-  const pmc = getPackageManagerCommand();
-
-  updateGitIgnore(repoRoot);
-
   const detectPluginsResponse = await detectPlugins();
 
   if (!detectPluginsResponse?.plugins.length) {
     // If no plugins are detected/chosen, guide users to setup
     // their targetDefaults correctly so their package scripts will work.
-    await addNxToNpmRepo({
-      interactive: options.interactive,
-    });
+    const packageJson: PackageJson = readJsonFile('package.json');
+    if (isMonorepo(packageJson)) {
+      await addNxToMonorepo({ interactive: options.interactive });
+    } else {
+      await addNxToNpmRepo({ interactive: options.interactive });
+    }
   } else {
     const useNxCloud =
       options.nxCloud ??
       (options.interactive
         ? await connectExistingRepoToNxCloudPrompt()
         : false);
+
+    const repoRoot = process.cwd();
+    const pmc = getPackageManagerCommand();
+
+    createNxJsonFile(repoRoot, [], [], {});
+    updateGitIgnore(repoRoot);
 
     addDepsToPackageJson(repoRoot, detectPluginsResponse?.plugins ?? []);
 
