@@ -29,6 +29,12 @@ import { getLockFileName } from '@nx/js';
 import { satisfies } from 'semver';
 import { join } from 'path';
 
+let originalEnvPort;
+
+function getRandomPort() {
+  return Math.floor(1000 + Math.random() * 9000);
+}
+
 function getData(port, path = '/api'): Promise<any> {
   return new Promise((resolve) => {
     http.get(`http://localhost:${port}${path}`, (res) => {
@@ -49,18 +55,23 @@ function getData(port, path = '/api'): Promise<any> {
 }
 
 describe('Node Applications', () => {
-  beforeAll(() =>
+  beforeAll(() => {
+    originalEnvPort = process.env.PORT;
     newProject({
       packages: ['@nx/node', '@nx/express', '@nx/nest'],
-    })
-  );
+    });
+  });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    process.env.PORT = originalEnvPort;
+    cleanupProject();
+  });
 
   it('should be able to generate an empty application', async () => {
     const nodeapp = uniq('nodeapp');
-
-    runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
+    runCLI(`generate @nx/node:app ${nodeapp} --port=${port} --linter=eslint`);
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('Successfully ran target lint');
@@ -73,9 +84,10 @@ describe('Node Applications', () => {
       cwd: tmpProjPath(),
     }).toString();
     expect(result).toContain('Hello World!');
+    await killPorts(port);
   }, 300000);
 
-  // TODO(crystal, @ndcunningham): What is the alternative here?
+  // TODO(crystal, @ndcunningham): This does not work because NxWebpackPlugin({}) outputFilename does not work.
   xit('should be able to generate the correct outputFileName in options', async () => {
     const nodeapp = uniq('nodeapp');
     runCLI(`generate @nx/node:app ${nodeapp} --linter=eslint`);
@@ -89,26 +101,47 @@ describe('Node Applications', () => {
     checkFilesExist(`dist/apps/${nodeapp}/index.js`);
   }, 300000);
 
-  // TODO(crystal, @ndcunningham): What is the alternative here?
-  xit('should be able to generate an empty application with additional entries', async () => {
+  it('should be able to generate an empty application with additional entries', async () => {
     const nodeapp = uniq('nodeapp');
-
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
     runCLI(
-      `generate @nx/node:app ${nodeapp} --linter=eslint --bundler=webpack`
+      `generate @nx/node:app ${nodeapp} --port=${port} --linter=eslint --bundler=webpack`
     );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('Successfully ran target lint');
 
-    updateJson(join('apps', nodeapp, 'project.json'), (config) => {
-      config.targets.build.options.additionalEntryPoints = [
+    updateFile(
+      `apps/${nodeapp}/webpack.config.js`,
+      `
+const { NxWebpackPlugin } = require('@nx/webpack');
+const { join } = require('path');
+
+module.exports = {
+  output: {
+    path: join(__dirname, '../../dist/apps/${nodeapp}'),
+  },
+  plugins: [
+    new NxWebpackPlugin({
+      target: 'node',
+      compiler: 'tsc',
+      main: './src/main.ts',
+      tsConfig: './tsconfig.app.json',
+      assets: ['./src/assets'],
+      additionalEntryPoints: [
         {
+          entryPath: 'apps/${nodeapp}/src/additional-main.ts',
           entryName: 'additional-main',
-          entryPath: `apps/${nodeapp}/src/additional-main.ts`,
-        },
-      ];
-      return config;
-    });
+        }
+      ],
+      optimization: false,
+      outputHashing: 'none',
+    }),
+  ],
+};
+     `
+    );
 
     updateFile(
       `apps/${nodeapp}/src/additional-main.ts`,
@@ -144,6 +177,8 @@ describe('Node Applications', () => {
       }
     ).toString();
     expect(additionalResult).toContain('Hello Additional World!');
+
+    await killPorts(port);
   }, 300_000);
 
   it('should be able to generate an empty application with variable in .env file', async () => {
@@ -185,10 +220,12 @@ describe('Node Applications', () => {
   it('should be able to generate an express application', async () => {
     const nodeapp = uniq('nodeapp');
     const originalEnvPort = process.env.PORT;
-    const port = 3456;
+    const port = 3499;
     process.env.PORT = `${port}`;
 
-    runCLI(`generate @nx/express:app ${nodeapp} --linter=eslint`);
+    runCLI(
+      `generate @nx/express:app ${nodeapp} --port=${port} --linter=eslint`
+    );
 
     const lintResults = runCLI(`lint ${nodeapp}`);
     expect(lintResults).toContain('Successfully ran target lint');
@@ -221,9 +258,9 @@ describe('Node Applications', () => {
 
     try {
       await promisifiedTreeKill(p.pid, 'SIGKILL');
-      await killPorts(port);
-    } finally {
-      process.env.port = originalEnvPort;
+      expect(await killPorts(port)).toBeTruthy();
+    } catch (err) {
+      expect(err).toBeFalsy();
     }
   }, 120_000);
 
@@ -287,6 +324,7 @@ describe('Node Applications', () => {
   }, 120000);
 
   // TODO(crystal, @ndcunningham): how do we handle this now?
+  // Revisit when NxWebpackPlugin({}) outputFilename is working.
   xit('should be able to run ESM applications', async () => {
     const esmapp = uniq('esmapp');
 
@@ -333,12 +371,16 @@ describe('Node Applications', () => {
 describe('Build Node apps', () => {
   let scope: string;
   beforeAll(() => {
+    originalEnvPort = process.env.PORT;
     scope = newProject({
       packages: ['@nx/node', '@nx/express', '@nx/nest'],
     });
   });
 
-  afterAll(() => cleanupProject());
+  afterAll(() => {
+    process.env.PORT = originalEnvPort;
+    cleanupProject();
+  });
 
   // TODO(crystal, @ndcunningham): What is the alternative here?
   xit('should generate a package.json with the `--generatePackageJson` flag', async () => {
@@ -445,7 +487,10 @@ ${jslib}();
   it('should remove previous output before building with the --deleteOutputPath option set', async () => {
     const appName = uniq('app');
 
-    runCLI(`generate @nx/node:app ${appName} --no-interactive`);
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
+
+    runCLI(`generate @nx/node:app ${appName} --port=${port} --no-interactive`);
 
     // deleteOutputPath should default to true
     createFile(`dist/apps/${appName}/_should_remove.txt`);
@@ -481,8 +526,11 @@ ${jslib}();
     const appName = uniq('app1');
     const libName = uniq('@my-org/lib1');
 
+    const port = getRandomPort();
+    process.env.PORT = `${port}`;
+
     runCLI(
-      `generate @nx/node:app ${appName} --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/node:app ${appName} --project-name-and-root-format=as-provided --port=${port} --no-interactive`
     );
 
     // check files are generated without the layout directory ("apps/") and
