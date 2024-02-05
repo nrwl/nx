@@ -305,6 +305,8 @@
       - [Authenticate via SAML](/ci/recipes/on-premise/auth-saml)
       - [Authenticate via SAML on Managed Version](/ci/recipes/on-premise/auth-saml-managed)
       - [Advanced Configuration](/ci/recipes/on-premise/advanced-config)
+    - [Troubleshooting](/ci/recipes/troubleshooting)
+      - [CI Execution Failed](/ci/recipes/troubleshooting/ci-execution-failed)
     - [Other](/ci/recipes/other)
       - [Record Non-Nx Commands](/ci/recipes/other/record-commands)
       - [Prepare applications for deployment via CI](/ci/recipes/other/ci-deployment)
