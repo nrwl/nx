@@ -455,6 +455,7 @@ const nxCloudUrls = {
   '/nx-cloud/features/nx-cloud-workflows': '/ci/features/nx-agents',
   '/ci': '/ci/intro/ci-with-nx',
   '/nx-cloud/:path*': '/ci/:path*',
+  '/core-features/:path*': '/features/:path*',
 };
 
 /**
