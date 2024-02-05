@@ -26,6 +26,7 @@ export async function normalizeOptions(
     projectNameAndRootFormat: options.projectNameAndRootFormat,
     callingGenerator: '@nx/react:library',
   });
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   const fileName = options.simpleName
     ? projectNames.projectSimpleName
@@ -81,7 +82,7 @@ export async function normalizeOptions(
     }
 
     normalized.appMain =
-      appProjectConfig.targets.build.options.main ??
+      appProjectConfig.targets.build?.options?.main ??
       findMainEntry(host, appProjectConfig.root);
     normalized.appSourceRoot = normalizePath(appProjectConfig.sourceRoot);
 

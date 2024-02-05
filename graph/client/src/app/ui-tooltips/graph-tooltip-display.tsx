@@ -8,17 +8,12 @@ import {
 } from '@nx/graph/ui-tooltips';
 import { ProjectNodeActions } from './project-node-actions';
 import { TaskNodeActions } from './task-node-actions';
-import {
-  getExternalApiService,
-  useEnvironmentConfig,
-  useRouteConstructor,
-} from '@nx/graph/shared';
+import { getExternalApiService, useRouteConstructor } from '@nx/graph/shared';
 import { useNavigate } from 'react-router-dom';
 
 const tooltipService = getTooltipService();
 
 export function TooltipDisplay() {
-  const environment = useEnvironmentConfig()?.environment;
   const navigate = useNavigate();
   const routeConstructor = useRouteConstructor();
   const externalApiService = getExternalApiService();
@@ -31,46 +26,74 @@ export function TooltipDisplay() {
   let tooltipToRender;
   if (currentTooltip) {
     if (currentTooltip.type === 'projectNode') {
-      const onConfigClick = (() => {
-        if (environment !== 'nx-console') {
-          return () => {
-            navigate(
-              routeConstructor(
-                {
-                  pathname: `/project-details/${encodeURIComponent(
-                    currentTooltip.props.id
-                  )}`,
-                },
-                false
-              )
-            );
-          };
-        } else {
-          return () =>
-            externalApiService.postEvent({
-              type: 'open-project-config',
-              payload: {
-                projectName: currentTooltip.props.id,
-              },
-            });
-        }
-      })();
+      const onConfigClick =
+        currentTooltip.props.renderMode === 'nx-docs'
+          ? undefined
+          : (() => {
+              if (currentTooltip.props.renderMode !== 'nx-console') {
+                return () => {
+                  navigate(
+                    routeConstructor(
+                      {
+                        pathname: `/project-details/${encodeURIComponent(
+                          currentTooltip.props.id
+                        )}`,
+                      },
+                      false
+                    )
+                  );
+                };
+              } else {
+                return () =>
+                  externalApiService.postEvent({
+                    type: 'open-project-config',
+                    payload: {
+                      projectName: currentTooltip.props.id,
+                    },
+                  });
+              }
+            })();
 
       tooltipToRender = (
         <ProjectNodeToolTip
           {...currentTooltip.props}
           openConfigCallback={onConfigClick}
-          isNxConsole={environment === 'nx-console'}
         >
           <ProjectNodeActions {...currentTooltip.props} />
         </ProjectNodeToolTip>
       );
     } else if (currentTooltip.type === 'projectEdge') {
-      tooltipToRender = <ProjectEdgeNodeTooltip {...currentTooltip.props} />;
+      const onFileClick =
+        currentTooltip.props.renderMode === 'nx-console'
+          ? (url) =>
+              externalApiService.postEvent({
+                type: 'file-click',
+                payload: {
+                  sourceRoot: currentTooltip.props.sourceRoot,
+                  file: url,
+                },
+              })
+          : undefined;
+      tooltipToRender = (
+        <ProjectEdgeNodeTooltip
+          {...currentTooltip.props}
+          fileClickCallback={onFileClick}
+        />
+      );
     } else if (currentTooltip.type === 'taskNode') {
+      const onRunTaskClick =
+        currentTooltip.props.renderMode === 'nx-console'
+          ? () =>
+              externalApiService.postEvent({
+                type: 'run-task',
+                payload: {
+                  taskId: currentTooltip.props.id,
+                },
+              })
+          : undefined;
       const onConfigClick = (() => {
         const [projectName, targetName] = currentTooltip.props.id.split(':');
-        if (environment !== 'nx-console') {
+        if (currentTooltip.props.renderMode !== 'nx-console') {
           return () => {
             navigate(
               routeConstructor(
@@ -100,7 +123,7 @@ export function TooltipDisplay() {
         <TaskNodeTooltip
           {...currentTooltip.props}
           openConfigCallback={onConfigClick}
-          isNxConsole={environment === 'nx-console'}
+          runTaskCallback={onRunTaskClick}
         >
           <TaskNodeActions {...currentTooltip.props} />
         </TaskNodeTooltip>

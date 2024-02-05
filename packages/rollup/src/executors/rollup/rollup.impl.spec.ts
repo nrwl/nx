@@ -44,7 +44,7 @@ describe('rollupExecutor', () => {
         ),
         [],
         context,
-        { name: 'example' },
+        { name: 'example', version: '1.0' },
         '/root/src',
         []
       );
@@ -81,7 +81,7 @@ describe('rollupExecutor', () => {
         ),
         [],
         context,
-        { name: 'example' },
+        { name: 'example', version: '1.0' },
         '/root/src',
         []
       );
@@ -117,7 +117,7 @@ describe('rollupExecutor', () => {
         ),
         [],
         context,
-        { name: 'example' },
+        { name: 'example', version: '1.0' },
         '/root/src',
         []
       );
@@ -146,7 +146,7 @@ describe('rollupExecutor', () => {
         },
         [],
         context,
-        { name: 'example' },
+        { name: 'example', version: '1.0' },
         '/root/src',
         []
       );
@@ -165,7 +165,7 @@ describe('rollupExecutor', () => {
         ),
         [],
         context,
-        { name: 'example' },
+        { name: 'example', version: '1.0' },
         '/root/src',
         ['lodash']
       );
@@ -186,7 +186,7 @@ describe('rollupExecutor', () => {
         ),
         [],
         context,
-        { name: 'example' },
+        { name: 'example', version: '1.0' },
         '/root/src',
         ['lodash']
       );
@@ -207,7 +207,7 @@ describe('rollupExecutor', () => {
         ),
         [],
         context,
-        { name: 'example' },
+        { name: 'example', version: '1.0' },
         '/root/src',
         ['lodash']
       );

@@ -18,7 +18,7 @@ export function addProject(host: Tree, options: NormalizedSchema) {
   };
 
   if (options.bundler === 'webpack') {
-    if (!hasWebpackPlugin(host)) {
+    if (!hasWebpackPlugin(host) || !options.addPlugin) {
       project.targets = {
         build: createBuildTarget(options),
         serve: createServeTarget(options),

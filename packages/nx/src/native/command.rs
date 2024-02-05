@@ -12,6 +12,7 @@ use napi::threadsafe_function::ThreadsafeFunction;
 use napi::threadsafe_function::ThreadsafeFunctionCallMode::NonBlocking;
 use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
+use tracing::trace;
 
 #[cfg(target_os = "windows")]
 static CURSOR_POSITION: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
@@ -234,10 +235,47 @@ pub fn nx_fork(
     js_env: Option<HashMap<String, String>>,
     quiet: bool,
 ) -> napi::Result<ChildProcess> {
-    run_command(
-        format!("node {} {} {}", fork_script, psuedo_ipc_path, id),
-        command_dir,
-        js_env,
-        Some(quiet),
-    )
+    let command = format!(
+        "node {} {} {}",
+        handle_path_space(fork_script),
+        psuedo_ipc_path,
+        id
+    );
+
+    trace!("nx_fork command: {}", &command);
+    run_command(command, command_dir, js_env, Some(quiet))
+}
+
+#[cfg(target_os = "windows")]
+pub fn handle_path_space(path: String) -> String {
+    use std::os::windows::ffi::OsStrExt;
+    use std::{ffi::OsString, os::windows::ffi::OsStringExt};
+
+    use winapi::um::fileapi::GetShortPathNameW;
+    let wide: Vec<u16> = std::path::PathBuf::from(&path)
+        .as_os_str()
+        .encode_wide()
+        .chain(Some(0))
+        .collect();
+    let mut buffer: Vec<u16> = vec![0; wide.len() * 2];
+    let result =
+        unsafe { GetShortPathNameW(wide.as_ptr(), buffer.as_mut_ptr(), buffer.len() as u32) };
+    if result == 0 {
+        path
+    } else {
+        let len = buffer.iter().position(|&x| x == 0).unwrap();
+        let short_path: String = OsString::from_wide(&buffer[..len])
+            .to_string_lossy()
+            .into_owned();
+        short_path
+    }
+}
+
+#[cfg(not(target_os = "windows"))]
+fn handle_path_space(path: String) -> String {
+    if path.contains(' ') {
+        format!("'{}'", path)
+    } else {
+        path
+    }
 }

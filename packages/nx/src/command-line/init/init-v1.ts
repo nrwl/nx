@@ -129,5 +129,5 @@ function setupDotNxInstallation(version: string) {
   }
   generateDotNxSetup(version);
   // invokes the wrapper, thus invoking the initial installation process
-  runNxSync('');
+  runNxSync('--version');
 }

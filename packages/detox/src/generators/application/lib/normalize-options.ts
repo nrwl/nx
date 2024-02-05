@@ -24,6 +24,8 @@ export async function normalizeOptions(
       callingGenerator: '@nx/detox:application',
     });
 
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   const { fileName: appFileName, className: appClassName } = names(
     options.appName || options.appProject
   );

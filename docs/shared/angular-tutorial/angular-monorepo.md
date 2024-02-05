@@ -24,7 +24,7 @@ Nx evolved from being an extension of the Angular CLI to a [fully standalone CLI
 
 Advantages of Nx over the Angular CLI:
 
-- [Cache any target](/core-features/cache-task-results)
+- [Cache any target](/features/cache-task-results)
 - [Run only tasks affected by a code change](/ci/features/affected)
 - [Split a large angular.json into multiple project.json files](/concepts/more-concepts/nx-and-angular#projectjson-vs-angularjson)
 - [Integrate with modern tools](/concepts/more-concepts/nx-and-angular#integrating-with-modern-tools)
@@ -125,7 +125,389 @@ Nx uses the following syntax to run tasks:
 
 ![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
-All targets, such as `serve`, `build`, `test` or your custom ones, are defined in the `project.json` file.
+### Inferred Tasks
+
+Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors) project detail view or run:
+
+```shell
+nx show project angular-store --web
+```
+
+{% project-details title="Project Details View" height="100px" %}
+
+```json
+{
+  "project": {
+    "name": "angular-store",
+    "data": {
+      "root": "apps/angular-store",
+      "targets": {
+        "lint": {
+          "cache": true,
+          "options": {
+            "cwd": "apps/angular-store",
+            "command": "eslint ."
+          },
+          "inputs": [
+            "default",
+            "{workspaceRoot}/.eslintrc.json",
+            "{workspaceRoot}/apps/angular-store/.eslintrc.json",
+            "{workspaceRoot}/tools/eslint-rules/**/*",
+            {
+              "externalDependencies": ["eslint"]
+            }
+          ],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        },
+        "test": {
+          "options": {
+            "cwd": "apps/angular-store",
+            "command": "jest"
+          },
+          "cache": true,
+          "inputs": [
+            "default",
+            "^production",
+            {
+              "externalDependencies": ["jest"]
+            }
+          ],
+          "outputs": ["{workspaceRoot}/coverage/apps/angular-store"],
+          "executor": "nx:run-commands",
+          "configurations": {}
+        },
+        "build": {
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": ["production", "^production"],
+          "executor": "@angular-devkit/build-angular:application",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/apps/angular-store",
+            "index": "apps/angular-store/src/index.html",
+            "browser": "apps/angular-store/src/main.ts",
+            "polyfills": ["zone.js"],
+            "tsConfig": "apps/angular-store/tsconfig.app.json",
+            "assets": [
+              "apps/angular-store/src/favicon.ico",
+              "apps/angular-store/src/assets"
+            ],
+            "styles": ["apps/angular-store/src/styles.css"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kb",
+                  "maximumError": "1mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2kb",
+                  "maximumError": "4kb"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "executor": "@angular-devkit/build-angular:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "angular-store:build:production"
+            },
+            "development": {
+              "buildTarget": "angular-store:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {}
+        },
+        "extract-i18n": {
+          "executor": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "buildTarget": "angular-store:build"
+          },
+          "configurations": {}
+        },
+        "serve-static": {
+          "executor": "@nx/web:file-server",
+          "options": {
+            "buildTarget": "angular-store:build",
+            "staticFilePath": "dist/apps/angular-store/browser"
+          },
+          "configurations": {}
+        }
+      },
+      "name": "angular-store",
+      "$schema": "../../node_modules/nx/schemas/project-schema.json",
+      "projectType": "application",
+      "prefix": "angular-monorepo",
+      "sourceRoot": "apps/angular-store/src",
+      "tags": [],
+      "implicitDependencies": []
+    }
+  },
+  "sourceMap": {
+    "root": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "targets": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "targets.lint": ["apps/angular-store/project.json", "@nx/eslint/plugin"],
+    "targets.lint.cache": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.options": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.inputs": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.executor": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.options.cwd": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.lint.options.command": [
+      "apps/angular-store/project.json",
+      "@nx/eslint/plugin"
+    ],
+    "targets.test": ["apps/angular-store/jest.config.ts", "@nx/jest/plugin"],
+    "targets.test.options": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.cache": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.inputs": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.outputs": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.executor": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.options.cwd": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.test.options.command": [
+      "apps/angular-store/jest.config.ts",
+      "@nx/jest/plugin"
+    ],
+    "targets.build": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.cache": [
+      "apps/angular-store/project.json",
+      "nx/core/target-defaults"
+    ],
+    "targets.build.dependsOn": [
+      "apps/angular-store/project.json",
+      "nx/core/target-defaults"
+    ],
+    "targets.build.inputs": [
+      "apps/angular-store/project.json",
+      "nx/core/target-defaults"
+    ],
+    "name": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "$schema": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "projectType": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "prefix": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "sourceRoot": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "tags": ["apps/angular-store/project.json", "nx/core/project-json"],
+    "targets.build.executor": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.outputs": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.defaultConfiguration": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.outputPath": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.index": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.browser": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.polyfills": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.tsConfig": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.assets": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.styles": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.options.scripts": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.budgets": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.production.outputHashing": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.optimization": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.extractLicenses": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.build.configurations.development.sourceMap": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.executor": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.defaultConfiguration": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.production": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.production.buildTarget": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.development": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve.configurations.development.buildTarget": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.extract-i18n": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.extract-i18n.executor": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.extract-i18n.options": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.extract-i18n.options.buildTarget": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static.executor": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static.options": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static.options.buildTarget": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ],
+    "targets.serve-static.options.staticFilePath": [
+      "apps/angular-store/project.json",
+      "nx/core/project-json"
+    ]
+  }
+}
+```
+
+{% /project-details %}
+
+If you expand the `test` task, you can see that it was created by the `@nx/jest` plugin by analyzing your `jest.config.ts` file. Notice the outputs are defined as `{workspaceRoot}/coverage/apps/angular-store`. This value is being read from the `coverageDirectory` defined in your `jest.config.ts` file. Let's change that value in your `jest.config.ts` file:
+
+```ts {% fileName="apps/angular-store/jest.config.ts" %}
+export default {
+  // ...
+  coverageDirectory: '../../coverage/apps/angular-store-changed',
+  // ...
+};
+```
+
+Now if you look at the project details view, the outputs for the `test` target will say `{workspaceRoot}/coverage/apps/angular-store-changed`. This feature ensures that Nx will always cache the correct files.
+
+You can also override the settings for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
+
+### Manually Defined Tasks
+
+The `serve` and `build` tasks are defined in the `project.json` file.
 
 ```json {% fileName="apps/angular-store/project.json"}
 {
@@ -135,8 +517,6 @@ All targets, such as `serve`, `build`, `test` or your custom ones, are defined i
     "build": { ... },
     "serve": { ... },
     "extract-i18n": { ... },
-    "lint": { ... },
-    "test": { ... },
     "serve-static": { ... },
   },
 }
@@ -176,13 +556,13 @@ The most critical parts are:
 - `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task.
 - `options` - these are additional properties and flags passed to the executor function to customize it
 
-Learn more about how to [run tasks with Nx](/core-features/run-tasks). We'll [revisit running tasks](#testing-and-linting-running-multiple-tasks) later in this tutorial.
+Learn more about how to [run tasks with Nx](/features/run-tasks). We'll [revisit running tasks](#testing-and-linting-running-multiple-tasks) later in this tutorial.
 
 ## Adding Another Application
 
 <!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=706" /%} -->
 
-Nx plugins usually provide [generators](/core-features/plugin-features/use-code-generators) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/angular` plugin provides, run the following command and inspect the output:
+Nx plugins usually provide [generators](/features/generate-code) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/angular` plugin provides, run the following command and inspect the output:
 
 ```{% command="npx nx list @nx/angular" path="angular-monorepo" %}
 
@@ -221,7 +601,7 @@ This executor is similar to the `@angular-devkit/build-angular:ng-packagr` with 
 
 If you prefer a more integrated experience, you can install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
 
-More info can be found in [the integrate with editors article](/core-features/integrate-with-editors).
+More info can be found in [the integrate with editors article](/features/integrate-with-editors).
 
 {% /callout %}
 
@@ -385,7 +765,7 @@ All libraries that we generate automatically have aliases created in the root-le
 Hence we can easily import them into other libraries and our Angular application. As an example, let's create and expose a `ProductListComponent` component from our `libs/products` library. Either create it by hand or run
 
 ```shell
-nx g @nx/angular:component product-list --directory=libs/products/src/lib/product-list --nameAndDirectoryFormat=as-provided --standalone --export
+nx g @nx/angular:component product-list --directory=libs/products/src/lib/product-list --standalone --export
 ```
 
 We don't need to implement anything fancy as we just want to learn how to import it into our main Angular application.
@@ -503,7 +883,7 @@ export class AppComponent {
 
 <!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1416" /%} -->
 
-Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/core-features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/core-features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
+Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
 
 Just run:
 
@@ -624,7 +1004,7 @@ nx run-many -t test lint e2e
 
 ### Caching
 
-One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
+One thing to highlight is that Nx is able to [cache the tasks you run](/features/cache-task-results).
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
@@ -642,7 +1022,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
    Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
 
 ### Testing Affected Projects
 
@@ -835,7 +1215,7 @@ Nx comes with a generic mechanism that allows you to assign "tags" to projects. 
 ```json {% fileName="libs/orders/project.json" %}
 {
   ...
-  "tags": ["type:feature", "scope:orders"]
+  "tags": ["type:feature", "scope:orders"],
 }
 ```
 
@@ -844,7 +1224,7 @@ Then go to the `project.json` of your `products` library and assign the tags `ty
 ```json {% fileName="libs/products/project.json" %}
 {
   ...
-  "tags": ["type:feature", "scope:products"]
+  "tags": ["type:feature", "scope:products"],
 }
 ```
 
@@ -853,7 +1233,7 @@ Finally, go to the `project.json` of the `shared-ui` library and assign the tags
 ```json {% fileName="libs/shared/ui/project.json" %}
 {
   ...
-  "tags": ["type:ui", "scope:shared"]
+  "tags": ["type:ui", "scope:shared"],
 }
 ```
 
@@ -977,7 +1357,7 @@ If you have the ESLint plugin installed in your IDE you should immediately see a
 
 ![ESLint module boundary error](/shared/angular-tutorial/module-boundary-lint-rule.png)
 
-Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
+Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
 
 ## Setting Up CI
 
@@ -1012,7 +1392,7 @@ Here's some more things you can dive into next:
 - Learn about popular generators such as [how to setup Tailwind](/recipes/angular/using-tailwind-css-with-angular-projects)
 - Learn how to [migrate your existing Angular CLI repo to Nx](/recipes/angular/migration/angular)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-angular)
-- [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
+- [Speed up CI: Run only tasks for project that got changed](/features/run-tasks#run-tasks-affected-by-a-pr)
 - [Speed up CI: Share your cache](/ci/features/remote-cache)
 - [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 

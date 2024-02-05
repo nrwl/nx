@@ -8,10 +8,9 @@ import {
   TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, extname, join, relative } from 'path';
-import { registerTsProject } from '@nx/js/src/internal';
+import { dirname, join, relative } from 'path';
 
-import { getLockFileName, getRootTsConfigPath } from '@nx/js';
+import { getLockFileName } from '@nx/js';
 
 import { CypressExecutorOptions } from '../executors/cypress/cypress.impl';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
@@ -20,6 +19,7 @@ import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { NX_PLUGIN_OPTIONS } from '../utils/symbols';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface CypressPluginOptions {
   ciTargetName?: string;
@@ -58,7 +58,7 @@ export const createDependencies: CreateDependencies = () => {
 
 export const createNodes: CreateNodes<CypressPluginOptions> = [
   '**/cypress.config.{js,ts,mjs,cjs}',
-  (configFilePath, options, context) => {
+  async (configFilePath, options, context) => {
     options = normalizeOptions(options);
     const projectRoot = dirname(configFilePath);
 
@@ -77,7 +77,12 @@ export const createNodes: CreateNodes<CypressPluginOptions> = [
 
     const targets = targetsCache[hash]
       ? targetsCache[hash]
-      : buildCypressTargets(configFilePath, projectRoot, options, context);
+      : await buildCypressTargets(
+          configFilePath,
+          projectRoot,
+          options,
+          context
+        );
 
     calculatedTargets[hash] = targets;
 
@@ -140,13 +145,15 @@ function getOutputs(
   return outputs;
 }
 
-function buildCypressTargets(
+async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
   context: CreateNodesContext
 ) {
-  const cypressConfig = getCypressConfig(configFilePath, context);
+  const cypressConfig = await loadConfigFile(
+    join(context.workspaceRoot, configFilePath)
+  );
 
   const pluginPresetOptions = {
     ...cypressConfig.e2e?.[NX_PLUGIN_OPTIONS],
@@ -239,7 +246,7 @@ function buildCypressTargets(
   if ('component' in cypressConfig) {
     // This will not override the e2e target if it is the same
     targets[options.componentTestingTargetName] ??= {
-      command: `cypress open --component`,
+      command: `cypress run --component`,
       options: { cwd: projectRoot },
       cache: true,
       inputs: getInputs(namedInputs),
@@ -248,32 +255,6 @@ function buildCypressTargets(
   }
 
   return targets;
-}
-
-function getCypressConfig(
-  configFilePath: string,
-  context: CreateNodesContext
-): any {
-  const resolvedPath = join(context.workspaceRoot, configFilePath);
-
-  let module: any;
-  if (extname(configFilePath) === '.ts') {
-    const tsConfigPath = getRootTsConfigPath();
-
-    if (tsConfigPath) {
-      const unregisterTsProject = registerTsProject(tsConfigPath);
-      try {
-        module = load(resolvedPath);
-      } finally {
-        unregisterTsProject();
-      }
-    } else {
-      module = load(resolvedPath);
-    }
-  } else {
-    module = load(resolvedPath);
-  }
-  return module.default ?? module;
 }
 
 function normalizeOptions(options: CypressPluginOptions): CypressPluginOptions {
@@ -296,27 +277,4 @@ function getInputs(
       externalDependencies: ['cypress'],
     },
   ];
-}
-
-/**
- * Load the module after ensuring that the require cache is cleared.
- */
-const packageInstallationDirectories = ['node_modules', '.yarn'];
-
-function load(path: string): any {
-  // Clear cache if the path is in the cache
-  if (require.cache[path]) {
-    for (const k of Object.keys(require.cache)) {
-      // We don't want to clear the require cache of installed packages.
-      // Clearing them can cause some issues when running Nx without the daemon
-      // and may cause issues for other packages that use the module state
-      // in some to store cached information.
-      if (!packageInstallationDirectories.some((dir) => k.includes(dir))) {
-        delete require.cache[k];
-      }
-    }
-  }
-
-  // Then require
-  return require(path);
 }

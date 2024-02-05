@@ -29,21 +29,6 @@ exports[`new should generate an empty nx.json 1`] = `
     ],
     "sharedGlobals": [],
   },
-  "targetDefaults": {
-    "build": {
-      "cache": true,
-      "dependsOn": [
-        "^build",
-      ],
-      "inputs": [
-        "production",
-        "^production",
-      ],
-    },
-    "lint": {
-      "cache": true,
-    },
-  },
 }
 `;
 
@@ -59,21 +44,6 @@ exports[`new should skip install 1`] = `
       "default",
     ],
     "sharedGlobals": [],
-  },
-  "targetDefaults": {
-    "build": {
-      "cache": true,
-      "dependsOn": [
-        "^build",
-      ],
-      "inputs": [
-        "production",
-        "^production",
-      ],
-    },
-    "lint": {
-      "cache": true,
-    },
   },
 }
 `;

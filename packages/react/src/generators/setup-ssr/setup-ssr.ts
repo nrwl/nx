@@ -2,9 +2,12 @@ import type * as ts from 'typescript';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
+  createProjectGraphAsync,
   formatFiles,
   generateFiles,
   joinPathFragments,
+  type ProjectGraph,
+  readCachedProjectGraph,
   readNxJson,
   readProjectConfiguration,
   Tree,
@@ -51,8 +54,22 @@ interface AppComponentInfo {
   filePath: string;
 }
 
+async function getProjectConfig(tree: Tree, projectName: string) {
+  let maybeProjectConfig = readProjectConfiguration(tree, projectName);
+  if (!maybeProjectConfig.targets?.build) {
+    let projectGraph;
+    try {
+      projectGraph = readCachedProjectGraph();
+    } catch {
+      projectGraph = await createProjectGraphAsync();
+    }
+    maybeProjectConfig = projectGraph.nodes[projectName].data;
+  }
+  return maybeProjectConfig;
+}
+
 export async function setupSsrGenerator(tree: Tree, options: Schema) {
-  const projectConfig = readProjectConfiguration(tree, options.project);
+  const projectConfig = await getProjectConfig(tree, options.project);
   const projectRoot = projectConfig.root;
   const appImportCandidates: AppComponentInfo[] = [
     options.appComponentImportPath ?? 'app/app',
@@ -90,18 +107,23 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
     throw new Error(`Project ${options.project} already has a server target.`);
   }
 
-  const originalOutputPath = projectConfig.targets.build?.options?.outputPath;
+  const originalOutputPath =
+    projectConfig.targets.build?.options?.outputPath ??
+    projectConfig.targets.build?.outputs[0];
 
   if (!originalOutputPath) {
     throw new Error(
       `Project ${options.project} does not contain a outputPath for the build target.`
     );
   }
+  // TODO(colum): We need to figure out how to handle this for Crystal
+  if (projectConfig.targets.build.options?.outputPath) {
+    projectConfig.targets.build.options.outputPath = joinPathFragments(
+      originalOutputPath,
+      'browser'
+    );
+  }
 
-  projectConfig.targets.build.options.outputPath = joinPathFragments(
-    originalOutputPath,
-    'browser'
-  );
   projectConfig.targets = {
     ...projectConfig.targets,
     server: {
@@ -199,7 +221,9 @@ export async function setupSsrGenerator(tree: Tree, options: Schema) {
         ? `"${options.extraInclude.join('", "')}",`
         : '',
     appComponentImport: appComponentInfo.importPath,
-    browserBuildOutputPath: projectConfig.targets.build.options.outputPath,
+    browserBuildOutputPath:
+      projectConfig.targets.build?.options?.outputPath ??
+      projectConfig.targets.build?.outputs[0],
   });
 
   // Add <StaticRouter> to server main if needed.

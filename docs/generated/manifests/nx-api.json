@@ -95,7 +95,7 @@
         "type": "executor"
       },
       "/nx-api/angular/executors/dev-server": {
-        "description": "The `dev-server` executor is very similar to the standard `dev-server` builder provided by the Angular Devkit. It is usually used in tandem with `@nrwl/angular:webpack-browser` when your Angular application uses a custom webpack configuration.",
+        "description": "Serves an Angular application using [Webpack](https://webpack.js.org/) when the build target is using a Webpack-based executor, or [Vite](https://vitejs.dev/) when the build target uses an esbuild-based executor.",
         "file": "generated/packages/angular/executors/dev-server.json",
         "hidden": false,
         "name": "dev-server",
@@ -917,7 +917,7 @@
     },
     "generators": {
       "/nx-api/expo/generators/init": {
-        "description": "Initialize the @nrwl/expo plugin",
+        "description": "Initialize the @nx/expo plugin",
         "file": "generated/packages/expo/generators/init.json",
         "hidden": true,
         "name": "init",
@@ -1628,7 +1628,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/generate",
-        "tags": ["use-code-generators"],
+        "tags": ["generate-code"],
         "originalFilePath": "generated/cli/generate"
       },
       "/nx-api/nx/documents/run": {
@@ -1639,7 +1639,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/run",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/run"
       },
       "/nx-api/nx/documents/daemon": {
@@ -1672,7 +1672,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/run-many",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/run-many"
       },
       "/nx-api/nx/documents/affected": {
@@ -1683,7 +1683,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "/nx-api/nx/documents/affected",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/affected"
       },
       "/nx-api/nx/documents/affected-dep-graph": {
@@ -2644,15 +2644,6 @@
         "name": "error-boundary",
         "originalFilePath": "/packages/remix/src/generators/error-boundary/schema.json",
         "path": "/nx-api/remix/generators/error-boundary",
-        "type": "generator"
-      },
-      "/nx-api/remix/generators/cypress": {
-        "description": "Generate a project for testing Remix apps using Cypress",
-        "file": "generated/packages/remix/generators/cypress.json",
-        "hidden": false,
-        "name": "cypress",
-        "originalFilePath": "/packages/remix/src/generators/cypress/schema.json",
-        "path": "/nx-api/remix/generators/cypress",
         "type": "generator"
       }
     },

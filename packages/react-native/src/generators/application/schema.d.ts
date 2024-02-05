@@ -19,4 +19,5 @@ export interface Schema {
   bundler: 'webpack' | 'vite'; // default is webpack
   install: boolean; // default is true
   skipPackageJson?: boolean; //default is false
+  addPlugin?: boolean;
 }

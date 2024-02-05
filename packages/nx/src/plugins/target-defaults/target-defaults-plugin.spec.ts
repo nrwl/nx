@@ -233,4 +233,129 @@ describe('target-defaults plugin', () => {
       }
     `);
   });
+
+  describe('executor key', () => {
+    it('should support multiple targets with the same executor', () => {
+      memfs.vol.fromJSON(
+        {
+          'project.json': JSON.stringify({
+            name: 'root',
+            targets: {
+              echo: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 1',
+                },
+              },
+              echo2: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 2',
+                },
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+
+      context.nxJsonConfiguration.targetDefaults = {
+        'nx:run-commands': {
+          options: {
+            cwd: '{projectRoot}',
+          },
+        },
+      };
+
+      expect(createNodesFn('project.json', undefined, context))
+        .toMatchInlineSnapshot(`
+        {
+          "projects": {
+            ".": {
+              "targets": {
+                "echo": {
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "echo2": {
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "nx:run-commands": {
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                  Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+
+    it('should not be overridden by target name based default', () => {
+      memfs.vol.fromJSON(
+        {
+          'project.json': JSON.stringify({
+            name: 'root',
+            targets: {
+              echo: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 1',
+                },
+              },
+              echo2: {
+                executor: 'nx:run-commands',
+                options: {
+                  command: 'echo 2',
+                },
+              },
+            },
+          }),
+        },
+        '/root'
+      );
+
+      context.nxJsonConfiguration.targetDefaults = {
+        'nx:run-commands': {
+          options: {
+            cwd: '{projectRoot}',
+          },
+        },
+        echo: {},
+      };
+
+      expect(createNodesFn('project.json', undefined, context))
+        .toMatchInlineSnapshot(`
+        {
+          "projects": {
+            ".": {
+              "targets": {
+                "echo": {
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "echo2": {
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                },
+                "nx:run-commands": {
+                  "options": {
+                    "cwd": "{projectRoot}",
+                  },
+                  Symbol(ONLY_MODIFIES_EXISTING_TARGET): true,
+                },
+              },
+            },
+          },
+        }
+      `);
+    });
+  });
 });
