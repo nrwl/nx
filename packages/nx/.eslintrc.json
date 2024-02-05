@@ -95,7 +95,6 @@
               "memfs", // used in mock for handling .node files in tests
               "events", // This is coming from @storybook/builder-manager since it uses the browser polyfill
               "process", // This is coming from @storybook/builder-manager since it uses the browser polyfill
-              "prettier", // This is coming from @storybook/builder-manager since it uses the browser polyfill
               "util" // This is coming from @storybook/builder-manager since it uses the browser polyfill
             ]
           }
