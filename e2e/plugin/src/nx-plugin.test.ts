@@ -30,12 +30,6 @@ describe('Nx Plugin', () => {
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
       json.release = {
         projects: ['!*-e2e'],
-        version: {
-          generatorOptions: {
-            // Workaround for NXC-296
-            skipLockFileUpdate: true,
-          },
-        },
       };
       return json;
     });

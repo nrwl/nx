@@ -1,4 +1,3 @@
-import { NxJsonConfiguration } from '@nx/devkit';
 import {
   checkFilesExist,
   cleanupProject,
@@ -7,7 +6,6 @@ import {
   runCLI,
   runCreatePlugin,
   uniq,
-  updateJson,
 } from '@nx/e2e/utils';
 
 describe('create-nx-plugin', () => {
@@ -72,17 +70,6 @@ describe('create-nx-plugin', () => {
     runCLI(`build create-${pluginName}-package`);
     checkFilesExist(`dist/packages/create-${pluginName}-package/bin/index.js`);
 
-    // Workaround for NXC-296
-    updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      json.release = {
-        version: {
-          generatorOptions: {
-            skipLockFileUpdate: true,
-          },
-        },
-      };
-      return json;
-    });
     expect(() => runCLI(`e2e ${pluginName}-e2e`)).not.toThrow();
   });
 });
