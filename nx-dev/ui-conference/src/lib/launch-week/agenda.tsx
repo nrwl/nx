@@ -45,7 +45,7 @@ export function LaunchWeekAgenda(): JSX.Element {
     {
       type: 'event',
       time: '3:35pm',
-      title: 'Nx Release',
+      title: 'Releasing Nx Release',
       description: ``,
       speakers: ['James Henry'],
       videoUrl: '',
