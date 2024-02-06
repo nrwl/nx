@@ -9,8 +9,7 @@ import {
 
 const TEN_MINS_MS = 600_000;
 
-// TODO(crystal, @leosvelperez): Still need to investigate why this is failing on CI
-xdescribe('Cypress E2E Test runner (legacy)', () => {
+describe('Cypress E2E Test runner (legacy)', () => {
   beforeAll(() => {
     newProject({ packages: ['@nx/angular', '@nx/react'] });
   });
