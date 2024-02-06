@@ -10,7 +10,6 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
-import { ViteDevServerExecutorOptions } from '../executors/dev-server/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
 import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
@@ -22,143 +21,26 @@ export type TargetFlags = Partial<Record<Target, boolean>>;
 export type UserProvidedTargetName = Partial<Record<Target, string>>;
 export type ValidFoundTargetName = Partial<Record<Target, string>>;
 
-export function findExistingTargetsInProject(
-  targets: {
-    [targetName: string]: TargetConfiguration;
-  },
-  userProvidedTargets?: UserProvidedTargetName
-): {
+export function findExistingTargetsInProject(targets: {
+  [targetName: string]: TargetConfiguration;
+}): {
   validFoundTargetName: ValidFoundTargetName;
-  projectContainsUnsupportedExecutor: boolean;
-  userProvidedTargetIsUnsupported: TargetFlags;
-  alreadyHasNxViteTargets: TargetFlags;
 } {
   const output: ReturnType<typeof findExistingTargetsInProject> = {
     validFoundTargetName: {},
-    projectContainsUnsupportedExecutor: false,
-    userProvidedTargetIsUnsupported: {},
-    alreadyHasNxViteTargets: {},
   };
 
   const supportedExecutors = {
-    build: [
-      '@nxext/vite:build',
-      '@nx/js:babel',
-      '@nx/js:swc',
-      '@nx/webpack:webpack',
-      '@nx/rollup:rollup',
-      '@nrwl/js:babel',
-      '@nrwl/js:swc',
-      '@nrwl/webpack:webpack',
-      '@nrwl/rollup:rollup',
-      '@nrwl/web:rollup',
-    ],
-    serve: [
-      '@nxext/vite:dev',
-      '@nx/webpack:dev-server',
-      '@nrwl/webpack:dev-server',
-    ],
-    test: ['@nx/jest:jest', '@nrwl/jest:jest', '@nxext/vitest:vitest'],
+    build: ['@nx/js:babel', '@nx/js:swc', '@nx/rollup:rollup'],
   };
 
-  const unsupportedExecutors = [
-    '@nx/angular:ng-packagr-lite',
-    '@nx/angular:package',
-    '@nx/angular:webpack-browser',
-    '@nx/esbuild:esbuild',
-    '@nx/react-native:run-ios',
-    '@nx/react-native:start',
-    '@nx/react-native:run-android',
-    '@nx/react-native:bundle',
-    '@nx/react-native:build-android',
-    '@nx/react-native:bundle',
-    '@nx/next:build',
-    '@nx/next:server',
-    '@nx/js:tsc',
-    '@nrwl/angular:ng-packagr-lite',
-    '@nrwl/angular:package',
-    '@nrwl/angular:webpack-browser',
-    '@nrwl/esbuild:esbuild',
-    '@nrwl/react-native:run-ios',
-    '@nrwl/react-native:start',
-    '@nrwl/react-native:run-android',
-    '@nrwl/react-native:bundle',
-    '@nrwl/react-native:build-android',
-    '@nrwl/react-native:bundle',
-    '@nrwl/next:build',
-    '@nrwl/next:server',
-    '@nrwl/js:tsc',
-    '@angular-devkit/build-angular:browser',
-    '@angular-devkit/build-angular:dev-server',
-  ];
-
-  // First, we check if the user has provided a target
-  // If they have, we check if the executor the target is using is supported
-  // If it's not supported, then we set the unsupported flag to true for that target
-
-  function checkUserProvidedTarget(target: Target) {
-    if (userProvidedTargets?.[target]) {
-      if (
-        supportedExecutors[target].includes(
-          targets[userProvidedTargets[target]]?.executor
-        )
-      ) {
-        output.validFoundTargetName[target] = userProvidedTargets[target];
-      } else {
-        output.userProvidedTargetIsUnsupported[target] = true;
-      }
-    }
-  }
-
-  checkUserProvidedTarget('build');
-  checkUserProvidedTarget('serve');
-  checkUserProvidedTarget('test');
-
-  // Returns early when we have a build, serve, and test targets.
-  if (
-    output.validFoundTargetName.build &&
-    output.validFoundTargetName.serve &&
-    output.validFoundTargetName.test
-  ) {
-    return output;
-  }
-
-  // We try to find the targets that are using the supported executors
-  // for build, serve and test, since these are the ones we will be converting
+  // We try to find the target that is using the supported executors
+  // for build since this is the one we will be converting
   for (const target in targets) {
     const executorName = targets[target].executor;
-
-    const hasViteTargets = output.alreadyHasNxViteTargets;
-    hasViteTargets.build ||=
-      executorName === '@nx/vite:build' || executorName === '@nrwl/vite:build';
-    hasViteTargets.serve ||=
-      executorName === '@nx/vite:dev-server' ||
-      executorName === '@nrwl/vite:dev-server';
-    hasViteTargets.test ||=
-      executorName === '@nx/vite:test' || executorName === '@nrwl/vite:test';
-    hasViteTargets.preview ||=
-      executorName === '@nx/vite:preview-server' ||
-      executorName === '@nrwl/vite:preview-server';
-
-    const foundTargets = output.validFoundTargetName;
-    if (
-      !foundTargets.build &&
-      supportedExecutors.build.includes(executorName)
-    ) {
-      foundTargets.build = target;
+    if (supportedExecutors.build.includes(executorName)) {
+      output.validFoundTargetName.build = target;
     }
-    if (
-      !foundTargets.serve &&
-      supportedExecutors.serve.includes(executorName)
-    ) {
-      foundTargets.serve = target;
-    }
-    if (!foundTargets.test && supportedExecutors.test.includes(executorName)) {
-      foundTargets.test = target;
-    }
-
-    output.projectContainsUnsupportedExecutor ||=
-      unsupportedExecutors.includes(executorName);
   }
 
   return output;
@@ -196,51 +78,39 @@ export function addOrChangeTestTarget(
   updateProjectConfiguration(tree, options.project, project);
 }
 
-export function addOrChangeBuildTarget(
+export function addBuildTarget(
   tree: Tree,
   options: ViteConfigurationGeneratorSchema,
   target: string
 ) {
   addBuildTargetDefaults(tree, '@nx/vite:build');
   const project = readProjectConfiguration(tree, options.project);
-
   const buildOptions: ViteBuildExecutorOptions = {
     outputPath: joinPathFragments(
       'dist',
       project.root != '.' ? project.root : options.project
     ),
   };
-
   project.targets ??= {};
-
-  if (project.targets[target]) {
-    if (project.targets[target].executor === '@nxext/vite:build') {
-      buildOptions['base'] = project.targets[target].options?.baseHref;
-      buildOptions['sourcemap'] = project.targets[target].options?.sourcemaps;
-    }
-    project.targets[target].options = { ...buildOptions };
-    project.targets[target].executor = '@nx/vite:build';
-  } else {
-    project.targets[target] = {
-      executor: '@nx/vite:build',
-      outputs: ['{options.outputPath}'],
-      defaultConfiguration: 'production',
-      options: buildOptions,
-      configurations: {
-        development: {
-          mode: 'development',
-        },
-        production: {
-          mode: 'production',
-        },
+  project.targets[target] = {
+    executor: '@nx/vite:build',
+    outputs: ['{options.outputPath}'],
+    defaultConfiguration: 'production',
+    options: buildOptions,
+    configurations: {
+      development: {
+        mode: 'development',
       },
-    };
-  }
+      production: {
+        mode: 'production',
+      },
+    },
+  };
 
   updateProjectConfiguration(tree, options.project, project);
 }
 
-export function addOrChangeServeTarget(
+export function addServeTarget(
   tree: Tree,
   options: ViteConfigurationGeneratorSchema,
   target: string
@@ -249,35 +119,23 @@ export function addOrChangeServeTarget(
 
   project.targets ??= {};
 
-  if (project.targets[target]) {
-    const serveTarget = project.targets[target];
-    const serveOptions: ViteDevServerExecutorOptions = {
+  project.targets[target] = {
+    executor: '@nx/vite:dev-server',
+    defaultConfiguration: 'development',
+    options: {
       buildTarget: `${options.project}:build`,
-    };
-    if (serveTarget.executor === '@nxext/vite:dev') {
-      serveOptions.proxyConfig = project.targets[target].options.proxyConfig;
-    }
-    serveTarget.executor = '@nx/vite:dev-server';
-    serveTarget.options = serveOptions;
-  } else {
-    project.targets[target] = {
-      executor: '@nx/vite:dev-server',
-      defaultConfiguration: 'development',
-      options: {
-        buildTarget: `${options.project}:build`,
+    },
+    configurations: {
+      development: {
+        buildTarget: `${options.project}:build:development`,
+        hmr: true,
       },
-      configurations: {
-        development: {
-          buildTarget: `${options.project}:build:development`,
-          hmr: true,
-        },
-        production: {
-          buildTarget: `${options.project}:build:production`,
-          hmr: false,
-        },
+      production: {
+        buildTarget: `${options.project}:build:production`,
+        hmr: false,
       },
-    };
-  }
+    },
+  };
 
   updateProjectConfiguration(tree, options.project, project);
 }
@@ -288,7 +146,6 @@ export function addOrChangeServeTarget(
  * @param tree
  * @param options
  * @param serveTarget An existing serve target.
- * @param previewTarget  The preview target to create.
  */
 export function addPreviewTarget(
   tree: Tree,
@@ -387,19 +244,14 @@ export function deleteWebpackConfig(
 
 export function moveAndEditIndexHtml(
   tree: Tree,
-  options: ViteConfigurationGeneratorSchema,
-  buildTarget: string
+  options: ViteConfigurationGeneratorSchema
 ) {
   const projectConfig = readProjectConfiguration(tree, options.project);
 
-  let indexHtmlPath =
-    projectConfig.targets?.[buildTarget]?.options?.index ??
-    `${projectConfig.root}/src/index.html`;
-  let mainPath =
-    projectConfig.targets?.[buildTarget]?.options?.main ??
-    `${projectConfig.root}/src/main.ts${
-      options.uiFramework === 'react' ? 'x' : ''
-    }`;
+  let indexHtmlPath = `${projectConfig.root}/src/index.html`;
+  let mainPath = `${projectConfig.root}/src/main.ts${
+    options.uiFramework === 'react' ? 'x' : ''
+  }`;
 
   if (projectConfig.root !== '.') {
     mainPath = mainPath.replace(projectConfig.root, '');

@@ -206,7 +206,6 @@ describe('@nx/vite:configuration', () => {
           addPlugin: true,
           uiFramework: 'react',
           project: 'my-test-mixed-react-app',
-          buildTarget: 'valid-build',
         });
       });
       it('should add vite packages and react-related dependencies for vite', async () => {
@@ -251,7 +250,6 @@ describe('@nx/vite:configuration', () => {
             addPlugin: true,
             uiFramework: 'react',
             project: 'my-test-mixed-react-app',
-            buildTarget: 'invalid-build',
           });
         } catch (e) {
           expect(e).toBeDefined();
@@ -272,7 +270,6 @@ describe('@nx/vite:configuration', () => {
             addPlugin: true,
             uiFramework: 'react',
             project: 'my-test-mixed-react-app',
-            buildTarget: 'invalid-build',
           });
           expect(
             tree.exists('apps/my-test-mixed-react-app/vite.config.ts')

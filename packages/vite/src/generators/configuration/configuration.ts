@@ -11,8 +11,8 @@ import {
 import { initGenerator as jsInitGenerator } from '@nx/js';
 
 import {
-  addOrChangeBuildTarget,
-  addOrChangeServeTarget,
+  addBuildTarget,
+  addServeTarget,
   addPreviewTarget,
   createOrEditViteConfig,
   deleteWebpackConfig,
@@ -29,6 +29,10 @@ import initGenerator from '../init/init';
 import vitestGenerator from '../vitest/vitest-generator';
 import { ViteConfigurationGeneratorSchema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import {
+  findViteConfig,
+  findWebpackConfig,
+} from '../../utils/find-vite-config';
 
 export function viteConfigurationGenerator(
   host: Tree,
@@ -49,15 +53,9 @@ export async function viteConfigurationGeneratorInternal(
   schema.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   const projectConfig = readProjectConfiguration(tree, schema.project);
-  const {
-    targets,
-    root: projectRoot,
-  } = projectConfig;
+  const { targets, root: projectRoot } = projectConfig;
 
   const projectType = projectConfig.projectType ?? 'library';
-  let buildTargetName = 'build';
-  let serveTargetName = 'serve';
-  let testTargetName = 'test';
 
   schema.includeLib ??= projectType === 'library';
 
@@ -72,18 +70,45 @@ export async function viteConfigurationGeneratorInternal(
   let projectAlreadyHasViteTargets: TargetFlags = {};
 
   if (!schema.newProject) {
-    const userProvidedTargetName: UserProvidedTargetName = {
-      build: schema.buildTarget,
-      serve: schema.serveTarget,
-      test: schema.testTarget,
-    };
+    // Check if it has vite
+    const hasViteConfig = findViteConfig(tree, projectRoot);
+    const hasIndexHtmlAtRoot = tree.exists(
+      joinPathFragments(projectRoot, 'index.html')
+    );
 
+    if (projectType === 'application' && hasViteConfig && hasIndexHtmlAtRoot) {
+      throw new Error(
+        `The project ${schema.project} is already configured to use Vite.`
+      );
+    }
+
+    if (projectType === 'library' && hasViteConfig) {
+      // continue anyway - it could need to be updated - only update vite.config.ts in any case
+      editTsConfig(tree, schema);
+    }
+
+    // Check if it has webpack
+    const hasWebpackConfig = findWebpackConfig(tree, projectRoot);
+    if (hasWebpackConfig) {
+      if (projectType === 'application') {
+        moveAndEditIndexHtml(tree, schema);
+      }
+      deleteWebpackConfig(tree, projectRoot, hasWebpackConfig);
+      editTsConfig(tree, schema);
+    }
+
+    // HAS JS EXECUTORS?
+    // TRY TO CONVERT TO VITE
     const {
       validFoundTargetName,
       projectContainsUnsupportedExecutor,
       userProvidedTargetIsUnsupported,
       alreadyHasNxViteTargets,
-    } = findExistingTargetsInProject(targets, userProvidedTargetName);
+    } = findExistingTargetsInProject(targets);
+
+    // HAS NO JS EXECUTORS, NO WEBPACK CONFIG, NO ROLLUP CONFIG
+    // CONVERT TO VITE
+
     projectAlreadyHasViteTargets = alreadyHasNxViteTargets;
     /**
      * This means that we only found unsupported build targets in that project.
@@ -191,15 +216,15 @@ export async function viteConfigurationGeneratorInternal(
 
   if (!hasPlugin) {
     if (!projectAlreadyHasViteTargets.build) {
-      addOrChangeBuildTarget(tree, schema, buildTargetName);
+      addBuildTarget(tree, schema, 'build');
     }
 
     if (!schema.includeLib) {
       if (!projectAlreadyHasViteTargets.serve) {
-        addOrChangeServeTarget(tree, schema, serveTargetName);
+        addServeTarget(tree, schema, 'serve');
       }
       if (!projectAlreadyHasViteTargets.preview) {
-        addPreviewTarget(tree, schema, serveTargetName);
+        addPreviewTarget(tree, schema, 'preview');
       }
     }
   }
