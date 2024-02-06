@@ -12,7 +12,6 @@ import {
   mockUnknownAppGenerator,
   mockWebAppGenerator,
 } from '../../utils/test-utils';
-import { ViteConfigurationGeneratorSchema } from './schema';
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
@@ -56,7 +55,7 @@ describe('@nx/vite:configuration', () => {
         tree,
         'apps/my-test-react-app/tsconfig.json'
       );
-      expect(tsconfigJson.compilerOptions.types).toMatchObject(['vite/client']);
+      expect(tsconfigJson.compilerOptions.jsx).toBe('react-jsx');
     });
 
     it('should create vite.config file at the root of the app', () => {
@@ -84,7 +83,6 @@ describe('@nx/vite:configuration', () => {
       );
       await viteConfigurationGenerator(tree, {
         addPlugin: true,
-        uiFramework: 'react',
         uiFramework: 'none',
         project: 'my-test-web-app',
       });
@@ -106,7 +104,7 @@ describe('@nx/vite:configuration', () => {
 
     it('should create correct tsconfig compilerOptions', () => {
       const tsconfigJson = readJson(tree, 'apps/my-test-web-app/tsconfig.json');
-      expect(tsconfigJson.compilerOptions.types).toMatchObject(['vite/client']);
+      expect(tsconfigJson.compilerOptions.noImplicitReturns).toBeTruthy();
     });
 
     it('should create vite.config file at the root of the app', () => {
@@ -132,7 +130,6 @@ describe('@nx/vite:configuration', () => {
       try {
         await viteConfigurationGenerator(tree, {
           addPlugin: true,
-          uiFramework: 'react',
           uiFramework: 'none',
           project: 'my-test-angular-app',
         });
@@ -160,7 +157,6 @@ describe('@nx/vite:configuration', () => {
       try {
         await viteConfigurationGenerator(tree, {
           addPlugin: true,
-          uiFramework: 'react',
           uiFramework: 'none',
           project: 'my-test-random-app',
         });
@@ -182,7 +178,6 @@ describe('@nx/vite:configuration', () => {
       try {
         await viteConfigurationGenerator(tree, {
           addPlugin: true,
-          uiFramework: 'react',
           uiFramework: 'none',
           project: 'my-test-random-app',
         });
@@ -255,7 +250,6 @@ describe('@nx/vite:configuration', () => {
           await viteConfigurationGenerator(tree, {
             addPlugin: true,
             uiFramework: 'react',
-            uiFramework: 'none',
             project: 'my-test-mixed-react-app',
             buildTarget: 'invalid-build',
           });
@@ -277,7 +271,6 @@ describe('@nx/vite:configuration', () => {
           await viteConfigurationGenerator(tree, {
             addPlugin: true,
             uiFramework: 'react',
-            uiFramework: 'none',
             project: 'my-test-mixed-react-app',
             buildTarget: 'invalid-build',
           });

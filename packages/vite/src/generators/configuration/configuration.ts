@@ -51,7 +51,6 @@ export async function viteConfigurationGeneratorInternal(
   const projectConfig = readProjectConfiguration(tree, schema.project);
   const {
     targets,
-
     root: projectRoot,
   } = projectConfig;
 

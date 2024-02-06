@@ -339,44 +339,26 @@ export function editTsConfig(
 
   const config = readJson(tree, `${projectConfig.root}/tsconfig.json`);
 
-  const commonCompilerOptions = {
-    target: 'ESNext',
-    useDefineForClassFields: true,
-    module: 'ESNext',
-    strict: true,
-    moduleResolution: 'Node',
-    resolveJsonModule: true,
-    isolatedModules: true,
-    types: ['vite/client'],
-    noEmit: true,
-  };
-
   switch (options.uiFramework) {
     case 'react':
       config.compilerOptions = {
-        ...commonCompilerOptions,
-        lib: ['DOM', 'DOM.Iterable', 'ESNext'],
+        jsx: 'react-jsx',
         allowJs: false,
         esModuleInterop: false,
-        skipLibCheck: true,
         allowSyntheticDefaultImports: true,
-        forceConsistentCasingInFileNames: true,
-        jsx: 'react-jsx',
+        strict: true,
       };
-      config.include = [...config.include, 'src'];
       break;
     case 'none':
       config.compilerOptions = {
-        ...commonCompilerOptions,
-        lib: ['ESNext', 'DOM'],
-        skipLibCheck: true,
-        esModuleInterop: true,
+        module: 'commonjs',
+        forceConsistentCasingInFileNames: true,
         strict: true,
-        noUnusedLocals: true,
-        noUnusedParameters: true,
+        noImplicitOverride: true,
+        noPropertyAccessFromIndexSignature: true,
         noImplicitReturns: true,
+        noFallthroughCasesInSwitch: true,
       };
-      config.include = [...config.include, 'src'];
       break;
     default:
       break;
