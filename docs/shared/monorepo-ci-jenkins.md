@@ -1,6 +1,6 @@
 # Configuring CI Using Jenkins and Nx
 
-Below is an example of an Jenkins setup, building and testing only what is affected.
+Below is an example of a Jenkins setup, building and testing only what is affected.
 
 ```groovy
 pipeline {
@@ -17,10 +17,12 @@ pipeline {
                     }
                     agent any
                     steps {
-                        sh "npx nx-cloud start-ci-run --distribute-on='5 linux-medium-js' --stop-agents-after='build'" // this line enables distribution
+                        // This line enables distribution
+                        // The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+                        sh "npx nx-cloud start-ci-run --distribute-on='5 linux-medium-js' --stop-agents-after='e2e-ci'"
                         sh "npm ci"
                         sh "npx nx-cloud record -- nx format:check"
-                        sh "npx nx affected --base=HEAD~1 -t lint test build --parallel=3"
+                        sh "npx nx affected --base=HEAD~1 -t lint test build e2e-ci"
                     }
                 }
                 stage('PR') {
@@ -29,10 +31,12 @@ pipeline {
                     }
                     agent any
                     steps {
-                        sh "npx nx-cloud start-ci-run --distribute-on='5 linux-medium-js' --stop-agents-after='build'" // this line enables distribution
+                        // This line enables distribution
+                        // The "--stop-agents-after" is optional, but allows idle agents to shut down once the "e2e-ci" targets have been requested
+                        sh "npx nx-cloud start-ci-run --distribute-on='5 linux-medium-js' --stop-agents-after='e2e-ci'"
                         sh "npm ci"
                         sh "npx nx-cloud record -- nx format:check"
-                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint test build --parallel=3"
+                        sh "npx nx affected --base origin/${env.CHANGE_TARGET} -t lint test build e2e-ci"
                     }
                 }
             }
