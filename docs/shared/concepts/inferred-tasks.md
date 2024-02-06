@@ -1,8 +1,13 @@
-# Inferred Tasks
+# Inferred Tasks (Project Crystal)
 
 In Nx version 18, many Nx plugins will automatically infer tasks for your projects based on the configuration of different tools. Many tools have configuration files which determine what a tool does. Nx is able to cache the results of running the tool. Nx plugins use the same configuration files to infer how Nx should [run the task](/features/run-tasks). This includes [fine-tuned cache settings](/features/cache-task-results) and automatic [task dependencies](/concepts/task-pipeline-configuration).
 
 For example, the `@nx/webpack` plugin infers tasks to run webpack through Nx based on your repository's webpack configuration. This configuration already defines the destination of your build files, so Nx reads that value and caches the correct output files.
+
+{% youtube
+src="https://youtu.be/wADNsVItnsM"
+title="Project Crystal"
+/%}
 
 ## How Does a Plugin Infer Tasks?
 

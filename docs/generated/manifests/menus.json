@@ -6145,6 +6145,23 @@
             "disableCollapsible": false
           },
           {
+            "name": "Troubleshooting",
+            "path": "/ci/recipes/troubleshooting",
+            "id": "troubleshooting",
+            "isExternal": false,
+            "children": [
+              {
+                "name": "CI Execution Failed",
+                "path": "/ci/recipes/troubleshooting/ci-execution-failed",
+                "id": "ci-execution-failed",
+                "isExternal": false,
+                "children": [],
+                "disableCollapsible": false
+              }
+            ],
+            "disableCollapsible": false
+          },
+          {
             "name": "Other",
             "path": "/ci/recipes/other",
             "id": "other",
@@ -6540,6 +6557,31 @@
         "name": "Advanced Configuration",
         "path": "/ci/recipes/on-premise/advanced-config",
         "id": "advanced-config",
+        "isExternal": false,
+        "children": [],
+        "disableCollapsible": false
+      },
+      {
+        "name": "Troubleshooting",
+        "path": "/ci/recipes/troubleshooting",
+        "id": "troubleshooting",
+        "isExternal": false,
+        "children": [
+          {
+            "name": "CI Execution Failed",
+            "path": "/ci/recipes/troubleshooting/ci-execution-failed",
+            "id": "ci-execution-failed",
+            "isExternal": false,
+            "children": [],
+            "disableCollapsible": false
+          }
+        ],
+        "disableCollapsible": false
+      },
+      {
+        "name": "CI Execution Failed",
+        "path": "/ci/recipes/troubleshooting/ci-execution-failed",
+        "id": "ci-execution-failed",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
