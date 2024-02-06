@@ -238,7 +238,7 @@ The library in `dist` is publishable to npm or a private registry.
 
 ### Static HTML Export
 
-Next.js applications can be statically exported by changing th eoutput inside your Next.js configuration file.
+Next.js applications can be statically exported by changing the output inside your Next.js configuration file.
 
 ```js {% fileName="apps/my-next-app/next.config.js" %}
 const nextConfig = {

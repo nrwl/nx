@@ -248,9 +248,10 @@ describe('Linter', () => {
       const libC = uniq('tslib-c');
 
       beforeAll(() => {
-        runCLI(`generate @nx/js:lib ${libA}`);
-        runCLI(`generate @nx/js:lib ${libB}`);
-        runCLI(`generate @nx/js:lib ${libC}`);
+        // make these libs non-buildable to avoid dep-checks triggering lint errors
+        runCLI(`generate @nx/js:lib ${libA} --bundler=none`);
+        runCLI(`generate @nx/js:lib ${libB} --bundler=none`);
+        runCLI(`generate @nx/js:lib ${libC} --bundler=none`);
 
         /**
          * create tslib-a structure
@@ -402,8 +403,7 @@ describe('Linter', () => {
         );
       });
 
-      // TODO(crystal, @meeroslav): Investigate why this is failing
-      xit('should fix noRelativeOrAbsoluteImportsAcrossLibraries', () => {
+      it('should fix noRelativeOrAbsoluteImportsAcrossLibraries', () => {
         const stdout = runCLI(`lint ${libB}`, {
           silenceError: true,
         });
@@ -435,16 +435,29 @@ describe('Linter', () => {
     describe('dependency checks', () => {
       beforeAll(() => {
         updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
-          json.overrides = [
-            ...json.overrides,
-            {
-              files: ['*.json'],
-              parser: 'jsonc-eslint-parser',
-              rules: {
-                '@nx/dependency-checks': 'error',
+          if (!json.overrides.some((o) => o.rules?.['@nx/dependency-checks'])) {
+            json.overrides = [
+              ...json.overrides,
+              {
+                files: ['*.json'],
+                parser: 'jsonc-eslint-parser',
+                rules: {
+                  '@nx/dependency-checks': 'error',
+                },
               },
-            },
-          ];
+            ];
+          }
+          return json;
+        });
+      });
+
+      afterAll(() => {
+        // ensure the rule for dependency checks is removed
+        // so that it does not affect other tests
+        updateJson(`libs/${mylib}/.eslintrc.json`, (json) => {
+          json.overrides = json.overrides.filter(
+            (o) => !o.rules?.['@nx/dependency-checks']
+          );
           return json;
         });
       });

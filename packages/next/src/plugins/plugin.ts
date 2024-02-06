@@ -15,7 +15,6 @@ import { existsSync, readdirSync } from 'fs';
 
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 import { getLockFileName } from '@nx/js';
 
 export interface NextPluginOptions {
@@ -155,6 +154,7 @@ function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
 
 async function getOutputs(projectRoot, nextConfig) {
   let dir = '.next';
+  const { PHASE_PRODUCTION_BUILD } = require('next/constants');
 
   if (typeof nextConfig === 'function') {
     // Works for both async and sync functions.
