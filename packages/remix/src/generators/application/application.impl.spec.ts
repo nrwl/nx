@@ -103,7 +103,7 @@ describe('Remix Application', () => {
     });
 
     describe('--e2eTestRunner', () => {
-      it('should generate an e2e application for the app', async () => {
+      it('should generate a cypress e2e application for the app', async () => {
         // ARRANGE
         const tree = createTreeWithEmptyWorkspace();
 
@@ -120,6 +120,24 @@ describe('Remix Application', () => {
 
         expect(tree.read('e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
       });
+    });
+
+    it('should generate a playwright e2e application for the app', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+
+      // ACT
+      await applicationGenerator(tree, {
+        name: 'test',
+        e2eTestRunner: 'playwright',
+        rootProject: true,
+        addPlugin: true,
+      });
+
+      // ASSERT
+      expectTargetsToBeCorrect(tree, '.');
+
+      expect(tree.read('e2e/playwright.config.ts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -294,7 +312,7 @@ describe('Remix Application', () => {
       });
 
       describe('--e2eTestRunner', () => {
-        it('should generate an e2e application for the app', async () => {
+        it('should generate a cypress e2e application for the app', async () => {
           // ARRANGE
           const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
@@ -311,6 +329,26 @@ describe('Remix Application', () => {
 
           expect(
             tree.read(`${appDir}-e2e/cypress.config.ts`, 'utf-8')
+          ).toMatchSnapshot();
+        });
+
+        it('should generate a playwright e2e application for the app', async () => {
+          // ARRANGE
+          const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+          // ACT
+          await applicationGenerator(tree, {
+            name: 'test',
+            e2eTestRunner: 'playwright',
+            projectNameAndRootFormat,
+            addPlugin: true,
+          });
+
+          // ASSERT
+          expectTargetsToBeCorrect(tree, appDir);
+
+          expect(
+            tree.read(`${appDir}-e2e/playwright.config.ts`, 'utf-8')
           ).toMatchSnapshot();
         });
       });
