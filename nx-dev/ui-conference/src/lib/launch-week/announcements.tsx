@@ -107,7 +107,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     variant="primary"
                     size="default"
                     href="https://blog.nrwl.io/introducing-nx-nuxt-enhanced-nuxt-js-support-in-nx-01eac78034fc?source=friends_link&sk=91582cdbd0719dc23375338ad92afa9b"
-                    title="Unveiling Project Crystal"
+                    title="Introducing @nx/nuxt: Enhanced Nuxt.js Support in Nx"
                   >
                     Read the blog post
                   </ButtonLink>
@@ -123,7 +123,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     variant="primary"
                     size="default"
                     href="https://www.youtube.com/watch?v=uHwUxFYX2DY&ab_channel=Nx-SmartMonorepos-FastCI"
-                    title="Nx Live: @nx/nuxt w/ Nuxt Maintinaer: Daniel Roe - Youtube Livestream"
+                    title="Nx Live: @nx/nuxt w/ Nuxt Maintainer: Daniel Roe - Youtube Livestream"
                   >
                     Catch the Livestream
                   </ButtonLink>
