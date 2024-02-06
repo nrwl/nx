@@ -416,7 +416,7 @@ export function hasBuildExecutor(
   );
 }
 
-const ESLINT_REGEX = /node_modules.*[\/\\]eslint$/;
+const ESLINT_REGEX = /node_modules.*[\/\\]eslint(?:\.js)?$/;
 const JEST_REGEX = /node_modules\/.bin\/jest$/; // when we run unit tests in jest
 const NRWL_CLI_REGEX = /nx[\/\\]bin[\/\\]run-executor\.js$/;
 
