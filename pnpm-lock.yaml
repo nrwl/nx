@@ -845,8 +845,8 @@ devDependencies:
     specifier: ^4.0.1
     version: 4.0.2(postcss@8.4.19)(ts-node@10.9.1)
   rollup-plugin-typescript2:
-    specifier: 0.34.1
-    version: 0.34.1(rollup@2.79.0)(typescript@5.3.3)
+    specifier: 0.36.0
+    version: 0.36.0(rollup@2.79.0)(typescript@5.3.3)
   rxjs:
     specifier: ^7.8.0
     version: 7.8.1
@@ -28718,8 +28718,8 @@ packages:
       - ts-node
     dev: true
 
-  /rollup-plugin-typescript2@0.34.1(rollup@2.79.0)(typescript@5.3.3):
-    resolution: {integrity: sha512-P4cHLtGikESmqi1CA+tdMDUv8WbQV48mzPYt77TSTOPJpERyZ9TXdDgjSDix8Fkqce6soYz3+fa4lrC93IEkcw==}
+  /rollup-plugin-typescript2@0.36.0(rollup@2.79.0)(typescript@5.3.3):
+    resolution: {integrity: sha512-NB2CSQDxSe9+Oe2ahZbf+B4bh7pHwjV5L+RSYpCu7Q5ROuN94F9b6ioWwKfz3ueL3KTtmX4o2MUH2cgHDIEUsw==}
     peerDependencies:
       rollup: '>=1.26.3'
       typescript: '>=2.4.0'
@@ -28728,8 +28728,8 @@ packages:
       find-cache-dir: 3.3.2
       fs-extra: 10.1.0
       rollup: 2.79.0
-      semver: 7.5.3
-      tslib: 2.5.0
+      semver: 7.5.4
+      tslib: 2.6.2
       typescript: 5.3.3
     dev: true
 
