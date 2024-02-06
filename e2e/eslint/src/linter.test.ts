@@ -462,8 +462,7 @@ describe('Linter', () => {
         });
       });
 
-      // TODO(crystal, @meeroslav): Investigate why this is failing
-      xit('should report dependency check issues', () => {
+      it('should report dependency check issues', () => {
         const rootPackageJson = readJson('package.json');
         const nxVersion = rootPackageJson.devDependencies.nx;
         const tslibVersion = rootPackageJson.dependencies['tslib'];
@@ -476,7 +475,7 @@ describe('Linter', () => {
           `libs/${mylib}/src/lib/${mylib}.ts`,
           (content) =>
             `import { names } from '@nx/devkit';\n\n` +
-            content.replace(/=> .*;/, `=> names(${mylib}).className;`)
+            content.replace(/=> .*;/, `=> names('${mylib}').className;`)
         );
 
         // output should now report missing dependency
