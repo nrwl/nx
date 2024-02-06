@@ -196,10 +196,10 @@ describe('Linter', () => {
         eslint.overrides[0].rules[
           '@nx/enforce-module-boundaries'
         ][1].depConstraints = [
-            { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
-            ...eslint.overrides[0].rules['@nx/enforce-module-boundaries'][1]
-              .depConstraints,
-          ];
+          { sourceTag: 'validtag', onlyDependOnLibsWithTags: ['validtag'] },
+          ...eslint.overrides[0].rules['@nx/enforce-module-boundaries'][1]
+            .depConstraints,
+        ];
         updateFile('.eslintrc.json', JSON.stringify(eslint, null, 2));
 
         const tsConfig = readJson('tsconfig.base.json');
