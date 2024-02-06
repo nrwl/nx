@@ -230,7 +230,7 @@
     - [Angular Schematics and Builders](/deprecated/angular-schematics-builders)
     - [Storybook deprecated docs](/deprecated/storybook)
       - [Angular: Information about the Storybook targets](/deprecated/storybook/angular-storybook-targets)
-      - [Angular: The browserTarget](/deprecated/storybook/angular-browser-target)
+      - [Angular - The projectBuildConfig](/deprecated/storybook/angular-project-build-config)
       - [Angular: Storybook Migration to webpackFinal](/deprecated/storybook/migrate-webpack-final-angular)
       - [Angular: Upgrading to Storybook 6](/deprecated/storybook/upgrade-storybook-v6-angular)
       - [React: Storybook Migration to webpackFinal and the Nx Addon](/deprecated/storybook/migrate-webpack-final-react)

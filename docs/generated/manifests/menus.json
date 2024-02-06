@@ -5005,9 +5005,9 @@
                 "disableCollapsible": false
               },
               {
-                "name": "Angular: The browserTarget",
-                "path": "/deprecated/storybook/angular-browser-target",
-                "id": "angular-browser-target",
+                "name": "Angular - The projectBuildConfig",
+                "path": "/deprecated/storybook/angular-project-build-config",
+                "id": "angular-project-build-config",
                 "isExternal": false,
                 "children": [],
                 "disableCollapsible": false
@@ -5161,9 +5161,9 @@
             "disableCollapsible": false
           },
           {
-            "name": "Angular: The browserTarget",
-            "path": "/deprecated/storybook/angular-browser-target",
-            "id": "angular-browser-target",
+            "name": "Angular - The projectBuildConfig",
+            "path": "/deprecated/storybook/angular-project-build-config",
+            "id": "angular-project-build-config",
             "isExternal": false,
             "children": [],
             "disableCollapsible": false
@@ -5212,9 +5212,9 @@
         "disableCollapsible": false
       },
       {
-        "name": "Angular: The browserTarget",
-        "path": "/deprecated/storybook/angular-browser-target",
-        "id": "angular-browser-target",
+        "name": "Angular - The projectBuildConfig",
+        "path": "/deprecated/storybook/angular-project-build-config",
+        "id": "angular-project-build-config",
         "isExternal": false,
         "children": [],
         "disableCollapsible": false
