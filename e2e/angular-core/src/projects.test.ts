@@ -218,8 +218,7 @@ describe('Angular Projects', () => {
     removeFile(`${app1}/src/app/inline-template.component.ts`);
   }, 1000000);
 
-  // TODO(crystal, @jaysoo): enable this test when buildable libs work
-  xit('should build the dependent buildable lib and its child lib, as well as the app', async () => {
+  it('should build the dependent buildable lib and its child lib, as well as the app', async () => {
     // ARRANGE
     const buildableLib = uniq('buildlib1');
     const buildableChildLib = uniq('buildlib2');
