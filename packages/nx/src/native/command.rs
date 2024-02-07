@@ -14,9 +14,6 @@ use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
 use tracing::trace;
 
-#[cfg(target_os = "windows")]
-static CURSOR_POSITION: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
-
 fn command_builder() -> CommandBuilder {
     if cfg!(target_os = "windows") {
         let comspec = std::env::var("COMSPEC");
@@ -98,6 +95,12 @@ impl ChildProcess {
 
         std::thread::spawn(move || {
             while let Ok(content) = rx.recv() {
+                // windows will add `ESC[6n` to the beginning of the output,
+                // we dont want to store this ANSI code in cache, because replays will cause issues
+                // remove it before sending it to js
+                #[cfg(windows)]
+                let content = content.replace("\x1B[6n", "");
+
                 callback_tsfn.call(content, NonBlocking);
             }
         });
@@ -159,34 +162,18 @@ pub fn run_command(
         let mut reader = BufReader::new(reader);
         let mut buffer = [0; 8 * 1024];
 
-        let mut strip_clear_code = cfg!(target_os = "windows");
-
         while let Ok(n) = reader.read(&mut buffer) {
             if n == 0 {
                 break;
             }
 
-            let mut content = String::from_utf8_lossy(&buffer[..n]).to_string();
-            if strip_clear_code {
-                strip_clear_code = false;
-                // remove clear screen
-                content = content.replacen("\x1B[2J", "", 1);
-                // remove cursor position 1,1
-                content = content.replacen("\x1B[H", "", 1);
-            }
+            let content = &buffer[..n];
+            message_tx
+                .send(String::from_utf8_lossy(content).to_string())
+                .ok();
 
-            #[cfg(target_os = "windows")]
-            {
-                let regex = CURSOR_POSITION.get_or_init(|| {
-                    regex::Regex::new(r"\x1B\[\d+;\d+H")
-                        .expect("failed to compile CURSOR ansi regex")
-                });
-                content = regex.replace_all(&content, "").to_string();
-            }
-
-            message_tx.send(content.to_string()).ok();
             if !quiet {
-                stdout.write_all(content.as_bytes()).ok();
+                stdout.write_all(content).ok();
                 stdout.flush().ok();
             }
         }
