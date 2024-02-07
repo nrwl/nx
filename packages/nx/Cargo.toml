@@ -47,6 +47,9 @@ crossterm = "0.27.0"
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["fileapi"] }
 
+[target.'cfg(not(windows))'.dependencies]
+mio = "0.8"
+
 [lib]
 crate-type = ['cdylib']
 

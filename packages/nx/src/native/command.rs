@@ -14,8 +14,12 @@ use napi::{Env, JsFunction};
 use portable_pty::{ChildKiller, CommandBuilder, NativePtySystem, PtySize, PtySystem};
 use tracing::trace;
 
+#[cfg_attr(windows, path = "command/windows.rs")]
+#[cfg_attr(not(windows), path = "command/unix.rs")]
+mod os;
+
 fn command_builder() -> CommandBuilder {
-    if cfg!(target_os = "windows") {
+    if cfg!(windows) {
         let comspec = std::env::var("COMSPEC");
         let shell = comspec
             .as_ref()
@@ -191,12 +195,13 @@ pub fn run_command(
 
     // Stdin -> pty stdin
     if std::io::stdout().is_tty() {
+        enable_raw_mode().expect("Failed to enter raw terminal mode");
         std::thread::spawn(move || {
-            enable_raw_mode().expect("Failed to enter raw terminal mode");
             let mut stdin = std::io::stdin();
-            #[allow(clippy::redundant_pattern_matching)]
-            // ignore errors that come from copying the stream
-            if let Ok(_) = std::io::copy(&mut stdin, &mut writer) {}
+
+            if let Err(e) = os::write_to_pty(&mut stdin, &mut writer) {
+                trace!("Error writing to pty: {:?}", e);
+            }
         });
     }
 
@@ -224,45 +229,11 @@ pub fn nx_fork(
 ) -> napi::Result<ChildProcess> {
     let command = format!(
         "node {} {} {}",
-        handle_path_space(fork_script),
+        os::handle_path_space(fork_script),
         psuedo_ipc_path,
         id
     );
 
     trace!("nx_fork command: {}", &command);
     run_command(command, command_dir, js_env, Some(quiet))
-}
-
-#[cfg(target_os = "windows")]
-pub fn handle_path_space(path: String) -> String {
-    use std::os::windows::ffi::OsStrExt;
-    use std::{ffi::OsString, os::windows::ffi::OsStringExt};
-
-    use winapi::um::fileapi::GetShortPathNameW;
-    let wide: Vec<u16> = std::path::PathBuf::from(&path)
-        .as_os_str()
-        .encode_wide()
-        .chain(Some(0))
-        .collect();
-    let mut buffer: Vec<u16> = vec![0; wide.len() * 2];
-    let result =
-        unsafe { GetShortPathNameW(wide.as_ptr(), buffer.as_mut_ptr(), buffer.len() as u32) };
-    if result == 0 {
-        path
-    } else {
-        let len = buffer.iter().position(|&x| x == 0).unwrap();
-        let short_path: String = OsString::from_wide(&buffer[..len])
-            .to_string_lossy()
-            .into_owned();
-        short_path
-    }
-}
-
-#[cfg(not(target_os = "windows"))]
-fn handle_path_space(path: String) -> String {
-    if path.contains(' ') {
-        format!("'{}'", path)
-    } else {
-        path
-    }
 }
