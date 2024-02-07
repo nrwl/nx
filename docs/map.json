@@ -1429,10 +1429,10 @@
                   "file": "shared/deprecated/storybook/angular-storybook-targets"
                 },
                 {
-                  "id": "angular-browser-target",
-                  "name": "Angular: The browserTarget",
-                  "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
-                  "file": "shared/deprecated/storybook/angular-browser-target"
+                  "id": "angular-project-build-config",
+                  "name": "Angular - The projectBuildConfig",
+                  "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+                  "file": "shared/deprecated/storybook/angular-project-build-config"
                 },
                 {
                   "id": "migrate-webpack-final-angular",

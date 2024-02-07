@@ -4,6 +4,22 @@ import { withEnvironmentVariables as withEnvironment } from '../internal-testing
 jest.mock('../project-graph/file-utils');
 
 describe('splitArgs', () => {
+  let originalBase: string;
+  let originalHead: string;
+
+  beforeEach(() => {
+    originalBase = process.env.NX_BASE;
+    originalHead = process.env.NX_HEAD;
+
+    delete process.env.NX_BASE;
+    delete process.env.NX_HEAD;
+  });
+
+  afterEach(() => {
+    process.env.NX_BASE = originalBase;
+    process.env.NX_HEAD = originalHead;
+  });
+
   it('should split nx specific arguments into nxArgs', () => {
     expect(
       splitArgsIntoNxArgsAndOverrides(
