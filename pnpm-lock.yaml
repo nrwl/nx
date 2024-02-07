@@ -228,8 +228,8 @@ devDependencies:
     specifier: ^29.4.1
     version: 29.5.0
   '@monodon/rust':
-    specifier: 1.3.2
-    version: 1.3.2(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(typescript@5.3.3)(verdaccio@5.15.4)
+    specifier: 1.3.3
+    version: 1.3.3(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(typescript@5.3.3)(verdaccio@5.15.4)
   '@napi-rs/cli':
     specifier: 2.14.0
     version: 2.14.0
@@ -6394,8 +6394,8 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@monodon/rust@1.3.2(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(typescript@5.3.3)(verdaccio@5.15.4):
-    resolution: {integrity: sha512-WcI8y0s8mVngdF/nwvki5EP3LS7YDnIxZyMcU34iVT6flVexcipN2F89e0pLb8ER9yS2AaMyvuDyX1JlqDi9bg==}
+  /@monodon/rust@1.3.3(@swc-node/register@1.6.8)(@swc/core@1.3.86)(@types/node@18.19.8)(typescript@5.3.3)(verdaccio@5.15.4):
+    resolution: {integrity: sha512-rDzKRAxlh5ohZSBTXrSt4vt++ZfZZuZ+6/XwrOohsfm8NTxd37JvkXH2nBLrNkqhcej0NiR/T2R/lpPKR7UEFQ==}
     dependencies:
       '@ltd/j-toml': 1.38.0
       '@nx/devkit': 17.1.2(nx@17.1.2)
@@ -24939,7 +24939,7 @@ packages:
       fs-extra: 11.2.0
       glob: 7.1.4
       ignore: 5.3.1
-      jest-diff: 29.5.0
+      jest-diff: 29.7.0
       js-yaml: 4.1.0
       jsonc-parser: 3.2.0
       lines-and-columns: 2.0.3
