@@ -1536,6 +1536,7 @@ dependencies = [
  "ignore",
  "ignore-files 2.0.0",
  "itertools",
+ "mio",
  "napi",
  "napi-build",
  "napi-derive",
