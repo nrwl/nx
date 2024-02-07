@@ -10,7 +10,6 @@ import {
   createOverrides,
   readGraphFileFromGraphArg,
 } from '../../utils/command-line-utils';
-import { logger } from '../../utils/logger';
 import { handleErrors } from '../../utils/params';
 import { projectHasTarget } from '../../utils/project-graph-utils';
 import { generateGraph } from '../graph/graph';
@@ -118,12 +117,6 @@ export async function releasePublish(
     if (status !== 0) {
       overallExitStatus = status || 1;
     }
-  }
-
-  if (_args.dryRun) {
-    logger.warn(
-      `\nNOTE: The "dryRun" flag means no projects were actually published.`
-    );
   }
 
   return overallExitStatus;
