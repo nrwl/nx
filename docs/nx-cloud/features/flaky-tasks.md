@@ -8,13 +8,17 @@ Nx is perfectly positioned to detect which tasks are flaky and automatically re-
 
 Nx creates a hash of all the inputs for a task whenever it is run. If Nx ever encounters a task that fails with a particular set of inputs and then succeeds with those same inputs, Nx knows for a fact that the task is flaky. Nx can't know with certainty when the task has been fixed to no longer be flaky, so if a particular task has no flakiness incidents for 2 weeks, the `flaky` flag is removed for that task.
 
+![Flaky tasks in CI](/nx-cloud/features/flaky-tasks-ci.png)
+
 ## Manually Mark a Task as Flaky or Not Flaky
 
-If you need to manually mark a task as flaky or not flaky, you can do so from the run details screen. Flaky tasks will have a button that says `Mark task as no longer flaky` and failed tasks that are not flaky will have a button that says `Mark task as likely flaky`. Using these buttons, you can ensure that Nx Cloud treats tasks in the appropriate way.
-
-![Mark task as no longer flaky button](/nx-cloud/features/mark-task-as-no-longer-flaky.png)
+If you don't want to wait for Nx Cloud to identify a task as flaky, you can manually mark a task as flaky from the run details screen. Failed tasks that are not flaky will have a button that says `Mark task as likely flaky`.
 
 ![Mark task as likely flaky button](/nx-cloud/features/mark-task-as-likely-flaky.png)
+
+Once you've resolved whatever issue caused a task to be flaky, you can manually mark a task as not flaky on the same run details screen. Flaky tasks will have a button that says `Mark task as no longer flaky`.
+
+![Mark task as no longer flaky button](/nx-cloud/features/mark-task-as-no-longer-flaky.png)
 
 ## Re-run Flaky Tasks
 
