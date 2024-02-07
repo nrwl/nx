@@ -1,8 +1,10 @@
-pub fn handle_path_space(path: String) -> String {
-    use std::os::windows::ffi::OsStrExt;
-    use std::{ffi::OsString, os::windows::ffi::OsStringExt};
+use std::io::{Stdin, Write};
+use std::os::windows::ffi::OsStrExt;
+use std::{ffi::OsString, os::windows::ffi::OsStringExt};
 
-    use winapi::um::fileapi::GetShortPathNameW;
+use winapi::um::fileapi::GetShortPathNameW;
+
+pub fn handle_path_space(path: String) -> String {
     let wide: Vec<u16> = std::path::PathBuf::from(&path)
         .as_os_str()
         .encode_wide()
@@ -22,6 +24,8 @@ pub fn handle_path_space(path: String) -> String {
     }
 }
 
-pub fn write_to_pty(stdin: &mut Stdin, writer: &mut impl Write) {
-    std::io::copy(stdin, writer).ok();
+pub fn write_to_pty(stdin: &mut Stdin, writer: &mut impl Write) -> anyhow::Result<()> {
+    std::io::copy(stdin, writer)
+        .map_err(|e| anyhow::anyhow!(e))
+        .map(|_| ())
 }
