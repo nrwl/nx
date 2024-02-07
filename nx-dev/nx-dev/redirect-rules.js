@@ -955,7 +955,7 @@ const latestRecipesRefactoring = {
 };
 
 const coreFeatureAndConceptsRefactoring = {
-  '/features/share-your-cache': '/features/remote-cache',
+  '/features/share-your-cache': '/ci/features/remote-cache',
   '/concepts/more-concepts/customizing-inputs':
     '/recipes/running-tasks/configure-inputs',
   '/recipes/tips-n-tricks/root-level-scripts':
