@@ -193,5 +193,5 @@ export default async function buildExecutor(
 {% /tabs %}
 
 {% callout type="note" title="What about Vite?" %}
-Vite is a build tool that is great for development, and we want to make sure that it is also great for production. We are working on a plugin for Vite that will have parity with the Webpack plugin. Stay tuned for updates.
+Vite is a build tool that is great for development, and we want to make sure that it is also great for production. We are working on an `NxVitePlugin` plugin for Vite that will have parity with the `NxWebpackPlugin`. Stay tuned for updates.
 {% /callout %}
