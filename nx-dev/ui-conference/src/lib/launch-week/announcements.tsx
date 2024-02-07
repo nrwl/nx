@@ -17,7 +17,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
         {/* MONDAY */}
         <div>
           <article className="relative overflow-hidden pt-4 mx-auto max-w-screen-lg xl:max-w-screen-xl">
-            <div className="px-5 pt-12  sm:grid sm:grid-cols-2 sm:gap-8 lg:py-16">
+            <div className="px-5 py-12 grid md:grid-cols-2 sm:gap-8 lg:py-16">
               <div>
                 <header>
                   <SectionHeading as="h2" variant="title" id="monday">
@@ -41,7 +41,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     This is what Nx Project Crystal is all about.
                   </p>
                 </div>
-                <div className="action mt-6 flex space-x-2">
+                <div className="pt-4 action flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
                   <ButtonLink
                     variant="primary"
                     size="default"
@@ -62,11 +62,80 @@ export function LaunchWeekAnnouncements(): JSX.Element {
               </div>
               <div
                 aria-hidden="true"
-                className="relative flex flex-col items-center"
+                className="order-first md:order-last pb-8 relative flex flex-col items-center"
               >
                 <img
                   className="rounded-lg"
                   src="/images/launch-nx/proj-crystal-launch.jpg"
+                  alt="Nx Project Crystal"
+                />
+              </div>
+            </div>
+          </article>
+        </div>
+
+        {/* TUESDAY */}
+        <div>
+          <article className="relative overflow-hidden pt-4 mx-auto max-w-screen-lg xl:max-w-screen-xl">
+            <div className="px-5 py-12 grid md:grid-cols-2 sm:gap-8 lg:py-16">
+              <div>
+                <header>
+                  <SectionHeading as="h2" variant="title" id="monday">
+                    Tuesday
+                  </SectionHeading>
+                  <SectionHeading as="p" variant="display" className="mt-4">
+                    NEW PLUGIN: <a href="nx-api/nuxt">@nx/nuxt</a>
+                  </SectionHeading>
+                </header>
+                <div className="mt-8 flex gap-16 font-normal">
+                  <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
+                    Checkout the newest Nx Plugin: @nx/nuxt. We're excited to
+                    collaborate closer with the Vue community, and have been
+                    looking forward to launching this plugin since we first
+                    announce Vue support last year!
+                    <br />
+                    <br />
+                    This is the first plugin to be created with Project Crystal
+                    from day 1! Using this plugin - you can expect enhanced
+                    support for the Nuxt framework in Nx. It's a game changer
+                    for Nuxt developers who want to take advantage of Nx's
+                    powerful monorepo capabilities.
+                  </p>
+                </div>
+                <div className="pt-4 action flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://blog.nrwl.io/introducing-nx-nuxt-enhanced-nuxt-js-support-in-nx-01eac78034fc?source=friends_link&sk=91582cdbd0719dc23375338ad92afa9b"
+                    title="Introducing @nx/nuxt: Enhanced Nuxt.js Support in Nx"
+                  >
+                    Read the blog post
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://www.youtube.com/watch?v=1L-bDvEemoc&ab_channel=Nx-SmartMonorepos-FastCI"
+                    title="NEW Nx Plugin: @nx/nuxt - Youtube Video"
+                  >
+                    Watch the video
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://www.youtube.com/watch?v=uHwUxFYX2DY&ab_channel=Nx-SmartMonorepos-FastCI"
+                    title="Nx Live: @nx/nuxt w/ Nuxt Maintainer: Daniel Roe - Youtube Livestream"
+                  >
+                    Catch the Livestream
+                  </ButtonLink>
+                </div>
+              </div>
+              <div
+                aria-hidden="true"
+                className="order-first md:order-last pb-8 relative flex flex-col items-center"
+              >
+                <img
+                  className="rounded-lg"
+                  src="/images/launch-nx/new-plugin-nx-nuxt.jpg"
                   alt="Nx Project Crystal"
                 />
               </div>

@@ -126,22 +126,13 @@ describe('Angular Projects', () => {
     );
 
     // check e2e tests
-    let appPort = 4958;
-    updateJson(join(app1, 'project.json'), (config) => {
-      config.targets.serve.options ??= {};
-      config.targets.serve.options.port = appPort;
-      return config;
-    });
     if (runE2ETests()) {
-      const e2eResults = runCLI(
-        `e2e ${app1}-e2e --config baseUrl=http://localhost:${appPort}`
-      );
+      const e2eResults = runCLI(`e2e ${app1}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
-      // TODO(leo): check why the port is not being killed and add assertion after fixing it
-      await killPort(appPort);
+      expect(await killPort(4200)).toBeTruthy();
     }
 
-    appPort = 4207;
+    const appPort = 4207;
     const process = await runCommandUntil(
       `serve ${app1} -- --port=${appPort}`,
       (output) => output.includes(`listening on localhost:${appPort}`)
@@ -227,8 +218,7 @@ describe('Angular Projects', () => {
     removeFile(`${app1}/src/app/inline-template.component.ts`);
   }, 1000000);
 
-  // TODO(crystal, @jaysoo): enable this test when buildable libs work
-  xit('should build the dependent buildable lib and its child lib, as well as the app', async () => {
+  it('should build the dependent buildable lib and its child lib, as well as the app', async () => {
     // ARRANGE
     const buildableLib = uniq('buildlib1');
     const buildableChildLib = uniq('buildlib2');
@@ -329,6 +319,28 @@ describe('Angular Projects', () => {
         main: config.targets.build.options.browser,
         browser: undefined,
         buildLibsFromSource: false,
+      };
+      return config;
+    });
+
+    // update the nx.json
+    updateJson('nx.json', (config) => {
+      config.targetDefaults ??= {};
+      config.targetDefaults['@nx/angular:webpack-browser'] ??= {
+        cache: true,
+        dependsOn: [`^build`],
+        inputs:
+          config.namedInputs && 'production' in config.namedInputs
+            ? ['production', '^production']
+            : ['default', '^default'],
+      };
+      config.targetDefaults['@nx/angular:browser-esbuild'] ??= {
+        cache: true,
+        dependsOn: [`^build`],
+        inputs:
+          config.namedInputs && 'production' in config.namedInputs
+            ? ['production', '^production']
+            : ['default', '^default'],
       };
       return config;
     });
