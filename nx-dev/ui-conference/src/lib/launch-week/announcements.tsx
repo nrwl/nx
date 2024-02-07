@@ -142,6 +142,71 @@ export function LaunchWeekAnnouncements(): JSX.Element {
             </div>
           </article>
         </div>
+
+        {/* WEDNESDAY */}
+        <div>
+          <article className="relative overflow-hidden pt-4 mx-auto max-w-screen-lg xl:max-w-screen-xl">
+            <div className="px-5 py-12 grid sm:grid-cols-2 sm:gap-8 lg:py-16">
+              <div>
+                <header>
+                  <SectionHeading as="h2" variant="title" id="monday">
+                    Wednesday
+                  </SectionHeading>
+                  <SectionHeading as="p" variant="display" className="mt-4">
+                    Nx Agents
+                  </SectionHeading>
+                </header>
+                <div className="mt-8 flex gap-16 font-normal">
+                  <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
+                    Continuous Integration is broken, so we built Nx Agents to
+                    fix it. Nx Agents is a new way to run your CI/CD pipelines.
+                    It's a distributed and scalable solution built to handle
+                    everything from the largest enterprise monorepo, down to
+                    your weekend hackathon project. It's a game changer for all
+                    developers that want to focus on shipping features, not
+                    maintaining CI/CD infrastructure.
+                  </p>
+                </div>
+                <div className="action my-6 flex space-x-2">
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="!!! NEEDS LINK !!!"
+                    title="Fast, Effortless CI"
+                  >
+                    Read the blog post
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://youtu.be/_FSHQIwITic"
+                    title="Continuous Integration is BROKEN. So We Fixed It! - Youtube Video"
+                  >
+                    Watch the video
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://nx.app/products/agents#content"
+                    title="Nx Agents"
+                  >
+                    Get Nx Agents Now
+                  </ButtonLink>
+                </div>
+              </div>
+              <div
+                aria-hidden="true"
+                className="order-first sm:order-last pb-8 relative flex flex-col items-center"
+              >
+                <img
+                  className="rounded-lg"
+                  src="/images/launch-nx/nx-agents.jpg"
+                  alt="Nx Agents"
+                />
+              </div>
+            </div>
+          </article>
+        </div>
       </section>
     </div>
   );
