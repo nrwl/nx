@@ -257,13 +257,22 @@ export async function releaseChangelog(
       args.createRelease
     )
   ) {
+    let hasPushed = false;
+
     postGitTasks.push(async (latestCommit) => {
-      // Before we can create/update the release we need to ensure the commit exists on the remote
-      await gitPush({
-        gitRemote: args.gitRemote,
-        dryRun: args.dryRun,
-        verbose: args.verbose,
-      });
+      if (!hasPushed) {
+        output.logSingleLine(`Pushing to git remote`);
+
+        // Before we can create/update the release we need to ensure the commit exists on the remote
+        await gitPush({
+          gitRemote: args.gitRemote,
+          dryRun: args.dryRun,
+          verbose: args.verbose,
+        });
+        hasPushed = true;
+      }
+
+      output.logSingleLine(`Creating GitHub Release`);
 
       await createOrUpdateGithubRelease(
         workspaceChangelog.releaseVersion,
@@ -340,6 +349,7 @@ export async function releaseChangelog(
           [project]
         );
 
+        let hasPushed = false;
         for (const [projectName, projectChangelog] of Object.entries(
           projectChangelogs
         )) {
@@ -351,12 +361,19 @@ export async function releaseChangelog(
             )
           ) {
             postGitTasks.push(async (latestCommit) => {
-              // Before we can create/update the release we need to ensure the commit exists on the remote
-              await gitPush({
-                gitRemote: args.gitRemote,
-                dryRun: args.dryRun,
-                verbose: args.verbose,
-              });
+              if (!hasPushed) {
+                output.logSingleLine(`Pushing to git remote`);
+
+                // Before we can create/update the release we need to ensure the commit exists on the remote
+                await gitPush({
+                  gitRemote: args.gitRemote,
+                  dryRun: args.dryRun,
+                  verbose: args.verbose,
+                });
+                hasPushed = true;
+              }
+
+              output.logSingleLine(`Creating GitHub Release`);
 
               await createOrUpdateGithubRelease(
                 projectChangelog.releaseVersion,
@@ -395,6 +412,7 @@ export async function releaseChangelog(
         projectNodes
       );
 
+      let hasPushed = false;
       for (const [projectName, projectChangelog] of Object.entries(
         projectChangelogs
       )) {
@@ -403,12 +421,19 @@ export async function releaseChangelog(
           shouldCreateGitHubRelease(releaseGroup.changelog, args.createRelease)
         ) {
           postGitTasks.push(async (latestCommit) => {
-            // Before we can create/update the release we need to ensure the commit exists on the remote
-            await gitPush({
-              gitRemote: args.gitRemote,
-              dryRun: args.dryRun,
-              verbose: args.verbose,
-            });
+            if (!hasPushed) {
+              output.logSingleLine(`Pushing to git remote`);
+
+              // Before we can create/update the release we need to ensure the commit exists on the remote
+              await gitPush({
+                gitRemote: args.gitRemote,
+                dryRun: args.dryRun,
+                verbose: args.verbose,
+              });
+              hasPushed = true;
+            }
+
+            output.logSingleLine(`Creating GitHub Release`);
 
             await createOrUpdateGithubRelease(
               projectChangelog.releaseVersion,
