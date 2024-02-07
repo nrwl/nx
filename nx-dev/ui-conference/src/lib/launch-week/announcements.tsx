@@ -88,7 +88,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
             <div className="px-5 py-12 grid md:grid-cols-2 sm:gap-8 lg:py-16">
               <div>
                 <header>
-                  <SectionHeading as="h2" variant="title" id="monday">
+                  <SectionHeading as="h2" variant="title" id="tuesday">
                     Tuesday
                   </SectionHeading>
                   <SectionHeading as="p" variant="display" className="mt-4">
@@ -100,7 +100,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     Checkout the newest Nx Plugin: @nx/nuxt. We're excited to
                     collaborate closer with the Vue community, and have been
                     looking forward to launching this plugin since we first
-                    announce Vue support last year!
+                    announced Vue support last year!
                     <br />
                     <br />
                     This is the first plugin to be created with Project Crystal
@@ -157,7 +157,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
             <div className="px-5 py-12 grid md:grid-cols-2 sm:gap-8 lg:py-16">
               <div>
                 <header>
-                  <SectionHeading as="h2" variant="title" id="monday">
+                  <SectionHeading as="h2" variant="title" id="wednesday">
                     Wednesday
                   </SectionHeading>
                   <SectionHeading as="p" variant="display" className="mt-4">
@@ -179,7 +179,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                   <ButtonLink
                     variant="primary"
                     size="default"
-                    href="!!! NEEDS LINK !!!"
+                    href="https://blog.nrwl.io/fast-effortless-ci-67812514ffb4?source=friends_link&sk=89e1b5c0388dda077e64a2eab5495d95"
                     title="Fast, Effortless CI"
                   >
                     Read the blog post
@@ -196,7 +196,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     variant="primary"
                     size="default"
                     href="https://www.producthunt.com/posts/nx-agents"
-                    title="Nx Project Crystal on ProductHunt"
+                    title="Nx Agents on ProductHunt"
                   >
                     Vote on ProductHunt
                   </ButtonLink>
