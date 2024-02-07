@@ -254,12 +254,15 @@ const changelogCommand: CommandModule<NxReleaseArgs, ChangelogOptions> = {
           return true;
         })
     ),
-  handler: async (args) => {
-    const status = await (
-      await import('./changelog')
-    ).releaseChangelogCLIHandler(args);
-    process.exit(status);
-  },
+  handler: async (args) =>
+    import('./changelog')
+      .then((m) => m.releaseChangelogCLIHandler(args))
+      .then((changelogDataOrExitCode) => {
+        if (typeof changelogDataOrExitCode === 'number') {
+          return process.exit(changelogDataOrExitCode);
+        }
+        process.exit(0);
+      }),
 };
 
 const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
