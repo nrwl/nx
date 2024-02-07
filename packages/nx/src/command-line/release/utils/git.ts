@@ -364,7 +364,13 @@ export async function getCommitHash(ref: string) {
 export async function getFirstGitCommit() {
   try {
     return (
-      await execCommand('git', ['rev-list', '--max-parents=0', 'HEAD'])
+      await execCommand('git', [
+        'rev-list',
+        '--max-parents=0',
+        'HEAD',
+        '--first-parent',
+        'HEAD',
+      ])
     ).trim();
   } catch (e) {
     throw new Error(`Unable to find first commit in git history`);
