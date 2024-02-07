@@ -17,7 +17,7 @@ pub fn handle_path_space(path: String) -> String {
 pub fn write_to_pty(stdin: &mut Stdin, writer: &mut impl Write) -> anyhow::Result<()> {
     let mut buffer = [0; 1024];
 
-    let mut poll = mio::Poll::new().unwrap();
+    let mut poll = mio::Poll::new()?;
     let mut events = Events::with_capacity(3);
 
     // Register stdin to the poll instance
