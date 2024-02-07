@@ -209,13 +209,22 @@ function readCompilerOptions(tsConfigPath): CompilerOptions {
   const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
 
   if (swcNodeInstalled && !preferTsNode) {
-    const {
-      readDefaultTsConfig,
-    }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
-    return readDefaultTsConfig(tsConfigPath);
+    return readCompilerOptionsWithSwc(tsConfigPath);
   } else {
     return readCompilerOptionsWithTypescript(tsConfigPath);
   }
+}
+
+function readCompilerOptionsWithSwc(tsConfigPath) {
+  const {
+    readDefaultTsConfig,
+  }: typeof import('@swc-node/register/read-default-tsconfig') = require('@swc-node/register/read-default-tsconfig');
+  const compilerOptions = readDefaultTsConfig(tsConfigPath);
+  // This is returned in compiler options for some reason, but not part of the typings.
+  // @swc-node/register filters the files to transpile based on it, but it can be limiting when processing
+  // files not part of the received tsconfig included files (e.g. shared helpers, or config files not in source, etc.).
+  delete compilerOptions.files;
+  return compilerOptions;
 }
 
 function readCompilerOptionsWithTypescript(tsConfigPath) {
