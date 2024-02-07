@@ -138,6 +138,7 @@ describe('nx release create github release', () => {
         },
         changelog: {
           projectChangelogs: {
+            file: false,
             createRelease: 'github',
           },
         },
@@ -147,10 +148,6 @@ describe('nx release create github release', () => {
 
     const result = runCLI('release -d --first-release --verbose');
 
-    const expectMatch = (str: string, times: number) => {
-      expect(result.match(new RegExp(str, 'g')).length).toEqual(times);
-    };
-
     expect(
       result.match(new RegExp(`>  NX   Pushing to git remote`, 'g')).length
     ).toEqual(1);
@@ -158,11 +155,11 @@ describe('nx release create github release', () => {
       result.match(new RegExp(`>  NX   Creating GitHub Release`, 'g')).length
     ).toEqual(3);
 
-    // should have two occurrences of each - one for the changelog file, one for the github release
-    expect(result.match(new RegExp(`### 🚀 Features`, 'g')).length).toEqual(4);
-    expect(result.match(new RegExp(`### 🩹 Fixes`, 'g')).length).toEqual(2);
+    // should have one occurrence of each because files are disabled
+    expect(result.match(new RegExp(`### 🚀 Features`, 'g')).length).toEqual(2);
+    expect(result.match(new RegExp(`### 🩹 Fixes`, 'g')).length).toEqual(1);
     expect(
       result.match(new RegExp(`#### ⚠️  Breaking Changes`, 'g')).length
-    ).toEqual(2);
+    ).toEqual(1);
   });
 });

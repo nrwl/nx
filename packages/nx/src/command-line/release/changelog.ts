@@ -766,12 +766,12 @@ async function generateChangelogForWorkspace(
     tree.write(interpolatedTreePath, rootChangelogContents);
 
     printAndFlushChanges(tree, !!dryRun, 3, false, noDiffInChangelogMessage);
-
-    return {
-      releaseVersion,
-      contents,
-    };
   }
+
+  return {
+    releaseVersion,
+    contents,
+  };
 }
 
 async function generateChangelogForProjects(
@@ -908,12 +908,12 @@ async function generateChangelogForProjects(
         // Only print the change for the current changelog file at this point
         (f) => f.path === interpolatedTreePath
       );
-
-      projectChangelogs[project.name] = {
-        releaseVersion,
-        contents,
-      };
     }
+
+    projectChangelogs[project.name] = {
+      releaseVersion,
+      contents,
+    };
   }
 
   return projectChangelogs;
