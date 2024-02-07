@@ -18,7 +18,7 @@ import { existsSync, readdirSync } from 'fs';
 import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
-import { NX_PLUGIN_OPTIONS } from '../utils/symbols';
+import { NX_PLUGIN_OPTIONS } from '../utils/constants';
 import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface CypressPluginOptions {
