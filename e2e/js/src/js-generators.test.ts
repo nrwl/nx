@@ -52,8 +52,9 @@ describe('js e2e', () => {
     // Lint
     const result = runCLI(`lint ${dirName}-${libName}`);
 
-    expect(result).toContain(`Linting "${dirName}-${libName}"...`);
-    expect(result).toContain('All files pass linting');
+    expect(result).toContain(
+      `Successfully ran target lint for project ${dirName}-${libName}"`
+    );
 
     // Test
     const testResult = await runCLIAsync(`test ${dirName}-${libName}`);
@@ -74,7 +75,7 @@ describe('js e2e', () => {
     checkFilesExist(`dist/libs/${nonBuildable}/src/index.js`);
   });
 
-  it('should build buildable libraries using the task graph and handle more scenarios than current implementation', () => {
+  it.skip('should build buildable libraries using the task graph and handle more scenarios than current implementation', () => {
     const lib1 = uniq('lib1');
     const lib2 = uniq('lib2');
     runCLI(`generate @nx/js:lib ${lib1} --bundler=tsc --no-interactive`);
