@@ -58,6 +58,14 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                   >
                     Watch the video
                   </ButtonLink>
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://www.producthunt.com/posts/nx-crystal"
+                    title="Nx Project Crystal on ProductHunt"
+                  >
+                    Vote on ProductHunt
+                  </ButtonLink>
                 </div>
               </div>
               <div
@@ -187,10 +195,10 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                   <ButtonLink
                     variant="primary"
                     size="default"
-                    href="https://nx.app/products/agents#content"
-                    title="Nx Agents"
+                    href="https://www.producthunt.com/posts/nx-agents"
+                    title="Nx Project Crystal on ProductHunt"
                   >
-                    Get Nx Agents Now
+                    Vote on ProductHunt
                   </ButtonLink>
                 </div>
               </div>
