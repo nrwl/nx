@@ -14,6 +14,9 @@ import { colors } from 'ng-packagr/lib/utils/color';
 // using this instead of the one from ng-packagr
 import { getTailwindConfigPath } from './tailwindcss';
 import { workspaceRoot } from '@nx/devkit';
+import type { PostcssConfiguration } from 'ng-packagr/lib/styles/postcss-configuration';
+import { gte } from 'semver';
+import { getInstalledPackageVersionInfo } from '../angular-version-utils';
 
 const maxWorkersVariable = process.env['NG_BUILD_MAX_WORKERS'];
 const maxThreads =
@@ -57,7 +60,7 @@ export class StylesheetProcessor {
     filePath: string;
     content: string;
   }): Promise<string> {
-    this.createRenderWorker();
+    await this.createRenderWorker();
 
     return this.renderWorker.run({ content, filePath });
   }
@@ -67,7 +70,7 @@ export class StylesheetProcessor {
     void this.renderWorker?.destroy();
   }
 
-  private createRenderWorker(): void {
+  private async createRenderWorker(): Promise<void> {
     if (this.renderWorker) {
       return;
     }
@@ -88,6 +91,18 @@ export class StylesheetProcessor {
 
     const browserslistData = browserslist(undefined, { path: this.basePath });
 
+    const { version: ngPackagrVersion } =
+      getInstalledPackageVersionInfo('ng-packagr');
+    let postcssConfiguration: PostcssConfiguration | undefined;
+    if (gte(ngPackagrVersion, '17.2.0-next.0')) {
+      const { loadPostcssConfiguration } = await import(
+        'ng-packagr/lib/styles/postcss-configuration'
+      );
+      postcssConfiguration = await loadPostcssConfiguration(
+        this.projectBasePath
+      );
+    }
+
     this.renderWorker = new Piscina({
       filename: require.resolve(
         'ng-packagr/lib/styles/stylesheet-processor-worker'
@@ -98,6 +113,7 @@ export class StylesheetProcessor {
         FORCE_COLOR: '' + colors.enabled,
       },
       workerData: {
+        postcssConfiguration,
         tailwindConfigPath: getTailwindConfigPath(
           this.projectBasePath,
           workspaceRoot
