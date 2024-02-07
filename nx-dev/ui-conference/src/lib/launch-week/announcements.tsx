@@ -154,7 +154,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
         {/* WEDNESDAY */}
         <div>
           <article className="relative overflow-hidden pt-4 mx-auto max-w-screen-lg xl:max-w-screen-xl">
-            <div className="px-5 py-12 grid sm:grid-cols-2 sm:gap-8 lg:py-16">
+            <div className="px-5 py-12 grid md:grid-cols-2 sm:gap-8 lg:py-16">
               <div>
                 <header>
                   <SectionHeading as="h2" variant="title" id="monday">
@@ -175,7 +175,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     maintaining CI/CD infrastructure.
                   </p>
                 </div>
-                <div className="action my-6 flex space-x-2">
+                <div className="pt-4 action flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
                   <ButtonLink
                     variant="primary"
                     size="default"
