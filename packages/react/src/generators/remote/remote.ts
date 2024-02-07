@@ -22,6 +22,7 @@ import { setupSsrForRemote } from './lib/setup-ssr-for-remote';
 import { setupTspathForRemote } from './lib/setup-tspath-for-remote';
 import { addRemoteToDynamicHost } from './lib/add-remote-to-dynamic-host';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
+import { maybeJs } from '../../utils/maybe-js';
 
 export function addModuleFederationFiles(
   host: Tree,
@@ -40,10 +41,9 @@ export function addModuleFederationFiles(
     templateVariables
   );
 
-  const pathToModuleFederationFiles =
-    options.typescriptConfiguration && !options.js
-      ? 'module-federation-ts'
-      : 'module-federation';
+  const pathToModuleFederationFiles = options.typescriptConfiguration
+    ? 'module-federation-ts'
+    : 'module-federation';
 
   generateFiles(
     host,
@@ -51,6 +51,23 @@ export function addModuleFederationFiles(
     options.appProjectRoot,
     templateVariables
   );
+
+  if (options.typescriptConfiguration) {
+    const pathToWebpackConfig = joinPathFragments(
+      options.appProjectRoot,
+      'webpack.config.js'
+    );
+    const pathToWebpackProdConfig = joinPathFragments(
+      options.appProjectRoot,
+      'webpack.config.prod.js'
+    );
+    if (host.exists(pathToWebpackConfig)) {
+      host.delete(pathToWebpackConfig);
+    }
+    if (host.exists(pathToWebpackProdConfig)) {
+      host.delete(pathToWebpackProdConfig);
+    }
+  }
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
@@ -64,7 +81,11 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   const tasks: GeneratorCallback[] = [];
   const options: NormalizedSchema<Schema> = {
     ...(await normalizeOptions<Schema>(host, schema, '@nx/react:remote')),
-    typescriptConfiguration: schema.typescriptConfiguration ?? false,
+    // when js is set to true, we want to use the js configuration
+    js: schema.js ?? false,
+    typescriptConfiguration: schema.js
+      ? false
+      : schema.typescriptConfiguration ?? true,
     dynamic: schema.dynamic ?? false,
     // TODO(colum): remove when MF works with Crystal
     addPlugin: false,
@@ -85,8 +106,8 @@ export async function remoteGeneratorInternal(host: Tree, schema: Schema) {
   // Renaming original entry file so we can use `import(./bootstrap)` in
   // new entry file.
   host.rename(
-    join(options.appProjectRoot, `src/main.${options.js ? 'js' : 'tsx'}`),
-    join(options.appProjectRoot, `src/bootstrap.${options.js ? 'js' : 'tsx'}`)
+    join(options.appProjectRoot, maybeJs(options, 'src/main.tsx')),
+    join(options.appProjectRoot, maybeJs(options, 'src/bootstrap.tsx'))
   );
 
   addModuleFederationFiles(host, options);

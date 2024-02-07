@@ -3,7 +3,7 @@ import { NormalizedSchema, Schema } from './schema';
 import { createApplicationFiles } from './lib/create-application-files';
 import { updateSpecConfig } from './lib/update-jest-config';
 import { normalizeOptions } from './lib/normalize-options';
-import { addProject, maybeJs } from './lib/add-project';
+import { addProject } from './lib/add-project';
 import { addJest } from './lib/add-jest';
 import { addRouting } from './lib/add-routing';
 import { setDefaults } from './lib/set-defaults';
@@ -27,6 +27,7 @@ import {
   nxRspackVersion,
   nxVersion,
 } from '../../utils/versions';
+import { maybeJs } from '../../utils/maybe-js';
 import { installCommonDependencies } from './lib/install-common-dependencies';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';

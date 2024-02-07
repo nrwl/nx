@@ -65,9 +65,10 @@ describe('React Module Federation', () => {
           ),
         });
 
-        updateFile(
-          `apps/${shell}/webpack.config.${js ? 'js' : 'ts'}`,
-          stripIndents`
+        if (js) {
+          updateFile(
+            `apps/${shell}/webpack.config.js`,
+            stripIndents`
         const { composePlugins, withNx } = require('@nx/webpack');
         const { withReact } = require('@nx/react');
         const { withModuleFederation } = require('@nx/react/module-federation');
@@ -86,7 +87,31 @@ describe('React Module Federation', () => {
         // Nx plugins for webpack to build config object from Nx options and context.
         module.exports = composePlugins(withNx(), withReact(), withModuleFederation(config));
       `
-        );
+          );
+        } else {
+          updateFile(
+            `apps/${shell}/webpack.config.ts`,
+            stripIndents`
+        import { composePlugins, withNx } from '@nx/webpack';
+        import { withReact } from '@nx/react';
+        import { withModuleFederation } from '@nx/react/module-federation';
+        
+        import baseConfig from './module-federation.config';
+        
+        const config = {
+          ...baseConfig,
+              remotes: [
+                '${remote1}',
+                ['${remote2}', 'http://localhost:${defaultRemotePort}/${remote2}/remoteEntry.js'],
+                ['${remote3}', 'http://localhost:${defaultRemotePort}/${remote3}/remoteEntry.js'],
+              ],
+        };
+
+        // Nx plugins for webpack to build config object from Nx options and context.
+        export default composePlugins(withNx(), withReact(), withModuleFederation(config));
+      `
+          );
+        }
 
         updateFile(
           `apps/${shell}-e2e/src/integration/app.spec.${js ? 'js' : 'ts'}`,
@@ -115,6 +140,23 @@ describe('React Module Federation', () => {
           });
         });
       `
+        );
+
+        [shell, remote1, remote2, remote3].forEach((app) => {
+          ['development', 'production'].forEach(async (configuration) => {
+            const cliOutput = runCLI(`run ${app}:build:${configuration}`);
+            expect(cliOutput).toContain('Successfully ran target');
+          });
+        });
+
+        const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
+          output.includes(`http://localhost:${readPort(shell)}`)
+        );
+
+        await killProcessAndPorts(
+          serveResult.pid,
+          readPort(shell),
+          defaultRemotePort
         );
 
         if (runE2ETests()) {
