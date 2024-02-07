@@ -95,6 +95,12 @@ impl ChildProcess {
 
         std::thread::spawn(move || {
             while let Ok(content) = rx.recv() {
+                // windows will add `ESC[6n` to the beginning of the output,
+                // we dont want to store this ANSI code in cache, because replays will cause issues
+                // remove it before sending it to js
+                #[cfg(windows)]
+                let content = content.replace("\x1B[6n", "");
+
                 callback_tsfn.call(content, NonBlocking);
             }
         });
