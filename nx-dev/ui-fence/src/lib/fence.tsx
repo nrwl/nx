@@ -92,6 +92,7 @@ export interface FenceProps {
   lineGroups: Record<string, number[]>;
   language: string;
   enableCopy: boolean;
+  skipRescope?: boolean;
   selectedLineGroup?: string;
   onLineGroupSelectionChange?: (selection: string) => void;
 }
@@ -106,6 +107,7 @@ export function Fence({
   language,
   enableCopy,
   selectedLineGroup,
+  skipRescope,
   onLineGroupSelectionChange,
 }: FenceProps) {
   if (highlightLines) {
@@ -162,7 +164,7 @@ export function Fence({
     };
   }, [copied]);
   const showRescopeMessage =
-    children.includes('@nx/') || command.includes('@nx/');
+    (!skipRescope && children.includes('@nx/')) || command.includes('@nx/');
   function highlightChange(item: { label: string; value: string }) {
     onLineGroupSelectionChange?.(item.value);
   }
