@@ -171,7 +171,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     It's a distributed and scalable solution built to handle
                     everything from the largest enterprise monorepo, down to
                     your weekend hackathon project. It's a game changer for all
-                    developers that want to focus on shipping features, notf
+                    developers that want to focus on shipping features, not
                     maintaining CI/CD infrastructure.
                   </p>
                 </div>
