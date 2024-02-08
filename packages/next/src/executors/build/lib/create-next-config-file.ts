@@ -77,10 +77,13 @@ export function createNextConfigFile(
   );
   for (const moduleFile of moduleFilesToCopy) {
     ensureDirSync(dirname(join(context.root, options.outputPath, moduleFile)));
-    copyFileSync(
-      join(context.root, projectRoot, moduleFile),
-      join(context.root, options.outputPath, moduleFile)
-    );
+    // We already generate a build version of package.json in the dist folder.
+    if (moduleFile !== 'package.json') {
+      copyFileSync(
+        join(context.root, projectRoot, moduleFile),
+        join(context.root, options.outputPath, moduleFile)
+      );
+    }
   }
 }
 

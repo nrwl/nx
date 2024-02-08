@@ -41,7 +41,7 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 
 Your new workspace won’t have much in it because of the `apps` preset. You’ll need to generate an application to have some structure created. Add the Angular plugin to your workspace:
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/angular
 ```
 

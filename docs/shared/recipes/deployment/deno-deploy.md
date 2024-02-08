@@ -18,7 +18,7 @@ This creates a single Deno application.
 
 You can also add a new Deno application to an existing Nx monorepo workspace. Make sure you have the `@nx/deno` package installed:
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/deno
 ```
 

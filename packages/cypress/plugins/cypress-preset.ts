@@ -3,7 +3,7 @@ import { dirname, join, relative } from 'path';
 import { lstatSync } from 'fs';
 
 import vitePreprocessor from '../src/plugins/preprocessor-vite';
-import { NX_PLUGIN_OPTIONS } from '../src/utils/symbols';
+import { NX_PLUGIN_OPTIONS } from '../src/utils/constants';
 
 import { exec } from 'child_process';
 import { request as httpRequest } from 'http';

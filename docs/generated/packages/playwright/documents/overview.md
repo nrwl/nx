@@ -24,7 +24,7 @@ In any Nx workspace, you can install `@nx/playwright` by running the following c
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/playwright
 ```
 
@@ -74,7 +74,7 @@ The `@nx/playwright/plugin` will automatically split your e2e tasks by file. You
 
 Install the `@nx/playwright` package with your package manager.
 
-```shell
+```shell {% skipRescope=true %}
 npm add -D @nx/playwright
 ```
 
