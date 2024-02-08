@@ -21,6 +21,7 @@ export async function addVite(
     includeVitest: options.unitTestRunner === 'vitest',
     skipFormat: true,
     testEnvironment: 'jsdom',
+    addPlugin: options.addPlugin,
   });
 
   createOrEditViteConfig(

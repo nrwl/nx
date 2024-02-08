@@ -24,6 +24,7 @@ import { combineLatest, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
 import { getInstalledAngularVersionInfo } from '../../executors/utilities/angular-version-utils';
 import {
+  loadIndexHtmlTransformer,
   loadMiddleware,
   loadPlugins,
   type PluginSpec,
@@ -44,6 +45,7 @@ type BuildTargetOptions = {
   tsConfig: string;
   buildLibsFromSource?: boolean;
   customWebpackConfig?: { path?: string };
+  indexHtmlTransformer?: string;
   indexFileTransformer?: string;
   plugins?: string[] | PluginSpec[];
   esbuildMiddleware?: string[];
@@ -111,11 +113,14 @@ export function executeDevServerBuilder(
     }
   }
 
+  const normalizedIndexHtmlTransformer =
+    buildTargetOptions.indexHtmlTransformer ??
+    buildTargetOptions.indexFileTransformer;
   let pathToIndexFileTransformer: string;
-  if (buildTargetOptions.indexFileTransformer) {
+  if (normalizedIndexHtmlTransformer) {
     pathToIndexFileTransformer = joinPathFragments(
       context.workspaceRoot,
-      buildTargetOptions.indexFileTransformer
+      normalizedIndexHtmlTransformer
     );
 
     if (pathToIndexFileTransformer && !existsSync(pathToIndexFileTransformer)) {
@@ -178,62 +183,72 @@ export function executeDevServerBuilder(
     from(
       loadMiddleware(options.esbuildMiddleware, buildTargetOptions.tsConfig)
     ),
-  ]).pipe(
-    switchMap(([{ executeDevServerBuilder }, plugins, middleware]) =>
-      executeDevServerBuilder(
-        delegateBuilderOptions,
+    from(
+      loadIndexHtmlFileTransformer(
+        pathToIndexFileTransformer,
+        buildTargetOptions.tsConfig,
         context,
-        {
-          webpackConfiguration: isUsingWebpackBuilder
-            ? async (baseWebpackConfig) => {
-                if (!buildLibsFromSource) {
-                  const workspaceDependencies = dependencies
-                    .filter((dep) => !isNpmProject(dep.node))
-                    .map((dep) => dep.node.name);
-                  // default for `nx run-many` is --all projects
-                  // by passing an empty string for --projects, run-many will default to
-                  // run the target for all projects.
-                  // This will occur when workspaceDependencies = []
-                  if (workspaceDependencies.length > 0) {
-                    baseWebpackConfig.plugins.push(
-                      // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
-                      new WebpackNxBuildCoordinationPlugin(
-                        `nx run-many --target=${
-                          parsedBuildTarget.target
-                        } --projects=${workspaceDependencies.join(',')}`
-                      )
-                    );
-                  }
-                }
-
-                if (!pathToWebpackConfig) {
-                  return baseWebpackConfig;
-                }
-
-                return mergeCustomWebpackConfig(
-                  baseWebpackConfig,
-                  pathToWebpackConfig,
-                  buildTargetOptions,
-                  context.target
-                );
-              }
-            : undefined,
-
-          ...(pathToIndexFileTransformer
-            ? {
-                indexHtml: resolveIndexHtmlTransformer(
-                  pathToIndexFileTransformer,
-                  buildTargetOptions.tsConfig,
-                  context.target
-                ),
-              }
-            : {}),
-        },
-        {
-          buildPlugins: plugins,
-          middleware,
-        }
+        isUsingWebpackBuilder
       )
+    ),
+  ]).pipe(
+    switchMap(
+      ([
+        { executeDevServerBuilder },
+        plugins,
+        middleware,
+        indexHtmlTransformer,
+      ]) =>
+        executeDevServerBuilder(
+          delegateBuilderOptions,
+          context,
+          {
+            webpackConfiguration: isUsingWebpackBuilder
+              ? async (baseWebpackConfig) => {
+                  if (!buildLibsFromSource) {
+                    const workspaceDependencies = dependencies
+                      .filter((dep) => !isNpmProject(dep.node))
+                      .map((dep) => dep.node.name);
+                    // default for `nx run-many` is --all projects
+                    // by passing an empty string for --projects, run-many will default to
+                    // run the target for all projects.
+                    // This will occur when workspaceDependencies = []
+                    if (workspaceDependencies.length > 0) {
+                      baseWebpackConfig.plugins.push(
+                        // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
+                        new WebpackNxBuildCoordinationPlugin(
+                          `nx run-many --target=${
+                            parsedBuildTarget.target
+                          } --projects=${workspaceDependencies.join(',')}`
+                        )
+                      );
+                    }
+                  }
+
+                  if (!pathToWebpackConfig) {
+                    return baseWebpackConfig;
+                  }
+
+                  return mergeCustomWebpackConfig(
+                    baseWebpackConfig,
+                    pathToWebpackConfig,
+                    buildTargetOptions,
+                    context.target
+                  );
+                }
+              : undefined,
+
+            ...(indexHtmlTransformer
+              ? {
+                  indexHtml: indexHtmlTransformer,
+                }
+              : {}),
+          },
+          {
+            buildPlugins: plugins,
+            middleware,
+          }
+        )
     )
   );
 }
@@ -261,6 +276,25 @@ function getDelegateBuilderOptions(
   delete delegateBuilderOptions.buildLibsFromSource;
 
   return delegateBuilderOptions;
+}
+
+async function loadIndexHtmlFileTransformer(
+  pathToIndexFileTransformer: string | undefined,
+  tsConfig: string,
+  context: BuilderContext,
+  isUsingWebpackBuilder: boolean
+) {
+  if (!pathToIndexFileTransformer) {
+    return undefined;
+  }
+
+  return isUsingWebpackBuilder
+    ? resolveIndexHtmlTransformer(
+        pathToIndexFileTransformer,
+        tsConfig,
+        context.target
+      )
+    : await loadIndexHtmlTransformer(pathToIndexFileTransformer, tsConfig);
 }
 
 const executorToBuilderMap = new Map<string, string>([
@@ -313,6 +347,7 @@ function cleanBuildTargetOptions(
   | BrowserEsbuildBuilderOptions {
   delete options.buildLibsFromSource;
   delete options.customWebpackConfig;
+  delete options.indexHtmlTransformer;
   delete options.indexFileTransformer;
   delete options.plugins;
 

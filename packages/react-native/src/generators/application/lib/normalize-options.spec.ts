@@ -23,6 +23,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
       fileName: 'my-app',
@@ -58,6 +59,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       androidProjectRoot: 'myApp/android',
       appProjectRoot: 'myApp',
       className: 'MyApp',
@@ -94,6 +96,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
       className: 'MyApp',
@@ -130,6 +133,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       androidProjectRoot: 'directory/my-app/android',
       appProjectRoot: 'directory/my-app',
       className: 'DirectoryMyApp',
@@ -166,6 +170,7 @@ describe('Normalize Options', () => {
     };
     const options = await normalizeOptions(appTree, schema);
     expect(options).toEqual({
+      addPlugin: true,
       androidProjectRoot: 'my-app/android',
       appProjectRoot: 'my-app',
       className: 'MyApp',

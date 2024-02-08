@@ -65,49 +65,12 @@ describe('Redirect rules configuration', () => {
       }
     });
 
-    test('old node tutorial links', () => {
-      const oldNodeTutorialPaths = [
-        '/node-tutorial/01-create-application',
-        '/node-tutorial/02-display-todos',
-        '/node-tutorial/03-share-code',
-        '/node-tutorial/04-create-libs',
-        '/node-tutorial/05-dep-graph',
-        '/node-tutorial/06-computation-caching',
-        '/node-tutorial/07-test-affected-projects',
-        '/node-tutorial/08-summary',
-      ];
-
-      for (const url of oldNodeTutorialPaths) {
-        expect(redirectRules.tutorialRedirects[url]).toEqual(
-          '/getting-started/tutorials/node-server-tutorial'
-        );
-      }
-
-      const oldNodePathPrefix = '/node-tutorial';
-      const newNodePathPrefix = '/node-server-tutorial';
-      const nodeDestination = [
-        '/1-code-generation',
-        '/2-project-graph',
-        '/3-task-running',
-        '/4-task-pipelines',
-        '/5-docker-target',
-        '/6-summary',
-      ];
-
-      nodeDestination.forEach((des) => {
-        expect(
-          redirectRules.tutorialRedirects[`${oldNodePathPrefix}${des}`]
-        ).toEqual(`${newNodePathPrefix}${des}`);
-      });
-    });
-
     test('old tutorial links', () => {
       const oldTutorialUrls = [
         '/tutorials/package-based-repo-tutorial',
         '/tutorials/integrated-repo-tutorial',
         '/tutorials/react-standalone-tutorial',
         '/tutorials/angular-standalone-tutorial',
-        '/tutorials/node-server-tutorial',
       ];
 
       for (const url of oldTutorialUrls) {

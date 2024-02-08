@@ -1,4 +1,4 @@
-export * from './lib/conf-health-and-safety';
+export * from './lib/components/code-of-conduct';
 export * from './lib/conf-location';
 export * from './lib/conf-schedule-short';
 export * from './lib/conf-speakers';

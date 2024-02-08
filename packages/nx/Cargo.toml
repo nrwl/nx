@@ -4,6 +4,7 @@ version = '0.1.0'
 edition = '2021'
 
 [dependencies]
+portable-pty = { git = "https://github.com/cammisuli/wezterm" }
 anyhow = "1.0.71"
 colored = "2"
 crossbeam-channel = '0.5'
@@ -17,7 +18,6 @@ ignore-files = "2.0.0"
 itertools = "0.10.5"
 once_cell = "1.18.0"
 parking_lot = { version = "0.12.1", features = ["send_guard"] }
-portable-pty = "0.8.1"
 napi = { version = '2.12.6', default-features = false, features = [
     'anyhow',
     'napi4',
@@ -43,6 +43,12 @@ swc_ecma_parser = { version = "0.137.1", features = ["typescript"] }
 swc_ecma_visit = "0.93.0"
 swc_ecma_ast = "0.107.0"
 crossterm = "0.27.0"
+
+[target.'cfg(windows)'.dependencies]
+winapi = { version = "0.3", features = ["fileapi"] }
+
+[target.'cfg(not(windows))'.dependencies]
+mio = "0.8"
 
 [lib]
 crate-type = ['cdylib']

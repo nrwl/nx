@@ -29,9 +29,8 @@ Nx Plugins are optional packages that extend the capabilities of Nx, catering to
 Features of an integrated monorepo:
 
 - [Install dependencies at the root by default](/concepts/more-concepts/dependency-management#single-version-policy)
-- [Scaffold new code with generators](/core-features/plugin-features/use-code-generators)
-- [Run tasks with executors](/core-features/plugin-features/use-task-executors)
-- [Updates dependencies with automated migrations](/core-features/automate-updating-dependencies)
+- [Scaffold new code with generators](/features/generate-code)
+- [Updates dependencies with automated migrations](/features/automate-updating-dependencies)
 
 Visit our ["Why Nx" page](/getting-started/why-nx) for more details.
 
@@ -123,64 +122,115 @@ Nx uses the following syntax to run tasks:
 
 ![Syntax for Running Tasks in Nx](/shared/images/run-target-syntax.svg)
 
-All targets, such as `serve`, `build`, `test` or your custom ones, are defined in the `project.json` file.
+### Inferred Tasks
 
-```json {% fileName="apps/react-store/project.json"}
-{
-  "name": "react-store",
-  ...
-  "targets": {
-    "serve": { ... },
-    "build": { ... },
-    "preview": { ... },
-    "test": { ... },
-    "lint": { ... },
-    "serve-static": { ... },
-  },
-}
+Nx identifies available tasks for your project from [tooling configuration files](/concepts/inferred-tasks), `package.json` scripts and the targets defined in `project.json`. To view the tasks that Nx has detected, look in the [Nx Console](/features/integrate-with-editors) project detail view or run:
+
+```shell
+nx show project react-store --web
 ```
 
-Each target contains a configuration object that tells Nx how to run that target.
+{% project-details title="Project Details View (Simplified)" height="100px" %}
 
-```json {% fileName="project.json"}
+```json
 {
-  "name": "react-store",
-  ...
-  "targets": {
-    "serve": {
-      "executor": "@nx/vite:dev-server",
-      "defaultConfiguration": "development",
-      "options": {
-        "buildTarget": "react-store:build"
-      },
-      "configurations": {
-        "development": {
-          "buildTarget": "react-store:build:development",
-          "hmr": true
-        },
-        "production": {
-          "buildTarget": "react-store:build:production",
-          "hmr": false
+  "project": {
+    "name": "react-store",
+    "data": {
+      "root": "apps/react-store",
+      "includedScripts": [],
+      "name": "react-store",
+      "targets": {
+        "build": {
+          "options": {
+            "cwd": "apps/react-store",
+            "command": "vite build"
+          },
+          "cache": true,
+          "dependsOn": ["^build"],
+          "inputs": [
+            "production",
+            "^production",
+            {
+              "externalDependencies": ["vite"]
+            }
+          ],
+          "outputs": ["{workspaceRoot}/dist/apps/react-store"],
+          "executor": "nx:run-commands",
+          "configurations": {}
         }
-      }
-     },
-     ...
+      },
+      "sourceRoot": "apps/react-store/src",
+      "projectType": "application",
+      "$schema": "node_modules/nx/schemas/project-schema.json",
+      "tags": [],
+      "implicitDependencies": []
+    }
   },
+  "sourceMap": {
+    "root": ["apps/react-store/project.json", "nx/core/project-json"],
+    "targets": ["apps/react-store/project.json", "nx/core/project-json"],
+    "targets.build": ["apps/react-store/vite.config.ts", "@nx/vite/plugin"],
+    "targets.build.command": [
+      "apps/react-store/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.options": [
+      "apps/react-store/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.cache": [
+      "apps/react-store/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.dependsOn": [
+      "apps/react-store/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.inputs": [
+      "apps/react-store/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.outputs": [
+      "apps/react-store/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "targets.build.options.cwd": [
+      "apps/react-store/vite.config.ts",
+      "@nx/vite/plugin"
+    ],
+    "name": ["apps/react-store/project.json", "nx/core/project-json"],
+    "$schema": ["apps/react-store/project.json", "nx/core/project-json"],
+    "sourceRoot": ["apps/react-store/project.json", "nx/core/project-json"],
+    "projectType": ["apps/react-store/project.json", "nx/core/project-json"],
+    "tags": ["apps/react-store/project.json", "nx/core/project-json"]
+  }
 }
 ```
 
-The most critical parts are:
+{% /project-details %}
 
-- `executor` - this is of the syntax `<plugin>:<executor-name>`, where the `plugin` is an NPM package containing an [Nx Plugin](/extending-nx/intro/getting-started) and `<executor-name>` points to a function that runs the task. In this case, the `@nx/vite` plugin contains the `dev-server` executor which serves the React app using Vite.
-- `options` - these are additional properties and flags passed to the executor function to customize it
+If you expand the `build` task, you can see that it was created by the `@nx/vite` plugin by analyzing your `vite.config.ts` file. Notice the outputs are defined as `{workspaceRoot}/dist/apps/react-store`. This value is being read from the `build.outDir` defined in your `vite.config.ts` file. Let's change that value in your `vite.config.ts` file:
 
-Learn more about how to [run tasks with Nx](/core-features/run-tasks). We'll [revisit running tasks](#testing-and-linting-running-multiple-tasks) later in this tutorial.
+```ts {% fileName="apps/react-store/vite.config.ts" %}
+export default defineConfig({
+  // ...
+  build: {
+    outDir: './build/react-store',
+    // ...
+  },
+});
+```
+
+Now if you look at the project details view, the outputs for the build target will say `{workspaceRoot}/build/react-store`. This feature ensures that Nx will always cache the correct files.
+
+You can also override the settings for inferred tasks by modifying the [`targetDefaults` in `nx.json`](/reference/nx-json#target-defaults) or setting a value in your [`project.json` file](/reference/project-configuration). Nx will merge the values from the inferred tasks with the values you define in `targetDefaults` and in your specific project's configuration.
 
 ## Adding Another Application
 
 <!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=706" /%} -->
 
-Nx plugins usually provide [generators](/core-features/plugin-features/use-code-generators) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin provides, run the following command and inspect the output:
+Nx plugins usually provide [generators](/features/generate-code) that allow you to easily scaffold code, configuration or entire projects. To see what capabilities the `@nx/react` plugin provides, run the following command and inspect the output:
 
 ```{% command="npx nx list @nx/react" path="react-monorepo" %}
 
@@ -204,6 +254,7 @@ Nx plugins usually provide [generators](/core-features/plugin-features/use-code-
    setup-ssr : Set up SSR configuration for a project.
    host : Generate a host react application
    remote : Generate a remote react application
+   federate-module : Federate a module.
 
    EXECUTORS/BUILDERS
 
@@ -215,7 +266,7 @@ Nx plugins usually provide [generators](/core-features/plugin-features/use-code-
 
 If you prefer a more integrated experience, you can install the "Nx Console" extension for your code editor. It has support for VSCode, IntelliJ and ships a LSP for Vim. Nx Console provides autocompletion support in Nx configuration files and has UIs for browsing and running generators.
 
-More info can be found in [the integrate with editors article](/core-features/integrate-with-editors).
+More info can be found in [the integrate with editors article](/features/integrate-with-editors).
 
 {% /callout %}
 
@@ -226,7 +277,7 @@ Run the following command to generate a new `inventory` application. Note how we
 
 ✔ Would you like to add React Router to this application? (y/N) · false
 ✔ Which E2E test runner would you like to use? · cypress
-A custom environment was provided: undefined. You need to install it manually.
+✔ What should be the project name and where should it be generated? · inventory @ apps/inventory
 CREATE apps/inventory/index.html
 CREATE apps/inventory/public/favicon.ico
 CREATE apps/inventory/src/app/app.spec.tsx
@@ -239,17 +290,17 @@ CREATE apps/inventory/src/app/app.tsx
 CREATE apps/inventory/src/styles.css
 CREATE apps/inventory/tsconfig.json
 CREATE apps/inventory/project.json
-CREATE apps/inventory/vite.config.ts
 CREATE apps/inventory/tsconfig.spec.json
+CREATE apps/inventory/vite.config.ts
 CREATE apps/inventory/.eslintrc.json
-CREATE apps/inventory-e2e/cypress.config.ts
-CREATE apps/inventory-e2e/src/e2e/app.cy.ts
-CREATE apps/inventory-e2e/src/fixtures/example.json
-CREATE apps/inventory-e2e/src/support/app.po.ts
-CREATE apps/inventory-e2e/src/support/commands.ts
-CREATE apps/inventory-e2e/src/support/e2e.ts
-CREATE apps/inventory-e2e/tsconfig.json
 CREATE apps/inventory-e2e/project.json
+CREATE apps/inventory-e2e/src/e2e/app.cy.ts
+CREATE apps/inventory-e2e/src/support/app.po.ts
+CREATE apps/inventory-e2e/src/support/e2e.ts
+CREATE apps/inventory-e2e/src/fixtures/example.json
+CREATE apps/inventory-e2e/src/support/commands.ts
+CREATE apps/inventory-e2e/cypress.config.ts
+CREATE apps/inventory-e2e/tsconfig.json
 CREATE apps/inventory-e2e/.eslintrc.json
 
 NOTE: The "dryRun" flag means no changes were made.
@@ -349,7 +400,8 @@ Running the above commands should lead to the following directory structure:
 
 Each of these libraries
 
-- has its own `project.json` file with corresponding targets you can run (e.g. running tests for just orders: `nx test orders`)
+- has a project details view where you can see the available tasks (e.g. running tests for just orders: `nx test orders`)
+- has its own `project.json` file where you can customize targets
 - has the name you specified in the generate command; you can find the name in the corresponding `project.json` file
 - has a dedicated `index.ts` file which is the "public API" of the library
 - is mapped in the `tsconfig.base.json` at the root of the workspace
@@ -377,7 +429,7 @@ All libraries that we generate automatically have aliases created in the root-le
 Hence we can easily import them into other libraries and our React application. As an example, let's create and expose a `ProductList` component from our `libs/products` library. Either create it by hand or run
 
 ```shell
-nx g @nx/react:component product-list --project=products
+nx g @nx/react:component product-list --project=products --directory="libs/products/src/lib/product-list"
 ```
 
 We don't need to implement anything fancy as we just want to learn how to import it into our main React application.
@@ -526,7 +578,7 @@ export default App;
 
 <!-- {% video-link link="https://youtu.be/OQ-Zc5tcxJE?t=1416" /%} -->
 
-Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/core-features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/core-features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
+Nx automatically detects the dependencies between the various parts of your workspace and builds a [project graph](/features/explore-graph). This graph is used by Nx to perform various optimizations such as determining the correct order of execution when running tasks like `nx build`, identifying [affected projects](/features/run-tasks#run-tasks-affected-by-a-pr) and more. Interestingly you can also visualize it.
 
 Just run:
 
@@ -647,7 +699,7 @@ nx run-many -t test
 
 ### Caching
 
-One thing to highlight is that Nx is able to [cache the tasks you run](/core-features/cache-task-results).
+One thing to highlight is that Nx is able to [cache the tasks you run](/features/cache-task-results).
 
 Note that all of these targets are automatically cached by Nx. If you re-run a single one or all of them again, you'll see that the task completes immediately. In addition, (as can be seen in the output example below) there will be a note that a matching cache result was found and therefore the task was not run again.
 
@@ -665,7 +717,7 @@ Note that all of these targets are automatically cached by Nx. If you re-run a s
    Nx read the output from the cache instead of running the command for 10 out of 10 tasks.
 ```
 
-Not all tasks might be cacheable though. You can configure `cacheableOperations` in the `nx.json` file. You can also [learn more about how caching works](/core-features/cache-task-results).
+Not all tasks might be cacheable though. You can configure the `cache` settings in the `targetDefaults` property of the `nx.json` file. You can also [learn more about how caching works](/features/cache-task-results).
 
 ### Testing Affected Projects
 
@@ -830,7 +882,7 @@ You can even create your own `deploy` task that sends the build output to your h
 {
   "targets": {
     "deploy": {
-      "dependsOn": "build",
+      "dependsOn": ["build"],
       "command": "netlify deploy --dir=dist/react-store"
     }
   }
@@ -839,7 +891,7 @@ You can even create your own `deploy` task that sends the build output to your h
 
 Replace the `command` with whatever terminal command you use to deploy your site.
 
-The `"dependsOn": "build"` setting tells Nx to make sure that the project's `build` task has been run successfully before the `deploy` task.
+The `"dependsOn": ["build"]` setting tells Nx to make sure that the project's `build` task has been run successfully before the `deploy` task.
 
 With the `deploy` tasks defined, you can deploy a single application with `nx deploy react-store` or deploy any applications affected by the current changes with:
 
@@ -1013,7 +1065,7 @@ If you have the ESLint plugin installed in your IDE you should immediately see a
 
 ![ESLint module boundary error](/shared/images/tutorial-react-standalone/react-standalone-module-boundaries.png)
 
-Learn more about how to [enforce module boundaries](/core-features/enforce-module-boundaries).
+Learn more about how to [enforce module boundaries](/features/enforce-module-boundaries).
 
 ## Setting Up CI
 
@@ -1047,7 +1099,7 @@ Here's some more things you can dive into next:
 - Learn how to [migrate your CRA app to Nx](/recipes/react/migration-cra)
 - [Learn how to setup Tailwind](/recipes/react/using-tailwind-css-in-react)
 - [Setup Storybook for our shared UI library](/recipes/storybook/overview-react)
-- [Speed up CI: Run only tasks for project that got changed](/core-features/run-tasks#run-tasks-affected-by-a-pr)
+- [Speed up CI: Run only tasks for project that got changed](/features/run-tasks#run-tasks-affected-by-a-pr)
 - [Speed up CI: Share your cache](/ci/features/remote-cache)
 - [Speed up CI: Distribute your tasks across machines](/ci/features/distribute-task-execution)
 

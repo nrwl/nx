@@ -12,13 +12,13 @@ Ensure that Nx is installed in your monorepo. Check out the [Installation docs](
 
 The [`@nx/js` package](/nx-api/js) is required for Nx Release to manage and release JavaScript packages. Add it if it is not already installed:
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/js
 ```
 
 ### Configure Projects to Release
 
-Nx Release uses Nx's powerful [Project Graph](/core-features/explore-graph) to understand your projects and their dependencies.
+Nx Release uses Nx's powerful [Project Graph](/features/explore-graph) to understand your projects and their dependencies.
 
 If you want to release all of the projects in your workspace, such as when dealing with a series of npm library packages, no configuration is required.
 

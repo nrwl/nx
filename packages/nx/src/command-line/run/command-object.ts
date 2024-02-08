@@ -18,3 +18,14 @@ export const yargsRunCommand: CommandModule = {
   handler: async (args) =>
     (await import('./run-one')).runOne(process.cwd(), withOverrides(args)),
 };
+
+/**
+ * Handles the infix notation for running a target.
+ */
+export const yargsNxInfixCommand: CommandModule = {
+  ...yargsRunCommand,
+  command: '$0 <target> [project] [_..]',
+  describe: 'Run a target for a project',
+  handler: async (args) =>
+    (await import('./run-one')).runOne(process.cwd(), withOverrides(args, 0)),
+};

@@ -42,12 +42,14 @@ import { type PackageJson } from 'nx/src/utils/package-json';
 import setupVerdaccio from '../setup-verdaccio/generator';
 import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
+import { addBuildTargetDefaults } from '@nx/devkit/src/generators/add-build-target-defaults';
 
 export async function libraryGenerator(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
   return await libraryGeneratorInternal(tree, {
+    addPlugin: false,
     // provide a default projectNameAndRootFormat to avoid breaking changes
     // to external generators invoking this one
     projectNameAndRootFormat: 'derived',
@@ -94,6 +96,7 @@ export async function libraryGeneratorInternal(
       includeLib: true,
       skipFormat: true,
       testEnvironment: options.testEnvironment,
+      addPlugin: options.addPlugin,
     });
     tasks.push(viteTask);
     createOrEditViteConfig(
@@ -195,8 +198,13 @@ function addProject(tree: Tree, options: NormalizedSchema) {
     options.config !== 'npm-scripts'
   ) {
     const outputPath = getOutputPath(options);
+
+    const executor = getBuildExecutor(options.bundler);
+
+    addBuildTargetDefaults(tree, executor);
+
     projectConfiguration.targets.build = {
-      executor: getBuildExecutor(options.bundler),
+      executor,
       outputs: ['{options.outputPath}'],
       options: {
         outputPath,
@@ -268,6 +276,7 @@ export type AddLintOptions = Pick<
   | 'setParserOptionsProject'
   | 'rootProject'
   | 'bundler'
+  | 'addPlugin'
 >;
 
 export async function addLint(
@@ -286,6 +295,7 @@ export async function addLint(
     unitTestRunner: options.unitTestRunner,
     setParserOptionsProject: options.setParserOptionsProject,
     rootProject: options.rootProject,
+    addPlugin: options.addPlugin,
   });
   const {
     addOverrideToLintConfig,
@@ -558,6 +568,8 @@ async function normalizeOptions(
   tree: Tree,
   options: LibraryGeneratorSchema
 ): Promise<NormalizedSchema> {
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
+
   /**
    * We are deprecating the compiler and the buildable options.
    * However, we want to keep the existing behavior for now.

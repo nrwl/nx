@@ -89,41 +89,13 @@ take advantage of remote caching and other features it provides.
 
 Then, for React users, install the `@nx/react` plugin; and for Angular users, install the `@nx/angular` plugin.
 
-{% tabs %}
-{% tab label="npm" %}
-
 ```shell
 # If you use React
-npm add -D @nx/react
+nx add @nx/react
 
 # If you use Angular
-npm add -D @nx/angular
+nx add @nx/angular
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-# If you use React
-yarn add -D @nx/react
-
-# If you use Angular
-yarn add -D @nx/angular
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-# If you use React
-pnpm add -D @nx/react
-
-# If you use Angular
-pnpm add -D @nx/angular
-```
-
-{% /tab %}
-{% /tabs %}
 
 Next, generate the host and remote applications.
 

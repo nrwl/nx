@@ -25,6 +25,7 @@ export const WORKSPACE_PLUGIN_DIR = 'tools/eslint-rules';
 
 export interface LintWorkspaceRulesProjectGeneratorOptions {
   skipFormat?: boolean;
+  addPlugin?: boolean;
 }
 
 export async function lintWorkspaceRulesProjectGenerator(
@@ -74,6 +75,7 @@ export async function lintWorkspaceRulesProjectGenerator(
   // Add jest to the project and return installation task
   tasks.push(
     await configurationGenerator(tree, {
+      ...options,
       project: WORKSPACE_RULES_PROJECT_NAME,
       supportTsx: false,
       skipSerializers: true,

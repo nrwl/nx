@@ -9,7 +9,6 @@ import {
 
 // TODO(jack): This test file can be removed when Vite goes ESM-only.
 // This test ensures that when CJS is gone from the published `vite` package, Nx will continue to work.
-
 describe('Vite ESM tests', () => {
   beforeAll(() =>
     newProject({
@@ -20,7 +19,9 @@ describe('Vite ESM tests', () => {
 
   it('should build with Vite when it is ESM-only', async () => {
     const appName = uniq('viteapp');
-    runCLI(`generate @nx/react:app ${appName} --bundler=vite`);
+    runCLI(
+      `generate @nx/react:app ${appName} --bundler=vite --project-name-and-root-format=as-provided`
+    );
 
     // .mts file is needed because Nx will transpile .ts files as CJS
     renameFile(`${appName}/vite.config.ts`, `${appName}/vite.config.mts`);

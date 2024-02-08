@@ -31,29 +31,9 @@ In this recipe, we'll show you how to create a [Remix](https://remix.run) applic
 Make sure to install the `@nx/remix` version that is on the same minor version as the `nx` version in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-{% tabs %}
-{% tab label="npm" %}
-
-```shell
-npm add -D @nx/remix
+```shell {% skipRescope=true %}
+nx add @nx/remix
 ```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/remix
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/remix
-```
-
-{% /tab %}
-{% /tabs %}
 
 ## Generate a Remix Application
 

@@ -8,7 +8,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
       "targets": {
         "build-something": {
           "cache": true,
-          "command": "nuxi build",
+          "command": "nuxt build",
           "dependsOn": [
             "^build-something",
           ],
@@ -17,7 +17,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
             "^production",
             {
               "externalDependencies": [
-                "nuxi",
+                "nuxt",
               ],
             },
           ],
@@ -29,7 +29,7 @@ exports[`@nx/nuxt/plugin not root project should create nodes 1`] = `
           ],
         },
         "my-serve": {
-          "command": "nuxi dev",
+          "command": "nuxt dev",
           "options": {
             "cwd": "my-app",
           },
@@ -48,7 +48,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
       "targets": {
         "build": {
           "cache": true,
-          "command": "nuxi build",
+          "command": "nuxt build",
           "dependsOn": [
             "^build",
           ],
@@ -57,7 +57,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
             "^production",
             {
               "externalDependencies": [
-                "nuxi",
+                "nuxt",
               ],
             },
           ],
@@ -69,7 +69,7 @@ exports[`@nx/nuxt/plugin root project should create nodes 1`] = `
           ],
         },
         "serve": {
-          "command": "nuxi dev",
+          "command": "nuxt dev",
           "options": {
             "cwd": ".",
           },

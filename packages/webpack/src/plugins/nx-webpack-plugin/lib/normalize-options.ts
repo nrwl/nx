@@ -92,7 +92,7 @@ export function normalizeOptions(
     sourceMap: options.sourceMap ?? !isProd,
     sourceRoot,
     styles: options.styles ?? [],
-    target: options.target ?? 'web',
+    target: options.target,
     targetName,
     vendorChunk: options.vendorChunk ?? !isProd,
   };

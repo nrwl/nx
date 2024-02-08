@@ -96,7 +96,7 @@ Documentation site generated in /docs
    Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
 ```
 
-Read more about [cacheableOperations](/core-features/cache-task-results) and fine-tuning caching with [task inputs](/recipes/running-tasks/customizing-inputs).
+Read more about [cacheableOperations](/features/cache-task-results) and fine-tuning caching with [task inputs](/recipes/running-tasks/configure-inputs).
 
 ## Keep using NPM to run scripts rather than Nx
 

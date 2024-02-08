@@ -1,3 +1,8 @@
+---
+title: Overview of the Nx Remix Plugin
+description: The Nx Plugin for Remix contains executors, generators, and utilities for managing Remix applications and libraries within an Nx workspace.
+---
+
 The Nx Plugin for Remix contains executors, generators, and utilities for managing Remix applications and libraries
 within an Nx workspace. It provides:
 
@@ -10,35 +15,66 @@ within an Nx workspace. It provides:
   - Meta
 - Utilities for automatic workspace refactoring.
 
-## Setting up the Remix plugin
+## Setting up @nx/remix
+
+### Installation
 
 {% callout type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/remix` version that matches the version of `nx` in your repository. If the version
-numbers get out of sync, you can encounter some difficult to debug errors. You
-can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/remix` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/recipes/tips-n-tricks/keep-nx-versions-in-sync).
 {% /callout %}
 
-Adding the Remix plugin to an existing Nx workspace can be done with the following:
+In any Nx workspace, you can install `@nx/remix` by running the following command:
 
 {% tabs %}
-{% tab label="npm" %}
+{% tab label="Nx 18+" %}
+
+```shell {% skipRescope=true %}
+nx add @nx/remix
+```
+
+This will install the correct version of `@nx/remix`.
+
+### How @nx/remix Infers Tasks
+
+The `@nx/remix` plugin will create a task for any project that has a Remix configuration file present. Any of the following files will be recognized as a Remix configuration file:
+
+- `remix.config.js`
+- `remix.config.mjs`
+- `remix.config.cjs`
+
+### View Inferred Tasks
+
+To view inferred tasks for a project, open the [project details view](/concepts/inferred-tasks) in Nx Console or run `nx show project my-project --web` in the command line.
+
+### @nx/remix Configuration
+
+The `@nx/remix/plugin` is configured in the `plugins` array in `nx.json`.
+
+```json {% fileName="nx.json" %}
+{
+  "plugins": [
+    {
+      "plugin": "@nx/remix/plugin",
+      "options": {
+        "buildTargetName": "build",
+        "serveTargetName": "serve",
+        "startTargetName": "start",
+        "typecheckTargetName": "typecheck"
+      }
+    }
+  ]
+}
+```
+
+- The `buildTargetName`, `serveTargetName`, `startTargetName` and `typecheckTargetName` options control the names of the inferred Remix tasks. The default names are `build`, `serve`, `start` and `typecheck`.
+
+{% /tab %}
+{% tab label="Nx < 18" %}
+
+Install the `@nx/remix` package with your package manager.
 
 ```shell
 npm add -D @nx/remix
-```
-
-{% /tab %}
-{% tab label="yarn" %}
-
-```shell
-yarn add -D @nx/remix
-```
-
-{% /tab %}
-{% tab label="pnpm" %}
-
-```shell
-pnpm add -D @nx/remix
 ```
 
 {% /tab %}

@@ -7,6 +7,7 @@ import {
   CreateNodesContext,
   detectPackageManager,
   joinPathFragments,
+  normalizePath,
   readJsonFile,
   TargetConfiguration,
   writeJsonFile,
@@ -17,9 +18,9 @@ import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context';
 import { minimatch } from 'minimatch';
-import { loadPlaywrightConfig } from '../utils/load-config-file';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
+import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -106,7 +107,12 @@ async function buildPlaywrightTargets(
   options: NormalizedOptions,
   context: CreateNodesContext
 ) {
-  const playwrightConfig: PlaywrightTestConfig = await loadPlaywrightConfig(
+  // Playwright forbids importing the `@playwright/test` module twice. This would affect running the tests,
+  // but we're just reading the config so let's delete the variable they are using to detect this.
+  // See: https://github.com/microsoft/playwright/pull/11218/files
+  delete (process as any)['__pw_initiator__'];
+
+  const playwrightConfig = await loadConfigFile<PlaywrightTestConfig>(
     join(context.workspaceRoot, configFilePath)
   );
 
@@ -152,7 +158,9 @@ async function buildPlaywrightTargets(
     const dependsOn: TargetConfiguration['dependsOn'] = [];
     forEachTestFile(
       (testFile) => {
-        const relativeToProjectRoot = relative(projectRoot, testFile);
+        const relativeToProjectRoot = normalizePath(
+          relative(projectRoot, testFile)
+        );
         const targetName = `${options.ciTargetName}--${relativeToProjectRoot}`;
         targets[targetName] = {
           ...ciBaseTargetConfig,
