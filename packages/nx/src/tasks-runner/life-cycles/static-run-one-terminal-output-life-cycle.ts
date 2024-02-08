@@ -112,6 +112,19 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     terminalOutput: string
   ) {
     const args = getPrintableCommandArgsForTask(task);
-    output.logCommandOutput(args.join(' '), status, terminalOutput);
+    if (
+      this.args.verbose ||
+      status === 'success' ||
+      status === 'failure' ||
+      task.target.project === this.initiatingProject
+    ) {
+      output.logCommandOutput(args.join(' '), status, terminalOutput);
+    } else {
+      /**
+       * Do not show the terminal output in the case where it is not the initiating project and verbose is not set,
+       * but still print the command that was run and its status (so that cache hits can still be traced).
+       */
+      output.logCommandOutput(args.join(' '), status, '');
+    }
   }
 }
