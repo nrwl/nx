@@ -241,7 +241,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                   <ButtonLink
                     variant="primary"
                     size="default"
-                    href="https://youtu.be/_FSHQIwITic"
+                    href="https://youtu.be/Xfvv09wSoM8"
                     title="Tusky - Youtube Video"
                   >
                     Watch the video
