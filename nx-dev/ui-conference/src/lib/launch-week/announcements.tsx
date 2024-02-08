@@ -250,7 +250,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     variant="primary"
                     size="default"
                     href="https://nx.app"
-                    title="Nx Agents on ProductHunt"
+                    title="Nx Cloud"
                   >
                     See on Nx Cloud
                   </ButtonLink>
@@ -262,7 +262,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
               >
                 <img
                   className="rounded-lg"
-                  src="/images/launch-nx/nx-agents.jpg"
+                  src="/images/launch-nx/tusky.jpg"
                   alt="Nx Agents"
                 />
               </div>
