@@ -92,6 +92,7 @@ export interface FenceProps {
   lineGroups: Record<string, number[]>;
   language: string;
   enableCopy: boolean;
+  skipRescope?: boolean;
   selectedLineGroup?: string;
   onLineGroupSelectionChange?: (selection: string) => void;
 }
@@ -106,6 +107,7 @@ export function Fence({
   language,
   enableCopy,
   selectedLineGroup,
+  skipRescope,
   onLineGroupSelectionChange,
 }: FenceProps) {
   if (highlightLines) {
@@ -161,13 +163,8 @@ export function Fence({
       t && clearTimeout(t);
     };
   }, [copied]);
-  const nxPackageCmd = children || command;
   const showRescopeMessage =
-    nxPackageCmd.includes('@nx/') &&
-    // these packages were never published on v15 and less
-    !['@nx/nuxt', '@nx/vue', '@nx/eslint', '@nx/playwright'].some((pkg) =>
-      nxPackageCmd.includes(pkg)
-    );
+    (!skipRescope && children.includes('@nx/')) || command.includes('@nx/');
   function highlightChange(item: { label: string; value: string }) {
     onLineGroupSelectionChange?.(item.value);
   }

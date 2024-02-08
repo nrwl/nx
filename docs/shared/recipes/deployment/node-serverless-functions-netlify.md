@@ -23,7 +23,7 @@ npx create-nx-workspace@latest my-functions --preset=@nx/netlify --site=my-site
 
 You will need to install `@nx/netlify` if you haven't already.
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/netlify
 ```
 
