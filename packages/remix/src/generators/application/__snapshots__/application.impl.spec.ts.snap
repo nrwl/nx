@@ -323,9 +323,8 @@ export default {
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using jest 2`] = `
 "/* eslint-disable */
 export default {
-  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
-  preset: '../jest.preset.cjs',
+  preset: '../jest.preset.js',
   transform: {
     '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
@@ -801,9 +800,8 @@ export default {
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --unitTestRunner should generate the correct files for testing using jest 2`] = `
 "/* eslint-disable */
 export default {
-  setupFilesAfterEnv: ['<rootDir>/test-setup.ts'],
   displayName: 'test',
-  preset: '../../jest.preset.cjs',
+  preset: '../../jest.preset.js',
   transform: {
     '^.+\\\\.[tj]sx?$': ['ts-jest', { tsconfig: '<rootDir>/tsconfig.spec.json' }],
   },
