@@ -378,7 +378,7 @@ describe('Angular Module Federation', () => {
 
     if (runE2ETests()) {
       const e2eProcess = await runCommandUntil(
-        `e2e ${host}-e2e --no-watch --verbose`,
+        `e2e ${host}-e2e --no-watch`,
         (output) => output.includes('All specs passed!')
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
@@ -470,7 +470,7 @@ describe('Angular Module Federation', () => {
 
     if (runE2ETests()) {
       const e2eProcess = await runCommandUntil(
-        `e2e ${host}-e2e --no-watch --verbose`,
+        `e2e ${host}-e2e --no-watch`,
         (output) => output.includes('All specs passed!')
       );
       await killProcessAndPorts(e2eProcess.pid, hostPort, hostPort + 1);
