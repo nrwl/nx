@@ -1608,7 +1608,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/generate",
-        "tags": ["use-code-generators"],
+        "tags": ["generate-code"],
         "originalFilePath": "generated/cli/generate"
       },
       {
@@ -1619,7 +1619,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/run",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/run"
       },
       {
@@ -1652,7 +1652,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/run-many",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/run-many"
       },
       {
@@ -1663,7 +1663,7 @@
         "itemList": [],
         "isExternal": false,
         "path": "nx/documents/affected",
-        "tags": ["run-tasks", "use-task-executors"],
+        "tags": ["run-tasks"],
         "originalFilePath": "generated/cli/affected"
       },
       {
@@ -2617,15 +2617,6 @@
         "name": "error-boundary",
         "originalFilePath": "/packages/remix/src/generators/error-boundary/schema.json",
         "path": "remix/generators/error-boundary",
-        "type": "generator"
-      },
-      {
-        "description": "Generate a project for testing Remix apps using Cypress",
-        "file": "generated/packages/remix/generators/cypress.json",
-        "hidden": false,
-        "name": "cypress",
-        "originalFilePath": "/packages/remix/src/generators/cypress/schema.json",
-        "path": "remix/generators/cypress",
         "type": "generator"
       }
     ],

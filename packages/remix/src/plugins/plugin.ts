@@ -69,7 +69,13 @@ export const createNodes: CreateNodes<RemixPluginOptions> = [
     ]);
     const targets = targetsCache[hash]
       ? targetsCache[hash]
-      : await buildRemixTargets(configFilePath, projectRoot, options, context);
+      : await buildRemixTargets(
+          configFilePath,
+          projectRoot,
+          options,
+          context,
+          siblingFiles
+        );
 
     calculatedTargets[hash] = targets;
 
@@ -88,7 +94,8 @@ async function buildRemixTargets(
   configFilePath: string,
   projectRoot: string,
   options: RemixPluginOptions,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  siblingFiles: string[]
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
   const serverBuildPath = await getServerBuildPath(
@@ -99,6 +106,7 @@ async function buildRemixTargets(
   const targets: Record<string, TargetConfiguration> = {};
   targets[options.buildTargetName] = buildTarget(
     options.buildTargetName,
+    projectRoot,
     namedInputs
   );
   targets[options.serveTargetName] = serveTarget(serverBuildPath);
@@ -109,7 +117,8 @@ async function buildRemixTargets(
   );
   targets[options.typecheckTargetName] = typecheckTarget(
     projectRoot,
-    namedInputs
+    namedInputs,
+    siblingFiles
   );
 
   return targets;
@@ -117,8 +126,10 @@ async function buildRemixTargets(
 
 function buildTarget(
   buildTargetName: string,
+  projectRoot: string,
   namedInputs: { [inputName: string]: any[] }
 ): TargetConfiguration {
+  const pathToOutput = projectRoot === '.' ? '' : `/${projectRoot}`;
   return {
     cache: true,
     dependsOn: [`^${buildTargetName}`],
@@ -130,7 +141,7 @@ function buildTarget(
     outputs: ['{options.outputPath}'],
     executor: '@nx/remix:build',
     options: {
-      outputPath: '{workspaceRoot}/dist',
+      outputPath: `{workspaceRoot}/dist${pathToOutput}`,
     },
   };
 }
@@ -160,16 +171,21 @@ function startTarget(
 
 function typecheckTarget(
   projectRoot: string,
-  namedInputs: { [inputName: string]: any[] }
+  namedInputs: { [inputName: string]: any[] },
+  siblingFiles: string[]
 ): TargetConfiguration {
+  const hasTsConfigAppJson = siblingFiles.includes('tsconfig.app.json');
+  const command = `tsc${
+    hasTsConfigAppJson ? ` --project tsconfig.app.json` : ``
+  }`;
   return {
+    command,
     cache: true,
     inputs: [
       ...('production' in namedInputs
         ? ['production', '^production']
         : ['default', '^default']),
     ],
-    command: 'tsc',
     options: {
       cwd: projectRoot,
     },

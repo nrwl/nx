@@ -21,8 +21,29 @@ jobs:
     pool:
       vmImage: 'ubuntu-latest'
     steps:
-      # Uncomment to enable task distribution. --stop-agents-after is optional, but allows idle agents to shut down once the "build" targets have been requested
-      # - script: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="build"
+      - checkout: self
+        fetchDepth: 0
+      # Set Azure Devops CLI default settings
+      - bash: az devops configure --defaults organization=$(System.TeamFoundationCollectionUri) project=$(System.TeamProject)
+        displayName: 'Set default Azure DevOps organization and project'
+      # Get last successfull commit from Azure Devops CLI
+      - displayName: 'Get last successful commit SHA'
+        condition: ne(variables['Build.Reason'], 'PullRequest')
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
+        bash: |
+          LAST_SHA=$(az pipelines build list --branch $(Build.SourceBranchName) --definition-ids $(System.DefinitionId) --result succeeded --top 1 --query "[0].triggerInfo.\"ci.sourceSha\"")
+          if [ -z "$LAST_SHA" ]
+          then
+            echo "Last successful commit not found. Using fallback 'HEAD~1': $BASE_SHA"
+          else
+            echo "Last successful commit SHA: $LAST_SHA"
+            echo "##vso[task.setvariable variable=BASE_SHA]$LAST_SHA"
+          fi
+
+      # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
+      # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
+      # - script: <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
 
       <% if(packageManager == 'pnpm'){ %>
       - script: npm install --prefix=$HOME/.local -g pnpm@8
@@ -30,4 +51,4 @@ jobs:
       <% } %>- script: <%= packageManagerInstall %>
 
       - script: <%= packageManagerPrefix %> nx-cloud record -- nx format:check --base=$(BASE_SHA) --head=$(HEAD_SHA)
-      - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t=lint,test,build
+      - script: <%= packageManagerPrefix %> nx affected --base=$(BASE_SHA) --head=$(HEAD_SHA) -t lint test build<% if(hasE2E){ %> e2e-ci<% } %>

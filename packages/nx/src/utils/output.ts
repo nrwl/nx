@@ -4,6 +4,9 @@ import * as readline from 'readline';
 import { isCI } from './is-ci';
 import { TaskStatus } from '../tasks-runner/tasks-runner';
 
+const GH_GROUP_PREFIX = '::group::';
+const GH_GROUP_SUFFIX = '::endgroup::';
+
 export interface CLIErrorMessageConfig {
   title: string;
   bodyLines?: string[];
@@ -228,15 +231,54 @@ class CLIOutput {
 
   logCommand(message: string, taskStatus?: TaskStatus) {
     this.addNewline();
-    const commandOutput =
-      chalk.dim('> ') + this.formatCommand(this.normalizeMessage(message));
-    const commandOutputWithStatus = this.addTaskStatus(
-      taskStatus,
-      commandOutput
+    this.writeToStdOut(this.getCommandWithStatus(message, taskStatus));
+    this.addNewline();
+    this.addNewline();
+  }
+
+  logCommandOutput(message: string, taskStatus: TaskStatus, output: string) {
+    let commandOutputWithStatus = this.getCommandWithStatus(
+      message,
+      taskStatus
     );
+    if (process.env.GITHUB_ACTIONS) {
+      const icon = this.getStatusIcon(taskStatus);
+      commandOutputWithStatus = `${GH_GROUP_PREFIX}${icon} ${commandOutputWithStatus}`;
+    }
+
+    this.addNewline();
     this.writeToStdOut(commandOutputWithStatus);
     this.addNewline();
     this.addNewline();
+    this.writeToStdOut(output);
+
+    if (process.env.GITHUB_ACTIONS) {
+      this.writeToStdOut(GH_GROUP_SUFFIX);
+    }
+  }
+
+  private getCommandWithStatus(
+    message: string,
+    taskStatus: TaskStatus
+  ): string {
+    const commandOutput =
+      chalk.dim('> ') + this.formatCommand(this.normalizeMessage(message));
+    return this.addTaskStatus(taskStatus, commandOutput);
+  }
+
+  private getStatusIcon(taskStatus: TaskStatus) {
+    switch (taskStatus) {
+      case 'success':
+        return '✔️';
+      case 'failure':
+        return '❌';
+      case 'skipped':
+      case 'local-cache-kept-existing':
+        return '⏩';
+      case 'local-cache':
+      case 'remote-cache':
+        return '🔁';
+    }
   }
 
   private normalizeMessage(message: string) {

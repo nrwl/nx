@@ -45,7 +45,7 @@ export function LaunchWeekAgenda(): JSX.Element {
     {
       type: 'event',
       time: '3:35pm',
-      title: 'Nx Release',
+      title: 'Releasing Nx Release',
       description: ``,
       speakers: ['James Henry'],
       videoUrl: '',
@@ -55,7 +55,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       time: '4:00pm',
       title: 'Special Announcement',
       description: ``,
-      speakers: ['Zack Derose'],
+      speakers: ['Zack DeRose'],
       videoUrl: '',
     },
     {
@@ -63,7 +63,7 @@ export function LaunchWeekAgenda(): JSX.Element {
       time: '4:25pm',
       title: `Closing Remarks`,
       description: '',
-      speakers: ['Jeff Cross', 'Juri Strumpflohner', 'Zack DeRose'],
+      speakers: ['Juri Strumpflohner', 'Zack DeRose'],
       videoUrl: '',
     },
   ];

@@ -26,10 +26,10 @@ export function Header(): JSX.Element {
     //   href: '/concepts',
     // },
     {
-      name: 'Core Features',
+      name: 'Features',
       description:
-        'Learn the core features of Nx with in depth guides and explainers.',
-      href: '/core-features',
+        'Learn the features of Nx with in depth guides and explainers.',
+      href: '/features',
     },
     {
       name: 'Nx Replay',
@@ -52,7 +52,7 @@ export function Header(): JSX.Element {
       name: 'Nx Console',
       description:
         'The official VSCode & JetBrains plugin bringing Nx to your editor.',
-      href: '/core-features/integrate-with-editors#vscode',
+      href: '/features/integrate-with-editors#vscode',
     },
     {
       name: 'Set Up CI',
@@ -73,13 +73,13 @@ export function Header(): JSX.Element {
     },
     {
       name: 'Community',
-      description: "Check how to reach out and be part of Nx' community.",
+      description: 'Check how to reach out and be part of the Nx community.',
       href: '/community',
     },
     {
-      name: 'Nx Conf',
-      description: 'Be part of the next Nx conference!',
-      href: '/conf',
+      name: 'Launch Nx',
+      description: 'A week of exciting announcements about Nx and Nx Cloud!',
+      href: '/launch-nx',
     },
     {
       name: 'Nx Enterprise',

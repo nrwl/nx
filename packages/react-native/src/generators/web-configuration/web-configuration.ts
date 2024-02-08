@@ -98,6 +98,7 @@ async function addBundlerConfiguration(
       typeof import('@nx/vite')
     >('@nx/vite', nxVersion);
     const viteTask = await viteConfigurationGenerator(tree, {
+      ...normalizedSchema,
       uiFramework: 'react',
       project: normalizedSchema.project,
       newProject: true,
@@ -111,6 +112,7 @@ async function addBundlerConfiguration(
       typeof import('@nx/webpack')
     >('@nx/webpack', nxVersion);
     const webpackInitTask = await webpackInitGenerator(tree, {
+      ...normalizedSchema,
       skipFormat: true,
       skipPackageJson: normalizedSchema.skipPackageJson,
     });

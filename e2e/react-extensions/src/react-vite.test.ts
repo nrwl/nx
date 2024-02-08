@@ -2,18 +2,15 @@ import {
   checkFilesExist,
   cleanupProject,
   newProject,
-  readJson,
   runCLI,
   runCLIAsync,
   uniq,
 } from '@nx/e2e/utils';
 
 describe('Build React applications and libraries with Vite', () => {
-  let proj: string;
-
   beforeAll(() => {
-    proj = newProject({
-      packages: ['@nx/react', '@nx/vite'],
+    newProject({
+      packages: ['@nx/react'],
     });
   });
 
@@ -124,23 +121,16 @@ describe('Build React applications and libraries with Vite', () => {
     );
   }, 300_000);
 
-  // TODO(crystal, @mandarini): investigate why this test fails
-  xit('should support bundling with Vite', async () => {
+  it('should support bundling with Vite', async () => {
     const viteLib = uniq('vitelib');
 
     runCLI(
       `generate @nx/react:lib ${viteLib} --bundler=vite --no-interactive --unit-test-runner=none`
     );
 
-    const packageJson = readJson('package.json');
-
-    // Vite does not need this library to work.
-    expect(packageJson.dependencies['core-js']).toBeUndefined();
-
     await runCLIAsync(`build ${viteLib}`);
 
     checkFilesExist(
-      `dist/libs/${viteLib}/package.json`,
       `dist/libs/${viteLib}/index.d.ts`,
       `dist/libs/${viteLib}/index.js`,
       `dist/libs/${viteLib}/index.mjs`

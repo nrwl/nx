@@ -10,6 +10,7 @@ import {
   readJson,
   readProjectConfiguration,
   runTasksInSerial,
+  stripIndents,
   toJS,
   Tree,
   updateJson,
@@ -27,11 +28,7 @@ import {
   typesReactDomVersion,
   typesReactVersion,
 } from '../../utils/versions';
-import {
-  NormalizedSchema,
-  normalizeOptions,
-  updateUnitTestConfig,
-} from './lib';
+import { normalizeOptions, updateUnitTestConfig, addE2E } from './lib';
 import { NxRemixGeneratorSchema } from './schema';
 import { updateDependencies } from '../utils/update-dependencies';
 import initGenerator from '../init/init';
@@ -49,7 +46,6 @@ export function remixApplicationGenerator(
   });
 }
 
-// TODO(@columferry): update this to use crystal?
 export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
@@ -70,38 +66,40 @@ export async function remixApplicationGeneratorInternal(
     sourceRoot: `${options.projectRoot}`,
     projectType: 'application',
     tags: options.parsedTags,
-    targets: {
-      build: {
-        executor: '@nx/remix:build',
-        outputs: ['{options.outputPath}'],
-        options: {
-          outputPath: joinPathFragments('dist', options.projectRoot),
-        },
-      },
-      serve: {
-        executor: `@nx/remix:serve`,
-        options: {
-          command: `${
-            getPackageManagerCommand().exec
-          } remix-serve build/index.js`,
-          manual: true,
-          port: 4200,
-        },
-      },
-      start: {
-        dependsOn: ['build'],
-        command: `remix-serve build/index.js`,
-        options: {
-          cwd: options.projectRoot,
-        },
-      },
-      typecheck: {
-        command: `tsc --project tsconfig.app.json`,
-        options: {
-          cwd: options.projectRoot,
-        },
-      },
-    },
+    targets: !options.addPlugin
+      ? {
+          build: {
+            executor: '@nx/remix:build',
+            outputs: ['{options.outputPath}'],
+            options: {
+              outputPath: joinPathFragments('dist', options.projectRoot),
+            },
+          },
+          serve: {
+            executor: `@nx/remix:serve`,
+            options: {
+              command: `${
+                getPackageManagerCommand().exec
+              } remix-serve build/index.js`,
+              manual: true,
+              port: 4200,
+            },
+          },
+          start: {
+            dependsOn: ['build'],
+            command: `remix-serve build/index.js`,
+            options: {
+              cwd: options.projectRoot,
+            },
+          },
+          typecheck: {
+            command: `tsc --project tsconfig.app.json`,
+            options: {
+              cwd: options.projectRoot,
+            },
+          },
+        }
+      : {},
   });
 
   const installTask = updateDependencies(tree);
@@ -226,6 +224,12 @@ export async function remixApplicationGeneratorInternal(
       addPlugin: options.addPlugin,
     });
     tasks.push(eslintTask);
+
+    tree.write(
+      joinPathFragments(options.projectRoot, '.eslintignore'),
+      stripIndents`build
+    public/build`
+    );
   }
 
   if (options.js) {
@@ -262,31 +266,7 @@ export async function remixApplicationGeneratorInternal(
     extractTsConfigBase(tree);
   }
 
-  // TODO(@columferry): add support for playwright?
-  if (options.e2eTestRunner === 'cypress') {
-    const { configurationGenerator } = ensurePackage<
-      typeof import('@nx/cypress')
-    >('@nx/cypress', getPackageVersion(tree, 'nx'));
-    addFileServerTarget(tree, options, 'serve-static');
-    addProjectConfiguration(tree, options.e2eProjectName, {
-      projectType: 'application',
-      root: options.e2eProjectRoot,
-      sourceRoot: joinPathFragments(options.e2eProjectRoot, 'src'),
-      targets: {},
-      tags: [],
-      implicitDependencies: [options.projectName],
-    });
-    tasks.push(
-      await configurationGenerator(tree, {
-        project: options.e2eProjectName,
-        directory: 'src',
-        skipFormat: true,
-        devServerTarget: `${options.projectName}:serve:development`,
-        baseUrl: 'http://localhost:4200',
-        addPlugin: options.addPlugin,
-      })
-    );
-  }
+  tasks.push(await addE2E(tree, options));
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -297,22 +277,6 @@ export async function remixApplicationGeneratorInternal(
   });
 
   return runTasksInSerial(...tasks);
-}
-
-function addFileServerTarget(
-  tree: Tree,
-  options: NormalizedSchema,
-  targetName: string
-) {
-  const projectConfig = readProjectConfiguration(tree, options.projectName);
-  projectConfig.targets[targetName] = {
-    executor: '@nx/web:file-server',
-    options: {
-      buildTarget: `${options.projectName}:build`,
-      port: 4200,
-    },
-  };
-  updateProjectConfiguration(tree, options.projectName, projectConfig);
 }
 
 export default remixApplicationGenerator;

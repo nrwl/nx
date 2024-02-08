@@ -39,7 +39,13 @@ impl Watcher {
         use_ignore: Option<bool>,
     ) -> Watcher {
         // always have these globs come before the additional globs
-        let mut globs = vec![".git/".into(), "node_modules/".into(), ".nx/".into()];
+        let mut globs = vec![
+            ".git/".into(),
+            "node_modules/".into(),
+            ".nx/".into(),
+            "vitest.config.ts.timestamp*.mjs".into(),
+            "vite.config.ts.timestamp*.mjs".into(),
+        ];
         if let Some(additional_globs) = additional_globs {
             globs.extend(additional_globs);
         }

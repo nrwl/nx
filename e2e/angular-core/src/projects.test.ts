@@ -4,7 +4,7 @@ import {
   checkFilesExist,
   cleanupProject,
   getSize,
-  killPorts,
+  killPort,
   killProcessAndPorts,
   newProject,
   readFile,
@@ -40,7 +40,7 @@ describe('Angular Projects', () => {
       `generate @nx/angular:app ${esbuildApp} --bundler=esbuild --no-standalone --project-name-and-root-format=as-provided --no-interactive`
     );
     runCLI(
-      `generate @nx/angular:lib ${lib1} --add-module-spec --project-name-and-root-format=as-provided --no-interactive`
+      `generate @nx/angular:lib ${lib1} --project-name-and-root-format=as-provided --no-interactive`
     );
     app1DefaultModule = readFile(`${app1}/src/app/app.module.ts`);
     app1DefaultComponentTemplate = readFile(
@@ -69,8 +69,7 @@ describe('Angular Projects', () => {
 
   afterAll(() => cleanupProject());
 
-  // TODO(crystal, @leosvelperez):  Investigate why this is failing
-  xit('should successfully generate apps and libs and work correctly', async () => {
+  it('should successfully generate apps and libs and work correctly', async () => {
     const standaloneApp = uniq('standalone-app');
     runCLI(
       `generate @nx/angular:app ${standaloneApp} --directory=my-dir/${standaloneApp} --bundler=webpack --project-name-and-root-format=as-provided --no-interactive`
@@ -90,13 +89,13 @@ describe('Angular Projects', () => {
         import { AppComponent } from './app.component';
         import { appRoutes } from './app.routes';
         import { NxWelcomeComponent } from './nx-welcome.component';
-        import { ${names(lib1).className}Module } from '@${proj}/${lib1}';
+        import { ${names(lib1).className}Component } from '@${proj}/${lib1}';
 
         @NgModule({
           imports: [
             BrowserModule,
             RouterModule.forRoot(appRoutes, { initialNavigation: 'enabledBlocking' }),
-            ${names(lib1).className}Module
+            ${names(lib1).className}Component
           ],
           declarations: [AppComponent, NxWelcomeComponent],
           bootstrap: [AppComponent]
@@ -130,7 +129,7 @@ describe('Angular Projects', () => {
     if (runE2ETests()) {
       const e2eResults = runCLI(`e2e ${app1}-e2e`);
       expect(e2eResults).toContain('All specs passed!');
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPort(4200)).toBeTruthy();
     }
 
     const appPort = 4207;
@@ -166,7 +165,7 @@ describe('Angular Projects', () => {
       expect(e2eResults).toContain(
         `Successfully ran target e2e for project ${app}-e2e`
       );
-      expect(await killPorts()).toBeTruthy();
+      expect(await killPort(4200)).toBeTruthy();
     }
   }, 1000000);
 
@@ -219,8 +218,7 @@ describe('Angular Projects', () => {
     removeFile(`${app1}/src/app/inline-template.component.ts`);
   }, 1000000);
 
-  // TODO(crystal, @jaysoo): enable this test when buildable libs work
-  xit('should build the dependent buildable lib and its child lib, as well as the app', async () => {
+  it('should build the dependent buildable lib and its child lib, as well as the app', async () => {
     // ARRANGE
     const buildableLib = uniq('buildlib1');
     const buildableChildLib = uniq('buildlib2');
@@ -321,6 +319,28 @@ describe('Angular Projects', () => {
         main: config.targets.build.options.browser,
         browser: undefined,
         buildLibsFromSource: false,
+      };
+      return config;
+    });
+
+    // update the nx.json
+    updateJson('nx.json', (config) => {
+      config.targetDefaults ??= {};
+      config.targetDefaults['@nx/angular:webpack-browser'] ??= {
+        cache: true,
+        dependsOn: [`^build`],
+        inputs:
+          config.namedInputs && 'production' in config.namedInputs
+            ? ['production', '^production']
+            : ['default', '^default'],
+      };
+      config.targetDefaults['@nx/angular:browser-esbuild'] ??= {
+        cache: true,
+        dependsOn: [`^build`],
+        inputs:
+          config.namedInputs && 'production' in config.namedInputs
+            ? ['production', '^production']
+            : ['default', '^default'],
       };
       return config;
     });

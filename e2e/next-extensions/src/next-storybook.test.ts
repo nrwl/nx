@@ -1,48 +1,35 @@
 import {
   checkFilesExist,
   cleanupProject,
-  getPackageManagerCommand,
-  getSelectedPackageManager,
   newProject,
   runCLI,
-  runCommand,
   uniq,
 } from '@nx/e2e/utils';
 
-const pmc = getPackageManagerCommand({
-  packageManager: getSelectedPackageManager(),
-});
-// TODO(crystal, @mandarini): Investigate why this test is failing
+// TODO(katerina): Enable some time?
+// This test fails because of sharp. In this PR I have included all related links to the issue.
 xdescribe('Next.js Storybook', () => {
-  let proj: string;
-
-  beforeAll(
-    () =>
-      (proj = newProject({
-        name: 'proj',
-        packageManager: 'npm',
-        packages: ['@nx/next', '@nx/react'],
-      }))
-  );
+  const appName = uniq('app');
+  beforeAll(() => {
+    newProject({
+      name: 'proj',
+      packageManager: 'npm',
+      packages: ['@nx/next'],
+    });
+    runCLI(
+      `generate @nx/next:app ${appName} --e2eTestRunner=none --project-name-and-root-format=as-provided --no-interactive`
+    );
+    runCLI(
+      `generate @nx/next:component Foo --directory=${appName}/components/foo/Foo.tsx --no-interactive`
+    );
+  });
 
   afterAll(() => cleanupProject());
 
   it('should run a Next.js based Storybook setup', async () => {
-    const appName = uniq('app');
-
-    runCLI(`generate @nx/next:app ${appName} --no-interactive`);
     runCLI(
-      `generate @nx/next:component Foo --project=${appName} --no-interactive`
+      `generate @nx/next:storybook-configuration ${appName} --generateStories --no-interactive`
     );
-
-    runCLI(
-      `generate @nx/react:storybook-configuration ${appName} --generateStories --no-interactive`
-    );
-
-    // It seems that we need to run install twice for some reason.
-    // This is only true on CI. On normal repos, it works as expected.
-    runCommand(pmc.install);
-
     runCLI(`build-storybook ${appName}`);
     checkFilesExist(`${appName}/storybook-static/index.html`);
   }, 600_000);
