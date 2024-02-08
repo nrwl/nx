@@ -64,7 +64,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
     const projectRoot = dirname(configFilePath);
 
     // Do not create a project if package.json and project.json isn't there.
-    const siblingFiles = readdirSync(projectRoot);
+    const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
     if (
       !siblingFiles.includes('package.json') &&
       !siblingFiles.includes('project.json')
