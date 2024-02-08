@@ -10,13 +10,15 @@ Nx creates a hash of all the inputs for a task whenever it is run. If Nx ever en
 
 ![Flaky tasks in CI](/nx-cloud/features/flaky-tasks-ci.png)
 
+In this image, the `e2e-ci--src/e2e/app.cy.ts` task is a flaky task that has been automatically retried once. There is a `1 retry` indicator to show that it has been retried and, once expanded, you can see tabs that contain the logs for `Attempt 1` and `Attempt 2`. With this UI, you can easily compare the output between a successful and unsuccessful run of a flaky task.
+
 ## Manually Mark a Task as Flaky or Not Flaky
 
-If you don't want to wait for Nx Cloud to identify a task as flaky, you can manually mark a task as flaky from the run details screen. Failed tasks that are not flaky will have a button that says `Mark task as likely flaky`.
+If you suspect that a task is flaky, but Nx has not confirmed it yet, you can manually mark it as `likely flaky` from the run details screen. Failed tasks that are not flaky will have a button that says `Mark task as likely flaky`.
 
 ![Mark task as likely flaky button](/nx-cloud/features/mark-task-as-likely-flaky.png)
 
-Once you've resolved whatever issue caused a task to be flaky, you can manually mark a task as not flaky on the same run details screen. Flaky tasks will have a button that says `Mark task as no longer flaky`.
+Once you've resolved the issue that caused a task to be flaky, you can immediately mark the task as not flaky by clicking on `Mark task as no longer flaky` on the same run details screen.
 
 ![Mark task as no longer flaky button](/nx-cloud/features/mark-task-as-no-longer-flaky.png)
 

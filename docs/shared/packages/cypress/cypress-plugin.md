@@ -97,6 +97,8 @@ export default defineConfig({
 });
 ```
 
+Note: The `nxE2EPreset` is a collection of default settings, but is not necessary for task splitting.
+
 {% /tab %}
 {% tab label="Nx < 18" %}
 

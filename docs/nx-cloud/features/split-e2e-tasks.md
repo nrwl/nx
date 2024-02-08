@@ -327,7 +327,7 @@ nx show project myproject-e2e --web
 
 You'll see that there are tasks named `e2e`, `e2e-ci` and a task for each e2e test file.
 
-Developers can run all e2e tests locally in the standard way:
+Developers can run all e2e tests locally with the `e2e` target:
 
 ```shell
 nx e2e my-project-e2e
@@ -353,4 +353,4 @@ With more granular e2e tasks, all the other features of Nx become more powerful.
 
 ### More Precise Flaky Task Identification
 
-Nx Agents can [automatically re-run failed flaky e2e tests](/ci/features/flaky-tasks) on a separate agent without a developer needing to manually re-run the CI pipeline. Without e2e task splitting, Nx can identify that the e2e tests in general are flaky. With e2e task splitting, Nx can identify which specific file is flaky - this way you can more quickly solve the problem.
+Nx Agents [automatically re-run failed flaky e2e tests](/ci/features/flaky-tasks) on a separate agent without a developer needing to manually re-run the CI pipeline. Leveraging e2e task splitting, Nx identifies the specific flaky test file - this way you can quickly fix the offending test file. Without e2e splitting, Nx identifies that at least one of the e2e tests are flaky - requiring you to find the flaky test on your own.
