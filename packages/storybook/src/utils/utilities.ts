@@ -149,13 +149,18 @@ export function findStorybookAndBuildTargetsAndCompiler(targets: {
     '@nrwl/esbuild:esbuild',
     '@nrwl/next:build',
     '@nxext/vite:build',
+    '@angular-devkit/build-angular:application',
     '@angular-devkit/build-angular:browser',
+    '@angular-devkit/build-angular:browser-esbuild',
   ];
 
   for (const target in targets) {
     if (arrayOfBuilders.includes(targets[target].executor)) {
       if (
-        targets[target].executor === '@angular-devkit/build-angular:browser'
+        targets[target].executor === '@angular-devkit/build-angular:browser' ||
+        targets[target].executor ===
+          '@angular-devkit/build-angular:browser-esbuild' ||
+        targets[target].executor === '@angular-devkit/build-angular:application'
       ) {
         /**
          * Not looking for '@nx/angular:ng-packagr-lite' or any other

@@ -218,8 +218,7 @@ describe('Angular Projects', () => {
     removeFile(`${app1}/src/app/inline-template.component.ts`);
   }, 1000000);
 
-  // TODO(crystal, @jaysoo): enable this test when buildable libs work
-  xit('should build the dependent buildable lib and its child lib, as well as the app', async () => {
+  it('should build the dependent buildable lib and its child lib, as well as the app', async () => {
     // ARRANGE
     const buildableLib = uniq('buildlib1');
     const buildableChildLib = uniq('buildlib2');
@@ -320,6 +319,28 @@ describe('Angular Projects', () => {
         main: config.targets.build.options.browser,
         browser: undefined,
         buildLibsFromSource: false,
+      };
+      return config;
+    });
+
+    // update the nx.json
+    updateJson('nx.json', (config) => {
+      config.targetDefaults ??= {};
+      config.targetDefaults['@nx/angular:webpack-browser'] ??= {
+        cache: true,
+        dependsOn: [`^build`],
+        inputs:
+          config.namedInputs && 'production' in config.namedInputs
+            ? ['production', '^production']
+            : ['default', '^default'],
+      };
+      config.targetDefaults['@nx/angular:browser-esbuild'] ??= {
+        cache: true,
+        dependsOn: [`^build`],
+        inputs:
+          config.namedInputs && 'production' in config.namedInputs
+            ? ['production', '^production']
+            : ['default', '^default'],
       };
       return config;
     });

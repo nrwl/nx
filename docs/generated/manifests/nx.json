@@ -6852,14 +6852,14 @@
             "tags": []
           },
           {
-            "id": "angular-browser-target",
-            "name": "Angular: The browserTarget",
-            "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+            "id": "angular-project-build-config",
+            "name": "Angular - The projectBuildConfig",
+            "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
             "mediaImage": "",
-            "file": "shared/deprecated/storybook/angular-browser-target",
+            "file": "shared/deprecated/storybook/angular-project-build-config",
             "itemList": [],
             "isExternal": false,
-            "path": "/deprecated/storybook/angular-browser-target",
+            "path": "/deprecated/storybook/angular-project-build-config",
             "tags": []
           },
           {
@@ -7067,14 +7067,14 @@
         "tags": []
       },
       {
-        "id": "angular-browser-target",
-        "name": "Angular: The browserTarget",
-        "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+        "id": "angular-project-build-config",
+        "name": "Angular - The projectBuildConfig",
+        "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
         "mediaImage": "",
-        "file": "shared/deprecated/storybook/angular-browser-target",
+        "file": "shared/deprecated/storybook/angular-project-build-config",
         "itemList": [],
         "isExternal": false,
-        "path": "/deprecated/storybook/angular-browser-target",
+        "path": "/deprecated/storybook/angular-project-build-config",
         "tags": []
       },
       {
@@ -7137,15 +7137,15 @@
     "path": "/deprecated/storybook/angular-storybook-targets",
     "tags": []
   },
-  "/deprecated/storybook/angular-browser-target": {
-    "id": "angular-browser-target",
-    "name": "Angular: The browserTarget",
-    "description": "This document explains the role of the browserTarget in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
+  "/deprecated/storybook/angular-project-build-config": {
+    "id": "angular-project-build-config",
+    "name": "Angular - The projectBuildConfig",
+    "description": "This document explains the role of the projectBuildConfig in Angular projects with a Storybook configuration, and how the Storybook executors use it.",
     "mediaImage": "",
-    "file": "shared/deprecated/storybook/angular-browser-target",
+    "file": "shared/deprecated/storybook/angular-project-build-config",
     "itemList": [],
     "isExternal": false,
-    "path": "/deprecated/storybook/angular-browser-target",
+    "path": "/deprecated/storybook/angular-project-build-config",
     "tags": []
   },
   "/deprecated/storybook/migrate-webpack-final-angular": {

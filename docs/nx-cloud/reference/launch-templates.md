@@ -10,8 +10,8 @@ This is an example of a launch template using all built-in features:
 ```yaml
 launch-templates:
   my-linux-medium-js:
-    resourceClass: ''
-    image: 'ubuntu22.04-node20.9-v1'
+    resourceClass: 'docker_linux_amd64/medium'
+    image: 'ubuntu22.04-node20.9-v3'
     env: MY_ENV_VAR=shared
     init-steps:
       - name: Checkout # using a reusable step
@@ -47,6 +47,7 @@ The following resource classes are available:
 - `docker_linux_amd64/large+`
 - `docker_linux_amd64/extra_large`
 - `docker_linux_amd64/extra_large+`
+- `windows/medium`
 
 See their detailed description and pricing at [nx.app/pricing](https://nx.app/pricing).
 
@@ -58,6 +59,11 @@ The following images are available:
 - `ubuntu22.04-node20.9-withDind-v1`
 - `ubuntu22.04-node20.9-v2`
 - `ubuntu22.04-node20.9-withDind-v2`
+- `ubuntu22.04-node20.9-v3`
+- `ubuntu22.04-node20.9-withDind-v3`
+- `windows-2022`
+
+_Note: Windows-based images can only run on Windows-based resource classes._
 
 Enterprise accounts can use custom images.
 

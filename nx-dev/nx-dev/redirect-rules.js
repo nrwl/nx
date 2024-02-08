@@ -687,7 +687,9 @@ const packagesDocuments = {
   '/packages/storybook/documents/angular-configuring-styles':
     '/recipes/storybook/angular-configuring-styles',
   '/storybook/angular-browser-target':
-    '/deprecated/storybook/angular-browser-target',
+    '/deprecated/storybook/angular-project-build-config',
+  '/deprecated/storybook/angular-browser-target':
+    '/deprecated/storybook/angular-project-build-config',
   '/storybook/migrate-webpack-final-angular':
     '/deprecated/storybook/migrate-webpack-final-angular',
   '/storybook/upgrade-storybook-v6-angular':
@@ -697,7 +699,7 @@ const packagesDocuments = {
   '/storybook/upgrade-storybook-v6-react':
     '/deprecated/storybook/upgrade-storybook-v6-react',
   '/packages/storybook/documents/angular-browser-target':
-    '/deprecated/storybook/angular-browser-target',
+    '/deprecated/storybook/angular-project-build-config',
   '/packages/storybook/documents/migrate-webpack-final-angular':
     '/deprecated/storybook/migrate-webpack-final-angular',
   '/packages/storybook/documents/upgrade-storybook-v6-angular':
@@ -953,7 +955,7 @@ const latestRecipesRefactoring = {
 };
 
 const coreFeatureAndConceptsRefactoring = {
-  '/features/share-your-cache': '/features/remote-cache',
+  '/features/share-your-cache': '/ci/features/remote-cache',
   '/concepts/more-concepts/customizing-inputs':
     '/recipes/running-tasks/configure-inputs',
   '/recipes/tips-n-tricks/root-level-scripts':
