@@ -38,7 +38,7 @@ export function registerTsProject(
   /**
    * @deprecated Do not use this.. it's a 1-off exception
    */
-  useForSwcEnvironmentVariable?: boolean
+  forceTsNode?: boolean
 );
 export function registerTsProject(
   path: string,
@@ -46,17 +46,14 @@ export function registerTsProject(
   /**
    * @deprecated Do not use this.. it's a 1-off exception
    */
-  useForSwcEnvironmentVariable?: boolean
+  forceTsNode?: boolean
 ): () => void {
   const tsConfigPath = configFilename ? join(path, configFilename) : path;
   const compilerOptions: CompilerOptions = readCompilerOptions(tsConfigPath);
 
   const cleanupFunctions: ((...args: unknown[]) => unknown)[] = [
     registerTsConfigPaths(tsConfigPath),
-    registerTranspiler(
-      compilerOptions,
-      useForSwcEnvironmentVariable ? tsConfigPath : undefined
-    ),
+    registerTranspiler(compilerOptions, forceTsNode),
   ];
 
   // Add ESM support for `.ts` files.
@@ -80,8 +77,7 @@ export function registerTsProject(
 }
 
 export function getSwcTranspiler(
-  compilerOptions: CompilerOptions,
-  tsConfigPath?: string
+  compilerOptions: CompilerOptions
 ): (...args: unknown[]) => unknown {
   type ISwcRegister = typeof import('@swc-node/register/register')['register'];
 
@@ -89,13 +85,9 @@ export function getSwcTranspiler(
   const register = require('@swc-node/register/register')
     .register as ISwcRegister;
 
-  if (tsConfigPath) {
-    process.env.SWC_NODE_PROJECT = tsConfigPath;
-  } else {
-    let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
-    if (existsSync(rootTsConfig)) {
-      process.env.SWC_NODE_PROJECT = rootTsConfig;
-    }
+  let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
+  if (existsSync(rootTsConfig)) {
+    process.env.SWC_NODE_PROJECT = rootTsConfig;
   }
 
   const cleanupFn = register(compilerOptions);
@@ -115,13 +107,6 @@ export function getTsNodeTranspiler(
     skipProject: true,
   });
 
-  const { transpiler, swc } = service.options;
-
-  // Don't warn if a faster transpiler is enabled
-  if (!transpiler && !swc) {
-    warnTsNodeUsage();
-  }
-
   return () => {
     service.enabled(false);
   };
@@ -129,9 +114,9 @@ export function getTsNodeTranspiler(
 
 export function getTranspiler(
   compilerOptions: CompilerOptions,
-  tsConfigPath?: string
+  forceTsNode?: boolean
 ) {
-  const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true';
+  const preferTsNode = process.env.NX_PREFER_TS_NODE === 'true' || forceTsNode;
 
   if (!ts) {
     ts = require('typescript');
@@ -144,7 +129,7 @@ export function getTranspiler(
   compilerOptions.skipLibCheck = true;
 
   if (swcNodeInstalled && !preferTsNode) {
-    return () => getSwcTranspiler(compilerOptions, tsConfigPath);
+    return () => getSwcTranspiler(compilerOptions);
   }
 
   // We can fall back on ts-node if it's available
@@ -163,10 +148,10 @@ export function getTranspiler(
  */
 export function registerTranspiler(
   compilerOptions: CompilerOptions,
-  tsConfigPath?: string
+  forceTsNode?: boolean
 ): () => void {
   // Function to register transpiler that returns cleanup function
-  const transpiler = getTranspiler(compilerOptions, tsConfigPath);
+  const transpiler = getTranspiler(compilerOptions, forceTsNode);
 
   if (!transpiler) {
     warnNoTranspiler();
@@ -250,13 +235,6 @@ function loadTsConfigPaths(): typeof import('tsconfig-paths') | null {
   } catch {
     warnNoTsconfigPaths();
   }
-}
-
-function warnTsNodeUsage() {
-  logger.warn(
-    stripIndent(`${NX_PREFIX} Falling back to ts-node for local typescript execution. This may be a little slower.
-  - To fix this, ensure @swc-node/register and @swc/core have been installed`)
-  );
 }
 
 function warnNoTsconfigPaths() {

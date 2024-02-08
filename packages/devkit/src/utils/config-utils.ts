@@ -24,8 +24,8 @@ export async function loadConfigFile<T extends object = any>(
         const unregisterTsProject = registerTsProject(
           tsConfigPath,
           undefined,
-          // TODO(@AgentEnder): Remove this hack to make sure that e2e loads properly for next.js
-          relative(workspaceRoot, dirname(configFilePath)) === 'e2e'
+          // TODO(@AgentEnder): Remove this once swc is removed
+          true
         );
         try {
           module = await load(configFilePath);
