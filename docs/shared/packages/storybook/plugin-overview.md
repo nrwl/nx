@@ -20,7 +20,7 @@ In any Nx workspace, you can install `@nx/storybook` by running the following co
 {% tabs %}
 {% tab label="Nx 18+" %}
 
-```shell
+```shell {% skipRescope=true %}
 nx add @nx/storybook
 ```
 
