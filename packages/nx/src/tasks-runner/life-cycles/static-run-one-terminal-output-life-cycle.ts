@@ -24,6 +24,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     private readonly args: {
       targets?: string[];
       configuration?: string;
+      verbose?: boolean;
     }
   ) {}
 
@@ -110,13 +111,7 @@ export class StaticRunOneTerminalOutputLifeCycle implements LifeCycle {
     status: TaskStatus,
     terminalOutput: string
   ) {
-    if (
-      status === 'success' ||
-      status === 'failure' ||
-      task.target.project === this.initiatingProject
-    ) {
-      const args = getPrintableCommandArgsForTask(task);
-      output.logCommandOutput(args.join(' '), status, terminalOutput);
-    }
+    const args = getPrintableCommandArgsForTask(task);
+    output.logCommandOutput(args.join(' '), status, terminalOutput);
   }
 }
