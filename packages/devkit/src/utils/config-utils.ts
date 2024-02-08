@@ -1,5 +1,5 @@
-import { dirname, extname, join, relative } from 'path';
-import { existsSync, readdirSync } from 'fs';
+import { dirname, join, relative } from 'path';
+import { existsSync } from 'fs';
 import { requireNx } from '../../nx';
 
 const { workspaceRoot, registerTsProject } = requireNx();
@@ -9,35 +9,26 @@ export let dynamicImport = new Function(
   'return import(modulePath);'
 );
 
+export function setupConfigLoading(): () => void {
+  const tsConfigPath = getRootTsConfigPath();
+  if (tsConfigPath) {
+    return registerTsProject(
+      tsConfigPath,
+      undefined,
+      // TODO(@AgentEnder): Remove this hack to make sure that e2e loads properly for next.js
+      true
+    );
+  } else {
+    return () => {};
+  }
+}
+
 export async function loadConfigFile<T extends object = any>(
   configFilePath: string
 ): Promise<T> {
   {
     let module: any;
-
-    if (extname(configFilePath) === '.ts') {
-      const siblingFiles = readdirSync(dirname(configFilePath));
-      const tsConfigPath = siblingFiles.includes('tsconfig.json')
-        ? join(dirname(configFilePath), 'tsconfig.json')
-        : getRootTsConfigPath();
-      if (tsConfigPath) {
-        const unregisterTsProject = registerTsProject(
-          tsConfigPath,
-          undefined,
-          // TODO(@AgentEnder): Remove this hack to make sure that e2e loads properly for next.js
-          relative(workspaceRoot, dirname(configFilePath)) === 'e2e'
-        );
-        try {
-          module = await load(configFilePath);
-        } finally {
-          unregisterTsProject();
-        }
-      } else {
-        module = await load(configFilePath);
-      }
-    } else {
-      module = await load(configFilePath);
-    }
+    module = await load(configFilePath);
     return module.default ?? module;
   }
 }

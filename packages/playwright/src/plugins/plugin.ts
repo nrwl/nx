@@ -20,7 +20,10 @@ import { getFilesInDirectoryUsingContext } from 'nx/src/utils/workspace-context'
 import { minimatch } from 'minimatch';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import {
+  loadConfigFile,
+  setupConfigLoading,
+} from '@nx/devkit/src/utils/config-utils';
 
 export interface PlaywrightPluginOptions {
   targetName?: string;
@@ -54,8 +57,14 @@ function writeTargetsToCache(
   writeJsonFile(cachePath, targets);
 }
 
+let unregister: () => void;
+
 export const createDependencies: CreateDependencies = () => {
   writeTargetsToCache(calculatedTargets);
+  if (unregister) {
+    unregister();
+    unregister = null;
+  }
   return [];
 };
 
@@ -112,6 +121,7 @@ async function buildPlaywrightTargets(
   // See: https://github.com/microsoft/playwright/pull/11218/files
   delete (process as any)['__pw_initiator__'];
 
+  unregister ??= setupConfigLoading();
   const playwrightConfig = await loadConfigFile<PlaywrightTestConfig>(
     join(context.workspaceRoot, configFilePath)
   );

@@ -14,7 +14,10 @@ import { getLockFileName } from '@nx/js';
 import { type AppConfig } from '@remix-run/dev';
 import { dirname, join } from 'path';
 import { existsSync, readdirSync } from 'fs';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
+import {
+  loadConfigFile,
+  setupConfigLoading,
+} from '@nx/devkit/src/utils/config-utils';
 
 const cachePath = join(projectGraphCacheDirectory, 'remix.hash');
 const targetsCache = existsSync(cachePath) ? readTargetsCache() : {};
@@ -36,8 +39,14 @@ function writeTargetsToCache(
   writeJsonFile(cachePath, targets);
 }
 
+let unregister: () => void;
+
 export const createDependencies: CreateDependencies = () => {
   writeTargetsToCache(calculatedTargets);
+  if (unregister) {
+    unregister();
+    unregister = null;
+  }
   return [];
 };
 
@@ -197,6 +206,7 @@ async function getServerBuildPath(
   workspaceRoot: string
 ): Promise<string> {
   const configPath = join(workspaceRoot, configFilePath);
+  unregister = setupConfigLoading();
   let appConfig = await loadConfigFile<AppConfig>(configPath);
   return appConfig.serverBuildPath ?? 'build/index.js';
 }

@@ -90,7 +90,7 @@ export function getSwcTranspiler(
     .register as ISwcRegister;
 
   if (tsConfigPath) {
-    process.env.SWC_NODE_PROJECT = tsConfigPath;
+    process.env.SWC_NODE_PROJECT = '';
   } else {
     let rootTsConfig = join(workspaceRoot, 'tsconfig.base.json');
     if (existsSync(rootTsConfig)) {
