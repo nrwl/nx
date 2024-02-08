@@ -171,7 +171,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     It's a distributed and scalable solution built to handle
                     everything from the largest enterprise monorepo, down to
                     your weekend hackathon project. It's a game changer for all
-                    developers that want to focus on shipping features, not
+                    developers that want to focus on shipping features, notf
                     maintaining CI/CD infrastructure.
                   </p>
                 </div>
@@ -199,6 +199,60 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                     title="Nx Agents on ProductHunt"
                   >
                     Vote on ProductHunt
+                  </ButtonLink>
+                </div>
+              </div>
+              <div
+                aria-hidden="true"
+                className="order-first sm:order-last pb-8 relative flex flex-col items-center"
+              >
+                <img
+                  className="rounded-lg"
+                  src="/images/launch-nx/nx-agents.jpg"
+                  alt="Nx Agents"
+                />
+              </div>
+            </div>
+          </article>
+        </div>
+
+        {/* Thursday */}
+        <div>
+          <article className="relative overflow-hidden pt-4 mx-auto max-w-screen-lg xl:max-w-screen-xl">
+            <div className="px-5 py-12 grid md:grid-cols-2 sm:gap-8 lg:py-16">
+              <div>
+                <header>
+                  <SectionHeading as="h2" variant="title" id="thursday">
+                    Thursday
+                  </SectionHeading>
+                  <SectionHeading as="p" variant="display" className="mt-4">
+                    Tusky
+                  </SectionHeading>
+                </header>
+                <div className="mt-8 flex gap-16 font-normal">
+                  <p className="max-w-xl text-lg text-slate-700 dark:text-slate-400">
+                    Anouncing Tusky: A powerful Artificial Intelligence equipped
+                    with context of your workspace, commit history, and
+                    historical build timing data. Tusky can uniquely understand
+                    and optimize your codebase and pipelines.
+                  </p>
+                </div>
+                <div className="pt-4 action flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://youtu.be/_FSHQIwITic"
+                    title="Tusky - Youtube Video"
+                  >
+                    Watch the video
+                  </ButtonLink>
+                  <ButtonLink
+                    variant="primary"
+                    size="default"
+                    href="https://nx.app"
+                    title="Nx Agents on ProductHunt"
+                  >
+                    See on Nx Cloud
                   </ButtonLink>
                 </div>
               </div>
