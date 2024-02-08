@@ -369,7 +369,6 @@ export async function getFirstGitCommit() {
         '--max-parents=0',
         'HEAD',
         '--first-parent',
-        'HEAD',
       ])
     ).trim();
   } catch (e) {
