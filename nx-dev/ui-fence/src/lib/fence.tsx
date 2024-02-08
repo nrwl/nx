@@ -161,8 +161,13 @@ export function Fence({
       t && clearTimeout(t);
     };
   }, [copied]);
+  const nxPackageCmd = children || command;
   const showRescopeMessage =
-    children.includes('@nx/') || command.includes('@nx/');
+    nxPackageCmd.includes('@nx/') &&
+    // these packages were never published on v15 and less
+    !['@nx/nuxt', '@nx/vue', '@nx/eslint', '@nx/playwright'].some((pkg) =>
+      nxPackageCmd.includes(pkg)
+    );
   function highlightChange(item: { label: string; value: string }) {
     onLineGroupSelectionChange?.(item.value);
   }
