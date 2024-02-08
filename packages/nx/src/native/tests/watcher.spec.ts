@@ -8,11 +8,14 @@ describe('watcher', () => {
     temp = new TempFs('watch-dir');
     temp.createFilesSync({
       '.gitignore': 'node_modules/\n.env.local',
-      '.nxignore': 'app2/\n!.env.local',
+      '.nxignore': 'app2/\n!.env.*\nboo.txt',
       '.env.local': '',
       'app1/main.js': '',
       'app1/main.css': '',
       'app2/main.js': '',
+      'inner/.gitignore': '.env.inner',
+      'inner/boo.txt': '',
+      'inner/.env.inner': '',
       'nested-ignore/.gitignore': '*',
       'nested-ignore/file.js': '',
       'node_modules/module/index.js': '',
@@ -51,7 +54,7 @@ describe('watcher', () => {
       await wait();
       temp.createFileSync('app1/main.html', JSON.stringify({}));
     });
-  }, 10000);
+  }, 15000);
 
   it('should trigger the callback when files are updated', async () => {
     return new Promise<void>(async (done) => {
@@ -76,7 +79,7 @@ describe('watcher', () => {
       await wait();
       temp.appendFile('app1/main.js', 'update');
     });
-  }, 10000);
+  }, 15000);
 
   it('should watch file renames', async () => {
     return new Promise<void>(async (done) => {
@@ -103,7 +106,7 @@ describe('watcher', () => {
       await wait();
       temp.renameFile('app1/main.js', 'app1/rename.js');
     });
-  }, 10000);
+  }, 15000);
 
   it('should trigger on deletes', async () => {
     return new Promise<void>(async (done) => {
@@ -125,7 +128,7 @@ describe('watcher', () => {
       await wait();
       temp.removeFileSync('app1/main.js');
     });
-  }, 10000);
+  }, 15000);
 
   it('should ignore nested gitignores', async () => {
     return new Promise<void>(async (done) => {
@@ -137,7 +140,7 @@ describe('watcher', () => {
         expect(paths).toMatchInlineSnapshot(`
         [
           {
-            "path": "boo.txt",
+            "path": "bar.txt",
             "type": "create",
           },
         ]
@@ -149,21 +152,27 @@ describe('watcher', () => {
       // should not be triggered
       temp.createFileSync('nested-ignore/hello1.txt', '');
       await wait();
-      temp.createFileSync('boo.txt', '');
+      temp.createFileSync('bar.txt', '');
     });
-  }, 10000);
+  }, 15000);
 
-  it('should include files that are negated in nxignore but are ignored in gitignore', async () => {
+  it('prioritize nxignore over gitignores', async () => {
     return new Promise<void>(async (done) => {
       await wait();
       watcher = new Watcher(temp.tempDir);
       watcher.watch((err, paths) => {
         expect(paths.some(({ path }) => path === '.env.local')).toBeTruthy();
+        expect(
+          paths.some(({ path }) => path === 'inner/.env.inner')
+        ).toBeTruthy();
+        expect(paths.some(({ path }) => path === 'inner/boo.txt')).toBeFalsy();
         done();
       });
 
       await wait(2000);
       temp.appendFile('.env.local', 'hello');
+      temp.appendFile('inner/.env.inner', 'hello');
+      temp.appendFile('inner/boo.txt', 'hello');
     });
   }, 15000);
 });

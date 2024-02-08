@@ -19,7 +19,6 @@ import { createLoaderFromCompiler } from './compiler-loaders';
 import { NormalizedNxWebpackPluginOptions } from '../nx-webpack-plugin-options';
 import TerserPlugin = require('terser-webpack-plugin');
 import nodeExternals = require('webpack-node-externals');
-import ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 const IGNORED_WEBPACK_WARNINGS = [
   /The comment file/i,
@@ -223,6 +222,7 @@ function applyNxDependentConfig(
   };
 
   if (!options?.skipTypeChecking) {
+    const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
     plugins.push(
       new ForkTsCheckerWebpackPlugin({
         typescript: {
@@ -336,17 +336,18 @@ function applyNxDependentConfig(
 
   config.resolve = {
     ...config.resolve,
-    extensions: [...extensions, ...(config?.resolve?.extensions ?? [])],
-    alias:
-      options.fileReplacements &&
-      options.fileReplacements.reduce(
+    extensions: [...(config?.resolve?.extensions ?? []), ...extensions],
+    alias: {
+      ...(config.resolve?.alias ?? {}),
+      ...(options.fileReplacements?.reduce(
         (aliases, replacement) => ({
           ...aliases,
           [replacement.replace]: replacement.with,
         }),
         {}
-      ),
-    mainFields,
+      ) ?? {}),
+    },
+    mainFields: config.resolve?.mainFields ?? mainFields,
   };
 
   config.externals = externals;

@@ -1,6 +1,6 @@
 # Local Executors
 
-Creating Executors for your workspace standardizes scripts that are run during your development/building/deploying tasks in order to provide guidance in the terminal with `--help` and when invoking with [Nx Console](/core-features/integrate-with-editors)
+Creating Executors for your workspace standardizes scripts that are run during your development/building/deploying tasks in order to provide guidance in the terminal with `--help` and when invoking with [Nx Console](/features/integrate-with-editors)
 
 This guide shows you how to create, run, and customize executors within your Nx workspace. The examples use the trivial use-case of an `echo` command.
 
@@ -9,8 +9,7 @@ This guide shows you how to create, run, and customize executors within your Nx 
 If you don't already have a local plugin, use Nx to generate one:
 
 ```shell
-# replace `latest` with the version that matches your Nx version
-npm install @nx/plugin@latest
+nx add @nx/plugin
 nx g @nx/plugin:plugin my-plugin
 ```
 
@@ -45,7 +44,7 @@ This file describes the options being sent to the executor (very similar to the 
 
 ```json
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "type": "object",
   "properties": {
     "textToEcho": {

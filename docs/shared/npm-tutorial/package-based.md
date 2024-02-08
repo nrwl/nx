@@ -67,9 +67,29 @@ export const isEven = (x: number) => x % 2 === 0;
 
 Next install TypeScript (notice we're using `tsc` for the `build` script in `package.json` above). While we could install TypeScript at the package-level, it is more convenient to have it globally for the entire monorepo. Run the following command at the root of your workspace.
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm i typescript -D -W
+npm add -D typescript
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D typescript
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D typescript
+```
+
+{% /tab %}
+{% /tabs %}
 
 Next run your `build` script with:
 
@@ -136,9 +156,29 @@ The `workspaces` property in the root-level `package.json` tells NPM to create l
 
 At the root of your workspace run:
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
 npm install
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm install
+```
+
+{% /tab %}
+{% /tabs %}
 
 NPM will create a Symbolic Link in your file system at: `node_modules/is-even` and `node_modules/is-odd`, so they reflect changes to your `packages/is-even` and `packages/is-odd` directories as they happen.
 
@@ -242,7 +282,7 @@ Notice that the `base` and `head` options were populated with their default valu
 
 {% cards %}
 
-{% card title="Core Features" description="Read about the core features of Nx." url="/core-features" /%}
+{% card title="Core Features" description="Read about the core features of Nx." url="/features" /%}
 
 {% card title="Mental Model" description="Get a deeper understanding of the mental model." url="/concepts/mental-model" /%}
 

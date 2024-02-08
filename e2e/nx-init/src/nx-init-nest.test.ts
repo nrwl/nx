@@ -8,7 +8,7 @@ import {
 import { execSync } from 'child_process';
 import { removeSync } from 'fs-extra';
 
-describe('nx init (for NestCLI)', () => {
+describe('nx init (for NestCLI - legacy)', () => {
   const pmc = getPackageManagerCommand({
     packageManager: 'npm',
   });
@@ -16,7 +16,12 @@ describe('nx init (for NestCLI)', () => {
   const projectRoot = `${e2eCwd}/${projectName}`;
   const cliOptions = { cwd: projectRoot };
 
+  beforeEach(() => {
+    process.env.NX_ADD_PLUGINS = 'false';
+  });
+
   afterEach(() => {
+    delete process.env.NX_ADD_PLUGINS;
     removeSync(projectRoot);
   });
 

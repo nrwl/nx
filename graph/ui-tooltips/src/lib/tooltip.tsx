@@ -25,6 +25,8 @@ import {
   useDismiss,
   useHover,
   useRole,
+  safePolygon,
+  useTransitionStyles,
 } from '@floating-ui/react';
 
 export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
@@ -34,6 +36,8 @@ export type TooltipProps = HTMLAttributes<HTMLDivElement> & {
   placement?: Placement;
   reference?: ReferenceType;
   openAction?: 'click' | 'hover' | 'manual';
+  buffer?: number;
+  showTooltipArrow?: boolean;
   strategy?: 'absolute' | 'fixed';
 };
 
@@ -45,6 +49,8 @@ export function Tooltip({
   reference: externalReference,
   openAction = 'click',
   strategy = 'absolute',
+  buffer = 0,
+  showTooltipArrow = true,
 }: TooltipProps) {
   const [isOpen, setIsOpen] = useState(open);
   const arrowRef = useRef(null);
@@ -71,6 +77,13 @@ export function Tooltip({
     ],
   });
 
+  const { isMounted, styles: animationStyles } = useTransitionStyles(context, {
+    duration: 200,
+    initial: {
+      opacity: openAction === 'hover' ? 0 : 1,
+    },
+  });
+
   const staticSide: string =
     {
       top: 'bottom',
@@ -92,7 +105,12 @@ export function Tooltip({
     outsidePress: true,
     outsidePressEvent: 'mousedown',
   });
-  const hover = useHover(context, { enabled: openAction === 'hover' });
+  const hover = useHover(context, {
+    restMs: 300,
+    enabled: openAction === 'hover',
+    delay: { open: 0, close: 150 },
+    handleClose: safePolygon({ buffer }),
+  });
   const role = useRole(context, { role: 'tooltip' });
 
   const { getReferenceProps, getFloatingProps } = useInteractions([
@@ -112,29 +130,32 @@ export function Tooltip({
       {!externalReference && !!children
         ? cloneElement(children, cloneProps)
         : children}
-      {isOpen ? (
+      {isOpen && isMounted ? (
         <div
           ref={refs.setFloating}
           style={{
             position: appliedStrategy,
-            top: y ?? 0,
+            top: showTooltipArrow ? y : y + 8 ?? 0,
             left: x ?? 0,
             width: 'max-content',
+            ...animationStyles,
           }}
           className="z-10 min-w-[250px] rounded-md border border-slate-500"
           {...getFloatingProps()}
         >
-          <div
-            style={{
-              left: arrowX != null ? `${arrowX}px` : '',
-              top: arrowY != null ? `${arrowY}px` : '',
-              right: '',
-              bottom: '',
-              [staticSide]: '-4px',
-            }}
-            className="absolute -z-10 h-4 w-4 rotate-45 bg-slate-500"
-            ref={arrowRef}
-          ></div>
+          {showTooltipArrow && (
+            <div
+              style={{
+                left: arrowX != null ? `${arrowX}px` : '',
+                top: arrowY != null ? `${arrowY}px` : '',
+                right: '',
+                bottom: '',
+                [staticSide]: '-4px',
+              }}
+              className="absolute -z-10 h-4 w-4 rotate-45 bg-slate-500"
+              ref={arrowRef}
+            ></div>
+          )}
           <div className="select-text rounded-md bg-white p-3 dark:bg-slate-900 dark:text-slate-400">
             {content}
           </div>

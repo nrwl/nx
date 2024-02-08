@@ -46,25 +46,6 @@ exports[`@nx/vite/plugin not root project should create nodes 1`] = `
             "buildTarget": "build-something",
           },
         },
-        "vitest": {
-          "cache": true,
-          "command": "vitest run",
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": [
-                "vitest",
-              ],
-            },
-          ],
-          "options": {
-            "cwd": "my-app",
-          },
-          "outputs": [
-            "{workspaceRoot}/coverage/{projectRoot}",
-          ],
-        },
       },
     },
   },
@@ -96,7 +77,7 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
             "cwd": ".",
           },
           "outputs": [
-            "{workspaceRoot}/dist/{projectRoot}",
+            "{projectRoot}/dist",
           ],
         },
         "preview": {
@@ -116,25 +97,6 @@ exports[`@nx/vite/plugin root project should create nodes 1`] = `
           "options": {
             "buildTarget": "build",
           },
-        },
-        "test": {
-          "cache": true,
-          "command": "vitest run",
-          "inputs": [
-            "default",
-            "^production",
-            {
-              "externalDependencies": [
-                "vitest",
-              ],
-            },
-          ],
-          "options": {
-            "cwd": ".",
-          },
-          "outputs": [
-            "{workspaceRoot}/coverage/{projectRoot}",
-          ],
         },
       },
     },

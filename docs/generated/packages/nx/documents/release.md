@@ -25,6 +25,12 @@ Default: `false`
 
 Preview the changes without updating files/creating releases
 
+### first-release
+
+Type: `boolean`
+
+Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.
+
 ### groups
 
 Type: `string`
@@ -161,13 +167,11 @@ Type: `string`
 
 Exact version or semver keyword to apply to the selected release group.
 
-##### stageChanges
+##### stage-changes
 
 Type: `boolean`
 
-Default: `false`
-
-Whether or not to stage the changes made by this command, irrespective of the git config in nx.json related to automated commits. Useful when combining this command with changelog generation.
+Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.
 
 ##### version
 
@@ -248,6 +252,12 @@ Type: `string`
 Choices: [all, workspace, projects]
 
 Interactively modify changelog markdown contents in your code editor before applying the changes. You can set it to be interactive for all changelogs, or only the workspace level, or only the project level
+
+##### stage-changes
+
+Type: `boolean`
+
+Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.
 
 ##### to
 

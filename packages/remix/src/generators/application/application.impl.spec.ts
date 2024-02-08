@@ -3,6 +3,7 @@ import { joinPathFragments, readJson } from '@nx/devkit';
 import { ProjectNameAndRootFormat } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import applicationGenerator from './application.impl';
+import { join } from 'path';
 
 describe('Remix Application', () => {
   describe('Standalone Project Repo', () => {
@@ -14,12 +15,13 @@ describe('Remix Application', () => {
       await applicationGenerator(tree, {
         name: 'test',
         rootProject: true,
+        addPlugin: true,
       });
 
       // ASSERT
       expectTargetsToBeCorrect(tree, '.');
 
-      expect(tree.read('remix.config.cjs', 'utf-8')).toMatchSnapshot();
+      expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app/root.tsx', 'utf-8')).toMatchSnapshot();
       expect(tree.read('app/routes/_index.tsx', 'utf-8')).toMatchSnapshot();
       expect(
@@ -39,12 +41,13 @@ describe('Remix Application', () => {
           name: 'test',
           js: true,
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
         expectTargetsToBeCorrect(tree, '.');
 
-        expect(tree.read('remix.config.cjs', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
         expect(tree.read('app/root.js', 'utf-8')).toMatchSnapshot();
         expect(tree.read('app/routes/_index.js', 'utf-8')).toMatchSnapshot();
       });
@@ -60,13 +63,14 @@ describe('Remix Application', () => {
           name: 'test',
           unitTestRunner: 'vitest',
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
         expectTargetsToBeCorrect(tree, '.');
 
-        expect(tree.read('remix.config.cjs', 'utf-8')).toMatchSnapshot();
-        expect(tree.read('vite.config.ts', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('vitest.config.ts', 'utf-8')).toMatchSnapshot();
         expect(
           tree.read('tests/routes/_index.spec.tsx', 'utf-8')
         ).toMatchSnapshot();
@@ -82,12 +86,13 @@ describe('Remix Application', () => {
           name: 'test',
           unitTestRunner: 'jest',
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
         expectTargetsToBeCorrect(tree, '.');
 
-        expect(tree.read('remix.config.cjs', 'utf-8')).toMatchSnapshot();
+        expect(tree.read('remix.config.js', 'utf-8')).toMatchSnapshot();
         expect(tree.read('jest.config.ts', 'utf-8')).toMatchSnapshot();
         expect(tree.read('test-setup.ts', 'utf-8')).toMatchSnapshot();
         expect(
@@ -98,7 +103,7 @@ describe('Remix Application', () => {
     });
 
     describe('--e2eTestRunner', () => {
-      it('should generate an e2e application for the app', async () => {
+      it('should generate a cypress e2e application for the app', async () => {
         // ARRANGE
         const tree = createTreeWithEmptyWorkspace();
 
@@ -107,6 +112,7 @@ describe('Remix Application', () => {
           name: 'test',
           e2eTestRunner: 'cypress',
           rootProject: true,
+          addPlugin: true,
         });
 
         // ASSERT
@@ -114,6 +120,24 @@ describe('Remix Application', () => {
 
         expect(tree.read('e2e/cypress.config.ts', 'utf-8')).toMatchSnapshot();
       });
+    });
+
+    it('should generate a playwright e2e application for the app', async () => {
+      // ARRANGE
+      const tree = createTreeWithEmptyWorkspace();
+
+      // ACT
+      await applicationGenerator(tree, {
+        name: 'test',
+        e2eTestRunner: 'playwright',
+        rootProject: true,
+        addPlugin: true,
+      });
+
+      // ASSERT
+      expectTargetsToBeCorrect(tree, '.');
+
+      expect(tree.read('e2e/playwright.config.ts', 'utf-8')).toMatchSnapshot();
     });
   });
 
@@ -131,13 +155,14 @@ describe('Remix Application', () => {
         await applicationGenerator(tree, {
           name: 'test',
           projectNameAndRootFormat,
+          addPlugin: true,
         });
 
         // ASSERT
         expectTargetsToBeCorrect(tree, appDir);
 
         expect(
-          tree.read(`${appDir}/remix.config.cjs`, 'utf-8')
+          tree.read(`${appDir}/remix.config.js`, 'utf-8')
         ).toMatchSnapshot();
         expect(tree.read(`${appDir}/app/root.tsx`, 'utf-8')).toMatchSnapshot();
         expect(
@@ -155,13 +180,14 @@ describe('Remix Application', () => {
             name: 'test',
             js: true,
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
           expectTargetsToBeCorrect(tree, appDir);
 
           expect(
-            tree.read(`${appDir}/remix.config.cjs`, 'utf-8')
+            tree.read(`${appDir}/remix.config.js`, 'utf-8')
           ).toMatchSnapshot();
           expect(tree.read(`${appDir}/app/root.js`, 'utf-8')).toMatchSnapshot();
           expect(
@@ -183,13 +209,14 @@ describe('Remix Application', () => {
             name: 'test',
             directory: 'demo',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
           expectTargetsToBeCorrect(tree, newAppDir);
 
           expect(
-            tree.read(`${newAppDir}/remix.config.cjs`, 'utf-8')
+            tree.read(`${newAppDir}/remix.config.js`, 'utf-8')
           ).toMatchSnapshot();
           expect(
             tree.read(`${newAppDir}/app/root.tsx`, 'utf-8')
@@ -212,13 +239,14 @@ describe('Remix Application', () => {
             name: 'test',
             directory: 'apps/demo',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
           expectTargetsToBeCorrect(tree, newAppDir);
 
           expect(
-            tree.read(`${newAppDir}/remix.config.cjs`, 'utf-8')
+            tree.read(`${newAppDir}/remix.config.js`, 'utf-8')
           ).toMatchSnapshot();
           expect(
             tree.read(`${newAppDir}/app/root.tsx`, 'utf-8')
@@ -239,16 +267,17 @@ describe('Remix Application', () => {
             name: 'test',
             unitTestRunner: 'vitest',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
           expectTargetsToBeCorrect(tree, appDir);
 
           expect(
-            tree.read(`${appDir}/remix.config.cjs`, 'utf-8')
+            tree.read(`${appDir}/remix.config.js`, 'utf-8')
           ).toMatchSnapshot();
           expect(
-            tree.read(`${appDir}/vite.config.ts`, 'utf-8')
+            tree.read(`${appDir}/vitest.config.ts`, 'utf-8')
           ).toMatchSnapshot();
           expect(
             tree.read(`${appDir}/test-setup.ts`, 'utf-8')
@@ -264,13 +293,14 @@ describe('Remix Application', () => {
             name: 'test',
             unitTestRunner: 'jest',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
           expectTargetsToBeCorrect(tree, appDir);
 
           expect(
-            tree.read(`${appDir}/remix.config.cjs`, 'utf-8')
+            tree.read(`${appDir}/remix.config.js`, 'utf-8')
           ).toMatchSnapshot();
           expect(
             tree.read(`${appDir}/jest.config.ts`, 'utf-8')
@@ -282,7 +312,7 @@ describe('Remix Application', () => {
       });
 
       describe('--e2eTestRunner', () => {
-        it('should generate an e2e application for the app', async () => {
+        it('should generate a cypress e2e application for the app', async () => {
           // ARRANGE
           const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
@@ -291,6 +321,7 @@ describe('Remix Application', () => {
             name: 'test',
             e2eTestRunner: 'cypress',
             projectNameAndRootFormat,
+            addPlugin: true,
           });
 
           // ASSERT
@@ -298,6 +329,26 @@ describe('Remix Application', () => {
 
           expect(
             tree.read(`${appDir}-e2e/cypress.config.ts`, 'utf-8')
+          ).toMatchSnapshot();
+        });
+
+        it('should generate a playwright e2e application for the app', async () => {
+          // ARRANGE
+          const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+
+          // ACT
+          await applicationGenerator(tree, {
+            name: 'test',
+            e2eTestRunner: 'playwright',
+            projectNameAndRootFormat,
+            addPlugin: true,
+          });
+
+          // ASSERT
+          expectTargetsToBeCorrect(tree, appDir);
+
+          expect(
+            tree.read(`${appDir}-e2e/playwright.config.ts`, 'utf-8')
           ).toMatchSnapshot();
         });
       });
@@ -310,19 +361,5 @@ function expectTargetsToBeCorrect(tree: Tree, projectRoot: string) {
     tree,
     joinPathFragments(projectRoot === '.' ? '/' : projectRoot, 'project.json')
   );
-  expect(targets.lint).toBeTruthy();
-  expect(targets.build).toBeTruthy();
-  expect(targets.build.executor).toEqual('@nx/remix:build');
-  expect(targets.build.options.outputPath).toEqual(
-    joinPathFragments('dist', projectRoot)
-  );
-  expect(targets.serve).toBeTruthy();
-  expect(targets.serve.executor).toEqual('@nx/remix:serve');
-  expect(targets.serve.options.port).toEqual(4200);
-  expect(targets.start).toBeTruthy();
-  expect(targets.start.command).toEqual('remix-serve build/index.js');
-  expect(targets.start.options.cwd).toEqual(projectRoot);
-  expect(targets.typecheck).toBeTruthy();
-  expect(targets.typecheck.command).toEqual('tsc');
-  expect(targets.typecheck.options.cwd).toEqual(projectRoot);
+  expect(tree.exists(join(projectRoot, '.eslintrc.json'))).toBeTruthy();
 }

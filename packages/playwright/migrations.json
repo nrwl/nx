@@ -1,0 +1,10 @@
+{
+  "generators": {
+    "17-3-1-add-project-to-config": {
+      "cli": "nx",
+      "version": "17.3.1-beta.0",
+      "description": "Add project property to playwright config",
+      "implementation": "./src/migrations/update-17-3-1/add-project-to-config"
+    }
+  }
+}

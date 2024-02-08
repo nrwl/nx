@@ -1,6 +1,7 @@
 import {
   joinPathFragments,
   normalizePath,
+  NX_VERSION,
   ProjectGraphExternalNode,
   ProjectGraphProjectNode,
   workspaceRoot,
@@ -74,7 +75,10 @@ export type MessageIds =
   | 'notTagsConstraintViolation';
 export const RULE_NAME = 'enforce-module-boundaries';
 
-export default ESLintUtils.RuleCreator(() => ``)<Options, MessageIds>({
+export default ESLintUtils.RuleCreator(
+  () =>
+    `https://github.com/nrwl/nx/blob/${NX_VERSION}/docs/generated/packages/eslint-plugin/documents/enforce-module-boundaries.md`
+)<Options, MessageIds>({
   name: RULE_NAME,
   meta: {
     type: 'suggestion',

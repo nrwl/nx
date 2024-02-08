@@ -1,6 +1,11 @@
 export function parseChangelogMarkdown(contents: string) {
+  /**
+   * The release header may include prerelease identifiers (e.g., -alpha.13),
+   * and major releases may use a single #, instead of the standard ## used
+   * for minor and patch releases. This regex matches all of these cases.
+   */
   const CHANGELOG_RELEASE_HEAD_RE = new RegExp(
-    '^#{2,}\\s+(\\d+\\.\\d+\\.\\d+)',
+    '^#+\\s*\\[?(\\d+\\.\\d+\\.\\d+(?:-[a-zA-Z0-9\\.]+)?)\\]?',
     'gm'
   );
 

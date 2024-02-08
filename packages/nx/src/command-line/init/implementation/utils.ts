@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import * as enquirer from 'enquirer';
 import { join } from 'path';
 
 import { NxJsonConfiguration } from '../../../config/nx-json';
@@ -17,30 +16,7 @@ import {
 } from '../../../utils/package-manager';
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
-import { readFileSync, writeFileSync } from 'fs';
-
-export async function askAboutNxCloud(): Promise<boolean> {
-  return await enquirer
-    .prompt([
-      {
-        name: 'NxCloud',
-        message: `Enable distributed caching to make your CI faster`,
-        type: 'autocomplete',
-        choices: [
-          {
-            name: 'Yes',
-            hint: 'I want faster builds',
-          },
-
-          {
-            name: 'No',
-          },
-        ],
-        initial: 'Yes' as any,
-      },
-    ])
-    .then((a: { NxCloud: 'Yes' | 'No' }) => a.NxCloud === 'Yes');
-}
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 
 export function createNxJsonFile(
   repoRoot: string,
@@ -49,12 +25,13 @@ export function createNxJsonFile(
   scriptOutputs: { [name: string]: string }
 ) {
   const nxJsonPath = joinPathFragments(repoRoot, 'nx.json');
-  let nxJson = {} as Partial<NxJsonConfiguration>;
+  let nxJson = {} as Partial<NxJsonConfiguration> & { $schema: string };
   try {
     nxJson = readJsonFile(nxJsonPath);
     // eslint-disable-next-line no-empty
   } catch {}
 
+  nxJson.$schema = './node_modules/nx/schemas/nx-schema.json';
   nxJson.targetDefaults ??= {};
 
   if (topologicalTargets.length > 0) {
@@ -75,6 +52,10 @@ export function createNxJsonFile(
   for (const target of cacheableOperations) {
     nxJson.targetDefaults[target] ??= {};
     nxJson.targetDefaults[target].cache ??= true;
+  }
+
+  if (Object.keys(nxJson.targetDefaults).length === 0) {
+    delete nxJson.targetDefaults;
   }
 
   nxJson.affected ??= {};
@@ -114,11 +95,19 @@ function deduceDefaultBase() {
   }
 }
 
-export function addDepsToPackageJson(repoRoot: string) {
+export function addDepsToPackageJson(
+  repoRoot: string,
+  additionalPackages?: string[]
+) {
   const path = joinPathFragments(repoRoot, `package.json`);
   const json = readJsonFile(path);
   if (!json.devDependencies) json.devDependencies = {};
   json.devDependencies['nx'] = nxVersion;
+  if (additionalPackages) {
+    for (const p of additionalPackages) {
+      json.devDependencies[p] = nxVersion;
+    }
+  }
   writeJsonFile(path, json);
 }
 
@@ -233,4 +222,15 @@ export function printFinalMessage({
       learnMoreLink ? `- Learn more at ${learnMoreLink}.` : undefined,
     ].filter(Boolean),
   });
+}
+
+export function isMonorepo(packageJson: PackageJson) {
+  if (!!packageJson.workspaces) return true;
+
+  if (existsSync('pnpm-workspace.yaml') || existsSync('pnpm-workspace.yml'))
+    return true;
+
+  if (existsSync('lerna.json')) return true;
+
+  return false;
 }

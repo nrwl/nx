@@ -22,19 +22,13 @@ export default async function run(
   process.chdir(systemRoot);
 
   const projectName = context.projectName || '<???>';
+  const projectRoot =
+    context.projectsConfigurations.projects[context.projectName].root;
   const printInfo = options.format && !options.silent;
 
   if (printInfo) {
     console.info(`\nLinting ${JSON.stringify(projectName)}...`);
   }
-
-  /**
-   * We want users to have the option of not specifying the config path, and let
-   * eslint automatically resolve the `.eslintrc.json` files in each folder.
-   */
-  let eslintConfigPath = options.eslintConfig
-    ? resolve(systemRoot, options.eslintConfig)
-    : undefined;
 
   options.cacheLocation = options.cacheLocation
     ? joinPathFragments(options.cacheLocation, projectName)
@@ -51,6 +45,23 @@ export default async function run(
   const hasFlatConfig = existsSync(
     joinPathFragments(workspaceRoot, 'eslint.config.js')
   );
+
+  // while standard eslint uses by default closest config to the file, if otherwise not specified,
+  // the flat config would always use the root config, so we need to explicitly set it to the local one
+  if (hasFlatConfig && !normalizedOptions.eslintConfig) {
+    const eslintConfigPath = joinPathFragments(projectRoot, 'eslint.config.js');
+    if (existsSync(eslintConfigPath)) {
+      normalizedOptions.eslintConfig = eslintConfigPath;
+    }
+  }
+
+  /**
+   * We want users to have the option of not specifying the config path, and let
+   * eslint automatically resolve the `.eslintrc.json` files in each folder.
+   */
+  let eslintConfigPath = normalizedOptions.eslintConfig
+    ? resolve(systemRoot, normalizedOptions.eslintConfig)
+    : undefined;
 
   const { eslint, ESLint } = await resolveAndInstantiateESLint(
     eslintConfigPath,
@@ -89,8 +100,7 @@ export default async function run(
     (pattern) => {
       return interpolate(pattern, {
         workspaceRoot: '',
-        projectRoot:
-          context.projectsConfigurations.projects[context.projectName].root,
+        projectRoot,
         projectName: context.projectName,
       });
     }
@@ -164,16 +174,6 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
 
   const formatter = await eslint.loadFormatter(normalizedOptions.format);
 
-  let totalErrors = 0;
-  let totalWarnings = 0;
-
-  for (const result of lintResults) {
-    if (result.errorCount || result.warningCount) {
-      totalErrors += result.errorCount;
-      totalWarnings += result.warningCount;
-    }
-  }
-
   const formattedResults = await formatter.format(lintResults);
 
   if (normalizedOptions.outputFile) {
@@ -187,23 +187,71 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     console.info(formattedResults);
   }
 
-  if (totalWarnings > 0 && printInfo) {
-    console.warn('Lint warnings found in the listed files.\n');
-  }
+  const totals = getTotals(lintResults);
 
-  if (totalErrors > 0 && printInfo) {
-    console.error('Lint errors found in the listed files.\n');
-  }
-
-  if (totalWarnings === 0 && totalErrors === 0 && printInfo) {
-    console.info('All files pass linting.\n');
+  if (printInfo) {
+    outputPrintInfo(totals);
   }
 
   return {
     success:
       normalizedOptions.force ||
-      (totalErrors === 0 &&
+      (totals.errors === 0 &&
         (normalizedOptions.maxWarnings === -1 ||
-          totalWarnings <= normalizedOptions.maxWarnings)),
+          totals.warnings <= normalizedOptions.maxWarnings)),
   };
+}
+
+function getTotals(lintResults: ESLint.LintResult[]) {
+  let errors = 0;
+  let warnings = 0;
+  let fixableErrors = 0;
+  let fixableWarnings = 0;
+
+  for (const result of lintResults) {
+    errors += result.errorCount || 0;
+    warnings += result.warningCount || 0;
+    fixableErrors += result.fixableErrorCount || 0;
+    fixableWarnings += result.fixableWarningCount || 0;
+  }
+
+  return {
+    errors,
+    warnings,
+    fixableErrors,
+    fixableWarnings,
+  };
+}
+
+function pluralizedOutput(word: string, count: number) {
+  return `${count} ${word}${count === 1 ? '' : 's'}`;
+}
+
+function outputPrintInfo({
+  errors,
+  warnings,
+  fixableErrors,
+  fixableWarnings,
+}: ReturnType<typeof getTotals>) {
+  const total = warnings + errors;
+  const totalFixable = fixableErrors + fixableWarnings;
+
+  if (total <= 0) {
+    console.info('\u2714 All files pass linting\n');
+    return;
+  }
+
+  console.info(
+    `\u2716 ${pluralizedOutput('problem', total)} (${pluralizedOutput(
+      'error',
+      errors
+    )}, ${pluralizedOutput('warning', warnings)})\n`
+  );
+  if (totalFixable <= 0) return;
+  console.info(
+    `  ${pluralizedOutput('error', fixableErrors)} and ${pluralizedOutput(
+      'warning',
+      fixableWarnings
+    )} are potentially fixable with the \`--fix\` option.\n`
+  );
 }

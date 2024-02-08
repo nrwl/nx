@@ -1,8 +1,16 @@
-import type { Tree } from '@nx/devkit';
-import { formatFiles, toJS, updateJson } from '@nx/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
+import {
+  addDependenciesToPackageJson,
+  formatFiles,
+  runTasksInSerial,
+  toJS,
+  updateJson,
+} from '@nx/devkit';
 import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
+import { tslibVersion } from '@nx/node/src/utils/versions';
 import { join } from 'path';
+import { nxVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import type { Schema } from './schema';
 
@@ -56,6 +64,7 @@ server.on('error', console.error);
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {
+    addPlugin: false,
     projectNameAndRootFormat: 'derived',
     ...schema,
   });
@@ -63,23 +72,28 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   const options = await normalizeOptions(tree, schema);
+
+  const tasks: GeneratorCallback[] = [];
   const initTask = await initGenerator(tree, { ...options, skipFormat: true });
+  tasks.push(initTask);
   const applicationTask = await nodeApplicationGenerator(tree, {
-    ...schema,
+    ...options,
     bundler: 'webpack',
     skipFormat: true,
   });
+  tasks.push(applicationTask);
   addMainFile(tree, options);
   addTypes(tree, options);
+
+  if (!options.skipPackageJson) {
+    tasks.push(ensureDependencies(tree));
+  }
 
   if (!options.skipFormat) {
     await formatFiles(tree);
   }
 
-  return async () => {
-    await initTask();
-    await applicationTask();
-  };
+  return runTasksInSerial(...tasks);
 }
 
 export default applicationGenerator;
@@ -100,10 +114,19 @@ async function normalizeOptions(
     callingGenerator: '@nx/express:application',
   });
   options.projectNameAndRootFormat = projectNameAndRootFormat;
+  options.addPlugin ??= process.env.NX_ADD_PLUGINS !== 'false';
 
   return {
     ...options,
     appProjectName,
     appProjectRoot,
   };
+}
+
+function ensureDependencies(tree: Tree): GeneratorCallback {
+  return addDependenciesToPackageJson(
+    tree,
+    { tslib: tslibVersion },
+    { '@nx/express': nxVersion }
+  );
 }

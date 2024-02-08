@@ -10,17 +10,16 @@ Because we are not using an Nx plugin for Solid, there are a few items we'll hav
 configure our own build system. There are no pre-created Solid-specific code generators. And we'll have to take care of
 updating any framework dependencies as needed.
 
-{% pill url="/core-features/run-tasks" %}✅ Run Tasks{% /pill %}
-{% pill url="/core-features/cache-task-results" %}✅ Cache Task Results{% /pill %}
+{% pill url="/features/run-tasks" %}✅ Run Tasks{% /pill %}
+{% pill url="/features/cache-task-results" %}✅ Cache Task Results{% /pill %}
 {% pill url="/ci/features/remote-cache" %}✅ Share Your Cache{% /pill %}
-{% pill url="/core-features/explore-graph" %}✅ Explore the Graph{% /pill %}
+{% pill url="/features/explore-graph" %}✅ Explore the Graph{% /pill %}
 {% pill url="/ci/features/distribute-task-execution" %}✅ Distribute Task Execution{% /pill %}
-{% pill url="/core-features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
-{% pill url="/core-features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
-{% pill url="/core-features/plugin-features/use-task-executors" %}🚫 Use Task Executors{% /pill %}
-{% pill url="/core-features/plugin-features/use-code-generators" %}🚫 Use Code Generators{% /pill %}
-{% pill url="/core-features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
+{% pill url="/features/integrate-with-editors" %}✅ Integrate with Editors{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}✅ Automate Updating Nx{% /pill %}
+{% pill url="/features/enforce-module-boundaries" %}✅ Enforce Module Boundaries{% /pill %}
+{% pill url="/features/generate-code" %}🚫 Use Code Generators{% /pill %}
+{% pill url="/features/automate-updating-dependencies" %}🚫 Automate Updating Framework Dependencies{% /pill %}
 
 ## Install Solid and Other Dependencies
 
@@ -28,8 +27,9 @@ updating any framework dependencies as needed.
 {% tab label="npm" %}
 
 ```shell
-npm i solid-js
-npm i --save-dev @nx/web solid-devtools vite-plugin-solid
+npm add solid-js
+npm add -D solid-devtools vite-plugin-solid
+nx add @nx/web
 ```
 
 {% /tab %}
@@ -37,15 +37,17 @@ npm i --save-dev @nx/web solid-devtools vite-plugin-solid
 
 ```shell
 yarn add solid-js
-yarn add --dev @nx/web solid-devtools vite-plugin-solid
+yarn add -D solid-devtools vite-plugin-solid
+nx add @nx/web
 ```
 
 {% /tab %}
 {% tab label="pnpm" %}
 
 ```shell
-pnpm i solid-js
-pnpm i --save-dev @nx/web solid-devtools vite-plugin-solid
+pnpm add solid-js
+pnpm add -D solid-devtools vite-plugin-solid
+nx add @nx/web
 ```
 
 {% /tab %}

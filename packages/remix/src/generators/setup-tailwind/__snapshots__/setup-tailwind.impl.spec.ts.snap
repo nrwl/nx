@@ -31,8 +31,8 @@ exports[`setup-tailwind generator should add a js tailwind config to an applicat
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react';
-import styles from './tailwind.css';
-export const links = () => [{ rel: 'stylesheet', href: styles }];
+import twStyles from './tailwind.css';
+export const links = () => [{ rel: 'stylesheet', href: twStyles }];
 export const meta = () => [
   {
     charset: 'utf-8',
@@ -60,17 +60,23 @@ export default function App() {
 `;
 
 exports[`setup-tailwind generator should add a js tailwind config to an application correctly 4`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   tailwind: true,
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -109,8 +115,10 @@ import {
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react';
-import styles from './tailwind.css';
-export const links: LinksFunction = () => [{ rel: 'stylesheet', href: styles }];
+import twStyles from './tailwind.css';
+export const links: LinksFunction = () => [
+  { rel: 'stylesheet', href: twStyles },
+];
 
 export const meta: MetaFunction = () => [
   {
@@ -140,17 +148,23 @@ export default function App() {
 `;
 
 exports[`setup-tailwind generator should add a tailwind config to an application correctly 4`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   tailwind: true,
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;

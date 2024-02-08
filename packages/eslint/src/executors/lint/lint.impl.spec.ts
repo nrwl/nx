@@ -316,11 +316,45 @@ describe('Linter Builder', () => {
         }),
         mockContext
       );
-      expect(console.error).toHaveBeenCalledWith(
-        'Lint errors found in the listed files.\n'
+      expect(console.info).toHaveBeenCalledWith(
+        '✖ 14 problems (4 errors, 10 warnings)\n'
       );
-      expect(console.warn).toHaveBeenCalledWith(
-        'Lint warnings found in the listed files.\n'
+    });
+
+    it('should log fixable errors or warnings', async () => {
+      mockReports = [
+        {
+          errorCount: 2,
+          warningCount: 4,
+          fixableErrorCount: 1,
+          fixableWarningCount: 2,
+          results: [],
+          usedDeprecatedRules: [],
+        },
+        {
+          errorCount: 3,
+          warningCount: 6,
+          fixableErrorCount: 2,
+          fixableWarningCount: 4,
+          results: [],
+          usedDeprecatedRules: [],
+        },
+      ];
+      setupMocks();
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          eslintConfig: './.eslintrc.json',
+          lintFilePatterns: ['includedFile1'],
+          format: 'json',
+          silent: false,
+        }),
+        mockContext
+      );
+      expect(console.info).toHaveBeenCalledWith(
+        '✖ 15 problems (5 errors, 10 warnings)\n'
+      );
+      expect(console.info).toHaveBeenCalledWith(
+        '  3 errors and 6 warnings are potentially fixable with the `--fix` option.\n'
       );
     });
 
@@ -375,13 +409,13 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         }),
         mockContext
       );
-      expect(console.error).not.toHaveBeenCalledWith(
-        'Lint errors found in the listed files.\n'
+      expect(console.info).not.toHaveBeenCalledWith(
+        '✖ 0 problems (0 errors, 0 warnings)\n'
       );
-      expect(console.warn).not.toHaveBeenCalledWith(
-        'Lint warnings found in the listed files.\n'
+      expect(console.info).not.toHaveBeenCalledWith(
+        '  0 errors and 0 warnings are potentially fixable with the `--fix` option.\n'
       );
-      expect(console.info).toHaveBeenCalledWith('All files pass linting.\n');
+      expect(console.info).toHaveBeenCalledWith('✔ All files pass linting\n');
     });
 
     it('should not log warnings if the quiet flag was passed', async () => {
@@ -486,11 +520,8 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         }),
         mockContext
       );
-      expect(console.error).toHaveBeenCalledWith(
-        'Lint errors found in the listed files.\n'
-      );
-      expect(console.warn).not.toHaveBeenCalledWith(
-        'Lint warnings found in the listed files.\n'
+      expect(console.info).toHaveBeenCalledWith(
+        '✖ 4 problems (4 errors, 0 warnings)\n'
       );
     });
     it('should not log if the silent flag was passed', async () => {
@@ -518,11 +549,8 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
         }),
         mockContext
       );
-      expect(console.error).not.toHaveBeenCalledWith(
-        'Lint errors found in the listed files.\n'
-      );
-      expect(console.warn).not.toHaveBeenCalledWith(
-        'Lint warnings found in the listed files.\n'
+      expect(console.info).not.toHaveBeenCalledWith(
+        '✖ 14 problems (4 errors, 10 warnings)\n'
       );
     });
   });
@@ -683,10 +711,10 @@ Please see https://nx.dev/guides/eslint for full guidance on how to resolve this
     jest.spyOn(fs, 'existsSync').mockReturnValue(true);
     await lintExecutor(createValidRunBuilderOptions(), mockContext);
     expect(mockResolveAndInstantiateESLint).toHaveBeenCalledWith(
-      undefined,
+      '/root/apps/proj/eslint.config.js',
       {
         lintFilePatterns: [],
-        eslintConfig: null,
+        eslintConfig: 'apps/proj/eslint.config.js',
         fix: true,
         cache: true,
         cacheLocation: 'cacheLocation1/proj',

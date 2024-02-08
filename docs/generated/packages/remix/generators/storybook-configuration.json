@@ -1,8 +1,8 @@
 {
   "name": "storybook-configuration",
-  "implementation": "/packages/remix/src/generators/storybook-configuration/storybook-configuration.impl.ts",
+  "implementation": "/packages/remix/src/generators/storybook-configuration/storybook-configuration.impl#remixStorybookConfiguration.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxRemixStorybookConfigure",
     "title": "Remix Storybook Configuration",
@@ -82,7 +82,7 @@
         "description": "Add a Storybook Test-Runner target."
       }
     },
-    "required": ["name"],
+    "required": ["project"],
     "presets": []
   },
   "description": "Generates a Storybook configuration for a Remix application",

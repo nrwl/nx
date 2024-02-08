@@ -11,11 +11,11 @@ import {
 } from '@nx/devkit';
 import { dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { loadConfigFromFile, UserConfig } from 'vite';
 import { existsSync, readdirSync } from 'fs';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { getLockFileName } from '@nx/js';
+import { loadViteDynamicImport } from '../utils/executor-utils';
 
 export interface VitePluginOptions {
   buildTargetName?: string;
@@ -52,7 +52,7 @@ export const createDependencies: CreateDependencies = () => {
 };
 
 export const createNodes: CreateNodes<VitePluginOptions> = [
-  '**/vite.config.{js,ts}',
+  '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}',
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
     // Do not create a project if package.json and project.json isn't there.
@@ -92,16 +92,30 @@ async function buildViteTargets(
   options: VitePluginOptions,
   context: CreateNodesContext
 ) {
-  const viteConfig = await loadConfigFromFile(
-    {
-      command: 'build',
-      mode: 'production',
-    },
+  const absoluteConfigFilePath = joinPathFragments(
+    context.workspaceRoot,
     configFilePath
   );
 
-  const { buildOutputs, testOutputs } = getOutputs(
-    viteConfig?.config,
+  // Workaround for the `build$3 is not a function` error that we sometimes see in agents.
+  // This should be removed later once we address the issue properly
+  try {
+    const importEsbuild = () => new Function('return import("esbuild")')();
+    await importEsbuild();
+  } catch {
+    // do nothing
+  }
+  const { resolveConfig } = await loadViteDynamicImport();
+  const viteConfig = await resolveConfig(
+    {
+      configFile: absoluteConfigFilePath,
+      mode: 'development',
+    },
+    'build'
+  );
+
+  const { buildOutputs, testOutputs, hasTest, isBuildable } = getOutputs(
+    viteConfig,
     projectRoot
   );
 
@@ -109,24 +123,30 @@ async function buildViteTargets(
 
   const targets: Record<string, TargetConfiguration> = {};
 
-  targets[options.buildTargetName] = await buildTarget(
-    options.buildTargetName,
-    namedInputs,
-    buildOutputs,
-    projectRoot
-  );
+  // If file is not vitest.config and buildable, create targets for build, serve, preview and serve-static
+  if (!configFilePath.includes('vitest.config') && isBuildable) {
+    targets[options.buildTargetName] = await buildTarget(
+      options.buildTargetName,
+      namedInputs,
+      buildOutputs,
+      projectRoot
+    );
 
-  targets[options.serveTargetName] = serveTarget(projectRoot);
+    targets[options.serveTargetName] = serveTarget(projectRoot);
 
-  targets[options.previewTargetName] = previewTarget(projectRoot);
+    targets[options.previewTargetName] = previewTarget(projectRoot);
 
-  targets[options.testTargetName] = await testTarget(
-    namedInputs,
-    testOutputs,
-    projectRoot
-  );
+    targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
+  }
 
-  targets[options.serveStaticTargetName] = serveStaticTarget(options) as {};
+  // if file is vitest.config or vite.config has definition for test, create target for test
+  if (configFilePath.includes('vitest.config') || hasTest) {
+    targets[options.testTargetName] = await testTarget(
+      namedInputs,
+      testOutputs,
+      projectRoot
+    );
+  }
 
   return targets;
 }
@@ -213,40 +233,61 @@ function serveStaticTarget(options: VitePluginOptions) {
 }
 
 function getOutputs(
-  viteConfig: UserConfig,
+  viteConfig: Record<string, any> | undefined,
   projectRoot: string
 ): {
   buildOutputs: string[];
   testOutputs: string[];
+  hasTest: boolean;
+  isBuildable: boolean;
 } {
   const { build, test } = viteConfig;
 
-  const buildOutputPath =
-    normalizeOutputPath(build?.outDir, projectRoot) ??
-    '{workspaceRoot}/dist/{projectRoot}';
+  const buildOutputPath = normalizeOutputPath(
+    build?.outDir,
+    projectRoot,
+    'dist'
+  );
 
-  const reportsDirectoryPath =
-    normalizeOutputPath(test?.coverage?.reportsDirectory, projectRoot) ??
-    '{workspaceRoot}/coverage/{projectRoot}';
+  const isBuildable =
+    build?.lib ||
+    build?.rollupOptions?.inputs ||
+    existsSync(join(workspaceRoot, projectRoot, 'index.html'));
+
+  const reportsDirectoryPath = normalizeOutputPath(
+    test?.coverage?.reportsDirectory,
+    projectRoot,
+    'coverage'
+  );
 
   return {
     buildOutputs: [buildOutputPath],
     testOutputs: [reportsDirectoryPath],
+    hasTest: !!test,
+    isBuildable,
   };
 }
 
 function normalizeOutputPath(
   outputPath: string | undefined,
-  projectRoot: string
+  projectRoot: string,
+  path: 'coverage' | 'dist'
 ): string | undefined {
-  if (!outputPath) return undefined;
-  if (isAbsolute(outputPath)) {
-    return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
-  } else {
-    if (outputPath.startsWith('..')) {
-      return join('{workspaceRoot}', join(projectRoot, outputPath));
+  if (!outputPath) {
+    if (projectRoot === '.') {
+      return `{projectRoot}/${path}`;
     } else {
-      return outputPath;
+      return `{workspaceRoot}/${path}/{projectRoot}`;
+    }
+  } else {
+    if (isAbsolute(outputPath)) {
+      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+    } else {
+      if (outputPath.startsWith('..')) {
+        return join('{workspaceRoot}', join(projectRoot, outputPath));
+      } else {
+        return join('{projectRoot}', outputPath);
+      }
     }
   }
 }

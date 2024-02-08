@@ -1,4 +1,4 @@
-// options from https://github.com/react-native-community/cli/blob/main/packages/cli-plugin-metro/src/commands/start/index.ts
+// options from https://github.com/facebook/react-native/blob/main/packages/community-cli-plugin/src/commands/start/index.js
 
 export interface ReactNativeStartOptions {
   port: number;

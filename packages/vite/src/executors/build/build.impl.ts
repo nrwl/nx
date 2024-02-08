@@ -23,6 +23,7 @@ import { relative, resolve } from 'path';
 import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import {
   createBuildableTsConfig,
+  loadViteDynamicImport,
   validateTypes,
 } from '../../utils/executor-utils';
 
@@ -32,9 +33,8 @@ export async function* viteBuildExecutor(
 ) {
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
-  const { mergeConfig, build, loadConfigFromFile } = await (Function(
-    'return import("vite")'
-  )() as Promise<typeof import('vite')>);
+  const { mergeConfig, build, loadConfigFromFile } =
+    await loadViteDynamicImport();
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
   createBuildableTsConfig(projectRoot, options, context);
@@ -83,7 +83,7 @@ export async function* viteBuildExecutor(
     await validateTypes({
       workspaceRoot: context.root,
       projectRoot: projectRoot,
-      tsconfig: getProjectTsConfigPath(projectRoot),
+      tsconfig: options.tsConfig ?? getProjectTsConfigPath(projectRoot),
     });
   }
 
@@ -142,6 +142,7 @@ export async function* viteBuildExecutor(
   }
   // For buildable libs, copy package.json if it exists.
   else if (
+    options.generatePackageJson !== false &&
     !existsSync(distPackageJson) &&
     existsSync(libraryPackageJson) &&
     rootPackageJson !== libraryPackageJson
@@ -174,7 +175,7 @@ export async function* viteBuildExecutor(
         }
         // result must be closed when present.
         // see https://rollupjs.org/guide/en/#rollupwatch
-        if ('result' in event) {
+        if ('result' in event && event.result) {
           event.result.close();
         }
       });
@@ -241,6 +242,8 @@ export async function getBuildExtraArgs(
       otherOptions[key] = extraArgs[key];
     }
   }
+
+  buildOptions['watch'] = options.watch ?? undefined;
 
   return {
     buildOptions,

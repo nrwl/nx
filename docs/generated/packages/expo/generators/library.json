@@ -4,7 +4,7 @@
   "schema": {
     "cli": "nx",
     "$id": "NxExpoLibrary",
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "description": "Create a Expo Library for Nx.",
     "type": "object",
     "examples": [
@@ -34,7 +34,7 @@
       "linter": {
         "description": "The tool to use for running lint checks.",
         "type": "string",
-        "enum": ["eslint"],
+        "enum": ["eslint", "none"],
         "default": "eslint"
       },
       "unitTestRunner": {

@@ -4,6 +4,7 @@ The following environment variables are ones that you can set to change the beha
 
 | Property                         | Type    | Description                                                                                                                                                                                                                            |
 | -------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| NX_ADD_PLUGINS                   | boolean | If set to false, Nx will not add plugins to infer tasks. This is true by default. Workspaces created before Nx 18 will have this disabled via a migration for backwards compatibility                                                  |
 | NX_BASE                          | string  | The default base branch to use when calculating the affected projects. Can be overridden on the command line with `--base`.                                                                                                            |
 | NX_CACHE_DIRECTORY               | string  | The cache for task outputs is stored in `node_modules/.cache/nx` by default. Set this variable to use a different directory.                                                                                                           |
 | NX_CACHE_PROJECT_GRAPH           | boolean | If set to `false`, disables the project graph cache. Most useful when developing a plugin that modifies the project graph.                                                                                                             |
@@ -37,4 +38,4 @@ Nx will set the following environment variables so they can be accessible within
 | NX_DRY_RUN                   | boolean | Set to `true` during dry runs of generators. Use this to avoid side effects during generators.                        |
 | NX_INTERACTIVE               | boolean | Set to `false` when running generators with `--interactive=false`. Use this to prevent prompting during generators    |
 
-When using distributed caching, [Nx Cloud Environment Variables](/ci/reference/env-vars) are also available.
+When using remote caching, [Nx Cloud Environment Variables](/ci/reference/env-vars) are also available.

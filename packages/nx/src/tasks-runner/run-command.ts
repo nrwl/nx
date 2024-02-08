@@ -24,16 +24,9 @@ import { createTaskGraph } from './create-task-graph';
 import { findCycle, makeAcyclic } from './task-graph-utils';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { handleErrors } from '../utils/params';
-import {
-  DaemonBasedTaskHasher,
-  InProcessTaskHasher,
-  TaskHasher,
-} from '../hasher/task-hasher';
 import { hashTasksThatDoNotDependOnOutputsOfOtherTasks } from '../hasher/hash-task';
 import { daemonClient } from '../daemon/client/client';
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
-import { getFileMap } from '../project-graph/build-project-graph';
-import { performance } from 'perf_hooks';
 import { createTaskHasher } from '../hasher/create-task-hasher';
 
 async function getTerminalOutputLifeCycle(
@@ -267,7 +260,7 @@ export async function invokeTasksRunner({
               title: `TaskGraph is now required as an argument to hashTask`,
               bodyLines: [
                 `The TaskGraph object can be retrieved from the context`,
-                'This will result in an error in Nx 18',
+                'This will result in an error in Nx 19',
               ],
             });
             taskGraph_ = taskGraph;
@@ -277,7 +270,7 @@ export async function invokeTasksRunner({
               title: `The environment variables are now required as an argument to hashTask`,
               bodyLines: [
                 `Please pass the environment variables used when running the task`,
-                'This will result in an error in Nx 18',
+                'This will result in an error in Nx 19',
               ],
             });
             env = process.env;
@@ -294,7 +287,7 @@ export async function invokeTasksRunner({
               title: `TaskGraph is now required as an argument to hashTasks`,
               bodyLines: [
                 `The TaskGraph object can be retrieved from the context`,
-                'This will result in an error in Nx 18',
+                'This will result in an error in Nx 19',
               ],
             });
             taskGraph_ = taskGraph;
@@ -304,7 +297,7 @@ export async function invokeTasksRunner({
               title: `The environment variables are now required as an argument to hashTasks`,
               bodyLines: [
                 `Please pass the environment variables used when running the tasks`,
-                'This will result in an error in Nx 18',
+                'This will result in an error in Nx 19',
               ],
             });
             env = process.env;

@@ -148,8 +148,11 @@ export function NxWithCi(): JSX.Element {
                 <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-lg blur-sm opacity-25 group-hover:opacity-90 transition duration-1000 group-hover:duration-200"></div>
                 <div className="relative flex gap-4 items-center rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
                   <CloudArrowDownIcon className="h-8 w-8" aria-hidden="true" />
-                  <a href="/ci/features/remote-cache" title="Discover Nx Cache">
-                    <span className="absolute inset-0"></span>Nx Cache
+                  <a
+                    href="/ci/features/remote-cache"
+                    title="Discover Nx Replay"
+                  >
+                    <span className="absolute inset-0"></span>Nx Replay
                   </a>
                 </div>
               </div>
@@ -168,10 +171,6 @@ export function NxWithCi(): JSX.Element {
                   <a href="/ci/features/nx-agents" title="Discover Nx Agents">
                     <span className="absolute inset-0"></span>Nx Agents
                   </a>
-                  <div className="flex-grow" />
-                  <span className="dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20 inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
-                    Early access
-                  </span>
                 </div>
               </div>
             </dt>

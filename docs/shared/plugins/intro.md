@@ -1,6 +1,6 @@
 # Getting Started with Plugins
 
-Nx plugins contain [generators](/core-features/plugin-features/use-code-generators) and [executors](/core-features/plugin-features/use-task-executors) that extend the capabilities of an Nx workspace. They can be shared as npm packages or referenced locally within the same repo.
+Nx plugins contain [generators](/features/generate-code) and [executors](/concepts/executors-and-configurations) that extend the capabilities of an Nx workspace. They can be shared as npm packages or referenced locally within the same repo.
 
 {% cards cols="4" %}
 
@@ -15,11 +15,11 @@ Nx plugins contain [generators](/core-features/plugin-features/use-code-generato
 
 Nx plugins help you scaffold new projects, pre-configure tooling, follow best practices, and modularize your codebase.
 
-{% cards cols="2" %}
+{% cards cols="3" %}
 
 {% card title="Browse Existing Plugins" description="Find a plugin to use" url="/plugin-registry" /%}
-{% card title="Use Task Executors" description="Run operations on your code" url="/core-features/plugin-features/use-task-executors" /%}
-{% card title="Use Code Generators" description="Create or modify code" url="/core-features/plugin-features/use-code-generators" /%}
+{% card title="Use Task Executors" description="Run operations on your code" url="/concepts/executors-and-configurations" /%}
+{% card title="Generate Code" description="Create or modify code" url="/features/generate-code" /%}
 
 {% /cards %}
 

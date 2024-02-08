@@ -187,7 +187,7 @@ export async function gitCommit({
   let hasStagedFiles = false;
   try {
     // This command will error if there are staged changes
-    await execCommand('git', ['diff-index', '--quiet', 'HEAD']);
+    await execCommand('git', ['diff-index', '--quiet', 'HEAD', '--cached']);
   } catch {
     hasStagedFiles = true;
   }
@@ -249,7 +249,7 @@ export async function gitTag({
   }
 }
 
-export async function gitPush() {
+export async function gitPush(gitRemote?: string) {
   try {
     await execCommand('git', [
       'push',
@@ -257,6 +257,8 @@ export async function gitPush() {
       '--follow-tags',
       '--no-verify',
       '--atomic',
+      // Set custom git remote if provided
+      ...(gitRemote ? [gitRemote] : []),
     ]);
   } catch (err) {
     throw new Error(`Unexpected git push error: ${err}`);
@@ -356,5 +358,15 @@ export async function getCommitHash(ref: string) {
     return (await execCommand('git', ['rev-parse', ref])).trim();
   } catch (e) {
     throw new Error(`Unknown revision: ${ref}`);
+  }
+}
+
+export async function getFirstGitCommit() {
+  try {
+    return (
+      await execCommand('git', ['rev-list', '--max-parents=0', 'HEAD'])
+    ).trim();
+  } catch (e) {
+    throw new Error(`Unable to find first commit in git history`);
   }
 }

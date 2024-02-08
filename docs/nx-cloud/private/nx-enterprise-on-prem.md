@@ -1,6 +1,6 @@
 # Running Nx Cloud Enterprise
 
-We offer multiple ways of running NxCloud for our Enterprise customers. The below options are listed in recommended order, from easiest to most complex in terms of set-up and maintenance for your team. Please carefully consider your organization's requirements and level of infrastructure expertise before deciding on a deployment option.
+We offer multiple ways of running Nx Cloud for our Enterprise customers. The below options are listed in recommended order, from easiest to most complex in terms of set-up and maintenance for your team. Please carefully consider your organization's requirements and level of infrastructure expertise before deciding on a deployment option.
 
 {% call-to-action title="Get in Touch" icon="nxcloud" description="Get the package that best fits your needs" url="https://nx.app/enterprise?utm_source=nx.dev" /%}
 
@@ -8,7 +8,7 @@ We offer multiple ways of running NxCloud for our Enterprise customers. The belo
 
 ### Multi-tenant
 
-The quickest and easiest way to start using NxCloud is by utilizing our pre-existing secure, multi-tenant managed clusters:
+The quickest and easiest way to start using Nx Cloud is by utilizing our pre-existing secure, multi-tenant managed clusters:
 
 - [https://nx.app/](https://nx.app/)
 - [https://eu.nx.app/](https://eu.nx.app/) if you have special restrictions and your data needs to be hosted in Europe.
@@ -25,7 +25,7 @@ npx nx connect
 
 ### Single-tenant instance
 
-If you have very specific requirements, then we can also offer to host NxCloud for you in an isolated/single-tenant cluster.
+If you have very specific requirements, then we can also offer to host Nx Cloud for you in an isolated/single-tenant cluster.
 
 We'll be able to discuss specific requirements such as:
 
@@ -36,7 +36,7 @@ We'll be able to discuss specific requirements such as:
 - Storage replication / redundancy
 
 This would be a "best of both worlds" option, as it would free you up from managing the instance yourself, but you will get to define specific parameters of how it should it run.
-Your data and the NxCloud will run in complete isolation and will only serve your company. There will be no external API calls to any services outside of the cluster we set-up for you.
+Your data and the Nx Cloud will run in complete isolation and will only serve your company. There will be no external API calls to any services outside of the cluster we set-up for you.
 
 Once you let us know you'd like this option, depending on the agreed requirements, it might take a few days to get it set up.
 
@@ -44,9 +44,9 @@ Once you let us know you'd like this option, depending on the agreed requirement
 
 ### Self-contained VM
 
-If you would like to host NxCloud yourself, within your organization's infrastructure, the easiest way to set it up is as a self-contained VM.
+If you would like to host Nx Cloud yourself, within your organization's infrastructure, the easiest way to set it up is as a self-contained VM.
 
-Refer to our ["Self-contained VM" guide](/ci/recipes/on-premise/ami-setup) for instructions on running NxCloud on Amazon EC2.
+Refer to our ["Self-contained VM" guide](/ci/recipes/on-premise/ami-setup) for instructions on running Nx Cloud on Amazon EC2.
 
 ### Multi-node setup with Kubernetes
 

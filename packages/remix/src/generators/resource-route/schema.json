@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "$id": "NxRemixResourceRoute",
   "title": "Create a Resource Route",
   "type": "object",
@@ -28,12 +28,8 @@
     "project": {
       "type": "string",
       "description": "The name of the project.",
-      "$default": {
-        "$source": "projectName"
-      },
-      "x-prompt": "What project is this route for?",
       "pattern": "^[a-zA-Z].*$",
-      "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v18."
+      "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v19."
     },
     "action": {
       "type": "boolean",

@@ -42,7 +42,7 @@ describe('@nx/cypress/plugin', () => {
     tempFs.cleanup();
   });
 
-  it('should add a target for e2e', () => {
+  it('should add a target for e2e', async () => {
     mockCypressConfig(
       defineConfig({
         e2e: {
@@ -57,7 +57,7 @@ describe('@nx/cypress/plugin', () => {
         },
       })
     );
-    const nodes = createNodesFunction(
+    const nodes = await createNodesFunction(
       'cypress.config.js',
       {
         targetName: 'e2e',
@@ -73,10 +73,10 @@ describe('@nx/cypress/plugin', () => {
             "targets": {
               "e2e": {
                 "cache": true,
-                "command": "cypress run --config-file cypress.config.js --e2e",
+                "command": "cypress run",
                 "configurations": {
                   "production": {
-                    "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="nx run my-app:serve:production"",
+                    "command": "cypress run --env webServerCommand="nx run my-app:serve:production"",
                   },
                 },
                 "inputs": [
@@ -103,7 +103,7 @@ describe('@nx/cypress/plugin', () => {
     `);
   });
 
-  it('should add a target for component testing', () => {
+  it('should add a target for component testing', async () => {
     mockCypressConfig(
       defineConfig({
         component: {
@@ -116,7 +116,7 @@ describe('@nx/cypress/plugin', () => {
         },
       })
     );
-    const nodes = createNodesFunction(
+    const nodes = await createNodesFunction(
       'cypress.config.js',
       {
         componentTestingTargetName: 'component-test',
@@ -132,7 +132,7 @@ describe('@nx/cypress/plugin', () => {
             "targets": {
               "component-test": {
                 "cache": true,
-                "command": "cypress open --config-file cypress.config.js --component",
+                "command": "cypress run --component",
                 "inputs": [
                   "default",
                   "^production",
@@ -157,7 +157,7 @@ describe('@nx/cypress/plugin', () => {
     `);
   });
 
-  it('should use ciDevServerTarget to create additional configurations', () => {
+  it('should use ciDevServerTarget to create additional configurations', async () => {
     mockCypressConfig(
       defineConfig({
         e2e: {
@@ -174,7 +174,7 @@ describe('@nx/cypress/plugin', () => {
         },
       })
     );
-    const nodes = createNodesFunction(
+    const nodes = await createNodesFunction(
       'cypress.config.js',
       {
         componentTestingTargetName: 'component-test',
@@ -190,10 +190,10 @@ describe('@nx/cypress/plugin', () => {
             "targets": {
               "e2e": {
                 "cache": true,
-                "command": "cypress run --config-file cypress.config.js --e2e",
+                "command": "cypress run",
                 "configurations": {
                   "production": {
-                    "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="my-app:serve:production"",
+                    "command": "cypress run --env webServerCommand="my-app:serve:production"",
                   },
                 },
                 "inputs": [
@@ -239,7 +239,7 @@ describe('@nx/cypress/plugin', () => {
               },
               "e2e-ci--src/test.cy.ts": {
                 "cache": true,
-                "command": "cypress run --config-file cypress.config.js --e2e --env webServerCommand="my-app:serve-static" --spec src/test.cy.ts",
+                "command": "cypress run --env webServerCommand="my-app:serve-static" --spec src/test.cy.ts",
                 "inputs": [
                   "default",
                   "^production",

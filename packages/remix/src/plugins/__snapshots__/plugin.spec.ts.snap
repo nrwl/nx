@@ -1,0 +1,111 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`@nx/remix/plugin non-root project should create nodes 1`] = `
+{
+  "projects": {
+    "my-app": {
+      "root": "my-app",
+      "targets": {
+        "build": {
+          "cache": true,
+          "dependsOn": [
+            "^build",
+          ],
+          "executor": "@nx/remix:build",
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "options": {
+            "outputPath": "{workspaceRoot}/dist/my-app",
+          },
+          "outputs": [
+            "{options.outputPath}",
+          ],
+        },
+        "serve": {
+          "executor": "@nx/remix:serve",
+          "options": {
+            "command": "npx remix-serve build/index.js",
+          },
+        },
+        "start": {
+          "command": "npx remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+        "tsc": {
+          "cache": true,
+          "command": "tsc",
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "options": {
+            "cwd": "my-app",
+          },
+        },
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/remix/plugin root project should create nodes 1`] = `
+{
+  "projects": {
+    ".": {
+      "root": ".",
+      "targets": {
+        "build": {
+          "cache": true,
+          "dependsOn": [
+            "^build",
+          ],
+          "executor": "@nx/remix:build",
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "options": {
+            "outputPath": "{workspaceRoot}/dist",
+          },
+          "outputs": [
+            "{options.outputPath}",
+          ],
+        },
+        "serve": {
+          "executor": "@nx/remix:serve",
+          "options": {
+            "command": "npx remix-serve build/index.js",
+          },
+        },
+        "start": {
+          "command": "npx remix-serve build/index.js",
+          "dependsOn": [
+            "build",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+        },
+        "typecheck": {
+          "cache": true,
+          "command": "tsc",
+          "inputs": [
+            "production",
+            "^production",
+          ],
+          "options": {
+            "cwd": ".",
+          },
+        },
+      },
+    },
+  },
+}
+`;

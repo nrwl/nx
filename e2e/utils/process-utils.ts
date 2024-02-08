@@ -13,14 +13,15 @@ export const promisifiedTreeKill: (
 
 export async function killPort(port: number): Promise<boolean> {
   if (await portCheck(port)) {
+    let killPortResult;
     try {
       logInfo(`Attempting to close port ${port}`);
-      await kill(port);
+      killPortResult = await kill(port);
       await new Promise<void>((resolve) =>
         setTimeout(() => resolve(), KILL_PORT_DELAY)
       );
       if (await portCheck(port)) {
-        logError(`Port ${port} still open`);
+        logError(`Port ${port} still open`, JSON.stringify(killPortResult));
       } else {
         logSuccess(`Port ${port} successfully closed`);
         return true;

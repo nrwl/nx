@@ -9,7 +9,8 @@ export interface NxRemixGeneratorSchema {
   projectNameAndRootFormat?: ProjectNameAndRootFormat;
   linter?: Linter;
   unitTestRunner?: 'vitest' | 'jest' | 'none';
-  e2eTestRunner?: 'cypress' | 'none';
+  e2eTestRunner?: 'cypress' | 'playwright' | 'none';
   skipFormat?: boolean;
   rootProject?: boolean;
+  addPlugin?: boolean;
 }

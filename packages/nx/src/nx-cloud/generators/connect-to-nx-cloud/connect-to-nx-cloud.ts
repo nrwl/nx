@@ -73,21 +73,17 @@ async function createNxCloudWorkspace(
 }
 
 function printSuccessMessage(url: string) {
-  let host = 'nx.app';
+  let origin = 'https://nx.app';
   try {
-    host = new URL(url).host;
+    origin = new URL(url).origin;
   } catch (e) {}
 
   output.note({
-    title: `Distributed caching via Nx Cloud has been enabled`,
+    title: `Your Nx Cloud workspace is public`,
     bodyLines: [
-      `In addition to the caching, Nx Cloud provides config-free distributed execution,`,
-      `UI for viewing complex runs and GitHub integration. Learn more at https://nx.app`,
-      ``,
-      `Your workspace is currently unclaimed. Run details from unclaimed workspaces can be viewed on ${host} by anyone`,
-      `with the link. Claim your workspace at the following link to restrict access.`,
-      ``,
-      `${url}`,
+      `To restrict access, connect it to your Nx Cloud account:`,
+      `- Push your changes`,
+      `- Login at ${origin} to connect your repository`,
     ],
   });
 }
@@ -95,6 +91,7 @@ function printSuccessMessage(url: string) {
 interface ConnectToNxCloudOptions {
   analytics: boolean;
   installationSource: string;
+  hideFormatLogs?: boolean;
 }
 
 function addNxCloudOptionsToNxJson(
@@ -102,6 +99,9 @@ function addNxCloudOptionsToNxJson(
   nxJson: NxJsonConfiguration,
   token: string
 ) {
+  nxJson ??= {
+    extends: 'nx/presets/npm.json',
+  };
   nxJson.nxCloudAccessToken = token;
   const overrideUrl = process.env.NX_CLOUD_API || process.env.NRWL_API;
   if (overrideUrl) {
@@ -114,9 +114,11 @@ export async function connectToNxCloud(
   tree: Tree,
   schema: ConnectToNxCloudOptions
 ) {
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) as
+    | null
+    | (NxJsonConfiguration & { neverConnectToCloud: boolean });
 
-  if ((nxJson as any).neverConnectToCloud) {
+  if (nxJson?.neverConnectToCloud) {
     return () => {
       printCloudConnectionDisabledMessage();
     };
@@ -130,7 +132,9 @@ export async function connectToNxCloud(
 
     addNxCloudOptionsToNxJson(tree, nxJson, r.token);
 
-    await formatChangedFilesWithPrettierIfAvailable(tree);
+    await formatChangedFilesWithPrettierIfAvailable(tree, {
+      silent: schema.hideFormatLogs,
+    });
 
     return () => printSuccessMessage(r.url);
   }

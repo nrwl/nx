@@ -1,16 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -54,35 +60,12 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should create the application correctly 3`] = `
-"export default function Index() {
+"import NxWelcome from '../nx-welcome';
+
+export default function Index() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div>
+      <NxWelcome title={'test'} />
     </div>
   );
 }
@@ -90,16 +73,22 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should extract the layout directory from the directory options if it exists 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -143,42 +132,19 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --directory should extract the layout directory from the directory options if it exists 3`] = `
-"export default function Index() {
+"import NxWelcome from '../nx-welcome';
+
+export default function Index() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div>
+      <NxWelcome title={'test'} />
     </div>
   );
 }
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --e2eTestRunner should generate an e2e application for the app 1`] = `
+exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 import { defineConfig } from 'cypress';
@@ -192,17 +158,96 @@ export default defineConfig({
 "
 `;
 
+exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
+"import { defineConfig, devices } from '@playwright/test';
+import { nxE2EPreset } from '@nx/playwright/preset';
+
+import { workspaceRoot } from '@nx/devkit';
+
+// For CI, you may want to set BASE_URL to the deployed application.
+const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+
+/**
+ * Read environment variables from file.
+ * https://github.com/motdotla/dotenv
+ */
+// require('dotenv').config();
+
+/**
+ * See https://playwright.dev/docs/test-configuration.
+ */
+export default defineConfig({
+  ...nxE2EPreset(__filename, { testDir: './src' }),
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  use: {
+    baseURL,
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on-first-retry',
+  },
+  /* Run your local dev server before starting the tests */
+  webServer: {
+    command: 'pnpm exec nx serve test',
+    url: 'http://localhost:4200',
+    reuseExistingServer: !process.env.CI,
+    cwd: workspaceRoot,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+
+    // Uncomment for mobile browsers support
+    /* {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    }, */
+
+    // Uncomment for branded browsers
+    /* {
+      name: 'Microsoft Edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    },
+    {
+      name: 'Google Chrome',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    } */
+  ],
+});
+"
+`;
+
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --js should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -243,35 +288,11 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --js should create the application correctly 3`] = `
-"export default function Index() {
+"import NxWelcome from '../nx-welcome';
+export default function Index() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div>
+      <NxWelcome title={'test'} />
     </div>
   );
 }
@@ -279,16 +300,22 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -316,16 +343,22 @@ installGlobals();
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided --unitTestRunner should generate the correct files for testing using vitest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -374,16 +407,22 @@ installGlobals();
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -427,35 +466,12 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provided should create the application correctly 3`] = `
-"export default function Index() {
+"import NxWelcome from '../nx-welcome';
+
+export default function Index() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div>
+      <NxWelcome title={'test'} />
     </div>
   );
 }
@@ -463,16 +479,22 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=as-provide
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --directory should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -516,35 +538,12 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --directory should create the application correctly 3`] = `
-"export default function Index() {
+"import NxWelcome from '../nx-welcome';
+
+export default function Index() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div>
+      <NxWelcome title={'demo-test'} />
     </div>
   );
 }
@@ -552,16 +551,22 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --directory should extract the layout directory from the directory options if it exists 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -605,42 +610,19 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --directory should extract the layout directory from the directory options if it exists 3`] = `
-"export default function Index() {
+"import NxWelcome from '../nx-welcome';
+
+export default function Index() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div>
+      <NxWelcome title={'demo-test'} />
     </div>
   );
 }
 "
 `;
 
-exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --e2eTestRunner should generate an e2e application for the app 1`] = `
+exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 import { defineConfig } from 'cypress';
@@ -654,17 +636,96 @@ export default defineConfig({
 "
 `;
 
+exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --e2eTestRunner should generate a playwright e2e application for the app 1`] = `
+"import { defineConfig, devices } from '@playwright/test';
+import { nxE2EPreset } from '@nx/playwright/preset';
+
+import { workspaceRoot } from '@nx/devkit';
+
+// For CI, you may want to set BASE_URL to the deployed application.
+const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+
+/**
+ * Read environment variables from file.
+ * https://github.com/motdotla/dotenv
+ */
+// require('dotenv').config();
+
+/**
+ * See https://playwright.dev/docs/test-configuration.
+ */
+export default defineConfig({
+  ...nxE2EPreset(__filename, { testDir: './src' }),
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  use: {
+    baseURL,
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on-first-retry',
+  },
+  /* Run your local dev server before starting the tests */
+  webServer: {
+    command: 'pnpm exec nx serve test',
+    url: 'http://localhost:4200',
+    reuseExistingServer: !process.env.CI,
+    cwd: workspaceRoot,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+
+    // Uncomment for mobile browsers support
+    /* {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    }, */
+
+    // Uncomment for branded browsers
+    /* {
+      name: 'Microsoft Edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    },
+    {
+      name: 'Google Chrome',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    } */
+  ],
+});
+"
+`;
+
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --js should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -705,35 +766,11 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --js should create the application correctly 3`] = `
-"export default function Index() {
+"import NxWelcome from '../nx-welcome';
+export default function Index() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div>
+      <NxWelcome title={'test'} />
     </div>
   );
 }
@@ -741,16 +778,22 @@ exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -778,16 +821,22 @@ installGlobals();
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived --unitTestRunner should generate the correct files for testing using vitest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -836,16 +885,22 @@ installGlobals();
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -889,42 +944,19 @@ export default function App() {
 `;
 
 exports[`Remix Application Integrated Repo --projectNameAndRootFormat=derived should create the application correctly 3`] = `
-"export default function Index() {
+"import NxWelcome from '../nx-welcome';
+
+export default function Index() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div>
+      <NxWelcome title={'test'} />
     </div>
   );
 }
 "
 `;
 
-exports[`Remix Application Standalone Project Repo --e2eTestRunner should generate an e2e application for the app 1`] = `
+exports[`Remix Application Standalone Project Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
 "import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
 
 import { defineConfig } from 'cypress';
@@ -939,16 +971,22 @@ export default defineConfig({
 `;
 
 exports[`Remix Application Standalone Project Repo --js should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -989,35 +1027,11 @@ export default function App() {
 `;
 
 exports[`Remix Application Standalone Project Repo --js should create the application correctly 3`] = `
-"export default function Index() {
+"import NxWelcome from '../nx-welcome';
+export default function Index() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div>
+      <NxWelcome title={'test'} />
     </div>
   );
 }
@@ -1025,16 +1039,22 @@ exports[`Remix Application Standalone Project Repo --js should create the applic
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using jest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -1080,22 +1100,28 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await waitFor(() => screen.findByText('Welcome to Remix'));
+  await waitFor(() => screen.findByText('Hello there,'));
 });
 "
 `;
 
 exports[`Remix Application Standalone Project Repo --unitTestRunner should generate the correct files for testing using vitest 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -1128,7 +1154,7 @@ export default defineConfig({
 
     reporters: ['default'],
     coverage: {
-      reportsDirectory: './coverage/.',
+      reportsDirectory: './coverage/test',
       provider: 'v8',
     },
   },
@@ -1151,7 +1177,7 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await waitFor(() => screen.findByText('Welcome to Remix'));
+  await waitFor(() => screen.findByText('Hello there,'));
 });
 "
 `;
@@ -1164,16 +1190,22 @@ installGlobals();
 `;
 
 exports[`Remix Application Standalone Project Repo should create the application correctly 1`] = `
-"/**
+"import { createWatchPaths } from '@nx/remix';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+/**
  * @type {import('@remix-run/dev').AppConfig}
  */
-module.exports = {
+export default {
   ignoredRouteFiles: ['**/.*'],
   // appDirectory: "app",
   // assetsBuildDirectory: "public/build",
   // serverBuildPath: "build/index.js",
   // publicPath: "/build/",
-  watchPaths: () => require('@nx/remix').createWatchPaths(__dirname),
+  watchPaths: () => createWatchPaths(__dirname),
 };
 "
 `;
@@ -1217,35 +1249,12 @@ export default function App() {
 `;
 
 exports[`Remix Application Standalone Project Repo should create the application correctly 3`] = `
-"export default function Index() {
+"import NxWelcome from '../nx-welcome';
+
+export default function Index() {
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', lineHeight: '1.4' }}>
-      <h1>Welcome to Remix</h1>
-      <ul>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/blog"
-            rel="noreferrer"
-          >
-            15m Quickstart Blog Tutorial
-          </a>
-        </li>
-        <li>
-          <a
-            target="_blank"
-            href="https://remix.run/tutorials/jokes"
-            rel="noreferrer"
-          >
-            Deep Dive Jokes App Tutorial
-          </a>
-        </li>
-        <li>
-          <a target="_blank" href="https://remix.run/docs" rel="noreferrer">
-            Remix Docs
-          </a>
-        </li>
-      </ul>
+    <div>
+      <NxWelcome title={'test'} />
     </div>
   );
 }
@@ -1267,7 +1276,7 @@ test('renders loader data', async () => {
 
   render(<RemixStub />);
 
-  await waitFor(() => screen.findByText('Welcome to Remix'));
+  await waitFor(() => screen.findByText('Hello there,'));
 });
 "
 `;
@@ -1292,5 +1301,78 @@ exports[`Remix Application Standalone Project Repo should create the application
     }
   ]
 }
+"
+`;
+
+exports[`Remix Application Standalone Project Repo should generate a playwright e2e application for the app 1`] = `
+"import { defineConfig, devices } from '@playwright/test';
+import { nxE2EPreset } from '@nx/playwright/preset';
+
+import { workspaceRoot } from '@nx/devkit';
+
+// For CI, you may want to set BASE_URL to the deployed application.
+const baseURL = process.env['BASE_URL'] || 'http://localhost:4200';
+
+/**
+ * Read environment variables from file.
+ * https://github.com/motdotla/dotenv
+ */
+// require('dotenv').config();
+
+/**
+ * See https://playwright.dev/docs/test-configuration.
+ */
+export default defineConfig({
+  ...nxE2EPreset(__filename, { testDir: './src' }),
+  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  use: {
+    baseURL,
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: 'on-first-retry',
+  },
+  /* Run your local dev server before starting the tests */
+  webServer: {
+    command: 'pnpm exec nx serve test',
+    url: 'http://localhost:4200',
+    reuseExistingServer: !process.env.CI,
+    cwd: workspaceRoot,
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
+    },
+
+    // Uncomment for mobile browsers support
+    /* {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 5'] },
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 12'] },
+    }, */
+
+    // Uncomment for branded browsers
+    /* {
+      name: 'Microsoft Edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    },
+    {
+      name: 'Google Chrome',
+      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    } */
+  ],
+});
 "
 `;

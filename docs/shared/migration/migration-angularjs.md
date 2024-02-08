@@ -34,7 +34,7 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 
 ```shell
 ? What to create in the new workspace empty             [an empty workspace with a layout that works best for building apps]
-? Set up distributed caching using Nx Cloud (It's free and doesn't require registration.) Yes [Faster builds, run details, GitHub integration. Learn more at https://nx.app]
+? Set up remote caching using Nx Cloud (It's free and doesn't require registration.) Yes [Faster builds, run details, GitHub integration. Learn more at https://nx.app]
 ```
 
 ## Creating your app
@@ -42,7 +42,7 @@ At the next prompt, you can choose whether to use [Nx Cloud](https://nx.app) or 
 Your new workspace won’t have much in it because of the `apps` preset. You’ll need to generate an application to have some structure created. Add the Angular plugin to your workspace:
 
 ```shell
-npm install -D @nx/angular
+nx add @nx/angular
 ```
 
 For this example, we will use Karma and Protractor, the most common unit test runner and e2e test runner for AngularJS.
@@ -365,11 +365,34 @@ So far, you’ve mostly gotten already existing code and processes to work. This
 
 But migrating AngularJS code means we need to switch some of our tools to a more modern tool stack. Specifically, using webpack and babel is going to allow us to take advantage of Nx more easily. Becoming an expert in these build tools is outside the scope of this article, but I’ll address some AngularJS specific concerns. To get started, install these new dependencies:
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install -D @nx/web babel-plugin-angularjs-annotate
+npm add -D babel-plugin-angularjs-annotate
+nx add @nx/web
 ```
 
-Nx already has most of what you need for webpack added as a dependency. `@nx/web` contains the [executors](/core-features/plugin-features/use-task-executors) we need to use to build and serve the application with webpack and
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D babel-plugin-angularjs-annotate
+nx add @nx/web
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D babel-plugin-angularjs-annotate
+nx add @nx/web
+```
+
+{% /tab %}
+{% /tabs %}
+
+Nx already has most of what you need for webpack added as a dependency. `@nx/web` contains the [executors](/concepts/executors-and-configurations) we need to use to build and serve the application with webpack and
 `babel-plugin-angularjs-annotate` is going to accomplish the same thing that `browserify-ngannotate` previously did in gulp: add dependency injection annotations.
 
 Start with a `webpack.config.js` file in your application’s root directory:
@@ -572,9 +595,29 @@ Unit testing can be an important part of any code migration. If you migrate your
 
 You need a few dependencies for AngularJS unit testing that Nx doesn’t provide by default:
 
+{% tabs %}
+{% tab label="npm" %}
+
 ```shell
-npm install -D angular-mocks@1.5.11 karma-webpack
+npm add -D angular-mocks@1.5.11 karma-webpack
 ```
+
+{% /tab %}
+{% tab label="yarn" %}
+
+```shell
+yarn add -D angular-mocks@1.5.11 karma-webpack
+```
+
+{% /tab %}
+{% tab label="pnpm" %}
+
+```shell
+pnpm add -D angular-mocks@1.5.11 karma-webpack
+```
+
+{% /tab %}
+{% /tabs %}
 
 Earlier, you configured this app to use Karma as its unit test runner. Nx has provided a Karma config file for you, but you’ll need to modify it to work with AngularJS:
 

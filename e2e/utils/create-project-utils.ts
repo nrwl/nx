@@ -39,6 +39,7 @@ let projName: string;
 // TODO(jack): we should tag the projects (e.g. tags: ['package']) and filter from that rather than hard-code packages.
 const nxPackages = [
   `@nx/angular`,
+  `@nx/cypress`,
   `@nx/eslint-plugin`,
   `@nx/express`,
   `@nx/esbuild`,
@@ -221,7 +222,6 @@ export function runCreateWorkspace(
     base,
     packageManager,
     extraArgs,
-    ci,
     useDetectedPm = false,
     cwd = e2eCwd,
     bundler,
@@ -229,6 +229,7 @@ export function runCreateWorkspace(
     standaloneApi,
     docker,
     nextAppDir,
+    nextSrcDir,
     e2eTestRunner,
     ssr,
     framework,
@@ -239,7 +240,6 @@ export function runCreateWorkspace(
     base?: string;
     packageManager?: 'npm' | 'yarn' | 'pnpm';
     extraArgs?: string;
-    ci?: 'azure' | 'github' | 'circleci';
     useDetectedPm?: boolean;
     cwd?: string;
     bundler?: 'webpack' | 'vite';
@@ -247,6 +247,7 @@ export function runCreateWorkspace(
     routing?: boolean;
     docker?: boolean;
     nextAppDir?: boolean;
+    nextSrcDir?: boolean;
     e2eTestRunner?: 'cypress' | 'playwright' | 'jest' | 'detox' | 'none';
     ssr?: boolean;
     framework?: string;
@@ -256,15 +257,12 @@ export function runCreateWorkspace(
 
   const pm = getPackageManagerCommand({ packageManager });
 
-  let command = `${pm.createWorkspace} ${name} --preset=${preset} --no-nxCloud --no-interactive`;
+  let command = `${pm.createWorkspace} ${name} --preset=${preset} --nxCloud=skip --no-interactive`;
   if (appName) {
     command += ` --appName=${appName}`;
   }
   if (style) {
     command += ` --style=${style}`;
-  }
-  if (ci) {
-    command += ` --ci=${ci}`;
   }
 
   if (bundler) {
@@ -273,6 +271,10 @@ export function runCreateWorkspace(
 
   if (nextAppDir !== undefined) {
     command += ` --nextAppDir=${nextAppDir}`;
+  }
+
+  if (nextSrcDir !== undefined) {
+    command += ` --nextSrcDir=${nextSrcDir}`;
   }
 
   if (docker !== undefined) {
@@ -360,7 +362,7 @@ export function runCreatePlugin(
 
   let command = `${
     pm.runUninstalledPackage
-  } create-nx-plugin@${getPublishedVersion()} ${name} --no-nxCloud`;
+  } create-nx-plugin@${getPublishedVersion()} ${name} --nxCloud=skip`;
 
   if (packageManager && !useDetectedPm) {
     command += ` --package-manager=${packageManager}`;

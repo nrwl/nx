@@ -23,11 +23,14 @@ import {
   removeCompatExtends,
   removePlugin,
 } from '../utils/flat-config/ast-utils';
+import { hasEslintPlugin } from '../utils/plugin';
+import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
 
 export function migrateConfigToMonorepoStyle(
   projects: ProjectConfiguration[],
   tree: Tree,
-  unitTestRunner: string
+  unitTestRunner: string,
+  keepExistingVersions?: boolean
 ): void {
   const rootEslintConfig = findEslintFile(tree);
   let skipCleanup = false;
@@ -47,7 +50,9 @@ export function migrateConfigToMonorepoStyle(
         {},
         {
           '@eslint/js': eslintVersion,
-        }
+        },
+        undefined,
+        keepExistingVersions
       );
       tree.write(
         tree.exists('eslint.config.js')
@@ -67,24 +72,36 @@ export function migrateConfigToMonorepoStyle(
 
   // update extends in all projects' eslint configs
   projects.forEach((project) => {
+    let eslintFile: string;
+
     const lintTarget = findLintTarget(project);
     if (lintTarget) {
-      const eslintFile =
+      // If target is configured in project.json, read file from target options.
+      eslintFile =
         lintTarget.options?.eslintConfig || findEslintFile(tree, project.root);
-      if (eslintFile) {
-        const projectEslintPath = joinPathFragments(project.root, eslintFile);
-        if (skipCleanup) {
-          const content = tree.read(projectEslintPath, 'utf-8');
-          tree.write(
-            projectEslintPath,
-            content.replace(
-              rootEslintConfig,
-              rootEslintConfig.replace('.base.', '.')
-            )
-          );
-        } else {
-          migrateEslintFile(projectEslintPath, tree);
+    } else if (hasEslintPlugin(tree)) {
+      // Otherwise, if `@nx/eslint/plugin` is used, match any of the known config files.
+      for (const f of ESLINT_CONFIG_FILENAMES) {
+        if (tree.exists(joinPathFragments(project.root, f))) {
+          eslintFile = f;
+          break;
         }
+      }
+    }
+
+    if (eslintFile) {
+      const projectEslintPath = joinPathFragments(project.root, eslintFile);
+      if (skipCleanup) {
+        const content = tree.read(projectEslintPath, 'utf-8');
+        tree.write(
+          projectEslintPath,
+          content.replace(
+            rootEslintConfig,
+            rootEslintConfig.replace('.base.', '.')
+          )
+        );
+      } else {
+        migrateEslintFile(projectEslintPath, tree);
       }
     }
   });

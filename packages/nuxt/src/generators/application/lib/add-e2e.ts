@@ -30,6 +30,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       devServerTarget: `${options.projectName}:serve`,
       baseUrl: 'http://localhost:4200',
       jsx: true,
+      addPlugin: true,
     });
   } else if (options.e2eTestRunner === 'playwright') {
     const { configurationGenerator } = ensurePackage<
@@ -53,6 +54,7 @@ export async function addE2e(host: Tree, options: NormalizedSchema) {
       webServerCommand: `${getPackageManagerCommand().exec} nx serve ${
         options.projectName
       }`,
+      addPlugin: true,
     });
   }
   return () => {};

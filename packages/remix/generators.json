@@ -1,5 +1,5 @@
 {
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "name": "NxRemix",
   "version": "0.0.1",
   "extends": ["@nx/react"],
@@ -17,23 +17,29 @@
       "hidden": true
     },
     "application": {
-      "implementation": "./src/generators/application/application.impl",
+      "implementation": "./src/generators/application/application.impl#remixApplicationGeneratorInternal",
       "schema": "./src/generators/application/schema.json",
       "description": "Generate a new Remix application",
       "aliases": ["app"],
       "x-type": "application"
     },
     "cypress-component-configuration": {
-      "implementation": "./src/generators/cypress-component-configuration/cypress-component-configuration.impl",
+      "implementation": "./src/generators/cypress-component-configuration/cypress-component-configuration.impl#cypressComponentConfigurationGeneratorInternal",
       "schema": "./src/generators/cypress-component-configuration/schema.json",
       "description": "Generate a Cypress Component Testing configuration for a Remix project"
     },
     "library": {
-      "implementation": "./src/generators/library/library.impl",
+      "implementation": "./src/generators/library/library.impl#remixLibraryGeneratorInternal",
       "schema": "./src/generators/library/schema.json",
       "description": "Generate a new library",
       "aliases": ["lib"],
       "x-type": "library"
+    },
+    "init": {
+      "implementation": "./src/generators/init/init#remixInitGeneratorInternal",
+      "schema": "./src/generators/init/schema.json",
+      "description": "Initialize the `@nx/remix` plugin.",
+      "hidden": true
     },
     "route": {
       "implementation": "./src/generators/route/route.impl",
@@ -66,7 +72,7 @@
       "description": "Generates a TailwindCSS configuration for the Remix application"
     },
     "storybook-configuration": {
-      "implementation": "./src/generators/storybook-configuration/storybook-configuration.impl",
+      "implementation": "./src/generators/storybook-configuration/storybook-configuration.impl#remixStorybookConfiguration",
       "schema": "./src/generators/storybook-configuration/schema.json",
       "description": "Generates a Storybook configuration for a Remix application"
     },
@@ -79,11 +85,6 @@
       "implementation": "./src/generators/error-boundary/error-boundary.impl",
       "schema": "./src/generators/error-boundary/schema.json",
       "description": "Add an ErrorBoundary to an existing route"
-    },
-    "cypress": {
-      "implementation": "./src/generators/cypress/cypress.impl",
-      "schema": "./src/generators/cypress/schema.json",
-      "description": "Generate a project for testing Remix apps using Cypress"
     }
   }
 }

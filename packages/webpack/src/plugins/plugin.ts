@@ -8,7 +8,7 @@ import {
   workspaceRoot,
   writeJsonFile,
 } from '@nx/devkit';
-import { basename, dirname, isAbsolute, join, relative } from 'path';
+import { dirname, isAbsolute, join, relative } from 'path';
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { WebpackExecutorOptions } from '../executors/webpack/schema';
 import { WebDevServerOptions } from '../executors/dev-server/schema';
@@ -53,7 +53,7 @@ export const createDependencies: CreateDependencies = () => {
 };
 
 export const createNodes: CreateNodes<WebpackPluginOptions> = [
-  '**/webpack.config.{js,ts,mjs,mts,cjs,cts}',
+  '**/webpack.config.{js,ts,mjs,cjs}',
   async (configFilePath, options, context) => {
     options ??= {};
     options.buildTargetName ??= 'build';
@@ -107,24 +107,25 @@ async function createWebpackTargets(
   >
 > {
   const namedInputs = getNamedInputs(projectRoot, context);
+
   const webpackConfig = resolveUserDefinedWebpackConfig(
     join(context.workspaceRoot, configFilePath),
     getRootTsConfigPath(),
     true
   );
+
   const webpackOptions = await readWebpackOptions(webpackConfig);
 
-  const outputPath =
-    normalizeOutputPath(webpackOptions.output?.path) ??
-    '{workspaceRoot}/dist/{projectRoot}';
+  const outputPath = normalizeOutputPath(
+    webpackOptions.output?.path,
+    projectRoot
+  );
 
   const targets = {};
 
-  const configBasename = basename(configFilePath);
-
   targets[options.buildTargetName] = {
-    command: `webpack -c ${configBasename} --node-env=production`,
-    options: { cwd: projectRoot },
+    command: `webpack-cli build`,
+    options: { cwd: projectRoot, args: ['--node-env=production'] },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs:
@@ -147,16 +148,18 @@ async function createWebpackTargets(
   };
 
   targets[options.serveTargetName] = {
-    command: `webpack serve -c ${configBasename} --node-env=development`,
+    command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
+      args: ['--node-env=development'],
     },
   };
 
   targets[options.previewTargetName] = {
-    command: `webpack serve -c ${configBasename} --node-env=production`,
+    command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
+      args: ['--node-env=production'],
     },
   };
 
@@ -171,12 +174,25 @@ async function createWebpackTargets(
 }
 
 function normalizeOutputPath(
-  outputPath: string | undefined
+  outputPath: string | undefined,
+  projectRoot: string
 ): string | undefined {
-  if (!outputPath) return undefined;
-  if (isAbsolute(outputPath)) {
-    return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+  if (!outputPath) {
+    // If outputPath is undefined, use webpack's default `dist` directory.
+    if (projectRoot === '.') {
+      return `{projectRoot}/dist}`;
+    } else {
+      return `{workspaceRoot}/dist/{projectRoot}`;
+    }
   } else {
-    return outputPath;
+    if (isAbsolute(outputPath)) {
+      return `{workspaceRoot}/${relative(workspaceRoot, outputPath)}`;
+    } else {
+      if (outputPath.startsWith('..')) {
+        return join('{workspaceRoot}', join(projectRoot, outputPath));
+      } else {
+        return join('{projectRoot}', outputPath);
+      }
+    }
   }
 }

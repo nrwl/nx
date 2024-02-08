@@ -31,9 +31,12 @@ import {
   ReleaseGroupWithName,
   filterReleaseGroups,
 } from './config/filter-release-groups';
+import { batchProjectsByGeneratorConfig } from './utils/batch-projects-by-generator-config';
 import { gitAdd, gitTag } from './utils/git';
 import { printDiff } from './utils/print-changes';
+import { resolveNxJsonConfigErrorMessage } from './utils/resolve-nx-json-error-message';
 import {
+  ReleaseVersionGeneratorResult,
   VersionData,
   commitChanges,
   createCommitMessageValues,
@@ -43,7 +46,12 @@ import {
 
 // Reexport some utils for use in plugin release-version generator implementations
 export { deriveNewSemverVersion } from './utils/semver';
-export type { VersionData } from './utils/shared';
+export type {
+  ReleaseVersionGeneratorResult,
+  VersionData,
+} from './utils/shared';
+
+export const validReleaseVersionPrefixes = ['auto', '', '~', '^'];
 
 export interface ReleaseVersionGeneratorSchema {
   // The projects being versioned in the current execution
@@ -56,6 +64,10 @@ export interface ReleaseVersionGeneratorSchema {
   packageRoot?: string;
   currentVersionResolver?: 'registry' | 'disk' | 'git-tag';
   currentVersionResolverMetadata?: Record<string, unknown>;
+  fallbackCurrentVersionResolver?: 'disk';
+  firstRelease?: boolean;
+  // auto means the existing prefix will be preserved, and is the default behavior
+  versionPrefix?: typeof validReleaseVersionPrefixes[number];
 }
 
 export interface NxReleaseVersionResult {
@@ -95,11 +107,31 @@ export async function releaseVersion(
   // Apply default configuration to any optional user configuration
   const { error: configError, nxReleaseConfig } = await createNxReleaseConfig(
     projectGraph,
-    nxJson.release,
-    'nx-release-publish'
+    nxJson.release
   );
   if (configError) {
     return await handleNxReleaseConfigError(configError);
+  }
+
+  // The nx release top level command will always override these three git args. This is how we can tell
+  // if the top level release command was used or if the user is using the changelog subcommand.
+  // If the user explicitly overrides these args, then it doesn't matter if the top level config is set,
+  // as all of the git options would be overridden anyway.
+  if (
+    (args.gitCommit === undefined ||
+      args.gitTag === undefined ||
+      args.stageChanges === undefined) &&
+    nxJson.release?.git
+  ) {
+    const nxJsonMessage = await resolveNxJsonConfigErrorMessage([
+      'release',
+      'git',
+    ]);
+    output.error({
+      title: `The "release.git" property in nx.json may not be used with the "nx release version" subcommand or programmatic API. Instead, configure git options for subcommands directly with "release.version.git" and "release.changelog.git".`,
+      bodyLines: [nxJsonMessage],
+    });
+    process.exit(1);
   }
 
   const {
@@ -120,8 +152,10 @@ export async function releaseVersion(
   const tree = new FsTree(workspaceRoot, args.verbose);
 
   const versionData: VersionData = {};
-  const userCommitMessage: string | undefined =
+  const commitMessage: string | undefined =
     args.gitCommitMessage || nxReleaseConfig.version.git.commitMessage;
+  const additionalChangedFiles = new Set<string>();
+  const generatorCallbacks: (() => Promise<void>)[] = [];
 
   if (args.projects?.length) {
     /**
@@ -129,31 +163,55 @@ export async function releaseVersion(
      */
     for (const releaseGroup of releaseGroups) {
       const releaseGroupName = releaseGroup.name;
-
-      // Resolve the generator data for the current release group
-      const generatorData = resolveGeneratorData({
-        ...extractGeneratorCollectionAndName(
-          `release-group "${releaseGroupName}"`,
-          releaseGroup.version.generator
-        ),
-        configGeneratorOptions: releaseGroup.version.generatorOptions,
-        projects,
-      });
-
       const releaseGroupProjectNames = Array.from(
         releaseGroupToFilteredProjects.get(releaseGroup)
       );
-
-      await runVersionOnProjects(
+      const projectBatches = batchProjectsByGeneratorConfig(
         projectGraph,
-        nxJson,
-        args,
-        tree,
-        generatorData,
-        releaseGroupProjectNames,
         releaseGroup,
-        versionData
+        // Only batch based on the filtered projects within the release group
+        releaseGroupProjectNames
       );
+
+      for (const [
+        generatorConfigString,
+        projectNames,
+      ] of projectBatches.entries()) {
+        const [generatorName, generatorOptions] = JSON.parse(
+          generatorConfigString
+        );
+        // Resolve the generator for the batch and run versioning on the projects within the batch
+        const generatorData = resolveGeneratorData({
+          ...extractGeneratorCollectionAndName(
+            `batch "${JSON.stringify(
+              projectNames
+            )}" for release-group "${releaseGroupName}"`,
+            generatorName
+          ),
+          configGeneratorOptions: generatorOptions,
+          // all project data from the project graph (not to be confused with projectNamesToRunVersionOn)
+          projects,
+        });
+        const generatorCallback = await runVersionOnProjects(
+          projectGraph,
+          nxJson,
+          args,
+          tree,
+          generatorData,
+          projectNames,
+          releaseGroup,
+          versionData
+        );
+        // Capture the callback so that we can run it after flushing the changes to disk
+        generatorCallbacks.push(async () => {
+          const changedFiles = await generatorCallback(tree, {
+            dryRun: !!args.dryRun,
+            verbose: !!args.verbose,
+            generatorOptions,
+          });
+          changedFiles.forEach((f) => additionalChangedFiles.add(f));
+        });
+      }
     }
 
     // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
@@ -169,19 +227,44 @@ export async function releaseVersion(
 
     printAndFlushChanges(tree, !!args.dryRun);
 
+    for (const generatorCallback of generatorCallbacks) {
+      await generatorCallback();
+    }
+
+    const changedFiles = [
+      ...tree.listChanges().map((f) => f.path),
+      ...additionalChangedFiles,
+    ];
+
+    // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
+    if (!changedFiles.length) {
+      return {
+        // An overall workspace version cannot be relevant when filtering to independent projects
+        workspaceVersion: undefined,
+        projectsVersionData: versionData,
+      };
+    }
+
     if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
       await commitChanges(
-        tree.listChanges().map((f) => f.path),
+        changedFiles,
         !!args.dryRun,
         !!args.verbose,
         createCommitMessageValues(
           releaseGroups,
           releaseGroupToFilteredProjects,
           versionData,
-          userCommitMessage
+          commitMessage
         ),
         args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
       );
+    } else if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
+      output.logSingleLine(`Staging changed files with git`);
+      await gitAdd({
+        changedFiles,
+        dryRun: args.dryRun,
+        verbose: args.verbose,
+      });
     }
 
     if (args.gitTag ?? nxReleaseConfig.version.git.tag) {
@@ -214,27 +297,52 @@ export async function releaseVersion(
    */
   for (const releaseGroup of releaseGroups) {
     const releaseGroupName = releaseGroup.name;
-
-    // Resolve the generator data for the current release group
-    const generatorData = resolveGeneratorData({
-      ...extractGeneratorCollectionAndName(
-        `release-group "${releaseGroupName}"`,
-        releaseGroup.version.generator
-      ),
-      configGeneratorOptions: releaseGroup.version.generatorOptions,
-      projects,
-    });
-
-    await runVersionOnProjects(
+    const projectBatches = batchProjectsByGeneratorConfig(
       projectGraph,
-      nxJson,
-      args,
-      tree,
-      generatorData,
-      releaseGroup.projects,
       releaseGroup,
-      versionData
+      // Batch based on all projects within the release group
+      releaseGroup.projects
     );
+
+    for (const [
+      generatorConfigString,
+      projectNames,
+    ] of projectBatches.entries()) {
+      const [generatorName, generatorOptions] = JSON.parse(
+        generatorConfigString
+      );
+      // Resolve the generator for the batch and run versioning on the projects within the batch
+      const generatorData = resolveGeneratorData({
+        ...extractGeneratorCollectionAndName(
+          `batch "${JSON.stringify(
+            projectNames
+          )}" for release-group "${releaseGroupName}"`,
+          generatorName
+        ),
+        configGeneratorOptions: generatorOptions,
+        // all project data from the project graph (not to be confused with projectNamesToRunVersionOn)
+        projects,
+      });
+      const generatorCallback = await runVersionOnProjects(
+        projectGraph,
+        nxJson,
+        args,
+        tree,
+        generatorData,
+        projectNames,
+        releaseGroup,
+        versionData
+      );
+      // Capture the callback so that we can run it after flushing the changes to disk
+      generatorCallbacks.push(async () => {
+        const changedFiles = await generatorCallback(tree, {
+          dryRun: !!args.dryRun,
+          verbose: !!args.verbose,
+          generatorOptions,
+        });
+        changedFiles.forEach((f) => additionalChangedFiles.add(f));
+      });
+    }
   }
 
   // Resolve any git tags as early as possible so that we can hard error in case of any duplicates before reaching the actual git command
@@ -250,6 +358,10 @@ export async function releaseVersion(
 
   printAndFlushChanges(tree, !!args.dryRun);
 
+  for (const generatorCallback of generatorCallbacks) {
+    await generatorCallback();
+  }
+
   // Only applicable when there is a single release group with a fixed relationship
   let workspaceVersion: string | null | undefined = undefined;
   if (releaseGroups.length === 1) {
@@ -262,7 +374,10 @@ export async function releaseVersion(
     }
   }
 
-  const changedFiles = tree.listChanges().map((f) => f.path);
+  const changedFiles = [
+    ...tree.listChanges().map((f) => f.path),
+    ...additionalChangedFiles,
+  ];
 
   // No further actions are necessary in this scenario (e.g. if conventional commits detected no changes)
   if (!changedFiles.length) {
@@ -270,17 +385,6 @@ export async function releaseVersion(
       workspaceVersion,
       projectsVersionData: versionData,
     };
-  }
-
-  if (args.stageChanges) {
-    output.logSingleLine(
-      `Staging changed files with git because --stage-changes was set`
-    );
-    await gitAdd({
-      changedFiles,
-      dryRun: args.dryRun,
-      verbose: args.verbose,
-    });
   }
 
   if (args.gitCommit ?? nxReleaseConfig.version.git.commit) {
@@ -292,10 +396,17 @@ export async function releaseVersion(
         releaseGroups,
         releaseGroupToFilteredProjects,
         versionData,
-        userCommitMessage
+        commitMessage
       ),
       args.gitCommitArgs || nxReleaseConfig.version.git.commitArgs
     );
+  } else if (args.stageChanges ?? nxReleaseConfig.version.git.stageChanges) {
+    output.logSingleLine(`Staging changed files with git`);
+    await gitAdd({
+      changedFiles,
+      dryRun: args.dryRun,
+      verbose: args.verbose,
+    });
   }
 
   if (args.gitTag ?? nxReleaseConfig.version.git.tag) {
@@ -346,7 +457,7 @@ async function runVersionOnProjects(
   projectNames: string[],
   releaseGroup: ReleaseGroupWithName,
   versionData: VersionData
-) {
+): Promise<ReleaseVersionGeneratorResult['callback']> {
   const generatorOptions: ReleaseVersionGeneratorSchema = {
     // Always ensure a string to avoid generator schema validation errors
     specifier: args.specifier ?? '',
@@ -356,6 +467,7 @@ async function runVersionOnProjects(
     projects: projectNames.map((p) => projectGraph.nodes[p]),
     projectGraph,
     releaseGroup,
+    firstRelease: args.firstRelease ?? false,
   };
 
   // Apply generator defaults from schema.json file etc
@@ -374,20 +486,22 @@ async function runVersionOnProjects(
 
   const releaseVersionGenerator = generatorData.implementationFactory();
 
-  // We expect all version generator implementations to return a VersionData object, rather than a GeneratorCallback
-  const versionDataForProjects = (await releaseVersionGenerator(
+  // We expect all version generator implementations to return a ReleaseVersionGeneratorResult object, rather than a GeneratorCallback
+  const versionResult = (await releaseVersionGenerator(
     tree,
     combinedOpts
-  )) as unknown as VersionData;
+  )) as unknown as ReleaseVersionGeneratorResult;
 
-  if (typeof versionDataForProjects === 'function') {
+  if (typeof versionResult === 'function') {
     throw new Error(
-      `The version generator ${generatorData.collectionName}:${generatorData.normalizedGeneratorName} returned a function instead of an expected VersionData object`
+      `The version generator ${generatorData.collectionName}:${generatorData.normalizedGeneratorName} returned a function instead of an expected ReleaseVersionGeneratorResult`
     );
   }
 
   // Merge the extra version data into the existing
-  appendVersionData(versionData, versionDataForProjects);
+  appendVersionData(versionData, versionResult.data);
+
+  return versionResult.callback;
 }
 
 function printAndFlushChanges(tree: Tree, isDryRun: boolean) {
@@ -460,20 +574,48 @@ function resolveGeneratorData({
   configGeneratorOptions,
   projects,
 }): GeneratorData {
-  const { normalizedGeneratorName, schema, implementationFactory } =
-    getGeneratorInformation(
+  try {
+    const { normalizedGeneratorName, schema, implementationFactory } =
+      getGeneratorInformation(
+        collectionName,
+        generatorName,
+        workspaceRoot,
+        projects
+      );
+
+    return {
       collectionName,
       generatorName,
-      workspaceRoot,
-      projects
-    );
-
-  return {
-    collectionName,
-    generatorName,
-    configGeneratorOptions,
-    normalizedGeneratorName,
-    schema,
-    implementationFactory,
-  };
+      configGeneratorOptions,
+      normalizedGeneratorName,
+      schema,
+      implementationFactory,
+    };
+  } catch (err) {
+    if (err.message.startsWith('Unable to resolve')) {
+      // See if it is because the plugin is not installed
+      try {
+        require.resolve(collectionName);
+        // is installed
+        throw new Error(
+          `Unable to resolve the generator called "${generatorName}" within the "${collectionName}" package`
+        );
+      } catch {
+        /**
+         * Special messaging for the most common case (especially as the user is unlikely to explicitly have
+         * the @nx/js generator config in their nx.json so we need to be clear about what the problem is)
+         */
+        if (collectionName === '@nx/js') {
+          throw new Error(
+            'The @nx/js plugin is required in order to version your JavaScript packages. Please install it and try again.'
+          );
+        }
+        throw new Error(
+          `Unable to resolve the package ${collectionName} in order to load the generator called ${generatorName}. Is the package installed?`
+        );
+      }
+    }
+    // Unexpected error, rethrow
+    throw err;
+  }
 }

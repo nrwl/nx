@@ -7,4 +7,5 @@ export interface VitestGeneratorSchema {
   testTarget?: string;
   skipFormat?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
+  addPlugin?: boolean;
 }

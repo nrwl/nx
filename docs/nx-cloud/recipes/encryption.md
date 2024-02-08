@@ -2,7 +2,7 @@
 
 To turn on end to end encryption, specify an encryption key in one of two ways:
 
-- Set the `encryptionKey` property in `nx.json`
+- Set the `nxCloudEncryptionKey` property in `nx.json`
 - Set the `NX_CLOUD_ENCRYPTION_KEY` environment variable
 
 The key can be any string up to 32 characters long.

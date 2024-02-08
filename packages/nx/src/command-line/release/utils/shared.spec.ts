@@ -11,6 +11,7 @@ describe('shared', () => {
             projectsRelationship: 'independent',
             projects: ['foo'], // single project, will get flattened in the final commit message
             version: {
+              conventionalCommits: false,
               generator: '@nx/js:version',
               generatorOptions: {},
             },
@@ -22,6 +23,7 @@ describe('shared', () => {
             projectsRelationship: 'fixed',
             projects: ['bar', 'baz'],
             version: {
+              conventionalCommits: false,
               generator: '@nx/js:version',
               generatorOptions: {},
             },
@@ -82,6 +84,7 @@ describe('shared', () => {
               'node',
             ],
             version: {
+              conventionalCommits: true,
               generator: '@nx/js:release-version',
               generatorOptions: {
                 specifierSource: 'conventional-commits',
@@ -93,8 +96,8 @@ describe('shared', () => {
               entryWhenNoChanges:
                 'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
               file: '{projectRoot}/CHANGELOG.md',
-              renderer: 'nx/changelog-renderer',
-              renderOptions: { includeAuthors: true },
+              renderer: 'nx/release/changelog-renderer',
+              renderOptions: { authors: true },
             },
             releaseTagPattern: '{projectName}-{version}',
             name: '__default__',

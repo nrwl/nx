@@ -25,10 +25,10 @@ describe('@nx/next/plugin', () => {
       jest.resetModules();
     });
 
-    it('should create nodes', () => {
+    it('should create nodes', async () => {
       const nextConfigPath = 'next.config.js';
       mockNextConfig(nextConfigPath, {});
-      const nodes = createNodesFunction(
+      const nodes = await createNodesFunction(
         nextConfigPath,
         {
           buildTargetName: 'build',
@@ -65,9 +65,9 @@ describe('@nx/next/plugin', () => {
       jest.resetModules();
     });
 
-    it('should create nodes', () => {
+    it('should create nodes', async () => {
       mockNextConfig('my-app/next.config.js', {});
-      const nodes = createNodesFunction(
+      const nodes = await createNodesFunction(
         'my-app/next.config.js',
         {
           buildTargetName: 'my-build',

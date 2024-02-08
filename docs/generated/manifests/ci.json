@@ -131,17 +131,6 @@
     "file": "",
     "itemList": [
       {
-        "id": "remote-cache",
-        "name": "Use Remote Caching",
-        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-        "mediaImage": "",
-        "file": "shared/core-features/remote-cache",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/features/remote-cache",
-        "tags": ["remote-cache"]
-      },
-      {
         "id": "affected",
         "name": "Run Only Tasks Affected by a PR",
         "description": "",
@@ -153,15 +142,59 @@
         "tags": ["run-tasks"]
       },
       {
-        "id": "distribute-task-execution",
-        "name": "Distribute Task Execution",
-        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
+        "id": "remote-cache",
+        "name": "Use Remote Caching (Nx Replay)",
+        "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
         "mediaImage": "",
-        "file": "shared/core-features/distribute-task-execution",
+        "file": "shared/features/remote-cache",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/remote-cache",
+        "tags": ["remote-cache"]
+      },
+      {
+        "id": "distribute-task-execution",
+        "name": "Distribute Task Execution (Nx Agents)",
+        "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
+        "mediaImage": "",
+        "file": "shared/features/distribute-task-execution",
         "itemList": [],
         "isExternal": false,
         "path": "/ci/features/distribute-task-execution",
-        "tags": ["distribute-task-execution"]
+        "tags": []
+      },
+      {
+        "id": "dynamic-agents",
+        "name": "Dynamically Allocate Agents",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/features/dynamic-agents",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/dynamic-agents",
+        "tags": []
+      },
+      {
+        "id": "split-e2e-tasks",
+        "name": "Automatically Split E2E Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/features/split-e2e-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/split-e2e-tasks",
+        "tags": []
+      },
+      {
+        "id": "flaky-tasks",
+        "name": "Identify and Re-run Flaky Tasks",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/features/flaky-tasks",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/features/flaky-tasks",
+        "tags": []
       },
       {
         "id": "on-premise",
@@ -173,33 +206,11 @@
         "isExternal": false,
         "path": "/ci/features/on-premise",
         "tags": ["on-premise"]
-      },
-      {
-        "id": "nx-agents",
-        "name": "Nx Agents",
-        "description": "",
-        "mediaImage": "",
-        "file": "nx-cloud/intro/nx-agents",
-        "itemList": [],
-        "isExternal": false,
-        "path": "/ci/features/nx-agents",
-        "tags": []
       }
     ],
     "isExternal": false,
     "path": "/ci/features",
     "tags": []
-  },
-  "/ci/features/remote-cache": {
-    "id": "remote-cache",
-    "name": "Use Remote Caching",
-    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
-    "mediaImage": "",
-    "file": "shared/core-features/remote-cache",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/features/remote-cache",
-    "tags": ["remote-cache"]
   },
   "/ci/features/affected": {
     "id": "affected",
@@ -212,16 +223,60 @@
     "path": "/ci/features/affected",
     "tags": ["run-tasks"]
   },
+  "/ci/features/remote-cache": {
+    "id": "remote-cache",
+    "name": "Use Remote Caching (Nx Replay)",
+    "description": "Learn how to enable remote caching s.t. you don't just benefit locally from it but also in CI.",
+    "mediaImage": "",
+    "file": "shared/features/remote-cache",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/remote-cache",
+    "tags": ["remote-cache"]
+  },
   "/ci/features/distribute-task-execution": {
     "id": "distribute-task-execution",
-    "name": "Distribute Task Execution",
-    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Cloud has a built-in DTE mechanism which makes this a trivial task.",
+    "name": "Distribute Task Execution (Nx Agents)",
+    "description": "Learn how to efficiently distribute tasks across machines to take full advantage of parallelization. Nx Agents make this a trivial task.",
     "mediaImage": "",
-    "file": "shared/core-features/distribute-task-execution",
+    "file": "shared/features/distribute-task-execution",
     "itemList": [],
     "isExternal": false,
     "path": "/ci/features/distribute-task-execution",
-    "tags": ["distribute-task-execution"]
+    "tags": []
+  },
+  "/ci/features/dynamic-agents": {
+    "id": "dynamic-agents",
+    "name": "Dynamically Allocate Agents",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/features/dynamic-agents",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/dynamic-agents",
+    "tags": []
+  },
+  "/ci/features/split-e2e-tasks": {
+    "id": "split-e2e-tasks",
+    "name": "Automatically Split E2E Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/features/split-e2e-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/split-e2e-tasks",
+    "tags": []
+  },
+  "/ci/features/flaky-tasks": {
+    "id": "flaky-tasks",
+    "name": "Identify and Re-run Flaky Tasks",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/features/flaky-tasks",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/features/flaky-tasks",
+    "tags": []
   },
   "/ci/features/on-premise": {
     "id": "on-premise",
@@ -233,17 +288,6 @@
     "isExternal": false,
     "path": "/ci/features/on-premise",
     "tags": ["on-premise"]
-  },
-  "/ci/features/nx-agents": {
-    "id": "nx-agents",
-    "name": "Nx Agents",
-    "description": "",
-    "mediaImage": "",
-    "file": "nx-cloud/intro/nx-agents",
-    "itemList": [],
-    "isExternal": false,
-    "path": "/ci/features/nx-agents",
-    "tags": []
   },
   "/ci/concepts": {
     "id": "concepts",
@@ -359,6 +403,17 @@
         "mediaImage": "",
         "file": "",
         "itemList": [
+          {
+            "id": "connect-to-cloud",
+            "name": "Connect Nx Cloud",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/recipes/connect-to-cloud",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/set-up/connect-to-cloud",
+            "tags": []
+          },
           {
             "id": "monorepo-ci-azure",
             "name": "Setting up Azure Pipelines",
@@ -621,6 +676,29 @@
         "tags": []
       },
       {
+        "id": "troubleshooting",
+        "name": "Troubleshooting",
+        "description": "Learn how to solve common issues in Nx Cloud.",
+        "mediaImage": "",
+        "file": "",
+        "itemList": [
+          {
+            "id": "ci-execution-failed",
+            "name": "CI Execution Failed",
+            "description": "",
+            "mediaImage": "",
+            "file": "nx-cloud/troubleshooting/ci-execution-failed",
+            "itemList": [],
+            "isExternal": false,
+            "path": "/ci/recipes/troubleshooting/ci-execution-failed",
+            "tags": []
+          }
+        ],
+        "isExternal": false,
+        "path": "/ci/recipes/troubleshooting",
+        "tags": []
+      },
+      {
         "id": "other",
         "name": "Other",
         "description": "Learn how to set up Nx Cloud for your workspace.",
@@ -666,6 +744,17 @@
     "mediaImage": "",
     "file": "",
     "itemList": [
+      {
+        "id": "connect-to-cloud",
+        "name": "Connect Nx Cloud",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/recipes/connect-to-cloud",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/set-up/connect-to-cloud",
+        "tags": []
+      },
       {
         "id": "monorepo-ci-azure",
         "name": "Setting up Azure Pipelines",
@@ -736,6 +825,17 @@
     "isExternal": false,
     "path": "/ci/recipes/set-up",
     "tags": ["distribute-task-execution"]
+  },
+  "/ci/recipes/set-up/connect-to-cloud": {
+    "id": "connect-to-cloud",
+    "name": "Connect Nx Cloud",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/recipes/connect-to-cloud",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/set-up/connect-to-cloud",
+    "tags": []
   },
   "/ci/recipes/set-up/monorepo-ci-azure": {
     "id": "monorepo-ci-azure",
@@ -1147,6 +1247,40 @@
     "path": "/ci/recipes/on-premise/advanced-config",
     "tags": []
   },
+  "/ci/recipes/troubleshooting": {
+    "id": "troubleshooting",
+    "name": "Troubleshooting",
+    "description": "Learn how to solve common issues in Nx Cloud.",
+    "mediaImage": "",
+    "file": "",
+    "itemList": [
+      {
+        "id": "ci-execution-failed",
+        "name": "CI Execution Failed",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/troubleshooting/ci-execution-failed",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/recipes/troubleshooting/ci-execution-failed",
+        "tags": []
+      }
+    ],
+    "isExternal": false,
+    "path": "/ci/recipes/troubleshooting",
+    "tags": []
+  },
+  "/ci/recipes/troubleshooting/ci-execution-failed": {
+    "id": "ci-execution-failed",
+    "name": "CI Execution Failed",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/troubleshooting/ci-execution-failed",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/recipes/troubleshooting/ci-execution-failed",
+    "tags": []
+  },
   "/ci/recipes/other": {
     "id": "other",
     "name": "Other",
@@ -1233,6 +1367,17 @@
         "tags": []
       },
       {
+        "id": "launch-templates",
+        "name": "Launch Templates",
+        "description": "",
+        "mediaImage": "",
+        "file": "nx-cloud/reference/launch-templates",
+        "itemList": [],
+        "isExternal": false,
+        "path": "/ci/reference/launch-templates",
+        "tags": []
+      },
+      {
         "id": "env-vars",
         "name": "Environment Variables",
         "description": "",
@@ -1290,6 +1435,17 @@
     "itemList": [],
     "isExternal": false,
     "path": "/ci/reference/nx-cloud-cli",
+    "tags": []
+  },
+  "/ci/reference/launch-templates": {
+    "id": "launch-templates",
+    "name": "Launch Templates",
+    "description": "",
+    "mediaImage": "",
+    "file": "nx-cloud/reference/launch-templates",
+    "itemList": [],
+    "isExternal": false,
+    "path": "/ci/reference/launch-templates",
     "tags": []
   },
   "/ci/reference/env-vars": {

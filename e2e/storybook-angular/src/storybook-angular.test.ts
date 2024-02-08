@@ -11,7 +11,10 @@ import {
 describe('Storybook executors for Angular', () => {
   const angularStorybookLib = uniq('test-ui-ng-lib');
   beforeAll(() => {
-    newProject();
+    newProject({
+      packages: ['@nx/angular'],
+      unsetProjectNameAndRootFormat: false,
+    });
     runCLI(
       `g @nx/angular:library ${angularStorybookLib} --project-name-and-root-format=as-provided --no-interactive`
     );
@@ -41,7 +44,7 @@ describe('Storybook executors for Angular', () => {
     // TODO(meeroslav) this test is still flaky and breaks the PR runs. We need to investigate why.
     xit('shoud build an Angular based storybook', () => {
       runCLI(`run ${angularStorybookLib}:build-storybook`);
-      checkFilesExist(`dist/storybook/${angularStorybookLib}/index.html`);
+      checkFilesExist(`${angularStorybookLib}/storybook-static/index.html`);
     }, 1_000_000);
   });
 });

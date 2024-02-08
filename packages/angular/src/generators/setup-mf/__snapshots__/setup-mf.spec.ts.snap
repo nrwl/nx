@@ -6,7 +6,7 @@ exports[`Init MF --federationType=dynamic should create a host with the correct 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
   .then(definitions => setRemoteDefinitions(definitions))
-  .then(() => import('./bootstrap').catch(err => console.error(err));)"
+  .then(() => import('./bootstrap').catch(err => console.error(err)));"
 `;
 
 exports[`Init MF --federationType=dynamic should create a host with the correct configurations when --typescriptConfiguration=true 1`] = `
@@ -15,7 +15,7 @@ exports[`Init MF --federationType=dynamic should create a host with the correct 
 fetch('/assets/module-federation.manifest.json')
   .then((res) => res.json())
   .then(definitions => setRemoteDefinitions(definitions))
-  .then(() => import('./bootstrap').catch(err => console.error(err));)"
+  .then(() => import('./bootstrap').catch(err => console.error(err)));"
 `;
 
 exports[`Init MF should add a remote application and add it to a specified host applications router config 1`] = `

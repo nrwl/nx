@@ -8,7 +8,7 @@ Note that the relationship between Nx and Turborepo isn’t the same as with Nx 
 
 We do our best to be unbiased, but, of course you should do your own research. Read the docs, try things out and build your own opinion.
 
-We clearly separate Nx (the open source tool) and [Nx Cloud](https://nx.app) (the SAAS product). Turborepo doesn’t have such a separation. Hence, in this guide we compare Turborepo with Nx+Nx Cloud (so it’s apples to apples). That said, you don’t have to use Nx Cloud to get features such as distributed caching and distributed task execution. We provide public APIs so you can build your own, if you'd prefer not to use Nx Cloud.
+We clearly separate Nx (the open source tool) and [Nx Cloud](https://nx.app) (the SAAS product). Turborepo doesn’t have such a separation. Hence, in this guide we compare Turborepo with Nx+Nx Cloud (so it’s apples to apples). That said, you don’t have to use Nx Cloud to get features such as remote caching and distributed task execution. We provide public APIs so you can build your own, if you'd prefer not to use Nx Cloud.
 
 We are going to compare the tools in three different ways: **features**, **tech and performance**, and **community**.
 
@@ -32,7 +32,7 @@ The starting point of any non-trivial monorepo management tool is to be able to 
 
 - Turborepo only analyzes package.json files to understand how projects relate to each other. Built-in Nx plugins also analyze package.json files but in addition they analyze JS/TS files, so you don't have to have bogus package.json files (that you don’t use for the purposes of installing packages or publishing) in your repo. There are plugins for Nx that do that for other languages (e.g., Golang, .Net).
 - Since the computation of the project graph can take a lot of time for complex workspaces, both Nx and Turborepo have a daemon process to create the graph in the background.
-- **Nx has [module boundary rules](/core-features/enforce-module-boundaries), which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have project boundary rules. **Project boundary rules prevent the monorepo from becoming a “big ball of mud”.**
+- **Nx has [module boundary rules](/features/enforce-module-boundaries), which are essential for any monorepo with multiple teams contributing.** You can say that some things in the monorepo are private to your team so they cannot be depended on by other teams. Turborepo doesn't have project boundary rules. **Project boundary rules prevent the monorepo from becoming a “big ball of mud”.**
 
 #### 3. Project graph visualization
 
@@ -65,13 +65,13 @@ Local computation caching (often also refered to as "build caching") is the proc
 - Turborepo only uses piping to capture the terminal output. Piping doesn’t work well for the tasks emitting “interesting” output (cypress, webpack, etc). As a result, **the terminal output with Turborepo and without it doesn’t look the same**. Nx can use piping, but it also supports other strategies. As a result, Nx is able to capture the output “as is”. **Running say Cypress with Nx or without Nx results in the same output**, and the replayed output matches the original output exactly as well.
 - Once again, Nx is pluggable, so you can write plugins which determine what can affect a given computation, and some Nx plugins do that.
 
-#### 7. Distributed computation caching
+#### 7. Remote computation caching
 
 Local computation caching helps speed up things locally, but the real benefits start when you distribute and share that cache remotely with your CI system and teammates.
 
 - Both Nx and Turborepo support it.
-- Nx exposes a public API, which allows you to provide your own implementation of the remote cache (and some companies do). Turborepo’s implementation is not customizable, so you have to use Turborepo’s distributed cache.
-- If you choose not to implement your own version of the distributed cache, you can use Nx Cloud. **There is an on-prem version of Nx Cloud, so you can host your own cached artifacts. Turborepo doesn’t offer an on-prem solution.**
+- Nx exposes a public API, which allows you to provide your own implementation of the remote cache (and some companies do). Turborepo’s implementation is not customizable, so you have to use Turborepo’s remote cache.
+- If you choose not to implement your own version of the remote cache, you can use Nx Cloud. **There is an on-prem version of Nx Cloud, so you can host your own cached artifacts. Turborepo doesn’t offer an on-prem solution.**
 
 #### 8. Distributed task execution
 
@@ -81,7 +81,7 @@ A crucial feature in Nx is the ability to not only parallelize your tasks on a s
 - **Turborepo doesn’t support it.** The best thing you can do when using Turborepo is binning/sharding, and that doesn’t work for non-trivial workspaces.
 - **Distributed task execution has a significantly higher impact on the ability to scale the repo than the computation cache.** You can scale without the cache, you cannot scale without the distribution.
 - This is the biggest feature related to performance and scaling that Turborepo is missing. And it’s by far the hardest one to build.
-- As with the rest of Nx, you can build your own version of the distributed task execution given the provided public API. If you choose not to implement your own version of the distributed cache, you can use Nx Cloud. There is an [on-prem version of Nx Cloud](https://nx.app/private-cloud), so you have full control over where the artifacts are stored.
+- As with the rest of Nx, you can build your own version of the distributed task execution given the provided public API. If you choose not to implement your own version of the remote cache, you can use Nx Cloud. There is an [on-prem version of Nx Cloud](https://nx.app/private-cloud), so you have full control over where the artifacts are stored.
 
 If you want to learn more, check out our article on [Distributing CI - Binning and Distributed Task Execution](https://blog.nrwl.io/distributing-ci-binning-and-distributed-task-execution-632fe31a8953)
 
@@ -89,7 +89,7 @@ If you want to learn more, check out our article on [Distributing CI - Binning a
 
 All the available Nx commands can be executed via the command line. But as your monorepo grows, with multiple teams and hundreds of projects, even just finding the project to run a command against can sometimes be difficult. Having a high quality IDE integration can be a time saver there.
 
-- Nx has [VSCode](/core-features/integrate-with-editors) and WebStorm/Intellij plugins.
+- Nx has [VSCode](/features/integrate-with-editors) and WebStorm/Intellij plugins.
 - Turborepo doesn’t have any plugins, and the maintainer has indicated there's no intention to provide editor support.
 
 Learn more [by watching this Egghead lesson](https://egghead.io/lessons/javascript-generate-new-projects-for-nx-with-nx-console).

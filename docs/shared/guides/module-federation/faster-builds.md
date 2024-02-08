@@ -70,7 +70,7 @@ These examples have fully
 functioning [CI](https://github.com/nrwl/react-module-federation/blob/main/.github/workflows/ci.yml) [workflows](https://github.com/nrwl/ng-module-federation/blob/main/.github/workflows/ci.yml)
 that are simple to set up. You can see what the CI does by viewing the sample pull requests in each repo. Also notice
 the [Nx Cloud](https://nx.app) integration, which gives you insight into each pipeline. We'll touch on
-this [later in this guide](#distributed-computation-caching-with-nx-cloud).
+this [later in this guide](#remote-computation-caching-with-nx-cloud).
 
 ![Nx Cloud integration for GitHub](/shared/guides/module-federation/pull-request.png)
 
@@ -82,34 +82,39 @@ npx create-nx-workspace acme --preset=apps
 cd acme
 ```
 
-{% callout type="check" title="Enabling distributed caching" %}
+{% callout type="check" title="Enabling remote caching" %}
 You will be prompted to enable Nx Cloud in the workspace. For the best experience, we highly recommend using Nx Cloud to
-take advantage of distributed caching and other features it provides.
+take advantage of remote caching and other features it provides.
 {% /callout %}
 
 Then, for React users, install the `@nx/react` plugin; and for Angular users, install the `@nx/angular` plugin.
 
 ```shell
 # If you use React
-npm install --save-dev @nx/react
+nx add @nx/react
 
 # If you use Angular
-npm install --save-dev @nx/angular
-
-# Or with yarn
-yarn add --dev @nx/react
-yarn add --dev @nx/angular
+nx add @nx/angular
 ```
 
 Next, generate the host and remote applications.
 
-```shell
-# React
-nx g @nx/react:host host --remotes=shop,cart,about
+{% tabs %}
+{% tab label="React" %}
 
-# Angular
+```shell
+nx g @nx/react:host host --remotes=shop,cart,about
+```
+
+{% /tab %}
+{% tab label="Angular" %}
+
+```shell
 nx g @nx/angular:host host --remotes=shop,cart,about
 ```
+
+{% /tab %}
+{% /tabs %}
 
 {% callout type="note" title="More details" %}
 You can leave off the `--remotes` option and add them later with `nx g @nx/react:remote shop --host=host`
@@ -290,7 +295,7 @@ If you have any feedback regarding this feature, we'd love to hear from you--che
 our [community page](https://nx.dev/community) for links to our Discord and Twitter.
 {% /callout %}
 
-## Distributed computation caching with Nx Cloud
+## Remote computation caching with Nx Cloud
 
 To use Module Federation well, we recommend that you enable [Nx Cloud](https://nx.app). If you haven't enabled it yet
 when using `create-nx-workspace`, you can do the following.
@@ -300,7 +305,7 @@ nx connect-to-nx-cloud
 ```
 
 With Nx Cloud enabled, a large set of builds can be skipped entirely when running the application locally (and in
-CI/CD). When you run builds through Nx + Nx Cloud, the artifacts are stored in the distributed cache, so as long as the
+CI/CD). When you run builds through Nx + Nx Cloud, the artifacts are stored in the remote cache, so as long as the
 source of a given remote hasn't changed, it will be served from cache.
 
 You can see this behavior locally if you serve the `host` twice.
@@ -331,7 +336,7 @@ If you inspect the terminal output, you'll see something like this, even if you 
 ```
 
 {% callout type="note" title="More details" %}
-This caching behavior is _crucial_. If you don't have a build system supporting distributed computation caching, using
+This caching behavior is _crucial_. If you don't have a build system supporting remote computation caching, using
 Module Federation will be slower. It takes longer to build `shop`, `cart` and `about` separately than building all of
 them together as part of the same process.
 
@@ -384,7 +389,7 @@ export default withModuleFederation({
 
 Now you can run `nx build host` to build all the `host` and all the implicit dependencies in production mode.
 
-{% callout type="note" title="Distributed caching" %}
+{% callout type="note" title="Remote caching" %}
 Again, if you don't use [Nx Cloud's Distributed Tasks Execution](/ci/features/distribute-task-execution) using Module Federation will be slower
 than building everything in a single process. It's only if you enable Distributed Tasks Execution, your CI will be able
 to build each remote on a separate machine, in parallel, (or not build it at all and retrieve it from cache), which will
@@ -459,7 +464,7 @@ guide showed how to use it to speed up your builds.
 
 Module Federation allows you to split a single build process into multiple processes which can run in parallel or even
 on multiple machines. The result of each build process can be cached independently. For this to work well in practice
-you need to have a build system supporting distributed computation caching and distributed tasks execution (e.g., Nx +
+you need to have a build system supporting remote computation caching and distributed tasks execution (e.g., Nx +
 Nx Cloud).
 
 When a developer runs say `nx serve host --devRemotes=cart`, they still run the whole application, but `shop`

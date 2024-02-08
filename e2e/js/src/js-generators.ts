@@ -2,7 +2,6 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
-  createFile,
   newProject,
   readFile,
   readJson,
@@ -54,7 +53,7 @@ describe('js e2e', () => {
     const result = runCLI(`lint ${dirName}-${libName}`);
 
     expect(result).toContain(`Linting "${dirName}-${libName}"...`);
-    expect(result).toContain('All files pass linting.');
+    expect(result).toContain('All files pass linting');
 
     // Test
     const testResult = await runCLIAsync(`test ${dirName}-${libName}`);

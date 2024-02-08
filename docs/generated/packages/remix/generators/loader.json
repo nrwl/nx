@@ -2,7 +2,7 @@
   "name": "loader",
   "implementation": "/packages/remix/src/generators/loader/loader.impl.ts",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "$id": "data-loader",
     "type": "object",
     "description": "Generate an loader for a given route.",
@@ -21,10 +21,8 @@
       "project": {
         "type": "string",
         "description": "The name of the project.",
-        "$default": { "$source": "projectName" },
-        "x-prompt": "What project is this route for?",
         "pattern": "^[a-zA-Z].*$",
-        "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v18."
+        "x-deprecated": "Provide the `path` option instead and use the `as-provided` format. The project will be determined from the path provided. It will be removed in Nx v19."
       }
     },
     "required": ["path"],

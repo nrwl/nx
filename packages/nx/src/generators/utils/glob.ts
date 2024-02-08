@@ -1,9 +1,7 @@
+import { minimatch } from 'minimatch';
 import { Tree } from '../tree';
 import { combineGlobPatterns } from '../../utils/globs';
-import { workspaceRoot } from '../../utils/workspace-root';
 import { globWithWorkspaceContext } from '../../utils/workspace-context';
-
-import minimatch = require('minimatch');
 
 /**
  * Performs a tree-aware glob search on the files in a workspace. Able to find newly

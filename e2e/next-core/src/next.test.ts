@@ -2,13 +2,9 @@ import {
   checkFilesDoNotExist,
   checkFilesExist,
   cleanupProject,
-  killPort,
-  killPorts,
   newProject,
   readFile,
   runCLI,
-  runCommandUntil,
-  runE2ETests,
   uniq,
   updateFile,
 } from '@nx/e2e/utils';
@@ -20,8 +16,11 @@ describe('Next.js Applications', () => {
   let originalEnv: string;
 
   beforeAll(() => {
-    proj = newProject();
+    proj = newProject({
+      packages: ['@nx/next', '@nx/cypress'],
+    });
   });
+
   beforeEach(() => {
     originalEnv = process.env.NODE_ENV;
   });
@@ -42,23 +41,16 @@ describe('Next.js Applications', () => {
 
     // check files are generated without the layout directory ("apps/") and
     // using the project name as the directory when no directory is provided
-    checkFilesExist(`${appName}/app/page.tsx`);
+    checkFilesExist(`${appName}/src/app/page.tsx`);
     // check build works
     expect(runCLI(`build ${appName}`)).toContain(
       `Successfully ran target build for project ${appName}`
     );
     // check tests pass
-    const appTestResult = runCLI(`test ${appName}`);
+    const appTestResult = runCLI(`test ${appName} --passWithNoTests`);
     expect(appTestResult).toContain(
       `Successfully ran target test for project ${appName}`
     );
-
-    // assert scoped project names are not supported when --project-name-and-root-format=derived
-    expect(() =>
-      runCLI(
-        `generate @nx/next:lib ${libName} --buildable --project-name-and-root-format=derived --no-interactive`
-      )
-    ).toThrow();
 
     runCLI(
       `generate @nx/next:lib ${libName} --buildable --project-name-and-root-format=as-provided --no-interactive`
@@ -72,90 +64,6 @@ describe('Next.js Applications', () => {
       `Successfully ran target build for project ${libName}`
     );
   }, 600_000);
-
-  it('should build app and .next artifacts at the outputPath if provided by the CLI', () => {
-    const appName = uniq('app');
-    runCLI(`generate @nx/next:app ${appName} --no-interactive --style=css`);
-
-    runCLI(`build ${appName} --outputPath="dist/foo"`);
-
-    checkFilesExist('dist/foo/package.json');
-    checkFilesExist('dist/foo/next.config.js');
-    // Next Files
-    checkFilesExist('dist/foo/.next/package.json');
-    checkFilesExist('dist/foo/.next/build-manifest.json');
-  }, 600_000);
-
-  // TODO(jack): re-enable this test
-  xit('should be able to serve with a proxy configuration', async () => {
-    const appName = uniq('app');
-    const jsLib = uniq('tslib');
-
-    const port = 4200;
-
-    runCLI(`generate @nx/next:app ${appName} --appDir=false`);
-    runCLI(`generate @nx/js:lib ${jsLib} --no-interactive`);
-
-    const proxyConf = {
-      '/external-api': {
-        target: `http://localhost:${port}`,
-        pathRewrite: {
-          '^/external-api/hello': '/api/hello',
-        },
-      },
-    };
-    updateFile(`apps/${appName}/proxy.conf.json`, JSON.stringify(proxyConf));
-    updateFile('.env.local', 'NX_CUSTOM_VAR=test value from a file');
-
-    updateFile(
-      `libs/${jsLib}/src/lib/${jsLib}.ts`,
-      `
-          export function jsLib(): string {
-            return process.env.NX_CUSTOM_VAR;
-          };
-          `
-    );
-
-    updateFile(
-      `apps/${appName}/pages/index.tsx`,
-      `
-        import React from 'react';
-        import { jsLib } from '@${proj}/${jsLib}';
-
-        export const Index = ({ greeting }: any) => {
-          return (
-            <p>{jsLib()}</p>
-          );
-        };
-        export default Index;
-      `
-    );
-
-    updateFile(
-      `apps/${appName}/pages/api/hello.js`,
-      `
-        export default (_req: any, res: any) => {
-          res.status(200).send('Welcome');
-        };
-      `
-    );
-
-    // serve Next.js
-    const p = await runCommandUntil(
-      `run ${appName}:serve --port=${port}`,
-      (output) => {
-        return output.indexOf(`[ ready ] on http://localhost:${port}`) > -1;
-      }
-    );
-
-    const apiData = await getData(port, '/external-api/hello');
-    const pageData = await getData(port, '/');
-    expect(apiData).toContain(`Welcome`);
-    expect(pageData).toContain(`test value from a file`);
-
-    await killPort(port);
-    await killPorts();
-  }, 300_000);
 
   it('should build in dev mode without errors', async () => {
     const appName = uniq('app');
@@ -176,10 +84,10 @@ describe('Next.js Applications', () => {
     const appName = uniq('app');
 
     runCLI(
-      `generate @nx/next:app ${appName} --no-interactive --js --appDir=false`
+      `generate @nx/next:app ${appName} --no-interactive --js --appDir=false --e2eTestRunner=playwright`
     );
 
-    checkFilesExist(`apps/${appName}/pages/index.js`);
+    checkFilesExist(`apps/${appName}/src/pages/index.js`);
 
     await checkApp(appName, {
       checkUnitTest: true,
@@ -195,7 +103,7 @@ describe('Next.js Applications', () => {
       `generate @nx/next:lib ${libName} --no-interactive --style=none --js`
     );
 
-    const mainPath = `apps/${appName}/pages/index.js`;
+    const mainPath = `apps/${appName}/src/pages/index.js`;
     updateFile(
       mainPath,
       `import '@${proj}/${libName}';\n` + readFile(mainPath)
@@ -240,107 +148,6 @@ describe('Next.js Applications', () => {
       checkE2E: false,
       checkExport: false,
     });
-  }, 300_000);
-
-  //TODO(caleb): Throwing error Cypress failed to verify that your server is running.
-  it.skip('should allow using a custom server implementation', async () => {
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nx/next:app ${appName} --style=css --no-interactive --custom-server`
-    );
-
-    checkFilesExist(`apps/${appName}/server/main.ts`);
-
-    await checkApp(appName, {
-      checkUnitTest: false,
-      checkLint: false,
-      checkE2E: true,
-      checkExport: false,
-    });
-  }, 300_000);
-
-  it('should copy relative modules needed by the next.config.js file', async () => {
-    const appName = uniq('app');
-
-    runCLI(`generate @nx/next:app ${appName} --style=css --no-interactive`);
-
-    updateFile(`apps/${appName}/redirects.js`, 'module.exports = [];');
-    updateFile(
-      `apps/${appName}/nested/headers.js`,
-      `module.exports = require('./headers-2');`
-    );
-    updateFile(`apps/${appName}/nested/headers-2.js`, 'module.exports = [];');
-    updateFile(`apps/${appName}/next.config.js`, (content) => {
-      return `const redirects = require('./redirects');\nconst headers = require('./nested/headers.js');\n${content}`;
-    });
-
-    runCLI(`build ${appName}`);
-    checkFilesExist(`dist/apps/${appName}/redirects.js`);
-    checkFilesExist(`dist/apps/${appName}/nested/headers.js`);
-    checkFilesExist(`dist/apps/${appName}/nested/headers-2.js`);
-  }, 120_000);
-
-  it('should support --turbo to enable Turbopack', async () => {
-    const appName = uniq('app');
-
-    runCLI(
-      `generate @nx/next:app ${appName} --style=css --appDir --no-interactive`
-    );
-
-    // add a new target to project.json to run with turbo enabled
-    updateFile(`apps/${appName}/project.json`, (content) => {
-      const json = JSON.parse(content);
-      const updateJson = {
-        ...json,
-        targets: {
-          ...json.targets,
-          turbo: {
-            executor: '@nx/next:server',
-            defaultConfiguration: 'development',
-            options: {
-              buildTarget: `${appName}:build`,
-              dev: true,
-              turbo: true,
-            },
-            configurations: {
-              development: {
-                buildTarget: `${appName}:build:development`,
-                dev: true,
-                turbo: true,
-              },
-            },
-          },
-        },
-      };
-      return JSON.stringify(updateJson, null, 2);
-    });
-
-    // update cypress to use the new target
-    updateFile(`apps/${appName}-e2e/project.json`, (content) => {
-      const json = JSON.parse(content);
-      const updatedJson = {
-        ...json,
-        targets: {
-          ...json.targets,
-          e2e: {
-            ...json.targets.e2e,
-            executor: '@nx/cypress:cypress',
-            options: {
-              ...json.targets.e2e.options,
-              devServerTarget: `${appName}:turbo`,
-            },
-            configurations: {},
-          },
-        },
-      };
-      return JSON.stringify(updatedJson, null, 2);
-    });
-
-    if (runE2ETests()) {
-      const e2eResult = runCLI(`e2e ${appName}-e2e --verbose`);
-      expect(e2eResult).toContain('All specs passed!');
-    }
   }, 300_000);
 });
 

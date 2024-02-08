@@ -1,36 +1,41 @@
-image: node:16.18
+image: node:20
 
 clone:
   depth: full
 
-definitions:
-  steps:
-    - step: &agent
-        name: Agent
-        script:
-          - export NX_BRANCH=$BITBUCKET_PR_ID
-          <% if(packageManagerPrefix == 'pnpm exec'){ %>
-          - npm install --prefix=$HOME/.local -g pnpm@8.2.0
-          <% } %>
-          - <%= packageManagerInstall %>
-          - <%= packageManagerPrefix %> nx-cloud start-agent
-
 pipelines:
   pull-requests:
     '**':
-      - parallel:
-          - step:
-              name: <%= workflowName %>
-              script:
-                - export NX_BRANCH=$BITBUCKET_PR_ID
-                <% if(packageManagerPrefix == 'pnpm exec'){ %>
-                - npm install --prefix=$HOME/.local -g pnpm@8.2.0
-                <% } %>
-                - <%= packageManagerInstall %>
-                - <%= packageManagerPrefix %> nx-cloud start-ci-run --stop-agents-after="build" --agent-count=3
-                - <%= packageManagerPrefix %> nx-cloud record -- <%= packageManagerPrefix %> nx format:check
-                - <%= packageManagerPrefix %> nx affected --target=lint & <%= packageManagerPrefix %> nx affected --target=test & <%= packageManagerPrefix %> nx affected --target=build
-                - <%= packageManagerPrefix %> nx-cloud stop-all-agents
-          - step: *agent
-          - step: *agent
-          - step: *agent
+      - step:
+          name: 'Build and test affected apps on Pull Requests'
+          script:
+            - export NX_BRANCH=$BITBUCKET_PR_ID
+
+            # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
+            # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+
+            <% if(packageManager == 'pnpm'){ %>
+            - npm install --prefix=$HOME/.local -g pnpm@8
+            <% } %>
+            - <%= packageManagerInstall %>
+
+            - <%= packageManagerPrefix %> nx-cloud record -- nx format:check
+            - <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasE2E){ %> e2e-ci<% } %> --base=origin/<%= mainBranch %>
+
+  branches:
+    main:
+      - step:
+          name: 'Build and test affected apps on "<%= mainBranch %>" branch changes'
+          script:
+            # Connect your workspace on <%= nxCloudHost %> and uncomment this to enable task distribution.
+            # The "--stop-agents-after" is optional, but allows idle agents to shut down once the "<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>" targets have been requested
+            # - <%= packageManagerPrefix %> nx-cloud start-ci-run --distribute-on="5 linux-medium-js" --stop-agents-after="<% if(hasE2E){ %>e2e-ci<% } else { %>build<% } %>"
+
+            <% if(packageManager == 'pnpm'){ %>
+            - npm install --prefix=$HOME/.local -g pnpm@8
+            <% } %>
+            - <%= packageManagerInstall %>
+
+            - <%= packageManagerPrefix %> nx-cloud record -- nx format:check
+            - <%= packageManagerPrefix %> nx affected -t lint test build<% if(hasE2E){ %> e2e-ci<% } %> --base=HEAD~1

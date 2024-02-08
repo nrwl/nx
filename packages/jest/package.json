@@ -42,6 +42,7 @@
     "jest-config": "^29.4.1",
     "jest-resolve": "^29.4.1",
     "jest-util": "^29.4.1",
+    "minimatch": "9.0.3",
     "resolve.exports": "1.1.0",
     "tslib": "^2.3.0",
     "@nx/devkit": "file:../devkit",

@@ -3,12 +3,13 @@ import {
   joinPathFragments,
   stripIndents,
   type Tree,
+  updateJson,
   workspaceRoot,
 } from '@nx/devkit';
 import {
   updateJestTestSetup,
-  updateViteTestIncludes,
-  updateViteTestSetup,
+  updateVitestTestIncludes,
+  updateVitestTestSetup,
 } from '../../../utils/testing-config-utils';
 import {
   getRemixVersion,
@@ -32,18 +33,18 @@ export function updateUnitTestConfig(
   );
 
   if (unitTestRunner === 'vitest') {
-    const pathToViteConfig = joinPathFragments(pathToRoot, 'vite.config.ts');
-    updateViteTestIncludes(
+    const pathToViteConfig = joinPathFragments(pathToRoot, 'vitest.config.ts');
+    updateVitestTestIncludes(
       tree,
       pathToViteConfig,
       './app/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
     );
-    updateViteTestIncludes(
+    updateVitestTestIncludes(
       tree,
       pathToViteConfig,
       './tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'
     );
-    updateViteTestSetup(tree, pathToViteConfig, 'test-setup.ts');
+    updateVitestTestSetup(tree, pathToViteConfig, 'test-setup.ts');
   } else if (unitTestRunner === 'jest') {
     const pathToJestConfig = joinPathFragments(pathToRoot, 'jest.config.ts');
     tree.rename('jest.preset.js', 'jest.preset.cjs');
@@ -55,6 +56,32 @@ export function updateUnitTestConfig(
         .replace('jest.preset.js', 'jest.preset.cjs')
     );
   }
+
+  const pathToTsConfigSpec = joinPathFragments(
+    pathToRoot,
+    `tsconfig.spec.json`
+  );
+
+  updateJson(tree, pathToTsConfigSpec, (json) => {
+    json.includes = [
+      'vite.config.ts',
+      'vitest.config.ts',
+      'app/**/*.ts',
+      'app/**/*.tsx',
+      'app/**/*.js',
+      'app/**/*.jsx',
+      'tests/**/*.spec.ts',
+      'tests/**/*.test.ts',
+      'tests/**/*.spec.tsx',
+      'tests/**/*.test.tsx',
+      'tests/**/*.spec.js',
+      'tests/**/*.test.js',
+      'tests/**/*.spec.jsx',
+      'tests/**/*.test.jsx',
+    ];
+
+    return json;
+  });
 
   return addDependenciesToPackageJson(
     tree,

@@ -1,7 +1,7 @@
 {
   "version": 2,
   "outputCapture": "direct-nodejs",
-  "$schema": "http://json-schema.org/schema",
+  "$schema": "https://json-schema.org/schema",
   "title": "ng-packagr Target",
   "description": "Builds and packages an Angular library producing an output following the Angular Package Format (APF) to be distributed as an NPM package.\n\nThis executor is similar to the `@angular-devkit/build-angular:ng-packagr` with additional support for incremental builds.",
   "cli": "nx",
@@ -35,9 +35,9 @@
     },
     "tailwindConfig": {
       "type": "string",
-      "description": "The full path for the Tailwind configuration file, relative to the workspace root. If not provided and a `tailwind.config.js` file exists in the project or workspace root, it will be used. Otherwise, Tailwind will not be configured.",
+      "description": "The full path for the Tailwind configuration file, relative to the workspace root. If not provided and a `tailwind.config.js` file exists in the project or workspace root, it will be used. Otherwise, Tailwind will not be configured. _Note: starting with Angular v17, this option is no longer used and the configuration will be picked up if exists at the project or workspace root_.",
       "x-completion-type": "file",
-      "x-completion-glob": "tailwind.config.js"
+      "x-completion-glob": "tailwind.config@(.js|.cjs|.mjs|.ts)"
     }
   },
   "additionalProperties": false,

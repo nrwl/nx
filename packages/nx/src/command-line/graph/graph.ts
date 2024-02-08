@@ -2,7 +2,7 @@ import { createHash } from 'crypto';
 import { existsSync, readFileSync, statSync, writeFileSync } from 'fs';
 import { copySync, ensureDirSync } from 'fs-extra';
 import * as http from 'http';
-import * as minimatch from 'minimatch';
+import { minimatch } from 'minimatch';
 import { URL } from 'node:url';
 import * as open from 'open';
 import {
@@ -427,7 +427,7 @@ export async function generateGraph(
           '- affectedProjects',
           '- criticalPath',
           '',
-          'These fields will be removed in Nx 18. If you need to see which projects were affected, use `nx show projects --affected`.',
+          'These fields will be removed in Nx 19. If you need to see which projects were affected, use `nx show projects --affected`.',
         ],
       });
 
@@ -523,6 +523,8 @@ async function startServer(
   currentProjectGraphClientResponse.groupByFolder = groupByFolder;
   currentProjectGraphClientResponse.exclude = exclude;
 
+  currentSourceMapsClientResponse = sourceMapResponse;
+
   const app = http.createServer(async (req, res) => {
     // parse URL
     const parsedUrl = new URL(req.url, `http://${host}:${port}`);
@@ -530,6 +532,8 @@ async function startServer(
     // Avoid https://en.wikipedia.org/wiki/Directory_traversal_attack
     // e.g curl --path-as-is http://localhost:9000/../fileInDanger.txt
     // by limiting the path to current directory only
+
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
     const sanitizePath = basename(parsedUrl.pathname);
     if (sanitizePath === 'project-graph.json') {
@@ -660,7 +664,8 @@ function createFileWatcher() {
 
         if (
           projectGraphClientResponse.hash !==
-          currentProjectGraphClientResponse.hash
+            currentProjectGraphClientResponse.hash &&
+          sourceMapResponse
         ) {
           output.note({ title: 'Graph changes updated.' });
 
@@ -695,7 +700,7 @@ async function createProjectGraphAndSourceMapClientResponse(
   const dependencies = graph.dependencies;
 
   const hasher = createHash('sha256');
-  hasher.update(JSON.stringify({ layout, projects, dependencies }));
+  hasher.update(JSON.stringify({ layout, projects, dependencies, sourceMaps }));
 
   const hash = hasher.digest('hex');
 
@@ -1029,12 +1034,12 @@ interface GraphJsonResponse {
   graph: ProjectGraph;
 
   /**
-   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 18.
+   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 19.
    */
   affectedProjects?: string[];
 
   /**
-   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 18.
+   * @deprecated To see affected projects, use `nx show projects --affected`. This will be removed in Nx 19.
    */
   criticalPath?: string[];
 }

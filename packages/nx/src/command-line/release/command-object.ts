@@ -15,9 +15,11 @@ export interface NxReleaseArgs {
   projects?: string[];
   dryRun?: boolean;
   verbose?: boolean;
+  firstRelease?: boolean;
 }
 
 interface GitCommitAndTagOptions {
+  stageChanges?: boolean;
   gitCommit?: boolean;
   gitCommitMessage?: string;
   gitCommitArgs?: string;
@@ -42,7 +44,6 @@ export type ChangelogOptions = NxReleaseArgs &
     from?: string;
     interactive?: string;
     gitRemote?: string;
-    workspaceChangelog?: boolean;
   };
 
 export type PublishOptions = NxReleaseArgs &
@@ -98,6 +99,11 @@ export const yargsReleaseCommand: CommandModule<
         type: 'boolean',
         describe:
           'Prints additional information about the commands (e.g., stack traces)',
+      })
+      .option('first-release', {
+        type: 'boolean',
+        description:
+          'Indicates that this is the first release for the selected release group. If the current version cannot be determined as usual, the version on disk will be used as a fallback. This is useful when using git or the registry to determine the current version of packages, since those sources are only available after the first release. Also indicates that changelog generation should not assume a previous git tag exists and that publishing should not check for the existence of the package before running.',
       })
       .check((argv) => {
         if (argv.groups && argv.projects) {
@@ -183,11 +189,10 @@ const versionCommand: CommandModule<NxReleaseArgs, VersionOptions> = {
             'The optional prerelease identifier to apply to the version, in the case that specifier has been set to prerelease.',
           default: '',
         })
-        .option('stageChanges', {
+        .option('stage-changes', {
           type: 'boolean',
           describe:
-            'Whether or not to stage the changes made by this command, irrespective of the git config in nx.json related to automated commits. Useful when combining this command with changelog generation.',
-          default: false,
+            'Whether or not to stage the changes made by this command. Useful when combining this command with changelog generation.',
         })
     ),
   handler: (args) =>
@@ -275,10 +280,12 @@ const publishCommand: CommandModule<NxReleaseArgs, PublishOptions> = {
         description:
           'A one-time password for publishing to a registry that requires 2FA',
       }),
-  handler: (args) =>
-    import('./publish').then((m) =>
-      m.releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)))
-    ),
+  handler: async (args) => {
+    const status = await (
+      await import('./publish')
+    ).releasePublishCLIHandler(coerceParallelOption(withOverrides(args, 2)));
+    process.exit(status);
+  },
 };
 
 function coerceParallelOption(args: any) {
@@ -338,5 +345,10 @@ function withGitCommitAndGitTagOptions<T>(
       describe:
         'Additional arguments to pass to the `git tag` command invoked behind the scenes',
       type: 'string',
+    })
+    .option('stage-changes', {
+      describe:
+        'Whether or not to stage the changes made by this command. Always treated as true if git-commit is true.',
+      type: 'boolean',
     });
 }

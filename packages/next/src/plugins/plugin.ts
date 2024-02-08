@@ -2,21 +2,19 @@ import {
   CreateDependencies,
   CreateNodes,
   CreateNodesContext,
-  NxJsonConfiguration,
-  TargetConfiguration,
   detectPackageManager,
+  NxJsonConfiguration,
   readJsonFile,
+  TargetConfiguration,
   writeJsonFile,
 } from '@nx/devkit';
-import { dirname, join } from 'path';
+import { dirname, extname, join } from 'path';
 
 import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { existsSync, readdirSync } from 'fs';
 
 import { projectGraphCacheDirectory } from 'nx/src/utils/cache-directory';
 import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { type NextConfig } from 'next';
-import { PHASE_PRODUCTION_BUILD } from 'next/constants';
 import { getLockFileName } from '@nx/js';
 
 export interface NextPluginOptions {
@@ -51,9 +49,8 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
-// TODO(nicholas): Add support for .mjs files
 export const createNodes: CreateNodes<NextPluginOptions> = [
-  '**/next.config.{js, cjs}',
+  '**/next.config.{js,cjs,mjs}',
   async (configFilePath, options, context) => {
     const projectRoot = dirname(configFilePath);
 
@@ -95,7 +92,7 @@ async function buildNextTargets(
   options: NextPluginOptions,
   context: CreateNodesContext
 ) {
-  const nextConfig = getNextConfig(nextConfigPath, context);
+  const nextConfig = await getNextConfig(nextConfigPath, context);
   const namedInputs = getNamedInputs(projectRoot, context);
 
   const targets: Record<string, TargetConfiguration> = {};
@@ -115,7 +112,7 @@ async function buildNextTargets(
 async function getBuildTargetConfig(
   namedInputs: { [inputName: string]: any[] },
   projectRoot: string,
-  nextConfig: NextConfig
+  nextConfig: any
 ) {
   const nextOutputPath = await getOutputs(projectRoot, nextConfig);
   // Set output path here so that `withNx` can pick it up.
@@ -157,6 +154,7 @@ function getStartTargetConfig(options: NextPluginOptions, projectRoot: string) {
 
 async function getOutputs(projectRoot, nextConfig) {
   let dir = '.next';
+  const { PHASE_PRODUCTION_BUILD } = require('next/constants');
 
   if (typeof nextConfig === 'function') {
     // Works for both async and sync functions.
@@ -170,16 +168,26 @@ async function getOutputs(projectRoot, nextConfig) {
     // If nextConfig is an object, directly use its 'distDir' property.
     dir = nextConfig.distDir;
   }
-  return `{workspaceRoot}/${projectRoot}/${dir}`;
+
+  if (projectRoot === '.') {
+    return `{projectRoot}/${dir}`;
+  } else {
+    return `{workspaceRoot}/${projectRoot}/${dir}`;
+  }
 }
 
-function getNextConfig(
+async function getNextConfig(
   configFilePath: string,
   context: CreateNodesContext
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
-  const module = load(resolvedPath);
+  let module;
+  if (extname(configFilePath) === '.mjs') {
+    module = await loadEsmModule(resolvedPath);
+  } else {
+    module = load(resolvedPath);
+  }
   return module.default ?? module;
 }
 
@@ -204,17 +212,35 @@ function getInputs(
   ];
 }
 
+const packageInstallationDirectories = ['node_modules', '.yarn'];
 /**
  * Load the module after ensuring that the require cache is cleared.
  */
 function load(path: string): any {
   // Clear cache if the path is in the cache
   if (require.cache[path]) {
-    for (const k of Object.keys(require.cache)) {
-      delete require.cache[k];
+    for (const key of Object.keys(require.cache)) {
+      if (!packageInstallationDirectories.some((dir) => key.includes(dir))) {
+        delete require.cache[key];
+      }
     }
   }
 
   // Then require
   return require(path);
+}
+
+/**
+ * Lazily compiled dynamic import loader function.
+ */
+let dynamicLoad: (<T>(modulePath: string | URL) => Promise<T>) | undefined;
+
+export function loadEsmModule<T>(modulePath: string | URL): Promise<T> {
+  const modulePathWithCacheBust = `${modulePath}?version=${Date.now()}`;
+  dynamicLoad ??= new Function(
+    'modulePath',
+    `return import(modulePath);`
+  ) as Exclude<typeof dynamicLoad, undefined>;
+
+  return dynamicLoad(modulePathWithCacheBust);
 }

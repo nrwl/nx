@@ -27,6 +27,8 @@ describe('update cy.mount usage', () => {
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof installedCypressVersion>
   > = installedCypressVersion as never;
+  // TODO(@leosvelperez): Turn these tests back to adding the plugin
+
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     mockedInstalledCypressVersion.mockReturnValue(10);

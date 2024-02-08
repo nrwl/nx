@@ -2,7 +2,7 @@ import { ExecutorContext, logger, names } from '@nx/devkit';
 import { resolve as pathResolve } from 'path';
 import { ChildProcess, fork } from 'child_process';
 
-import { ensureNodeModulesSymlink } from '../../utils/ensure-node-modules-symlink';
+import { resolveEas } from '../../utils/resolve-eas';
 
 import { ExpoEasBuildListOptions } from './schema';
 
@@ -18,7 +18,6 @@ export default async function* buildListExecutor(
 ): AsyncGenerator<ReactNativeBuildListOutput> {
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
-  ensureNodeModulesSymlink(context.root, projectRoot);
 
   try {
     if (options.json) {
@@ -42,7 +41,7 @@ export function runCliBuildList(
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      require.resolve('eas-cli/bin/run'),
+      resolveEas(workspaceRoot),
       ['build:list', ...createBuildListOptions(options)],
       {
         cwd: pathResolve(workspaceRoot, projectRoot),

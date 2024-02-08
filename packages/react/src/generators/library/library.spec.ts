@@ -30,6 +30,7 @@ describe('lib', () => {
     component: true,
     strict: true,
     simpleName: false,
+    addPlugin: true,
   };
 
   beforeEach(() => {
@@ -50,12 +51,18 @@ describe('lib', () => {
   it('should update project configuration', async () => {
     await libraryGenerator(tree, defaultSchema);
     const project = readProjectConfiguration(tree, 'my-lib');
-    expect(project.root).toEqual('my-lib');
-    expect(project.targets.build).toBeUndefined();
-    expect(project.targets.lint).toEqual({
-      executor: '@nx/eslint:lint',
-      outputs: ['{options.outputFile}'],
-    });
+
+    expect(project).toMatchInlineSnapshot(`
+      {
+        "$schema": "../node_modules/nx/schemas/project-schema.json",
+        "name": "my-lib",
+        "projectType": "library",
+        "root": "my-lib",
+        "sourceRoot": "my-lib/src",
+        "tags": [],
+        "targets": {},
+      }
+    `);
   });
 
   it('should add vite types to tsconfigs', async () => {
@@ -312,11 +319,17 @@ describe('lib', () => {
       await libraryGenerator(tree, { ...defaultSchema, directory: 'myDir' });
       const config = readProjectConfiguration(tree, 'my-dir-my-lib');
 
-      expect(config.root).toEqual('my-dir/my-lib');
-      expect(config.targets.lint).toEqual({
-        executor: '@nx/eslint:lint',
-        outputs: ['{options.outputFile}'],
-      });
+      expect(config).toMatchInlineSnapshot(`
+        {
+          "$schema": "../../node_modules/nx/schemas/project-schema.json",
+          "name": "my-dir-my-lib",
+          "projectType": "library",
+          "root": "my-dir/my-lib",
+          "sourceRoot": "my-dir/my-lib/src",
+          "tags": [],
+          "targets": {},
+        }
+      `);
     });
 
     it('should update root tsconfig.base.json', async () => {
@@ -405,16 +418,6 @@ describe('lib', () => {
 
       expect(tree.exists('my-lib/tsconfig.spec.json')).toBeFalsy();
       expect(tree.exists('my-lib/jest.config.ts')).toBeFalsy();
-      const config = readProjectConfiguration(tree, 'my-lib');
-      expect(config.targets.test).toBeUndefined();
-      expect(config.targets.lint).toMatchInlineSnapshot(`
-        {
-          "executor": "@nx/eslint:lint",
-          "outputs": [
-            "{options.outputFile}",
-          ],
-        }
-      `);
     });
   });
 

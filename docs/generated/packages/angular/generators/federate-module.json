@@ -2,7 +2,7 @@
   "name": "federate-module",
   "factory": "./src/generators/federate-module/federate-module",
   "schema": {
-    "$schema": "http://json-schema.org/schema",
+    "$schema": "https://json-schema.org/schema",
     "cli": "nx",
     "$id": "NxReactFederateModule",
     "title": "Federate Module",
