@@ -263,7 +263,7 @@ export function LaunchWeekAnnouncements(): JSX.Element {
                 <img
                   className="rounded-lg"
                   src="/images/launch-nx/tusky.jpg"
-                  alt="Nx Agents"
+                  alt="Tusky"
                 />
               </div>
             </div>
