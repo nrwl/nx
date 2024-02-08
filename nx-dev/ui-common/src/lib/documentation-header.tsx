@@ -88,9 +88,6 @@ export function DocumentationHeader({
       content: (
         <>
           <span>AI Chat</span>
-          <span className="ml-1 rounded-md bg-yellow-50 dark:bg-yellow-900/30 px-1.5 py-0.5 text-xs font-medium text-yellow-600 dark:text-yellow-400">
-            beta
-          </span>
         </>
       ),
     },
