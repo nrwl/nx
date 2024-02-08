@@ -455,6 +455,11 @@
     "url": "https://github.com/simondotm/nx-firebase"
   },
   {
+    "name": "@dman926/nx-python-pdm",
+    "description": "Use Python in NX workspaces with PDM",
+    "url": "https://github.com/dman926/nx-python-pdm"
+  },
+  {
     "name": "@gnuechtel/nx-cucumber",
     "description": "Plugin to use Cucumber within Nx workspaces",
     "url": "https://gitlab.com/gnuechtel/open-source/-/tree/main/libs/nx-cucumber"
