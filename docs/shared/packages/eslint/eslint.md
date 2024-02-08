@@ -57,12 +57,21 @@ The `@nx/eslint/plugin` is configured in the `plugins` array in `nx.json`.
 - The `targetName` option controls the name of the inferred ESLint tasks. The default name is `lint`.
 
 {% /tab %}
-{% tab label="Nx < 18" %}
+{% tab label="Nx 17" %}
 
 Install the `@nx/eslint` package with your package manager.
 
-```shell
+```shell {% skipRescope=true %}
 npm add -D @nx/eslint
+```
+
+{% /tab %}
+{% tab label="Nx < 17" %}
+
+Install the `@nx/linter` package with your package manager.
+
+```shell
+npm add -D @nx/linter
 ```
 
 {% /tab %}
