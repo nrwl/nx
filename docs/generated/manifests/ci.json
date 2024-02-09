@@ -176,7 +176,7 @@
       },
       {
         "id": "split-e2e-tasks",
-        "name": "Automatically Split E2E Tasks",
+        "name": "Automatically Split E2E Tasks (TestAtomizer)",
         "description": "",
         "mediaImage": "",
         "file": "nx-cloud/features/split-e2e-tasks",
@@ -258,7 +258,7 @@
   },
   "/ci/features/split-e2e-tasks": {
     "id": "split-e2e-tasks",
-    "name": "Automatically Split E2E Tasks",
+    "name": "Automatically Split E2E Tasks (TestAtomizer)",
     "description": "",
     "mediaImage": "",
     "file": "nx-cloud/features/split-e2e-tasks",
