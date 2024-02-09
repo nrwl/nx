@@ -16,6 +16,7 @@ interface BaseSchema {
   hmr?: boolean;
   watch?: boolean;
   poll?: number;
+  prebundle?: boolean | { exclude: string[] };
   buildLibsFromSource?: boolean;
   esbuildMiddleware?: string[];
 }
