@@ -85,7 +85,7 @@ export function LaunchWeekAgenda(): JSX.Element {
                 className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
               >
                 <span className="group-hover:underline">
-                  Watch the live stream recording
+                  Watch the conference recording
                 </span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

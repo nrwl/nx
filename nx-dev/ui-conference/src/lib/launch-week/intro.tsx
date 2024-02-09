@@ -38,12 +38,39 @@ export function LaunchNxIntro() {
             </div>
           </h3>
           <p className="mb-6 sm:text-lg">
-            Join us for Launch Nx when we’ll be announcing exciting new features
-            and plans for Nx and Nx Cloud, culminating in a free, half-day
-            online conference on Thursday, Feb. 8th.
+            Missed our Launch Nx Conf? Then follow up with the{' '}
+            <a href="#announcements" className="underline">
+              announcements
+            </a>{' '}
+            below or watch the conference recording:
           </p>
 
-          <div className="border-t border-slate-200 dark:border-slate-700">
+          <a
+            rel="noreferrer"
+            target="_blank"
+            href="https://youtu.be/fy0K2Smyj5A"
+            className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
+          >
+            <span className="group-hover:underline">
+              Watch the conference recording
+            </span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
+          </a>
+
+          <div className="mt-5 border-t border-slate-200 dark:border-slate-700">
             <p className="mb-6 mt-6 sm:text-lg">
               Follow us on{' '}
               <a
@@ -84,31 +111,6 @@ export function LaunchNxIntro() {
               to not miss any updates.
             </p>
           </div>
-
-          <a
-            rel="noreferrer"
-            target="_blank"
-            href="https://youtu.be/fy0K2Smyj5A"
-            className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
-          >
-            <span className="group-hover:underline">
-              Watch the live stream recording
-            </span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="ml-1 h-8 w-8 transform-gpu transition duration-200 ease-out group-hover:translate-x-2 "
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 7l5 5m0 0l-5 5m5-5H6"
-              />
-            </svg>
-          </a>
         </div>
       </div>
     </div>
