@@ -81,11 +81,11 @@ export function LaunchWeekAgenda(): JSX.Element {
               <a
                 rel="noreferrer"
                 target="_blank"
-                href="https://go.nx.dev/launch-nx-conf?hs_preview=OjKMOOmK-152639569298"
+                href="https://youtu.be/fy0K2Smyj5A"
                 className="font-input-mono group flex w-full items-center text-blue-500 dark:text-sky-500 sm:text-xl"
               >
                 <span className="group-hover:underline">
-                  Register for Launch Nx Conf
+                  Watch the live stream recording
                 </span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
