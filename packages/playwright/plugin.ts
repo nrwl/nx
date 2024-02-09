@@ -1,5 +1,1 @@
-export {
-  createNodes,
-  PlaywrightPluginOptions,
-  createDependencies,
-} from './src/plugins/plugin';
+export { createNodes, PlaywrightPluginOptions } from './src/plugins/plugin';
