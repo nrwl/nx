@@ -363,13 +363,13 @@
       "description": "Add NX_MF_DEV_SERVER_STATIC_REMOTES to inputs for task hashing when '@nx/angular:webpack-browser' is used for Module Federation.",
       "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
     },
-    "update-angular-cli-version-17-2-0-next-1": {
+    "update-angular-cli-version-17-2-0-rc-0": {
       "cli": "nx",
       "version": "18.1.0-beta.0",
       "requires": {
-        "@angular/core": ">=17.2.0-next.1"
+        "@angular/core": ">=17.2.0-rc.1"
       },
-      "description": "Update the @angular/cli package version to ~17.2.0-next.1.",
+      "description": "Update the @angular/cli package version to ~17.2.0-rc.0.",
       "factory": "./src/migrations/update-18-1-0/update-angular-cli"
     }
   },
@@ -1644,55 +1644,55 @@
       "version": "18.1.0-beta.0",
       "x-prompt": "Do you want to update the Angular version to v17.2?",
       "requires": {
-        "@angular/core": ">=17.1.0 <17.2.0-next.1"
+        "@angular/core": ">=17.1.0 <17.2.0-rc.1"
       },
       "packages": {
         "@angular-devkit/build-angular": {
-          "version": "~17.2.0-next.1",
+          "version": "~17.2.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/core": {
-          "version": "~17.2.0-next.1",
+          "version": "~17.2.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/schematics": {
-          "version": "~17.2.0-next.1",
+          "version": "~17.2.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/pwa": {
-          "version": "~17.2.0-next.1",
+          "version": "~17.2.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/ssr": {
-          "version": "~17.2.0-next.1",
+          "version": "~17.2.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@schematics/angular": {
-          "version": "~17.2.0-next.1",
+          "version": "~17.2.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/architect": {
-          "version": "~0.1702.0-next.1",
+          "version": "~0.1702.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular-devkit/build-webpack": {
-          "version": "~0.1702.0-next.1",
+          "version": "~0.1702.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/core": {
-          "version": "~17.2.0-next.1",
+          "version": "~17.2.0-rc.1",
           "alwaysAddToPackageJson": true
         },
         "@angular/material": {
-          "version": "~17.2.0-next.1",
+          "version": "~17.2.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "@angular/cdk": {
-          "version": "~17.2.0-next.1",
+          "version": "~17.2.0-rc.0",
           "alwaysAddToPackageJson": false
         },
         "ng-packagr": {
-          "version": "~17.2.0-next.0",
+          "version": "~17.2.0-rc.0",
           "alwaysAddToPackageJson": false
         }
       }
