@@ -140,8 +140,8 @@ export function NxWithCi(): JSX.Element {
           </div>
         </div>
       </motion.div>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8 lg:pb-16">
-        <dl className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-3">
+      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 pb-8 lg:pb-16">
+        <dl className="grid grid-cols-1 gap-x-8 gap-y-16 sm:grid-cols-2">
           <div className="relative">
             <dt className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
               <div className="relative group">
@@ -199,6 +199,28 @@ export function NxWithCi(): JSX.Element {
             <dd className="mt-4 text-base leading-7 text-slate-700 dark:text-slate-400">
               Next generation, fully managed CI solution with distribution at
               its core, designed from the ground up for monorepos.
+            </dd>
+          </div>
+          <div className="relative">
+            <dt className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
+              <div className="relative group opacity-70">
+                <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg blur-sm opacity-25"></div>
+                <div className="relative flex gap-4 items-center rounded-lg border border-slate-200 bg-white p-4 text-lg shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 dark:border-slate-800/40 dark:bg-slate-800">
+                  <CogIcon className="h-8 w-8" aria-hidden="true" />
+                  {/*<a href="/ci/features/tusky" title="Discover Tusky">*/}
+                  <span className="absolute inset-0"></span>Tusky
+                  {/*</a>*/}
+                  <div className="flex-grow" />
+                  <span className="dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20 inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">
+                    Coming soon
+                  </span>
+                </div>
+              </div>
+            </dt>
+            <dd className="mt-4 text-base leading-7 text-slate-700 dark:text-slate-400">
+              A powerful Artificial Intelligence equipped with context of your
+              workspace, commit history, and historical build timing data. Tusky
+              can uniquely understand and optimize your codebase and pipelines.
             </dd>
           </div>
         </dl>
