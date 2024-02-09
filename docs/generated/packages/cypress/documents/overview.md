@@ -75,6 +75,30 @@ The `@nx/cypress/plugin` is configured in the `plugins` array in `nx.json`.
 
 The `@nx/cypress/plugin` will automatically split your e2e tasks by file. You can read more about this feature [here](/ci/features/split-e2e-tasks).
 
+To enable e2e task splitting, make sure there is a `ciWebServerCommand` property set in your `cypress.config.ts` file. It will look something like this:
+
+```ts {% fileName="apps/my-project-e2e/cypress.config.ts" highlightLines=[13] %}
+import { defineConfig } from 'cypress';
+import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
+
+export default defineConfig({
+  e2e: {
+    ...nxE2EPreset(__filename, {
+      cypressDir: 'src',
+      bundler: 'vite',
+      webServerCommands: {
+        default: 'nx run my-project:serve',
+        production: 'nx run my-project:preview',
+      },
+      ciWebServerCommand: 'nx run my-project:serve-static',
+    }),
+    baseUrl: 'http://localhost:4200',
+  },
+});
+```
+
+Note: The `nxE2EPreset` is a collection of default settings, but is not necessary for task splitting.
+
 {% /tab %}
 {% tab label="Nx < 18" %}
 
