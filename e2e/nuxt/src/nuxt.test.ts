@@ -12,7 +12,7 @@ describe('Nuxt Plugin', () => {
 
   beforeAll(() => {
     newProject({
-      packages: ['@nx/nuxt', '@nx/storybook'],
+      packages: ['@nx/nuxt'],
       unsetProjectNameAndRootFormat: false,
     });
     runCLI(
