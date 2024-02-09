@@ -13,12 +13,13 @@ import type { NormalizedJestProjectSchema } from '../schema';
 
 export async function createJestConfig(
   tree: Tree,
-  options: Partial<NormalizedJestProjectSchema>
+  options: Partial<NormalizedJestProjectSchema>,
+  presetExt: 'cjs' | 'js'
 ) {
-  if (!tree.exists('jest.preset.js')) {
+  if (!tree.exists(`jest.preset.${presetExt}`)) {
     // preset is always js file.
     tree.write(
-      `jest.preset.js`,
+      `jest.preset.${presetExt}`,
       `
       const nxPreset = require('@nx/jest/preset').default;
 
